@@ -111,6 +111,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
           "Improved Quick Items selection interface",
+          "Quick Items can now be disabled (for personal and faction separately)",
           "Added seconds to targets cards red-status countdown",
           "Removed obsolete providers",
           "Fixed app update dialog",

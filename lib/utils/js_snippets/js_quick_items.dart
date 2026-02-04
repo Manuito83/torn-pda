@@ -84,6 +84,32 @@ String runQuickItemJS({
       return final;
     }
 
+    // Decode HTML entities if Torn returns escaped HTML
+    function decodeHtmlEntities(str) {
+      if (!str || typeof str !== 'string') return str;
+      if (str.indexOf('&lt;') === -1 && str.indexOf('&gt;') === -1 && str.indexOf('&amp;') === -1) return str;
+      const txt = document.createElement('textarea');
+      txt.innerHTML = str;
+      return txt.value;
+    }
+
+    // Render links array from Torn response (if present)
+    function buildLinksHtml(links) {
+      if (!links || !Array.isArray(links) || links.length === 0) return '';
+      try {
+        return links.map(function(link) {
+          if (!link) return '';
+          var title = link.title || link.text || 'Link';
+          var url = link.url || '#';
+          var cls = link.class || '';
+          var attr = link.attr || '';
+          return '<a href="' + url + '" class="' + cls + '" ' + attr + '>' + title + '</a>';
+        }).join(' ');
+      } catch (_) {
+        return '';
+      }
+    }
+
     // Add style for result box
     function addStyle(styleString) {
       let style = document.getElementById('pda-resultbox-style');
@@ -907,13 +933,41 @@ String runQuickItemJS({
             var resultBox = document.querySelector('.resultBox');
             resultBox.style.display = "block";
 
+            try { console.log('[PDA][QuickItems] raw response:', response); } catch (_) {}
+            try { console.log('[PDA][QuickItems] raw respStr:', respStr); } catch (_) {}
+
             // Prefer using the properly parsed 'text' field
+            let resultHtml = '';
             if (respObj && respObj.text) {
-              let fixResult = fixTime(respObj.text);
-              resultBox.innerHTML = fixResult || respObj.text;
-            } 
-            // Fallback: Dump whatever we have
-            else {
+              resultHtml = respObj.text;
+            } else if (respObj && respObj.message) {
+              resultHtml = respObj.message;
+            } else if (respStr && (respStr.trim().startsWith('<') || respStr.includes('<a') || respStr.includes('<div'))) {
+              resultHtml = respStr;
+            } else if (respStr && respStr.trim().startsWith('{')) {
+              try {
+                const parsed = JSON.parse(respStr);
+                resultHtml = parsed.text || parsed.message || '';
+              } catch (_) {}
+            }
+
+            resultHtml = decodeHtmlEntities(resultHtml);
+            var linksHtml = '';
+            if (respObj && respObj.links) {
+              linksHtml = buildLinksHtml(respObj.links);
+            } else if (respStr && respStr.trim().startsWith('{')) {
+              try {
+                const parsed = JSON.parse(respStr);
+                linksHtml = buildLinksHtml(parsed.links);
+              } catch (_) {}
+            }
+            if (linksHtml) {
+              resultHtml = (resultHtml ? resultHtml + '<br>' : '') + linksHtml;
+            }
+            if (resultHtml) {
+              let fixResult = fixTime(resultHtml);
+              resultBox.innerHTML = fixResult || resultHtml;
+            } else {
               resultBox.innerHTML = respStr || (respObj ? JSON.stringify(respObj) : "Error parsing response");
             }
           }
@@ -1524,8 +1578,13 @@ String quickItemsMassCheckJS(List<String> itemNames) {
               }
               
               // Now send the aggregated results
+                var wanted = (itemName || '').toString().trim().toLowerCase();
+                var foundExact = false;
               for (var key in results) {
                  var res = results[key];
+                  if (wanted && key.toString().trim().toLowerCase() === wanted) {
+                   foundExact = true;
+                  }
                  // console.log("PDA Mass Check DEBUG: Sending " + key + " -> Qty: " + res.qty + ", RowKey: " + res.rowKey);
                  if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
                     window.flutter_inappwebview.callHandler('quickItemMassUpdate', {
@@ -1536,6 +1595,18 @@ String quickItemsMassCheckJS(List<String> itemNames) {
                     });
                  }
               }
+
+                // If no exact match was found, report qty 0 for the requested item
+                if (!foundExact) {
+                 if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                  window.flutter_inappwebview.callHandler('quickItemMassUpdate', {
+                    originalName: itemName,
+                    foundName: itemName,
+                    qty: 0,
+                    rowKey: null
+                  });
+                 }
+                }
            } catch(e) {
               console.error("PDA Mass Check: Parsing error", e);
            }
