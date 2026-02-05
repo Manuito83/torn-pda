@@ -48,6 +48,8 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   bool _pickerActive = false;
   bool _pickerBusy = false;
   bool _cleanupHandlerAttached = false;
+  bool _loadingTimedOut = false;
+  Timer? _loadingTimeoutTimer;
 
   @override
   void initState() {
@@ -58,6 +60,15 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
     // Trigger initial check after a small delay to allow webview/provider to settle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshInventory();
+    });
+
+    // If the provider hasn't initialized in time, stop showing the spinner
+    _loadingTimeoutTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted && !_loadingTimedOut) {
+        setState(() {
+          _loadingTimedOut = true;
+        });
+      }
     });
   }
 
@@ -73,6 +84,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   @override
   void dispose() {
     // _inventoryRefreshTimer.cancel();
+    _loadingTimeoutTimer?.cancel();
     for (var t in _itemUpdateTimers.values) {
       if (t.isActive) t.cancel();
     }
@@ -127,7 +139,10 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   List<Widget> _itemButtons() {
     final myList = <Widget>[];
 
-    if (!_itemsProvider.isInitialized) {
+    // Show a brief spinner while the provider loads saved items from prefs,
+    // checking the correct provider based on faction flag
+    final isReady = widget.faction ? _itemsProviderFaction.isInitialized : _itemsProvider.isInitialized;
+    if (!isReady && !_loadingTimedOut) {
       return [
         const Padding(
           padding: EdgeInsets.all(20),
