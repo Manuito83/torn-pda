@@ -54,6 +54,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   String? _lifeDropDownValue;
   String? _drugDropDownValue;
   String? _medicalDropDownValue;
+  String? _educationDropDownValue;
   String? _boosterDropDownValue;
   String? _hospitalDropDownValue;
   String? _jailDropDownValue;
@@ -196,6 +197,9 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
         case ProfileNotification.medical:
           typeString = 'Medical';
           profileType = ProfileNotification.medical;
+        case ProfileNotification.education:
+          typeString = 'Education';
+          profileType = ProfileNotification.education;
         case ProfileNotification.booster:
           typeString = 'Booster';
           profileType = ProfileNotification.booster;
@@ -483,6 +487,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
     final lifeType = await Prefs().getLifeNotificationType();
     final drugType = await Prefs().getDrugNotificationType();
     final medicalType = await Prefs().getMedicalNotificationType();
+    final educationType = await Prefs().getEducationNotificationType();
     final boosterType = await Prefs().getBoosterNotificationType();
     final hospitalType = await Prefs().getHospitalNotificationType();
     final jailType = await Prefs().getJailNotificationType();
@@ -500,6 +505,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
       _lifeDropDownValue = lifeType;
       _drugDropDownValue = drugType;
       _medicalDropDownValue = medicalType;
+      _educationDropDownValue = educationType;
       _boosterDropDownValue = boosterType;
       _hospitalDropDownValue = hospitalType;
       _jailDropDownValue = jailType;
@@ -530,6 +536,8 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
         value = _drugDropDownValue;
       case ProfileNotification.medical:
         value = _medicalDropDownValue;
+      case ProfileNotification.education:
+        value = _educationDropDownValue;
       case ProfileNotification.booster:
         value = _boosterDropDownValue;
       case ProfileNotification.hospital:
@@ -612,6 +620,11 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             Prefs().setMedicalNotificationType(newValue);
             setState(() {
               _medicalDropDownValue = newValue;
+            });
+          case ProfileNotification.education:
+            Prefs().setEducationNotificationType(newValue);
+            setState(() {
+              _educationDropDownValue = newValue;
             });
           case ProfileNotification.booster:
             Prefs().setBoosterNotificationType(newValue);

@@ -834,6 +834,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _educationBarEnabled = true;
+  bool get educationBarEnabled => _educationBarEnabled;
+  set educationBarEnabled(bool value) {
+    _educationBarEnabled = value;
+    Prefs().setEducationBarEnabled(value);
+    notifyListeners();
+  }
+
   bool _colorCodedStatusCard = true;
   bool get colorCodedStatusCard => _colorCodedStatusCard;
   set colorCodedStatusCard(bool choice) {
@@ -1580,6 +1588,8 @@ class SettingsProvider extends ChangeNotifier {
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
 
     _lifeBarOption = await Prefs().getLifeBarOption();
+
+    _educationBarEnabled = await Prefs().getEducationBarEnabled();
 
     _colorCodedStatusCard = await Prefs().getColorCodedStatusCard();
 

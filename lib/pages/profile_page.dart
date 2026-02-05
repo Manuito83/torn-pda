@@ -90,6 +90,7 @@ enum ProfileNotification {
   jail,
   drugs,
   medical,
+  education,
   booster,
   rankedWar,
   raceStart,
@@ -170,6 +171,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime? _lifeNotificationTime;
   DateTime? _drugsNotificationTime;
   DateTime? _medicalNotificationTime;
+  DateTime? _educationNotificationTime;
   DateTime? _boosterNotificationTime;
   late DateTime _hospitalReleaseTime;
   late DateTime _jailReleaseTime;
@@ -195,6 +197,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _lifeNotificationsPending = false;
   bool _drugsNotificationsPending = false;
   bool _medicalNotificationsPending = false;
+  bool _educationNotificationsPending = false;
   bool _boosterNotificationsPending = false;
   bool _hospitalNotificationsPending = false;
   bool _jailNotificationsPending = false;
@@ -209,6 +212,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   NotificationType _lifeNotificationType = NotificationType.notification;
   NotificationType _drugsNotificationType = NotificationType.notification;
   NotificationType _medicalNotificationType = NotificationType.notification;
+  NotificationType _educationNotificationType = NotificationType.notification;
   NotificationType _boosterNotificationType = NotificationType.notification;
   NotificationType _hospitalNotificationType = NotificationType.notification;
   NotificationType _jailNotificationType = NotificationType.notification;
@@ -227,6 +231,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   IconData? _lifeNotificationIcon;
   IconData? _drugsNotificationIcon;
   IconData? _medicalNotificationIcon;
+  IconData? _educationNotificationIcon;
   IconData? _boosterNotificationIcon;
   IconData? _hospitalNotificationIcon;
   IconData? _jailNotificationIcon;
@@ -2749,6 +2754,29 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationType = _boosterNotificationType;
         notificationIcon = _boosterNotificationIcon;
 
+      case ProfileNotification.education:
+        semanticsLabel += "for education";
+        if (_miscModel != null && _miscModel!.education.current != null) {
+          secondsToGo = _miscModel!.education.current!.until - (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+          _educationNotificationTime = DateTime.fromMillisecondsSinceEpoch(_miscModel!.education.current!.until * 1000);
+        } else {
+          secondsToGo = 0;
+          _educationNotificationTime = DateTime.now();
+        }
+        notificationsPending = _educationNotificationsPending;
+        final formattedTime = TimeFormatter(
+          inputTime: _educationNotificationTime,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
+        ).formatHourWithDaysElapsed();
+        notificationSetString = 'Education notification set for $formattedTime';
+        notificationCancelString = 'Education notification cancelled!';
+        alarmSetString = 'Education alarm set for $formattedTime';
+        alarmCancelString = 'Education alarm cancelled!';
+        timerSetString = 'Education timer set for $formattedTime';
+        notificationType = _educationNotificationType;
+        notificationIcon = _educationNotificationIcon ?? Icons.chat_bubble_outline;
+
       case ProfileNotification.hospital:
         semanticsLabel += "for hospital";
         _hospitalReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user!.status!.until! * 1000);
@@ -3001,8 +3029,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Card _coolDowns() {
+    bool showEducation = false;
+    if (_settingsProvider!.educationBarEnabled && _miscModel != null && _miscModel!.education.current != null) {
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (_miscModel!.education.current!.until > now) {
+        showEducation = true;
+      }
+    }
+
     Widget cooldownItems;
-    if (_user!.cooldowns!.drug! > 0 || _user!.cooldowns!.booster! > 0 || _user!.cooldowns!.medical! > 0) {
+    if (_user!.cooldowns!.drug! > 0 ||
+        _user!.cooldowns!.booster! > 0 ||
+        _user!.cooldowns!.medical! > 0 ||
+        showEducation) {
       cooldownItems = Padding(
         padding: const EdgeInsets.only(left: 8),
         child: Column(
@@ -3082,6 +3121,34 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           _notificationIcon(ProfileNotification.booster),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
+            if (showEducation)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _educationIcon(),
+                            const SizedBox(width: 10),
+                            _educationCounter(),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.education),
                         ],
                       ),
                     ],
@@ -3186,6 +3253,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
+  Widget _educationIcon() {
+    return Icon(MdiIcons.schoolOutline, size: 20, color: _themeProvider!.mainText);
+  }
+
   Widget _drugCounter() {
     final DateTime timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.drug!));
 
@@ -3221,6 +3292,24 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _boosterCounter() {
     final timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.booster!));
+    final formattedTime = TimeFormatter(
+      inputTime: timeEnd,
+      timeFormatSetting: _settingsProvider!.currentTimeFormat,
+      timeZoneSetting: _settingsProvider!.currentTimeZone,
+    ).formatHourWithDaysElapsed();
+    final String diff = _timeFormatted(timeEnd, previous: formattedTime);
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
+  }
+
+  Widget _educationCounter() {
+    final DateTime timeEnd = DateTime.fromMillisecondsSinceEpoch(
+      _miscModel!.education.current!.until * 1000,
+    );
     final formattedTime = TimeFormatter(
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
@@ -6644,6 +6733,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationPayload += 'raceStart';
         notificationIconAndroid = "notification_racing";
         notificationIconColor = Colors.blue;
+      case ProfileNotification.education:
+        notificationId = 113;
+        if (_educationNotificationTime != null) {
+          secondsToNotification = _educationNotificationTime!.difference(DateTime.now()).inSeconds;
+          final myTimeStamp = (_educationNotificationTime!.millisecondsSinceEpoch / 1000).floor();
+          notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        } else {
+          secondsToNotification = 0;
+        }
+        channelTitle = 'Manual education';
+        channelSubtitle = 'Manual education';
+        channelDescription = 'Manual notifications for education';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "Edu" : 'Education Complete';
+        notificationSubtitle =
+            _settingsProvider!.discreetNotifications ? "Done" : 'Your education course has finished!';
+        notificationIconAndroid = "notification_items";
+        notificationIconColor = Colors.blueGrey;
     }
 
     final modifier = await getNotificationChannelsModifiers();
@@ -6718,6 +6824,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool jail = false;
     bool war = false;
     bool raceStart = false;
+    bool education = false;
 
     final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -6756,6 +6863,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (notification.id == 201) {
           raceStart = true;
         }
+        if (notification.id == 113) {
+          education = true;
+        }
       }
     }
 
@@ -6772,6 +6882,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _jailNotificationsPending = jail;
         _rankedWarNotificationsPending = war;
         _raceStartNotificationsPending = raceStart;
+        _educationNotificationsPending = education;
       });
     }
 
@@ -6802,6 +6913,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         await flutterLocalNotificationsPlugin.cancel(109);
       case ProfileNotification.raceStart:
         await flutterLocalNotificationsPlugin.cancel(110);
+      case ProfileNotification.education:
+        await flutterLocalNotificationsPlugin.cancel(113);
     }
 
     _retrievePendingNotifications();
@@ -7384,6 +7497,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final life = await Prefs().getLifeNotificationType();
     final drugs = await Prefs().getDrugNotificationType();
     final medical = await Prefs().getMedicalNotificationType();
+    final education = await Prefs().getEducationNotificationType();
     final booster = await Prefs().getBoosterNotificationType();
 
     final hospital = await Prefs().getHospitalNotificationType();
@@ -7492,6 +7606,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       } else if (medical == '2') {
         _medicalNotificationType = NotificationType.timer;
         _medicalNotificationIcon = Icons.timer_outlined;
+      }
+
+      if (education == '0') {
+        _educationNotificationType = NotificationType.notification;
+        _educationNotificationIcon = Icons.chat_bubble_outline;
+      } else if (education == '1') {
+        _educationNotificationType = NotificationType.alarm;
+        _educationNotificationIcon = Icons.notifications_none;
+      } else if (education == '2') {
+        _educationNotificationType = NotificationType.timer;
+        _educationNotificationIcon = Icons.timer_outlined;
+      } else {
+        _educationNotificationType = NotificationType.notification;
+        _educationNotificationIcon = Icons.chat_bubble_outline;
       }
 
       if (booster == '0') {
@@ -7708,6 +7836,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         alarmDateTime = alarmTime;
         Duration difference = currentTime.difference(alarmTime);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
+      case ProfileNotification.education:
+        if (_educationNotificationTime != null) {
+          hour = _educationNotificationTime!.hour;
+          minute = _educationNotificationTime!.minute;
+          alarmDateTime = _educationNotificationTime;
+          Duration difference = currentTime.difference(_educationNotificationTime!);
+          moreThan24Hours = difference.inMinutes.abs() > 1439;
+        } else {
+          hour = currentTime.hour;
+          minute = currentTime.minute;
+          alarmDateTime = currentTime;
+          moreThan24Hours = false;
+        }
+        message = isIOS ? 'Education' : 'Torn PDA Education';
     }
 
     if (moreThan24Hours) {
@@ -7871,6 +8013,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.raceStart:
         totalSeconds = _raceStartTime.difference(DateTime.now()).inSeconds - _raceStartTimerAhead;
         message = 'Torn PDA Race Start';
+      case ProfileNotification.education:
+        totalSeconds = _educationNotificationTime?.difference(DateTime.now()).inSeconds ?? 0;
+        message = 'Torn PDA Education';
     }
 
     final AndroidIntent intent = AndroidIntent(
@@ -7909,6 +8054,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         return "W";
       case ProfileNotification.raceStart:
         return "R";
+      case ProfileNotification.education:
+        return "Edu";
     }
   }
 
@@ -7936,6 +8083,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         return "W";
       case ProfileNotification.raceStart:
         return "R";
+      case ProfileNotification.education:
+        return "Edu";
     }
   }
 

@@ -113,6 +113,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Improved Quick Items selection interface",
           "Quick Items can now be disabled (for personal and faction separately)",
           "Added seconds to targets cards red-status countdown",
+          "Added education information to Profile's cooldowns section",
           "Removed obsolete providers",
           "Fixed app update dialog",
         ],
