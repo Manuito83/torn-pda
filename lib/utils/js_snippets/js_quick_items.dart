@@ -131,6 +131,11 @@ String runQuickItemJS({
           padding:5px;
           background-color: #242424;
         }
+        .resultBox a {
+          color: #82c8e0;
+          cursor: pointer;
+          text-decoration: underline;
+        }
       `);
     } else {
       addStyle(`
@@ -140,6 +145,11 @@ String runQuickItemJS({
           margin-bottom: 20px;
           padding:5px;
           background-color: #fff;
+        }
+        .resultBox a {
+          color: #006994;
+          cursor: pointer;
+          text-decoration: underline;
         }
       `);
     }
@@ -326,14 +336,14 @@ String runQuickItemJS({
 
     var _tempDebugLogging = $kDebugMode; // Use Flutter's kDebugMode
 
-    // Helper for debug logging with timestamp.
-    // Usage: Called throughout the lifecycle to trace ID resolution (Strategies 0-3).
+    // Helper for debug logging with timestamp
+    // Usage: Called throughout the lifecycle to trace ID resolution (Strategies 0-3)
     function logTemp(msg, obj) {
       if (!_tempDebugLogging) return;
       try {
         if (typeof console !== 'undefined') {
-          var time = new Date().toISOString().split('T')[1].replace('Z', '');
-          console.log('[PDA][TempID][' + time + '] ' + msg, obj || '');
+          // var time = new Date().toISOString().split('T')[1].replace('Z', '');
+          // console.log('[PDA][TempID][' + time + '] ' + msg, obj || '');
         }
       } catch (_) {}
     }
@@ -723,14 +733,14 @@ String runQuickItemJS({
                   var doc = parser.parseFromString(data.html, 'text/html');
                   var items = doc.querySelectorAll('li[data-item="' + itemId + '"]');
                   
-                  console.log("DEBUG: items found via Search API: " + items.length);
+                  // console.log("DEBUG: items found via Search API: " + items.length);
 
                   for (var i = 0; i < items.length; i++) {
                        var li = items[i];
                        
                        var dQty = li.getAttribute('data-qty');
                        var dRowKey = li.getAttribute('data-rowkey');
-                       console.log("DEBUG: Item index " + i + " | Qty: " + dQty + " | RowKey: " + dRowKey);
+                       // console.log("DEBUG: Item index " + i + " | Qty: " + dQty + " | RowKey: " + dRowKey);
 
                        // Look for equip ID
                        var equipBtn = li.querySelector('[data-action="equip"], [data-action="unequip"]');
@@ -934,8 +944,8 @@ String runQuickItemJS({
             var resultBox = document.querySelector('.resultBox');
             resultBox.style.display = "block";
 
-            try { console.log('[PDA][QuickItems] raw response:', response); } catch (_) {}
-            try { console.log('[PDA][QuickItems] raw respStr:', respStr); } catch (_) {}
+            // try { console.log('[PDA][QuickItems] raw response:', response); } catch (_) {}
+            // try { console.log('[PDA][QuickItems] raw respStr:', respStr); } catch (_) {}
 
             // Prefer using the properly parsed 'text' field
             let resultHtml = '';
@@ -1081,10 +1091,10 @@ String runQuickItemJS({
     runAction();
 
     // DEBUG: ALWAYS FORCE A SEARCH TO SEE THE LOGS
-    console.log("DEBUG: Forcing background search for " + itemName);
-    fetchItemViaSearch(itemName, function(sId) {
-      console.log("DEBUG: Background search finished. Result ID: " + sId);
-    });
+    // console.log("DEBUG: Forcing background search for " + itemName);
+    // fetchItemViaSearch(itemName, function(sId) {
+    //   console.log("DEBUG: Background search finished. Result ID: " + sId);
+    // });
     
     // Get rid of the resultBox on close
     document.addEventListener("click", (event) => {
