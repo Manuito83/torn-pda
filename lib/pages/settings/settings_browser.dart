@@ -2400,6 +2400,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   counterText: '',
                 ),
                 initialValue: _settingsProvider.travelWalletMoneyWarningThreshold.toString(),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return "This field cannot be empty";
@@ -2413,9 +2414,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  if (value != null && value.isNotEmpty) {
-                    _settingsProvider.travelWalletMoneyWarningThreshold = int.parse(value);
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    final parsedValue = int.tryParse(value);
+                    if (parsedValue != null && parsedValue >= 0 && parsedValue <= 1000000000) {
+                      _settingsProvider.travelWalletMoneyWarningThreshold = parsedValue;
+                    }
                   }
                 },
               ),

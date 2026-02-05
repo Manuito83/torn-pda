@@ -115,6 +115,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added seconds to targets cards red-status countdown",
           "Added education information to Profile's cooldowns section",
           "Removed obsolete providers",
+          "Fixed travel wallet money warning quantity persistence",
           "Fixed app update dialog",
         ],
     );
