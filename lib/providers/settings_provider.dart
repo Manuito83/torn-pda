@@ -521,6 +521,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _newTabByDeepLinkTap = false;
+  bool get newTabByDeepLinkTap => _newTabByDeepLinkTap;
+  set newTabByDeepLinkTap(bool value) {
+    _newTabByDeepLinkTap = value;
+    Prefs().setNewTabByDeepLinkTap(_newTabByDeepLinkTap);
+    notifyListeners();
+  }
+
   var _fullScreenByQuickItemTap = false;
   bool get fullScreenByQuickItemTap => _fullScreenByQuickItemTap;
   set fullScreenByQuickItemTap(bool value) {
@@ -1486,6 +1494,7 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByShortChainingTap = await Prefs().getFullScreenByShortChainingTap();
     _fullScreenByLongChainingTap = await Prefs().getFullScreenByLongChainingTap();
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
+    _newTabByDeepLinkTap = await Prefs().getNewTabByDeepLinkTap();
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 

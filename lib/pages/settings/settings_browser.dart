@@ -77,6 +77,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       _fab(),
       _downloads(),
       _fullScreen(),
+      _deepLinks(),
       _textScale(),
       _chat(),
       _travel(),
@@ -1532,39 +1533,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
               Text(
-                "Opens full screen mode when a notification is tapped. Defaults to OFF.",
-                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-              ),
-            ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Deep links open full screen",
-        searchText: _searchText,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Flexible(child: Text("Deep links open full screen")),
-                  Switch(
-                    value: _settingsProvider.fullScreenByDeepLinkTap,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.fullScreenByDeepLinkTap = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeThumbColor: Colors.green,
-                  ),
-                ],
-              ),
-              Text(
-                "Opens full screen mode when triggered by a deep link. Defaults to OFF.",
+                "Opens full screen mode when a notification is tapped",
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
@@ -1596,7 +1565,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
               Text(
-                "Opens full screen mode when a quick item is tapped. Defaults to OFF.",
+                "Opens full screen mode when a quick item is tapped",
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
@@ -1687,6 +1656,81 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
     return buildSectionWithRows(
       title: 'FULL SCREEN BEHAVIOR',
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _deepLinks() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Deep links open full screen",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Deep links open full screen")),
+                  Switch(
+                    value: _settingsProvider.fullScreenByDeepLinkTap,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.fullScreenByDeepLinkTap = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Opens full screen mode when triggered by a deep link.",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Deep links open in new tab",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Deep links open in new tab")),
+                  Switch(
+                    value: _settingsProvider.newTabByDeepLinkTap,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.newTabByDeepLinkTap = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Opens deep links in a new tab instead of the main tab",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: 'DEEP LINKS',
       rows: rows,
       searchText: _searchText,
     );

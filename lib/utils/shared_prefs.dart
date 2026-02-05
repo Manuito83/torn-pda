@@ -405,6 +405,7 @@ class Prefs {
   final String _kFullScreenByShortChainingTap = "pda_fullScreenByShortChainingTap";
   final String _kFullScreenByLongChainingTap = "pda_fullScreenByLongChainingTap";
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
+  final String _kNewTabByDeepLinkTap = "pda_newTabByDeepLinkTap";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
 
@@ -3698,6 +3699,16 @@ class Prefs {
 
   Future setFullScreenByDeepLinkTap(bool value) async {
     return await PrefsDatabase.setBool(_kFullScreenByDeepLinkTap, value);
+  }
+
+  //--
+
+  Future<bool> getNewTabByDeepLinkTap() async {
+    return await PrefsDatabase.getBool(_kNewTabByDeepLinkTap, false);
+  }
+
+  Future setNewTabByDeepLinkTap(bool value) async {
+    return await PrefsDatabase.setBool(_kNewTabByDeepLinkTap, value);
   }
 
   //--
