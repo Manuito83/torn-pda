@@ -103,12 +103,13 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.11.1 - Build 616 - built 04/02/2026
+    // v3.12.0 - Build 617 - built 07/02/2026
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.11.1'
-        ..date = '10 FEB 2026'
+        ..version = 'Torn PDA v3.12.0'
+        ..date = '♡ 14 FEB 2026 ♡'
         ..features = [
+          "Added FFScouter section in Chaining and profile stats dialogs",
           if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
           "Improved Quick Items selection interface",
           "Quick Items can now be disabled (for personal and faction separately)",
