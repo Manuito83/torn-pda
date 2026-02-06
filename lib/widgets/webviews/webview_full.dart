@@ -6327,7 +6327,7 @@ class WebViewFullState extends State<WebViewFull>
   /// Updates attacked targets if we are in a chaining browser and then cancels the chain
   void _checkIfTargetsAttackedAndRevertChaining({bool split = false}) {
     String message = "";
-    if (_isChainingBrowser) {
+    if (_isChainingBrowser && !(_chainingPayload?.skipAutoUpdate ?? false)) {
       if (_chainingPayload!.war && _lastAttackedMembers.isNotEmpty) {
         message = split
             ? 'Updating member'

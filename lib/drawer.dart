@@ -708,7 +708,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Remote Config defaults
       remoteConfig.setDefaults(const {
-        "tsc_enabled": true,
+        "ffscouter_enabled": true,
         "yata_stats_enabled": true,
         "yata_upload_enabled": true,
         "prometheus_upload_enabled": true,
@@ -776,7 +776,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!mounted) return;
 
     try {
-      _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.ffScouterEnabledStatusRemoteConfig = remoteConfig.getBool("ffscouter_enabled");
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
       _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");

@@ -639,23 +639,23 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Torn Spies Central
+  // FFScouter
   // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
   //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
   //  0 == disabled
   //  1 == enabled
-  int _tscEnabledStatus = -1;
-  int get tscEnabledStatus => _tscEnabledStatus;
-  set tscEnabledStatus(int value) {
-    _tscEnabledStatus = value;
-    Prefs().setTSCEnabledStatus(_tscEnabledStatus);
+  int _ffScouterEnabledStatus = -1;
+  int get ffScouterEnabledStatus => _ffScouterEnabledStatus;
+  set ffScouterEnabledStatus(int value) {
+    _ffScouterEnabledStatus = value;
+    Prefs().setFFScouterEnabledStatus(_ffScouterEnabledStatus);
     notifyListeners();
   }
 
-  bool _tscEnabledStatusRemoteConfig = true;
-  bool get tscEnabledStatusRemoteConfig => _tscEnabledStatusRemoteConfig;
-  set tscEnabledStatusRemoteConfig(bool value) {
-    _tscEnabledStatusRemoteConfig = value;
+  bool _ffScouterEnabledStatusRemoteConfig = true;
+  bool get ffScouterEnabledStatusRemoteConfig => _ffScouterEnabledStatusRemoteConfig;
+  set ffScouterEnabledStatusRemoteConfig(bool value) {
+    _ffScouterEnabledStatusRemoteConfig = value;
     notifyListeners();
   }
 
@@ -1148,6 +1148,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _targetFinderSectionEnabled = true;
+  bool get targetFinderSectionEnabled => _targetFinderSectionEnabled;
+  set setTargetFinderSectionEnabled(bool value) {
+    _targetFinderSectionEnabled = value;
+    Prefs().setTargetFinderSectionEnabled(value);
+    notifyListeners();
+  }
+
   var _singleRetaliationOpensBrowser = false;
   bool get singleRetaliationOpensBrowser => _singleRetaliationOpensBrowser;
   set setSingleRetaliationOpensBrowser(bool value) {
@@ -1532,7 +1540,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _shareAttackOptions = await Prefs().getShareAttackOptions();
 
-    _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
+    _ffScouterEnabledStatus = await Prefs().getFFScouterEnabledStatus();
     _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
 
     //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();
@@ -1657,6 +1665,7 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartShowBoth = await Prefs().getTornStatsChartShowBoth();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
+    _targetFinderSectionEnabled = await Prefs().getTargetFinderSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
 
     _quickItemsEnabled = await Prefs().getQuickItemsEnabled();

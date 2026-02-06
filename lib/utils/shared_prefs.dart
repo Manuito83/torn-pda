@@ -74,6 +74,11 @@ class Prefs {
   final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
   final String _kSingleRetaliationOpensBrowser = "pda_singleRetaliationOpensBrowser";
 
+  // Target Finder
+  final String _kTargetFinderSectionEnabled = "pda_targetFinderSectionEnabled";
+  final String _kFFScouterTargetsCache = "pda_ffScouterTargetsCache";
+  final String _kFFScouterFilters = "pda_ffScouterFilters";
+
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
@@ -254,6 +259,7 @@ class Prefs {
   final String _kShareAttackOptions = "pda_shareAttackOptions";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
   final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
+  final String _kFFScouterEnabledStatus = "pda_ffScouterEnabledStatus";
 
   // Notes
   final String _kPlayerNotes = "pda_playerNotes";
@@ -458,6 +464,9 @@ class Prefs {
   // TSC
   final String _kAlternativeTSCKeyEnabled = "pda_alternativeTSCKeyEnabled";
   final String _kAlternativeTSCKey = "pda_alternativeTSCKey";
+  // FFScouter
+  final String _kAlternativeFFScouterKeyEnabled = "pda_alternativeFFScouterKeyEnabled";
+  final String _kAlternativeFFScouterKey = "pda_alternativeFFScouterKey";
 
   // TornStats stats chart configuration
   final String _kTornStatsChartSave = "pda_tornStatsChartSave";
@@ -467,12 +476,6 @@ class Prefs {
   final String _kTornStatsChartRange = "pda_tornStatsChartRange";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
   final String _kTornStatsChartShowBoth = "pda_tornStatsChartShowBoth";
-
-  // Torn Attack Central
-  // NOTE: [_kTACEnabled] adds an extra tab in Chaining
-  final String _kTACEnabled = "pda_tacEnabled";
-  final String _kTACFilters = "pda_tacFilters";
-  final String _kTACTargets = "pda_tacTargets";
 
   // Appwidget
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
@@ -1797,6 +1800,15 @@ class Prefs {
   }
 
   // *************
+  Future<int> getFFScouterEnabledStatus() async {
+    return await PrefsDatabase.getInt(_kFFScouterEnabledStatus, -1);
+  }
+
+  Future setFFScouterEnabledStatus(int value) async {
+    return await PrefsDatabase.setInt(_kFFScouterEnabledStatus, value);
+  }
+
+  // *************
   Future<int> getYataStatsEnabledStatus() async {
     return await PrefsDatabase.getInt(_kYataStatsEnabledStatus, 1);
   }
@@ -3089,6 +3101,39 @@ class Prefs {
     return await PrefsDatabase.setString(_kAlternativeTSCKey, value);
   }
 
+  // FFSCOUTER
+  Future<bool> getAlternativeFFScouterKeyEnabled() async {
+    return await PrefsDatabase.getBool(_kAlternativeFFScouterKeyEnabled, false);
+  }
+
+  Future setAlternativeFFScouterKeyEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kAlternativeFFScouterKeyEnabled, value);
+  }
+
+  Future<String> getAlternativeFFScouterKey() async {
+    return await PrefsDatabase.getString(_kAlternativeFFScouterKey, "");
+  }
+
+  Future setAlternativeFFScouterKey(String value) async {
+    return await PrefsDatabase.setString(_kAlternativeFFScouterKey, value);
+  }
+
+  Future<String> getFFScouterTargetsCache() async {
+    return await PrefsDatabase.getString(_kFFScouterTargetsCache, "");
+  }
+
+  Future setFFScouterTargetsCache(String value) async {
+    return await PrefsDatabase.setString(_kFFScouterTargetsCache, value);
+  }
+
+  Future<String> getFFScouterFilters() async {
+    return await PrefsDatabase.getString(_kFFScouterFilters, "");
+  }
+
+  Future setFFScouterFilters(String value) async {
+    return await PrefsDatabase.setString(_kFFScouterFilters, value);
+  }
+
   /// ---------------------
   /// TORNSTATS STATS CHART
   /// ---------------------
@@ -3147,33 +3192,6 @@ class Prefs {
 
   Future setTornStatsChartShowBoth(bool value) async {
     return await PrefsDatabase.setBool(_kTornStatsChartShowBoth, value);
-  }
-
-  /// -------------------
-  /// TORN ATTACK CENTRAL
-  /// -------------------
-  Future<bool> getTACEnabled() async {
-    return await PrefsDatabase.getBool(_kTACEnabled, false);
-  }
-
-  Future setTACEnabled(bool value) async {
-    return await PrefsDatabase.setBool(_kTACEnabled, value);
-  }
-
-  Future<String> getTACFilters() async {
-    return await PrefsDatabase.getString(_kTACFilters, "");
-  }
-
-  Future setTACFilters(String value) async {
-    return await PrefsDatabase.setString(_kTACFilters, value);
-  }
-
-  Future<String> getTACTargets() async {
-    return await PrefsDatabase.getString(_kTACTargets, "");
-  }
-
-  Future setTACTargets(String value) async {
-    return await PrefsDatabase.setString(_kTACTargets, value);
   }
 
   /// -----------------------------
@@ -3371,6 +3389,14 @@ class Prefs {
 
   Future setRetaliationSectionEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kRetaliationSectionEnabled, value);
+  }
+
+  Future<bool> getTargetFinderSectionEnabled() async {
+    return await PrefsDatabase.getBool(_kTargetFinderSectionEnabled, true);
+  }
+
+  Future setTargetFinderSectionEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kTargetFinderSectionEnabled, value);
   }
 
   Future<bool> getSingleRetaliationOpensBrowser() async {

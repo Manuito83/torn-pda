@@ -62,7 +62,7 @@ import 'package:torn_pda/widgets/settings/backup_online/backup_share_dialog.dart
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
-import 'package:torn_pda/widgets/stats/tsc_info.dart';
+import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:vibration/vibration.dart';
 
@@ -1333,11 +1333,11 @@ class SettingsPageState extends State<SettingsPage> {
   Widget _statsSection() {
     List<SearchableRow> rows = [];
 
-    // TSC Block
-    if (_settingsProvider.tscEnabledStatusRemoteConfig) {
+    // FFScouter Block
+    if (_settingsProvider.ffScouterEnabledStatusRemoteConfig) {
       rows.add(
         SearchableRow(
-          label: "Use Torn Spies Central",
+          label: "Use FFScouter",
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -1350,7 +1350,7 @@ class SettingsPageState extends State<SettingsPage> {
                     Flexible(
                       child: Row(
                         children: [
-                          const Flexible(child: Text("Use Torn Spies Central")),
+                          const Flexible(child: Text("Use FFScouter")),
                           const SizedBox(width: 8),
                           GestureDetector(
                             child: const Icon(Icons.info_outline, size: 18),
@@ -1358,7 +1358,7 @@ class SettingsPageState extends State<SettingsPage> {
                               showDialog(
                                 context: context,
                                 builder: (BuildContext context) {
-                                  return TSCInfoDialog(
+                                  return FFScouterInfoDialog(
                                     settingsProvider: _settingsProvider,
                                     themeProvider: _themeProvider,
                                   );
@@ -1370,24 +1370,24 @@ class SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     Switch(
-                      value: _settingsProvider.tscEnabledStatus == 1,
+                      value: _settingsProvider.ffScouterEnabledStatus == 1,
                       onChanged: (enabled) async {
-                        if (_settingsProvider.tscEnabledStatus != 1) {
+                        if (_settingsProvider.ffScouterEnabledStatus != 1) {
                           await showDialog(
                             context: context,
                             builder: (BuildContext context) {
-                              return TSCInfoDialog(
+                              return FFScouterInfoDialog(
                                 settingsProvider: _settingsProvider,
                                 themeProvider: _themeProvider,
                               );
                             },
                           );
-                          if (_settingsProvider.tscEnabledStatus == 1) {
+                          if (_settingsProvider.ffScouterEnabledStatus == 1) {
                             setState(() {}); // Force update
                           }
                         } else {
                           setState(() {
-                            _settingsProvider.tscEnabledStatus = 0;
+                            _settingsProvider.ffScouterEnabledStatus = 0;
                           });
                         }
                       },
@@ -1397,7 +1397,7 @@ class SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
                 Text(
-                  'Enable Torn Spies Central estimations in sections where spied or estimated stats are shown (e.g.: war targets cards, retal cards or profile widget)',
+                  'Enable FFScouter battle stats estimations in player profiles, war/retal cards and the FFScouter tab in the Chaining section',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -1412,12 +1412,12 @@ class SettingsPageState extends State<SettingsPage> {
     } else {
       rows.add(
         SearchableRow(
-          label: "Use Torn Spies Central",
+          label: "Use FFScouter",
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
             child: Text(
-              "TSC temporarily deactivated",
+              "FFScouter temporarily deactivated",
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 12,

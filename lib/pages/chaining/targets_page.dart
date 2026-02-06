@@ -45,12 +45,12 @@ class TargetsOptions {
 
 class TargetsPage extends StatefulWidget {
   final Function retaliationCallback;
-  //final Function tabCallback;
+  final Function targetFinderCallback;
 
   const TargetsPage({
     super.key,
     required this.retaliationCallback,
-    //@required this.tabCallback,
+    required this.targetFinderCallback,
   });
 
   @override
@@ -594,7 +594,7 @@ class TargetsPageState extends State<TargetsPage> {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
         widget.retaliationCallback(newOptions.retaliationEnabled);
-      //widget.tabCallback(newOptions.tacEnabled);
+        widget.targetFinderCallback(newOptions.targetFinderEnabled);
       case "Filter Color":
         showDialog(
           useRootNavigator: false,
