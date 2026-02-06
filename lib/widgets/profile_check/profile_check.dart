@@ -1006,13 +1006,14 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 themeProvider: widget.themeProvider!,
                               );
 
-                              final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.id ?? 0);
+                              final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
                               final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
 
                               return StatsDialog(
                                 spiesPayload: spiesPayload,
                                 estimatedStatsPayload: estimatedStatsPayload,
-                                tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                                ffScouterStatsPayload:
+                                    _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                                 yataStatsPayload:
                                     _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                               );
@@ -1103,13 +1104,14 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             themeProvider: widget.themeProvider!,
                           );
 
-                          final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.id ?? 0);
+                          final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
                           final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
 
                           return StatsDialog(
                             spiesPayload: null,
                             estimatedStatsPayload: estimatedStatsPayload,
-                            tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                            ffScouterStatsPayload:
+                                _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                             yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                           );
                         },

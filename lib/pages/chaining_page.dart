@@ -12,7 +12,7 @@ import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/pages/chaining/retals_page.dart';
-//import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
+import 'package:torn_pda/pages/chaining/target_finder_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
@@ -44,7 +44,7 @@ class ChainingPageState extends State<ChainingPage> {
 
   bool _retaliationEnabled = true;
 
-  //bool _tacEnabled = true;
+  bool _targetFinderEnabled = true;
 
   @override
   void initState() {
@@ -78,9 +78,8 @@ class ChainingPageState extends State<ChainingPage> {
                     index: _currentPage,
                     children: <Widget>[
                       TargetsPage(
-                        // Used to add or remove TAC tab
                         retaliationCallback: _retaliationCallback,
-                        //tabCallback: _tabCallback,
+                        targetFinderCallback: _targetFinderCallback,
                       ),
                       const AttacksPage(),
                       const WarPage(),
@@ -88,11 +87,7 @@ class ChainingPageState extends State<ChainingPage> {
                         RetalsPage(
                           retalsController: _r,
                         ),
-                      /*
-                      TacPage(
-                        userKey: _myCurrentKey,
-                      ),
-                      */
+                      if (_targetFinderEnabled) const FFScouterPage(),
                     ],
                   ),
                 ),
@@ -129,6 +124,12 @@ class ChainingPageState extends State<ChainingPage> {
                                 FontAwesomeIcons.personWalkingArrowLoopLeft,
                                 color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                                 size: 18,
+                              ),
+                            if (_targetFinderEnabled)
+                              Icon(
+                                Icons.search,
+                                color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                                size: 22,
                               ),
                             // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                           ],
@@ -181,6 +182,12 @@ class ChainingPageState extends State<ChainingPage> {
                           color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                           size: 18,
                         ),
+                      if (_targetFinderEnabled)
+                        Icon(
+                          Icons.search,
+                          color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+                          size: 22,
+                        ),
                       // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                     ],
                     locationTop: false,
@@ -200,8 +207,15 @@ class ChainingPageState extends State<ChainingPage> {
     });
   }
 
+  void _targetFinderCallback(bool targetFinderEnabled) {
+    setState(() {
+      _targetFinderEnabled = targetFinderEnabled;
+    });
+  }
+
   Future _restorePreferences() async {
-    //_tacEnabled = await Prefs().getTACEnabled();
+    _retaliationEnabled = await Prefs().getRetaliationSectionEnabled();
+    _targetFinderEnabled = await Prefs().getTargetFinderSectionEnabled();
 
     if (widget.retalsRedirection && (UserHelper.factionId != 0 || !_retaliationEnabled)) {
       _currentPage = 3;
@@ -228,6 +242,8 @@ class ChainingPageState extends State<ChainingPage> {
           analytics?.logScreenView(screenName: 'retals');
           _r.retrieveRetals(context);
         }
+      case 4:
+        analytics?.logScreenView(screenName: 'target_finder');
     }
   }
 
@@ -255,6 +271,9 @@ class ChainingPageState extends State<ChainingPage> {
         analytics?.logScreenView(screenName: 'retals');
         Prefs().setChainingCurrentPage(_currentPage);
         _r.retrieveRetals(context);
+      case 4:
+        analytics?.logScreenView(screenName: 'target_finder');
+        Prefs().setChainingCurrentPage(_currentPage);
     }
   }
 }

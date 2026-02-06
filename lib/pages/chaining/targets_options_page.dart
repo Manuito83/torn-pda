@@ -17,7 +17,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class TargetsOptionsReturn {
   bool? yataEnabled;
   bool? retaliationEnabled;
-  //bool tacEnabled;
+  bool? targetFinderEnabled;
 }
 
 class TargetsOptionsPage extends StatefulWidget {
@@ -34,11 +34,11 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // Retaliation
   bool _retaliationEnabled = true;
 
+  // Target Finder
+  bool _targetFinderEnabled = true;
+
   // Yata import
   bool _yataTargetsEnabled = true;
-
-  // TAC
-  //bool _tacEnabled = true;
 
   Future? _preferencesLoaded;
 
@@ -377,15 +377,14 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ),
                                 ),
                               ),
-                              /*
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 5),
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'Torn Attack Central',
+                                    'FFSCOUTER',
                                     style: TextStyle(fontSize: 10),
                                   ),
                                 ],
@@ -395,13 +394,14 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
-                                    Text("Show TAC tab"),
+                                    const Text("Section enabled"),
                                     Switch(
-                                      value: _tacEnabled,
+                                      value: _targetFinderEnabled,
                                       onChanged: (value) {
-                                        Prefs().setTACEnabled(value);
+                                        Prefs().setTargetFinderSectionEnabled(value);
+                                        _settingsProvider.setTargetFinderSectionEnabled = value;
                                         setState(() {
-                                          _tacEnabled = value;
+                                          _targetFinderEnabled = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -413,8 +413,9 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
-                                  'If enabled, you\'ll have access to TAC through a third '
-                                  'bottom tab in the Chaining section.',
+                                  'If enabled, you\'ll have access to the FFScouter tab '
+                                  'in the Chaining section, which allows you to find targets '
+                                  'powered by FFScouter.',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -422,7 +423,6 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ),
                                 ),
                               ),
-                              */
                               const SizedBox(height: 50),
                             ],
                           ),
@@ -463,7 +463,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
     final showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
     final yataEnabled = await Prefs().getYataTargetsEnabled();
     final retaliationEnabled = await Prefs().getRetaliationSectionEnabled();
-    //var tacEnabled = await Prefs().getTACEnabled();
+    final targetFinderEnabled = await Prefs().getTargetFinderSectionEnabled();
 
     setState(() {
       _showTargetsNotes = showTargetsNotes;
@@ -471,7 +471,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
       _showOnlineFactionWarning = showOnlineFactionWarning;
       _yataTargetsEnabled = yataEnabled;
       _retaliationEnabled = retaliationEnabled;
-      //_tacEnabled = tacEnabled;
+      _targetFinderEnabled = targetFinderEnabled;
     });
   }
 
@@ -481,8 +481,8 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
     Navigator.of(context).pop(
       TargetsOptionsReturn()
         ..yataEnabled = _yataTargetsEnabled
-        ..retaliationEnabled = _retaliationEnabled,
-      //..tacEnabled = _tacEnabled,
+        ..retaliationEnabled = _retaliationEnabled
+        ..targetFinderEnabled = _targetFinderEnabled,
     );
   }
 }

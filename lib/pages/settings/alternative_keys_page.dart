@@ -30,7 +30,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
 
   final TextEditingController _yataKeyController = TextEditingController();
   final TextEditingController _tornStatsKeyController = TextEditingController();
-  final TextEditingController _tscKeyController = TextEditingController();
+  final TextEditingController _ffScouterKeyController = TextEditingController();
 
   final UserController _u = Get.find<UserController>();
 
@@ -42,7 +42,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _yataKeyController.text = _u.alternativeYataKey;
     _tornStatsKeyController.text = _u.alternativeTornStatsKey;
-    _tscKeyController.text = _u.alternativeTSCKey;
+    _ffScouterKeyController.text = _u.alternativeFFScouterKey;
 
     routeWithDrawer = false;
     routeName = "alternative_keys";
@@ -96,13 +96,11 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     const Divider(),
                     const SizedBox(height: 15),
                     _tornStatsKey(),
+                    const Divider(),
+                    const SizedBox(height: 15),
+                    _ffScouterKey(),
                     const SizedBox(height: 15),
                     const SizedBox(height: 40),
-                    /*
-                    _tscKey(),
-                    const SizedBox(height: 15),
-                    const SizedBox(height: 40),
-                    */
                   ],
                 ),
               ),
@@ -257,8 +255,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
     );
   }
 
-  // ignore: unused_element
-  Widget _tscKey() {
+  Widget _ffScouterKey() {
     return GetBuilder<UserController>(
       builder: (w) {
         return Column(
@@ -267,7 +264,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'TORN SPIES CENTRAL',
+                  'FFSCOUTER',
                   style: TextStyle(fontSize: 10),
                 ),
               ],
@@ -279,12 +276,12 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                 children: <Widget>[
                   const Text("Alternative key enabled"),
                   Switch(
-                    value: w.alternativeTSCKeyEnabled,
+                    value: w.alternativeFFScouterKeyEnabled,
                     onChanged: (enabled) {
-                      w.alternativeTSCKeyEnabled = enabled;
-                      Prefs().setAlternativeTSCKeyEnabled(enabled);
+                      w.alternativeFFScouterKeyEnabled = enabled;
+                      Prefs().setAlternativeFFScouterKeyEnabled(enabled);
                       if (!enabled) {
-                        w.alternativeTSCKey = w.apiKey!;
+                        w.alternativeFFScouterKey = w.apiKey!;
                       }
                       w.update(); // Notify GetBuilder observers
                     },
@@ -294,7 +291,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                 ],
               ),
             ),
-            if (w.alternativeTSCKeyEnabled)
+            if (w.alternativeFFScouterKeyEnabled)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -304,7 +301,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     SizedBox(
                       width: 150,
                       child: TextFormField(
-                        controller: _tscKeyController,
+                        controller: _ffScouterKeyController,
                         decoration: const InputDecoration(
                           border: UnderlineInputBorder(),
                           isDense: true,
@@ -315,8 +312,8 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           if (key.isEmpty) {
                             key = w.apiKey!;
                           }
-                          w.alternativeTSCKey = key;
-                          Prefs().setAlternativeTSCKey(key);
+                          w.alternativeFFScouterKey = key;
+                          Prefs().setAlternativeFFScouterKey(key);
                           w.update(); // Notify GetBuilder observers
                         },
                       ),

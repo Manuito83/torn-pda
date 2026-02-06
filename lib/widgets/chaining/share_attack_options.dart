@@ -6,7 +6,7 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/utils/external/tsc_comm.dart';
+import 'package:torn_pda/utils/external/ffscouter_comm.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 
@@ -30,14 +30,14 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
 
   bool _includeEstimates = false;
   bool _includeSpied = false;
-  bool _includeTsc = false;
+  bool _includeFFScouter = false;
   bool _isLoading = true;
 
   late String _attackUrl;
   late String _estStats;
   String? _spiedText;
-  String? _tscDetails;
-  String _tscError = "";
+  String? _ffScouterDetails;
+  String _ffScouterError = "";
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _includeEstimates = _settingsProvider.shareOptions.contains('estimates');
     _includeSpied = _settingsProvider.shareOptions.contains('spies');
-    _includeTsc = _settingsProvider.shareOptions.contains('tsc');
+    _includeFFScouter = _settingsProvider.shareOptions.contains('ffscouter');
     _prepareData();
   }
 
@@ -62,36 +62,36 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
       _spiedText = 'Spied: $exact ($months month${months == 1 ? '' : 's'} ago)';
     }
 
-    if (_settingsProvider.tscEnabledStatus != 0 && _settingsProvider.tscEnabledStatusRemoteConfig) {
-      final apiKey = Get.find<UserController>().alternativeTSCKey;
-      final response = await TSCComm.checkIfUserExists(
-        targetId: id,
-        ownApiKey: apiKey,
+    if (_settingsProvider.ffScouterEnabledStatus != 0 && _settingsProvider.ffScouterEnabledStatusRemoteConfig) {
+      final apiKey = Get.find<UserController>().alternativeFFScouterKey;
+      final result = await FFScouterComm.getStats(
+        key: apiKey,
+        targetIds: [widget.member.memberId!],
         timeout: 4,
       );
 
-      if (response.success) {
-        _tscDetails = "TSC:";
-        final tscEstimate = int.tryParse(response.spy?.estimate?.stats ?? '');
-        final tscIntervalMin = int.tryParse(response.spy?.statInterval?.min ?? '');
-        final tscIntervalMax = int.tryParse(response.spy?.statInterval?.max ?? '');
-        final tscDate = response.spy?.statInterval?.lastUpdated;
-        final tscDateTime = DateTime.tryParse(tscDate ?? '');
+      if (result.success && result.data != null && result.data!.isNotEmpty) {
+        final stats = result.data!.first;
+        _ffScouterDetails = "FFScouter:";
 
-        if (tscEstimate != null) {
-          _tscDetails = "$_tscDetails Est ${formatBigNumbers(tscEstimate)}";
+        if (stats.bsEstimate != null) {
+          _ffScouterDetails = "$_ffScouterDetails BS Est ${formatBigNumbers(stats.bsEstimate!)}";
         }
 
-        if (tscIntervalMin != null && tscIntervalMax != null && tscDateTime != null) {
-          final dateDiff = DateTime.now().difference(tscDateTime);
+        if (stats.fairFight != null) {
+          _ffScouterDetails = "$_ffScouterDetails, FF ${stats.fairFight!.toStringAsFixed(2)}";
+        }
+
+        if (stats.lastUpdated != null) {
+          final updatedDate = DateTime.fromMillisecondsSinceEpoch(stats.lastUpdated! * 1000);
+          final dateDiff = DateTime.now().difference(updatedDate);
           final dateDiffText = dateDiff.inDays < 31
               ? '${dateDiff.inDays} day${dateDiff.inDays == 1 ? '' : 's'} ago'
               : '${dateDiff.inDays ~/ 30} month${dateDiff.inDays ~/ 30 == 1 ? '' : 's'} ago';
-          _tscDetails = "$_tscDetails, Spy Range ${formatBigNumbers(tscIntervalMin)}"
-              " - ${formatBigNumbers(tscIntervalMax)} ($dateDiffText)";
+          _ffScouterDetails = "$_ffScouterDetails ($dateDiffText)";
         }
       } else {
-        _tscError = "TSC details could not be retrieved: ${response.message}";
+        _ffScouterError = "FFScouter details could not be retrieved: ${result.errorMessage}";
       }
     }
 
@@ -104,7 +104,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
     final opts = <String>[];
     if (_includeEstimates) opts.add('estimates');
     if (_includeSpied) opts.add('spies');
-    if (_includeTsc) opts.add('tsc');
+    if (_includeFFScouter) opts.add('ffscouter');
     _settingsProvider.shareOptions = opts;
   }
 
@@ -113,7 +113,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
     buffer.writeln('Target: ${widget.member.name} [${widget.member.memberId}]');
     if (_includeEstimates && _estStats.isNotEmpty && _estStats != "unk") buffer.writeln('Estimated: $_estStats');
     if (_includeSpied && _spiedText != null) buffer.writeln(_spiedText);
-    if (_includeTsc && _tscDetails != null) buffer.writeln(_tscDetails);
+    if (_includeFFScouter && _ffScouterDetails != null) buffer.writeln(_ffScouterDetails);
     buffer.writeln('URL: $_attackUrl');
     return buffer.toString();
   }
@@ -165,9 +165,9 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 16),
-                  if ((_estStats.isEmpty || _estStats == "unk") && _spiedText == null && _tscDetails == null)
+                  if ((_estStats.isEmpty || _estStats == "unk") && _spiedText == null && _ffScouterDetails == null)
                     Text(
-                      "There's no estimated stats, nor spied stats, nor TSC stats available. "
+                      "There's no estimated stats, nor spied stats, nor FFScouter stats available. "
                       "You will only be able to share the player name, ID and attack URL.",
                       style: TextStyle(
                         fontSize: 13,
@@ -227,11 +227,11 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                         ),
                       ],
                     ),
-                  if (_tscError.isNotEmpty)
+                  if (_ffScouterError.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8, 15, 55, 8),
                       child: Text(
-                        _tscError,
+                        _ffScouterError,
                         style: TextStyle(
                           fontSize: 13,
                           color: _themeProvider.getTextColor(Colors.red),
@@ -239,7 +239,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                         ),
                       ),
                     ),
-                  if (_tscDetails != null)
+                  if (_ffScouterDetails != null)
                     Row(
                       children: [
                         Expanded(
@@ -248,19 +248,19 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                _tscDetails!,
+                                _ffScouterDetails!,
                                 style: const TextStyle(fontSize: 14, color: Colors.black),
                               ),
                             ),
                           ),
                         ),
                         Checkbox(
-                          value: _includeTsc,
+                          value: _includeFFScouter,
                           onChanged: (v) {
                             setState(() {
-                              _includeTsc = v!;
+                              _includeFFScouter = v!;
                             });
-                            _saveShareOption('tsc', _includeTsc);
+                            _saveShareOption('ffscouter', _includeFFScouter);
                           },
                         ),
                       ],

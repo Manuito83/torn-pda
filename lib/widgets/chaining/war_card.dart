@@ -951,13 +951,13 @@ class WarCardState extends State<WarCard> {
                     themeProvider: _themeProvider,
                   );
 
-                  final tscStatsPayload = TSCStatsPayload(targetId: _member.memberId!);
+                  final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
                   final yataStatsPayload = YataStatsPayload(targetId: _member.memberId!);
 
                   return StatsDialog(
                     spiesPayload: spiesPayload,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                     yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },
@@ -1016,13 +1016,13 @@ class WarCardState extends State<WarCard> {
                     themeProvider: _themeProvider,
                   );
 
-                  final tscStatsPayload = TSCStatsPayload(targetId: _member.memberId!);
+                  final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
                   final yataStatsPayload = YataStatsPayload(targetId: _member.memberId!);
 
                   return StatsDialog(
                     spiesPayload: null,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                     yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },

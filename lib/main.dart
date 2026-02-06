@@ -50,7 +50,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
-import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -206,7 +205,6 @@ Future<void> main() async {
         ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
         ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
         ChangeNotifierProvider<AwardsProvider>(create: (context) => AwardsProvider()),
-        ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
         ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider()),
         ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
         ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
