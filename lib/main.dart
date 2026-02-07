@@ -20,6 +20,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
@@ -607,6 +608,21 @@ Future<void> _initializePlatformSpecifics() async {
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       kSdkIos = double.tryParse(iosInfo.systemVersion) ?? 99;
       log("iOS SDK Version: $kSdkIos");
+
+      // Workaround for Flutter bug on iPadOS 26.x: FlutterViewController sends fake touch
+      // events at (0,0) to signal status bar taps, which inadvertently dismiss overlays
+      // (dialogs, popups, bottom sheets, drawers). Cancel any pointer events at Offset.zero.
+      // Only applied on iPads to preserve scroll-to-top on iPhones.
+      // See: https://github.com/flutter/flutter/issues/177992
+      // TODO: remove once Flutter stable includes the fix from PR #179643
+      if (iosInfo.model.toLowerCase().contains('ipad')) {
+        GestureBinding.instance.pointerRouter.addGlobalRoute((PointerEvent event) {
+          if (event.position == Offset.zero) {
+            GestureBinding.instance.cancelPointer(event.pointer);
+          }
+        });
+        log("iPadOS overlay dismiss workaround installed");
+      }
     } else if (Platform.isAndroid) {
       final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
