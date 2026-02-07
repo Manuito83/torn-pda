@@ -211,10 +211,12 @@ class FFScouterPageState extends State<FFScouterPage> {
           _isRefreshingAll
               ? const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    ),
                   ),
                 )
               : IconButton(

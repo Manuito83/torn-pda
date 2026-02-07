@@ -12,7 +12,7 @@ import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/pages/chaining/retals_page.dart';
-import 'package:torn_pda/pages/chaining/target_finder_page.dart';
+import 'package:torn_pda/pages/chaining/ffscouter_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/retals_controller.dart';

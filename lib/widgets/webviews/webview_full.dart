@@ -4621,7 +4621,7 @@ class WebViewFullState extends State<WebViewFull>
     _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
 
     final easyUrl = targetUrl.replaceAll('#', '');
-    if (easyUrl.contains('www.torn.com/travelagency.php')) {
+    if (easyUrl.contains('www.torn.com/travelagency.php') || easyUrl.contains('page.php?sid=travel')) {
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
 
