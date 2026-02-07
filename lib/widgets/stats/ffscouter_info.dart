@@ -161,6 +161,37 @@ class _FFScouterInfoDialogState extends State<FFScouterInfoDialog> {
                   ),
                   const SizedBox(height: 16),
 
+                  // --- TORN PDA INTEGRATION ---
+                  _sectionHeader("TORN PDA INTEGRATION"),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Prefer FFScouter battle score",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "When enabled, war/retal cards and profile checks will show the FFScouter battle score "
+                    "estimate (e.g. ~12.5M) in orange instead of the vague estimated range (e.g. 2M-25M) for "
+                    "unspied targets. The same value is used for sorting, filters (Total Stats slider), and SmartScore. "
+                    "Disabling this setting clears the local cache.",
+                    style: TextStyle(fontSize: 12, color: textColor),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Override old spies",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "When the 'Prefer FFScouter' option is active, a slider lets you choose a spy age threshold "
+                    "(1–12 months). If a target's spied stats are older than that threshold and FFScouter has a "
+                    "battle score estimate, the FFS value will replace the spied stats on the card. "
+                    "A small clock icon indicates the override. Sorting, filters, and SmartScore also use the "
+                    "FFS value in that case. Set to 'Off' to always keep spied stats regardless of age.",
+                    style: TextStyle(fontSize: 12, color: textColor),
+                  ),
+                  const SizedBox(height: 16),
+
                   // --- DEVELOPER ---
                   const Divider(),
                   const SizedBox(height: 8),

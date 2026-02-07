@@ -55,6 +55,7 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -777,6 +778,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     try {
       _settingsProvider.ffScouterEnabledStatusRemoteConfig = remoteConfig.getBool("ffscouter_enabled");
+      Get.find<FFScouterCacheController>().remoteConfigEnabled = _settingsProvider.ffScouterEnabledStatusRemoteConfig;
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
       _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");
@@ -1445,11 +1447,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
               message["body"] = message["body"].replaceAll("(tap to get a comparison with you)", "");
               int? begin = message["body"].indexOf("\n- Xanax");
-              int? last = message["body"].length;
-              message["body"] = message["body"].replaceRange(begin, last, "");
-              message["body"] += xanaxString;
-              message["body"] += refillsString;
-              message["body"] += drinksString;
+              if (begin != -1) {
+                // Preserve any lines after Drinks (e.g. FFS Battle Score, Fair Fight)
+                String remaining = "";
+                int drinksIdx = message["body"].indexOf("\n- Drinks (E):", begin);
+                if (drinksIdx != -1) {
+                  int afterDrinks = message["body"].indexOf("\n", drinksIdx + 1);
+                  if (afterDrinks != -1) {
+                    remaining = message["body"].substring(afterDrinks);
+                  }
+                }
+                message["body"] = message["body"].substring(0, begin);
+                message["body"] += xanaxString;
+                message["body"] += refillsString;
+                message["body"] += drinksString;
+                message["body"] += remaining;
+              }
             }
           }
         }

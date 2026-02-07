@@ -6184,7 +6184,7 @@ class WebViewFullState extends State<WebViewFull>
       final now = DateTime.now();
       final lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline! * 1000));
       if (lastOnlineDiff.inDays < 7) {
-        if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty) {
+        if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isNotEmpty) {
           extraInfo += "\n\n";
         }
         if (lastOnlineDiff.inHours < 1) {
@@ -6205,7 +6205,7 @@ class WebViewFullState extends State<WebViewFull>
     }
 
     // Do nothing if note is empty
-    if (_chainingPayload!.attackNotesList[_attackNumber]!.isEmpty &&
+    if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isEmpty &&
         !_chainingPayload!.showBlankNotes &&
         extraInfo.isEmpty) {
       return;
@@ -6225,7 +6225,7 @@ class WebViewFullState extends State<WebViewFull>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty)
+                  if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isNotEmpty)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -6242,13 +6242,13 @@ class WebViewFullState extends State<WebViewFull>
                         ),
                       ],
                     ),
-                  if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty) const SizedBox(height: 12),
+                  if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isNotEmpty) const SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          '${_chainingPayload!.attackNotesList[_attackNumber]}$extraInfo',
+                          '${_chainingPayload!.attackNotesList[_attackNumber] ?? ''}$extraInfo',
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: Colors.white),
                         ),

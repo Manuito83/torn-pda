@@ -659,6 +659,26 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// When true, FFScouter battle score estimates replace the vague estimated
+  /// stats range on war/retal cards and profile checks (for unspied targets).
+  bool _preferFFScouterOverEstimated = false;
+  bool get preferFFScouterOverEstimated => _preferFFScouterOverEstimated;
+  set preferFFScouterOverEstimated(bool value) {
+    _preferFFScouterOverEstimated = value;
+    Prefs().setPreferFFScouterOverEstimated(value);
+    notifyListeners();
+  }
+
+  /// 0 = Off. 1-12 = months. When > 0, FFS overrides spied stats if the spy
+  /// is older than this many months.
+  int _ffsOverrideSpyMonths = 0;
+  int get ffsOverrideSpyMonths => _ffsOverrideSpyMonths;
+  set ffsOverrideSpyMonths(int value) {
+    _ffsOverrideSpyMonths = value;
+    Prefs().setFfsOverrideSpyMonths(value);
+    notifyListeners();
+  }
+
   int _yataStatsEnabledStatus = 0;
   int get yataStatsEnabledStatus => _yataStatsEnabledStatus;
   set yataStatsEnabledStatus(int value) {
@@ -1541,6 +1561,8 @@ class SettingsProvider extends ChangeNotifier {
     _shareAttackOptions = await Prefs().getShareAttackOptions();
 
     _ffScouterEnabledStatus = await Prefs().getFFScouterEnabledStatus();
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
     _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
 
     //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();

@@ -57,6 +57,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
@@ -75,8 +76,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.12.0';
-const String androidCompilation = '618';
-const String iosCompilation = '618';
+const String androidCompilation = '619';
+const String iosCompilation = '619';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -699,6 +700,7 @@ Future<void> _initializeGetXControllers() async {
     Get.put(SpiesController(), permanent: true);
     Get.put(ApiCallerController(), permanent: true);
     Get.put(WarController(), permanent: true);
+    Get.put(FFScouterCacheController(), permanent: true);
     Get.put(StakeoutsController(), permanent: true);
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);

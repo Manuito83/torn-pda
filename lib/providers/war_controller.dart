@@ -23,6 +23,7 @@ import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
@@ -164,6 +165,11 @@ class WarController extends GetxController {
 
   String playerLocation = "";
 
+  // FFScouter cache integration
+  late final FFScouterCacheController _ffScouterCache;
+  bool _preferFFScouterOverEstimated = false;
+  int _ffsOverrideSpyMonths = 0;
+
   bool initialised = false;
   bool _initWithIntegrity = true;
   WarController({bool initWithIntegrity = true}) {
@@ -273,6 +279,11 @@ class WarController extends GetxController {
     member.isUpdating = true;
     update();
 
+    // Ensure FFScouter cache is fresh for this member (no-op if already cached)
+    if (_preferFFScouterOverEstimated && !_fullUpdateInProgress) {
+      await _ffScouterCache.ensureFresh([member.memberId!]);
+    }
+
     final String memberKey = member.memberId.toString();
     bool error = false;
 
@@ -361,24 +372,30 @@ class WarController extends GetxController {
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
         // if exact does not exist (-1)
         if (member.statsExactTotal == -1) {
-          switch (member.statsEstimated) {
-            case "< 2k":
-              member.statsSort = 2000;
-            case "2k - 25k":
-              member.statsSort = 25000;
-            case "20k - 250k":
-              member.statsSort = 250000;
-            case "200k - 2.5M":
-              member.statsSort = 2500000;
-            case "2M - 25M":
-              member.statsSort = 25000000;
-            case "20M - 250M":
-              member.statsSort = 200000000;
-            case "> 200M":
-              member.statsSort = 250000000;
-            default:
-              member.statsSort = 0;
-              break;
+          // Prefer FFScouter BS estimate for statsSort when available (more precise than range-based estimate)
+          final ffsEntry = _preferFFScouterOverEstimated ? _ffScouterCache.get(member.memberId!) : null;
+          if (ffsEntry != null && ffsEntry.bsEstimate != null) {
+            member.statsSort = ffsEntry.bsEstimate!.round();
+          } else {
+            switch (member.statsEstimated) {
+              case "< 2k":
+                member.statsSort = 2000;
+              case "2k - 25k":
+                member.statsSort = 25000;
+              case "20k - 250k":
+                member.statsSort = 250000;
+              case "200k - 2.5M":
+                member.statsSort = 2500000;
+              case "2M - 25M":
+                member.statsSort = 25000000;
+              case "20M - 250M":
+                member.statsSort = 200000000;
+              case "> 200M":
+                member.statsSort = 250000000;
+              default:
+                member.statsSort = 0;
+                break;
+            }
           }
         }
       } else {
@@ -499,6 +516,14 @@ class WarController extends GetxController {
     List<FactionModel> thisFactions = List.from(factions);
 
     _fullUpdateTotal = thisCards.length;
+
+    // Bulk prefetch FFScouter BS estimates for all visible members (stale/missing only)
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
+    if (_preferFFScouterOverEstimated) {
+      final allMemberIds = thisCards.where((c) => c.memberId != null).map((c) => c.memberId!).toList();
+      await _ffScouterCache.ensureFresh(allMemberIds);
+    }
 
     // Process with limited concurrency and shared rate limiter to avoid bursts/rate limits
     int index = 0;
@@ -971,6 +996,10 @@ class WarController extends GetxController {
     _statsShareShowEstimatesIfNoSpyAvailable = await Prefs().getStatsShareShowEstimatesIfNoSpyAvailable();
     _statsShareIncludeTargetsWithNoStatsAvailable = await Prefs().getStatsShareIncludeTargetsWithNoStatsAvailable();
 
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
+    _ffScouterCache = Get.find<FFScouterCacheController>();
+
     warSettings = await Prefs().getWarSettings();
 
     // Get sorting
@@ -1032,6 +1061,26 @@ class WarController extends GetxController {
 
     initialised = true;
     update();
+
+    // Trigger initial FFScouter cache population for all existing members
+    if (_preferFFScouterOverEstimated && factions.isNotEmpty) {
+      final allIds = <int>[];
+      for (final f in factions) {
+        if (f.members != null) {
+          for (final key in f.members!.keys) {
+            final id = int.tryParse(key);
+            if (id != null) allIds.add(id);
+          }
+        }
+      }
+      if (allIds.isNotEmpty) {
+        _ffScouterCache.ensureFresh(allIds).then((fetched) {
+          if (fetched > 0) {
+            update(); // Rebuild cards so they pick up cached data
+          }
+        });
+      }
+    }
   }
 
   void savePreferences() {
@@ -1435,12 +1484,16 @@ class WarController extends GetxController {
         for (var m in faction.members!.values) {
           if (m == null) continue;
 
-          // Estimated
+          // Estimated (prefer FFS if available)
           double e = getMemberEstimatedStats(m);
+          if (e <= 0 && _preferFFScouterOverEstimated && m.memberId != null) {
+            final ffs = _ffScouterCache.get(m.memberId!);
+            if (ffs != null && ffs.bsEstimate != null) e = ffs.bsEstimate!.toDouble();
+          }
           if (e > 0) est.add(e);
 
-          // Total Stats
-          double s = getMemberTotalStats(m);
+          // Total Stats (including FFS fallback)
+          double s = getMemberTotalStatsWithFFS(m);
           if (s > 0) stats.add(s);
 
           // Individual
@@ -1514,9 +1567,49 @@ class WarController extends GetxController {
     return getSmartScoreDetails(member)['total']!;
   }
 
+  /// Returns true when the member has spied stats BUT the spy is older than
+  /// the user-configured threshold ([_ffsOverrideSpyMonths]), and a fresh FFS
+  /// cache entry exists. In that case callers should prefer the FFS value.
+  bool _shouldFfsOverrideSpy(Member member) {
+    if (_ffsOverrideSpyMonths <= 0) return false;
+    if (!_preferFFScouterOverEstimated) return false;
+    // Must have spied stats to consider overriding
+    if (member.statsExactTotal == null || member.statsExactTotal == -1) return false;
+    // Need a valid spy timestamp
+    final ts = member.statsExactUpdated;
+    if (ts == null || ts <= 0) return false;
+    // Compute age in months (same logic as SpiesController.statsOld)
+    final spyDate = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+    final ageDays = DateTime.now().difference(spyDate).inDays;
+    final ageMonths = ageDays ~/ 30;
+    if (ageMonths < _ffsOverrideSpyMonths) return false;
+    // Finally check that we actually have FFS data
+    if (member.memberId == null) return false;
+    final ffs = _ffScouterCache.get(member.memberId!);
+    return ffs != null && ffs.bsEstimate != null;
+  }
+
   double getMemberTotalStats(Member member) {
     if (member.statsExactTotal != null && member.statsExactTotal != -1) {
       return member.statsExactTotal!.toDouble();
+    }
+    return 0.0;
+  }
+
+  /// Like [getMemberTotalStats] but falls back to the FFScouter BS estimate.
+  /// Also returns FFS when spied stats exist but are too old (spy age threshold).
+  /// Used for the "Total Stats (Spied/FFS)" filter and its slider range.
+  double getMemberTotalStatsWithFFS(Member member) {
+    // If spied stats exist but spy is too old, prefer FFS
+    if (_shouldFfsOverrideSpy(member)) {
+      final ffs = _ffScouterCache.get(member.memberId!);
+      return ffs!.bsEstimate!.toDouble();
+    }
+    final spied = getMemberTotalStats(member);
+    if (spied > 0) return spied;
+    if (_preferFFScouterOverEstimated && member.memberId != null) {
+      final ffs = _ffScouterCache.get(member.memberId!);
+      if (ffs != null && ffs.bsEstimate != null) return ffs.bsEstimate!.toDouble();
     }
     return 0.0;
   }
@@ -1551,6 +1644,12 @@ class WarController extends GetxController {
 
   /// Returns stats for sorting with grouping: 0 exact (total or partial), 1 estimate, 2 unknown
   ({int group, double value}) getMemberStatsForSorting(Member member) {
+    // If spied but too old and FFS available, use FFS (group 1 = estimate)
+    if (_shouldFfsOverrideSpy(member)) {
+      final ffs = _ffScouterCache.get(member.memberId!);
+      return (group: 1, value: ffs!.bsEstimate!.toDouble());
+    }
+
     final double exact = getMemberTotalStats(member);
     if (exact > 0) return (group: 0, value: exact);
 
@@ -1559,6 +1658,14 @@ class WarController extends GetxController {
 
     final double estimated = getMemberEstimatedStats(member);
     if (estimated > 0) return (group: 1, value: estimated);
+
+    // FFScouter BS estimate as fallback for sorting (still an estimate → group 1)
+    if (_preferFFScouterOverEstimated && member.memberId != null) {
+      final ffsEntry = _ffScouterCache.get(member.memberId!);
+      if (ffsEntry != null && ffsEntry.bsEstimate != null) {
+        return (group: 1, value: ffsEntry.bsEstimate!.toDouble());
+      }
+    }
 
     return (group: 2, value: 0.0);
   }
@@ -1671,18 +1778,20 @@ class WarController extends GetxController {
     double lifeContribution = calcContribution(lifeScore, warSettings.weightLife);
     score += lifeContribution;
 
-    // Estimated Stats
+    // Estimated Stats (with FFS fallback)
     double? estimatedStatsScore;
-    if (member.statsEstimated != null && member.statsEstimated!.isNotEmpty) {
-      double val = getMemberEstimatedStats(member);
-      if (val > 0) {
-        estimatedStatsScore = calcLogScore(val, 'Estimated');
-      }
+    double estimatedVal = getMemberEstimatedStats(member);
+    if (estimatedVal <= 0 && _preferFFScouterOverEstimated && member.memberId != null) {
+      final ffs = _ffScouterCache.get(member.memberId!);
+      if (ffs != null && ffs.bsEstimate != null) estimatedVal = ffs.bsEstimate!.toDouble();
+    }
+    if (estimatedVal > 0) {
+      estimatedStatsScore = calcLogScore(estimatedVal, 'Estimated');
     }
     double estimatedStatsContribution = calcContribution(estimatedStatsScore, warSettings.weightEstimatedStats);
     score += estimatedStatsContribution;
 
-    // Spied stats
+    // Spied stats (with FFS fallback)
     double statsContribution = 0.0;
     double strContribution = 0.0;
     double defContribution = 0.0;
@@ -1690,7 +1799,7 @@ class WarController extends GetxController {
     double dexContribution = 0.0;
 
     double? statsScore;
-    double totalStatsVal = getMemberTotalStats(member);
+    double totalStatsVal = getMemberTotalStatsWithFFS(member);
     if (totalStatsVal > 0) {
       statsScore = calcLogScore(totalStatsVal, 'Stats');
     }

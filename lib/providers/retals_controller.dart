@@ -15,7 +15,9 @@ import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 
@@ -37,6 +39,9 @@ class RetalsController extends GetxController {
 
   List<String> lastAttackedTargets = [];
 
+  // FFScouter cache integration
+  late final FFScouterCacheController _ffScouterCache = Get.find<FFScouterCacheController>();
+
   Future<Retal?> getInfoForNewRetal(String retalId, {dynamic allAttacks, dynamic ownStats}) async {
     final retal = Retal(lastAction: LastAction(), status: Status());
 
@@ -48,6 +53,15 @@ class RetalsController extends GetxController {
 
     final String retalKey = retalId;
     bool error = false;
+
+    // Ensure FFScouter cache is fresh for this retal
+    final preferFFS = await Prefs().getPreferFFScouterOverEstimated();
+    if (preferFFS) {
+      final retalIdInt = int.tryParse(retalKey);
+      if (retalIdInt != null) {
+        await _ffScouterCache.ensureFresh([retalIdInt]);
+      }
+    }
 
     // Perform update
     try {
@@ -109,25 +123,46 @@ class RetalsController extends GetxController {
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
         // if exact does not exist (-1)
-        if (retal.statsExactTotal == -1) {
-          switch (retal.statsEstimated) {
-            case "< 2k":
-              retal.statsSort = 2000;
-            case "2k - 25k":
-              retal.statsSort = 25000;
-            case "20k - 250k":
-              retal.statsSort = 250000;
-            case "200k - 2.5M":
-              retal.statsSort = 2500000;
-            case "2M - 25M":
-              retal.statsSort = 25000000;
-            case "20M - 250M":
-              retal.statsSort = 200000000;
-            case "> 200M":
-              retal.statsSort = 250000000;
-            default:
-              retal.statsSort = 0;
-              break;
+        bool useFFSForSort = retal.statsExactTotal == -1;
+        // Also use FFS if spy is too old (spy age override)
+        if (!useFFSForSort) {
+          final overrideMonths = await Prefs().getFfsOverrideSpyMonths();
+          if (overrideMonths > 0) {
+            final ts = retal.statsExactUpdated;
+            if (ts != null && ts > 0) {
+              final ageDays = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(ts * 1000)).inDays;
+              if (ageDays ~/ 30 >= overrideMonths) {
+                useFFSForSort = true;
+              }
+            }
+          }
+        }
+        if (useFFSForSort) {
+          // Prefer FFScouter BS estimate for statsSort when available
+          final preferFFS = await Prefs().getPreferFFScouterOverEstimated();
+          final ffsEntry = preferFFS ? _ffScouterCache.get(int.parse(retalKey)) : null;
+          if (ffsEntry != null && ffsEntry.bsEstimate != null) {
+            retal.statsSort = ffsEntry.bsEstimate!.round();
+          } else {
+            switch (retal.statsEstimated) {
+              case "< 2k":
+                retal.statsSort = 2000;
+              case "2k - 25k":
+                retal.statsSort = 25000;
+              case "20k - 250k":
+                retal.statsSort = 250000;
+              case "200k - 2.5M":
+                retal.statsSort = 2500000;
+              case "2M - 25M":
+                retal.statsSort = 25000000;
+              case "20M - 250M":
+                retal.statsSort = 200000000;
+              case "> 200M":
+                retal.statsSort = 250000000;
+              default:
+                retal.statsSort = 0;
+                break;
+            }
           }
         }
       } else {

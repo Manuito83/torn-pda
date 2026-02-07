@@ -169,14 +169,16 @@ class FFScouterPageState extends State<FFScouterPage> {
           : null,
       body: Container(
         color: _themeProvider.canvas,
-        child: _settingsProvider.ffScouterEnabledStatus != 1
-            ? _buildConsentScreen()
-            : Column(
-                children: [
-                  _buildFiltersSection(),
-                  Expanded(child: _buildResultsSection()),
-                ],
-              ),
+        child: !_settingsProvider.ffScouterEnabledStatusRemoteConfig
+            ? _buildRemoteDisabledScreen()
+            : _settingsProvider.ffScouterEnabledStatus != 1
+                ? _buildConsentScreen()
+                : Column(
+                    children: [
+                      _buildFiltersSection(),
+                      Expanded(child: _buildResultsSection()),
+                    ],
+                  ),
       ),
     );
   }
@@ -280,6 +282,32 @@ class FFScouterPageState extends State<FFScouterPage> {
               },
               icon: const Icon(Icons.info_outline, size: 18),
               label: const Text("Review & Enable"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRemoteDisabledScreen() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off, color: Colors.grey[400], size: 50),
+            const SizedBox(height: 16),
+            Text(
+              "FFScouter temporarily deactivated",
+              style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "This feature is temporarily disabled. Please try again later.",
+              style: TextStyle(color: Colors.grey[500], fontSize: 13),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

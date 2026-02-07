@@ -78,6 +78,10 @@ class Prefs {
   final String _kTargetFinderSectionEnabled = "pda_targetFinderSectionEnabled";
   final String _kFFScouterTargetsCache = "pda_ffScouterTargetsCache";
   final String _kFFScouterFilters = "pda_ffScouterFilters";
+  final String _kFFScouterStatsCache = "pda_ffScouterStatsCache";
+  final String _kPreferFFScouterOverEstimated = "pda_preferFFScouterOverEstimated";
+  final String _kFfsOverrideSpyMonths = "pda_ffsOverrideSpyMonths";
+  final String _kFactionAssistPrefs = "pda_factionAssistPrefs";
 
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
@@ -3134,6 +3138,32 @@ class Prefs {
     return await PrefsDatabase.setString(_kFFScouterFilters, value);
   }
 
+  Future<String> getFFScouterStatsCache() async {
+    return await PrefsDatabase.getString(_kFFScouterStatsCache, "");
+  }
+
+  Future setFFScouterStatsCache(String value) async {
+    return await PrefsDatabase.setString(_kFFScouterStatsCache, value);
+  }
+
+  Future<bool> getPreferFFScouterOverEstimated() async {
+    return await PrefsDatabase.getBool(_kPreferFFScouterOverEstimated, false);
+  }
+
+  Future setPreferFFScouterOverEstimated(bool value) async {
+    return await PrefsDatabase.setBool(_kPreferFFScouterOverEstimated, value);
+  }
+
+  /// 0 = Off (FFS never overrides spied). 1-12 = months threshold.
+  /// When set, FFS replaces spied stats on cards if the spy is older than X months.
+  Future<int> getFfsOverrideSpyMonths() async {
+    return await PrefsDatabase.getInt(_kFfsOverrideSpyMonths, 0);
+  }
+
+  Future setFfsOverrideSpyMonths(int value) async {
+    return await PrefsDatabase.setInt(_kFfsOverrideSpyMonths, value);
+  }
+
   /// ---------------------
   /// TORNSTATS STATS CHART
   /// ---------------------
@@ -4354,5 +4384,23 @@ class Prefs {
 
   Future setPlayerNotesMigrationCompleted(bool completed) async {
     return await PrefsDatabase.setBool(_kPlayerNotesMigrationCompleted, completed);
+  }
+
+  /// ----------------------------
+  /// Methods for FACTION ASSIST checkbox prefs
+  /// ----------------------------
+  Future<Map<String, bool>> getFactionAssistPrefs() async {
+    final raw = await PrefsDatabase.getString(_kFactionAssistPrefs, "");
+    if (raw.isEmpty) return {};
+    try {
+      final map = Map<String, dynamic>.from(jsonDecode(raw));
+      return map.map((k, v) => MapEntry(k, v as bool));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future setFactionAssistPrefs(Map<String, bool> prefs) async {
+    return await PrefsDatabase.setString(_kFactionAssistPrefs, jsonEncode(prefs));
   }
 }

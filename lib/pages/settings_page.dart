@@ -63,6 +63,7 @@ import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:vibration/vibration.dart';
 
@@ -1423,6 +1424,94 @@ class SettingsPageState extends State<SettingsPage> {
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
               ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // FFScouter: prefer BS estimates over range-based estimates
+    if (_settingsProvider.ffScouterEnabledStatusRemoteConfig && _settingsProvider.ffScouterEnabledStatus == 1) {
+      rows.add(
+        SearchableRow(
+          label: "Prefer FFScouter battle score",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Text("Prefer FFScouter battle score"),
+                    ),
+                    Switch(
+                      value: _settingsProvider.preferFFScouterOverEstimated,
+                      onChanged: (enabled) {
+                        setState(() {
+                          _settingsProvider.preferFFScouterOverEstimated = enabled;
+                          if (!enabled) {
+                            Get.find<FFScouterCacheController>().clearCache();
+                          }
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'When enabled, war/retal cards and profile checks will show the FFScouter battle score '
+                  'estimate (~12.5M) instead of the vague range (2M-25M) for unspied targets. '
+                  'Disabling this clears the cache.',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                if (_settingsProvider.preferFFScouterOverEstimated) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _settingsProvider.ffsOverrideSpyMonths == 0
+                              ? "Override old spies: Off"
+                              : "Override spies older than ${_settingsProvider.ffsOverrideSpyMonths} month${_settingsProvider.ffsOverrideSpyMonths == 1 ? '' : 's'}",
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _settingsProvider.ffsOverrideSpyMonths.toDouble(),
+                    min: 0,
+                    max: 12,
+                    divisions: 12,
+                    label: _settingsProvider.ffsOverrideSpyMonths == 0
+                        ? "Off"
+                        : "${_settingsProvider.ffsOverrideSpyMonths}m",
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.ffsOverrideSpyMonths = value.round();
+                      });
+                    },
+                  ),
+                  Text(
+                    'When set, FFS will replace spied stats on cards if the spy is older '
+                    'than the selected number of months. Sorting, filters, and SmartScore '
+                    'will also use FFS in that case.',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),

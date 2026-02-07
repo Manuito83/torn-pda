@@ -762,7 +762,7 @@ class WarPageState extends State<WarPage> {
               if (faction.members != null) {
                 for (var member in faction.members!.values) {
                   if (member == null) continue;
-                  double total = w.getMemberTotalStats(member);
+                  double total = w.getMemberTotalStatsWithFFS(member);
                   if (total > maxS) maxS = total;
                   if (member.statsStr != null && member.statsStr! > maxStr) maxStr = member.statsStr!.toDouble();
                   if (member.statsDef != null && member.statsDef! > maxDef) maxDef = member.statsDef!.toDouble();
@@ -1816,7 +1816,7 @@ class WarTargetsListState extends State<WarTargetsList> {
 
         // Stats Filters
         if (settings.statsRange != null) {
-          double totalStats = widget.warController.getMemberTotalStats(thisMember);
+          double totalStats = widget.warController.getMemberTotalStatsWithFFS(thisMember);
           if (totalStats < settings.statsRange!.start || totalStats > settings.statsRange!.end) {
             continue;
           }
