@@ -49,17 +49,25 @@ class FFScouterCacheController extends GetxController {
   // Public API
   // ---------------------------------------------------------------------------
 
-  /// Returns the cached entry for [playerId], or null if not available.
+  /// Returns the cached entry for [playerId], or null if no data available.
   /// Returns null when [remoteConfigEnabled] is false (kill-switch).
+  /// Returns stale entries — age only controls re-fetch via [ensureFresh].
   FFScouterCacheEntry? get(int playerId) {
     if (!remoteConfigEnabled) return null;
     final entry = _cache[playerId];
-    if (entry != null && entry.isFresh) return entry;
+    if (entry != null && entry.hasData) return entry;
     return null;
   }
 
-  /// Returns true if we have a fresh cache entry for [playerId].
-  bool hasFresh(int playerId) => get(playerId) != null;
+  /// Returns true if we have a **fresh** (< 24h) cache entry for [playerId].
+  /// Used by [ensureFresh] to decide which IDs need re-fetching.
+  /// N/A entries (no useful data) are still considered fresh so we don't
+  /// re-fetch them repeatedly — they will be retried after 24h.
+  bool hasFresh(int playerId) {
+    if (!remoteConfigEnabled) return false;
+    final entry = _cache[playerId];
+    return entry != null && entry.isFresh;
+  }
 
   /// Ensures all [playerIds] have fresh cache entries.
   /// Fetches only the stale/missing ones in bulk (chunks of 205).
@@ -170,7 +178,9 @@ class FFScouterCacheController extends GetxController {
       final List<dynamic> decoded = json.decode(raw);
       for (final item in decoded) {
         final entry = FFScouterCacheEntry.fromJson(item);
-        if (entry.isFresh) {
+        // Keep entries with data (any age, for stale display) and
+        // N/A entries while fresh (prevent pointless re-fetches).
+        if (entry.hasData || entry.isFresh) {
           _cache[entry.playerId] = entry;
         }
       }
@@ -179,7 +189,8 @@ class FFScouterCacheController extends GetxController {
 
   Future<void> _saveCache() async {
     try {
-      final entries = _cache.values.where((e) => e.isFresh).toList();
+      // Persist entries with data (any age) and N/A entries while fresh.
+      final entries = _cache.values.where((e) => e.hasData || e.isFresh).toList();
       final encoded = json.encode(entries.map((e) => e.toJson()).toList());
       await Prefs().setFFScouterStatsCache(encoded);
     } catch (_) {}

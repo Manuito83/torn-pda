@@ -732,22 +732,23 @@ class WarCardState extends State<WarCard> {
       final prefEnabled = _settingsProvider.preferFFScouterOverEstimated;
       final ffsEntry = prefEnabled ? _ffScouterCache.get(_member.memberId!) : null;
       if (ffsEntry != null) {
+        final ffsColor = ffsEntry.ffsColor(UserHelper.totalStats);
         return Row(
           children: [
             Text(
               "(FFS)",
-              style: TextStyle(fontSize: 11, color: Colors.deepOrange[400]),
+              style: TextStyle(fontSize: 11, color: ffsColor),
             ),
             const SizedBox(width: 5),
             Text(
               "~${ffsEntry.displayText}",
-              style: TextStyle(fontSize: 11, color: Colors.deepOrange[400]),
+              style: TextStyle(fontSize: 11, color: ffsColor),
             ),
             const SizedBox(width: 5),
             GestureDetector(
               child: Icon(
                 Icons.info_outline,
-                color: Colors.deepOrange[400],
+                color: ffsColor,
                 size: 16,
               ),
               onTap: () {
@@ -777,6 +778,7 @@ class WarCardState extends State<WarCard> {
                         otherFactionName: _member.factionName ?? '',
                         otherLastActionRelative: _member.lastAction?.relative ?? '',
                         themeProvider: _themeProvider,
+                        estimatedStatsRange: _member.statsEstimated ?? '',
                       ),
                       ffScouterStatsPayload:
                           _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
@@ -931,25 +933,26 @@ class WarCardState extends State<WarCard> {
           if (ageMonths >= overrideMonths) {
             final ffsCheck = _ffScouterCache.get(_member.memberId!);
             if (ffsCheck != null && ffsCheck.bsEstimate != null) {
+              final ffsColor = ffsCheck.ffsColor(UserHelper.totalStats);
               return Row(
                 children: [
                   Text(
                     "(FFS)",
-                    style: TextStyle(fontSize: 11, color: Colors.deepOrange[400]),
+                    style: TextStyle(fontSize: 11, color: ffsColor),
                   ),
                   const SizedBox(width: 5),
                   Text(
                     "~${ffsCheck.displayText}",
-                    style: TextStyle(fontSize: 11, color: Colors.deepOrange[400]),
+                    style: TextStyle(fontSize: 11, color: ffsColor),
                   ),
                   const SizedBox(width: 3),
                   Tooltip(
                     message: "Spy is $ageMonths month${ageMonths == 1 ? '' : 's'} old",
-                    child: Icon(Icons.history, size: 14, color: Colors.deepOrange[300]),
+                    child: Icon(Icons.history, size: 14, color: ffsColor),
                   ),
                   const SizedBox(width: 3),
                   GestureDetector(
-                    child: Icon(Icons.info_outline, color: Colors.deepOrange[400], size: 16),
+                    child: Icon(Icons.info_outline, color: ffsColor, size: 16),
                     onTap: () {
                       showDialog<void>(
                         context: context,
@@ -995,6 +998,7 @@ class WarCardState extends State<WarCard> {
                               otherFactionName: _member.factionName ?? '',
                               otherLastActionRelative: _member.lastAction?.relative ?? '',
                               themeProvider: _themeProvider,
+                              estimatedStatsRange: _member.statsEstimated ?? '',
                             ),
                             ffScouterStatsPayload:
                                 _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
@@ -1102,6 +1106,7 @@ class WarCardState extends State<WarCard> {
                     otherFactionName: _member.factionName ?? '',
                     otherLastActionRelative: _member.lastAction?.relative ?? '',
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _member.statsEstimated ?? '',
                   );
 
                   final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
@@ -1125,6 +1130,7 @@ class WarCardState extends State<WarCard> {
       final ffsEntry = prefEnabled ? _ffScouterCache.get(_member.memberId!) : null;
       final String statsLabel = ffsEntry != null ? "(FFS)" : "(EST)";
       final String statsValue = ffsEntry != null ? "~${ffsEntry.displayText}" : _member.statsEstimated!;
+      final Color? ffsColor = ffsEntry?.ffsColor(UserHelper.totalStats);
 
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1133,7 +1139,7 @@ class WarCardState extends State<WarCard> {
             statsLabel,
             style: TextStyle(
               fontSize: 11,
-              color: ffsEntry != null ? Colors.deepOrange[400] : null,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
@@ -1141,7 +1147,7 @@ class WarCardState extends State<WarCard> {
             statsValue,
             style: TextStyle(
               fontSize: 11,
-              color: ffsEntry != null ? Colors.deepOrange[400] : null,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
@@ -1175,6 +1181,7 @@ class WarCardState extends State<WarCard> {
                     otherFactionName: _member.factionName ?? '',
                     otherLastActionRelative: _member.lastAction?.relative ?? '',
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _member.statsEstimated ?? '',
                   );
 
                   final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
@@ -1197,14 +1204,15 @@ class WarCardState extends State<WarCard> {
       final prefEnabledFallback = _settingsProvider.preferFFScouterOverEstimated;
       final ffsEntryFallback = prefEnabledFallback ? _ffScouterCache.get(_member.memberId!) : null;
       if (ffsEntryFallback != null) {
+        final ffsColor = ffsEntryFallback.ffsColor(UserHelper.totalStats);
         return Row(
           children: [
-            Text("(FFS)", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+            Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
             const SizedBox(width: 5),
-            Text("~${ffsEntryFallback.displayText}", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+            Text("~${ffsEntryFallback.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
             const SizedBox(width: 5),
             GestureDetector(
-              child: Icon(Icons.info_outline, color: Colors.deepOrange[400], size: 16),
+              child: Icon(Icons.info_outline, color: ffsColor, size: 16),
               onTap: () {
                 showDialog<void>(
                   context: context,
@@ -1229,6 +1237,7 @@ class WarCardState extends State<WarCard> {
                         otherFactionName: _member.factionName ?? '',
                         otherLastActionRelative: _member.lastAction?.relative ?? '',
                         themeProvider: _themeProvider,
+                        estimatedStatsRange: _member.statsEstimated ?? '',
                       ),
                       ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
                           ? FFScouterStatsPayload(targetId: _member.memberId!)

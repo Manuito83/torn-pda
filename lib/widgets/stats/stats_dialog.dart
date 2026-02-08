@@ -67,6 +67,7 @@ class EstimatedStatsPayload {
     required this.otherFactionName,
     required this.otherLastActionRelative,
     required this.themeProvider,
+    this.estimatedStatsRange = '',
   });
 
   final int xanaxCompare;
@@ -86,6 +87,7 @@ class EstimatedStatsPayload {
   final String otherFactionName;
   final String otherLastActionRelative;
   final ThemeProvider themeProvider;
+  final String estimatedStatsRange;
 }
 
 class FFScouterStatsPayload {

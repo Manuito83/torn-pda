@@ -825,25 +825,26 @@ class RetalCardState extends State<RetalCard> {
           if (ageMonths >= overrideMonths) {
             final ffsEntry = _ffScouterCache.get(_retal!.retalId!);
             if (ffsEntry != null && ffsEntry.bsEstimate != null) {
+              final ffsColor = ffsEntry.ffsColor(UserHelper.totalStats);
               return Row(
                 children: [
                   Text(
                     "(FFS)",
-                    style: TextStyle(fontSize: 11, color: Colors.deepOrange[400]),
+                    style: TextStyle(fontSize: 11, color: ffsColor),
                   ),
                   const SizedBox(width: 5),
                   Text(
                     "~${ffsEntry.displayText}",
-                    style: TextStyle(fontSize: 11, color: Colors.deepOrange[400]),
+                    style: TextStyle(fontSize: 11, color: ffsColor),
                   ),
                   const SizedBox(width: 3),
                   Tooltip(
                     message: "Spy is $ageMonths month${ageMonths == 1 ? '' : 's'} old",
-                    child: Icon(Icons.history, size: 14, color: Colors.deepOrange[300]),
+                    child: Icon(Icons.history, size: 14, color: ffsColor),
                   ),
                   const SizedBox(width: 3),
                   GestureDetector(
-                    child: Icon(Icons.info_outline, color: Colors.deepOrange[400], size: 16),
+                    child: Icon(Icons.info_outline, color: ffsColor, size: 16),
                     onTap: () {
                       showDialog<void>(
                         context: context,
@@ -889,6 +890,7 @@ class RetalCardState extends State<RetalCard> {
                               otherFactionName: _retal!.factionName!,
                               otherLastActionRelative: _retal!.lastAction.relative!,
                               themeProvider: _themeProvider,
+                              estimatedStatsRange: _retal!.statsEstimated,
                             ),
                             ffScouterStatsPayload:
                                 _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
@@ -996,6 +998,7 @@ class RetalCardState extends State<RetalCard> {
                     otherFactionName: _retal!.factionName!,
                     otherLastActionRelative: _retal!.lastAction.relative!,
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _retal!.statsEstimated,
                   );
 
                   final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _retal!.retalId!);
@@ -1019,14 +1022,15 @@ class RetalCardState extends State<RetalCard> {
         final ffsEntryNoComp =
             _settingsProvider.preferFFScouterOverEstimated ? _ffScouterCache.get(_retal!.retalId!) : null;
         if (ffsEntryNoComp != null) {
+          final ffsColor = ffsEntryNoComp.ffsColor(UserHelper.totalStats);
           return Row(
             children: [
-              Text("(FFS)", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+              Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
               const SizedBox(width: 5),
-              Text("~${ffsEntryNoComp.displayText}", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+              Text("~${ffsEntryNoComp.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
               const SizedBox(width: 5),
               GestureDetector(
-                child: Icon(Icons.info_outline, color: Colors.deepOrange[400], size: 16),
+                child: Icon(Icons.info_outline, color: ffsColor, size: 16),
                 onTap: () {
                   showDialog<void>(
                     context: context,
@@ -1051,6 +1055,7 @@ class RetalCardState extends State<RetalCard> {
                           otherFactionName: _retal!.factionName!,
                           otherLastActionRelative: _retal!.lastAction.relative!,
                           themeProvider: _themeProvider,
+                          estimatedStatsRange: _retal!.statsEstimated,
                         ),
                         ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
                             ? FFScouterStatsPayload(targetId: _retal!.retalId!)
@@ -1079,6 +1084,7 @@ class RetalCardState extends State<RetalCard> {
       final ffsEntry = _settingsProvider.preferFFScouterOverEstimated ? _ffScouterCache.get(_retal!.retalId!) : null;
       final String statsLabel = ffsEntry != null ? "(FFS)" : "(EST)";
       final String statsValue = ffsEntry != null ? "~${ffsEntry.displayText}" : _retal!.statsEstimated;
+      final Color? ffsColor = ffsEntry?.ffsColor(UserHelper.totalStats);
 
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1087,7 +1093,7 @@ class RetalCardState extends State<RetalCard> {
             statsLabel,
             style: TextStyle(
               fontSize: 11,
-              color: ffsEntry != null ? Colors.deepOrange[400] : null,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
@@ -1095,7 +1101,7 @@ class RetalCardState extends State<RetalCard> {
             statsValue,
             style: TextStyle(
               fontSize: 11,
-              color: ffsEntry != null ? Colors.deepOrange[400] : null,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
@@ -1129,6 +1135,7 @@ class RetalCardState extends State<RetalCard> {
                     otherFactionName: _retal!.factionName!,
                     otherLastActionRelative: _retal!.lastAction.relative!,
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _retal!.statsEstimated,
                   );
 
                   final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _retal!.retalId!);
@@ -1151,14 +1158,15 @@ class RetalCardState extends State<RetalCard> {
       final ffsEntryFallback =
           _settingsProvider.preferFFScouterOverEstimated ? _ffScouterCache.get(_retal!.retalId!) : null;
       if (ffsEntryFallback != null) {
+        final ffsColor = ffsEntryFallback.ffsColor(UserHelper.totalStats);
         return Row(
           children: [
-            Text("(FFS)", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+            Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
             const SizedBox(width: 5),
-            Text("~${ffsEntryFallback.displayText}", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+            Text("~${ffsEntryFallback.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
             const SizedBox(width: 5),
             GestureDetector(
-              child: Icon(Icons.info_outline, color: Colors.deepOrange[400], size: 16),
+              child: Icon(Icons.info_outline, color: ffsColor, size: 16),
               onTap: () {
                 showDialog<void>(
                   context: context,
@@ -1183,6 +1191,7 @@ class RetalCardState extends State<RetalCard> {
                         otherFactionName: _retal!.factionName!,
                         otherLastActionRelative: _retal!.lastAction.relative!,
                         themeProvider: _themeProvider,
+                        estimatedStatsRange: _retal!.statsEstimated,
                       ),
                       ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
                           ? FFScouterStatsPayload(targetId: _retal!.retalId!)

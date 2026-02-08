@@ -802,6 +802,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       if (spyTooOldForFFS) {
         // Show FFS instead of old spied stats
         final ffsEntry = Get.find<FFScouterCacheController>().get(otherProfile.id!);
+        final ffsColor = ffsEntry!.ffsColor(UserHelper.totalStats);
         _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
@@ -812,13 +813,13 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 Flexible(
                   child: Row(
                     children: [
-                      Text("(FFS)", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+                      Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
                       const SizedBox(width: 5),
-                      Text("~${ffsEntry!.displayText}", style: TextStyle(fontSize: 11, color: Colors.deepOrange[400])),
+                      Text("~${ffsEntry.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
                       const SizedBox(width: 3),
                       Tooltip(
                         message: "Spy age exceeds threshold",
-                        child: Icon(Icons.history, size: 14, color: Colors.deepOrange[300]),
+                        child: Icon(Icons.history, size: 14, color: ffsColor),
                       ),
                     ],
                   ),
@@ -827,7 +828,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: GestureDetector(
-                    child: Icon(Icons.info_outline, color: Colors.deepOrange[400], size: 18),
+                    child: Icon(Icons.info_outline, color: ffsColor, size: 18),
                     onTap: () {
                       showWebviewDialog<void>(
                         context: context,
@@ -872,6 +873,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               otherFactionName: otherProfile.factionName ?? '',
                               otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                               themeProvider: widget.themeProvider!,
+                              estimatedStatsRange: estimatedStats,
                             ),
                             ffScouterStatsPayload:
                                 _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
@@ -1115,6 +1117,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                   otherFactionName: otherProfile.factionName ?? '',
                                   otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                                   themeProvider: widget.themeProvider!,
+                                  estimatedStatsRange: estimatedStats,
                                 );
 
                                 final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
@@ -1154,7 +1157,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 : null;
             final String statsLabel = ffsEntry != null ? "(FFS)" : (npc ? "" : "(EST)");
             final String statsValue = ffsEntry != null ? "~${ffsEntry.displayText}" : estimatedStats;
-            final Color? statsColor = ffsEntry != null ? Colors.deepOrange[400] : Colors.white;
+            final Color statsColor = ffsEntry?.ffsColor(UserHelper.totalStats) ?? Colors.white;
 
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1225,6 +1228,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               otherFactionName: otherProfile.factionName ?? '',
                               otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                               themeProvider: widget.themeProvider!,
+                              estimatedStatsRange: estimatedStats,
                             );
 
                             final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
