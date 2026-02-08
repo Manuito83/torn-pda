@@ -72,23 +72,23 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
 
       if (result.success && result.data != null && result.data!.isNotEmpty) {
         final stats = result.data!.first;
-        _ffScouterDetails = "FFScouter:";
+        final hasBs = stats.bsEstimate != null && stats.bsEstimate! > 0;
+        final hasFf = stats.fairFight != null;
 
-        if (stats.bsEstimate != null) {
-          _ffScouterDetails = "$_ffScouterDetails BS Est ${formatBigNumbers(stats.bsEstimate!)}";
-        }
+        if (hasBs || hasFf) {
+          final parts = <String>[];
+          if (hasBs) parts.add("BS Est ${formatBigNumbers(stats.bsEstimate!)}");
+          if (hasFf) parts.add("FF ${stats.fairFight!.toStringAsFixed(2)}");
+          _ffScouterDetails = "FFScouter: ${parts.join(', ')}";
 
-        if (stats.fairFight != null) {
-          _ffScouterDetails = "$_ffScouterDetails, FF ${stats.fairFight!.toStringAsFixed(2)}";
-        }
-
-        if (stats.lastUpdated != null) {
-          final updatedDate = DateTime.fromMillisecondsSinceEpoch(stats.lastUpdated! * 1000);
-          final dateDiff = DateTime.now().difference(updatedDate);
-          final dateDiffText = dateDiff.inDays < 31
-              ? '${dateDiff.inDays} day${dateDiff.inDays == 1 ? '' : 's'} ago'
-              : '${dateDiff.inDays ~/ 30} month${dateDiff.inDays ~/ 30 == 1 ? '' : 's'} ago';
-          _ffScouterDetails = "$_ffScouterDetails ($dateDiffText)";
+          if (stats.lastUpdated != null) {
+            final updatedDate = DateTime.fromMillisecondsSinceEpoch(stats.lastUpdated! * 1000);
+            final dateDiff = DateTime.now().difference(updatedDate);
+            final dateDiffText = dateDiff.inDays < 31
+                ? '${dateDiff.inDays} day${dateDiff.inDays == 1 ? '' : 's'} ago'
+                : '${dateDiff.inDays ~/ 30} month${dateDiff.inDays ~/ 30 == 1 ? '' : 's'} ago';
+            _ffScouterDetails = "$_ffScouterDetails ($dateDiffText)";
+          }
         }
       } else {
         _ffScouterError = "FFScouter details could not be retrieved: ${result.errorMessage}";
@@ -175,7 +175,19 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                  if (_estStats != "unk" || _estStats.isEmpty)
+                  if (_estStats.isEmpty && (_spiedText != null || _ffScouterDetails != null))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        "Estimated stats not yet calculated. Perform a full update on this target to obtain them.",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _themeProvider.getTextColor(Colors.orange),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  if (_estStats.isNotEmpty && _estStats != "unk")
                     Row(
                       children: [
                         Expanded(
