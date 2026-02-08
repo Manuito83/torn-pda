@@ -241,6 +241,17 @@ class WarController extends GetxController {
 
     update();
     savePreferences();
+
+    // Populate FFScouter cache for new members (fire-and-forget, rebuilds cards when done)
+    if (_preferFFScouterOverEstimated && faction.members != null) {
+      final newIds = faction.members!.keys.map((k) => int.tryParse(k)).whereType<int>().toList();
+      if (newIds.isNotEmpty) {
+        _ffScouterCache.ensureFresh(newIds).then((fetched) {
+          if (fetched > 0) update();
+        });
+      }
+    }
+
     return faction.name;
   }
 
@@ -640,6 +651,25 @@ class WarController extends GetxController {
       state: profile.status!.state,
       description: profile.status!.description,
     );
+
+    // Refresh FFScouter cache for all members (fire-and-forget to avoid blocking quick update)
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    if (_preferFFScouterOverEstimated) {
+      final allMemberIds = <int>[];
+      for (final f in factions) {
+        if (f.members != null) {
+          for (final key in f.members!.keys) {
+            final id = int.tryParse(key);
+            if (id != null) allMemberIds.add(id);
+          }
+        }
+      }
+      if (allMemberIds.isNotEmpty) {
+        _ffScouterCache.ensureFresh(allMemberIds).then((fetched) {
+          if (fetched > 0) update();
+        });
+      }
+    }
 
     for (final FactionModel f in factions) {
       final apiResult = await ApiCallsV1.getFaction(factionId: f.id.toString());

@@ -103,7 +103,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.12.0 - Build 619 - built 08/02/2026
+    // v3.12.0 - Build 620 - built 08/02/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.12.0'
@@ -128,8 +128,8 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
           "Improved Quick Items selection interface",
-          "Improved faction attack assistance notification settings",
           "Quick Items can now be disabled (personal and faction separately)",
+          "Improved faction attack assistance notification settings",
           "Added seconds to targets cards red-status countdown",
           "Added education information to Profile's cooldowns section",
           "Added option to open deep links in a new tab",
