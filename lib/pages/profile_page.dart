@@ -911,6 +911,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
             _previousShowAllRentedOutProperties = showAllProperties;
 
+            if (!mounted) return;
             setState(() {
               _warnAboutChains = warnChains;
               _showHeaderWallet = headerWallet;
@@ -7539,6 +7540,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final expandBasicInfo = await Prefs().getExpandBasicInfo();
     final expandNetworth = await Prefs().getExpandNetworth();
 
+    if (!mounted) return;
     setState(() {
       _userSectionOrder = savedUserOrder;
 

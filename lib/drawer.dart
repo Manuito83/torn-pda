@@ -46,6 +46,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
@@ -1081,6 +1082,45 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } catch (e) {
         log("Error reading file: $e");
       }
+    }
+
+    // Handle in-app settings deep links (e.g. tornpda://settings/browser?highlight=clear-cache)
+    if (link != null && link.startsWith("tornpda://settings/")) {
+      // Prevents double activation (same guard as browser deep links)
+      if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
+        return;
+      }
+      _deepLinkSubTriggeredTime = DateTime.now();
+
+      try {
+        final uri = Uri.parse(link);
+        final pathSegments = uri.pathSegments; // e.g. ["browser"]
+        final highlight = uri.queryParameters['highlight'];
+
+        _preferencesCompleter.future.whenComplete(() {
+          // Close browser if it's in foreground
+          if (!_webViewProvider.webViewSplitActive) {
+            _webViewProvider.browserShowInForeground = false;
+          }
+
+          // Switch drawer to Settings
+          _callSectionFromOutside(_settingsPosition);
+
+          if (pathSegments.isNotEmpty && pathSegments[0] == "browser") {
+            // Push Advanced Browser Settings with highlight
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => SettingsBrowserPage(highlightItem: highlight),
+                ),
+              );
+            });
+          }
+        });
+      } catch (e) {
+        log("Error handling settings deep link: $e");
+      }
+      return;
     }
 
     try {

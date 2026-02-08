@@ -31,7 +31,10 @@ import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
-  const SettingsBrowserPage({super.key});
+  const SettingsBrowserPage({super.key, this.highlightItem});
+
+  /// Optional item key to auto-scroll to and highlight (e.g. 'clear-cache').
+  final String? highlightItem;
 
   @override
   SettingsBrowserPageState createState() => SettingsBrowserPageState();
@@ -48,6 +51,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   int? _browserStyle = 0;
 
   final _travelMoneyWarningFormKey = GlobalKey<FormState>();
+
+  // Scroll-to-highlight support
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _highlightTargetKey = GlobalKey();
+  bool _showHighlight = false;
 
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
@@ -125,7 +133,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
-    _preferencesRestored = _restorePreferences();
+    _preferencesRestored = _restorePreferences().then((_) {
+      if (widget.highlightItem != null) {
+        // Wait for the widget tree to be laid out, then scroll to the target
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToHighlightedItem());
+      }
+    });
 
     routeWithDrawer = false;
     routeName = "settings_browser";
@@ -168,6 +181,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     behavior: HitTestBehavior.opaque,
                     onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
                     child: SingleChildScrollView(
+                      controller: _scrollController,
                       child: Column(
                         children: [
                           const SizedBox(height: 15),
@@ -2983,38 +2997,48 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       SearchableRow(
         label: "Browser cache",
         searchText: _searchText,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Browser cache"),
-                  ElevatedButton(
-                    child: const Text("Clear"),
-                    onPressed: () async {
-                      _webViewProvider.clearCacheAndTabs();
-                      BotToast.showText(
-                        text: "Browser cache and tabs have been reset!",
-                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                        contentColor: Colors.grey[600]!,
-                        duration: const Duration(seconds: 3),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  "Note: this will clear your browser's cache and current tabs. It can be useful in case of errors (sections not loading correctly, etc.). You'll be logged out from Torn and all other sites",
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+        child: AnimatedContainer(
+          key: widget.highlightItem == 'clear-cache' ? _highlightTargetKey : null,
+          duration: const Duration(milliseconds: 800),
+          decoration: BoxDecoration(
+            color: _showHighlight && widget.highlightItem == 'clear-cache'
+                ? Colors.orange.withValues(alpha: 0.25)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Browser cache"),
+                    ElevatedButton(
+                      child: const Text("Clear"),
+                      onPressed: () async {
+                        _webViewProvider.clearCacheAndTabs();
+                        BotToast.showText(
+                          text: "Browser cache and tabs have been reset!",
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                          contentColor: Colors.grey[600]!,
+                          duration: const Duration(seconds: 3),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "Note: this will clear your browser's cache and current tabs. It can be useful in case of errors (sections not loading correctly, etc.). You'll be logged out from Torn and all other sites",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -3547,7 +3571,30 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   void dispose() {
     _ticker?.cancel();
     _willPopSubscription.cancel();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Scrolls to the highlighted item and triggers an animated highlight effect.
+  void _scrollToHighlightedItem() {
+    final keyContext = _highlightTargetKey.currentContext;
+    if (keyContext == null) return;
+
+    // Ensure the item is visible
+    Scrollable.ensureVisible(
+      keyContext,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOut,
+      alignment: 0.3, // Position ~30% from top
+    ).then((_) {
+      if (mounted) {
+        setState(() => _showHighlight = true);
+        // Remove highlight after animation
+        Future.delayed(const Duration(milliseconds: 2000), () {
+          if (mounted) setState(() => _showHighlight = false);
+        });
+      }
+    });
   }
 
   Widget _browserStyleDropdown() {
