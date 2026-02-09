@@ -1212,6 +1212,12 @@ export async function sendNotificationToUser({
       return null;
     }
 
+    // Handle payload too large - log and skip instead of crashing
+    if (message.includes("message is too big") || message.includes("Payload size")) {
+      logger.warn(`FCM payload too large. Skipping notification. (${message})`);
+      return null;
+    }
+
     logger.warn(`FCM send failed: ${message}`);
     throw error;
   }
