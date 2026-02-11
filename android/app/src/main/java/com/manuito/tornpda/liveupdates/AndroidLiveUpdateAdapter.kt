@@ -24,7 +24,7 @@ class AndroidLiveUpdateAdapter(
     private var listener: LiveUpdateAdapterListener? = null
     private var activeSessionId: String? = null
     private var cachedPayload: LiveUpdatePayload? = null
-    
+
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var updateJob: Job? = null
 
@@ -43,7 +43,7 @@ class AndroidLiveUpdateAdapter(
         val dismissIntent = LiveUpdateNotificationReceiver.createDismissIntent(context, sessionId)
         val notification = buildNotification(payload, tapIntent, dismissIntent)
         notifySurface(sessionId.hashCode(), notification)
-        
+
         // Initiate the update loop to refresh the progress bar
         startUpdateLoop(sessionId, tapIntent, dismissIntent)
 
@@ -121,29 +121,29 @@ class AndroidLiveUpdateAdapter(
             else -> R.drawable.plane_right
         }
     }
-    
+
     /**
      * Starts a coroutine loop to update the notification every minute
      * This ensures the progress bar reflects the current travel status
      */
     private fun startUpdateLoop(
-        sessionId: String, 
-        tapIntent: android.app.PendingIntent, 
+        sessionId: String,
+        tapIntent: android.app.PendingIntent,
         dismissIntent: android.app.PendingIntent
     ) {
         updateJob?.cancel()
         val payload = cachedPayload ?: return
-        
+
         if (payload.hasArrived) return
 
         updateJob = scope.launch {
             while (isActive) {
-                delay(60_000) 
-                
+                delay(60_000)
+
                 if (activeSessionId != sessionId) break
                 val current = cachedPayload ?: break
                 if (current.hasArrived) break
-                
+
                 val notification = buildNotification(current, tapIntent, dismissIntent)
                 notifySurface(sessionId.hashCode(), notification)
             }
@@ -283,7 +283,7 @@ class AndroidLiveUpdateAdapter(
         val intent = LiveUpdateNotificationReceiver.createArrivedIntent(
             context, sessionId, destination, origin, payload.earliestReturnTimestamp,
         )
-        
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             if (alarmManager?.canScheduleExactAlarms() == true) {
                 alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, arrivalMillis, intent)
@@ -349,7 +349,7 @@ class AndroidLiveUpdateAdapter(
     private fun computeProgress(payload: LiveUpdatePayload): ProgressInfo? {
         val arrival = payload.arrivalTimeTimestamp ?: return null
         val departure = payload.departureTimeTimestamp ?: return null
-        
+
         // Calculate progress based on current system time
         val reference = System.currentTimeMillis() / 1000
         val totalSeconds = max(1L, arrival - departure)
@@ -376,7 +376,8 @@ class AndroidLiveUpdateAdapter(
         val arrival = payload.arrivalTimeTimestamp ?: return null
         val date = java.util.Date(arrival * 1000)
         val format = android.text.format.DateFormat.getTimeFormat(context)
-        return format.format(date)
+        val formatted = format.format(date)
+        return context.getString(R.string.live_update_eta_pattern, formatted)
     }
 
     private fun enablePromotedOngoing(builder: NotificationCompat.Builder) {
@@ -398,21 +399,23 @@ class AndroidLiveUpdateAdapter(
     }
 
     private fun invokeFrameworkShortCriticalText(builder: Notification.Builder, text: CharSequence) {
+        // Primary approach: set the extra key directly in the notification bundle
+        // This avoids reflection issues with hidden/restricted APIs on some devices
         try {
-            val method = builder.javaClass.getMethod("setShortCriticalText", CharSequence::class.java)
-            method.invoke(builder, text)
-        } catch (_: Exception) {
-            // Fallback: try the two-arg variant (CharSequence, Bundle) if the single-arg doesn't exist
-            try {
-                val method2 = builder.javaClass.getMethod(
-                    "setShortCriticalText",
-                    CharSequence::class.java,
-                    android.os.Bundle::class.java,
-                )
-                method2.invoke(builder, text, android.os.Bundle())
-            } catch (_: Exception) {
-                // Ignore if not supported on this SDK
+            val extras = android.os.Bundle().apply {
+                putCharSequence("android.shortCriticalText", text)
             }
+            builder.addExtras(extras)
+        } catch (_: Exception) {
+            // Ignore if addExtras is unavailable
+        }
+
+        // Secondary approach: reflection with correct signature (String, not CharSequence on API 36+)
+        try {
+            val method = builder.javaClass.getMethod("setShortCriticalText", String::class.java)
+            method.invoke(builder, text.toString())
+        } catch (_: Exception) {
+            // Ignore if not supported on this SDK
         }
     }
 
