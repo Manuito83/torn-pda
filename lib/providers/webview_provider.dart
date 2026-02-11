@@ -1079,7 +1079,9 @@ class WebViewProvider extends ChangeNotifier {
         await controller.evaluateJavascript(
           source: WebviewInteractionRecoveryScripts.installClickRestoreShim,
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('WebView provider: dialog closed JS eval error: $e');
+      }
     }
   }
 
@@ -1940,7 +1942,9 @@ class WebViewProvider extends ChangeNotifier {
         isActiveTab: true,
         isWebViewVisible: isVisible,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('WebView provider: broadcast tab state error: $e');
+    }
   }
   // END TAB UID ###
 

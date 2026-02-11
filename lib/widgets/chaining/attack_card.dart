@@ -308,7 +308,7 @@ class AttackCardState extends State<AttackCard> {
   Widget _returnRespect() {
     dynamic respect = _attack.respectGain;
     if (respect is String) {
-      respect = double.parse(respect);
+      respect = double.tryParse(respect) ?? 0.0;
     }
 
     TextSpan respectSpan;
@@ -360,7 +360,7 @@ class AttackCardState extends State<AttackCard> {
   Widget _returnFairFight() {
     dynamic ff = _attack.modifiers!.fairFight;
     if (ff is String) {
-      ff = double.parse(ff);
+      ff = double.tryParse(ff) ?? 1.0;
     }
 
     var ffColor = Colors.red;

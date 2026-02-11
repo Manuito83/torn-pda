@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:math';
 
 // Package imports:
@@ -34,6 +35,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
 
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
+  late StreamSubscription _willPopSubscription;
 
   @override
   void initState() {
@@ -42,9 +44,15 @@ class AwardsGraphsState extends State<AwardsGraphs> {
 
     routeWithDrawer = false;
     routeName = "awards_graphs";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "awards_graphs") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override

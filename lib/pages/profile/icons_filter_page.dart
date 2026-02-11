@@ -31,7 +31,7 @@ class IconsFilterPageState extends State<IconsFilterPage> {
     final s = Provider.of<SettingsProvider>(context, listen: false);
     routeWithDrawer = false;
     routeName = "icons_filter_page";
-    _willPopSubscription = _willPopSubscription = s.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = s.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "icons_filter_page") _goBack();
     });
   }

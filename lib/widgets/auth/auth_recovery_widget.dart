@@ -194,7 +194,9 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       _logStep('DEBUG_FORCE_SIGNOUT');
       try {
         await FirebaseAuth.instance.signOut();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Auth recovery: debug force signout error: $e');
+      }
       _userUid = '';
     }
 
@@ -451,7 +453,9 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
 
       try {
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Auth recovery: anonymous Firebase init error: $e');
+      }
 
       // Final check before creating anonymous - maybe user appeared now
       User? user;
@@ -636,7 +640,9 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
           {'apiKey': apiKey, 'platform': devicePlatform},
           SetOptions(merge: true),
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Auth recovery: Firestore player set error: $e');
+      }
 
       final result = await firebaseFunctions.lookupUserByApiKey(
         apiKey: apiKey,

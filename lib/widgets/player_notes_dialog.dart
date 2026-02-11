@@ -290,7 +290,7 @@ Future<void> showPlayerNotesDialog({
 
   try {
     await context.read<WebViewProvider>().notifyDialogClosed();
-  } catch (_) {
-    // WebViewProvider may be unavailable outside the webview context.
+  } catch (e) {
+    debugPrint('Player notes dialog: notifyDialogClosed error: $e');
   }
 }
