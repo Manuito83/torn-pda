@@ -11,4 +11,8 @@
     <string name="live_update_unknown_eta">ETA unavailable</string>
     <string name="live_update_destination_unknown">Unknown</string>
     <string name="live_update_notification_secondary">%1$s → %2$s</string>
+    <string name="live_update_remaining_pattern">%1$s remaining</string>
+    <string name="live_update_earliest_return_pattern">Earliest return: %1$s</string>
+    <string name="live_update_arrived_at_pattern">Arrived at %1$s</string>
+    <string name="live_update_arrived_in_pattern">Arrived in %1$s</string>
 </resources>

@@ -4362,33 +4362,37 @@ class SettingsPageState extends State<SettingsPage> {
           });
 
           if (!Platform.isWindows) {
-            // See note in [firebase_auth.dart]
-            final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
-            // Only sign in if there is currently no user registered (to avoid duplicates)
-            if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
-              final User? newFirebaseUser = await (firebaseAuth.signInAnon());
+            try {
+              // See note in [firebase_auth.dart]
+              final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
+              // Only sign in if there is currently no user registered (to avoid duplicates)
+              if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
+                final User? newFirebaseUser = await (firebaseAuth.signInAnon());
 
-              if (newFirebaseUser == null) {
-                throw Exception("Firebase anonymous sign-in failed");
+                if (newFirebaseUser == null) {
+                  log("Settings: Firebase anonymous sign-in failed, continuing without Firebase");
+                } else {
+                  await FirestoreHelper().setUID(newFirebaseUser.uid);
+                  // Returns UID to Drawer so that it can be passed to settings
+                  widget.changeUID(newFirebaseUser.uid);
+                  log("Settings: signed in with UID ${newFirebaseUser.uid}");
+                }
+              } else {
+                log("Settings: existing user UID ${firebaseUser.uid}");
               }
 
-              await FirestoreHelper().setUID(newFirebaseUser.uid);
-              // Returns UID to Drawer so that it can be passed to settings
-              widget.changeUID(newFirebaseUser.uid);
-              log("Settings: signed in with UID ${newFirebaseUser.uid}");
-            } else {
-              log("Settings: existing user UID ${firebaseUser.uid}");
-            }
+              await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
+              await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
+              if (Platform.isAndroid) {
+                FirestoreHelper().setVibrationPattern(_vibrationValue);
+              }
 
-            await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
-            await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
-            if (Platform.isAndroid) {
-              FirestoreHelper().setVibrationPattern(_vibrationValue);
+              // Sendbird notifications
+              final sbController = Get.find<SendbirdController>();
+              sbController.register();
+            } catch (firebaseError) {
+              log("Settings: Firebase/Firestore operations failed, continuing: $firebaseError");
             }
-
-            // Sendbird notifications
-            final sbController = Get.find<SendbirdController>();
-            sbController.register();
           } else {
             log("Windows: skipping Firestore sign up!");
           }
@@ -4427,7 +4431,7 @@ class SettingsPageState extends State<SettingsPage> {
         FirebaseCrashlytics.instance.recordError(
           e,
           stack,
-          information: ['API Key: $currentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser.uid}'],
+          information: ['API Key: $currentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser?.uid}'],
         );
       }
     }
