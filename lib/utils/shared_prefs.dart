@@ -411,6 +411,7 @@ class Prefs {
   final String _kFullScreenOverNotch = "pda_fullScreenOverNotch";
   final String _kFullScreenOverBottom = "pda_fullScreenOverBottom";
   final String _kFullScreenOverSides = "pda_fullScreenOverSides";
+  final String _kFullScreenHeaderDoubleTap = "pda_fullScreenHeaderDoubleTap";
   final String _kFullScreenByShortTap = "pda_fullScreenByShortTap";
   final String _kFullScreenByLongTap = "pda_fullScreenByLongTap";
   final String _kFullScreenByNotificationTap = "pda_fullScreenByNotificationTap";
@@ -3716,6 +3717,14 @@ class Prefs {
 
   Future setFullScreenOverSides(bool value) async {
     return await PrefsDatabase.setBool(_kFullScreenOverSides, value);
+  }
+
+  Future<bool> getFullScreenHeaderDoubleTap() async {
+    return await PrefsDatabase.getBool(_kFullScreenHeaderDoubleTap, true);
+  }
+
+  Future setFullScreenHeaderDoubleTap(bool value) async {
+    return await PrefsDatabase.setBool(_kFullScreenHeaderDoubleTap, value);
   }
 
   //--

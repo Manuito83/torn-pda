@@ -449,6 +449,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenHeaderDoubleTap = true;
+  bool get fullScreenHeaderDoubleTap => _fullScreenHeaderDoubleTap;
+  set fullScreenHeaderDoubleTap(bool value) {
+    _fullScreenHeaderDoubleTap = value;
+    Prefs().setFullScreenHeaderDoubleTap(_fullScreenHeaderDoubleTap);
+    notifyListeners();
+  }
+
   var _fullScreenByShortTap = false;
   bool get fullScreenByShortTap => _fullScreenByShortTap;
   set fullScreenByShortTap(bool value) {
@@ -1525,6 +1533,7 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
     _fullScreenOverBottom = await Prefs().getFullScreenOverBottom();
     _fullScreenOverSides = await Prefs().getFullScreenOverSides();
+    _fullScreenHeaderDoubleTap = await Prefs().getFullScreenHeaderDoubleTap();
     _fullScreenByShortTap = await Prefs().getFullScreenByShortTap();
     _fullScreenByLongTap = await Prefs().getFullScreenByLongTap();
     _fullScreenByNotificationTap = await Prefs().getFullScreenByNotificationTap();

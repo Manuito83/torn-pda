@@ -4338,7 +4338,7 @@ class WebViewFullState extends State<WebViewFull>
     final inTorn = _currentUrl.contains("torn.com");
     final isFullScreen = _webViewProvider.currentUiMode == UiMode.fullScreen;
 
-    if (inTorn && isFullScreen) {
+    if (inTorn && isFullScreen && _settingsProvider.fullScreenHeaderDoubleTap) {
       webViewController?.evaluateJavascript(
         source: exitFullScreenOnHeaderDoubleClick(
           isIOS: Platform.isIOS,

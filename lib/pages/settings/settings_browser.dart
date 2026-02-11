@@ -28,6 +28,7 @@ import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
+import 'package:torn_pda/widgets/webviews/fullscreen_header_doubletap_warning.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
@@ -1300,6 +1301,55 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ),
               Text(
                 "When in full screen mode, replaces the 'X' close button with an additional tab for quicker access",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Exit full screen by header double tap",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Exit via header double tap")),
+                  Switch(
+                    value: _settingsProvider.fullScreenHeaderDoubleTap,
+                    onChanged: (value) async {
+                      if (!value) {
+                        // Show warning dialog before disabling
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return const FullScreenHeaderDoubleTapWarningDialog();
+                          },
+                        );
+                        if (confirmed == true) {
+                          setState(() {
+                            _settingsProvider.fullScreenHeaderDoubleTap = false;
+                          });
+                        }
+                      } else {
+                        setState(() {
+                          _settingsProvider.fullScreenHeaderDoubleTap = true;
+                        });
+                      }
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'Allows exiting full screen mode by double-tapping on Torn\'s top header bar (where the Torn logo is shown). '
+                'Defaults to ON.',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
