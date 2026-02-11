@@ -188,10 +188,54 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                       },
                     ),
                   ),
+                  if (!widget.isFaction)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: const Text('Long-press to add items', style: TextStyle(fontSize: 13)),
+                      subtitle: const Text(
+                        'Replace the (+) button with a long-press gesture anywhere on the widget. '
+                        'Tap or long-press again to exit add mode.',
+                        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                      ),
+                      trailing: Switch(
+                        value: itemsProvider.longPressToAdd,
+                        onChanged: (value) {
+                          if (value) {
+                            _showLongPressConfirmationDialog(context, itemsProvider);
+                          } else {
+                            itemsProvider.setLongPressToAdd(false);
+                          }
+                        },
+                      ),
+                    ),
+                  if (!widget.isFaction && itemsProvider.longPressToAdd)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        'Long-press anywhere on the quick items bar to activate the item picker. '
+                        'Tap or long-press again to exit add mode.',
+                        style: TextStyle(fontSize: 11, color: Colors.orange[700]),
+                      ),
+                    ),
                 ],
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  void _showLongPressConfirmationDialog(BuildContext context, QuickItemsProvider itemsProvider) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return _LongPressConfirmationDialog(
+          onConfirmed: () {
+            itemsProvider.setLongPressToAdd(true);
+          },
         );
       },
     );
@@ -1000,5 +1044,121 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
   Future<bool> _willPopCallback() async {
     _searchController.text = "";
     return true;
+  }
+}
+
+class _LongPressConfirmationDialog extends StatefulWidget {
+  final VoidCallback onConfirmed;
+
+  const _LongPressConfirmationDialog({required this.onConfirmed});
+
+  @override
+  State<_LongPressConfirmationDialog> createState() => _LongPressConfirmationDialogState();
+}
+
+class _LongPressConfirmationDialogState extends State<_LongPressConfirmationDialog> with TickerProviderStateMixin {
+  late AnimationController _progressController;
+  bool _confirmed = false;
+  bool _holding = false;
+
+  static const _holdDuration = Duration(seconds: 3);
+
+  @override
+  void initState() {
+    super.initState();
+    _progressController = AnimationController(vsync: this, duration: _holdDuration);
+    _progressController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && !_confirmed) {
+        setState(() => _confirmed = true);
+        widget.onConfirmed();
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  void _onPointerDown() {
+    setState(() => _holding = true);
+    _progressController.forward(from: _progressController.value);
+  }
+
+  void _onPointerUp() {
+    if (!_confirmed) {
+      setState(() => _holding = false);
+      _progressController.reverse();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Long-press mode', style: TextStyle(fontSize: 16)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'If you enable this, the (+) button will be replaced. '
+            'You will need to long-press anywhere on the quick items bar to activate the item picker.\n\n'
+            'Once in add mode, tap or long-press anywhere to exit.',
+            style: TextStyle(fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+          AnimatedBuilder(
+            animation: _progressController,
+            builder: (context, child) {
+              return Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: _progressController.value,
+                      minHeight: 8,
+                      backgroundColor: Colors.grey[700],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _holding ? Colors.orange : Colors.orange.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTapDown: (_) => _onPointerDown(),
+                    onTapUp: (_) => _onPointerUp(),
+                    onTapCancel: _onPointerUp,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: _holding ? Colors.orange[800] : Colors.orange[700],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _holding ? 'Keep holding...' : 'Hold to confirm',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+      ],
+    );
   }
 }

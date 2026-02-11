@@ -109,6 +109,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '♡ 14 FEB 2026 ♡'
         ..features = [
           "Quick Items: added option to disable inventory quantities",
+          "Quick Items: added option to replace the add button (+) with a long-press gesture anywhere on the widget",
           "The double-tap on Torn's header bar to exit full screen can now be disabled",
           "Added option to disable the update dialog",
           "Fixed travel expenditure showing repetedly",

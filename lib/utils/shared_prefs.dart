@@ -310,6 +310,7 @@ class Prefs {
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kQuickItemsRefreshAfterEquip = "pda_quickItemsRefreshAfterEquip";
   final String _kQuickItemsHideInventoryCount = "pda_quickItemsHideInventoryCount";
+  final String _kQuickItemsLongPressToAdd = "pda_quickItemsLongPressToAdd";
   final String _kQuickItemsEnabled = "pda_quickItemsEnabled";
   final String _kQuickItemsFactionEnabled = "pda_quickItemsFactionEnabled";
   //
@@ -2811,6 +2812,14 @@ class Prefs {
 
   Future setQuickItemsHideInventoryCount(bool value) async {
     return await PrefsDatabase.setBool(_kQuickItemsHideInventoryCount, value);
+  }
+
+  Future<bool> getQuickItemsLongPressToAdd() async {
+    return await PrefsDatabase.getBool(_kQuickItemsLongPressToAdd, false);
+  }
+
+  Future setQuickItemsLongPressToAdd(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsLongPressToAdd, value);
   }
 
   Future<bool> getQuickItemsEnabled() async {
