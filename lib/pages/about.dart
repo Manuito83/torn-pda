@@ -688,7 +688,7 @@ class AboutPageState extends State<AboutPage> {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
                   child: Text('Thank you to our partners, who chose Torn PDA as their mobile '
-                      'interface: YATA, Arson Warehouse, and many reviving providers.'),
+                      'interface: YATA and many reviving providers.'),
                 ),
               ),
               const Align(

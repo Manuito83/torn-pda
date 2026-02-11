@@ -166,8 +166,8 @@ class TradesProvider extends ChangeNotifier {
         // data so that we can send them unaltered to AWH
         tradesContainer.rightOriginalItemsBeforeTornExchange = tradesContainer.rightItems;
 
-        // Check Arson Warehouse.
-        tradesContainer.awhActive = await Prefs().getAWHEnabled();
+        // Check Arson Warehouse (disabled).
+        // tradesContainer.awhActive = await Prefs().getAWHEnabled();
 
         // If Torn Exchange is enabled, we integrate TE’s data.
         var tornExchangeActive = await Prefs().getTornExchangeEnabled() && tornExchangeActiveRemoteConfig;

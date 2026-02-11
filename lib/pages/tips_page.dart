@@ -1328,14 +1328,16 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       ),
     );
 
-    tips.add(
-      ExpandableTip(
-        headerValue: "Sync with Arson Warehouse",
-        expandedValue:
-            "If you are a user of Arson Warehouse (AWH), tap on the options icon while in the Trades section in game. "
-            "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
-      ),
-    );
+    // AWH DISABLED
+    // tips.add(
+    //   ExpandableTip(
+    //     headerValue: "Sync with Arson Warehouse",
+    //     expandedValue:
+    //         "If you are a user of Arson Warehouse (AWH), tap on the options icon while in the Trades section in game. "
+    //         "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
+    //   ),
+    // );
+
     tips.add(
       ExpandableTip(
         headerValue: "Quick vault access",

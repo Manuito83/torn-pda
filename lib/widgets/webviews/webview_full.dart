@@ -3658,7 +3658,7 @@ class WebViewFullState extends State<WebViewFull>
         key: _showCaseTradeOptions,
         title: 'Trading options!',
         description: '\nIf you are a trader, you can manage the different trading providers available in Torn PDA '
-            'by tapping this icon (e.g.: Arson Warehouse and Torn Exchange)!\n\nThere\'s also additional options available, '
+            'by tapping this icon (e.g.: Torn Exchange)!\n\nThere\'s also additional options available, '
             'such as detailed profit information.\n\nIf you prefer, you can also deactivate the whole Trade Calculator '
             'widget to gain some space.',
         targetPadding: const EdgeInsets.all(10),
