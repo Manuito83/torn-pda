@@ -20,6 +20,7 @@ import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class QuickItemsWidget extends StatefulWidget {
@@ -40,6 +41,7 @@ class QuickItemsWidget extends StatefulWidget {
 class QuickItemsWidgetState extends State<QuickItemsWidget> {
   late QuickItemsProvider _itemsProvider;
   late QuickItemsProviderFaction _itemsProviderFaction;
+  late SettingsProvider _settingsProvider;
 
   // late Timer _inventoryRefreshTimer;
   final Map<String, Timer> _itemUpdateTimers = {};
@@ -98,6 +100,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   Widget build(BuildContext context) {
     _itemsProvider = context.watch<QuickItemsProvider>();
     _itemsProviderFaction = context.watch<QuickItemsProviderFaction>();
+    _settingsProvider = context.watch<SettingsProvider>();
 
     final useLongPress = !widget.faction && _itemsProvider.longPressToAdd;
 
@@ -253,7 +256,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
 
       double qtyFontSize = 12;
       String? itemQty;
-      if (!item.isLoadout! && !widget.faction && !_itemsProvider.hideInventoryCount) {
+      if (!item.isLoadout! && !widget.faction && !_itemsProvider.hideInventoryCount && _settingsProvider.quickItemsInventoryCheckEnabled) {
         // If we have a valid inventory count (e.g. from Mass Check), show it
         // ONLY if it is a stackable/grouped item. Unique items (weapons/armor) should not show quantity
         if (item.inventory == null || item.isGrouped == false) {
@@ -353,7 +356,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                     kDebugMode: kDebugMode,
                   );
                   await widget.inAppWebViewController!.evaluateJavascript(source: js);
-                  if (!widget.faction) {
+                  if (!widget.faction && _settingsProvider.quickItemsInventoryCheckEnabled) {
                     _itemsProvider.decreaseInventory(item);
 
                     // Debounce single item check: wait 3s of inactivity before checking logic
@@ -424,6 +427,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   Future<void> _triggerSingleItemCheck(String itemName) async {
     // Only for personal items, not faction
     if (widget.faction) return;
+    if (!_settingsProvider.quickItemsInventoryCheckEnabled) return;
 
     final controller = widget.inAppWebViewController;
     if (controller == null) return;
@@ -444,6 +448,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   Future<void> _triggerMassCheck() async {
     // Only for personal items, not faction
     if (widget.faction) return;
+    if (!_settingsProvider.quickItemsInventoryCheckEnabled) return;
 
     final controller = widget.inAppWebViewController;
     if (controller == null) return;

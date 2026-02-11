@@ -738,6 +738,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _quickItemsInventoryCheckEnabled = true;
+  bool get quickItemsInventoryCheckEnabled => _quickItemsInventoryCheckEnabled;
+  set quickItemsInventoryCheckEnabled(bool value) {
+    _quickItemsInventoryCheckEnabled = value;
+    notifyListeners();
+  }
+
   var _friendlyFactions = <FriendlyFaction>[];
   List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
   set setFriendlyFactions(List<FriendlyFaction> faction) {

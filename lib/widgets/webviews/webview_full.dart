@@ -1363,6 +1363,7 @@ class WebViewFullState extends State<WebViewFull>
             WebviewHandlers.addQuickItemPickerHandler(
               webview: webViewController!,
               quickItemsProvider: context.read<QuickItemsProvider>(),
+              settingsProvider: context.read<SettingsProvider>(),
             );
 
             publishTabState();

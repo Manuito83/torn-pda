@@ -173,21 +173,22 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                       },
                     ),
                   ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    title: const Text('Hide inventory count', style: TextStyle(fontSize: 13)),
-                    subtitle: const Text(
-                      'Hide item quantities from the quick items chips.',
-                      style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                  if (settingsProvider.quickItemsInventoryCheckEnabled)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: const Text('Hide inventory count', style: TextStyle(fontSize: 13)),
+                      subtitle: const Text(
+                        'Hide item quantities from the quick items chips.',
+                        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                      ),
+                      trailing: Switch(
+                        value: itemsProvider.hideInventoryCount,
+                        onChanged: (value) {
+                          itemsProvider.setHideInventoryCount(value);
+                        },
+                      ),
                     ),
-                    trailing: Switch(
-                      value: itemsProvider.hideInventoryCount,
-                      onChanged: (value) {
-                        itemsProvider.setHideInventoryCount(value);
-                      },
-                    ),
-                  ),
                   if (!widget.isFaction)
                     ListTile(
                       contentPadding: EdgeInsets.zero,

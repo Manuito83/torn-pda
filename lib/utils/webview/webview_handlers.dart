@@ -642,6 +642,7 @@ class WebviewHandlers {
   static void addQuickItemPickerHandler({
     required InAppWebViewController webview,
     required QuickItemsProvider quickItemsProvider,
+    required SettingsProvider settingsProvider,
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'quickItemPicker',
@@ -691,7 +692,10 @@ class WebviewHandlers {
             );
 
             // Trigger a single item verification immediately after adding
-            if (equipData.name != null && equipData.name!.isNotEmpty) {
+            // (guarded by Remote Config kill switch via quickItemsProvider check)
+            if (settingsProvider.quickItemsInventoryCheckEnabled &&
+                equipData.name != null &&
+                equipData.name!.isNotEmpty) {
               try {
                 webview.evaluateJavascript(source: quickItemsMassCheckJS([equipData.name!]));
               } catch (_) {}
@@ -723,6 +727,9 @@ class WebviewHandlers {
     webview.addJavaScriptHandler(
       handlerName: 'quickItemMassUpdate',
       callback: (args) async {
+        // Kill switch: ignore inventory updates when disabled via Remote Config
+        if (!settingsProvider.quickItemsInventoryCheckEnabled) return;
+
         if (args.isEmpty || args[0] is! Map) return;
         final data = args[0] as Map;
         final originalName = data['originalName'] as String?;
