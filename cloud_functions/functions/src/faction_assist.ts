@@ -74,6 +74,8 @@ export const sendAssistMessage = onCall({
 
     let estimatedStats = request.data["estimatedStats"];
     let exactStats = request.data["exactStats"];
+    let ffsStats = request.data["ffsStats"];
+    let fairFight = request.data["fairFight"];
     let bulkDetails = "";
     if (exactStats === "" || exactStats === undefined) {
         exactStats = "";
@@ -92,13 +94,27 @@ export const sendAssistMessage = onCall({
         exactStats = `\n- Spied stats: ${exactStats}`;
     }
 
+    // FFScouter battle score
+    if (ffsStats !== "" && ffsStats !== undefined) {
+        ffsStats = `\n- FFS Battle Score: ~${ffsStats}`;
+    } else {
+        ffsStats = "";
+    }
+
+    // FFScouter fair fight
+    if (fairFight !== "" && fairFight !== undefined) {
+        fairFight = `\n- Fair Fight: ${fairFight}`;
+    } else {
+        fairFight = "";
+    }
+
     let membersNotified = 0;
     for (const key of Array.from(factionMembers.keys())) {
         const thisMember = factionMembers[key];
 
         let title = `Attack assist request!`;
         let body = `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking ${attackName}!` +
-            `${attackLevelAge}${attackLife}${estimatedStats}${exactStats}`;
+            `${attackLevelAge}${attackLife}${estimatedStats}${exactStats}${ffsStats}${fairFight}`;
         if (thisMember.discrete) {
             title = `Assist`;
             body = `${attackLevelAge}`;

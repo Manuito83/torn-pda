@@ -13,6 +13,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/retal_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -52,6 +53,7 @@ class RetalCardState extends State<RetalCard> {
   late SettingsProvider _settingsProvider;
 
   final _chainProvider = Get.find<ChainStatusController>();
+  final _ffScouterCache = Get.find<FFScouterCacheController>();
   late WebViewProvider _webViewProvider;
 
   Timer? _expiryTicker;
@@ -813,6 +815,98 @@ class RetalCardState extends State<RetalCard> {
     additional.add(const SizedBox(width: 5));
 
     if (_retal!.statsExactTotalKnown != -1) {
+      // Check if spy is too old and FFS should override
+      final overrideMonths = _settingsProvider.ffsOverrideSpyMonths;
+      if (overrideMonths > 0 && _settingsProvider.preferFFScouterOverEstimated) {
+        final ts = _retal!.statsExactUpdated;
+        if (ts != null && ts > 0) {
+          final ageDays = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(ts * 1000)).inDays;
+          final ageMonths = ageDays ~/ 30;
+          if (ageMonths >= overrideMonths) {
+            final ffsEntry = _ffScouterCache.get(_retal!.retalId!);
+            if (ffsEntry != null && ffsEntry.bsEstimate != null) {
+              final ffsColor = ffsEntry.ffsColor(UserHelper.totalStats);
+              return Row(
+                children: [
+                  Text(
+                    "(FFS)",
+                    style: TextStyle(fontSize: 11, color: ffsColor),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    "~${ffsEntry.displayText}",
+                    style: TextStyle(fontSize: 11, color: ffsColor),
+                  ),
+                  const SizedBox(width: 3),
+                  Tooltip(
+                    message: "Spy is $ageMonths month${ageMonths == 1 ? '' : 's'} old",
+                    child: Icon(Icons.history, size: 14, color: ffsColor),
+                  ),
+                  const SizedBox(width: 3),
+                  GestureDetector(
+                    child: Icon(Icons.info_outline, color: ffsColor, size: 16),
+                    onTap: () {
+                      showDialog<void>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          final SpiesController spyController = Get.find<SpiesController>();
+                          final spiesPayload = SpiesPayload(
+                            spyController: spyController,
+                            strength: _retal!.statsStr ?? -1,
+                            strengthUpdate: _retal!.statsStrUpdated,
+                            defense: _retal!.statsDef ?? -1,
+                            defenseUpdate: _retal!.statsDefUpdated,
+                            speed: _retal!.statsSpd ?? -1,
+                            speedUpdate: _retal!.statsSpdUpdated,
+                            dexterity: _retal!.statsDex ?? -1,
+                            dexterityUpdate: _retal!.statsDexUpdated,
+                            total: _retal!.statsExactTotal ?? -1,
+                            totalUpdate: _retal!.statsExactTotalUpdated,
+                            update: _retal!.statsExactUpdated ?? 0,
+                            spySource: _retal!.spySource,
+                            name: _retal!.name!,
+                            factionName: _retal!.factionName!,
+                            themeProvider: _themeProvider,
+                          );
+                          final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _retal!.retalId!);
+                          final yataStatsPayload = YataStatsPayload(targetId: _retal!.retalId!);
+                          return StatsDialog(
+                            spiesPayload: spiesPayload,
+                            estimatedStatsPayload: EstimatedStatsPayload(
+                              xanaxCompare: xanaxComparison,
+                              xanaxColor: xanaxColor,
+                              refillCompare: refillComparison,
+                              refillColor: refillColor,
+                              enhancementCompare: enhancementComparison,
+                              enhancementColor: enhancementColor,
+                              cansCompare: cansComparison,
+                              cansColor: cansColor,
+                              sslColor: sslColor,
+                              sslProb: sslProb,
+                              otherXanTaken: _retal!.retalXanax!,
+                              otherEctTaken: _retal!.retalEcstasy!,
+                              otherLsdTaken: _retal!.retalLsd!,
+                              otherName: _retal!.name!,
+                              otherFactionName: _retal!.factionName!,
+                              otherLastActionRelative: _retal!.lastAction.relative!,
+                              themeProvider: _themeProvider,
+                              estimatedStatsRange: _retal!.statsEstimated,
+                            ),
+                            ffScouterStatsPayload:
+                                _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
+                            yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
+          }
+        }
+      }
+
       Color? exactColor = Colors.green;
       if (UserHelper.totalStats < _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) {
         exactColor = Colors.red[700];
@@ -904,15 +998,16 @@ class RetalCardState extends State<RetalCard> {
                     otherFactionName: _retal!.factionName!,
                     otherLastActionRelative: _retal!.lastAction.relative!,
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _retal!.statsEstimated,
                   );
 
-                  final tscStatsPayload = TSCStatsPayload(targetId: _retal!.retalId!);
+                  final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _retal!.retalId!);
                   final yataStatsPayload = YataStatsPayload(targetId: _retal!.retalId!);
 
                   return StatsDialog(
                     spiesPayload: spiesPayload,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                     yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },
@@ -923,6 +1018,59 @@ class RetalCardState extends State<RetalCard> {
       );
     } else if (_retal!.statsEstimated.isNotEmpty) {
       if (!_retal!.statsComparisonSuccess) {
+        // Even without comparison data, check FFScouter cache
+        final ffsEntryNoComp =
+            _settingsProvider.preferFFScouterOverEstimated ? _ffScouterCache.get(_retal!.retalId!) : null;
+        if (ffsEntryNoComp != null) {
+          final ffsColor = ffsEntryNoComp.ffsColor(UserHelper.totalStats);
+          return Row(
+            children: [
+              Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
+              const SizedBox(width: 5),
+              Text("~${ffsEntryNoComp.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
+              const SizedBox(width: 5),
+              GestureDetector(
+                child: Icon(Icons.info_outline, color: ffsColor, size: 16),
+                onTap: () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return StatsDialog(
+                        spiesPayload: null,
+                        estimatedStatsPayload: EstimatedStatsPayload(
+                          xanaxCompare: 0,
+                          xanaxColor: Colors.orange,
+                          refillCompare: 0,
+                          refillColor: Colors.orange,
+                          enhancementCompare: 0,
+                          enhancementColor: _themeProvider.mainText,
+                          cansCompare: 0,
+                          cansColor: Colors.orange,
+                          sslColor: Colors.green,
+                          sslProb: false,
+                          otherXanTaken: 0,
+                          otherEctTaken: 0,
+                          otherLsdTaken: 0,
+                          otherName: _retal!.name!,
+                          otherFactionName: _retal!.factionName!,
+                          otherLastActionRelative: _retal!.lastAction.relative!,
+                          themeProvider: _themeProvider,
+                          estimatedStatsRange: _retal!.statsEstimated,
+                        ),
+                        ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
+                            ? FFScouterStatsPayload(targetId: _retal!.retalId!)
+                            : null,
+                        yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0
+                            ? YataStatsPayload(targetId: _retal!.retalId!)
+                            : null,
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          );
+        }
         return const Text(
           "unk stats",
           style: TextStyle(
@@ -932,20 +1080,28 @@ class RetalCardState extends State<RetalCard> {
         );
       }
 
+      // Check if FFScouter has a better estimate
+      final ffsEntry = _settingsProvider.preferFFScouterOverEstimated ? _ffScouterCache.get(_retal!.retalId!) : null;
+      final String statsLabel = ffsEntry != null ? "(FFS)" : "(EST)";
+      final String statsValue = ffsEntry != null ? "~${ffsEntry.displayText}" : _retal!.statsEstimated;
+      final Color? ffsColor = ffsEntry?.ffsColor(UserHelper.totalStats);
+
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            "(EST)",
+          Text(
+            statsLabel,
             style: TextStyle(
               fontSize: 11,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
           Text(
-            _retal!.statsEstimated,
-            style: const TextStyle(
+            statsValue,
+            style: TextStyle(
               fontSize: 11,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
@@ -979,15 +1135,16 @@ class RetalCardState extends State<RetalCard> {
                     otherFactionName: _retal!.factionName!,
                     otherLastActionRelative: _retal!.lastAction.relative!,
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _retal!.statsEstimated,
                   );
 
-                  final tscStatsPayload = TSCStatsPayload(targetId: _retal!.retalId!);
+                  final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _retal!.retalId!);
                   final yataStatsPayload = YataStatsPayload(targetId: _retal!.retalId!);
 
                   return StatsDialog(
                     spiesPayload: null,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                     yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },
@@ -997,6 +1154,59 @@ class RetalCardState extends State<RetalCard> {
         ],
       );
     } else {
+      // No estimated stats — check FFScouter cache as fallback
+      final ffsEntryFallback =
+          _settingsProvider.preferFFScouterOverEstimated ? _ffScouterCache.get(_retal!.retalId!) : null;
+      if (ffsEntryFallback != null) {
+        final ffsColor = ffsEntryFallback.ffsColor(UserHelper.totalStats);
+        return Row(
+          children: [
+            Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
+            const SizedBox(width: 5),
+            Text("~${ffsEntryFallback.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
+            const SizedBox(width: 5),
+            GestureDetector(
+              child: Icon(Icons.info_outline, color: ffsColor, size: 16),
+              onTap: () {
+                showDialog<void>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return StatsDialog(
+                      spiesPayload: null,
+                      estimatedStatsPayload: EstimatedStatsPayload(
+                        xanaxCompare: 0,
+                        xanaxColor: Colors.orange,
+                        refillCompare: 0,
+                        refillColor: Colors.orange,
+                        enhancementCompare: 0,
+                        enhancementColor: _themeProvider.mainText,
+                        cansCompare: 0,
+                        cansColor: Colors.orange,
+                        sslColor: Colors.green,
+                        sslProb: false,
+                        otherXanTaken: 0,
+                        otherEctTaken: 0,
+                        otherLsdTaken: 0,
+                        otherName: _retal!.name!,
+                        otherFactionName: _retal!.factionName!,
+                        otherLastActionRelative: _retal!.lastAction.relative!,
+                        themeProvider: _themeProvider,
+                        estimatedStatsRange: _retal!.statsEstimated,
+                      ),
+                      ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
+                          ? FFScouterStatsPayload(targetId: _retal!.retalId!)
+                          : null,
+                      yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0
+                          ? YataStatsPayload(targetId: _retal!.retalId!)
+                          : null,
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      }
       return const Text(
         "unk stats",
         style: TextStyle(

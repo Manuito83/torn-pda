@@ -21,7 +21,7 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
-import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;

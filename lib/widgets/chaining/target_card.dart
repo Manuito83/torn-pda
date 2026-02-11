@@ -824,16 +824,24 @@ class TargetCardState extends State<TargetCard> {
       }
 
       int timerCadence = 1;
-      if (diff.inSeconds > 80) {
+      if (timeOut.inHours >= 1) {
+        // More than 1 hour: show "Xh Ym", update every 20 seconds
         timerCadence = 20;
         if (mounted) {
           setState(() {
             _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
           });
         }
-      } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
+      } else if (diff.inSeconds > 59) {
+        // Less than 1 hour but more than 59 seconds: show "Xm Ys" with countdown
         timerCadence = 1;
+        if (mounted) {
+          setState(() {
+            _currentLifeString = '${timeOutMin}m ${timeOutSec}s';
+          });
+        }
       } else {
+        // Less than 60 seconds: show only seconds
         timerCadence = 1;
         if (mounted) {
           setState(() {

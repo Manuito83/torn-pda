@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -17,6 +18,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/appwidget/installed_widgets_info.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -76,6 +79,10 @@ Future<bool> _updateWidgetsInBackgroundAndroid(String taskName, Map<String, dyna
   DateTime now = DateTime.now();
   String timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
   log("Android Widget $taskName update @$timeString");
+
+  if (taskName == 'com.tornpda.liveactivity.arrival_backup') {
+    return await _handleLiveActivityBackup(inputData);
+  }
 
   if ((await getInstalledHomeWidgets()).isEmpty) {
     return true;
@@ -803,4 +810,36 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
     HomeWidget.saveWidgetData<String>('error_message', "API error: ${error.errorReason}");
   }
+}
+
+Future<bool> _handleLiveActivityBackup(Map<String, dynamic>? inputData) async {
+  log("LiveActivity Backup Task triggered!");
+  // 1. Get stored backup
+  final backupJson = await Prefs().getLiveActivityCurrentTripBackup();
+  if (backupJson == null || backupJson.isEmpty) {
+    log("LiveActivity Backup: No stored trip found. Aborting.");
+    return true;
+  }
+
+  try {
+    // 2. Parse backup
+    final Map<String, dynamic> args = jsonDecode(backupJson);
+
+    // 4. Force "hasArrived" = true
+    args['hasArrived'] = true;
+
+    // 5. Send to Native
+    // We instantiate Controller directly. It's a GetxController but we don't need DI here.
+    final bridge = LiveActivityBridgeController();
+
+    log("LiveActivity Backup: Sending FORCED ARRIVAL update to native layer.");
+    await bridge.startActivity(arguments: args);
+
+    // 6. Clear backup
+    await Prefs().setLiveActivityCurrentTripBackup(null);
+  } catch (e) {
+    log("LiveActivity Backup Error: $e");
+  }
+
+  return true;
 }

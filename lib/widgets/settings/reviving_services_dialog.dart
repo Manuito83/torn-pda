@@ -78,6 +78,7 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                 ],
               ),
             ),
+            /*
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Row(
@@ -104,6 +105,7 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                 ],
               ),
             ),
+            */
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Row(

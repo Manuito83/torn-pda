@@ -13,6 +13,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class QuickItemsProviderFaction extends ChangeNotifier {
   bool _firstLoad = true;
   bool _itemSuccess = false;
+  bool _isInitialized = false;
+
+  bool get isInitialized => _isInitialized;
 
   final _activeQuickItemsListFaction = <QuickItem>[];
   UnmodifiableListView<QuickItem> get activeQuickItemsFaction => UnmodifiableListView(_activeQuickItemsListFaction);
@@ -43,6 +46,7 @@ class QuickItemsProviderFaction extends ChangeNotifier {
     if (_firstLoad) {
       _firstLoad = false;
       await _loadSaveActiveItems();
+      _isInitialized = true;
       _itemSuccess = await _getAllTornItems();
       notifyListeners();
     } else {

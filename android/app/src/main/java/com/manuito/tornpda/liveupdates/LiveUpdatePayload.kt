@@ -20,6 +20,7 @@ data class LiveUpdatePayload(
     val showProgressBar: Boolean,
     val hasArrived: Boolean,
     val travelIdentifier: String?,
+    val destinationEmoji: String?,
     val extras: Map<String, Any?>,
 ) {
 
@@ -53,6 +54,7 @@ data class LiveUpdatePayload(
                 showProgressBar = safeMap["showProgressBar"] == true,
                 hasArrived = safeMap["hasArrived"] == true,
                 travelIdentifier = safeMap["travelIdentifier"] as? String,
+                destinationEmoji = safeMap["destinationEmoji"] as? String,
                 extras = safeMap,
             )
         }

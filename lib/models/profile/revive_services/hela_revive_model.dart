@@ -1,3 +1,4 @@
+/*
 // To parse this JSON data, do
 //
 //     final helaReviveModel = helaReviveModelFromJson(jsonString);
@@ -40,3 +41,4 @@ class HelaReviveModel {
         "type": type,
       };
 }
+*/

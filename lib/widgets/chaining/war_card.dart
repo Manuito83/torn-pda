@@ -19,6 +19,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -125,6 +126,7 @@ class WarCardState extends State<WarCard> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   final _chainProvider = Get.find<ChainStatusController>();
+  final _ffScouterCache = Get.find<FFScouterCacheController>();
   late WebViewProvider _webViewProvider;
 
   Timer? _updatedTicker;
@@ -726,6 +728,69 @@ class WarCardState extends State<WarCard> {
   Widget _statsWidget() {
     // Return if stats (any type) are not available
     if (!_member.statsComparisonSuccess! && _member.statsExactTotalKnown == -1) {
+      // Even without Torn API stats, check FFScouter cache
+      final prefEnabled = _settingsProvider.preferFFScouterOverEstimated;
+      final ffsEntry = prefEnabled ? _ffScouterCache.get(_member.memberId!) : null;
+      if (ffsEntry != null) {
+        final ffsColor = ffsEntry.ffsColor(UserHelper.totalStats);
+        return Row(
+          children: [
+            Text(
+              "(FFS)",
+              style: TextStyle(fontSize: 11, color: ffsColor),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              "~${ffsEntry.displayText}",
+              style: TextStyle(fontSize: 11, color: ffsColor),
+            ),
+            const SizedBox(width: 5),
+            GestureDetector(
+              child: Icon(
+                Icons.info_outline,
+                color: ffsColor,
+                size: 16,
+              ),
+              onTap: () {
+                showDialog<void>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
+                    final yataStatsPayload = YataStatsPayload(targetId: _member.memberId!);
+
+                    return StatsDialog(
+                      spiesPayload: null,
+                      estimatedStatsPayload: EstimatedStatsPayload(
+                        xanaxCompare: 0,
+                        xanaxColor: Colors.orange,
+                        refillCompare: 0,
+                        refillColor: Colors.orange,
+                        enhancementCompare: 0,
+                        enhancementColor: _themeProvider.mainText,
+                        cansCompare: 0,
+                        cansColor: Colors.orange,
+                        sslColor: Colors.green,
+                        sslProb: false,
+                        otherXanTaken: 0,
+                        otherEctTaken: 0,
+                        otherLsdTaken: 0,
+                        otherName: _member.name ?? '',
+                        otherFactionName: _member.factionName ?? '',
+                        otherLastActionRelative: _member.lastAction?.relative ?? '',
+                        themeProvider: _themeProvider,
+                        estimatedStatsRange: _member.statsEstimated ?? '',
+                      ),
+                      ffScouterStatsPayload:
+                          _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
+                      yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      }
       return Row(
         children: [
           const Text(
@@ -858,6 +923,98 @@ class WarCardState extends State<WarCard> {
     additional.add(const SizedBox(width: 5));
 
     if (_member.statsExactTotalKnown != -1) {
+      // Check if spy is too old and FFS should override
+      final overrideMonths = _settingsProvider.ffsOverrideSpyMonths;
+      if (overrideMonths > 0 && _settingsProvider.preferFFScouterOverEstimated) {
+        final ts = _member.statsExactUpdated;
+        if (ts != null && ts > 0) {
+          final ageDays = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(ts * 1000)).inDays;
+          final ageMonths = ageDays ~/ 30;
+          if (ageMonths >= overrideMonths) {
+            final ffsCheck = _ffScouterCache.get(_member.memberId!);
+            if (ffsCheck != null && ffsCheck.bsEstimate != null) {
+              final ffsColor = ffsCheck.ffsColor(UserHelper.totalStats);
+              return Row(
+                children: [
+                  Text(
+                    "(FFS)",
+                    style: TextStyle(fontSize: 11, color: ffsColor),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    "~${ffsCheck.displayText}",
+                    style: TextStyle(fontSize: 11, color: ffsColor),
+                  ),
+                  const SizedBox(width: 3),
+                  Tooltip(
+                    message: "Spy is $ageMonths month${ageMonths == 1 ? '' : 's'} old",
+                    child: Icon(Icons.history, size: 14, color: ffsColor),
+                  ),
+                  const SizedBox(width: 3),
+                  GestureDetector(
+                    child: Icon(Icons.info_outline, color: ffsColor, size: 16),
+                    onTap: () {
+                      showDialog<void>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          SpiesController spyController = Get.find<SpiesController>();
+                          final spiesPayload = SpiesPayload(
+                            spyController: spyController,
+                            strength: _member.statsStr ?? -1,
+                            strengthUpdate: _member.statsStrUpdated,
+                            defense: _member.statsDef ?? -1,
+                            defenseUpdate: _member.statsDefUpdated,
+                            speed: _member.statsSpd ?? -1,
+                            speedUpdate: _member.statsSpdUpdated,
+                            dexterity: _member.statsDex ?? -1,
+                            dexterityUpdate: _member.statsDexUpdated,
+                            total: _member.statsExactTotal ?? -1,
+                            totalUpdate: _member.statsExactTotalUpdated,
+                            update: _member.statsExactUpdated ?? 0,
+                            spySource: _member.spySource,
+                            name: _member.name ?? '',
+                            factionName: _member.factionName ?? '',
+                            themeProvider: _themeProvider,
+                          );
+                          final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
+                          final yataStatsPayload = YataStatsPayload(targetId: _member.memberId!);
+                          return StatsDialog(
+                            spiesPayload: spiesPayload,
+                            estimatedStatsPayload: EstimatedStatsPayload(
+                              xanaxCompare: xanaxComparison,
+                              xanaxColor: xanaxColor,
+                              refillCompare: refillComparison,
+                              refillColor: refillColor,
+                              enhancementCompare: enhancementComparison,
+                              enhancementColor: enhancementColor,
+                              cansCompare: cansComparison,
+                              cansColor: cansColor,
+                              sslColor: sslColor,
+                              sslProb: sslProb,
+                              otherXanTaken: _member.memberXanax ?? 0,
+                              otherEctTaken: _member.memberEcstasy ?? 0,
+                              otherLsdTaken: _member.memberLsd ?? 0,
+                              otherName: _member.name ?? '',
+                              otherFactionName: _member.factionName ?? '',
+                              otherLastActionRelative: _member.lastAction?.relative ?? '',
+                              themeProvider: _themeProvider,
+                              estimatedStatsRange: _member.statsEstimated ?? '',
+                            ),
+                            ffScouterStatsPayload:
+                                _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
+                            yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
+          }
+        }
+      }
+
       Color? exactColor = Colors.green;
       if (UserHelper.totalStats < _member.statsExactTotalKnown! - _member.statsExactTotalKnown! * 0.1) {
         exactColor = Colors.red[700];
@@ -949,15 +1106,16 @@ class WarCardState extends State<WarCard> {
                     otherFactionName: _member.factionName ?? '',
                     otherLastActionRelative: _member.lastAction?.relative ?? '',
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _member.statsEstimated ?? '',
                   );
 
-                  final tscStatsPayload = TSCStatsPayload(targetId: _member.memberId!);
+                  final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
                   final yataStatsPayload = YataStatsPayload(targetId: _member.memberId!);
 
                   return StatsDialog(
                     spiesPayload: spiesPayload,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                     yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },
@@ -967,20 +1125,29 @@ class WarCardState extends State<WarCard> {
         ],
       );
     } else if (_member.statsEstimated!.isNotEmpty) {
+      // Check if FFScouter has a better estimate
+      final prefEnabled = _settingsProvider.preferFFScouterOverEstimated;
+      final ffsEntry = prefEnabled ? _ffScouterCache.get(_member.memberId!) : null;
+      final String statsLabel = ffsEntry != null ? "(FFS)" : "(EST)";
+      final String statsValue = ffsEntry != null ? "~${ffsEntry.displayText}" : _member.statsEstimated!;
+      final Color? ffsColor = ffsEntry?.ffsColor(UserHelper.totalStats);
+
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            "(EST)",
+          Text(
+            statsLabel,
             style: TextStyle(
               fontSize: 11,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
           Text(
-            _member.statsEstimated!,
-            style: const TextStyle(
+            statsValue,
+            style: TextStyle(
               fontSize: 11,
+              color: ffsColor,
             ),
           ),
           const SizedBox(width: 5),
@@ -1014,15 +1181,16 @@ class WarCardState extends State<WarCard> {
                     otherFactionName: _member.factionName ?? '',
                     otherLastActionRelative: _member.lastAction?.relative ?? '',
                     themeProvider: _themeProvider,
+                    estimatedStatsRange: _member.statsEstimated ?? '',
                   );
 
-                  final tscStatsPayload = TSCStatsPayload(targetId: _member.memberId!);
+                  final ffScouterStatsPayload = FFScouterStatsPayload(targetId: _member.memberId!);
                   final yataStatsPayload = YataStatsPayload(targetId: _member.memberId!);
 
                   return StatsDialog(
                     spiesPayload: null,
                     estimatedStatsPayload: estimatedStatsPayload,
-                    tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                     yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },
@@ -1032,6 +1200,59 @@ class WarCardState extends State<WarCard> {
         ],
       );
     } else {
+      // No estimated stats — check FFScouter cache as fallback
+      final prefEnabledFallback = _settingsProvider.preferFFScouterOverEstimated;
+      final ffsEntryFallback = prefEnabledFallback ? _ffScouterCache.get(_member.memberId!) : null;
+      if (ffsEntryFallback != null) {
+        final ffsColor = ffsEntryFallback.ffsColor(UserHelper.totalStats);
+        return Row(
+          children: [
+            Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
+            const SizedBox(width: 5),
+            Text("~${ffsEntryFallback.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
+            const SizedBox(width: 5),
+            GestureDetector(
+              child: Icon(Icons.info_outline, color: ffsColor, size: 16),
+              onTap: () {
+                showDialog<void>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return StatsDialog(
+                      spiesPayload: null,
+                      estimatedStatsPayload: EstimatedStatsPayload(
+                        xanaxCompare: 0,
+                        xanaxColor: Colors.orange,
+                        refillCompare: 0,
+                        refillColor: Colors.orange,
+                        enhancementCompare: 0,
+                        enhancementColor: _themeProvider.mainText,
+                        cansCompare: 0,
+                        cansColor: Colors.orange,
+                        sslColor: Colors.green,
+                        sslProb: false,
+                        otherXanTaken: 0,
+                        otherEctTaken: 0,
+                        otherLsdTaken: 0,
+                        otherName: _member.name ?? '',
+                        otherFactionName: _member.factionName ?? '',
+                        otherLastActionRelative: _member.lastAction?.relative ?? '',
+                        themeProvider: _themeProvider,
+                        estimatedStatsRange: _member.statsEstimated ?? '',
+                      ),
+                      ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
+                          ? FFScouterStatsPayload(targetId: _member.memberId!)
+                          : null,
+                      yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0
+                          ? YataStatsPayload(targetId: _member.memberId!)
+                          : null,
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      }
       return const Text(
         "unk stats",
         style: TextStyle(
@@ -1390,16 +1611,24 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       }
 
       int timerCadence = 1;
-      if (diff.inSeconds > 80) {
+      if (timeOut.inHours >= 1) {
+        // More than 1 hour: show "Xh Ym", update every 20 seconds
         timerCadence = 20;
         if (mounted) {
           setState(() {
             _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
           });
         }
-      } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
+      } else if (diff.inSeconds > 59) {
+        // Less than 1 hour but more than 59 seconds: show "Xm Ys" with countdown
         timerCadence = 1;
+        if (mounted) {
+          setState(() {
+            _currentLifeString = '${timeOutMin}m ${timeOutSec}s';
+          });
+        }
       } else {
+        // Less than 60 seconds: show only seconds
         timerCadence = 1;
         if (mounted) {
           setState(() {

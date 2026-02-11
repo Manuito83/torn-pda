@@ -211,6 +211,24 @@ class EstimatedStatsDialog extends StatelessWidget {
               padding: const EdgeInsets.only(top: 20, left: 4),
               child: sslWidget,
             ),
+            if (estimatedStatsPayload.estimatedStatsRange.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: Row(
+                  children: [
+                    const Text(
+                      "> Estimated stats: ",
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    Flexible(
+                      child: Text(
+                        estimatedStatsPayload.estimatedStatsRange,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
