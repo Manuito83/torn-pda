@@ -1,5 +1,5 @@
 // Dart imports:
-import 'dart:collection';
+import 'dart:developer';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -18,8 +18,10 @@ class QuickItemsProvider extends ChangeNotifier {
   bool _firstLoad = true;
   bool _itemSuccess = false;
   bool _refreshAfterEquip = false;
+  bool _isInitialized = false;
 
   bool get refreshAfterEquip => _refreshAfterEquip;
+  bool get isInitialized => _isInitialized;
 
   final _activeQuickItemsList = <QuickItem>[];
   UnmodifiableListView<QuickItem> get activeQuickItems => UnmodifiableListView(_activeQuickItemsList);
@@ -58,6 +60,7 @@ class QuickItemsProvider extends ChangeNotifier {
     if (_firstLoad) {
       _firstLoad = false;
       await _loadSaveActiveItems();
+      _isInitialized = true;
       _itemSuccess = await _getAllTornItems();
       updateInventoryQuantities(fullUpdate: true);
       notifyListeners();
@@ -192,14 +195,30 @@ class QuickItemsProvider extends ChangeNotifier {
       target.inventory = data.quantity;
     }
 
-    // Block duplicates only when the same instanceId is already active; allow multiple variants
+    // Check if the item is "grouped" in Torn UI (starts with 'g' in rowKey) indicating stackable
+    bool isGrouped = data.rowKey != null && data.rowKey!.startsWith('g');
+
+    // Force unique (not grouped) for weapons and armor, even if Torn returns a 'g' key or we are unsure
+    if (target.itemType == ItemType.PRIMARY ||
+        target.itemType == ItemType.SECONDARY ||
+        target.itemType == ItemType.MELEE ||
+        target.itemType == ItemType.DEFENSIVE) {
+      isGrouped = false;
+    }
+
+    target.isGrouped = isGrouped;
+
+    // Block duplicates checking instanceId, except for grouped items where we ignore instanceId
     final existingSameItem = _activeQuickItemsList.firstWhereOrNull(
-      (i) =>
-          i.number == itemNumber &&
-          i.isLoadout != true &&
-          ((data.instanceId.isNotEmpty)
-              ? i.instanceId == data.instanceId
-              : (i.instanceId == null || i.instanceId!.isEmpty)),
+      (i) {
+        if (i.number != itemNumber || i.isLoadout == true) return false;
+
+        if (isGrouped) return true;
+
+        return (data.instanceId.isNotEmpty)
+            ? i.instanceId == data.instanceId
+            : (i.instanceId == null || i.instanceId!.isEmpty);
+      },
     );
 
     bool added = false;
@@ -211,12 +230,13 @@ class QuickItemsProvider extends ChangeNotifier {
         ..number = target.number
         ..active = true
         ..itemType = target.itemType
-        ..inventory = target.inventory
+        ..inventory = isGrouped ? target.inventory : null
         ..instanceId = data.instanceId
         ..armoryId = data.armoryId
         ..damage = data.damage ?? target.damage
         ..accuracy = data.accuracy ?? target.accuracy
-        ..defense = data.defense ?? target.defense;
+        ..defense = data.defense ?? target.defense
+        ..isGrouped = isGrouped;
       _activeQuickItemsList.add(newItem);
       added = true;
     } else {
@@ -226,15 +246,98 @@ class QuickItemsProvider extends ChangeNotifier {
       existingSameItem.damage = data.damage ?? existingSameItem.damage;
       existingSameItem.accuracy = data.accuracy ?? existingSameItem.accuracy;
       existingSameItem.defense = data.defense ?? existingSameItem.defense;
-      if (data.quantity != null) {
+      // Only update inventory if grouped
+      if (isGrouped && data.quantity != null) {
         existingSameItem.inventory = data.quantity;
       }
+      existingSameItem.isGrouped = isGrouped;
     }
 
     _saveListAfterChanges();
     notifyListeners();
 
     return added ? AddPickedItemResult.added : AddPickedItemResult.duplicate;
+  }
+
+  void updateItemFromMassCheck({
+    required String originalName,
+    required int? qty,
+    required bool? isGrouped,
+  }) {
+    log('[QuickItemsProvider] updateItemFromMassCheck: $originalName, qty: $qty, isGrouped: $isGrouped');
+
+    // Update all active items with this name
+    // We check partial matches if needed, but originalName comes from our own list, so exact match is expected
+    final items = _activeQuickItemsList.where((i) => i.name == originalName).toList();
+    if (items.isEmpty) return;
+
+    bool changed = false;
+    for (var item in items) {
+      bool? finalIsGrouped = isGrouped;
+
+      //log('[QuickItemsProvider] DEBUG ITEM: ${item.name}, Type: ${item.itemType}, CurrentInv: ${item.inventory}, Inputs -> Qty: $qty, IsGrouped: $isGrouped');
+
+      if (finalIsGrouped == true) {
+        if (item.itemType == ItemType.PRIMARY ||
+            item.itemType == ItemType.SECONDARY ||
+            item.itemType == ItemType.MELEE ||
+            item.itemType == ItemType.DEFENSIVE) {
+          finalIsGrouped = false;
+        }
+      }
+
+      // 1. Update isGrouped status if new info is available (and consistent with type override)
+      if (finalIsGrouped != null && item.isGrouped != finalIsGrouped) {
+        //log('[QuickItemsProvider] Updating isGrouped for $originalName to $finalIsGrouped (Scraper said: $isGrouped)');
+        item.isGrouped = finalIsGrouped;
+        changed = true;
+      }
+
+      // 2. Only update inventory quantity if it is a grouped item
+      if (item.isGrouped == true) {
+        if (qty != null && item.inventory != qty) {
+          // log('[QuickItemsProvider] Updating inventory for grouped $originalName to $qty');
+          item.inventory = qty;
+          changed = true;
+        }
+      } else {
+        // If it's unique (not grouped), ensure inventory is null
+        if (item.inventory != null) {
+          // log('[QuickItemsProvider] Clearing inventory for unique $originalName');
+          item.inventory = null;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      _saveListAfterChanges();
+      notifyListeners();
+    }
+  }
+
+  /// Updates the instanceId of an active item if it exists in the active list
+  /// Used for learning temporary item IDs on the fly without adding new items
+  void updateActiveItemInstanceId(int itemNumber, String instanceId) {
+    if (instanceId.isEmpty) return;
+
+    // Find all active items with this itemNumber
+    final itemsToUpdate = _activeQuickItemsList.where((i) => i.number == itemNumber).toList();
+
+    if (itemsToUpdate.isEmpty) return;
+
+    bool changed = false;
+    for (var item in itemsToUpdate) {
+      if (item.instanceId != instanceId) {
+        item.instanceId = instanceId;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      _saveListAfterChanges();
+      notifyListeners();
+    }
   }
 
   void _saveListAfterChanges() {
@@ -323,12 +426,16 @@ class QuickItemsProvider extends ChangeNotifier {
     }
 
     // Items removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+    // We do NOT want to clear inventory here anymore, because we are now populating it via
+    // the "Mass Check" scraper (Quick Items Mass Update). If we clear it here, we lose the scraped data.
+    /*
     for (final quickItem in _fullQuickItemsList) {
       quickItem.inventory = null;
     }
     for (final quickItem in _activeQuickItemsList) {
       quickItem.inventory = null;
     }
+    */
     return true;
 
     /*
@@ -383,6 +490,7 @@ class QuickItemEquipScanData {
   final double? accuracy;
   final double? defense;
   final String? armoryId;
+  final String? rowKey;
 
   const QuickItemEquipScanData({
     required this.instanceId,
@@ -394,5 +502,6 @@ class QuickItemEquipScanData {
     this.accuracy,
     this.defense,
     this.armoryId,
+    this.rowKey,
   });
 }

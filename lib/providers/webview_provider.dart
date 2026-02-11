@@ -1663,7 +1663,13 @@ class WebViewProvider extends ChangeNotifier {
         chainingPayload: chainingPayload,
       );
 
-      loadMainTabUrl(authUrl);
+      final SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      if (browserTapType == BrowserTapType.deeplink && settingsProvider.newTabByDeepLinkTap) {
+        await addTab(url: authUrl);
+        activateTab(_tabList.length - 1);
+      } else {
+        loadMainTabUrl(authUrl);
+      }
 
       if (isChainingBrowser) {
         convertToChainingBrowser(chainingPayload: chainingPayload);

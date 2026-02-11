@@ -17,6 +17,7 @@ import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.da
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -584,6 +585,11 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       estimatedStats = "NPC!";
       npc = true;
     } else {
+      // Prefetch FFScouter BS for this player (fire-and-forget, result cached for display)
+      if (_settingsProvider.preferFFScouterOverEstimated && otherProfile.id != null) {
+        Get.find<FFScouterCacheController>().ensureFresh([otherProfile.id!]);
+      }
+
       try {
         estimatedStats = StatsCalculator.calculateStats(
           criminalRecordTotal: otherProfile.personalstats?.criminalRecordTotal,
@@ -776,340 +782,101 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
 
     if (yataSpy != null) {
-      // Stats spans
-      final statsSpans = <TextSpan>[];
-      final strength = yataSpy.strength;
-      final speed = yataSpy.speed;
-      final defense = yataSpy.defense;
-      final dexterity = yataSpy.dexterity;
-      final total = yataSpy.total;
-      // STR
-      var strColor = Colors.white;
-      if (strength != -1) {
-        if (UserHelper.strength >= strength!) {
-          strColor = Colors.green;
-        } else if (UserHelper.strength * 1.15 > strength) {
-          strColor = Colors.orange;
-        } else {
-          strColor = Colors.red;
-        }
-        statsSpans.add(
-          const TextSpan(
-            text: "STR ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-        statsSpans.add(
-          TextSpan(
-            text: formatBigNumbers(strength),
-            style: TextStyle(color: strColor, fontSize: 11),
-          ),
-        );
-        statsSpans.add(
-          const TextSpan(
-            text: ", ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-      } else {
-        statsSpans.add(
-          const TextSpan(
-            text: "STR ?, ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-      }
-      // SPD
-      var spdColor = Colors.white;
-      if (speed != -1) {
-        if (UserHelper.speed >= speed!) {
-          spdColor = Colors.green;
-        } else if (UserHelper.speed * 1.15 > speed) {
-          spdColor = Colors.orange;
-        } else {
-          spdColor = Colors.red;
-        }
-        statsSpans.add(
-          const TextSpan(
-            text: "SPD ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-        statsSpans.add(
-          TextSpan(
-            text: formatBigNumbers(speed),
-            style: TextStyle(color: spdColor, fontSize: 11),
-          ),
-        );
-        statsSpans.add(
-          const TextSpan(
-            text: ", ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-      } else {
-        statsSpans.add(
-          const TextSpan(
-            text: "SPD ?, ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-      }
-      // DEF
-      var defColor = Colors.white;
-      if (defense != -1) {
-        if (UserHelper.defense >= defense!) {
-          defColor = Colors.green;
-        } else if (UserHelper.defense * 1.15 > defense) {
-          defColor = Colors.orange;
-        } else {
-          defColor = Colors.red;
-        }
-        statsSpans.add(
-          const TextSpan(
-            text: "DEF ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-        statsSpans.add(
-          TextSpan(
-            text: formatBigNumbers(defense),
-            style: TextStyle(color: defColor, fontSize: 11),
-          ),
-        );
-        statsSpans.add(
-          const TextSpan(
-            text: ", ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-      } else {
-        statsSpans.add(
-          const TextSpan(
-            text: "DEF ?, ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-      }
-      // DEX
-      var dexColor = Colors.white;
-      if (dexterity != -1) {
-        if (UserHelper.dexterity >= dexterity!) {
-          dexColor = Colors.green;
-        } else if (UserHelper.dexterity * 1.15 > dexterity) {
-          dexColor = Colors.orange;
-        } else {
-          dexColor = Colors.red;
-        }
-        statsSpans.add(
-          const TextSpan(
-            text: "DEX ",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-        statsSpans.add(
-          TextSpan(
-            text: formatBigNumbers(dexterity),
-            style: TextStyle(color: dexColor, fontSize: 11),
-          ),
-        );
-      } else {
-        statsSpans.add(
-          const TextSpan(
-            text: "DEX ?",
-            style: TextStyle(color: Colors.white, fontSize: 11),
-          ),
-        );
-      }
-
-      Color infoColorStats = Colors.white;
-      if (total != -1) {
-        infoColorStats = Colors.red;
-        if (UserHelper.totalStats >= total!) {
-          infoColorStats = Colors.green;
-        } else if (UserHelper.totalStats * 1.15 > total) {
-          infoColorStats = Colors.orange;
+      // Check if spy is too old and FFS should override
+      final overrideMonths = _settingsProvider.ffsOverrideSpyMonths;
+      bool spyTooOldForFFS = false;
+      if (overrideMonths > 0 && _settingsProvider.preferFFScouterOverEstimated && !npc) {
+        final ts = yataSpy.update;
+        if (ts != null && ts > 0) {
+          final ageDays = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(ts * 1000)).inDays;
+          final ageMonths = ageDays ~/ 30;
+          if (ageMonths >= overrideMonths && otherProfile.id != null) {
+            final ffsEntry = Get.find<FFScouterCacheController>().get(otherProfile.id!);
+            if (ffsEntry != null && ffsEntry.bsEstimate != null) {
+              spyTooOldForFFS = true;
+            }
+          }
         }
       }
 
-      _statsWidget = Container(
-        color: Colors.grey[900],
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
-          child: Row(
-            children: [
-              Image.asset(
-                thisSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
-                height: 18,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: RichText(
-                        text: TextSpan(
-                          children: statsSpans,
-                        ),
+      if (spyTooOldForFFS) {
+        // Show FFS instead of old spied stats
+        final ffsEntry = Get.find<FFScouterCacheController>().get(otherProfile.id!);
+        final ffsColor = ffsEntry!.ffsColor(UserHelper.totalStats);
+        _statsWidget = Container(
+          color: Colors.grey[900],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Row(
+                    children: [
+                      Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
+                      const SizedBox(width: 5),
+                      Text("~${ffsEntry.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
+                      const SizedBox(width: 3),
+                      Tooltip(
+                        message: "Spy age exceeds threshold",
+                        child: Icon(Icons.history, size: 14, color: ffsColor),
                       ),
-                    ),
-                    onlineStatus,
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: GestureDetector(
-                        child: Icon(
-                          Icons.info_outline,
-                          color: infoColorStats,
-                          size: 18,
-                        ),
-                        onTap: () {
-                          showWebviewDialog<void>(
-                            context: context,
-                            builder: (BuildContext context) {
-                              final spiesPayload = SpiesPayload(
-                                spyController: _spyController,
-                                strength: strength ?? -1,
-                                strengthUpdate: yataSpy?.strengthTimestamp ?? -1,
-                                defense: defense ?? -1,
-                                defenseUpdate: yataSpy?.defenseTimestamp ?? -1,
-                                speed: speed ?? -1,
-                                speedUpdate: yataSpy?.speedTimestamp ?? -1,
-                                dexterity: dexterity ?? -1,
-                                dexterityUpdate: yataSpy?.dexterityTimestamp ?? -1,
-                                total: total ?? -1,
-                                totalUpdate: yataSpy?.totalTimestamp,
-                                update: yataSpy?.update ?? 0,
-                                spySource: thisSource,
-                                name: _playerName ?? '',
-                                factionName: _factionName ?? '',
-                                themeProvider: widget.themeProvider!,
-                              );
-
-                              final estimatedStatsPayload = EstimatedStatsPayload(
-                                xanaxCompare: xanaxComparison,
-                                xanaxColor: xanaxColor,
-                                refillCompare: refillComparison,
-                                refillColor: refillColor,
-                                enhancementCompare: enhancementComparison,
-                                enhancementColor: enhancementColor,
-                                cansCompare: cansComparison,
-                                cansColor: cansColor,
-                                sslColor: sslColor,
-                                sslProb: sslProb,
-                                otherXanTaken: otherProfile.personalstats?.xanax ?? 0,
-                                otherEctTaken: otherProfile.personalstats?.ecstasy ?? 0,
-                                otherLsdTaken: otherProfile.personalstats?.lsd ?? 0,
-                                otherName: otherProfile.name ?? '',
-                                otherFactionName: otherProfile.factionName ?? '',
-                                otherLastActionRelative: otherProfile.lastActionRelative ?? '',
-                                themeProvider: widget.themeProvider!,
-                              );
-
-                              final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.id ?? 0);
-                              final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
-
-                              return StatsDialog(
-                                spiesPayload: spiesPayload,
-                                estimatedStatsPayload: estimatedStatsPayload,
-                                tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
-                                yataStatsPayload:
-                                    _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else if (yataSpy == null) {
-      _statsWidget = Container(
-        color: Colors.grey[900],
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Row(
-                  children: [
-                    Text(
-                      npc ? "" : "(EST)",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      estimatedStats,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    if (!npc)
-                      Flexible(
-                        child: Wrap(
-                          children: additional,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (!npc)
+                onlineStatus,
                 Padding(
-                  padding: const EdgeInsets.only(right: 30),
-                  child: onlineStatus,
-                ),
-              if (!npc)
-                Padding(
-                  padding: const EdgeInsets.only(left: 2),
+                  padding: const EdgeInsets.only(left: 8),
                   child: GestureDetector(
-                    child: const Icon(
-                      Icons.info_outline,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                    child: Icon(Icons.info_outline, color: ffsColor, size: 18),
                     onTap: () {
                       showWebviewDialog<void>(
                         context: context,
                         builder: (BuildContext context) {
-                          final estimatedStatsPayload = EstimatedStatsPayload(
-                            xanaxCompare: xanaxComparison,
-                            xanaxColor: xanaxColor,
-                            refillCompare: refillComparison,
-                            refillColor: refillColor,
-                            enhancementCompare: enhancementComparison,
-                            enhancementColor: enhancementColor,
-                            cansCompare: cansComparison,
-                            cansColor: cansColor,
-                            sslColor: sslColor,
-                            sslProb: sslProb,
-                            otherXanTaken: otherProfile.personalstats?.xanax ?? 0,
-                            otherEctTaken: otherProfile.personalstats?.ecstasy ?? 0,
-                            otherLsdTaken: otherProfile.personalstats?.lsd ?? 0,
-                            otherName: otherProfile.name ?? '',
-                            otherFactionName: otherProfile.factionName ?? '',
-                            otherLastActionRelative: otherProfile.lastActionRelative ?? '',
+                          final spiesPayload = SpiesPayload(
+                            spyController: _spyController,
+                            strength: yataSpy?.strength ?? -1,
+                            strengthUpdate: yataSpy?.strengthTimestamp ?? -1,
+                            defense: yataSpy?.defense ?? -1,
+                            defenseUpdate: yataSpy?.defenseTimestamp ?? -1,
+                            speed: yataSpy?.speed ?? -1,
+                            speedUpdate: yataSpy?.speedTimestamp ?? -1,
+                            dexterity: yataSpy?.dexterity ?? -1,
+                            dexterityUpdate: yataSpy?.dexterityTimestamp ?? -1,
+                            total: yataSpy?.total ?? -1,
+                            totalUpdate: yataSpy?.totalTimestamp,
+                            update: yataSpy?.update ?? 0,
+                            spySource: thisSource,
+                            name: _playerName ?? '',
+                            factionName: _factionName ?? '',
                             themeProvider: widget.themeProvider!,
                           );
-
-                          final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.id ?? 0);
+                          final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
                           final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
-
                           return StatsDialog(
-                            spiesPayload: null,
-                            estimatedStatsPayload: estimatedStatsPayload,
-                            tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                            spiesPayload: spiesPayload,
+                            estimatedStatsPayload: EstimatedStatsPayload(
+                              xanaxCompare: xanaxComparison,
+                              xanaxColor: xanaxColor,
+                              refillCompare: refillComparison,
+                              refillColor: refillColor,
+                              enhancementCompare: enhancementComparison,
+                              enhancementColor: enhancementColor,
+                              cansCompare: cansComparison,
+                              cansColor: cansColor,
+                              sslColor: sslColor,
+                              sslProb: sslProb,
+                              otherXanTaken: otherProfile.personalstats?.xanax ?? 0,
+                              otherEctTaken: otherProfile.personalstats?.ecstasy ?? 0,
+                              otherLsdTaken: otherProfile.personalstats?.lsd ?? 0,
+                              otherName: otherProfile.name ?? '',
+                              otherFactionName: otherProfile.factionName ?? '',
+                              otherLastActionRelative: otherProfile.lastActionRelative ?? '',
+                              themeProvider: widget.themeProvider!,
+                              estimatedStatsRange: estimatedStats,
+                            ),
+                            ffScouterStatsPayload:
+                                _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
                             yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                           );
                         },
@@ -1117,8 +884,371 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     },
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
+        );
+      } else {
+        // Stats spans
+        final statsSpans = <TextSpan>[];
+        final strength = yataSpy.strength;
+        final speed = yataSpy.speed;
+        final defense = yataSpy.defense;
+        final dexterity = yataSpy.dexterity;
+        final total = yataSpy.total;
+        // STR
+        var strColor = Colors.white;
+        if (strength != -1) {
+          if (UserHelper.strength >= strength!) {
+            strColor = Colors.green;
+          } else if (UserHelper.strength * 1.15 > strength) {
+            strColor = Colors.orange;
+          } else {
+            strColor = Colors.red;
+          }
+          statsSpans.add(
+            const TextSpan(
+              text: "STR ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+          statsSpans.add(
+            TextSpan(
+              text: formatBigNumbers(strength),
+              style: TextStyle(color: strColor, fontSize: 11),
+            ),
+          );
+          statsSpans.add(
+            const TextSpan(
+              text: ", ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+        } else {
+          statsSpans.add(
+            const TextSpan(
+              text: "STR ?, ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+        }
+        // SPD
+        var spdColor = Colors.white;
+        if (speed != -1) {
+          if (UserHelper.speed >= speed!) {
+            spdColor = Colors.green;
+          } else if (UserHelper.speed * 1.15 > speed) {
+            spdColor = Colors.orange;
+          } else {
+            spdColor = Colors.red;
+          }
+          statsSpans.add(
+            const TextSpan(
+              text: "SPD ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+          statsSpans.add(
+            TextSpan(
+              text: formatBigNumbers(speed),
+              style: TextStyle(color: spdColor, fontSize: 11),
+            ),
+          );
+          statsSpans.add(
+            const TextSpan(
+              text: ", ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+        } else {
+          statsSpans.add(
+            const TextSpan(
+              text: "SPD ?, ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+        }
+        // DEF
+        var defColor = Colors.white;
+        if (defense != -1) {
+          if (UserHelper.defense >= defense!) {
+            defColor = Colors.green;
+          } else if (UserHelper.defense * 1.15 > defense) {
+            defColor = Colors.orange;
+          } else {
+            defColor = Colors.red;
+          }
+          statsSpans.add(
+            const TextSpan(
+              text: "DEF ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+          statsSpans.add(
+            TextSpan(
+              text: formatBigNumbers(defense),
+              style: TextStyle(color: defColor, fontSize: 11),
+            ),
+          );
+          statsSpans.add(
+            const TextSpan(
+              text: ", ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+        } else {
+          statsSpans.add(
+            const TextSpan(
+              text: "DEF ?, ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+        }
+        // DEX
+        var dexColor = Colors.white;
+        if (dexterity != -1) {
+          if (UserHelper.dexterity >= dexterity!) {
+            dexColor = Colors.green;
+          } else if (UserHelper.dexterity * 1.15 > dexterity) {
+            dexColor = Colors.orange;
+          } else {
+            dexColor = Colors.red;
+          }
+          statsSpans.add(
+            const TextSpan(
+              text: "DEX ",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+          statsSpans.add(
+            TextSpan(
+              text: formatBigNumbers(dexterity),
+              style: TextStyle(color: dexColor, fontSize: 11),
+            ),
+          );
+        } else {
+          statsSpans.add(
+            const TextSpan(
+              text: "DEX ?",
+              style: TextStyle(color: Colors.white, fontSize: 11),
+            ),
+          );
+        }
+
+        Color infoColorStats = Colors.white;
+        if (total != -1) {
+          infoColorStats = Colors.red;
+          if (UserHelper.totalStats >= total!) {
+            infoColorStats = Colors.green;
+          } else if (UserHelper.totalStats * 1.15 > total) {
+            infoColorStats = Colors.orange;
+          }
+        }
+
+        _statsWidget = Container(
+          color: Colors.grey[900],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
+            child: Row(
+              children: [
+                Image.asset(
+                  thisSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                  height: 18,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: RichText(
+                          text: TextSpan(
+                            children: statsSpans,
+                          ),
+                        ),
+                      ),
+                      onlineStatus,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: GestureDetector(
+                          child: Icon(
+                            Icons.info_outline,
+                            color: infoColorStats,
+                            size: 18,
+                          ),
+                          onTap: () {
+                            showWebviewDialog<void>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                final spiesPayload = SpiesPayload(
+                                  spyController: _spyController,
+                                  strength: strength ?? -1,
+                                  strengthUpdate: yataSpy?.strengthTimestamp ?? -1,
+                                  defense: defense ?? -1,
+                                  defenseUpdate: yataSpy?.defenseTimestamp ?? -1,
+                                  speed: speed ?? -1,
+                                  speedUpdate: yataSpy?.speedTimestamp ?? -1,
+                                  dexterity: dexterity ?? -1,
+                                  dexterityUpdate: yataSpy?.dexterityTimestamp ?? -1,
+                                  total: total ?? -1,
+                                  totalUpdate: yataSpy?.totalTimestamp,
+                                  update: yataSpy?.update ?? 0,
+                                  spySource: thisSource,
+                                  name: _playerName ?? '',
+                                  factionName: _factionName ?? '',
+                                  themeProvider: widget.themeProvider!,
+                                );
+
+                                final estimatedStatsPayload = EstimatedStatsPayload(
+                                  xanaxCompare: xanaxComparison,
+                                  xanaxColor: xanaxColor,
+                                  refillCompare: refillComparison,
+                                  refillColor: refillColor,
+                                  enhancementCompare: enhancementComparison,
+                                  enhancementColor: enhancementColor,
+                                  cansCompare: cansComparison,
+                                  cansColor: cansColor,
+                                  sslColor: sslColor,
+                                  sslProb: sslProb,
+                                  otherXanTaken: otherProfile.personalstats?.xanax ?? 0,
+                                  otherEctTaken: otherProfile.personalstats?.ecstasy ?? 0,
+                                  otherLsdTaken: otherProfile.personalstats?.lsd ?? 0,
+                                  otherName: otherProfile.name ?? '',
+                                  otherFactionName: otherProfile.factionName ?? '',
+                                  otherLastActionRelative: otherProfile.lastActionRelative ?? '',
+                                  themeProvider: widget.themeProvider!,
+                                  estimatedStatsRange: estimatedStats,
+                                );
+
+                                final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
+                                final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
+
+                                return StatsDialog(
+                                  spiesPayload: spiesPayload,
+                                  estimatedStatsPayload: estimatedStatsPayload,
+                                  ffScouterStatsPayload:
+                                      _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
+                                  yataStatsPayload:
+                                      _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } // end of spyTooOldForFFS else
+    } else if (yataSpy == null) {
+      _statsWidget = Container(
+        color: Colors.grey[900],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 4, 8, 4),
+          child: Builder(builder: (context) {
+            // Check if FFScouter has a better estimate
+            final ffsCacheController = Get.find<FFScouterCacheController>();
+            final ffsEntry = (!npc && _settingsProvider.preferFFScouterOverEstimated)
+                ? ffsCacheController.get(otherProfile.id!)
+                : null;
+            final String statsLabel = ffsEntry != null ? "(FFS)" : (npc ? "" : "(EST)");
+            final String statsValue = ffsEntry != null ? "~${ffsEntry.displayText}" : estimatedStats;
+            final Color statsColor = ffsEntry?.ffsColor(UserHelper.totalStats) ?? Colors.white;
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Row(
+                    children: [
+                      Text(
+                        statsLabel,
+                        style: TextStyle(
+                          color: statsColor,
+                          fontSize: 11,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        statsValue,
+                        style: TextStyle(
+                          color: statsColor,
+                          fontSize: 11,
+                          fontStyle:
+                              estimatedStats == "(EST) UNK" && ffsEntry == null ? FontStyle.italic : FontStyle.normal,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      if (!npc)
+                        Flexible(
+                          child: Wrap(
+                            children: additional,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (!npc)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 30),
+                    child: onlineStatus,
+                  ),
+                if (!npc)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 2),
+                    child: GestureDetector(
+                      child: const Icon(
+                        Icons.info_outline,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      onTap: () {
+                        showWebviewDialog<void>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            final estimatedStatsPayload = EstimatedStatsPayload(
+                              xanaxCompare: xanaxComparison,
+                              xanaxColor: xanaxColor,
+                              refillCompare: refillComparison,
+                              refillColor: refillColor,
+                              enhancementCompare: enhancementComparison,
+                              enhancementColor: enhancementColor,
+                              cansCompare: cansComparison,
+                              cansColor: cansColor,
+                              sslColor: sslColor,
+                              sslProb: sslProb,
+                              otherXanTaken: otherProfile.personalstats?.xanax ?? 0,
+                              otherEctTaken: otherProfile.personalstats?.ecstasy ?? 0,
+                              otherLsdTaken: otherProfile.personalstats?.lsd ?? 0,
+                              otherName: otherProfile.name ?? '',
+                              otherFactionName: otherProfile.factionName ?? '',
+                              otherLastActionRelative: otherProfile.lastActionRelative ?? '',
+                              themeProvider: widget.themeProvider!,
+                              estimatedStatsRange: estimatedStats,
+                            );
+
+                            final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
+                            final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
+
+                            return StatsDialog(
+                              spiesPayload: null,
+                              estimatedStatsPayload: estimatedStatsPayload,
+                              ffScouterStatsPayload:
+                                  _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
+                              yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            );
+          }),
         ),
       );
 

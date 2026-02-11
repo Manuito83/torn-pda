@@ -74,6 +74,15 @@ class Prefs {
   final String _kRetaliationSectionEnabled = "pda_retaliationSectionEnabled";
   final String _kSingleRetaliationOpensBrowser = "pda_singleRetaliationOpensBrowser";
 
+  // Target Finder
+  final String _kTargetFinderSectionEnabled = "pda_targetFinderSectionEnabled";
+  final String _kFFScouterTargetsCache = "pda_ffScouterTargetsCache";
+  final String _kFFScouterFilters = "pda_ffScouterFilters";
+  final String _kFFScouterStatsCache = "pda_ffScouterStatsCache";
+  final String _kPreferFFScouterOverEstimated = "pda_preferFFScouterOverEstimated";
+  final String _kFfsOverrideSpyMonths = "pda_ffsOverrideSpyMonths";
+  final String _kFactionAssistPrefs = "pda_factionAssistPrefs";
+
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
@@ -197,6 +206,8 @@ class Prefs {
   final String _kLifeNotificationType = "pda_lifeNotificationType";
   final String _kDrugNotificationType = "pda_drugNotificationType";
   final String _kMedicalNotificationType = "pda_medicalNotificationType";
+  final String _kEducationNotificationType = "pda_educationNotificationType";
+  final String _kEducationBarEnabled = "pda_educationBarEnabled";
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kHospitalNotificationType = "pda_hospitalNotificationType";
   final String _kHospitalNotificationAhead = "pda_hospitalNotificationAhead";
@@ -252,6 +263,7 @@ class Prefs {
   final String _kShareAttackOptions = "pda_shareAttackOptions";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
   final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
+  final String _kFFScouterEnabledStatus = "pda_ffScouterEnabledStatus";
 
   // Notes
   final String _kPlayerNotes = "pda_playerNotes";
@@ -296,6 +308,8 @@ class Prefs {
   final String _kQuickItemsListFaction = "pda_quickItemsListFaction"; // keep faction data
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kQuickItemsRefreshAfterEquip = "pda_quickItemsRefreshAfterEquip";
+  final String _kQuickItemsEnabled = "pda_quickItemsEnabled";
+  final String _kQuickItemsFactionEnabled = "pda_quickItemsFactionEnabled";
   //
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
@@ -338,7 +352,7 @@ class Prefs {
   // Reviving
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kUseUhcRevive = "pda_useUhcRevive";
-  final String _kUseHelaRevive = "pda_useHelaRevive";
+  //final String _kUseHelaRevive = "pda_useHelaRevive";
   final String _kUseWtfRevive = "pda_useWtfRevive";
   final String _kUseMidnightXRevive = "pda_useMidnightXRevive";
   final String _kUseWolverinesRevive = "pda_useWolverinesRevive";
@@ -401,6 +415,7 @@ class Prefs {
   final String _kFullScreenByShortChainingTap = "pda_fullScreenByShortChainingTap";
   final String _kFullScreenByLongChainingTap = "pda_fullScreenByLongChainingTap";
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
+  final String _kNewTabByDeepLinkTap = "pda_newTabByDeepLinkTap";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
 
@@ -453,6 +468,9 @@ class Prefs {
   // TSC
   final String _kAlternativeTSCKeyEnabled = "pda_alternativeTSCKeyEnabled";
   final String _kAlternativeTSCKey = "pda_alternativeTSCKey";
+  // FFScouter
+  final String _kAlternativeFFScouterKeyEnabled = "pda_alternativeFFScouterKeyEnabled";
+  final String _kAlternativeFFScouterKey = "pda_alternativeFFScouterKey";
 
   // TornStats stats chart configuration
   final String _kTornStatsChartSave = "pda_tornStatsChartSave";
@@ -462,12 +480,6 @@ class Prefs {
   final String _kTornStatsChartRange = "pda_tornStatsChartRange";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
   final String _kTornStatsChartShowBoth = "pda_tornStatsChartShowBoth";
-
-  // Torn Attack Central
-  // NOTE: [_kTACEnabled] adds an extra tab in Chaining
-  final String _kTACEnabled = "pda_tacEnabled";
-  final String _kTACFilters = "pda_tacFilters";
-  final String _kTACTargets = "pda_tacTargets";
 
   // Appwidget
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
@@ -530,6 +542,7 @@ class Prefs {
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
   // Android-only: used to avoid repeating "Arrived" Live Update after app relaunch
   final String _kAndroidLiveActivityTravelLastArrivalId = "pda_androidLiveActivityTravelLastArrivalId";
+  final String _kLiveActivityCurrentTripBackup = "pda_liveActivityCurrentTripBackup";
 
   /// ----------------------------
   /// Methods for app version
@@ -1791,6 +1804,15 @@ class Prefs {
   }
 
   // *************
+  Future<int> getFFScouterEnabledStatus() async {
+    return await PrefsDatabase.getInt(_kFFScouterEnabledStatus, -1);
+  }
+
+  Future setFFScouterEnabledStatus(int value) async {
+    return await PrefsDatabase.setInt(_kFFScouterEnabledStatus, value);
+  }
+
+  // *************
   Future<int> getYataStatsEnabledStatus() async {
     return await PrefsDatabase.getInt(_kYataStatsEnabledStatus, 1);
   }
@@ -2077,6 +2099,22 @@ class Prefs {
 
   Future setBoosterNotificationType(String value) async {
     return await PrefsDatabase.setString(_kBoosterNotificationType, value);
+  }
+
+  Future<String> getEducationNotificationType() async {
+    return await PrefsDatabase.getString(_kEducationNotificationType, '0');
+  }
+
+  Future setEducationNotificationType(String value) async {
+    return await PrefsDatabase.setString(_kEducationNotificationType, value);
+  }
+
+  Future<bool> getEducationBarEnabled() async {
+    return await PrefsDatabase.getBool(_kEducationBarEnabled, true);
+  }
+
+  Future setEducationBarEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kEducationBarEnabled, value);
   }
 
   Future<String> getHospitalNotificationType() async {
@@ -2590,6 +2628,7 @@ class Prefs {
     return await PrefsDatabase.setBool(_kUseUhcRevive, value);
   }
 
+  /*
   Future<bool> getUseHelaRevive() async {
     return await PrefsDatabase.getBool(_kUseHelaRevive, false);
   }
@@ -2597,6 +2636,7 @@ class Prefs {
   Future setUseHelaRevive(bool value) async {
     return await PrefsDatabase.setBool(_kUseHelaRevive, value);
   }
+  */
 
   Future<bool> getUseWtfRevive() async {
     return await PrefsDatabase.getBool(_kUseWtfRevive, false);
@@ -2752,6 +2792,22 @@ class Prefs {
 
   Future setQuickItemsRefreshAfterEquip(bool value) async {
     return await PrefsDatabase.setBool(_kQuickItemsRefreshAfterEquip, value);
+  }
+
+  Future<bool> getQuickItemsEnabled() async {
+    return await PrefsDatabase.getBool(_kQuickItemsEnabled, true);
+  }
+
+  Future setQuickItemsEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsEnabled, value);
+  }
+
+  Future<bool> getQuickItemsFactionEnabled() async {
+    return await PrefsDatabase.getBool(_kQuickItemsFactionEnabled, true);
+  }
+
+  Future setQuickItemsFactionEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsFactionEnabled, value);
   }
 
   /// ----------------------------
@@ -3049,6 +3105,65 @@ class Prefs {
     return await PrefsDatabase.setString(_kAlternativeTSCKey, value);
   }
 
+  // FFSCOUTER
+  Future<bool> getAlternativeFFScouterKeyEnabled() async {
+    return await PrefsDatabase.getBool(_kAlternativeFFScouterKeyEnabled, false);
+  }
+
+  Future setAlternativeFFScouterKeyEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kAlternativeFFScouterKeyEnabled, value);
+  }
+
+  Future<String> getAlternativeFFScouterKey() async {
+    return await PrefsDatabase.getString(_kAlternativeFFScouterKey, "");
+  }
+
+  Future setAlternativeFFScouterKey(String value) async {
+    return await PrefsDatabase.setString(_kAlternativeFFScouterKey, value);
+  }
+
+  Future<String> getFFScouterTargetsCache() async {
+    return await PrefsDatabase.getString(_kFFScouterTargetsCache, "");
+  }
+
+  Future setFFScouterTargetsCache(String value) async {
+    return await PrefsDatabase.setString(_kFFScouterTargetsCache, value);
+  }
+
+  Future<String> getFFScouterFilters() async {
+    return await PrefsDatabase.getString(_kFFScouterFilters, "");
+  }
+
+  Future setFFScouterFilters(String value) async {
+    return await PrefsDatabase.setString(_kFFScouterFilters, value);
+  }
+
+  Future<String> getFFScouterStatsCache() async {
+    return await PrefsDatabase.getString(_kFFScouterStatsCache, "");
+  }
+
+  Future setFFScouterStatsCache(String value) async {
+    return await PrefsDatabase.setString(_kFFScouterStatsCache, value);
+  }
+
+  Future<bool> getPreferFFScouterOverEstimated() async {
+    return await PrefsDatabase.getBool(_kPreferFFScouterOverEstimated, false);
+  }
+
+  Future setPreferFFScouterOverEstimated(bool value) async {
+    return await PrefsDatabase.setBool(_kPreferFFScouterOverEstimated, value);
+  }
+
+  /// 0 = Off (FFS never overrides spied). 1-12 = months threshold.
+  /// When set, FFS replaces spied stats on cards if the spy is older than X months.
+  Future<int> getFfsOverrideSpyMonths() async {
+    return await PrefsDatabase.getInt(_kFfsOverrideSpyMonths, 0);
+  }
+
+  Future setFfsOverrideSpyMonths(int value) async {
+    return await PrefsDatabase.setInt(_kFfsOverrideSpyMonths, value);
+  }
+
   /// ---------------------
   /// TORNSTATS STATS CHART
   /// ---------------------
@@ -3107,33 +3222,6 @@ class Prefs {
 
   Future setTornStatsChartShowBoth(bool value) async {
     return await PrefsDatabase.setBool(_kTornStatsChartShowBoth, value);
-  }
-
-  /// -------------------
-  /// TORN ATTACK CENTRAL
-  /// -------------------
-  Future<bool> getTACEnabled() async {
-    return await PrefsDatabase.getBool(_kTACEnabled, false);
-  }
-
-  Future setTACEnabled(bool value) async {
-    return await PrefsDatabase.setBool(_kTACEnabled, value);
-  }
-
-  Future<String> getTACFilters() async {
-    return await PrefsDatabase.getString(_kTACFilters, "");
-  }
-
-  Future setTACFilters(String value) async {
-    return await PrefsDatabase.setString(_kTACFilters, value);
-  }
-
-  Future<String> getTACTargets() async {
-    return await PrefsDatabase.getString(_kTACTargets, "");
-  }
-
-  Future setTACTargets(String value) async {
-    return await PrefsDatabase.setString(_kTACTargets, value);
   }
 
   /// -----------------------------
@@ -3331,6 +3419,14 @@ class Prefs {
 
   Future setRetaliationSectionEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kRetaliationSectionEnabled, value);
+  }
+
+  Future<bool> getTargetFinderSectionEnabled() async {
+    return await PrefsDatabase.getBool(_kTargetFinderSectionEnabled, true);
+  }
+
+  Future setTargetFinderSectionEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kTargetFinderSectionEnabled, value);
   }
 
   Future<bool> getSingleRetaliationOpensBrowser() async {
@@ -3659,6 +3755,16 @@ class Prefs {
 
   Future setFullScreenByDeepLinkTap(bool value) async {
     return await PrefsDatabase.setBool(_kFullScreenByDeepLinkTap, value);
+  }
+
+  //--
+
+  Future<bool> getNewTabByDeepLinkTap() async {
+    return await PrefsDatabase.getBool(_kNewTabByDeepLinkTap, false);
+  }
+
+  Future setNewTabByDeepLinkTap(bool value) async {
+    return await PrefsDatabase.setBool(_kNewTabByDeepLinkTap, value);
   }
 
   //--
@@ -4216,6 +4322,18 @@ class Prefs {
     return await PrefsDatabase.setString(_kAndroidLiveActivityTravelLastArrivalId, travelId);
   }
 
+  Future<String?> getLiveActivityCurrentTripBackup() async {
+    final String value = await PrefsDatabase.getString(_kLiveActivityCurrentTripBackup, "");
+    return value.isEmpty ? null : value;
+  }
+
+  Future setLiveActivityCurrentTripBackup(String? jsonString) async {
+    if (jsonString == null) {
+      return await PrefsDatabase.setString(_kLiveActivityCurrentTripBackup, "");
+    }
+    return await PrefsDatabase.setString(_kLiveActivityCurrentTripBackup, jsonString);
+  }
+
   /// ----------------------------
   /// Methods for player notes
   /// ----------------------------
@@ -4266,5 +4384,23 @@ class Prefs {
 
   Future setPlayerNotesMigrationCompleted(bool completed) async {
     return await PrefsDatabase.setBool(_kPlayerNotesMigrationCompleted, completed);
+  }
+
+  /// ----------------------------
+  /// Methods for FACTION ASSIST checkbox prefs
+  /// ----------------------------
+  Future<Map<String, bool>> getFactionAssistPrefs() async {
+    final raw = await PrefsDatabase.getString(_kFactionAssistPrefs, "");
+    if (raw.isEmpty) return {};
+    try {
+      final map = Map<String, dynamic>.from(jsonDecode(raw));
+      return map.map((k, v) => MapEntry(k, v as bool));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future setFactionAssistPrefs(Map<String, bool> prefs) async {
+    return await PrefsDatabase.setString(_kFactionAssistPrefs, jsonEncode(prefs));
   }
 }

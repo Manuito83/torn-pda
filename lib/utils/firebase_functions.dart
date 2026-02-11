@@ -93,6 +93,8 @@ class _FirebaseFunctions {
     String refills = "unk",
     String drinks = "unk",
     String exactStats = "",
+    String ffsStats = "",
+    String fairFight = "",
   }) async {
     final String functionName = 'factionAssist-sendAssistMessage';
 
@@ -107,6 +109,8 @@ class _FirebaseFunctions {
       'refills': refills,
       'drinks': drinks,
       'exactStats': exactStats,
+      'ffsStats': ffsStats,
+      'fairFight': fairFight,
     };
 
     if (Platform.isWindows) {

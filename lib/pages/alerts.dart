@@ -12,7 +12,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/pages/alerts/alerts_tsm_dialog.dart';
+import 'package:torn_pda/pages/alerts/alerts_troubleshooting_page.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
@@ -1883,12 +1883,13 @@ class AlertsSettingsState extends State<AlertsSettings> {
             Icons.handyman,
           ),
           onPressed: () {
-            showDialog(
-              useRootNavigator: false,
-              context: context,
-              builder: (BuildContext context) {
-                return _troubleShootingDialog();
-              },
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => AlertsTroubleshootingPage(
+                  firebaseUserModel: _firebaseUserModel,
+                  reassignFirebaseUserModelCallback: _reassignUserAfterTsm,
+                ),
+              ),
             );
           },
         ),
@@ -1973,29 +1974,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
             Navigator.of(context).pop();
           },
         )
-      ],
-    );
-  }
-
-  Widget _troubleShootingDialog() {
-    return AlertDialog(
-      title: const Text(
-        "Troubleshooting",
-        style: TextStyle(
-          fontSize: 18,
-        ),
-      ),
-      content: AlertsTsmDialog(
-        firebaseUserModel: _firebaseUserModel,
-        reassignFirebaseUserModelCallback: _reassignUserAfterTsm,
-      ),
-      actions: [
-        TextButton(
-          child: const Text("Close"),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
       ],
     );
   }

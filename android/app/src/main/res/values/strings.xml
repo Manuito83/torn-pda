@@ -9,6 +9,7 @@
     <string name="live_update_eta_pattern">ETA %1$s</string>
     <string name="live_update_arrived_label">Arrived</string>
     <string name="live_update_unknown_eta">ETA unavailable</string>
+    <string name="live_update_arriving_pattern">Arriving in: %1$s at %2$s</string>
     <string name="live_update_destination_unknown">Unknown</string>
     <string name="live_update_notification_secondary">%1$s → %2$s</string>
 </resources>

@@ -13,7 +13,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ForeignStocksWebviewHandler {

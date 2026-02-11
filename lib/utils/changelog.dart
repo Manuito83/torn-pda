@@ -103,6 +103,44 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.12.0 - Build 624 - built 08/02/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.12.0'
+        ..date = '♡ 14 FEB 2026 ♡'
+        ..features = [
+          ComplexFeature(
+            "Added FFScouter integration for battle score estimates",
+            explanation: "FFScouter is an external service that estimates battle scores for Torn players.\n\n"
+                "Two new options are available in Settings (Stats & Player Notes):\n\n"
+                "1. Prefer FFScouter battle score: replaces the vague estimated stats range "
+                "(e.g. '2M - 25M') with FFScouter's battle score estimate on war cards, retal cards "
+                "and profile checks. Also used for sorting, filters and SmartScore calculations. "
+                "Data is cached locally for 24 hours.\n\n"
+                "2. Override old spies (1-12 months): when enabled, if a spy is older than the "
+                "configured threshold, FFScouter's estimate will be shown instead. "
+                "A clock icon indicates when this override is active.\n\n"
+                "FFScouter data is also available in the Faction Assistance dialog, so faction "
+                "members can receive battle score and fair fight estimates in assist notifications.\n\n"
+                "An FFScouter section with detailed tips has been added to the Tips page.\n\n"
+                "You need an FFScouter API key (free at ffscouter.com) to use these features. "
+                "Set it up in Chaining > FFScouter tab > API Key.",
+          ),
+          if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
+          "Improved Quick Items selection interface",
+          "Quick Items can now be disabled (personal and faction separately)",
+          "Improved faction attack assistance notification settings",
+          "Added seconds to targets cards red-status countdown",
+          "Added education information to Profile's cooldowns section",
+          "Added option to open deep links in a new tab",
+          "Removed obsolete providers",
+          "Updated Wiki entries",
+          "Fixed travel expenditure warning not showing in some cases",
+          "Fixed travel wallet money warning quantity persistence",
+          "Fixed app update dialog",
+        ],
+    );
+
     // v3.11.0 - Build 611 - built 26/01/2026
     itemList.add(
       ChangeLogItem()

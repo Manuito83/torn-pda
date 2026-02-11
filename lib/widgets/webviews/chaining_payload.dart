@@ -6,6 +6,7 @@ class ChainingPayload {
   Function(List<String>)? attacksCallback;
   bool war = false;
   bool panic = false;
+  bool skipAutoUpdate = false;
   late bool showNotes;
   late bool showBlankNotes;
   late bool showOnlineFactionWarning;

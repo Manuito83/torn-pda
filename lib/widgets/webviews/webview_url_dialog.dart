@@ -30,7 +30,9 @@ import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_open_button.dart';
+import 'package:torn_pda/widgets/webviews/faction_assist_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -146,17 +148,16 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             ],
                           ),
                           onPressed: () async {
+                            // Show a loading toast while fetching data
                             BotToast.showText(
-                              text: "Requesting assistance from faction members!",
+                              text: "Fetching target info…",
                               textStyle: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
-                              contentColor: Colors.green,
+                              contentColor: Colors.grey[700]!,
                               contentPadding: const EdgeInsets.all(10),
                             );
-
-                            Navigator.of(context).pop();
 
                             final String attackId = widget.url.split("user2ID=")[1];
 
@@ -166,7 +167,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               },
                             );
 
-                            dynamic attackAssistMessageArg;
+                            FactionAssistPayload assistPayload;
                             if (t is OtherProfilePDA) {
                               final SpiesController spyController = Get.find<SpiesController>();
 
@@ -204,33 +205,86 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               estimatedStats += "\n- Refills (E): ${t.personalstats?.energyRefills ?? '?'}";
                               estimatedStats += "\n- Drinks (E): ${t.personalstats?.energyDrinks ?? '?'}";
                               estimatedStats += "\n(tap to get a comparison with you)";
-                              attackAssistMessageArg = (
+
+                              // FFScouter data
+                              String ffsStats = "";
+                              String fairFight = "";
+                              if (_settingsProvider.ffScouterEnabledStatusRemoteConfig &&
+                                  _settingsProvider.ffScouterEnabledStatus == 1 &&
+                                  _settingsProvider.preferFFScouterOverEstimated) {
+                                try {
+                                  final ffsCache = Get.find<FFScouterCacheController>();
+                                  final attackIdInt = int.tryParse(attackId);
+                                  if (attackIdInt != null) {
+                                    await ffsCache.ensureFresh([attackIdInt]);
+                                    final entry = ffsCache.get(attackIdInt);
+                                    if (entry != null) {
+                                      ffsStats = entry.displayText;
+                                      if (entry.fairFight != null) {
+                                        fairFight = "${entry.fairFight!.toStringAsFixed(2)}x";
+                                      }
+                                    }
+                                  }
+                                } catch (_) {
+                                  // FFScouter not available, continue without it
+                                }
+                              }
+
+                              assistPayload = FactionAssistPayload(
                                 attackId: attackId,
-                                attackName: t.name,
-                                attackLevel: t.level.toString(),
+                                attackName: t.name ?? "",
+                                attackLevel: t.level?.toString() ?? "",
                                 attackLife: "${t.lifeCurrent ?? '?'} / ${t.lifeMaximum ?? '?'}",
-                                attackAge: t.age.toString(),
+                                attackAge: t.age?.toString() ?? "",
                                 estimatedStats: estimatedStats,
                                 exactStats: exactStats ?? "",
                                 xanax: (t.personalstats?.xanax ?? '?').toString(),
                                 refills: (t.personalstats?.energyRefills ?? '?').toString(),
                                 drinks: (t.personalstats?.energyDrinks ?? '?').toString(),
+                                ffsStats: ffsStats,
+                                fairFight: fairFight,
                               );
                             } else {
-                              attackAssistMessageArg = (attackId: attackId);
+                              assistPayload = FactionAssistPayload(attackId: attackId);
                             }
 
+                            BotToast.cleanAll();
+
+                            // Show confirmation dialog (on top of this one)
+                            if (!mounted) return;
+                            final result = await showFactionAssistDialog(
+                              context: context,
+                              payload: assistPayload,
+                            );
+
+                            // Now close the options dialog
+                            if (mounted) Navigator.of(context).pop();
+
+                            if (result == null) return; // User cancelled
+
+                            BotToast.showText(
+                              text: "Requesting assistance from faction members!",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.green,
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+
                             final int membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                              attackId: attackAssistMessageArg.attackId,
-                              attackName: attackAssistMessageArg.attackName,
-                              attackLevel: attackAssistMessageArg.attackLevel,
-                              attackLife: attackAssistMessageArg.attackLife,
-                              attackAge: attackAssistMessageArg.attackAge,
-                              estimatedStats: attackAssistMessageArg.estimatedStats,
-                              xanax: attackAssistMessageArg.xanax,
-                              refills: attackAssistMessageArg.refills,
-                              drinks: attackAssistMessageArg.drinks,
-                              exactStats: attackAssistMessageArg.exactStats,
+                              attackId: result.attackId,
+                              attackName: result.attackName,
+                              attackLevel: result.attackLevel,
+                              attackLife: result.attackLife,
+                              attackAge: result.attackAge,
+                              estimatedStats: result.estimatedStats,
+                              xanax: result.xanax,
+                              refills: result.refills,
+                              drinks: result.drinks,
+                              exactStats: result.exactStats,
+                              ffsStats: result.ffsStats,
+                              fairFight: result.fairFight,
                             );
 
                             String membersMessage =

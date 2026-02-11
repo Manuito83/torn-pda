@@ -1144,6 +1144,11 @@ export async function sendNotificationToUser({
   sound = "slow_spring_board.aiff",
 }: NotificationParams): Promise<any> {
 
+  // Guard: skip invalid tokens to avoid unnecessary FCM errors
+  if (!token || token === "windows" || token === "error") {
+    return null;
+  }
+
   // Give a space to mach channel ids in the app
   let vibrationPattern = vibration;
   if (vibrationPattern !== "") {
@@ -1206,9 +1211,16 @@ export async function sendNotificationToUser({
     const message = (error && error.message) ? error.message : String(error);
     if (
       message.includes("registration token is not a valid FCM registration token") ||
-      message.includes("Requested entity was not found")
+      message.includes("Requested entity was not found") ||
+      message.includes("NotRegistered")
     ) {
       logger.warn(`Invalid FCM token. Skipping notification. (${message})`);
+      return null;
+    }
+
+    // Handle payload too large - log and skip instead of crashing
+    if (message.includes("message is too big") || message.includes("Payload size")) {
+      logger.warn(`FCM payload too large. Skipping notification. (${message})`);
       return null;
     }
 

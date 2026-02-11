@@ -37,7 +37,7 @@ import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/share_stats_dialog.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 import 'package:torn_pda/widgets/chaining/war_settings_sheet.dart';
-import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
+//import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
@@ -64,9 +64,11 @@ class WarOptions {
       case "UHC revive":
         // Own icon in widget
         break;
+      /*
       case "HeLa revive":
         // Own icon in widget
         break;
+      */
       case "WTF revive":
         // Own icon in widget
         break;
@@ -118,7 +120,7 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "Hidden targets"),
     WarOptions(description: "Nuke revive"),
     WarOptions(description: "UHC revive"),
-    WarOptions(description: "HeLa revive"),
+    //WarOptions(description: "HeLa revive"),
     WarOptions(description: "WTF revive"),
     WarOptions(description: "Midnight X revive"),
     WarOptions(description: "The Wolverines revive"),
@@ -760,7 +762,7 @@ class WarPageState extends State<WarPage> {
               if (faction.members != null) {
                 for (var member in faction.members!.values) {
                   if (member == null) continue;
-                  double total = w.getMemberTotalStats(member);
+                  double total = w.getMemberTotalStatsWithFFS(member);
                   if (total > maxS) maxS = total;
                   if (member.statsStr != null && member.statsStr! > maxStr) maxStr = member.statsStr!.toDouble();
                   if (member.statsDef != null && member.statsDef! > maxDef) maxDef = member.statsDef!.toDouble();
@@ -840,8 +842,10 @@ class WarPageState extends State<WarPage> {
                 openNukeReviveDialog(context, _themeProvider!, null);
               case "UHC revive":
                 openUhcReviveDialog(context, _themeProvider!, null);
+              /*
               case "HeLa revive":
                 openHelaReviveDialog(context, _themeProvider!, null);
+              */
               case "WTF revive":
                 openWtfReviveDialog(context, _themeProvider!, null);
               case "Midnight X revive":
@@ -886,9 +890,11 @@ class WarPageState extends State<WarPage> {
               if (choice.description!.contains("UHC") && !_w.uhcReviveActive) {
                 return false;
               }
+              /*
               if (choice.description!.contains("HeLa") && !_w.helaReviveActive) {
                 return false;
               }
+              */
               if (choice.description!.contains("WTF") && !_w.wtfReviveActive) {
                 return false;
               }
@@ -996,6 +1002,7 @@ class WarPageState extends State<WarPage> {
                   ),
                 );
               }
+              /*
               if (choice.description!.contains("HeLa")) {
                 return PopupMenuItem<WarOptions>(
                   value: choice,
@@ -1011,6 +1018,7 @@ class WarPageState extends State<WarPage> {
                   ),
                 );
               }
+              */
               if (choice.description!.contains("WTF")) {
                 return PopupMenuItem<WarOptions>(
                   value: choice,
@@ -1808,7 +1816,7 @@ class WarTargetsListState extends State<WarTargetsList> {
 
         // Stats Filters
         if (settings.statsRange != null) {
-          double totalStats = widget.warController.getMemberTotalStats(thisMember);
+          double totalStats = widget.warController.getMemberTotalStatsWithFFS(thisMember);
           if (totalStats < settings.statsRange!.start || totalStats > settings.statsRange!.end) {
             continue;
           }

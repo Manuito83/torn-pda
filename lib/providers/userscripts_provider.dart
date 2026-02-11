@@ -18,7 +18,7 @@ import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
-import 'package:torn_pda/utils/js_handlers.dart';
+import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
