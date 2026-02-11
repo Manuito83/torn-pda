@@ -256,7 +256,10 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
 
       double qtyFontSize = 12;
       String? itemQty;
-      if (!item.isLoadout! && !widget.faction && !_itemsProvider.hideInventoryCount && _settingsProvider.quickItemsInventoryCheckEnabled) {
+      if (!item.isLoadout! &&
+          !widget.faction &&
+          !_itemsProvider.hideInventoryCount &&
+          _settingsProvider.quickItemsInventoryCheckEnabled) {
         // If we have a valid inventory count (e.g. from Mass Check), show it
         // ONLY if it is a stackable/grouped item. Unique items (weapons/armor) should not show quantity
         if (item.inventory == null || item.isGrouped == false) {
