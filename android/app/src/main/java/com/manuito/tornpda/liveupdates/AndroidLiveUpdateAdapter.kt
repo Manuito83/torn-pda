@@ -8,8 +8,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.manuito.tornpda.R
 import kotlinx.coroutines.*
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Manages the lifecycle and rendering of the travel live update notification
@@ -18,6 +16,7 @@ import kotlin.math.min
 class AndroidLiveUpdateAdapter(
     private val context: Context,
     private val tapIntentFactory: LiveUpdateTapIntentFactory,
+    private val contentBuilder: LiveUpdateNotificationContentBuilder = LiveUpdateNotificationContentBuilder(),
 ) : LiveUpdateAdapter, LiveUpdateNotificationReceiver.Listener {
 
     private val notificationManager = NotificationManagerCompat.from(context)
@@ -161,6 +160,8 @@ class AndroidLiveUpdateAdapter(
         val etaText = formatEta(payload)
         val secondary = context.getString(R.string.live_update_notification_secondary, origin, destination)
 
+        val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
+
         val extrasBundle = android.os.Bundle()
         payload.extras.forEach { (key, value) ->
             when (value) {
@@ -196,13 +197,13 @@ class AndroidLiveUpdateAdapter(
             .setContentIntent(tapIntent)
             .setDeleteIntent(dismissIntent)
             .setOnlyAlertOnce(true)
-            .setOngoing(!payload.hasArrived)
-            .setAutoCancel(payload.hasArrived)
+            .setOngoing(!hasActuallyArrived)
+            .setAutoCancel(hasActuallyArrived)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setExtras(extrasBundle)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
 
-        if (payload.hasArrived) {
+        if (hasActuallyArrived) {
             // --- Arrived state ---
             val arrivedTitle = context.getString(R.string.live_update_arrived_in_pattern, destination)
             val arrivedContentText = if (arrivalClockTime != null) {
@@ -247,7 +248,7 @@ class AndroidLiveUpdateAdapter(
             }
             builder.setStyle(NotificationCompat.BigTextStyle().bigText(bigTextLines.joinToString("\n")))
 
-            val progress = computeProgress(payload)
+            val progress = contentBuilder.computeProgress(payload)
             if (progress != null) {
                 builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
             } else {
@@ -320,15 +321,8 @@ class AndroidLiveUpdateAdapter(
     }
 
     private fun formatRemaining(payload: LiveUpdatePayload): String? {
-        if (payload.hasArrived) return null
-        val arrival = payload.arrivalTimeTimestamp ?: return null
-        val nowSec = System.currentTimeMillis() / 1000
-        val remaining = arrival - nowSec
-        if (remaining <= 0) return null
-        val hours = remaining / 3600
-        val minutes = (remaining % 3600) / 60
-        val formatted = if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
-        return context.getString(R.string.live_update_remaining_pattern, formatted)
+        val remaining = contentBuilder.computeRemainingTime(payload) ?: return null
+        return context.getString(R.string.live_update_remaining_pattern, remaining.toCompact())
     }
 
     private fun formatEarliestReturn(payload: LiveUpdatePayload): String? {
@@ -344,17 +338,6 @@ class AndroidLiveUpdateAdapter(
         val date = java.util.Date(arrival * 1000)
         val format = android.text.format.DateFormat.getTimeFormat(context)
         return format.format(date)
-    }
-
-    private fun computeProgress(payload: LiveUpdatePayload): ProgressInfo? {
-        val arrival = payload.arrivalTimeTimestamp ?: return null
-        val departure = payload.departureTimeTimestamp ?: return null
-
-        // Calculate progress based on current system time
-        val reference = System.currentTimeMillis() / 1000
-        val totalSeconds = max(1L, arrival - departure)
-        val elapsedSeconds = min(totalSeconds, max(0L, reference - departure))
-        return ProgressInfo(totalSeconds, elapsedSeconds)
     }
 
     private fun applyShortCriticalText(builder: NotificationCompat.Builder, payload: LiveUpdatePayload) {
@@ -430,6 +413,8 @@ class AndroidLiveUpdateAdapter(
         tapIntent: android.app.PendingIntent,
         dismissIntent: android.app.PendingIntent,
     ): Notification {
+        val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
+
         val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
         val remainingText = formatRemaining(payload)
         val earliestReturnText = formatEarliestReturn(payload)
@@ -440,13 +425,13 @@ class AndroidLiveUpdateAdapter(
             .setContentIntent(tapIntent)
             .setDeleteIntent(dismissIntent)
             .setOnlyAlertOnce(true)
-            .setOngoing(!payload.hasArrived)
-            .setAutoCancel(payload.hasArrived)
+            .setOngoing(!hasActuallyArrived)
+            .setAutoCancel(hasActuallyArrived)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setExtras(extrasBundle)
             .setCategory(Notification.CATEGORY_STATUS)
 
-        if (payload.hasArrived) {
+        if (hasActuallyArrived) {
             // --- Arrived state ---
             val arrivedTitle = context.getString(R.string.live_update_arrived_in_pattern, destination)
             val arrivedContentText = if (arrivalClockTime != null) {
@@ -489,7 +474,7 @@ class AndroidLiveUpdateAdapter(
             }
             builder.setStyle(Notification.BigTextStyle().bigText(bigTextLines.joinToString("\n")))
 
-            val progress = computeProgress(payload)
+            val progress = contentBuilder.computeProgress(payload)
             if (progress != null) {
                 builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
             }
@@ -511,8 +496,4 @@ class AndroidLiveUpdateAdapter(
         return builder.build()
     }
 
-    private data class ProgressInfo(
-        val totalSeconds: Long,
-        val elapsedSeconds: Long,
-    )
 }
