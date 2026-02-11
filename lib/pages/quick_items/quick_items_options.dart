@@ -98,24 +98,98 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
     );
   }
 
-  Widget _equipRefreshTile() {
-    return Consumer<QuickItemsProvider>(
-      builder: (context, itemsProvider, child) {
+  Widget _enableSwitch() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: ListTile(
+          dense: true,
+          leading: const Icon(Icons.power_settings_new, size: 20),
+          title: const Text('Enable quick items', style: TextStyle(fontSize: 13)),
+          trailing: Switch(
+            value: false,
+            onChanged: (value) {
+              if (widget.isFaction) {
+                _settingsProvider.quickItemsFactionEnabled = value;
+              } else {
+                _settingsProvider.quickItemsEnabled = value;
+              }
+            },
+            activeTrackColor: Colors.lightGreenAccent,
+            activeThumbColor: Colors.green,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _optionsCard() {
+    return Consumer2<QuickItemsProvider, SettingsProvider>(
+      builder: (context, itemsProvider, settingsProvider, child) {
+        final quickItemsEnabled =
+            widget.isFaction ? settingsProvider.quickItemsFactionEnabled : settingsProvider.quickItemsEnabled;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text("Refresh after equipping"),
-            subtitle: const Text(
-              'Torn may not immediately show newly equipped items when using Quick Items. '
-              'Enable to auto-refresh after each equip (slower). NOTE: loadout changes will always refresh.',
-              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-            ),
-            trailing: Switch(
-              value: itemsProvider.refreshAfterEquip,
-              onChanged: (value) {
-                itemsProvider.setRefreshAfterEquip(value);
-              },
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                leading: const Icon(Icons.settings, size: 20),
+                title: const Text('OPTIONS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: const Text('Enable quick items', style: TextStyle(fontSize: 13)),
+                    trailing: Switch(
+                      value: quickItemsEnabled,
+                      onChanged: (value) {
+                        if (widget.isFaction) {
+                          settingsProvider.quickItemsFactionEnabled = value;
+                        } else {
+                          settingsProvider.quickItemsEnabled = value;
+                        }
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: const Text('Refresh after equipping', style: TextStyle(fontSize: 13)),
+                    subtitle: const Text(
+                      'Auto-refresh after each equip (slower). Loadout changes always refresh.',
+                      style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                    ),
+                    trailing: Switch(
+                      value: itemsProvider.refreshAfterEquip,
+                      onChanged: (value) {
+                        itemsProvider.setRefreshAfterEquip(value);
+                      },
+                    ),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: const Text('Hide inventory count', style: TextStyle(fontSize: 13)),
+                    subtitle: const Text(
+                      'Hide item quantities from the quick items chips.',
+                      style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                    ),
+                    trailing: Switch(
+                      value: itemsProvider.hideInventoryCount,
+                      onChanged: (value) {
+                        itemsProvider.setHideInventoryCount(value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -156,103 +230,106 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                child: quickItemsEnabled
-                    ? SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            const SizedBox(height: 20),
-                            if (!widget.isFaction) _equipRefreshTile(),
-                            if (!widget.isFaction) const SizedBox(height: 10),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 15),
-                              child: SizedBox(
-                                width: 200,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text("ACTIVE QUICK ITEMS"),
-                                    Padding(
-                                      padding: EdgeInsets.only(left: 10),
-                                      child: Text(
-                                        'SWIPE TO REMOVE',
-                                        style: TextStyle(fontSize: 10),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.only(left: 10),
-                                      child: Text(
-                                        'LONG-PRESS TO SORT',
-                                        style: TextStyle(fontSize: 10),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const SizedBox(height: 10),
+                      if (!widget.isFaction && !quickItemsEnabled) _enableSwitch(),
+                      if (!widget.isFaction && quickItemsEnabled) _optionsCard(),
+                      if (!quickItemsEnabled)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(30),
+                            child: Text(
+                              'Quick Items deactivated',
+                              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                             ),
-                            const SizedBox(height: 10),
-                            if ((!widget.isFaction && _itemsProvider!.activeQuickItems.isEmpty) ||
-                                (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.isEmpty))
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                                child: Text(
-                                  widget.isFaction
-                                      ? 'No quick items active, add some below!'
-                                      : 'No quick items yet. Add them from Items with the "+" button, or pick loadouts below.',
-                                  style: TextStyle(
-                                    color: Colors.orange[800],
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              )
-                            else
-                              _activeCardsList(),
-                            const SizedBox(height: 40),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15),
-                              child: Text(widget.isFaction ? "ALL AVAILABLE ITEMS" : "LOADOUTS"),
-                            ),
-                            const SizedBox(height: 10),
-                            if ((!widget.isFaction && _itemsProvider!.fullQuickItems.isEmpty) ||
-                                (widget.isFaction && _itemsProviderFaction.fullQuickItemsFaction.isEmpty))
-                              const Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(50),
-                                  child: Column(
-                                    children: [
-                                      Text('Loading loadouts...'),
-                                      SizedBox(height: 40),
-                                      CircularProgressIndicator(),
-                                      SizedBox(height: 40),
-                                      Text(
-                                        'If this takes too long, there might be a connection '
-                                        'problem or Torn API might be down. Close the browser '
-                                        'completely and try again in a while!',
-                                        style: TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            else
-                              _allCardsList(),
-                            const SizedBox(height: 40),
-                          ],
-                        ),
-                      )
-                    : const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(30),
-                          child: Text(
-                            'Quick Items deactivated',
-                            style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                           ),
                         ),
-                      ),
+                      if (quickItemsEnabled) ...[
+                        if (!widget.isFaction) const SizedBox(height: 10),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 15),
+                          child: SizedBox(
+                            width: 200,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text("ACTIVE QUICK ITEMS"),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    'SWIPE TO REMOVE',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    'LONG-PRESS TO SORT',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if ((!widget.isFaction && _itemsProvider!.activeQuickItems.isEmpty) ||
+                            (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.isEmpty))
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                            child: Text(
+                              widget.isFaction
+                                  ? 'No quick items active, add some below!'
+                                  : 'No quick items yet. Add them from Items with the "+" button, or pick loadouts below.',
+                              style: TextStyle(
+                                color: Colors.orange[800],
+                                fontStyle: FontStyle.italic,
+                                fontSize: 13,
+                              ),
+                            ),
+                          )
+                        else
+                          _activeCardsList(),
+                        const SizedBox(height: 40),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          child: Text(widget.isFaction ? "ALL AVAILABLE ITEMS" : "LOADOUTS"),
+                        ),
+                        const SizedBox(height: 10),
+                        if ((!widget.isFaction && _itemsProvider!.fullQuickItems.isEmpty) ||
+                            (widget.isFaction && _itemsProviderFaction.fullQuickItemsFaction.isEmpty))
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(50),
+                              child: Column(
+                                children: [
+                                  Text('Loading loadouts...'),
+                                  SizedBox(height: 40),
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 40),
+                                  Text(
+                                    'If this takes too long, there might be a connection '
+                                    'problem or Torn API might be down. Close the browser '
+                                    'completely and try again in a while!',
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          _allCardsList(),
+                        const SizedBox(height: 40),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -262,8 +339,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
   }
 
   AppBar buildAppBar() {
-    final quickItemsEnabled =
-        widget.isFaction ? _settingsProvider.quickItemsFactionEnabled : _settingsProvider.quickItemsEnabled;
     return AppBar(
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
@@ -277,21 +352,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
         },
       ),
       actions: <Widget>[
-        Tooltip(
-          message: quickItemsEnabled ? 'Disable quick items' : 'Enable quick items',
-          child: Switch(
-            value: quickItemsEnabled,
-            onChanged: (value) {
-              if (widget.isFaction) {
-                _settingsProvider.quickItemsFactionEnabled = value;
-              } else {
-                _settingsProvider.quickItemsEnabled = value;
-              }
-            },
-            activeTrackColor: Colors.lightGreenAccent,
-            activeThumbColor: Colors.green,
-          ),
-        ),
         IconButton(
           icon: Icon(
             Icons.delete,

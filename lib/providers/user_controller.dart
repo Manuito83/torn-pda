@@ -34,7 +34,7 @@ class UserController extends GetxController {
     }
 
     _syncFromBasic();
-    _setupAlternativeKeys();
+    await _setupAlternativeKeys();
 
     if (_basic!.userApiKeyValid == true) {
       await _refreshFromAPI();
@@ -75,24 +75,18 @@ class UserController extends GetxController {
     if (yataKeyEnabled) {
       alternativeYataKeyEnabled = true;
       _alternativeYataKey = await Prefs().getAlternativeYataKey();
-    } else {
-      _alternativeYataKey = _basic?.userApiKey ?? "";
     }
 
     final bool tornStatsKeyEnabled = await Prefs().getAlternativeTornStatsKeyEnabled();
     if (tornStatsKeyEnabled) {
       alternativeTornStatsKeyEnabled = true;
       _alternativeTornStatsKey = await Prefs().getAlternativeTornStatsKey();
-    } else {
-      _alternativeTornStatsKey = _basic?.userApiKey ?? "";
     }
 
     final bool ffScouterKeyEnabled = await Prefs().getAlternativeFFScouterKeyEnabled();
     if (ffScouterKeyEnabled) {
       alternativeFFScouterKeyEnabled = true;
       _alternativeFFScouterKey = await Prefs().getAlternativeFFScouterKey();
-    } else {
-      _alternativeFFScouterKey = _basic?.userApiKey ?? "";
     }
   }
 
@@ -137,7 +131,7 @@ class UserController extends GetxController {
   bool alternativeYataKeyEnabled = false;
 
   String _alternativeYataKey = "";
-  String get alternativeYataKey => _alternativeYataKey.trim();
+  String get alternativeYataKey => alternativeYataKeyEnabled ? _alternativeYataKey.trim() : (apiKey ?? "");
   set alternativeYataKey(String key) {
     _alternativeYataKey = key.trim();
   }
@@ -146,7 +140,8 @@ class UserController extends GetxController {
   bool alternativeTornStatsKeyEnabled = false;
 
   String _alternativeTornStatsKey = "";
-  String get alternativeTornStatsKey => _alternativeTornStatsKey.trim();
+  String get alternativeTornStatsKey =>
+      alternativeTornStatsKeyEnabled ? _alternativeTornStatsKey.trim() : (apiKey ?? "");
   set alternativeTornStatsKey(String key) {
     _alternativeTornStatsKey = key.trim();
   }
@@ -155,7 +150,8 @@ class UserController extends GetxController {
   bool alternativeFFScouterKeyEnabled = false;
 
   String _alternativeFFScouterKey = "";
-  String get alternativeFFScouterKey => _alternativeFFScouterKey.trim();
+  String get alternativeFFScouterKey =>
+      alternativeFFScouterKeyEnabled ? _alternativeFFScouterKey.trim() : (apiKey ?? "");
   set alternativeFFScouterKey(String key) {
     _alternativeFFScouterKey = key.trim();
   }

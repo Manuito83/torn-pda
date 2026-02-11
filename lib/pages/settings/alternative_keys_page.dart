@@ -136,9 +136,6 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     onChanged: (enabled) {
                       w.alternativeYataKeyEnabled = enabled;
                       Prefs().setAlternativeYataKeyEnabled(enabled);
-                      if (!enabled) {
-                        w.alternativeYataKey = w.apiKey!;
-                      }
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -208,9 +205,6 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     onChanged: (enabled) {
                       w.alternativeTornStatsKeyEnabled = enabled;
                       Prefs().setAlternativeTornStatsKeyEnabled(enabled);
-                      if (!enabled) {
-                        w.alternativeTornStatsKey = w.apiKey!;
-                      }
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -280,9 +274,6 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     onChanged: (enabled) {
                       w.alternativeFFScouterKeyEnabled = enabled;
                       Prefs().setAlternativeFFScouterKeyEnabled(enabled);
-                      if (!enabled) {
-                        w.alternativeFFScouterKey = w.apiKey!;
-                      }
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,

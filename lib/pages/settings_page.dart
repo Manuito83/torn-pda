@@ -2331,6 +2331,41 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Disable update notification",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Disable update notification")),
+                  Switch(
+                    value: _settingsProvider.disableUpdateDialog,
+                    onChanged: (enabled) {
+                      setState(() {
+                        _settingsProvider.disableUpdateDialog = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Disable the dialog that notifies you about new PDA versions and features when the app starts",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
 
     return buildSectionWithRows(

@@ -14,8 +14,7 @@ class ChangeLogItem {
   String version = "";
   String date = "";
   List<dynamic> features = [];
-  bool showInfoLine = false;
-  String infoString = "";
+  List<String> hotfixes = [];
 }
 
 class ComplexFeature {
@@ -103,11 +102,23 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.12.1 - Build 625 - built 11/02/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.12.1'
+        ..date = '♡ 14 FEB 2026 ♡'
+        ..features = [
+          "Quick Items: added option to disable inventory quantities",
+          "Added option to disable the update dialog",
+          "Fixed travel expenditure showing repetedly",
+        ],
+    );
+
     // v3.12.0 - Build 624 - built 08/02/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.12.0'
-        ..date = '♡ 14 FEB 2026 ♡'
+        ..date = '11 FEB 2026'
         ..features = [
           ComplexFeature(
             "Added FFScouter integration for battle score estimates",
@@ -294,7 +305,7 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.5'
         ..date = '10 DEC 2025'
-        ..infoString = 'Hotfix: resolved issues with TS chart and jobless warning'
+        ..hotfixes = ['Resolved issues with TS chart and jobless warning']
         ..features = [
           "User scripts can now be exported and imported in a JSON file",
           "Profile: added Arson crime",
@@ -356,7 +367,7 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.2'
         ..date = '20 SEP 2025'
-        ..infoString = 'Hotfix: resolved issues with foreign stocks filtering'
+        ..hotfixes = ['Resolved issues with foreign stocks filtering']
         ..features = [
           ComplexFeature(
             "Player notes system overhauled",
@@ -428,9 +439,11 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.4'
         ..date = '25 AUG 2025'
-        ..infoString = Platform.isIOS
-            ? "Please note that the minimum supported OS version will be updated to iOS 15 soon"
-            : "Please note that the minimum supported OS version will be updated to Android 7 (Nougat) soon"
+        ..hotfixes = [
+          Platform.isIOS
+              ? "Minimum supported OS version will be updated to iOS 15 soon"
+              : "Minimum supported OS version will be updated to Android 7 (Nougat) soon",
+        ]
         ..features = [
           "User scripts can now be accessed from the browser URL dialog",
           if (Platform.isAndroid) "Discreet notification setting now also applies to alarms and timers",
@@ -607,7 +620,7 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.4'
         ..date = '15 APR 2025'
-        ..infoString = "Hotfix: fixed issue with AWH pricing"
+        ..hotfixes = ["Fixed issue with AWH pricing"]
         ..features = [
           "Alerts: company messages can now be filtered out in chat notifications",
           "Added Wiki to the main drawer menu",
@@ -746,8 +759,7 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.7'
         ..date = '30 DEC 2024'
-        ..infoString = "Hotfix: resolved issues with the travel widget and graphic "
-            "display problems on certain devices"
+        ..hotfixes = ["Resolved issues with the travel widget and graphic display problems on certain devices"]
         ..features = [
           "Profile: added user's market items details",
           ComplexFeature(
@@ -772,7 +784,7 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.4'
         ..date = '15 DEC 2024'
-        ..infoString = 'Hotfix: resolved incorrect estimated stats calculation in the War section'
+        ..hotfixes = ['Resolved incorrect estimated stats calculation in the War section']
         ..features = [
           "Fixed player profile widget",
           "Fixed chat notifications in split screen",
@@ -784,7 +796,7 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.2'
         ..date = '09 DEC 2024'
-        ..infoString = 'Hotfix: resolved an issue affecting the reordering of tabs'
+        ..hotfixes = ['Resolved an issue affecting the reordering of tabs']
         ..features = [
           "Added channel info to chat notifications",
           "Fixed notifications for own chat messages",
@@ -1218,7 +1230,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v3_1_6 = ChangeLogItem();
     v3_1_6.version = 'Torn PDA v3.1.6';
     v3_1_6.date = '15 SEP 2023';
-    v3_1_6.infoString = 'Hotfix to address blank screen issues';
+    v3_1_6.hotfixes = ['Blank screen issues'];
     const String feat3_1_6_1 = "Added split screen mode between browser and app";
     const String feat3_1_6_2 = "Browser: long press in title opens shortcuts (default style)";
     const String feat3_1_6_3 = "Browser: the terminal can now be cleared";
@@ -1366,7 +1378,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v3_0_1 = ChangeLogItem();
     v3_0_1.version = 'Torn PDA v3.0.1';
     v3_0_1.date = '01 APR 2023';
-    v3_0_1.infoString = "Hotfix for issues with hidden foreign stocks and stakeouts";
+    v3_0_1.hotfixes = ["Issues with hidden foreign stocks and stakeouts"];
     const String feat3_0_1_1 = "Added stakeouts section";
     const String feat3_0_1_2 = "Added native Torn authentication (see Settings)";
     const String feat3_0_1_3 = "Added alerts for medical and booster cooldowns";
@@ -1414,7 +1426,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v2_9_5 = ChangeLogItem();
     v2_9_5.version = 'Torn PDA v2.9.5';
     v2_9_5.date = '01 FEB 2023';
-    v2_9_5.infoString = "Hotfix for crashes in some iOS devices when launching the browser";
+    v2_9_5.hotfixes = ["Crashes in some iOS devices when launching the browser"];
     const String feat2_9_5_1 = "Added theme synchronization between app and web (can be disabled)";
     const String feat2_9_5_2 = "User scripts' injection time can now be selected. NOTE: this might be "
         "a breaking change for some scripts, that will require to be adapted. It is also recommended to restore "
@@ -1533,7 +1545,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v2_8_7 = ChangeLogItem();
     v2_8_7.version = 'Torn PDA v2.8.7';
     v2_8_7.date = '03 JUL 2022';
-    v2_8_7.infoString = "Hotfix 2 for jail widget issues in some devices";
+    v2_8_7.hotfixes = ["Hotfix 2 for jail widget issues in some devices"];
     const String feat2_8_7_1 = "Fixed user stale check and alerts persistence";
     v2_8_7.features.add(feat2_8_7_1);
 
@@ -1541,7 +1553,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v2_8_4 = ChangeLogItem();
     v2_8_4.version = 'Torn PDA v2.8.4';
     v2_8_4.date = '18 JUN 2022';
-    v2_8_4.infoString = "Hotfix for some user scripts not loading at start";
+    v2_8_4.hotfixes = ["User scripts not loading at start"];
     const String feat2_8_4_1 = "Items: fixed owned items filtering";
     const String feat2_8_4_2 = "Browser: improved stability issues in some devices";
     v2_8_4.features.add(feat2_8_4_1);
@@ -1551,7 +1563,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v2_8_2 = ChangeLogItem();
     v2_8_2.version = 'Torn PDA v2.8.2';
     v2_8_2.date = '06 JUN 2022';
-    v2_8_2.infoString = "Hotfix for war targets' data persistence";
+    v2_8_2.hotfixes = ["War targets' data persistence"];
     const String feat2_8_2_1 = "Browser: added Bounties filter widget";
     const String feat2_8_2_2 = "War: targets in a different country can now be filtered out";
     const String feat2_8_2_3 = "War: red (not-okay) targets can now be filtered out";
@@ -1586,8 +1598,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // VERSION 2.7.0 && 2.7.1 && 2.7.2 due to hotfix
     final v2_7_0 = ChangeLogItem();
-    v2_7_0.showInfoLine = true; // REMOVE for others
-    if (Platform.isAndroid) v2_7_0.infoString = "Hotfix 2 for stability issues still reported after release of v2.7.1";
+    if (Platform.isAndroid) v2_7_0.hotfixes = ["Hotfix 2 for stability issues still reported after release of v2.7.1"];
     v2_7_0.version = 'Torn PDA v2.7.2';
     v2_7_0.date = '25 APR 2022';
     const String feat2_7_0_1 = "Browser: added quick items widget in faction armoury";
@@ -2906,22 +2917,21 @@ class ChangeLogState extends State<ChangeLog> {
           ),
         );
 
-        // Info icon, if there is one
-        if (entry.key.infoString.isNotEmpty) {
+        // Hotfix lines, if there are any
+        for (final hotfix in entry.key.hotfixes) {
           itemList.add(
             Padding(
               padding: const EdgeInsets.fromLTRB(7, 10, 10, 10),
               child: Row(
                 children: <Widget>[
                   const Icon(
-                    Icons.info_outline,
-                    color: Colors.blue,
+                    Icons.local_fire_department,
+                    color: Colors.orange,
+                    size: 20,
                   ),
                   const Padding(padding: EdgeInsets.only(right: 12)),
                   Flexible(
-                    child: Text(
-                      entry.key.infoString,
-                    ),
+                    child: Text(hotfix),
                   ),
                 ],
               ),

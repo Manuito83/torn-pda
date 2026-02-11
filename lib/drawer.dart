@@ -2914,6 +2914,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future _showPdaUpdateDialog() async {
+    // Allow users to disable the update dialog from Settings > Maintenance
+    if (_settingsProvider.disableUpdateDialog && !_debugForcePdaUpdateDialog) return;
+
     final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetailsRC;
     if (pdaUpdateDetailsString.isEmpty) return;
 

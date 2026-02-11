@@ -134,6 +134,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _disableUpdateDialog = false;
+  bool get disableUpdateDialog => _disableUpdateDialog;
+  set disableUpdateDialog(bool enabled) {
+    _disableUpdateDialog = enabled;
+    Prefs().setPdaUpdateDialogDisabled(enabled);
+    notifyListeners();
+  }
+
   var _webviewCacheEnabledRemoteConfig = "user";
   String get webviewCacheEnabledRemoteConfig => _webviewCacheEnabledRemoteConfig;
   set webviewCacheEnabledRemoteConfig(String enabled) {
@@ -1484,6 +1492,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
     _webviewCacheEnabled = await Prefs().getWebviewCacheEnabled();
+    _disableUpdateDialog = await Prefs().getPdaUpdateDialogDisabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
     _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();

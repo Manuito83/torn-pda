@@ -4615,13 +4615,35 @@ class WebViewFullState extends State<WebViewFull>
     if (!mounted) return;
 
     if (_assessTravelAgencyEnergyNerveLifeWarningTriggerTime != null &&
-        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 2) {
+        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 30) {
       return;
     }
-    _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/travelagency.php') || easyUrl.contains('page.php?sid=travel')) {
+      // Verify the "Travel Agency" title is actually present on the page
+      // to avoid activation while traveling or visiting a foreign country
+      bool foundTravelAgency = false;
+      try {
+        for (int attempt = 0; attempt < 5; attempt++) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (!mounted) return;
+          final html = await webViewController?.getHtml();
+          if (html == null) continue;
+          final document = parse(html);
+          final h4Elements = document.querySelectorAll('h4');
+          foundTravelAgency = h4Elements.any(
+            (e) => e.text.trim() == 'Travel Agency',
+          );
+          if (foundTravelAgency) break;
+        }
+        if (!foundTravelAgency) return;
+      } catch (e) {
+        return;
+      }
+
+      _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
+
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
 
