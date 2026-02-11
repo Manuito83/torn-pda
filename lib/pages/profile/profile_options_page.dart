@@ -282,6 +282,49 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
+                                      'COOLDOWNS',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      const Text("Show education"),
+                                      Switch(
+                                        value: _settingsProvider.educationBarEnabled,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.educationBarEnabled = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeThumbColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'This information is also available in MISC, but you can choose to have it shown in the cool downs section '
+                                    'with dedicated manual notifications or alarms.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 15),
+                                const Divider(),
+                                const SizedBox(height: 5),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
                                       'STATUS CARD',
                                       style: TextStyle(fontSize: 10),
                                     ),

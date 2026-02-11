@@ -87,12 +87,12 @@ class UserController extends GetxController {
       _alternativeTornStatsKey = _basic?.userApiKey ?? "";
     }
 
-    final bool tscKeyEnabled = await Prefs().getAlternativeTSCKeyEnabled();
-    if (tscKeyEnabled) {
-      alternativeTSCKeyEnabled = true;
-      _alternativeTSCKey = await Prefs().getAlternativeTSCKey();
+    final bool ffScouterKeyEnabled = await Prefs().getAlternativeFFScouterKeyEnabled();
+    if (ffScouterKeyEnabled) {
+      alternativeFFScouterKeyEnabled = true;
+      _alternativeFFScouterKey = await Prefs().getAlternativeFFScouterKey();
     } else {
-      _alternativeTSCKey = _basic?.userApiKey ?? "";
+      _alternativeFFScouterKey = _basic?.userApiKey ?? "";
     }
   }
 
@@ -151,13 +151,13 @@ class UserController extends GetxController {
     _alternativeTornStatsKey = key.trim();
   }
 
-  // Alternative keys Torn Spies Central
-  bool alternativeTSCKeyEnabled = false;
+  // Alternative keys FFScouter
+  bool alternativeFFScouterKeyEnabled = false;
 
-  String _alternativeTSCKey = "";
-  String get alternativeTSCKey => _alternativeTSCKey.trim();
-  set alternativeTSCKey(String key) {
-    _alternativeTSCKey = key.trim();
+  String _alternativeFFScouterKey = "";
+  String get alternativeFFScouterKey => _alternativeFFScouterKey.trim();
+  set alternativeFFScouterKey(String key) {
+    _alternativeFFScouterKey = key.trim();
   }
 
   Future<void> _checkIfNewFactionAndReport() async {

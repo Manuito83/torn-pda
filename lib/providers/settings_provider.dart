@@ -521,6 +521,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _newTabByDeepLinkTap = false;
+  bool get newTabByDeepLinkTap => _newTabByDeepLinkTap;
+  set newTabByDeepLinkTap(bool value) {
+    _newTabByDeepLinkTap = value;
+    Prefs().setNewTabByDeepLinkTap(_newTabByDeepLinkTap);
+    notifyListeners();
+  }
+
   var _fullScreenByQuickItemTap = false;
   bool get fullScreenByQuickItemTap => _fullScreenByQuickItemTap;
   set fullScreenByQuickItemTap(bool value) {
@@ -631,23 +639,43 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Torn Spies Central
+  // FFScouter
   // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
   //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
   //  0 == disabled
   //  1 == enabled
-  int _tscEnabledStatus = -1;
-  int get tscEnabledStatus => _tscEnabledStatus;
-  set tscEnabledStatus(int value) {
-    _tscEnabledStatus = value;
-    Prefs().setTSCEnabledStatus(_tscEnabledStatus);
+  int _ffScouterEnabledStatus = -1;
+  int get ffScouterEnabledStatus => _ffScouterEnabledStatus;
+  set ffScouterEnabledStatus(int value) {
+    _ffScouterEnabledStatus = value;
+    Prefs().setFFScouterEnabledStatus(_ffScouterEnabledStatus);
     notifyListeners();
   }
 
-  bool _tscEnabledStatusRemoteConfig = true;
-  bool get tscEnabledStatusRemoteConfig => _tscEnabledStatusRemoteConfig;
-  set tscEnabledStatusRemoteConfig(bool value) {
-    _tscEnabledStatusRemoteConfig = value;
+  bool _ffScouterEnabledStatusRemoteConfig = true;
+  bool get ffScouterEnabledStatusRemoteConfig => _ffScouterEnabledStatusRemoteConfig;
+  set ffScouterEnabledStatusRemoteConfig(bool value) {
+    _ffScouterEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
+  /// When true, FFScouter battle score estimates replace the vague estimated
+  /// stats range on war/retal cards and profile checks (for unspied targets).
+  bool _preferFFScouterOverEstimated = false;
+  bool get preferFFScouterOverEstimated => _preferFFScouterOverEstimated;
+  set preferFFScouterOverEstimated(bool value) {
+    _preferFFScouterOverEstimated = value;
+    Prefs().setPreferFFScouterOverEstimated(value);
+    notifyListeners();
+  }
+
+  /// 0 = Off. 1-12 = months. When > 0, FFS overrides spied stats if the spy
+  /// is older than this many months.
+  int _ffsOverrideSpyMonths = 0;
+  int get ffsOverrideSpyMonths => _ffsOverrideSpyMonths;
+  set ffsOverrideSpyMonths(int value) {
+    _ffsOverrideSpyMonths = value;
+    Prefs().setFfsOverrideSpyMonths(value);
     notifyListeners();
   }
 
@@ -831,6 +859,14 @@ class SettingsProvider extends ChangeNotifier {
   set changeLifeBarOption(String? choice) {
     _lifeBarOption = choice;
     Prefs().setLifeBarOption(_lifeBarOption!);
+    notifyListeners();
+  }
+
+  bool _educationBarEnabled = true;
+  bool get educationBarEnabled => _educationBarEnabled;
+  set educationBarEnabled(bool value) {
+    _educationBarEnabled = value;
+    Prefs().setEducationBarEnabled(value);
     notifyListeners();
   }
 
@@ -1132,11 +1168,35 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _targetFinderSectionEnabled = true;
+  bool get targetFinderSectionEnabled => _targetFinderSectionEnabled;
+  set setTargetFinderSectionEnabled(bool value) {
+    _targetFinderSectionEnabled = value;
+    Prefs().setTargetFinderSectionEnabled(value);
+    notifyListeners();
+  }
+
   var _singleRetaliationOpensBrowser = false;
   bool get singleRetaliationOpensBrowser => _singleRetaliationOpensBrowser;
   set setSingleRetaliationOpensBrowser(bool value) {
     _singleRetaliationOpensBrowser = value;
     Prefs().setSingleRetaliationOpensBrowser(value);
+    notifyListeners();
+  }
+
+  var _quickItemsEnabled = true;
+  bool get quickItemsEnabled => _quickItemsEnabled;
+  set quickItemsEnabled(bool value) {
+    _quickItemsEnabled = value;
+    Prefs().setQuickItemsEnabled(value);
+    notifyListeners();
+  }
+
+  var _quickItemsFactionEnabled = true;
+  bool get quickItemsFactionEnabled => _quickItemsFactionEnabled;
+  set quickItemsFactionEnabled(bool value) {
+    _quickItemsFactionEnabled = value;
+    Prefs().setQuickItemsFactionEnabled(value);
     notifyListeners();
   }
 
@@ -1299,12 +1359,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /*
   String _reviveHelaPrice = "1.8 million or 2 Xanax each";
   String get reviveHelaPrice => _reviveHelaPrice;
   set reviveHelaPrice(String value) {
     _reviveHelaPrice = value;
     notifyListeners();
   }
+  */
 
   String _reviveMidnightPrice = "1.8 million or 2 Xanax each";
   String get reviveMidnightPrice => _reviveMidnightPrice;
@@ -1460,6 +1522,7 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByShortChainingTap = await Prefs().getFullScreenByShortChainingTap();
     _fullScreenByLongChainingTap = await Prefs().getFullScreenByLongChainingTap();
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
+    _newTabByDeepLinkTap = await Prefs().getNewTabByDeepLinkTap();
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
@@ -1497,7 +1560,9 @@ class SettingsProvider extends ChangeNotifier {
 
     _shareAttackOptions = await Prefs().getShareAttackOptions();
 
-    _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
+    _ffScouterEnabledStatus = await Prefs().getFFScouterEnabledStatus();
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
     _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
 
     //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();
@@ -1563,6 +1628,8 @@ class SettingsProvider extends ChangeNotifier {
 
     _lifeBarOption = await Prefs().getLifeBarOption();
 
+    _educationBarEnabled = await Prefs().getEducationBarEnabled();
+
     _colorCodedStatusCard = await Prefs().getColorCodedStatusCard();
 
     _iosAllowLinkPreview = await Prefs().getIosAllowLinkPreview();
@@ -1620,7 +1687,11 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartShowBoth = await Prefs().getTornStatsChartShowBoth();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
+    _targetFinderSectionEnabled = await Prefs().getTargetFinderSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
+
+    _quickItemsEnabled = await Prefs().getQuickItemsEnabled();
+    _quickItemsFactionEnabled = await Prefs().getQuickItemsFactionEnabled();
 
     _syncTornWebTheme = await Prefs().getSyncTornWebTheme();
     _syncDeviceTheme = await Prefs().getSyncDeviceTheme();

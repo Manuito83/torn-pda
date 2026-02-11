@@ -274,7 +274,10 @@ class PdaUpdateDialogState extends State<PdaUpdateDialog> {
                   Expanded(
                     child: TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop(false); // User dismissed
+                        Navigator.of(context).pop({
+                          'shouldUpdate': false,
+                          'createBackup': false,
+                        });
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),

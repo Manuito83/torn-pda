@@ -30,7 +30,17 @@ export async function getStockMarket(apiKey: string) {
   const response = await fetch(
     `https://api.torn.com/torn/?selections=stocks&key=${apiKey}`
   );
-  return response.json();
+  if (!response.ok) {
+    logger.warn(`Stock market API returned HTTP ${response.status}`);
+    return { error: { error: `HTTP ${response.status}` } };
+  }
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    logger.warn(`Stock market API returned non-JSON response (status ${response.status})`);
+    return { error: { error: "Non-JSON response from API" } };
+  }
 }
 
 //****************************//
@@ -86,8 +96,8 @@ export const checkIOS = onSchedule(
         laOnlyUsersQuery,
       ]);
 
-      const alertsUsers = alertsUsersSnapshot.docs.map((d) => d.data());
-      const laOnlyUsers = laOnlyUsersSnapshot.docs.map((d) => d.data());
+      const alertsUsers = alertsUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      const laOnlyUsers = laOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
 
       const subscribers = [...alertsUsers, ...laOnlyUsers];
       let iOSBlocks = 0;
@@ -164,7 +174,7 @@ export const checkAndroidLow = onSchedule(
         .where("level", "<", 42)
         .get();
 
-      const subscribers = response.docs.map((d) => d.data());
+      const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
       let androidLow = 0;
 
       const batchSize = 500;
@@ -238,7 +248,7 @@ export const checkAndroidHigh = onSchedule(
         .where("level", ">=", 42)
         .get();
 
-      const subscribers = response.docs.map((d) => d.data());
+      const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
       let androidHigh = 0;
 
       const batchSize = 500;
@@ -281,6 +291,12 @@ async function sendNotificationForProfile(
   stockMarket: any,
   _forceTest: boolean = false
 ): Promise<any> {
+  // Guard: skip subscribers without a valid uid (e.g. LA-only users missing this field)
+  if (!subscriber.uid) {
+    logger.warn(`Skipping subscriber without uid (playerId: ${subscriber.playerId || "unknown"})`);
+    return;
+  }
+
   const notificationsToSend: NotificationParams[] = [];
   const firestoreUpdates: { [key: string]: any } = {};
   const allPromises: Promise<any>[] = [];
@@ -467,7 +483,7 @@ export const runForUser = onCall(
       .where("name", "==", userName)
       .get();
 
-    const subscribers = response.docs.map((d) => d.data());
+    const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
 
     if (subscribers.length === 0) {
       const message = `No player found with name: ${userName}`;

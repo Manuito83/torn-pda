@@ -20,6 +20,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
@@ -50,13 +51,13 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
-import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
@@ -74,9 +75,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.11.0';
-const String androidCompilation = '611';
-const String iosCompilation = '611';
+const String appVersion = '3.12.0';
+const String androidCompilation = '624';
+const String iosCompilation = '624';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -206,7 +207,6 @@ Future<void> main() async {
         ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
         ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
         ChangeNotifierProvider<AwardsProvider>(create: (context) => AwardsProvider()),
-        ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
         ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider()),
         ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
         ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
@@ -609,6 +609,21 @@ Future<void> _initializePlatformSpecifics() async {
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       kSdkIos = double.tryParse(iosInfo.systemVersion) ?? 99;
       log("iOS SDK Version: $kSdkIos");
+
+      // Workaround for Flutter bug on iPadOS 26.x: FlutterViewController sends fake touch
+      // events at (0,0) to signal status bar taps, which inadvertently dismiss overlays
+      // (dialogs, popups, bottom sheets, drawers). Cancel any pointer events at Offset.zero.
+      // Only applied on iPads to preserve scroll-to-top on iPhones.
+      // See: https://github.com/flutter/flutter/issues/177992
+      // TODO: remove once Flutter stable includes the fix from PR #179643
+      if (iosInfo.model.toLowerCase().contains('ipad')) {
+        GestureBinding.instance.pointerRouter.addGlobalRoute((PointerEvent event) {
+          if (event.position == Offset.zero) {
+            GestureBinding.instance.cancelPointer(event.pointer);
+          }
+        });
+        log("iPadOS overlay dismiss workaround installed");
+      }
     } else if (Platform.isAndroid) {
       final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -685,6 +700,7 @@ Future<void> _initializeGetXControllers() async {
     Get.put(SpiesController(), permanent: true);
     Get.put(ApiCallerController(), permanent: true);
     Get.put(WarController(), permanent: true);
+    Get.put(FFScouterCacheController(), permanent: true);
     Get.put(StakeoutsController(), permanent: true);
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);

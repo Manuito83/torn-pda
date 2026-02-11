@@ -32,6 +32,7 @@ enum TipClass {
   chaining,
   chainingWar,
   spies,
+  ffScouter,
   trading,
   deepLinks,
   userScripts,
@@ -115,6 +116,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
   var _chainingTipsList = <TipTextBuilder>[];
   var _chainingWarTipsList = <TipTextBuilder>[];
   var _spiesTipsList = <TipTextBuilder>[];
+  var _ffScouterTipsList = <TipTextBuilder>[];
   var _tradingTipsList = <TipTextBuilder>[];
   var _deepLinksTipsList = <TipTextBuilder>[];
   var _userScriptsTipsList = <TipTextBuilder>[];
@@ -146,6 +148,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _chainingTipsList = buildChainingTips();
     _chainingWarTipsList = buildChainingWarTips();
     _spiesTipsList = buildSpiesTips();
+    _ffScouterTipsList = buildFFScouterTips();
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
     _userScriptsTipsList = buildUserScriptsTipsList();
@@ -256,6 +259,12 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.spies),
                 const SizedBox(height: 25),
+                if (_settingsProvider.ffScouterEnabledStatusRemoteConfig) ...[
+                  const Text("FFSCOUTER"),
+                  const SizedBox(height: 10),
+                  tipsPanels(TipClass.ffScouter),
+                  const SizedBox(height: 25),
+                ],
                 const Text("TRADING"),
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.trading),
@@ -329,6 +338,8 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         listToShow = _chainingWarTipsList;
       case TipClass.spies:
         listToShow = _spiesTipsList;
+      case TipClass.ffScouter:
+        listToShow = _ffScouterTipsList;
       case TipClass.trading:
         listToShow = _tradingTipsList;
       case TipClass.deepLinks:
@@ -1238,6 +1249,63 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       ),
     );
 
+    return tips;
+  }
+
+  List<ExpandableTip> buildFFScouterTips() {
+    final tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "What is FFScouter?",
+        expandedValue: "FFScouter is a free community tool that estimates the battle stats of other players. "
+            "It does NOT expose your actual stats to anyone — only aggregated estimates are shared.\n\n"
+            "In Torn PDA, FFScouter provides two features:\n"
+            "• Target Finder (inside the Chaining section) — search for targets by fair fight and battle score.\n"
+            "• Battle Score cache — replace vague estimated stat ranges on war/retal cards and profile checks with "
+            "more precise FFScouter estimates.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "How do I enable it?",
+        expandedValue: "Go to Settings and look for the FFScouter subsection. Tap the info icon to review the terms, "
+            "then tap 'Accept & Enable'.\n\n"
+            "IMPORTANT: enabling FFScouter shares your API key with the FFScouter service. A Custom API key is "
+            "recommended (you can create one at ffscouter.com). You can also configure an alternative key in "
+            "Settings → Alternative API Keys.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "What does 'Prefer FFScouter battle score' do?",
+        expandedValue: "When enabled, war/retal cards and profile checks will show the FFScouter battle score "
+            "estimate (e.g. ~12.5M, shown in orange) instead of the vague range (e.g. 2M-25M) for targets "
+            "that have not been spied.\n\n"
+            "The same estimate is used for sorting, the Total Stats filter slider, and the SmartScore calculation. "
+            "Estimates are cached locally for 24 hours to minimize API calls.\n\n"
+            "Disabling this setting clears the local cache.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "What does 'Override old spies' do?",
+        expandedValue: "When the 'Prefer FFScouter battle score' option is active, a slider appears that lets you "
+            "set a spy age threshold (1–12 months).\n\n"
+            "If a target has spied stats that are older than the configured threshold and FFScouter has a battle "
+            "score estimate for that target, the FFS value will replace the spied stats on the card. A small "
+            "clock icon indicates this override.\n\n"
+            "Sorting, filters, and SmartScore will also use the FFS value in that case.\n\n"
+            "Set the slider to 'Off' to always keep spied stats regardless of age.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Why does a target still show spied stats even with override enabled?",
+        expandedValue: "FFScouter may not have a battle score estimate for every player. If no FFS data is available, "
+            "the existing spied stats will remain visible even if they exceed the age threshold.\n\n"
+            "The same applies to targets for which FFScouter returned a null battle score.",
+      ),
+    );
     return tips;
   }
 

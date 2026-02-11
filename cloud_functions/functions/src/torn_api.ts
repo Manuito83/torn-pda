@@ -3,9 +3,15 @@ const { tornParam } = require('../key/torn_key.js');
 
 export async function getUsersStat(apiKey: string) {
   const response = await fetch(`https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents&key=${apiKey}&comment=PDA-Alerts&${tornParam}`);
-  const data = await response.json() as any;
-  return data;
-
+  if (!response.ok) {
+    return { error: { error: `HTTP ${response.status}` } };
+  }
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as any;
+  } catch {
+    return { error: { error: "Non-JSON response from API" } };
+  }
 }
 
 export async function getUsersRefills(apiKey: string) {

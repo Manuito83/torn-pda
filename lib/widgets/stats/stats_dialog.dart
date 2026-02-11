@@ -7,7 +7,7 @@ import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/stats/estimated_stats_dialog.dart';
 import 'package:torn_pda/widgets/stats/spies_exact_details_dialog.dart';
-import 'package:torn_pda/widgets/stats/tcs_stats_dialog.dart';
+import 'package:torn_pda/widgets/stats/ffscouter_stats_dialog.dart';
 import 'package:torn_pda/widgets/stats/yata_stats_dialog.dart';
 
 class SpiesPayload {
@@ -67,6 +67,7 @@ class EstimatedStatsPayload {
     required this.otherFactionName,
     required this.otherLastActionRelative,
     required this.themeProvider,
+    this.estimatedStatsRange = '',
   });
 
   final int xanaxCompare;
@@ -86,10 +87,11 @@ class EstimatedStatsPayload {
   final String otherFactionName;
   final String otherLastActionRelative;
   final ThemeProvider themeProvider;
+  final String estimatedStatsRange;
 }
 
-class TSCStatsPayload {
-  const TSCStatsPayload({
+class FFScouterStatsPayload {
+  const FFScouterStatsPayload({
     required this.targetId,
   });
 
@@ -108,13 +110,13 @@ class StatsDialog extends StatefulWidget {
   const StatsDialog({
     required this.spiesPayload,
     required this.estimatedStatsPayload,
-    required this.tscStatsPayload,
+    required this.ffScouterStatsPayload,
     required this.yataStatsPayload,
   });
 
   final SpiesPayload? spiesPayload;
   final EstimatedStatsPayload estimatedStatsPayload;
-  final TSCStatsPayload? tscStatsPayload;
+  final FFScouterStatsPayload? ffScouterStatsPayload;
   final YataStatsPayload? yataStatsPayload;
 
   @override
@@ -128,7 +130,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
   late TabController _tabController;
   late int _originTab;
 
-  bool _disableTSCcalledBack = false;
+  bool _disableFFScouterCalledBack = false;
 
   @override
   void initState() {
@@ -184,12 +186,12 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                     const Tab(
                       icon: Icon(MdiIcons.compareHorizontal, color: Colors.white),
                     ),
-                    if (widget.tscStatsPayload != null &&
-                        !_disableTSCcalledBack &&
-                        _settingsProvider.tscEnabledStatusRemoteConfig)
+                    if (widget.ffScouterStatsPayload != null &&
+                        !_disableFFScouterCalledBack &&
+                        _settingsProvider.ffScouterEnabledStatusRemoteConfig)
                       const Tab(
                         child: Text(
-                          "T S C",
+                          "F F S",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -237,18 +239,18 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                       ),
                     ),
                   ),
-                  if (widget.tscStatsPayload != null &&
-                      !_disableTSCcalledBack &&
-                      _settingsProvider.tscEnabledStatusRemoteConfig)
+                  if (widget.ffScouterStatsPayload != null &&
+                      !_disableFFScouterCalledBack &&
+                      _settingsProvider.ffScouterEnabledStatusRemoteConfig)
                     SingleChildScrollView(
                       child: Container(
                         color: _themeProvider.accesibilityNoTextColors ? _themeProvider.cardColor : null,
                         child: Column(
                           children: [
-                            TSCStatsDialog(
-                              tscStatsPayload: widget.tscStatsPayload!,
+                            FFScouterStatsDialog(
+                              ffScouterStatsPayload: widget.ffScouterStatsPayload!,
                               themeProvider: _themeProvider,
-                              callBackToDisableTSCtab: _disableTSC,
+                              callBackToDisableFFScouterTab: _disableFFScouter,
                             ),
                           ],
                         ),
@@ -294,9 +296,9 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
     }
   }
 
-  void _disableTSC() {
+  void _disableFFScouter() {
     setState(() {
-      _disableTSCcalledBack = true;
+      _disableFFScouterCalledBack = true;
       _tabController.index = 1;
       _tabController.dispose();
       _tabController = TabController(vsync: this, length: _getLength());
@@ -307,7 +309,9 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
   int _getLength() {
     int total = 2;
 
-    if (widget.tscStatsPayload != null && !_disableTSCcalledBack && _settingsProvider.tscEnabledStatusRemoteConfig) {
+    if (widget.ffScouterStatsPayload != null &&
+        !_disableFFScouterCalledBack &&
+        _settingsProvider.ffScouterEnabledStatusRemoteConfig) {
       total++;
     }
 

@@ -55,6 +55,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
   String? _lifeDropDownValue;
   String? _drugDropDownValue;
   String? _medicalDropDownValue;
+  String? _educationDropDownValue;
   String? _boosterDropDownValue;
   String? _hospitalDropDownValue;
   String? _jailDropDownValue;
@@ -190,6 +191,9 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
         case ProfileNotification.medical:
           typeString = 'Medical';
           profileType = ProfileNotification.medical;
+        case ProfileNotification.education:
+          typeString = 'Education';
+          profileType = ProfileNotification.education;
         case ProfileNotification.booster:
           typeString = 'Booster';
           profileType = ProfileNotification.booster;
@@ -526,6 +530,8 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
         value = _drugDropDownValue;
       case ProfileNotification.medical:
         value = _medicalDropDownValue;
+      case ProfileNotification.education:
+        value = _educationDropDownValue;
       case ProfileNotification.booster:
         value = _boosterDropDownValue;
       case ProfileNotification.hospital:
@@ -613,6 +619,11 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
             setState(() {
               _medicalDropDownValue = value;
             });
+          case ProfileNotification.education:
+            Prefs().setEducationNotificationType(value!);
+            setState(() {
+              _educationDropDownValue = value;
+            });
           case ProfileNotification.booster:
             Prefs().setBoosterNotificationType(value!);
             setState(() {
@@ -663,6 +674,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
     final lifeType = await Prefs().getLifeNotificationType();
     final drugsType = await Prefs().getDrugNotificationType();
     final medicalType = await Prefs().getMedicalNotificationType();
+    final educationType = await Prefs().getEducationNotificationType();
     final hospitalType = await Prefs().getHospitalNotificationType();
     final jailType = await Prefs().getJailNotificationType();
     final rankedWarType = await Prefs().getRankedWarNotificationType();
@@ -683,6 +695,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
       _lifeDropDownValue = lifeType;
       _drugDropDownValue = drugsType;
       _medicalDropDownValue = medicalType;
+      _educationDropDownValue = educationType;
       _hospitalDropDownValue = hospitalType;
       _jailDropDownValue = jailType;
       _rankedWarDropDownValue = rankedWarType;

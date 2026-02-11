@@ -72,9 +72,8 @@ export async function sendTravelPushToStart(
     const result = await apnProvider.send(notification, pushToStartToken);
 
     if (result.failed.length > 0) {
-      logger.error(
-        `@parse/node-apn - APNs push failed`,
-        result.failed[0].response
+      logger.warn(
+        `@parse/node-apn - APNs push failed (reason: ${result.failed[0].response?.reason || "unknown"})`,
       );
       return false;
     }

@@ -55,8 +55,8 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
       if (faction.members != null) {
         for (var member in faction.members!.values) {
           if (member == null) continue;
-          // Total Stats
-          double total = _warController.getMemberTotalStats(member);
+          // Total Stats (including FFS fallback)
+          double total = _warController.getMemberTotalStatsWithFFS(member);
           if (total > maxS) maxS = total;
 
           // Individual Stats
@@ -189,9 +189,9 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
 
     String? subtitle;
     if (type == WarSortType.statsAsc) {
-      subtitle = "Spied low to high, then estimates low to high, then unknown estimates.";
+      subtitle = "Spied/FFS low to high, then estimates low to high, then unknown";
     } else if (type == WarSortType.statsDes) {
-      subtitle = "Spied high to low, then estimates high to low, then unknown estimates.";
+      subtitle = "Spied/FFS high to low, then estimates high to low, then unknown";
     }
 
     return Column(
@@ -423,10 +423,10 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                 ),
                 const Divider(),
                 _buildSlider(
-                  "Total stats (spied)",
+                  "Total stats (spied/FFS)",
                   _settings.weightStats,
                   (val) => _settings.weightStats = val,
-                  description: "Uses spied stats if available",
+                  description: "Uses spied stats or FFScouter estimate",
                 ),
                 _buildSlider("Strength", _settings.weightStrength, (val) => _settings.weightStrength = val),
                 _buildSlider("Defense", _settings.weightDefense, (val) => _settings.weightDefense = val),
@@ -448,7 +448,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
   Widget _buildSlider(String label, double value, Function(double) onChanged, {String? description}) {
     // Determine the key for range lookup based on label
     String rangeKey = '';
-    if (label == 'Total stats (spied)') {
+    if (label == 'Total stats (spied/FFS)') {
       rangeKey = 'Stats';
     } else if (label == 'Estimated stats')
       rangeKey = 'Estimated';
@@ -625,8 +625,8 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           if (mins < _settings.hospitalTimeRange!.start || mins > _settings.hospitalTimeRange!.end) return false;
         }
         // Stats filters
-        if (_settings.statsRange != null && _warController.getMemberTotalStats(m) > 0) {
-          double s = _warController.getMemberTotalStats(m);
+        if (_settings.statsRange != null && _warController.getMemberTotalStatsWithFFS(m) > 0) {
+          double s = _warController.getMemberTotalStatsWithFFS(m);
           if (s < _settings.statsRange!.start || s > _settings.statsRange!.end) return false;
         }
         return true;
@@ -1011,8 +1011,8 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                   _buildEstimateRangeSlider(
                       "Estimated Stats", _settings.estimatedStatsRange, (val) => _settings.estimatedStatsRange = val),
                   const Divider(),
-                  _buildRangeSlider(
-                      "Total Stats (Spied)", _settings.statsRange, 0, _maxStats, (val) => _settings.statsRange = val),
+                  _buildRangeSlider("Total Stats (Spied/FFS)", _settings.statsRange, 0, _maxStats,
+                      (val) => _settings.statsRange = val),
                   _buildRangeSlider(
                       "Strength", _settings.strengthRange, 0, _maxStr, (val) => _settings.strengthRange = val),
                   _buildRangeSlider(

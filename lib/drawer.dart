@@ -46,6 +46,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
@@ -55,6 +56,7 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -198,6 +200,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
   static const bool _debugShowAllDialogs = kDebugMode && false;
+  // Force PDA update dialog for testing
+  static const bool _debugForcePdaUpdateDialog = kDebugMode && false;
   // Force Firebase auth restoration to fail for testing
   static const bool _debugForceFirebaseAuthMissing = kDebugMode && false;
   // DEBUG ## DEBUG
@@ -706,7 +710,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Remote Config defaults
       remoteConfig.setDefaults(const {
-        "tsc_enabled": true,
+        "ffscouter_enabled": true,
         "yata_stats_enabled": true,
         "yata_upload_enabled": true,
         "prometheus_upload_enabled": true,
@@ -719,7 +723,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
-        "revive_hela": "1.8 million or 2 Xanax",
+        //"revive_hela": "1.8 million or 2 Xanax",
         "revive_midnight": "1.8 million or 2 Xanax",
         "revive_nuke": "1.8 million or 2 Xanax",
         "revive_uhc": "1.8 million or 2 Xanax",
@@ -774,7 +778,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!mounted) return;
 
     try {
-      _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.ffScouterEnabledStatusRemoteConfig = remoteConfig.getBool("ffscouter_enabled");
+      Get.find<FFScouterCacheController>().remoteConfigEnabled = _settingsProvider.ffScouterEnabledStatusRemoteConfig;
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
       _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");
@@ -800,7 +805,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Revives
       _settingsProvider.reviveWolverinesPrice = remoteConfig.getString("revive_wolverines");
-      _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
+      //_settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
       _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
       _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
       _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
@@ -1077,6 +1082,45 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } catch (e) {
         log("Error reading file: $e");
       }
+    }
+
+    // Handle in-app settings deep links (e.g. tornpda://settings/browser?highlight=clear-cache)
+    if (link != null && link.startsWith("tornpda://settings/")) {
+      // Prevents double activation (same guard as browser deep links)
+      if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
+        return;
+      }
+      _deepLinkSubTriggeredTime = DateTime.now();
+
+      try {
+        final uri = Uri.parse(link);
+        final pathSegments = uri.pathSegments; // e.g. ["browser"]
+        final highlight = uri.queryParameters['highlight'];
+
+        _preferencesCompleter.future.whenComplete(() {
+          // Close browser if it's in foreground
+          if (!_webViewProvider.webViewSplitActive) {
+            _webViewProvider.browserShowInForeground = false;
+          }
+
+          // Switch drawer to Settings
+          _callSectionFromOutside(_settingsPosition);
+
+          if (pathSegments.isNotEmpty && pathSegments[0] == "browser") {
+            // Push Advanced Browser Settings with highlight
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => SettingsBrowserPage(highlightItem: highlight),
+                ),
+              );
+            });
+          }
+        });
+      } catch (e) {
+        log("Error handling settings deep link: $e");
+      }
+      return;
     }
 
     try {
@@ -1443,11 +1487,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
               message["body"] = message["body"].replaceAll("(tap to get a comparison with you)", "");
               int? begin = message["body"].indexOf("\n- Xanax");
-              int? last = message["body"].length;
-              message["body"] = message["body"].replaceRange(begin, last, "");
-              message["body"] += xanaxString;
-              message["body"] += refillsString;
-              message["body"] += drinksString;
+              if (begin != -1) {
+                // Preserve any lines after Drinks (e.g. FFS Battle Score, Fair Fight)
+                String remaining = "";
+                int drinksIdx = message["body"].indexOf("\n- Drinks (E):", begin);
+                if (drinksIdx != -1) {
+                  int afterDrinks = message["body"].indexOf("\n", drinksIdx + 1);
+                  if (afterDrinks != -1) {
+                    remaining = message["body"].substring(afterDrinks);
+                  }
+                }
+                message["body"] = message["body"].substring(0, begin);
+                message["body"] += xanaxString;
+                message["body"] += refillsString;
+                message["body"] += drinksString;
+                message["body"] += remaining;
+              }
             }
           }
         }
@@ -2865,13 +2920,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
     if (updateDetails == null || updateDetails.latestVersionCode == 0) return;
 
+    final bool forceDialog = _debugForcePdaUpdateDialog;
+
     // Stop if this version is already queued during this app session
     // (initial fetch + onConfigUpdated can both call here)
-    if (_pdaUpdateDialogEnqueuedVersion == updateDetails.latestVersionCode) return;
+    if (!forceDialog && _pdaUpdateDialogEnqueuedVersion == updateDetails.latestVersionCode) return;
 
     final currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
     final currentCompilationInt = int.tryParse(currentCompilation) ?? 0;
-    if (currentCompilationInt == 0) return;
+    if (!forceDialog && currentCompilationInt == 0) return;
 
     // Check if there's an update available for the current platform
     bool hasUpdate = false;
@@ -2881,11 +2938,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       hasUpdate = updateDetails.latestVersionCode > currentCompilationInt;
     }
 
-    if (!hasUpdate) return;
+    if (!forceDialog && !hasUpdate) return;
 
     // Check if we already showed this update version dialog
     final lastShownVersion = await Prefs().getPdaUpdateDialogVersion();
-    if (!_debugShowAllDialogs && lastShownVersion == updateDetails.latestVersionCode) return false;
+    if (!forceDialog && !_debugShowAllDialogs && lastShownVersion == updateDetails.latestVersionCode) return false;
 
     _pdaUpdateDialogEnqueuedVersion = updateDetails.latestVersionCode;
 

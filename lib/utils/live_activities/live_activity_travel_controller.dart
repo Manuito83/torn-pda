@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +12,7 @@ import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:workmanager/workmanager.dart';
 
 class LiveActivityTravelController extends GetxController {
   final _chainStatusProvider = Get.find<ChainStatusController>();
@@ -33,6 +35,7 @@ class LiveActivityTravelController extends GetxController {
 
   static const int _staleArrivalThresholdSeconds = 15 * 60;
   static const int _arrivedLAAutoEndMinutes = 10;
+  static const String _backupTaskUniqueName = "com.tornpda.liveactivity.arrival_backup";
   String? _activeSessionId;
 
   @visibleForTesting
@@ -140,6 +143,32 @@ class LiveActivityTravelController extends GetxController {
     if (!_isMonitoring) return;
     //log("TravelLiveActivityHandler received new status: ${json.encode(statusData?.barsAndStatusModel?.travel)}");
     _processCurrentState(statusData: statusData);
+  }
+
+  void _scheduleBackupTask(int arrivalTimestamp) {
+    if (!Platform.isAndroid) return;
+
+    final nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+    final delaySeconds = arrivalTimestamp - nowSeconds;
+
+    // Schedule for 30 seconds after arrival to give the native alarm a chance first
+    int initialDelaySeconds = delaySeconds + 30;
+    if (initialDelaySeconds < 0) initialDelaySeconds = 0;
+
+    // Workmanager on Android might have a minimum delay/window
+    // Better late "Arrived" than hours ago...
+    Workmanager().registerOneOffTask(
+      _backupTaskUniqueName,
+      _backupTaskUniqueName,
+      initialDelay: Duration(seconds: initialDelaySeconds),
+      existingWorkPolicy: ExistingWorkPolicy.replace,
+      inputData: {'target_timestamp': arrivalTimestamp},
+    );
+  }
+
+  void _cancelBackupTask() {
+    if (!Platform.isAndroid) return;
+    Workmanager().cancelByUniqueName(_backupTaskUniqueName);
   }
 
   void _processCurrentState({StatusObservable? statusData}) async {
@@ -284,6 +313,18 @@ class LiveActivityTravelController extends GetxController {
       // Sync with Firebase so that a Cloud Function won't start for this LA
       log("Syncing arrival timestamp $arrivalTimestamp with server...");
       _syncTimestamp(arrivalTimestamp);
+
+      if (Platform.isAndroid) {
+        if (isArrivalUpdate) {
+          // If we are notifying arrival, we don't need the backup task anymore
+          _cancelBackupTask();
+          await _prefs.setLiveActivityCurrentTripBackup(null);
+        } else {
+          // Saving current trip for backup purposes
+          await _prefs.setLiveActivityCurrentTripBackup(jsonEncode(laArgs));
+          _scheduleBackupTask(arrivalTimestamp);
+        }
+      }
     }
   }
 
@@ -296,6 +337,11 @@ class LiveActivityTravelController extends GetxController {
     _activeSessionId = null;
     _currentLAArrivalTimestamp = 0;
     _hasArrivedNotified = false;
+
+    if (Platform.isAndroid) {
+      _prefs.setLiveActivityCurrentTripBackup(null);
+      _cancelBackupTask();
+    }
   }
 
   // Ends the native Live Activity and resets the internal state
@@ -316,6 +362,7 @@ class LiveActivityTravelController extends GetxController {
     String originFlagAsset;
     String vehicleAssetName;
     String activityStateTitle;
+    String destinationEmoji;
     int? earliestReturnTimestamp;
     bool showProgressBar = !hasArrived;
 
@@ -328,6 +375,7 @@ class LiveActivityTravelController extends GetxController {
       originFlagAsset = "hospital_origin_icon";
       vehicleAssetName = isChristmasTimeValue ? "sleigh" : "plane_left";
       activityStateTitle = hasArrived ? "Repatriated to" : "Repatriating to";
+      destinationEmoji = "\u{1F3E0}"; // Home emoji for Torn
     } else {
       final String destination = apiTravelData['destination']!;
       if (destination == "Torn") {
@@ -337,6 +385,7 @@ class LiveActivityTravelController extends GetxController {
         originFlagAsset = "world_origin_icon";
         vehicleAssetName = isChristmasTimeValue ? "sleigh" : "plane_left";
         activityStateTitle = hasArrived ? "Returned to" : "Returning to";
+        destinationEmoji = "\u{1F3E0}"; // Home emoji for Torn
       } else {
         currentDestinationDisplayName = destination;
         currentDestinationFlagAsset = "ball_${_normalizeCountryNameForAsset(destination)}";
@@ -344,6 +393,7 @@ class LiveActivityTravelController extends GetxController {
         originFlagAsset = "ball_torn";
         vehicleAssetName = isChristmasTimeValue ? "sleigh" : "plane_right";
         activityStateTitle = hasArrived ? "Arrived in" : "Traveling to";
+        destinationEmoji = _getCountryEmoji(destination);
 
         if (!hasArrived) {
           int travelDuration = apiTravelData['arrivalTimestamp']! - apiTravelData['departureTimestamp']!;
@@ -355,6 +405,12 @@ class LiveActivityTravelController extends GetxController {
     }
 
     final int currentDeviceTimestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+
+    // Reconstruct the travelID to ensure uniqueness in session matching if needed by native side
+    // (Though currently native relies largely on sessionID, having this consistent helps)
+    String travelId =
+        "${apiTravelData['destination']}-${apiTravelData['arrivalTimestamp']}-${apiTravelData['departureTimestamp']}";
+    if (isRepatriation) travelId += "-repat";
 
     return {
       'currentDestinationDisplayName': currentDestinationDisplayName,
@@ -369,7 +425,28 @@ class LiveActivityTravelController extends GetxController {
       'activityStateTitle': activityStateTitle,
       'showProgressBar': showProgressBar,
       'hasArrived': hasArrived,
+      'destinationEmoji': destinationEmoji,
+      'travelIdentifier': travelId,
     };
+  }
+
+  String _getCountryEmoji(String countryName) {
+    // Unicode flag emojis use regional indicator symbols
+    // Each flag is composed of two regional indicator symbols
+    const Map<String, String> countryEmojis = {
+      'United Kingdom': '\u{1F1EC}\u{1F1E7}', // 🇬🇧
+      'Japan': '\u{1F1EF}\u{1F1F5}', // 🇯🇵
+      'Hawaii': '\u{1F1FA}\u{1F1F8}', // 🇺🇸 (US flag for Hawaii)
+      'China': '\u{1F1E8}\u{1F1F3}', // 🇨🇳
+      'Argentina': '\u{1F1E6}\u{1F1F7}', // 🇦🇷
+      'Canada': '\u{1F1E8}\u{1F1E6}', // 🇨🇦
+      'Cayman Islands': '\u{1F1F0}\u{1F1FE}', // 🇰🇾
+      'Mexico': '\u{1F1F2}\u{1F1FD}', // 🇲🇽
+      'South Africa': '\u{1F1FF}\u{1F1E6}', // 🇿🇦
+      'Switzerland': '\u{1F1E8}\u{1F1ED}', // 🇨🇭
+      'United Arab Emirates': '\u{1F1E6}\u{1F1EA}', // 🇦🇪
+    };
+    return countryEmojis[countryName] ?? '\u{1F30D}'; // Default to globe emoji
   }
 
   bool _isChristmas() {

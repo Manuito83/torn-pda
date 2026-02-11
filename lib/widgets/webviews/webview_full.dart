@@ -64,7 +64,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
-import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -621,6 +621,7 @@ class WebViewFullState extends State<WebViewFull>
     super.build(context);
     _terminalProvider = Provider.of<TerminalProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _settingsProvider = Provider.of<SettingsProvider>(context);
 
     return ShowCaseWidget(
       builder: (_) {
@@ -1135,7 +1136,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsActive
+                  expanded: _quickItemsActive && _settingsProvider.quickItemsEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: false,
@@ -1154,7 +1155,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsFactionController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsFactionActive
+                  expanded: _quickItemsFactionActive && _settingsProvider.quickItemsFactionEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: true,
@@ -1215,7 +1216,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsActive
+                  expanded: _quickItemsActive && _settingsProvider.quickItemsEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: false,
@@ -1234,7 +1235,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsFactionController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsFactionActive
+                  expanded: _quickItemsFactionActive && _settingsProvider.quickItemsFactionEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: true,
@@ -4620,7 +4621,7 @@ class WebViewFullState extends State<WebViewFull>
     _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
 
     final easyUrl = targetUrl.replaceAll('#', '');
-    if (easyUrl.contains('www.torn.com/travelagency.php')) {
+    if (easyUrl.contains('www.torn.com/travelagency.php') || easyUrl.contains('page.php?sid=travel')) {
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
 
@@ -6183,7 +6184,7 @@ class WebViewFullState extends State<WebViewFull>
       final now = DateTime.now();
       final lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline! * 1000));
       if (lastOnlineDiff.inDays < 7) {
-        if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty) {
+        if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isNotEmpty) {
           extraInfo += "\n\n";
         }
         if (lastOnlineDiff.inHours < 1) {
@@ -6204,7 +6205,7 @@ class WebViewFullState extends State<WebViewFull>
     }
 
     // Do nothing if note is empty
-    if (_chainingPayload!.attackNotesList[_attackNumber]!.isEmpty &&
+    if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isEmpty &&
         !_chainingPayload!.showBlankNotes &&
         extraInfo.isEmpty) {
       return;
@@ -6224,7 +6225,7 @@ class WebViewFullState extends State<WebViewFull>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty)
+                  if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isNotEmpty)
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -6241,13 +6242,13 @@ class WebViewFullState extends State<WebViewFull>
                         ),
                       ],
                     ),
-                  if (_chainingPayload!.attackNotesList[_attackNumber]!.isNotEmpty) const SizedBox(height: 12),
+                  if ((_chainingPayload!.attackNotesList[_attackNumber] ?? '').isNotEmpty) const SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          '${_chainingPayload!.attackNotesList[_attackNumber]}$extraInfo',
+                          '${_chainingPayload!.attackNotesList[_attackNumber] ?? ''}$extraInfo',
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: Colors.white),
                         ),
@@ -6326,7 +6327,7 @@ class WebViewFullState extends State<WebViewFull>
   /// Updates attacked targets if we are in a chaining browser and then cancels the chain
   void _checkIfTargetsAttackedAndRevertChaining({bool split = false}) {
     String message = "";
-    if (_isChainingBrowser) {
+    if (_isChainingBrowser && !(_chainingPayload?.skipAutoUpdate ?? false)) {
       if (_chainingPayload!.war && _lastAttackedMembers.isNotEmpty) {
         message = split
             ? 'Updating member'
