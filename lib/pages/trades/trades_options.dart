@@ -23,7 +23,7 @@ class TradesOptions extends StatefulWidget {
 
 class TradesOptionsState extends State<TradesOptions> {
   bool _tradeCalculatorEnabled = true;
-  bool _awhEnabled = true;
+  //bool _awhEnabled = true;
   bool _tornExchangeEnabled = true;
   bool _tornExchangeProfitEnabled = true;
 
@@ -328,13 +328,13 @@ class TradesOptionsState extends State<TradesOptions> {
 
   Future _restorePreferences() async {
     final tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
-    final awhActive = await Prefs().getAWHEnabled();
+    //final awhActive = await Prefs().getAWHEnabled();
     final tornExchangeActive = await Prefs().getTornExchangeEnabled();
     final tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;
-      _awhEnabled = awhActive;
+      //_awhEnabled = awhActive;
       _tornExchangeEnabled = tornExchangeActive;
       _tornExchangeProfitEnabled = tornExchangeProfitActive;
     });

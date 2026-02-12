@@ -4622,6 +4622,10 @@ class WebViewFullState extends State<WebViewFull>
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/travelagency.php') || easyUrl.contains('page.php?sid=travel')) {
+      // Set trigger time early to prevent concurrent calls from also proceeding
+      // (onLoadStart can fire multiple times during page load/redirects)
+      _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
+
       // Verify the "Travel Agency" title is actually present on the page
       // to avoid activation while traveling or visiting a foreign country
       bool foundTravelAgency = false;
@@ -4642,8 +4646,6 @@ class WebViewFullState extends State<WebViewFull>
       } catch (e) {
         return;
       }
-
-      _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
 
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;

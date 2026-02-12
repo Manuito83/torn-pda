@@ -26,10 +26,11 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -52,6 +53,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   late WebViewProvider _webViewProvider;
 
   bool _notificationsPending = false;
+  bool _alarmPendingIos = false;
+  bool _isAlarmKitAvailableIos = false;
   bool _alarmSound = false;
   bool _alarmVibration = true;
 
@@ -72,6 +75,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
+    if (Platform.isIOS) _refreshAlarmPendingIos();
     _ticker = Timer.periodic(const Duration(seconds: 10), (Timer t) => _updateInformation());
     analytics?.logScreenView(screenName: 'travel');
 
@@ -92,6 +96,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     if (state == AppLifecycleState.resumed) {
       _updateInformation();
+      if (Platform.isIOS) _refreshAlarmPendingIos();
     }
   }
 
@@ -399,6 +404,62 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       labelBackgroundColor: Colors.grey[400],
     );
 
+    final dialAlarmIos = SpeedDialChild(
+      child: const Icon(
+        Icons.notifications_none,
+        color: Colors.black,
+      ),
+      backgroundColor: Colors.green,
+      onTap: () async {
+        await _setAlarm().then((value) {
+          String? formattedTime = _formatTime(value);
+          BotToast.showText(
+            text: 'Alarm set for $formattedTime!',
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        });
+      },
+      label: 'Set alarm',
+      labelStyle: const TextStyle(
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      labelBackgroundColor: Colors.green,
+    );
+
+    final dialAlarmCancelIos = SpeedDialChild(
+      child: const Icon(
+        Icons.notifications_none,
+        color: Colors.black,
+      ),
+      backgroundColor: Colors.red,
+      onTap: () async {
+        await _cancelAlarmIos();
+        BotToast.showText(
+          text: 'Alarm cancelled!',
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.black,
+          ),
+          contentColor: Colors.orange[700]!,
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(10),
+        );
+      },
+      label: 'Cancel alarm',
+      labelStyle: const TextStyle(
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      labelBackgroundColor: Colors.red,
+    );
+
     final dialTimer = SpeedDialChild(
       child: const Icon(
         Icons.timer,
@@ -441,6 +502,14 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       if (Platform.isAndroid) {
         dials.add(dialAlarm);
         dials.add(dialTimer);
+      } else if (Platform.isIOS) {
+        if (_isAlarmKitAvailableIos) {
+          if (_alarmPendingIos) {
+            dials.add(dialAlarmCancelIos);
+          } else {
+            dials.add(dialAlarmIos);
+          }
+        }
       }
     }
 
@@ -968,7 +1037,49 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setAlarm() async {
-    final alarmTime = _travelModel.timeArrival!.add(Duration(minutes: -_travelAlarmAhead));
+    final alarmTime = _travelModel.timeArrival!.add(
+      Platform.isIOS ? Duration(seconds: -_travelAlarmAhead) : Duration(minutes: -_travelAlarmAhead),
+    );
+
+    if (Platform.isIOS) {
+      final available = await AlarmKitServiceIos.isAvailable();
+      if (!available) {
+        BotToast.showText(
+          text: 'Alarms are not available on this iOS device!',
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: _themeProvider.getTextColor(Colors.red),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
+        );
+        return alarmTime;
+      }
+
+      final descriptor = AlarmKitServiceIos.profileDescriptor('travel');
+
+      final label = _settingsProvider!.discreetNotifications ? 'T' : 'Travel';
+      await AlarmKitServiceIos.setAlarm(
+        targetTime: alarmTime,
+        label: label,
+        id: descriptor.alarmId,
+        metadata: AlarmKitServiceIos.buildMetadata(
+          alarmId: descriptor.alarmId,
+          context: descriptor.context,
+          details: 'Triggers at ${TimeFormatter(
+            inputTime: alarmTime,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
+          ).formatHourWithDaysElapsed()}',
+          payload: descriptor.payload,
+          timeMillis: alarmTime.millisecondsSinceEpoch,
+        ),
+      );
+      await _refreshAlarmPendingIos();
+      return alarmTime;
+    }
+
     final int hour = alarmTime.hour;
     final int minute = alarmTime.minute;
 
@@ -994,6 +1105,23 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return alarmTime;
   }
 
+  Future<void> _cancelAlarmIos() async {
+    if (!Platform.isIOS) return;
+    await AlarmKitServiceIos.cancelAlarm('profile_travel');
+    await _refreshAlarmPendingIos();
+  }
+
+  Future<void> _refreshAlarmPendingIos() async {
+    if (!Platform.isIOS) return;
+    if (!_isAlarmKitAvailableIos) return;
+    final ids = await AlarmKitServiceIos.listLogicalIds();
+    if (mounted) {
+      setState(() {
+        _alarmPendingIos = ids.contains('profile_travel');
+      });
+    }
+  }
+
   Future<DateTime> _setTimer() async {
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
@@ -1013,6 +1141,10 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _myCurrentKey = UserHelper.apiKey;
     if (_myCurrentKey != '') {
       await _fetchTornApi();
+    }
+
+    if (Platform.isIOS) {
+      _isAlarmKitAvailableIos = await AlarmKitServiceIos.isAvailable();
     }
 
     _alarmSound = await Prefs().getManualAlarmSound();
@@ -1037,16 +1169,29 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       _travelNotificationAhead = 300;
     }
 
-    if (alarmAhead == 'exact') {
-      _travelAlarmAhead = 0;
-    } else if (alarmAhead == '0') {
-      _travelAlarmAhead = 0;
-    } else if (alarmAhead == '1') {
-      _travelAlarmAhead = 1;
-    } else if (alarmAhead == '2') {
-      _travelAlarmAhead = 2;
-    } else if (alarmAhead == '3') {
-      _travelAlarmAhead = 5;
+    if (Platform.isIOS) {
+      // iOS alarm ahead is stored in seconds
+      final parsed = int.tryParse(alarmAhead);
+      if (alarmAhead == 'exact') {
+        _travelAlarmAhead = 0;
+      } else if (parsed != null) {
+        _travelAlarmAhead = parsed;
+      } else {
+        _travelAlarmAhead = 60;
+      }
+    } else {
+      // Android alarm ahead is stored in minutes
+      if (alarmAhead == 'exact') {
+        _travelAlarmAhead = 0;
+      } else if (alarmAhead == '0') {
+        _travelAlarmAhead = 0;
+      } else if (alarmAhead == '1') {
+        _travelAlarmAhead = 1;
+      } else if (alarmAhead == '2') {
+        _travelAlarmAhead = 2;
+      } else if (alarmAhead == '3') {
+        _travelAlarmAhead = 5;
+      }
     }
 
     if (timerAhead == 'exact') {
