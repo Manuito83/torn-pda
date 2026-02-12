@@ -1,9 +1,11 @@
 # PDA specifics
-/lib/config/
-/lib/torn-pda-native/
+# /lib/config/
+# /lib/torn-pda-native/
 /android/app/sign-key.jks
 .kiro/
 .shotgun/
+/.agent/*
+lib/config/secrets.dart
 
 # Miscellaneoussure
 *.class
