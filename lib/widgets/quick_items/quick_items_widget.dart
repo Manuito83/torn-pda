@@ -46,6 +46,9 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   // late Timer _inventoryRefreshTimer;
   final Map<String, Timer> _itemUpdateTimers = {};
 
+  /// Shared across all instances: last time a mass check was triggered
+  static DateTime? _lastMassCheckTime;
+
   final _scrollController = ScrollController();
   bool _pickerActive = false;
   bool _pickerBusy = false;
@@ -452,6 +455,14 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
     // Only for personal items, not faction
     if (widget.faction) return;
     if (!_settingsProvider.quickItemsInventoryCheckEnabled) return;
+    if (_itemsProvider.hideInventoryCount) return;
+
+    // Cooldown: skip if last mass check was less than 10 seconds ago
+    final now = DateTime.now();
+    if (_lastMassCheckTime != null && now.difference(_lastMassCheckTime!).inSeconds < 10) {
+      return;
+    }
+    _lastMassCheckTime = now;
 
     final controller = widget.inAppWebViewController;
     if (controller == null) return;

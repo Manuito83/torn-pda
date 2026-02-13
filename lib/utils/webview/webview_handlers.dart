@@ -692,8 +692,9 @@ class WebviewHandlers {
             );
 
             // Trigger a single item verification immediately after adding
-            // (guarded by Remote Config kill switch via quickItemsProvider check)
+            // (guarded by Remote Config kill switch and user inventory toggle)
             if (settingsProvider.quickItemsInventoryCheckEnabled &&
+                !quickItemsProvider.hideInventoryCount &&
                 equipData.name != null &&
                 equipData.name!.isNotEmpty) {
               try {
@@ -727,8 +728,9 @@ class WebviewHandlers {
     webview.addJavaScriptHandler(
       handlerName: 'quickItemMassUpdate',
       callback: (args) async {
-        // Kill switch: ignore inventory updates when disabled via Remote Config
+        // Kill switch: ignore inventory updates when disabled via Remote Config or user toggle
         if (!settingsProvider.quickItemsInventoryCheckEnabled) return;
+        if (quickItemsProvider.hideInventoryCount) return;
 
         if (args.isEmpty || args[0] is! Map) return;
         final data = args[0] as Map;
