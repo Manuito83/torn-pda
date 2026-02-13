@@ -6239,7 +6239,7 @@ class WebViewFullState extends State<WebViewFull>
     BotToast.showCustomText(
       clickClose: true,
       ignoreContentClick: true,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(seconds: 8),
       toastBuilder: (textCancel) => Align(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
