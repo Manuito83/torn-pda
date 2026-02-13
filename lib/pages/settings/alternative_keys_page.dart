@@ -312,6 +312,14 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                   ],
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: Text(
+                "Tip: You can create and register a dedicated FFScouter key directly from the "
+                "FFScouter info dialog (tap the ⓘ icon in the FFScouter page or stats tab).",
+                style: TextStyle(fontSize: 11, color: Colors.grey[500], fontStyle: FontStyle.italic),
+              ),
+            ),
           ],
         );
       },

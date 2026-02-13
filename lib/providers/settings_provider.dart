@@ -677,8 +677,9 @@ class SettingsProvider extends ChangeNotifier {
 
   /// When true, FFScouter battle score estimates replace the vague estimated
   /// stats range on war/retal cards and profile checks (for unspied targets).
+  /// Returns false if FFScouter is disabled, regardless of the stored value.
   bool _preferFFScouterOverEstimated = false;
-  bool get preferFFScouterOverEstimated => _preferFFScouterOverEstimated;
+  bool get preferFFScouterOverEstimated => _preferFFScouterOverEstimated && _ffScouterEnabledStatus == 1;
   set preferFFScouterOverEstimated(bool value) {
     _preferFFScouterOverEstimated = value;
     Prefs().setPreferFFScouterOverEstimated(value);

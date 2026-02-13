@@ -40,6 +40,7 @@ class FFScouterPageState extends State<FFScouterPage> {
   List<FFScouterTarget> _targets = [];
   bool _isLoading = false;
   String? _errorMessage;
+  int? _errorCode;
 
   // Bulk refresh tracking
   bool _isRefreshingAll = false;
@@ -229,15 +230,14 @@ class FFScouterPageState extends State<FFScouterPage> {
         IconButton(
           icon: const Icon(Icons.info_outline, color: Colors.white),
           onPressed: () {
-            showDialog(
-              useRootNavigator: false,
-              context: context,
-              builder: (context) {
-                return FFScouterInfoDialog(
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FFScouterInfoPage(
                   settingsProvider: _settingsProvider,
                   themeProvider: _themeProvider,
-                );
-              },
+                ),
+              ),
             );
           },
         ),
@@ -268,15 +268,14 @@ class FFScouterPageState extends State<FFScouterPage> {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () async {
-                await showDialog(
-                  useRootNavigator: false,
-                  context: context,
-                  builder: (context) {
-                    return FFScouterInfoDialog(
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FFScouterInfoPage(
                       settingsProvider: _settingsProvider,
                       themeProvider: _themeProvider,
-                    );
-                  },
+                    ),
+                  ),
                 );
                 if (mounted) setState(() {});
               },
@@ -660,6 +659,33 @@ class FFScouterPageState extends State<FFScouterPage> {
                 style: const TextStyle(color: Colors.red),
                 textAlign: TextAlign.center,
               ),
+              if (_errorCode == 6) ...[
+                const SizedBox(height: 12),
+                Text(
+                  "Your API key is not registered with FFScouter. "
+                  "You can register it directly from Torn PDA.",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FFScouterInfoPage(
+                          settingsProvider: _settingsProvider,
+                          themeProvider: _themeProvider,
+                          jumpToKeySetup: true,
+                        ),
+                      ),
+                    );
+                    if (mounted) setState(() {});
+                  },
+                  icon: const Icon(Icons.app_registration, size: 18),
+                  label: const Text("Register Key"),
+                ),
+              ],
             ],
           ),
         ),
@@ -1197,6 +1223,7 @@ class FFScouterPageState extends State<FFScouterPage> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _errorCode = null;
     });
 
     final result = await FFScouterComm.getTargets(
@@ -1226,6 +1253,7 @@ class FFScouterPageState extends State<FFScouterPage> {
       } else {
         _targets = [];
         _errorMessage = result.errorMessage ?? "Failed to fetch targets";
+        _errorCode = result.errorCode;
       }
     });
   }

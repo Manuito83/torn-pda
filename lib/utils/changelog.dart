@@ -109,6 +109,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '♡ 14 FEB 2026 ♡'
         ..features = [
           if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
+          "FFScouter: added API key creation, check and registration process",
           "Quick Items: added option to disable inventory quantities",
           "Quick Items: added option to replace the add button (+) with a long-press gesture anywhere on the widget",
           "The double-tap on Torn's header bar to exit full screen can now be disabled",

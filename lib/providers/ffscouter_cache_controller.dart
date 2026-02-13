@@ -30,6 +30,11 @@ class FFScouterCacheController extends GetxController {
   bool _isFetching = false;
   bool get isFetching => _isFetching;
 
+  /// Set to true when the last API call returned error code 6
+  /// ("Invalid API key / not registered"). UI layers can check this
+  /// to offer the user a registration flow.
+  bool keyNotRegistered = false;
+
   /// Completer that concurrent callers can await while a fetch is running.
   Completer<void>? _activeFetch;
 
@@ -123,6 +128,7 @@ class FFScouterCacheController extends GetxController {
         );
 
         if (result.success && result.data != null) {
+          keyNotRegistered = false;
           final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
           for (final stat in result.data!) {
             if (stat.playerId == null) continue;
@@ -136,6 +142,10 @@ class FFScouterCacheController extends GetxController {
             );
             totalFetched++;
           }
+        } else if (result.errorCode == 6) {
+          // API key not registered — set the flag so UI can react
+          keyNotRegistered = true;
+          break;
         }
 
         // Rate-limit courtesy: small delay between chunks

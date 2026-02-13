@@ -1356,14 +1356,14 @@ class SettingsPageState extends State<SettingsPage> {
                           GestureDetector(
                             child: const Icon(Icons.info_outline, size: 18),
                             onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return FFScouterInfoDialog(
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FFScouterInfoPage(
                                     settingsProvider: _settingsProvider,
                                     themeProvider: _themeProvider,
-                                  );
-                                },
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -1374,14 +1374,14 @@ class SettingsPageState extends State<SettingsPage> {
                       value: _settingsProvider.ffScouterEnabledStatus == 1,
                       onChanged: (enabled) async {
                         if (_settingsProvider.ffScouterEnabledStatus != 1) {
-                          await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return FFScouterInfoDialog(
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FFScouterInfoPage(
                                 settingsProvider: _settingsProvider,
                                 themeProvider: _themeProvider,
-                              );
-                            },
+                              ),
+                            ),
                           );
                           if (_settingsProvider.ffScouterEnabledStatus == 1) {
                             setState(() {}); // Force update
