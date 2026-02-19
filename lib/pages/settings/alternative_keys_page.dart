@@ -136,9 +136,6 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     onChanged: (enabled) {
                       w.alternativeYataKeyEnabled = enabled;
                       Prefs().setAlternativeYataKeyEnabled(enabled);
-                      if (!enabled) {
-                        w.alternativeYataKey = w.apiKey!;
-                      }
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -208,9 +205,6 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     onChanged: (enabled) {
                       w.alternativeTornStatsKeyEnabled = enabled;
                       Prefs().setAlternativeTornStatsKeyEnabled(enabled);
-                      if (!enabled) {
-                        w.alternativeTornStatsKey = w.apiKey!;
-                      }
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -280,9 +274,6 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     onChanged: (enabled) {
                       w.alternativeFFScouterKeyEnabled = enabled;
                       Prefs().setAlternativeFFScouterKeyEnabled(enabled);
-                      if (!enabled) {
-                        w.alternativeFFScouterKey = w.apiKey!;
-                      }
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -321,6 +312,14 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                   ],
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              child: Text(
+                "Tip: You can create and register a dedicated FFScouter key directly from the "
+                "FFScouter info dialog (tap the ⓘ icon in the FFScouter page or stats tab).",
+                style: TextStyle(fontSize: 11, color: Colors.grey[500], fontStyle: FontStyle.italic),
+              ),
+            ),
           ],
         );
       },

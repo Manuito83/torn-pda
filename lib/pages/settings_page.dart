@@ -1356,14 +1356,14 @@ class SettingsPageState extends State<SettingsPage> {
                           GestureDetector(
                             child: const Icon(Icons.info_outline, size: 18),
                             onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return FFScouterInfoDialog(
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => FFScouterInfoPage(
                                     settingsProvider: _settingsProvider,
                                     themeProvider: _themeProvider,
-                                  );
-                                },
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -1374,14 +1374,14 @@ class SettingsPageState extends State<SettingsPage> {
                       value: _settingsProvider.ffScouterEnabledStatus == 1,
                       onChanged: (enabled) async {
                         if (_settingsProvider.ffScouterEnabledStatus != 1) {
-                          await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return FFScouterInfoDialog(
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FFScouterInfoPage(
                                 settingsProvider: _settingsProvider,
                                 themeProvider: _themeProvider,
-                              );
-                            },
+                              ),
+                            ),
                           );
                           if (_settingsProvider.ffScouterEnabledStatus == 1) {
                             setState(() {}); // Force update
@@ -2327,6 +2327,41 @@ class SettingsPageState extends State<SettingsPage> {
                 "If enabled, you will have quick access to the Torn wiki from the app drawer menu",
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               )
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Disable update notification",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Disable update notification")),
+                  Switch(
+                    value: _settingsProvider.disableUpdateDialog,
+                    onChanged: (enabled) {
+                      setState(() {
+                        _settingsProvider.disableUpdateDialog = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Disable the dialog that notifies you about new PDA versions and features when the app starts",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             ],
           ),
         ),
@@ -3996,33 +4031,37 @@ class SettingsPageState extends State<SettingsPage> {
           });
 
           if (!Platform.isWindows) {
-            // See note in [firebase_auth.dart]
-            final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
-            // Only sign in if there is currently no user registered (to avoid duplicates)
-            if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
-              final User? newFirebaseUser = await (firebaseAuth.signInAnon());
+            try {
+              // See note in [firebase_auth.dart]
+              final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
+              // Only sign in if there is currently no user registered (to avoid duplicates)
+              if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
+                final User? newFirebaseUser = await (firebaseAuth.signInAnon());
 
-              if (newFirebaseUser == null) {
-                throw Exception("Firebase anonymous sign-in failed");
+                if (newFirebaseUser == null) {
+                  log("Settings: Firebase anonymous sign-in failed, continuing without Firebase");
+                } else {
+                  await FirestoreHelper().setUID(newFirebaseUser.uid);
+                  // Returns UID to Drawer so that it can be passed to settings
+                  widget.changeUID(newFirebaseUser.uid);
+                  log("Settings: signed in with UID ${newFirebaseUser.uid}");
+                }
+              } else {
+                log("Settings: existing user UID ${firebaseUser.uid}");
               }
 
-              await FirestoreHelper().setUID(newFirebaseUser.uid);
-              // Returns UID to Drawer so that it can be passed to settings
-              widget.changeUID(newFirebaseUser.uid);
-              log("Settings: signed in with UID ${newFirebaseUser.uid}");
-            } else {
-              log("Settings: existing user UID ${firebaseUser.uid}");
-            }
+              await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
+              await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
+              if (Platform.isAndroid) {
+                FirestoreHelper().setVibrationPattern(_vibrationValue);
+              }
 
-            await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
-            await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
-            if (Platform.isAndroid) {
-              FirestoreHelper().setVibrationPattern(_vibrationValue);
+              // Sendbird notifications
+              final sbController = Get.find<SendbirdController>();
+              sbController.register();
+            } catch (firebaseError) {
+              log("Settings: Firebase/Firestore operations failed, continuing: $firebaseError");
             }
-
-            // Sendbird notifications
-            final sbController = Get.find<SendbirdController>();
-            sbController.register();
           } else {
             log("Windows: skipping Firestore sign up!");
           }
@@ -4061,7 +4100,7 @@ class SettingsPageState extends State<SettingsPage> {
         FirebaseCrashlytics.instance.recordError(
           e,
           stack,
-          information: ['API Key: $currentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser.uid}'],
+          information: ['API Key: $currentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser?.uid}'],
         );
       }
     }

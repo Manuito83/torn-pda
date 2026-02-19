@@ -1363,6 +1363,7 @@ class WebViewFullState extends State<WebViewFull>
             WebviewHandlers.addQuickItemPickerHandler(
               webview: webViewController!,
               quickItemsProvider: context.read<QuickItemsProvider>(),
+              settingsProvider: context.read<SettingsProvider>(),
             );
 
             publishTabState();
@@ -3658,7 +3659,7 @@ class WebViewFullState extends State<WebViewFull>
         key: _showCaseTradeOptions,
         title: 'Trading options!',
         description: '\nIf you are a trader, you can manage the different trading providers available in Torn PDA '
-            'by tapping this icon (e.g.: Arson Warehouse and Torn Exchange)!\n\nThere\'s also additional options available, '
+            'by tapping this icon (e.g.: Torn Exchange)!\n\nThere\'s also additional options available, '
             'such as detailed profit information.\n\nIf you prefer, you can also deactivate the whole Trade Calculator '
             'widget to gain some space.',
         targetPadding: const EdgeInsets.all(10),
@@ -4338,7 +4339,7 @@ class WebViewFullState extends State<WebViewFull>
     final inTorn = _currentUrl.contains("torn.com");
     final isFullScreen = _webViewProvider.currentUiMode == UiMode.fullScreen;
 
-    if (inTorn && isFullScreen) {
+    if (inTorn && isFullScreen && _settingsProvider.fullScreenHeaderDoubleTap) {
       webViewController?.evaluateJavascript(
         source: exitFullScreenOnHeaderDoubleClick(
           isIOS: Platform.isIOS,
@@ -4615,13 +4616,37 @@ class WebViewFullState extends State<WebViewFull>
     if (!mounted) return;
 
     if (_assessTravelAgencyEnergyNerveLifeWarningTriggerTime != null &&
-        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 2) {
+        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 30) {
       return;
     }
-    _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/travelagency.php') || easyUrl.contains('page.php?sid=travel')) {
+      // Set trigger time early to prevent concurrent calls from also proceeding
+      // (onLoadStart can fire multiple times during page load/redirects)
+      _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
+
+      // Verify the "Travel Agency" title is actually present on the page
+      // to avoid activation while traveling or visiting a foreign country
+      bool foundTravelAgency = false;
+      try {
+        for (int attempt = 0; attempt < 5; attempt++) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (!mounted) return;
+          final html = await webViewController?.getHtml();
+          if (html == null) continue;
+          final document = parse(html);
+          final h4Elements = document.querySelectorAll('h4');
+          foundTravelAgency = h4Elements.any(
+            (e) => e.text.trim() == 'Travel Agency',
+          );
+          if (foundTravelAgency) break;
+        }
+        if (!foundTravelAgency) return;
+      } catch (e) {
+        return;
+      }
+
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
 
@@ -6214,7 +6239,7 @@ class WebViewFullState extends State<WebViewFull>
     BotToast.showCustomText(
       clickClose: true,
       ignoreContentClick: true,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(seconds: 8),
       toastBuilder: (textCancel) => Align(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),

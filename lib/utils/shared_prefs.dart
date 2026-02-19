@@ -23,6 +23,7 @@ class Prefs {
   final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
   final String _kBugsAnnouncementDialogVersion = "pda_bugsAnnouncementDialogVersion";
   final String _kPdaUpdateDialogVersion = "pda_updateDialogVersion";
+  final String _kPdaUpdateDialogDisabled = "pda_updateDialogDisabled";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
   final String _kPdaConnectivityCheckRC = "pda_connectivityCheckRC";
@@ -308,6 +309,8 @@ class Prefs {
   final String _kQuickItemsListFaction = "pda_quickItemsListFaction"; // keep faction data
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kQuickItemsRefreshAfterEquip = "pda_quickItemsRefreshAfterEquip";
+  final String _kQuickItemsHideInventoryCount = "pda_quickItemsHideInventoryCount";
+  final String _kQuickItemsLongPressToAdd = "pda_quickItemsLongPressToAdd";
   final String _kQuickItemsEnabled = "pda_quickItemsEnabled";
   final String _kQuickItemsFactionEnabled = "pda_quickItemsFactionEnabled";
   //
@@ -409,6 +412,7 @@ class Prefs {
   final String _kFullScreenOverNotch = "pda_fullScreenOverNotch";
   final String _kFullScreenOverBottom = "pda_fullScreenOverBottom";
   final String _kFullScreenOverSides = "pda_fullScreenOverSides";
+  final String _kFullScreenHeaderDoubleTap = "pda_fullScreenHeaderDoubleTap";
   final String _kFullScreenByShortTap = "pda_fullScreenByShortTap";
   final String _kFullScreenByLongTap = "pda_fullScreenByLongTap";
   final String _kFullScreenByNotificationTap = "pda_fullScreenByNotificationTap";
@@ -582,6 +586,14 @@ class Prefs {
 
   Future setPdaUpdateDialogVersion(int value) async {
     await PrefsDatabase.setInt(_kPdaUpdateDialogVersion, value);
+  }
+
+  Future<bool> getPdaUpdateDialogDisabled() async {
+    return await PrefsDatabase.getBool(_kPdaUpdateDialogDisabled, false);
+  }
+
+  Future setPdaUpdateDialogDisabled(bool value) async {
+    await PrefsDatabase.setBool(_kPdaUpdateDialogDisabled, value);
   }
 
   /// ----------------------------
@@ -2794,6 +2806,22 @@ class Prefs {
     return await PrefsDatabase.setBool(_kQuickItemsRefreshAfterEquip, value);
   }
 
+  Future<bool> getQuickItemsHideInventoryCount() async {
+    return await PrefsDatabase.getBool(_kQuickItemsHideInventoryCount, false);
+  }
+
+  Future setQuickItemsHideInventoryCount(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsHideInventoryCount, value);
+  }
+
+  Future<bool> getQuickItemsLongPressToAdd() async {
+    return await PrefsDatabase.getBool(_kQuickItemsLongPressToAdd, false);
+  }
+
+  Future setQuickItemsLongPressToAdd(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsLongPressToAdd, value);
+  }
+
   Future<bool> getQuickItemsEnabled() async {
     return await PrefsDatabase.getBool(_kQuickItemsEnabled, true);
   }
@@ -3698,6 +3726,14 @@ class Prefs {
 
   Future setFullScreenOverSides(bool value) async {
     return await PrefsDatabase.setBool(_kFullScreenOverSides, value);
+  }
+
+  Future<bool> getFullScreenHeaderDoubleTap() async {
+    return await PrefsDatabase.getBool(_kFullScreenHeaderDoubleTap, true);
+  }
+
+  Future setFullScreenHeaderDoubleTap(bool value) async {
+    return await PrefsDatabase.setBool(_kFullScreenHeaderDoubleTap, value);
   }
 
   //--

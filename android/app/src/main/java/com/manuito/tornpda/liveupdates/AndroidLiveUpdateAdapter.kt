@@ -4,15 +4,10 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.content.Context
 import android.os.Build
-import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.Person
-import androidx.core.graphics.drawable.IconCompat
 import com.manuito.tornpda.R
 import kotlinx.coroutines.*
-import kotlin.math.max
-import kotlin.math.min
 
 /**
  * Manages the lifecycle and rendering of the travel live update notification
@@ -21,13 +16,14 @@ import kotlin.math.min
 class AndroidLiveUpdateAdapter(
     private val context: Context,
     private val tapIntentFactory: LiveUpdateTapIntentFactory,
+    private val contentBuilder: LiveUpdateNotificationContentBuilder = LiveUpdateNotificationContentBuilder(),
 ) : LiveUpdateAdapter, LiveUpdateNotificationReceiver.Listener {
 
     private val notificationManager = NotificationManagerCompat.from(context)
     private var listener: LiveUpdateAdapterListener? = null
     private var activeSessionId: String? = null
     private var cachedPayload: LiveUpdatePayload? = null
-    
+
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var updateJob: Job? = null
 
@@ -46,7 +42,7 @@ class AndroidLiveUpdateAdapter(
         val dismissIntent = LiveUpdateNotificationReceiver.createDismissIntent(context, sessionId)
         val notification = buildNotification(payload, tapIntent, dismissIntent)
         notifySurface(sessionId.hashCode(), notification)
-        
+
         // Initiate the update loop to refresh the progress bar
         startUpdateLoop(sessionId, tapIntent, dismissIntent)
 
@@ -115,49 +111,38 @@ class AndroidLiveUpdateAdapter(
     }
 
     /**
-     * Returns the appropriate composite drawable resource ID for the given travel destination
-     * Combines plane icon with country flag overlay (or home icon for Torn)
+     * Returns the appropriate drawable resource ID for the given travel destination
+     * Uses plane_left when returning to Torn, plane_right when traveling abroad
      */
     private fun getDestinationIcon(destination: String?): Int {
         return when (destination?.lowercase()) {
-            "torn" -> R.drawable.travel_pill_torn
-            "united kingdom" -> R.drawable.travel_pill_uk
-            "japan" -> R.drawable.travel_pill_japan
-            "hawaii" -> R.drawable.travel_pill_hawaii
-            "china" -> R.drawable.travel_pill_china
-            "argentina" -> R.drawable.travel_pill_argentina
-            "canada" -> R.drawable.travel_pill_canada
-            "cayman islands" -> R.drawable.travel_pill_cayman
-            "mexico" -> R.drawable.travel_pill_mexico
-            "south africa" -> R.drawable.travel_pill_south_africa
-            "switzerland" -> R.drawable.travel_pill_switzerland
-            "united arab emirates" -> R.drawable.travel_pill_uae
-            else -> R.drawable.plane_right // Fallback for unknown destinations
+            "torn" -> R.drawable.plane_left
+            else -> R.drawable.plane_right
         }
     }
-    
+
     /**
      * Starts a coroutine loop to update the notification every minute
      * This ensures the progress bar reflects the current travel status
      */
     private fun startUpdateLoop(
-        sessionId: String, 
-        tapIntent: android.app.PendingIntent, 
+        sessionId: String,
+        tapIntent: android.app.PendingIntent,
         dismissIntent: android.app.PendingIntent
     ) {
         updateJob?.cancel()
         val payload = cachedPayload ?: return
-        
+
         if (payload.hasArrived) return
 
         updateJob = scope.launch {
             while (isActive) {
-                delay(15_000)
-                
+                delay(60_000)
+
                 if (activeSessionId != sessionId) break
                 val current = cachedPayload ?: break
                 if (current.hasArrived) break
-                
+
                 val notification = buildNotification(current, tapIntent, dismissIntent)
                 notifySurface(sessionId.hashCode(), notification)
             }
@@ -172,14 +157,10 @@ class AndroidLiveUpdateAdapter(
         val destination = payload.currentDestinationDisplayName ?: context.getString(R.string.live_update_destination_unknown)
         val origin = payload.originDisplayName ?: context.getString(R.string.live_update_destination_unknown)
         val title = payload.activityStateTitle ?: context.getString(R.string.live_update_channel_name)
-        val emoji = payload.destinationEmoji ?: ""
         val etaText = formatEta(payload)
         val secondary = context.getString(R.string.live_update_notification_secondary, origin, destination)
 
-        // Calculate actual arrival status based on real time, not just Flutter's hasArrived flag
-        val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
-        val nowMillis = System.currentTimeMillis()
-        val hasActuallyArrived = payload.hasArrived || (arrivalMillis > 0 && arrivalMillis <= nowMillis)
+        val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
 
         val extrasBundle = android.os.Bundle()
         payload.extras.forEach { (key, value) ->
@@ -198,7 +179,6 @@ class AndroidLiveUpdateAdapter(
                 payload = payload,
                 title = title,
                 destination = destination,
-                emoji = emoji,
                 etaText = etaText,
                 secondary = secondary,
                 extrasBundle = extrasBundle,
@@ -208,10 +188,12 @@ class AndroidLiveUpdateAdapter(
         }
 
         val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
+        val remainingText = formatRemaining(payload)
+        val earliestReturnText = formatEarliestReturn(payload)
+        val arrivalClockTime = formatArrivalClockTime(payload)
+
         val builder = NotificationCompat.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
             .setSmallIcon(destinationIcon)
-            .setContentTitle("$title $destination $emoji")
-            .setContentText(etaText)
             .setContentIntent(tapIntent)
             .setDeleteIntent(dismissIntent)
             .setOnlyAlertOnce(true)
@@ -219,34 +201,75 @@ class AndroidLiveUpdateAdapter(
             .setAutoCancel(hasActuallyArrived)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setExtras(extrasBundle)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
 
-        // Standard BigTextStyle is used for reliability across different Android versions
-        builder.setStyle(NotificationCompat.BigTextStyle().bigText("$etaText • $secondary"))
-        builder.setCategory(NotificationCompat.CATEGORY_STATUS)
+        if (hasActuallyArrived) {
+            // --- Arrived state ---
+            val arrivedTitle = context.getString(R.string.live_update_arrived_in_pattern, destination)
+            val arrivedContentText = if (arrivalClockTime != null) {
+                context.getString(R.string.live_update_arrived_at_pattern, arrivalClockTime)
+            } else {
+                context.getString(R.string.live_update_arrived_label)
+            }
 
-        val progress = computeProgress(payload)
-        if (progress != null) {
-            builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
-        } else {
+            builder.setContentTitle(arrivedTitle)
+            builder.setContentText(arrivedContentText)
+            builder.setSubText(secondary)
+
+            val bigTextLines = buildList {
+                add(arrivedContentText)
+                add(secondary)
+                earliestReturnText?.let { add(it) }
+            }
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText(bigTextLines.joinToString("\n")))
+
+            // Full progress bar or hidden
             builder.setProgress(0, 0, false)
-        }
-
-        if (!hasActuallyArrived && arrivalMillis > 0) {
+            // No chronometer for arrived
             builder.setShowWhen(true)
-            builder.setUsesChronometer(true)
-            builder.setChronometerCountDown(true)
-            builder.setWhen(arrivalMillis)
+            builder.setUsesChronometer(false)
+            builder.setWhen(System.currentTimeMillis())
+        } else {
+            // --- En-route state ---
+            builder.setContentTitle("$title $destination")
 
-            // Set subtext to assist system in identifying context
-            builder.setSubText(context.getString(R.string.live_update_channel_name))
+            val contentTextParts = buildList {
+                add(etaText)
+                remainingText?.let { add(it) }
+            }
+            builder.setContentText(contentTextParts.joinToString(" \u2022 "))
+            builder.setSubText(secondary)
 
-            // Enable promoted ongoing (Live Update) when supported (Android 15+); fallback is no-op on older SDKs
-            enablePromotedOngoing(builder)
+            val bigTextLines = buildList {
+                add(secondary)
+                val etaLine = contentTextParts.joinToString(" \u2022 ")
+                add(etaLine)
+                earliestReturnText?.let { add(it) }
+            }
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText(bigTextLines.joinToString("\n")))
 
-            // Provide a compact status-chip text for Android 15+ surfaces (if available)
-            applyShortCriticalText(builder, payload)
+            val progress = contentBuilder.computeProgress(payload)
+            if (progress != null) {
+                builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
+            } else {
+                builder.setProgress(0, 0, false)
+            }
 
-            scheduleArrivedAlarm(payload, arrivalMillis)
+            val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
+            if (arrivalMillis > 0) {
+                builder.setShowWhen(true)
+                builder.setUsesChronometer(true)
+                builder.setChronometerCountDown(true)
+                builder.setWhen(arrivalMillis)
+
+                // Enable promoted ongoing (Live Update) when supported (Android 15+); fallback is no-op on older SDKs
+                enablePromotedOngoing(builder)
+
+                // Provide a compact status-chip text for Android 15+ surfaces (if available)
+                applyShortCriticalText(builder, payload)
+
+                scheduleArrivedAlarm(payload, arrivalMillis)
+            }
         }
 
         return builder.build()
@@ -255,10 +278,13 @@ class AndroidLiveUpdateAdapter(
     private fun scheduleArrivedAlarm(payload: LiveUpdatePayload, arrivalMillis: Long) {
         val sessionId = activeSessionId ?: return
         val destination = payload.currentDestinationDisplayName ?: context.getString(R.string.live_update_destination_unknown)
-        
+        val origin = payload.originDisplayName
+
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? android.app.AlarmManager
-        val intent = LiveUpdateNotificationReceiver.createArrivedIntent(context, sessionId, destination)
-        
+        val intent = LiveUpdateNotificationReceiver.createArrivedIntent(
+            context, sessionId, destination, origin, payload.earliestReturnTimestamp,
+        )
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             if (alarmManager?.canScheduleExactAlarms() == true) {
                 alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, arrivalMillis, intent)
@@ -273,6 +299,7 @@ class AndroidLiveUpdateAdapter(
     private fun cancelArrivedAlarm(sessionId: String) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? android.app.AlarmManager
         // We need a dummy destination to recreate the same PendingIntent structure for matching
+        // Extra fields (origin, earliestReturnTimestamp) don't affect PendingIntent identity
         val intent = LiveUpdateNotificationReceiver.createArrivedIntent(context, sessionId, "dummy")
         alarmManager?.cancel(intent)
     }
@@ -280,49 +307,37 @@ class AndroidLiveUpdateAdapter(
     private fun formatEta(payload: LiveUpdatePayload): String {
         val arrival = payload.arrivalTimeTimestamp ?: return context.getString(R.string.live_update_unknown_eta)
 
-        // If arrived, show Arrived label
-        if (payload.hasArrived) {
-            return context.getString(R.string.live_update_arrived_label)
-        }
-
-        // Calculate countdown
-        val nowSeconds = System.currentTimeMillis() / 1000
-        val remaining = arrival - nowSeconds
-        if (remaining <= 0) {
-            return context.getString(R.string.live_update_arrived_label)
-        }
-
-        val countdown = formatCountdown(remaining)
-
-        // Format arrival time as local clock time (e.g. 09:53 or 21:53)
         val date = java.util.Date(arrival * 1000)
         val format = android.text.format.DateFormat.getTimeFormat(context)
-        val arrivalTimeFormatted = format.format(date)
+        val formatted = format.format(date)
 
-        // "Arriving in: 1:23:45 at 09:53"
-        return context.getString(R.string.live_update_arriving_pattern, countdown, arrivalTimeFormatted)
-    }
-
-    private fun formatCountdown(remainingSeconds: Long): String {
-        val h = remainingSeconds / 3600
-        val m = (remainingSeconds % 3600) / 60
-        val s = remainingSeconds % 60
-        return if (h > 0) {
-            String.format("%d:%02d:%02d", h, m, s)
-        } else {
-            String.format("%d:%02d", m, s)
+        // If arrived, show "Arrived at <time>"
+        if (payload.hasArrived) {
+            return context.getString(R.string.live_update_arrived_at_pattern, formatted)
         }
+
+        // Format as local clock time (e.g. ETA 09:53)
+        return context.getString(R.string.live_update_eta_pattern, formatted)
     }
 
-    private fun computeProgress(payload: LiveUpdatePayload): ProgressInfo? {
+    private fun formatRemaining(payload: LiveUpdatePayload): String? {
+        val remaining = contentBuilder.computeRemainingTime(payload) ?: return null
+        return context.getString(R.string.live_update_remaining_pattern, remaining.toCompact())
+    }
+
+    private fun formatEarliestReturn(payload: LiveUpdatePayload): String? {
+        val returnTs = payload.earliestReturnTimestamp ?: return null
+        val date = java.util.Date(returnTs * 1000)
+        val format = android.text.format.DateFormat.getTimeFormat(context)
+        val formatted = format.format(date)
+        return context.getString(R.string.live_update_earliest_return_pattern, formatted)
+    }
+
+    private fun formatArrivalClockTime(payload: LiveUpdatePayload): String? {
         val arrival = payload.arrivalTimeTimestamp ?: return null
-        val departure = payload.departureTimeTimestamp ?: return null
-        
-        // Calculate progress based on current system time
-        val reference = System.currentTimeMillis() / 1000
-        val totalSeconds = max(1L, arrival - departure)
-        val elapsedSeconds = min(totalSeconds, max(0L, reference - departure))
-        return ProgressInfo(totalSeconds, elapsedSeconds)
+        val date = java.util.Date(arrival * 1000)
+        val format = android.text.format.DateFormat.getTimeFormat(context)
+        return format.format(date)
     }
 
     private fun applyShortCriticalText(builder: NotificationCompat.Builder, payload: LiveUpdatePayload) {
@@ -342,20 +357,10 @@ class AndroidLiveUpdateAdapter(
         }
 
         val arrival = payload.arrivalTimeTimestamp ?: return null
-        val nowSeconds = System.currentTimeMillis() / 1000
-        val remaining = arrival - nowSeconds
-        if (remaining <= 0) {
-            return context.getString(R.string.live_update_arrived_label)
-        }
-
-        val h = remaining / 3600
-        val m = (remaining % 3600) / 60
-        val s = remaining % 60
-        return if (h > 0) {
-            String.format("%d:%02d:%02d", h, m, s)
-        } else {
-            String.format("%d:%02d", m, s)
-        }
+        val date = java.util.Date(arrival * 1000)
+        val format = android.text.format.DateFormat.getTimeFormat(context)
+        val formatted = format.format(date)
+        return context.getString(R.string.live_update_eta_pattern, formatted)
     }
 
     private fun enablePromotedOngoing(builder: NotificationCompat.Builder) {
@@ -377,9 +382,21 @@ class AndroidLiveUpdateAdapter(
     }
 
     private fun invokeFrameworkShortCriticalText(builder: Notification.Builder, text: CharSequence) {
+        // Primary approach: set the extra key directly in the notification bundle
+        // This avoids reflection issues with hidden/restricted APIs on some devices
         try {
-            val method = builder.javaClass.getMethod("setShortCriticalText", CharSequence::class.java)
-            method.invoke(builder, text)
+            val extras = android.os.Bundle().apply {
+                putCharSequence("android.shortCriticalText", text)
+            }
+            builder.addExtras(extras)
+        } catch (_: Exception) {
+            // Ignore if addExtras is unavailable
+        }
+
+        // Secondary approach: reflection with correct signature (String, not CharSequence on API 36+)
+        try {
+            val method = builder.javaClass.getMethod("setShortCriticalText", String::class.java)
+            method.invoke(builder, text.toString())
         } catch (_: Exception) {
             // Ignore if not supported on this SDK
         }
@@ -390,22 +407,21 @@ class AndroidLiveUpdateAdapter(
         payload: LiveUpdatePayload,
         title: String,
         destination: String,
-        emoji: String,
         etaText: String,
         secondary: String,
         extrasBundle: android.os.Bundle,
         tapIntent: android.app.PendingIntent,
         dismissIntent: android.app.PendingIntent,
     ): Notification {
-        val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
-        val nowMillis = System.currentTimeMillis()
-        val hasActuallyArrived = payload.hasArrived || (arrivalMillis > 0 && arrivalMillis <= nowMillis)
+        val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
 
         val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
+        val remainingText = formatRemaining(payload)
+        val earliestReturnText = formatEarliestReturn(payload)
+        val arrivalClockTime = formatArrivalClockTime(payload)
+
         val builder = Notification.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
             .setSmallIcon(destinationIcon)
-            .setContentTitle("$title $destination $emoji")
-            .setContentText(etaText)
             .setContentIntent(tapIntent)
             .setDeleteIntent(dismissIntent)
             .setOnlyAlertOnce(true)
@@ -415,33 +431,69 @@ class AndroidLiveUpdateAdapter(
             .setExtras(extrasBundle)
             .setCategory(Notification.CATEGORY_STATUS)
 
-        // BigTextStyle
-        builder.setStyle(Notification.BigTextStyle().bigText("$etaText • $secondary"))
+        if (hasActuallyArrived) {
+            // --- Arrived state ---
+            val arrivedTitle = context.getString(R.string.live_update_arrived_in_pattern, destination)
+            val arrivedContentText = if (arrivalClockTime != null) {
+                context.getString(R.string.live_update_arrived_at_pattern, arrivalClockTime)
+            } else {
+                context.getString(R.string.live_update_arrived_label)
+            }
 
-        // Progress
-        val progress = computeProgress(payload)
-        if (progress != null) {
-            builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
-        }
+            builder.setContentTitle(arrivedTitle)
+            builder.setContentText(arrivedContentText)
+            builder.setSubText(secondary)
 
-        if (!hasActuallyArrived && arrivalMillis > 0) {
+            val bigTextLines = buildList {
+                add(arrivedContentText)
+                add(secondary)
+                earliestReturnText?.let { add(it) }
+            }
+            builder.setStyle(Notification.BigTextStyle().bigText(bigTextLines.joinToString("\n")))
+
+            builder.setProgress(0, 0, false)
             builder.setShowWhen(true)
-            builder.setUsesChronometer(true)
-            builder.setChronometerCountDown(true)
-            builder.setWhen(arrivalMillis)
-            builder.setSubText(context.getString(R.string.live_update_channel_name))
-            invokeFrameworkPromotedOngoing(builder)
+            builder.setUsesChronometer(false)
+            builder.setWhen(System.currentTimeMillis())
+        } else {
+            // --- En-route state ---
+            builder.setContentTitle("$title $destination")
 
-            buildShortCriticalText(payload)?.let { invokeFrameworkShortCriticalText(builder, it) }
+            val contentTextParts = buildList {
+                add(etaText)
+                remainingText?.let { add(it) }
+            }
+            builder.setContentText(contentTextParts.joinToString(" \u2022 "))
+            builder.setSubText(secondary)
 
-            scheduleArrivedAlarm(payload, arrivalMillis)
+            val bigTextLines = buildList {
+                add(secondary)
+                val etaLine = contentTextParts.joinToString(" \u2022 ")
+                add(etaLine)
+                earliestReturnText?.let { add(it) }
+            }
+            builder.setStyle(Notification.BigTextStyle().bigText(bigTextLines.joinToString("\n")))
+
+            val progress = contentBuilder.computeProgress(payload)
+            if (progress != null) {
+                builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
+            }
+
+            val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
+            if (arrivalMillis > 0) {
+                builder.setShowWhen(true)
+                builder.setUsesChronometer(true)
+                builder.setChronometerCountDown(true)
+                builder.setWhen(arrivalMillis)
+                invokeFrameworkPromotedOngoing(builder)
+
+                buildShortCriticalText(payload)?.let { invokeFrameworkShortCriticalText(builder, it) }
+
+                scheduleArrivedAlarm(payload, arrivalMillis)
+            }
         }
 
         return builder.build()
     }
 
-    private data class ProgressInfo(
-        val totalSeconds: Long,
-        val elapsedSeconds: Long,
-    )
 }

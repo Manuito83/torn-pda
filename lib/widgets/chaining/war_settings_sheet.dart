@@ -97,6 +97,13 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
     }
   }
 
+  String _formatStatValue(double value) {
+    if (value >= 1000000000) return "${(value / 1000000000).toStringAsFixed(1)}B";
+    if (value >= 1000000) return "${(value / 1000000).toStringAsFixed(1)}M";
+    if (value >= 1000) return "${(value / 1000).toStringAsFixed(1)}k";
+    return value.round().toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -1011,15 +1018,23 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                   _buildEstimateRangeSlider(
                       "Estimated Stats", _settings.estimatedStatsRange, (val) => _settings.estimatedStatsRange = val),
                   const Divider(),
-                  _buildRangeSlider("Total Stats (Spied/FFS)", _settings.statsRange, 0, _maxStats,
-                      (val) => _settings.statsRange = val),
                   _buildRangeSlider(
-                      "Strength", _settings.strengthRange, 0, _maxStr, (val) => _settings.strengthRange = val),
+                      "Total Stats", _settings.statsRange, 0, _maxStats, (val) => _settings.statsRange = val,
+                      subtitle: _maxStats > 0
+                          ? "Spied/FFS \u00b7 max ${_formatStatValue(_maxStats)}"
+                          : "Spied/FFS \u00b7 no spy data",
+                      showCalculator: true),
                   _buildRangeSlider(
-                      "Defense", _settings.defenseRange, 0, _maxDef, (val) => _settings.defenseRange = val),
-                  _buildRangeSlider("Speed", _settings.speedRange, 0, _maxSpd, (val) => _settings.speedRange = val),
+                      "Strength", _settings.strengthRange, 0, _maxStr, (val) => _settings.strengthRange = val,
+                      subtitle: _maxStr > 0 ? "max ${_formatStatValue(_maxStr)}" : "No spy data", showCalculator: true),
                   _buildRangeSlider(
-                      "Dexterity", _settings.dexterityRange, 0, _maxDex, (val) => _settings.dexterityRange = val),
+                      "Defense", _settings.defenseRange, 0, _maxDef, (val) => _settings.defenseRange = val,
+                      subtitle: _maxDef > 0 ? "max ${_formatStatValue(_maxDef)}" : "No spy data", showCalculator: true),
+                  _buildRangeSlider("Speed", _settings.speedRange, 0, _maxSpd, (val) => _settings.speedRange = val,
+                      subtitle: _maxSpd > 0 ? "max ${_formatStatValue(_maxSpd)}" : "No spy data", showCalculator: true),
+                  _buildRangeSlider(
+                      "Dexterity", _settings.dexterityRange, 0, _maxDex, (val) => _settings.dexterityRange = val,
+                      subtitle: _maxDex > 0 ? "max ${_formatStatValue(_maxDex)}" : "No spy data", showCalculator: true),
                 ],
               ),
             ),
@@ -1189,7 +1204,8 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
   }
 
   Widget _buildRangeSlider(
-      String label, RangeValues? currentRange, double min, double max, Function(RangeValues?) onChanged) {
+      String label, RangeValues? currentRange, double min, double max, Function(RangeValues?) onChanged,
+      {String? subtitle, bool showCalculator = false}) {
     String formatLabel(double value) {
       if (value >= 1000000000) {
         return "${(value / 1000000000).toStringAsFixed(1)}B";
@@ -1220,11 +1236,11 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.only(left: 0.0, bottom: 10.0),
+          Padding(
+            padding: const EdgeInsets.only(left: 0.0, bottom: 10.0),
             child: Text(
-              "No spy info available (max: N/A)",
-              style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+              subtitle != null ? "$subtitle \u00b7 no spy data" : "No spy info available (max: N/A)",
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ),
         ],
@@ -1247,7 +1263,44 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("$label (max: ${formatLabel(max)})"),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(subtitle != null ? label : "$label (max: ${formatLabel(max)})"),
+                      ),
+                      if (showCalculator)
+                        SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(Icons.calculate_outlined, size: 20, color: Colors.blueGrey[400]),
+                            onPressed: () => _showRangeInputDialog(
+                              label,
+                              min,
+                              max,
+                              currentRange,
+                              onChanged,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (subtitle != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1.0),
+                      child: Text(
+                        subtitle,
+                        style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             Switch(
               value: currentRange != null,
               onChanged: (val) {
@@ -1261,6 +1314,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           ],
         ),
         if (currentRange != null) ...[
+          const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: Row(
@@ -1287,6 +1341,126 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           ),
         ],
       ],
+    );
+  }
+
+  void _showRangeInputDialog(
+      String label, double min, double max, RangeValues? currentRange, Function(RangeValues?) onChanged) {
+    final minController = TextEditingController(
+      text: currentRange != null ? currentRange.start.round().toString() : min.round().toString(),
+    );
+    final maxController = TextEditingController(
+      text: currentRange != null ? currentRange.end.round().toString() : max.round().toString(),
+    );
+    final int maxDigits = max.round().toString().length;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            String minPreview = '';
+            String maxPreview = '';
+            final minVal = double.tryParse(minController.text);
+            final maxVal = double.tryParse(maxController.text);
+            if (minVal != null && minVal >= 1000) {
+              minPreview = _formatStatValue(minVal);
+            }
+            if (maxVal != null && maxVal >= 1000) {
+              maxPreview = _formatStatValue(maxVal);
+            }
+
+            return AlertDialog(
+              title: Text("$label Range"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Enter values between ${_formatStatValue(min)} and ${_formatStatValue(max)}",
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: minController,
+                    keyboardType: TextInputType.number,
+                    maxLength: maxDigits,
+                    decoration: const InputDecoration(
+                      labelText: "Minimum",
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      counterText: '',
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  if (minPreview.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "= $minPreview",
+                          style: TextStyle(fontSize: 12, color: Colors.blueGrey[400], fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: maxController,
+                    keyboardType: TextInputType.number,
+                    maxLength: maxDigits,
+                    decoration: InputDecoration(
+                      labelText: "Maximum (max: ${_formatStatValue(max)})",
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      counterText: '',
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  if (maxPreview.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "= $maxPreview",
+                          style: TextStyle(fontSize: 12, color: Colors.blueGrey[400], fontStyle: FontStyle.italic),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    double? newMin = double.tryParse(minController.text);
+                    double? newMax = double.tryParse(maxController.text);
+                    if (newMin != null && newMax != null) {
+                      newMin = newMin.clamp(min, max);
+                      newMax = newMax.clamp(min, max);
+                      if (newMin > newMax) {
+                        final temp = newMin;
+                        newMin = newMax;
+                        newMax = temp;
+                      }
+                      setState(() {
+                        onChanged(RangeValues(newMin!, newMax!));
+                        _warController.savePreferences();
+                        _warController.update();
+                      });
+                    }
+                    Navigator.pop(dialogContext);
+                  },
+                  child: const Text("Apply"),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

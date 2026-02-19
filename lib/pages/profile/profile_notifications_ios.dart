@@ -21,6 +21,7 @@ import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/profile/energy_trigger_dialog.dart';
 
@@ -60,6 +61,8 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   String? _jailDropDownValue;
   String? _rankedWarDropDownValue;
   String? _raceStartDropDownValue;
+
+  bool _isAlarmKitAvailable = false;
 
   Future? _preferencesLoaded;
 
@@ -238,6 +241,20 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
       );
 
       if (element == ProfileNotification.travel) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Text(
+              'This option does not apply if you are using the dedicated card for Travel in the '
+              "Profile section (in that case you'll have direct access to all types of notification methods)",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        );
         types.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -469,6 +486,8 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   }
 
   Future _restorePreferences() async {
+    _isAlarmKitAvailable = await AlarmKitServiceIos.isAvailable();
+
     var energyTrigger = await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (energyTrigger < _energyMin || energyTrigger > widget.energyMax!) {
@@ -555,12 +574,17 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
       value = '1';
     }
 
+    // If AlarmKit is not available, normalize alarm to notification.
+    if (!_isAlarmKitAvailable && value == '1') {
+      value = '0';
+    }
+
     value ??= '0';
 
     return DropdownButton<String>(
       value: value,
-      items: const [
-        DropdownMenuItem(
+      items: [
+        const DropdownMenuItem(
           value: "0",
           child: SizedBox(
             width: 95,
@@ -573,19 +597,20 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             ),
           ),
         ),
-        DropdownMenuItem(
-          value: "1",
-          child: SizedBox(
-            width: 95,
-            child: Text(
-              "Alarm",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
+        if (_isAlarmKitAvailable)
+          const DropdownMenuItem(
+            value: "1",
+            child: SizedBox(
+              width: 95,
+              child: Text(
+                "Alarm",
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 14,
+                ),
               ),
             ),
           ),
-        ),
       ],
       onChanged: (newValue) {
         if (newValue == null) return;

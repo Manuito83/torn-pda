@@ -205,6 +205,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _raceStartNotificationsPending = false;
 
   final Set<String> _activeAlarmKitIdsIos = <String>{};
+  bool _isAlarmKitAvailableIos = false;
 
   NotificationType _travelNotificationType = NotificationType.notification;
   NotificationType _energyNotificationType = NotificationType.notification;
@@ -2016,17 +2017,68 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       );
     } else if (Platform.isIOS) {
-      alertsButton = RawMaterialButton(
-        onPressed: null,
-        constraints: const BoxConstraints.expand(width: 32, height: 32),
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        fillColor: _themeProvider!.navSelected,
-        shape: const CircleBorder(),
-        child: _notificationIcon(
-          ProfileNotification.travel,
-          size: 20,
-        ),
-      );
+      if (_isAlarmKitAvailableIos) {
+        final descriptor = AlarmKitServiceIos.profileDescriptor(ProfileNotification.travel.string ?? '');
+        final logicalAlarmId = descriptor.alarmId;
+        alertsButton = Row(
+          children: [
+            RawMaterialButton(
+              onPressed: null,
+              constraints: const BoxConstraints.expand(width: 32, height: 32),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: _travelNotificationsPending ? Colors.green : Colors.blueGrey,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: _notificationIcon(
+                ProfileNotification.travel,
+                size: 20,
+                forcedTravelIcon: NotificationType.notification,
+              ),
+            ),
+            const SizedBox(width: 10),
+            RawMaterialButton(
+              onPressed: null,
+              constraints: const BoxConstraints.expand(width: 32, height: 32),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: _activeAlarmKitIdsIos.contains(logicalAlarmId) ? Colors.green : Colors.blueGrey,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: _notificationIcon(
+                ProfileNotification.travel,
+                size: 20,
+                forcedTravelIcon: NotificationType.alarm,
+              ),
+            ),
+          ],
+        );
+      } else {
+        // AlarmKit not available: show only the notification icon
+        alertsButton = RawMaterialButton(
+          onPressed: null,
+          constraints: const BoxConstraints.expand(width: 32, height: 32),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: _travelNotificationsPending ? Colors.green : Colors.blueGrey,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(50),
+          ),
+          child: _notificationIcon(
+            ProfileNotification.travel,
+            size: 20,
+            forcedTravelIcon: NotificationType.notification,
+          ),
+        );
+      }
     } else {
       alertsButton = const SizedBox.shrink();
     }
@@ -2465,6 +2517,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _refreshActiveAlarmKitIds() async {
     if (!Platform.isIOS) return;
+    if (!_isAlarmKitAvailableIos) return;
     if (!_hasProfileAlarmMode()) return;
     final ids = await AlarmKitServiceIos.listLogicalIds();
 
@@ -7533,6 +7586,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
 
+    if (Platform.isIOS) {
+      _isAlarmKitAvailableIos = await AlarmKitServiceIos.isAvailable();
+    }
+
     final expandEvents = await Prefs().getExpandEvents();
     final eventsNumber = await Prefs().getEventsShowNumber();
     final expandMessages = await Prefs().getExpandMessages();
@@ -7730,6 +7787,54 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (_raceStartNotificationType == NotificationType.timer) {
           _raceStartNotificationType = NotificationType.alarm;
           _raceStartNotificationIcon = Icons.notifications_none;
+        }
+
+        // If AlarmKit is not available (iOS < 26), normalize alarm to notification
+        if (!_isAlarmKitAvailableIos) {
+          if (_travelNotificationType == NotificationType.alarm) {
+            _travelNotificationType = NotificationType.notification;
+            _travelNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_energyNotificationType == NotificationType.alarm) {
+            _energyNotificationType = NotificationType.notification;
+            _energyNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_nerveNotificationType == NotificationType.alarm) {
+            _nerveNotificationType = NotificationType.notification;
+            _nerveNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_lifeNotificationType == NotificationType.alarm) {
+            _lifeNotificationType = NotificationType.notification;
+            _lifeNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_drugsNotificationType == NotificationType.alarm) {
+            _drugsNotificationType = NotificationType.notification;
+            _drugsNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_medicalNotificationType == NotificationType.alarm) {
+            _medicalNotificationType = NotificationType.notification;
+            _medicalNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_boosterNotificationType == NotificationType.alarm) {
+            _boosterNotificationType = NotificationType.notification;
+            _boosterNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_hospitalNotificationType == NotificationType.alarm) {
+            _hospitalNotificationType = NotificationType.notification;
+            _hospitalNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_jailNotificationType == NotificationType.alarm) {
+            _jailNotificationType = NotificationType.notification;
+            _jailNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_rankedWarNotificationType == NotificationType.alarm) {
+            _rankedWarNotificationType = NotificationType.notification;
+            _rankedWarNotificationIcon = Icons.chat_bubble_outline;
+          }
+          if (_raceStartNotificationType == NotificationType.alarm) {
+            _raceStartNotificationType = NotificationType.notification;
+            _raceStartNotificationIcon = Icons.chat_bubble_outline;
+          }
         }
       }
     });

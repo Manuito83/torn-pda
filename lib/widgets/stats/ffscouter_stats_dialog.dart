@@ -1,5 +1,3 @@
-import 'package:easy_rich_text/easy_rich_text.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -7,12 +5,10 @@ import 'package:torn_pda/models/chaining/ffscouter/ffscouter_stats_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/ffscouter_comm.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class FFScouterStatsDialog extends StatefulWidget {
   FFScouterStatsDialog({
@@ -67,53 +63,14 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
                 if (snapshot.connectionState == ConnectionState.done) {
                   if (snapshot.data is FFScouterPlayerStats) {
                     return _mainResponseWidget(snapshot.data as FFScouterPlayerStats);
+                  } else if (snapshot.data is Map<String, dynamic>) {
+                    final errorData = snapshot.data as Map<String, dynamic>;
+                    final errorMessage = errorData['errorMessage'] as String;
+                    final errorCode = errorData['errorCode'] as int?;
+                    return _errorWidget(errorMessage, errorCode);
                   } else if (snapshot.data is String) {
-                    // Error message
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 50),
-                        child: Column(
-                          children: [
-                            Text(
-                              snapshot.data as String,
-                              style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                              child: EasyRichText(
-                                "Make sure you have registered your key at the FFScouter website.\n\n"
-                                "If you have, make sure you are using the correct key or that an alternative key has been "
-                                "provided in Torn PDA Settings.",
-                                patternList: [
-                                  EasyRichTextPattern(
-                                    targetString: "FFScouter website",
-                                    style: TextStyle(
-                                      decoration: TextDecoration.underline,
-                                      color: context.read<ThemeProvider>().getTextColor(Colors.blue[400]),
-                                    ),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () async {
-                                        Navigator.of(context).pop();
-                                        const url = 'https://ffscouter.com';
-                                        await context.read<WebViewProvider>().openBrowserPreference(
-                                              context: context,
-                                              url: url,
-                                              browserTapType: BrowserTapType.short,
-                                            );
-                                      },
-                                  ),
-                                ],
-                                defaultStyle: TextStyle(
-                                  fontSize: 14,
-                                  color: widget.themeProvider.mainText,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    // Legacy string error handling
+                    return _errorWidget(snapshot.data as String, null);
                   } else if (snapshot.data == null && _preEnabled) {
                     return _preEnabledWidget();
                   }
@@ -134,6 +91,94 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
                 );
               },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _errorWidget(String errorMessage, int? errorCode) {
+    final isKeyNotRegistered = errorCode == 6;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 50),
+        child: Column(
+          children: [
+            Text(
+              errorMessage,
+              style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            if (isKeyNotRegistered) ...[
+              const SizedBox(height: 16),
+              Text(
+                "Your API key is not registered with FFScouter. "
+                "You can register it directly from Torn PDA.",
+                style: TextStyle(fontSize: 13, color: widget.themeProvider.mainText),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FFScouterInfoPage(
+                        settingsProvider: context.read<SettingsProvider>(),
+                        themeProvider: widget.themeProvider,
+                        jumpToKeySetup: true,
+                      ),
+                    ),
+                  );
+                  // Retry after registration
+                  if (mounted) {
+                    setState(() {
+                      _ffScouterDetailsFetched = _fetchDetails();
+                    });
+                  }
+                },
+                icon: const Icon(Icons.app_registration, size: 18),
+                label: const Text("Register Key"),
+              ),
+            ] else ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                child: Column(
+                  children: [
+                    Text(
+                      "Make sure you have registered your key with FFScouter.\n\n"
+                      "If you have, make sure you are using the correct key or that an alternative key has been "
+                      "provided in Torn PDA Settings.",
+                      style: TextStyle(fontSize: 13, color: widget.themeProvider.mainText),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FFScouterInfoPage(
+                              settingsProvider: context.read<SettingsProvider>(),
+                              themeProvider: widget.themeProvider,
+                              jumpToKeySetup: true,
+                            ),
+                          ),
+                        );
+                        if (mounted) {
+                          setState(() {
+                            _ffScouterDetailsFetched = _fetchDetails();
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.settings, size: 16),
+                      label: const Text("Open FFScouter Setup", style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -249,15 +294,14 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
           children: [
             ElevatedButton.icon(
               onPressed: () async {
-                await showDialog(
-                  useRootNavigator: false,
-                  context: context,
-                  builder: (context) {
-                    return FFScouterInfoDialog(
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FFScouterInfoPage(
                       settingsProvider: context.read<SettingsProvider>(),
                       themeProvider: widget.themeProvider,
-                    );
-                  },
+                    ),
+                  ),
                 );
                 // If the user accepted in the dialog, fetch the data
                 if (context.read<SettingsProvider>().ffScouterEnabledStatus == 1) {
@@ -302,7 +346,11 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
     if (result.success && result.data != null && result.data!.isNotEmpty) {
       return result.data!.first;
     } else {
-      return result.errorMessage ?? "Error fetching data from FFScouter";
+      // Return a map with error details so the UI can distinguish error code 6
+      return {
+        'errorMessage': result.errorMessage ?? "Error fetching data from FFScouter",
+        'errorCode': result.errorCode,
+      };
     }
   }
 

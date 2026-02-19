@@ -20,6 +20,7 @@ import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class QuickItemsWidget extends StatefulWidget {
@@ -40,9 +41,13 @@ class QuickItemsWidget extends StatefulWidget {
 class QuickItemsWidgetState extends State<QuickItemsWidget> {
   late QuickItemsProvider _itemsProvider;
   late QuickItemsProviderFaction _itemsProviderFaction;
+  late SettingsProvider _settingsProvider;
 
   // late Timer _inventoryRefreshTimer;
   final Map<String, Timer> _itemUpdateTimers = {};
+
+  /// Shared across all instances: last time a mass check was triggered
+  static DateTime? _lastMassCheckTime;
 
   final _scrollController = ScrollController();
   bool _pickerActive = false;
@@ -98,7 +103,11 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   Widget build(BuildContext context) {
     _itemsProvider = context.watch<QuickItemsProvider>();
     _itemsProviderFaction = context.watch<QuickItemsProviderFaction>();
-    return Container(
+    _settingsProvider = context.watch<SettingsProvider>();
+
+    final useLongPress = !widget.faction && _itemsProvider.longPressToAdd;
+
+    final container = Container(
       decoration: _pickerActive
           ? BoxDecoration(
               border: Border.all(color: Colors.orangeAccent, width: 1),
@@ -134,10 +143,22 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
         ],
       ),
     );
+
+    if (useLongPress) {
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _pickerActive && !_pickerBusy ? () => _togglePicker(false) : null,
+        onLongPress: _pickerBusy ? null : () => _togglePicker(!_pickerActive),
+        child: container,
+      );
+    }
+
+    return container;
   }
 
   List<Widget> _itemButtons() {
     final myList = <Widget>[];
+    final useLongPress = !widget.faction && _itemsProvider.longPressToAdd;
 
     // Show a brief spinner while the provider loads saved items from prefs,
     // checking the correct provider based on faction flag
@@ -171,22 +192,33 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (!widget.faction) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _pickerChip(allowSingleTap: true),
-                    const SizedBox(width: 8),
-                    const Padding(
-                      padding: EdgeInsets.only(top: 5),
-                      child: Text(
-                        'Tap to add quick items from your list',
-                        style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
-                        textAlign: TextAlign.center,
-                        softWrap: true,
-                      ),
+                if (useLongPress)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 5),
+                    child: Text(
+                      'Long-press here to add quick items from your list',
+                      style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
                     ),
-                  ],
-                ),
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _pickerChip(allowSingleTap: true),
+                      const SizedBox(width: 8),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 5),
+                        child: Text(
+                          'Tap to add quick items from your list',
+                          style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
+                          textAlign: TextAlign.center,
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
               ] else ...[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -213,7 +245,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       return myList;
     }
 
-    if (!widget.faction) {
+    if (!widget.faction && !_itemsProvider.longPressToAdd) {
       myList.add(_pickerChip());
     }
 
@@ -227,7 +259,10 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
 
       double qtyFontSize = 12;
       String? itemQty;
-      if (!item.isLoadout! && !widget.faction) {
+      if (!item.isLoadout! &&
+          !widget.faction &&
+          !_itemsProvider.hideInventoryCount &&
+          _settingsProvider.quickItemsInventoryCheckEnabled) {
         // If we have a valid inventory count (e.g. from Mass Check), show it
         // ONLY if it is a stackable/grouped item. Unique items (weapons/armor) should not show quantity
         if (item.inventory == null || item.isGrouped == false) {
@@ -245,110 +280,116 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
         }
       }
 
-      myList.add(
-        Tooltip(
-          message: '${item.name}\n\n${item.description}',
-          textStyle: const TextStyle(color: Colors.white),
-          padding: const EdgeInsets.all(20),
-          margin: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: Colors.grey[700]),
-          child: ActionChip(
-            elevation: 3,
-            padding: const EdgeInsets.all(4),
-            visualDensity: VisualDensity.compact,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
-            ),
-            side: item.isLoadout! || item.isEnergyPoints! || item.isNervePoints!
-                ? const BorderSide(color: Colors.blue)
-                : null,
-            avatar: item.isLoadout!
-                    // Personal inventory was removed from the API, so add a check until it's restored
-                    // https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-                    ||
-                    (!item.isLoadout! && !widget.faction && itemQty == null)
-                ? null
-                : widget.faction
-                    ? item.isEnergyPoints! || item.isNervePoints!
-                        ? Icon(
-                            MdiIcons.alphaPCircleOutline,
-                            color: item.isEnergyPoints! ? Colors.green : Colors.red,
-                          )
-                        : CircleAvatar(
-                            child: Image.asset(
-                              'images/icons/faction.png',
-                              width: 12,
-                              color: Colors.white,
-                            ),
-                          )
+      final chipWidget = ActionChip(
+        elevation: 3,
+        padding: const EdgeInsets.all(4),
+        visualDensity: VisualDensity.compact,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(50),
+        ),
+        side: item.isLoadout! || item.isEnergyPoints! || item.isNervePoints!
+            ? const BorderSide(color: Colors.blue)
+            : null,
+        avatar: item.isLoadout!
+                // Personal inventory was removed from the API, so add a check until it's restored
+                // https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
+                ||
+                (!item.isLoadout! && !widget.faction && itemQty == null)
+            ? null
+            : widget.faction
+                ? item.isEnergyPoints! || item.isNervePoints!
+                    ? Icon(
+                        MdiIcons.alphaPCircleOutline,
+                        color: item.isEnergyPoints! ? Colors.green : Colors.red,
+                      )
                     : CircleAvatar(
-                        child: Text(
-                          itemQty!,
-                          style: TextStyle(
-                            fontSize: qtyFontSize,
-                            color: qtyColor,
-                          ),
+                        child: Image.asset(
+                          'images/icons/faction.png',
+                          width: 12,
+                          color: Colors.white,
                         ),
+                      )
+                : CircleAvatar(
+                    child: Text(
+                      itemQty!,
+                      style: TextStyle(
+                        fontSize: qtyFontSize,
+                        color: qtyColor,
                       ),
-            label: item.isLoadout!
+                    ),
+                  ),
+        label: item.isLoadout!
+            ? Text(
+                item.loadoutName ?? "",
+                style: const TextStyle(fontSize: 11),
+              )
+            : item.isEnergyPoints! || item.isNervePoints!
                 ? Text(
-                    item.loadoutName ?? "",
+                    item.isEnergyPoints! ? "E Refill" : "N Refill",
                     style: const TextStyle(fontSize: 11),
                   )
-                : item.isEnergyPoints! || item.isNervePoints!
-                    ? Text(
-                        item.isEnergyPoints! ? "E Refill" : "N Refill",
+                : item.name!.split(' ').length > 1
+                    ? _splitName(item.name!.replaceAll("Blood Bag : ", "Blood: "))
+                    : Text(
+                        item.name!.replaceAll("Blood Bag : ", "Blood: "),
+                        softWrap: true,
+                        overflow: TextOverflow.clip,
+                        maxLines: 2,
                         style: const TextStyle(fontSize: 11),
-                      )
-                    : item.name!.split(' ').length > 1
-                        ? _splitName(item.name!.replaceAll("Blood Bag : ", "Blood: "))
-                        : Text(
-                            item.name!.replaceAll("Blood Bag : ", "Blood: "),
-                            softWrap: true,
-                            overflow: TextOverflow.clip,
-                            maxLines: 2,
-                            style: const TextStyle(fontSize: 11),
-                          ),
-            onPressed: () async {
-              if (item.isLoadout!) {
-                final js = changeLoadOutJS(item: item.name!.split(" ")[1], attackWebview: false);
-                await widget.inAppWebViewController!.evaluateJavascript(source: js);
-              } else {
-                final isEquip = item.itemType == ItemType.PRIMARY ||
-                    item.itemType == ItemType.SECONDARY ||
-                    item.itemType == ItemType.MELEE ||
-                    item.itemType == ItemType.DEFENSIVE ||
-                    item.itemType == ItemType.TEMPORARY;
-                final js = runQuickItemJS(
-                  item: item.number.toString(),
-                  itemName: item.name!,
-                  faction: widget.faction,
-                  eRefill: item.isEnergyPoints,
-                  nRefill: item.isNervePoints,
-                  instanceId: item.instanceId,
-                  isEquip: isEquip,
-                  refreshAfterEquip: _itemsProvider.refreshAfterEquip,
-                  isTemporary: item.itemType == ItemType.TEMPORARY,
-                  kDebugMode: kDebugMode,
-                );
-                await widget.inAppWebViewController!.evaluateJavascript(source: js);
-                if (!widget.faction) {
-                  _itemsProvider.decreaseInventory(item);
+                      ),
+        onPressed: (useLongPress && _pickerActive)
+            ? () => _togglePicker(false)
+            : () async {
+                if (item.isLoadout!) {
+                  final js = changeLoadOutJS(item: item.name!.split(" ")[1], attackWebview: false);
+                  await widget.inAppWebViewController!.evaluateJavascript(source: js);
+                } else {
+                  final isEquip = item.itemType == ItemType.PRIMARY ||
+                      item.itemType == ItemType.SECONDARY ||
+                      item.itemType == ItemType.MELEE ||
+                      item.itemType == ItemType.DEFENSIVE ||
+                      item.itemType == ItemType.TEMPORARY;
+                  final js = runQuickItemJS(
+                    item: item.number.toString(),
+                    itemName: item.name!,
+                    faction: widget.faction,
+                    eRefill: item.isEnergyPoints,
+                    nRefill: item.isNervePoints,
+                    instanceId: item.instanceId,
+                    isEquip: isEquip,
+                    refreshAfterEquip: _itemsProvider.refreshAfterEquip,
+                    isTemporary: item.itemType == ItemType.TEMPORARY,
+                    kDebugMode: kDebugMode,
+                  );
+                  await widget.inAppWebViewController!.evaluateJavascript(source: js);
+                  if (!widget.faction && _settingsProvider.quickItemsInventoryCheckEnabled) {
+                    _itemsProvider.decreaseInventory(item);
 
-                  // Debounce single item check: wait 3s of inactivity before checking logic
-                  if (_itemUpdateTimers.containsKey(item.name)) {
-                    _itemUpdateTimers[item.name]?.cancel();
+                    // Debounce single item check: wait 3s of inactivity before checking logic
+                    if (_itemUpdateTimers.containsKey(item.name)) {
+                      _itemUpdateTimers[item.name]?.cancel();
+                    }
+
+                    _itemUpdateTimers[item.name!] = Timer(const Duration(seconds: 3), () {
+                      _triggerSingleItemCheck(item.name!);
+                      _itemUpdateTimers.remove(item.name);
+                    });
                   }
-
-                  _itemUpdateTimers[item.name!] = Timer(const Duration(seconds: 3), () {
-                    _triggerSingleItemCheck(item.name!);
-                    _itemUpdateTimers.remove(item.name);
-                  });
                 }
-              }
-            },
-          ),
-        ),
+              },
+      );
+
+      myList.add(
+        useLongPress
+            ? chipWidget
+            : Tooltip(
+                message: '${item.name}\n\n${item.description}',
+                textStyle: const TextStyle(color: Colors.white),
+                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: Colors.grey[700]),
+                child: chipWidget,
+              ),
       );
     }
 
@@ -392,6 +433,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   Future<void> _triggerSingleItemCheck(String itemName) async {
     // Only for personal items, not faction
     if (widget.faction) return;
+    if (!_settingsProvider.quickItemsInventoryCheckEnabled) return;
 
     final controller = widget.inAppWebViewController;
     if (controller == null) return;
@@ -412,6 +454,15 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   Future<void> _triggerMassCheck() async {
     // Only for personal items, not faction
     if (widget.faction) return;
+    if (!_settingsProvider.quickItemsInventoryCheckEnabled) return;
+    if (_itemsProvider.hideInventoryCount) return;
+
+    // Cooldown: skip if last mass check was less than 10 seconds ago
+    final now = DateTime.now();
+    if (_lastMassCheckTime != null && now.difference(_lastMassCheckTime!).inSeconds < 10) {
+      return;
+    }
+    _lastMassCheckTime = now;
 
     final controller = widget.inAppWebViewController;
     if (controller == null) return;
@@ -538,8 +589,11 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
         _pickerActive = nextActive;
       });
       if (nextActive) {
+        final useLongPress = !widget.faction && _itemsProvider.longPressToAdd;
         BotToast.showText(
-          text: 'Choose the items you want to add from your items list',
+          text: useLongPress
+              ? 'Choose items from your list, then tap or long-press anywhere to exit'
+              : 'Choose the items you want to add from your items list',
           textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.blue[800]!,
           duration: const Duration(seconds: 3),

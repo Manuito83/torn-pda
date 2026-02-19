@@ -716,6 +716,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "prometheus_upload_enabled": true,
         "prefs_backup_enabled": true,
         "tornexchange_enabled": true,
+        "quick_items_inventory_check_enabled": true,
         "webview_dialog_recovery_enabled_ios": false,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
@@ -785,6 +786,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
       _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
+      _settingsProvider.quickItemsInventoryCheckEnabled = remoteConfig.getBool("quick_items_inventory_check_enabled");
       _webViewProvider.webviewDialogRecoveryEnabledIOS = remoteConfig.getBool("webview_dialog_recovery_enabled_ios");
       _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
       _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
@@ -2914,6 +2916,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future _showPdaUpdateDialog() async {
+    // Allow users to disable the update dialog from Settings > Maintenance
+    if (_settingsProvider.disableUpdateDialog && !_debugForcePdaUpdateDialog) return;
+
     final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetailsRC;
     if (pdaUpdateDetailsString.isEmpty) return;
 

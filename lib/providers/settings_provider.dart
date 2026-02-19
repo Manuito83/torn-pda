@@ -134,6 +134,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _disableUpdateDialog = false;
+  bool get disableUpdateDialog => _disableUpdateDialog;
+  set disableUpdateDialog(bool enabled) {
+    _disableUpdateDialog = enabled;
+    Prefs().setPdaUpdateDialogDisabled(enabled);
+    notifyListeners();
+  }
+
   var _webviewCacheEnabledRemoteConfig = "user";
   String get webviewCacheEnabledRemoteConfig => _webviewCacheEnabledRemoteConfig;
   set webviewCacheEnabledRemoteConfig(String enabled) {
@@ -441,6 +449,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenHeaderDoubleTap = true;
+  bool get fullScreenHeaderDoubleTap => _fullScreenHeaderDoubleTap;
+  set fullScreenHeaderDoubleTap(bool value) {
+    _fullScreenHeaderDoubleTap = value;
+    Prefs().setFullScreenHeaderDoubleTap(_fullScreenHeaderDoubleTap);
+    notifyListeners();
+  }
+
   var _fullScreenByShortTap = false;
   bool get fullScreenByShortTap => _fullScreenByShortTap;
   set fullScreenByShortTap(bool value) {
@@ -661,8 +677,9 @@ class SettingsProvider extends ChangeNotifier {
 
   /// When true, FFScouter battle score estimates replace the vague estimated
   /// stats range on war/retal cards and profile checks (for unspied targets).
+  /// Returns false if FFScouter is disabled, regardless of the stored value.
   bool _preferFFScouterOverEstimated = false;
-  bool get preferFFScouterOverEstimated => _preferFFScouterOverEstimated;
+  bool get preferFFScouterOverEstimated => _preferFFScouterOverEstimated && _ffScouterEnabledStatus == 1;
   set preferFFScouterOverEstimated(bool value) {
     _preferFFScouterOverEstimated = value;
     Prefs().setPreferFFScouterOverEstimated(value);
@@ -719,6 +736,13 @@ class SettingsProvider extends ChangeNotifier {
   bool get tornExchangeEnabledStatusRemoteConfig => _tornExchangeEnabledStatusRemoteConfig;
   set tornExchangeEnabledStatusRemoteConfig(bool value) {
     _tornExchangeEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
+  bool _quickItemsInventoryCheckEnabled = true;
+  bool get quickItemsInventoryCheckEnabled => _quickItemsInventoryCheckEnabled;
+  set quickItemsInventoryCheckEnabled(bool value) {
+    _quickItemsInventoryCheckEnabled = value;
     notifyListeners();
   }
 
@@ -1484,6 +1508,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _restoreSessionCookie = await Prefs().getRestoreSessionCookie();
     _webviewCacheEnabled = await Prefs().getWebviewCacheEnabled();
+    _disableUpdateDialog = await Prefs().getPdaUpdateDialogDisabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
     _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
@@ -1516,6 +1541,7 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenOverNotch = await Prefs().getFullScreenOverNotch();
     _fullScreenOverBottom = await Prefs().getFullScreenOverBottom();
     _fullScreenOverSides = await Prefs().getFullScreenOverSides();
+    _fullScreenHeaderDoubleTap = await Prefs().getFullScreenHeaderDoubleTap();
     _fullScreenByShortTap = await Prefs().getFullScreenByShortTap();
     _fullScreenByLongTap = await Prefs().getFullScreenByLongTap();
     _fullScreenByNotificationTap = await Prefs().getFullScreenByNotificationTap();

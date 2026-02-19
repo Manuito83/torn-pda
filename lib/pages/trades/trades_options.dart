@@ -23,7 +23,7 @@ class TradesOptions extends StatefulWidget {
 
 class TradesOptionsState extends State<TradesOptions> {
   bool _tradeCalculatorEnabled = true;
-  bool _awhEnabled = true;
+  //bool _awhEnabled = true;
   bool _tornExchangeEnabled = true;
   bool _tornExchangeProfitEnabled = true;
 
@@ -118,46 +118,47 @@ class TradesOptionsState extends State<TradesOptions> {
                                   padding: EdgeInsets.symmetric(horizontal: 40),
                                   child: Divider(),
                                 ),
-                                const SizedBox(height: 10),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Row(
-                                        children: [
-                                          Image(
-                                            image: AssetImage('images/icons/awh_logo.png'),
-                                            width: 35,
-                                            color: Colors.orange,
-                                            fit: BoxFit.fill,
-                                          ),
-                                          SizedBox(width: 10),
-                                          Text("Arson Warehouse"),
-                                        ],
-                                      ),
-                                      awhSwitch(),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'If you are a professional trader and have your own price list in '
-                                    'the Arson Warehouse, you can activate a quick access icon in the '
-                                    'Trade Calculator icon here',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 40),
-                                  child: Divider(),
-                                ),
+                                // AWH DISABLED
+                                // const SizedBox(height: 10),
+                                // Padding(
+                                //   padding: const EdgeInsets.symmetric(horizontal: 15),
+                                //   child: Row(
+                                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                //     children: <Widget>[
+                                //       const Row(
+                                //         children: [
+                                //           Image(
+                                //             image: AssetImage('images/icons/awh_logo.png'),
+                                //             width: 35,
+                                //             color: Colors.orange,
+                                //             fit: BoxFit.fill,
+                                //           ),
+                                //           SizedBox(width: 10),
+                                //           Text("Arson Warehouse"),
+                                //         ],
+                                //       ),
+                                //       awhSwitch(),
+                                //     ],
+                                //   ),
+                                // ),
+                                // Padding(
+                                //   padding: const EdgeInsets.symmetric(horizontal: 15),
+                                //   child: Text(
+                                //     'If you are a professional trader and have your own price list in '
+                                //     'the Arson Warehouse, you can activate a quick access icon in the '
+                                //     'Trade Calculator icon here',
+                                //     style: TextStyle(
+                                //       color: Colors.grey[600],
+                                //       fontSize: 12,
+                                //       fontStyle: FontStyle.italic,
+                                //     ),
+                                //   ),
+                                // ),
+                                // const SizedBox(height: 15),
+                                // const Padding(
+                                //   padding: EdgeInsets.symmetric(horizontal: 40),
+                                //   child: Divider(),
+                                // ),
                                 const SizedBox(height: 10),
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(10, 0, 15, 0),
@@ -276,21 +277,22 @@ class TradesOptionsState extends State<TradesOptions> {
     );
   }
 
-  Switch awhSwitch() {
-    return Switch(
-      activeThumbColor: Colors.orange[900],
-      activeTrackColor: Colors.orange,
-      value: _awhEnabled,
-      onChanged: _tradeCalculatorEnabled
-          ? (activated) async {
-              setState(() {
-                _awhEnabled = activated;
-                Prefs().setAWHEnabled(activated);
-              });
-            }
-          : null,
-    );
-  }
+  // AWH DISABLED
+  // Switch awhSwitch() {
+  //   return Switch(
+  //     activeThumbColor: Colors.orange[900],
+  //     activeTrackColor: Colors.orange,
+  //     value: _awhEnabled,
+  //     onChanged: _tradeCalculatorEnabled
+  //         ? (activated) async {
+  //             setState(() {
+  //               _awhEnabled = activated;
+  //               Prefs().setAWHEnabled(activated);
+  //             });
+  //           }
+  //         : null,
+  //   );
+  // }
 
   Switch tornExchangeSwitch() {
     return Switch(
@@ -326,13 +328,13 @@ class TradesOptionsState extends State<TradesOptions> {
 
   Future _restorePreferences() async {
     final tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
-    final awhActive = await Prefs().getAWHEnabled();
+    //final awhActive = await Prefs().getAWHEnabled();
     final tornExchangeActive = await Prefs().getTornExchangeEnabled();
     final tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;
-      _awhEnabled = awhActive;
+      //_awhEnabled = awhActive;
       _tornExchangeEnabled = tornExchangeActive;
       _tornExchangeProfitEnabled = tornExchangeProfitActive;
     });
