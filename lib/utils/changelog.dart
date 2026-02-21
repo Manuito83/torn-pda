@@ -109,6 +109,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '25 FEB 2026'
         ..features = [
           "Fixed several reported issues with Quick Items",
+          "Fixed several general issues and memory leaks [bombel]",
+          "Fixed typos in delayed flight notifications",
         ],
     );
 
