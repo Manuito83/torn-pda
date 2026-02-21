@@ -110,7 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Fixed several reported issues with Quick Items",
           "Fixed several general issues and memory leaks [bombel]",
-          "Fixed typos in delayed flight notifications",
+          "Fixed typos in delayed flight notifications [HangingLow]",
         ],
     );
 
