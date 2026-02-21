@@ -357,7 +357,6 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                     nRefill: item.isNervePoints,
                     instanceId: item.instanceId,
                     isEquip: isEquip,
-                    refreshAfterEquip: _itemsProvider.refreshAfterEquip,
                     isTemporary: item.itemType == ItemType.TEMPORARY,
                     kDebugMode: kDebugMode,
                   );

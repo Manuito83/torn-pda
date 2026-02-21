@@ -158,21 +158,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                       activeThumbColor: Colors.green,
                     ),
                   ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    title: const Text('Refresh after equipping', style: TextStyle(fontSize: 13)),
-                    subtitle: const Text(
-                      'Auto-refresh after each equip (slower). Loadout changes always refresh.',
-                      style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-                    ),
-                    trailing: Switch(
-                      value: itemsProvider.refreshAfterEquip,
-                      onChanged: (value) {
-                        itemsProvider.setRefreshAfterEquip(value);
-                      },
-                    ),
-                  ),
                   if (settingsProvider.quickItemsInventoryCheckEnabled)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -843,6 +828,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                 final loadoutCards = <Widget>[];
                 for (final item in itemsProvider.fullQuickItems) {
                   if (!item.isLoadout!) continue;
+                  if (item.active!) continue;
                   loadoutCards.add(
                     AnimatedOpacity(
                       opacity: item.visible! ? 1 : 0,

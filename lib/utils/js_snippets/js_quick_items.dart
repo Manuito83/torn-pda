@@ -8,7 +8,6 @@ String runQuickItemJS({
   bool? nRefill = false,
   String? instanceId,
   bool isEquip = false,
-  bool refreshAfterEquip = false,
   bool isTemporary = false,
   bool kDebugMode = false,
 }) {
@@ -41,7 +40,7 @@ String runQuickItemJS({
     // UI Helpers:
     // - fixTime(): Formats time strings in responses
     // - addStyle(): Injects result box CSS
-    // - triggerTornUIRefresh(): Refreshes Torn's loadout panel after equipping
+    // - updateEquippedUI(): Refreshes Torn's loadout panel after equip via loadEquippedItems()
     //
     // Network & Utilities:
     // - getRFC() / addRFC(): Handles security tokens
@@ -322,16 +321,37 @@ String runQuickItemJS({
       } catch (_) {}
     }
 
-    // Function to trigger Torn UI refresh after item action
-    function triggerTornUIRefresh() {
-      // Call Torn's native function to refresh equipped items in the loadouts panel
+    // Client-side UI update after equip/unequip action
+    // Parses the response to detect equip/unequip via data-equip attribute, then:
+    // 1. Calls Torn's loadEquippedItems() to refresh the loadout panel
+    // 2. Updates item list classes as best-effort fallback
+    function updateEquippedUI(response) {
       try {
-        if (typeof window.loadEquippedItems === 'function') {
-          window.loadEquippedItems();
+        var respStr = '';
+        if (typeof response === 'string') {
+          respStr = response;
+        } else if (response && response.text) {
+          respStr = response.text;
+        } else if (response) {
+          try { respStr = JSON.stringify(response); } catch(_) {}
         }
-      } catch(e) {
-        // Silently fail if function not available
-      }
+        if (!respStr) return;
+
+        // Detect equip/unequip via data-equip attribute
+        var isUnequipped = /data-equip="unequipped/i.test(respStr);
+        var isEquipped = !isUnequipped && /data-equip="equipped/i.test(respStr);
+        if (!isEquipped && !isUnequipped) return;
+
+        // Refresh Torn's loadout panel
+        setTimeout(function() {
+          try {
+            if (typeof window.loadEquippedItems === 'function') {
+              window.loadEquippedItems();
+            }
+          } catch(e) {}
+        }, 200);
+
+      } catch(e) {}
     }
 
     var _tempDebugLogging = $kDebugMode; // Use Flutter's kDebugMode
@@ -619,7 +639,7 @@ String runQuickItemJS({
     // Use jQuery AJAX if available
     // Usage: Called by executeAction() to perform the actual Equip/Use request
     // [Action Execution - All Levels]
-    function useItemWithJQuery(itemId, isEquipAction, equipId, forceReload, callback) {
+    function useItemWithJQuery(itemId, isEquipAction, equipId, callback) {
       if (typeof \$ !== 'undefined' && \$.ajax) {
         var ajaxUrl = "item.php?rfcv=" + getRFC();
         var ajaxData;
@@ -636,13 +656,9 @@ String runQuickItemJS({
           data: ajaxData,
           success: function(response) {
             callback(response, null);
-            // Trigger Torn UI refresh after successful action
-            setTimeout(triggerTornUIRefresh, 200);
-            // If force reload is enabled, also do a full page reload
-            if (forceReload && isEquipAction) {
-              setTimeout(function() {
-                try { window.location.reload(); } catch (_) {}
-              }, 400);
+            // Refresh Torn's loadout panel for equip actions only
+            if (isEquipAction) {
+              updateEquippedUI(response);
             }
           },
           error: function(xhr, status, error) {
@@ -666,7 +682,6 @@ String runQuickItemJS({
     // ========================================================================
     var resolvedId = "$instanceId";
     var abortEquip = false;
-    var shouldRefreshAfterEquip = $refreshAfterEquip;
     var itemId = "$item";
     var itemName = "$itemName";
     var isTemporaryItem = $isTemporary;
@@ -904,14 +919,14 @@ String runQuickItemJS({
                   if (searchId && searchId !== resolvedId) {
                        resolvedId = searchId;
                        logTemp('Level 2 (Retry): Success, retrying action', resolvedId);
-                       useItemWithJQuery(itemId, true, resolvedId, shouldRefreshAfterEquip, handleJQueryResponse);
+                       useItemWithJQuery(itemId, true, resolvedId, handleJQueryResponse);
                   } else {
                        logTemp('Level 2 (Retry): Failed, trying Level 3');
                        doScrollForTemporary(function(newTempId) {
                             if (newTempId && newTempId !== resolvedId) {
                               resolvedId = newTempId;
                               logTemp('Level 3 (Retry): Success, retrying action', resolvedId);
-                              useItemWithJQuery(itemId, true, resolvedId, shouldRefreshAfterEquip, handleJQueryResponse);
+                              useItemWithJQuery(itemId, true, resolvedId, handleJQueryResponse);
                             } else {
                               try {
                                 window.flutter_inappwebview.callHandler('showToast', {
@@ -992,13 +1007,13 @@ String runQuickItemJS({
                   var isQuickLink = link.classList.contains('next-act') || link.classList.contains('decrement-amount') || link.getAttribute('data-item');
                   if (!isQuickLink) return;
                   e.preventDefault();
-                  useItemWithJQuery(itemId, canEquip, resolvedId, shouldRefreshAfterEquip, handleJQueryResponse);
+                  useItemWithJQuery(itemId, canEquip, resolvedId, handleJQueryResponse);
                 } catch (_) {}
               });
             }
           }
         }
-        useItemWithJQuery(itemId, canEquip, resolvedId, shouldRefreshAfterEquip, handleJQueryResponse);
+        useItemWithJQuery(itemId, canEquip, resolvedId, handleJQueryResponse);
       } else {
         // 3. Fallback for Faction/Refills (Vanilla JS)
         if (canEquip) {
@@ -1027,12 +1042,8 @@ String runQuickItemJS({
               resultBox = document.querySelector('.resultBox');
               resultBox.style.display = "block";
               resultBox.innerHTML = response;
-              setTimeout(triggerTornUIRefresh, 200);
-              if (shouldRefreshAfterEquip) {
-                setTimeout(function() {
-                  try { window.location.reload(); } catch (_) {}
-                }, 400);
-              }
+              // Refresh Torn's loadout panel
+              updateEquippedUI(response);
             },
             onerror: function(e) {}
           });

@@ -127,7 +127,6 @@ class WebViewPanicState extends State<WebViewPanic> {
             final regex = RegExp(r'"equippedSet":(\d)');
             final match = regex.firstMatch(message.message)!;
             final loadout = match.group(1);
-            _webViewController!.reload();
             BotToast.showText(
               text: "Loadout $loadout activated!",
               textStyle: const TextStyle(
