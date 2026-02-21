@@ -1,0 +1,21 @@
+import 'package:flutter/material.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
+
+class NativeAuthProvider extends ChangeNotifier {
+  bool get tryAutomaticLogins => false;
+
+  DateTime lastAuthRedirect = DateTime.now().subtract(const Duration(days: 1));
+  int authErrorsInSession = 0;
+
+  Future<void> loadPreferences() async {}
+
+  Future<TornLoginResponseContainer> requestTornRecurrentInitData({
+    required BuildContext context,
+    required GetInitDataModel loginData,
+  }) async {
+    return TornLoginResponseContainer(
+      success: false,
+      message: "Native auth not configured",
+    );
+  }
+}

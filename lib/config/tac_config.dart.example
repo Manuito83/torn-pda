@@ -1,0 +1,3 @@
+class TacConfig {
+  static String password = '';
+}

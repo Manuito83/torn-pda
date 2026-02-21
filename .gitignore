@@ -1,5 +1,7 @@
 # PDA specifics
-/lib/config/
+/lib/config/*.dart
+!/lib/config/*.example
+!/lib/config/README.md
 /lib/torn-pda-native/
 /android/app/sign-key.jks
 .kiro/

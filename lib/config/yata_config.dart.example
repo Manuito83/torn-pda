@@ -1,0 +1,5 @@
+class YataConfig {
+  static String url = 'https://yata.yt';
+  static String user = '';
+  static String pass = '';
+}

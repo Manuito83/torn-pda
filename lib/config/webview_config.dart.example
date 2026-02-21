@@ -1,0 +1,8 @@
+class WebviewConfig {
+  static String agent = 'OpenSourceApp/1.0';
+  static String userAgentForUser = '';
+
+  Future<void> generateUserAgentForUser() async {
+    // Implement user agent generation if needed
+  }
+}

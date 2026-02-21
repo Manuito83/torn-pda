@@ -386,309 +386,64 @@ class AboutPageState extends State<AboutPage> {
                   child: Text('Contributors:'),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(30, 15, 30, 10),
-                child: Row(
-                  children: <Widget>[
-                    Flexible(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Developers: ',
-                          style: DefaultTextStyle.of(context).style,
-                          children: <InlineSpan>[
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2225097';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2225097';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'Manuito',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                            const TextSpan(
-                              text: ', ',
-                            ),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2190604';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2190604';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'Kwack',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                            const TextSpan(
-                              text: ', ',
-                            ),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2402357';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2402357';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'Mavri',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+              _contributorLine('Developers: ', [
+                _profileLink('Manuito', '2225097'),
+                const TextSpan(text: ', '),
+                _profileLink('Kwack', '2190604'),
+                const TextSpan(text: ', '),
+                _profileLink('Mavri', '2402357'),
+              ]),
+              _contributorLine('Partners: ', [
+                _profileLink('Kivou', '2000607'),
+                const TextSpan(text: ' (YATA), '),
+                _profileLink('IceBlueFire', '776'),
+                const TextSpan(text: ' (Torn Stats), '),
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () {
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: 'https://www.prombot.co.uk/home',
+                            browserTapType: BrowserTapType.short,
+                          );
+                    },
+                    onLongPress: () {
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: 'https://www.prombot.co.uk/home',
+                            browserTapType: BrowserTapType.long,
+                          );
+                    },
+                    child: Text(
+                      'Prometheus',
+                      style: TextStyle(
+                          decoration: _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                          fontWeight: FontWeight.bold,
+                          color: _themeProvider.getTextColor(Colors.blue)),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child: Row(
-                  children: <Widget>[
-                    Flexible(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Discord: ',
-                          style: DefaultTextStyle.of(context).style,
-                          children: <InlineSpan>[
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2184575';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2184575';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'Phillip_J_Fry',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                            const TextSpan(
-                              text: ', ',
-                            ),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2233317';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2233317';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'VioletStorm',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child: Row(
-                  children: <Widget>[
-                    Flexible(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Special mention to ',
-                          style: DefaultTextStyle.of(context).style,
-                          children: <InlineSpan>[
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2000607';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2000607';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'Kivou',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' and ',
-                              style: DefaultTextStyle.of(context).style,
-                            ),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=776';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=776';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'IceBlueFire',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' for the resources and support offered by YATA and Torn Stats respectively. '
-                                  'Also to the team at ',
-                              style: DefaultTextStyle.of(context).style,
-                            ),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.prombot.co.uk/home';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.prombot.co.uk/home';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'Prometheus',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' for the help with their foreign stock database.',
-                              style: DefaultTextStyle.of(context).style,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                const TextSpan(text: ' (foreign stocks)'),
+              ]),
+              _contributorLine('Code contributions: ', [
+                _profileLink('bombel', '2362436'),
+                const TextSpan(text: ' (Android Live Updates), '),
+                _profileLink('Knoxby', '2503189'),
+                const TextSpan(text: ' (JS cross-origin API), '),
+                _profileLink('tiksan', '2383326'),
+                const TextSpan(text: ' (JS handlers), '),
+                _profileLink('Tenren', '3373820'),
+                const TextSpan(text: ', '),
+                _profileLink('TheProgrammer', '2782979'),
+                const TextSpan(text: ', '),
+                _profileLink('HangingLow', '3128897'),
+              ]),
               const Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
                   child: Text('Thank you to our partners, who chose Torn PDA as their mobile '
-                      'interface: YATA and many reviving providers.'),
+                      'interface: YATA, FFScouter and many reviving providers.'),
                 ),
               ),
               const Align(
@@ -698,52 +453,6 @@ class AboutPageState extends State<AboutPage> {
                   child: Text('Some scripts, concepts, and features have been '
                       'adapted from preexisting ones in tools like YATA, '
                       'Torn Tools or DocTorn.'),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child: Row(
-                  children: <Widget>[
-                    Flexible(
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'The JavaScript API for cross-origin http requests (see userscripts section) has '
-                              'been developed by ',
-                          style: DefaultTextStyle.of(context).style,
-                          children: <InlineSpan>[
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2503189';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/profiles.php?XID=2503189';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: Text(
-                                  'Knoxby',
-                                  style: TextStyle(
-                                      decoration:
-                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
-                                      fontWeight: FontWeight.bold,
-                                      color: _themeProvider.getTextColor(Colors.blue)),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
               Padding(
@@ -834,6 +543,55 @@ class AboutPageState extends State<AboutPage> {
       builder: (context) {
         return const ChangeLog(autoTriggered: false);
       },
+    );
+  }
+
+  Widget _contributorLine(String label, List<InlineSpan> children) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(30, 4, 30, 4),
+      child: Row(
+        children: [
+          Flexible(
+            child: RichText(
+              text: TextSpan(
+                text: label,
+                style: DefaultTextStyle.of(context).style,
+                children: children,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  WidgetSpan _profileLink(String name, String xid) {
+    final url = 'https://www.torn.com/profiles.php?XID=$xid';
+    return WidgetSpan(
+      child: GestureDetector(
+        onTap: () {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: url,
+                browserTapType: BrowserTapType.short,
+              );
+        },
+        onLongPress: () {
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: url,
+                browserTapType: BrowserTapType.long,
+              );
+        },
+        child: Text(
+          name,
+          style: TextStyle(
+            decoration: _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+            fontWeight: FontWeight.bold,
+            color: _themeProvider.getTextColor(Colors.blue),
+          ),
+        ),
+      ),
     );
   }
 }
