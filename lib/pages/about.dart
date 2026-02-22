@@ -425,18 +425,34 @@ class AboutPageState extends State<AboutPage> {
                 ),
                 const TextSpan(text: ' (foreign stocks)'),
               ]),
-              _contributorLine('Code contributions: ', [
+              _contributorLine('Code contributions:', []),
+              _contributorLine('  • ', [
                 _profileLink('bombel', '2362436'),
-                const TextSpan(text: ' (Android Live Updates), '),
+                const TextSpan(text: ': Android Live Updates'),
+              ]),
+              _contributorLine('  • ', [
                 _profileLink('Knoxby', '2503189'),
-                const TextSpan(text: ' (JS cross-origin API), '),
+                const TextSpan(text: ': JS cross-origin API'),
+              ]),
+              _contributorLine('  • ', [
                 _profileLink('tiksan', '2383326'),
-                const TextSpan(text: ' (JS handlers), '),
+                const TextSpan(text: ': JS handlers'),
+              ]),
+              _contributorLine('  • ', [
                 _profileLink('Tenren', '3373820'),
-                const TextSpan(text: ', '),
+                const TextSpan(text: ': level calculation fix'),
+              ]),
+              _contributorLine('  • ', [
                 _profileLink('TheProgrammer', '2782979'),
-                const TextSpan(text: ', '),
+                const TextSpan(text: ': ToS table'),
+              ]),
+              _contributorLine('  • ', [
                 _profileLink('HangingLow', '3128897'),
+                const TextSpan(text: ': flight notifications'),
+              ]),
+              _contributorLine('  • ', [
+                _profileLink('OneMind', '3608257'),
+                const TextSpan(text: ': config templates & build docs'),
               ]),
               const Align(
                 alignment: Alignment.bottomLeft,
