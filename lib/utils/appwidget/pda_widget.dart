@@ -25,6 +25,8 @@ import 'package:workmanager/workmanager.dart';
 
 const String iOSRankedWarWidgetRefreshTaskID = "com.manuito.tornpda.ranked_widget_refresh";
 
+const bool _debugWidgetCooldowns = false;
+
 Future<List<HomeWidgetInfo>> pdaWidget_numberInstalled() async {
   // Check whether the user is using a widget
   return await HomeWidget.getInstalledWidgets();
@@ -584,6 +586,19 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<String>('status', statusDescription);
     HomeWidget.saveWidgetData<String>('status_color', user.status!.color!);
 
+    // Racing
+    String racingStatus = "none";
+    String racingString = "";
+    if (user.icons?.icon17 != null) {
+      racingStatus = "in_progress";
+      racingString = user.icons!.icon17!;
+    } else if (user.icons?.icon18 != null) {
+      racingStatus = "completed";
+      racingString = user.icons!.icon18!;
+    }
+    HomeWidget.saveWidgetData<String>('racing', racingStatus);
+    HomeWidget.saveWidgetData<String>('racing_string', racingString);
+
     // Messages and events
     int unreadMessages = user.messages?.length ?? 0;
     HomeWidget.saveWidgetData<int>('messages', unreadMessages);
@@ -783,6 +798,21 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
 
     HomeWidget.saveWidgetData<int>('booster_level', boosterLevel);
     HomeWidget.saveWidgetData<String>('booster_string', boosterString);
+
+    // --- DEBUG: FORCE ALL COOLDOWN ICONS VISIBLE ---
+    if (kDebugMode && _debugWidgetCooldowns) {
+      drugLevel = 3;
+      medicalLevel = 2;
+      boosterLevel = 4;
+      racingStatus = "in_progress";
+      racingString = "Racing - starts in 2:30";
+      HomeWidget.saveWidgetData<int>('drug_level', drugLevel);
+      HomeWidget.saveWidgetData<int>('medical_level', medicalLevel);
+      HomeWidget.saveWidgetData<int>('booster_level', boosterLevel);
+      HomeWidget.saveWidgetData<String>('racing', racingStatus);
+      HomeWidget.saveWidgetData<String>('racing_string', racingString);
+    }
+    // --- END DEBUG ---
 
     // SHORTCUTS
     var savedShortcuts = await BackgroundPrefs().getActiveShortcutsList();

@@ -108,10 +108,11 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.12.2'
         ..date = '25 FEB 2026'
         ..features = [
+          if (Platform.isAndroid) "Added racing icon to home screen widget",
           "Fixed several reported issues with Quick Items",
           "Fixed several general issues and memory leaks [bombel]",
           "Fixed typos in delayed flight notifications [HangingLow]",
-          "Added config templates and build documentation for developers",
+          "Added config templates and build documentation for developers [OneMind]",
         ],
     );
 

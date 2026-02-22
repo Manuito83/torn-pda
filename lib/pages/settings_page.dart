@@ -1142,6 +1142,38 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: _appWidgetCooldownTapDestinationSelector(),
         ),
+      SearchableRow(
+        label: "Racing tap opens browser",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Racing tap opens browser")),
+                  Switch(
+                    value: _settingsProvider.appwidgetRacingTapOpenBrowser,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.appwidgetRacingTapOpenBrowser = value;
+                        HomeWidget.saveWidgetData<bool>('racing_tap_opens_browser', value);
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'If enabled, tapping the racing icon will open the racing page in the browser. Otherwise, the racing status text is displayed.  NOTE: you may need to try a couple of times after switching for the widget to update properly.',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
     return buildSectionWithRows(
       title: "HOME SCREEN WIDGET",

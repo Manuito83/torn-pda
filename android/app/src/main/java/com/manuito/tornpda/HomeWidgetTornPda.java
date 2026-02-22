@@ -137,6 +137,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         setupDrugsSection(view, context, prefs);
         setupMedicalSection(view, context, prefs);
         setupBoosterSection(view, context, prefs);
+        setupRacingSection(view, context, prefs);
         setupShortcutsSection(view, context, prefs);
         setupErrorLayout(view, prefs);
         return view;
@@ -697,6 +698,40 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             default:
                 view.setViewVisibility(R.id.widget_booster_box, View.INVISIBLE);
                 break;
+        }
+    }
+
+    /**
+     * Sets up the racing section of the widget
+     *
+     * @param view    The RemoteViews instance.
+     * @param context The application context.
+     * @param prefs   SharedPreferences containing user preferences.
+     */
+    private void setupRacingSection(RemoteViews view, Context context, SharedPreferences prefs) {
+        String racing = prefs.getString("racing", "none");
+        String racingString = prefs.getString("racing_string", "");
+        view.setViewVisibility(R.id.widget_racing_box, View.INVISIBLE);
+        view.setViewVisibility(R.id.widget_icon_racing_progress, View.INVISIBLE);
+        view.setViewVisibility(R.id.widget_icon_racing_completed, View.INVISIBLE);
+        view.setViewVisibility(R.id.widget_racing_box, View.VISIBLE);
+
+        boolean racingTapOpensApp = prefs.getBoolean("racing_tap_opens_browser", false);
+        PendingIntent racingIntent;
+        if (racingTapOpensApp) {
+            racingIntent = getUniquePendingIntent(context, "RacingClicked", "pdaWidget://racing:clicked", 17);
+        } else {
+            racingIntent = getUniqueBroadcastPendingIntent(context, Uri.parse("pdaWidget://racing:clicked"), racingString.isEmpty() ? "Racing" : racingString);
+        }
+
+        view.setOnClickPendingIntent(R.id.widget_racing_box, racingIntent);
+
+        if ("in_progress".equals(racing)) {
+            view.setViewVisibility(R.id.widget_icon_racing_progress, View.VISIBLE);
+        } else if ("completed".equals(racing)) {
+            view.setViewVisibility(R.id.widget_icon_racing_completed, View.VISIBLE);
+        } else {
+            view.setViewVisibility(R.id.widget_racing_box, View.INVISIBLE);
         }
     }
 

@@ -1005,6 +1005,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
         browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters";
       }
+    } else if (intent.data!.contains("pdaWidget://racing:clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/page.php?sid=racing";
     } else if (intent.data!.contains("pdaWidget://chain:box:clicked")) {
       _callSectionFromOutside(2); // Chaining
       return;

@@ -1360,6 +1360,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _appwidgetRacingTapOpenBrowser = false;
+  bool get appwidgetRacingTapOpenBrowser => _appwidgetRacingTapOpenBrowser;
+  set appwidgetRacingTapOpenBrowser(bool value) {
+    _appwidgetRacingTapOpenBrowser = value;
+    Prefs().setAppwidgetRacingTapOpensBrowser(value);
+    notifyListeners();
+  }
+
   int _exactPermissionDialogShownAndroid = 0;
   int get exactPermissionDialogShownAndroid => _exactPermissionDialogShownAndroid;
   set exactPermissionDialogShownAndroid(int value) {
@@ -1737,6 +1745,7 @@ class SettingsProvider extends ChangeNotifier {
     _appwidgetMoneyEnabled = await Prefs().getAppwidgetMoneyEnabled();
     _appwidgetCooldownTapOpenBrowser = await Prefs().getAppwidgetCooldownTapOpensBrowser();
     _appwidgetCooldownTapOpenBrowserDestination = await Prefs().getAppwidgetCooldownTapOpensBrowserDestination();
+    _appwidgetRacingTapOpenBrowser = await Prefs().getAppwidgetRacingTapOpensBrowser();
 
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 
