@@ -1,0 +1,5 @@
+class StatsController {
+  Future<void> logCheckIn() async {}
+  Future<void> logCheckOut() async {}
+  Future<void> logFirstLoginEver() async {}
+}

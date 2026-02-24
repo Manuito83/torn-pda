@@ -17,12 +17,10 @@ enum AddPickedItemResult { added, duplicate, missing }
 class QuickItemsProvider extends ChangeNotifier {
   bool _firstLoad = true;
   bool _itemSuccess = false;
-  bool _refreshAfterEquip = false;
   bool _hideInventoryCount = false;
   bool _longPressToAdd = false;
   bool _isInitialized = false;
 
-  bool get refreshAfterEquip => _refreshAfterEquip;
   bool get hideInventoryCount => _hideInventoryCount;
   bool get longPressToAdd => _longPressToAdd;
   bool get isInitialized => _isInitialized;
@@ -90,7 +88,6 @@ class QuickItemsProvider extends ChangeNotifier {
     }
 
     _numberOfLoadoutsToShow = await Prefs().getNumberOfLoadouts();
-    _refreshAfterEquip = await Prefs().getQuickItemsRefreshAfterEquip();
     _hideInventoryCount = await Prefs().getQuickItemsHideInventoryCount();
     _longPressToAdd = await Prefs().getQuickItemsLongPressToAdd();
   }
@@ -164,12 +161,6 @@ class QuickItemsProvider extends ChangeNotifier {
   void setNumberOfLoadoutsToShow(int number) {
     _numberOfLoadoutsToShow = number;
     Prefs().setNumberOfLoadouts(number);
-    notifyListeners();
-  }
-
-  Future<void> setRefreshAfterEquip(bool value) async {
-    _refreshAfterEquip = value;
-    await Prefs().setQuickItemsRefreshAfterEquip(value);
     notifyListeners();
   }
 

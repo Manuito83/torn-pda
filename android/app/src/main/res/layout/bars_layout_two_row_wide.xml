@@ -6,30 +6,26 @@
     android:orientation="vertical"
     android:background="@drawable/widget_background"
     android:padding="12dp">
-
-    <!-- MAIN LAYOUT -->
-    <RelativeLayout
+  <!-- MAIN LAYOUT -->
+  <RelativeLayout
         android:id="@+id/widget_main_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@drawable/widget_background"
         android:visibility="visible">
-
-        <RelativeLayout
+    <RelativeLayout
             android:id="@+id/widget_main_container_top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-
-            <ImageView
+      <ImageView
                 android:id="@+id/widget_pda_logo_main"
                 android:layout_width="20dp"
                 android:layout_height="18dp"
                 android:adjustViewBounds="true"
                 android:src="@drawable/torn_pda" />
-
-            <ImageView
+      <ImageView
                 android:id="@+id/widget_status_icon_main"
                 android:layout_width="20dp"
                 android:layout_height="18dp"
@@ -38,8 +34,7 @@
                 android:visibility="visible"
                 android:layout_toEndOf="@id/widget_pda_logo_main"
                 android:src="@drawable/plane_left" />
-
-            <ImageView
+      <ImageView
                 android:id="@+id/widget_status_extra_icon_main"
                 android:layout_width="20dp"
                 android:layout_height="18dp"
@@ -48,8 +43,7 @@
                 android:visibility="visible"
                 android:layout_toEndOf="@id/widget_status_icon_main"
                 android:src="@drawable/hospital" />
-
-            <TextView
+      <TextView
                 android:id="@+id/widget_status_green"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -63,8 +57,7 @@
                 android:layout_toEndOf="@id/widget_status_extra_icon_main"
                 android:layout_toStartOf="@id/widget_main_events_messages"
                 tools:text="Status" />
-
-            <TextView
+      <TextView
                 android:id="@+id/widget_status_red"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -78,8 +71,7 @@
                 android:layout_toEndOf="@id/widget_status_extra_icon_main"
                 android:layout_toStartOf="@id/widget_main_events_messages"
                 tools:text="Status" />
-
-            <TextView
+      <TextView
                 android:id="@+id/widget_status_blue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -93,21 +85,18 @@
                 android:layout_toEndOf="@id/widget_status_extra_icon_main"
                 android:layout_toStartOf="@id/widget_main_events_messages"
                 tools:text="Status" />
-
-            <LinearLayout
+      <LinearLayout
                 android:id="@+id/widget_main_events_messages"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:orientation="horizontal">
-
-                <LinearLayout
+        <LinearLayout
                     android:id="@+id/widget_main_messages_box"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-
-                    <TextView
+          <TextView
                         android:id="@+id/widget_messages_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -117,14 +106,12 @@
                         android:textStyle="bold"
                         android:visibility="visible"
                         tools:text="0"/>
-
-                    <RelativeLayout
+          <RelativeLayout
                         android:id="@+id/widget_main_messages_icon_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
-                        <ImageView
+            <ImageView
                             android:id="@+id/widget_messages_icon_black"
                             android:src="@drawable/new_messages"
                             android:layout_width="wrap_content"
@@ -133,8 +120,7 @@
                             android:layout_marginEnd="3dp"
                             android:visibility="visible"
                             android:adjustViewBounds="true" />
-
-                        <ImageView
+            <ImageView
                             android:id="@+id/widget_messages_icon_green"
                             android:src="@drawable/new_messages_green"
                             android:layout_width="wrap_content"
@@ -143,17 +129,14 @@
                             android:layout_marginEnd="3dp"
                             android:visibility="gone"
                             android:adjustViewBounds="true" />
-                        
-                        </RelativeLayout>
-                </LinearLayout>
-
-                <LinearLayout
+          </RelativeLayout>
+        </LinearLayout>
+        <LinearLayout
                     android:id="@+id/widget_main_events_box"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-
-                    <TextView
+          <TextView
                         android:id="@+id/widget_events_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -163,14 +146,12 @@
                         android:textStyle="bold"
                         android:visibility="visible"
                         tools:text="0"/>
-
-                    <RelativeLayout
+          <RelativeLayout
                         android:id="@+id/widget_main_events_icon_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
-                        <ImageView
+            <ImageView
                             android:id="@+id/widget_events_icon_black"
                             android:src="@drawable/new_events"
                             android:layout_width="wrap_content"
@@ -178,8 +159,7 @@
                             android:layout_marginTop="1dp"
                             android:visibility="visible"
                             android:adjustViewBounds="true" />
-
-                        <ImageView
+            <ImageView
                             android:id="@+id/widget_events_icon_green"
                             android:src="@drawable/new_events_green"
                             android:layout_width="wrap_content"
@@ -187,16 +167,14 @@
                             android:layout_marginTop="1dp"
                             android:visibility="gone"
                             android:adjustViewBounds="true" />
-                    </RelativeLayout>
-                </LinearLayout>
-
-                <LinearLayout
+          </RelativeLayout>
+        </LinearLayout>
+        <LinearLayout
                     android:id="@+id/widget_main_money_box"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-
-                    <TextView
+          <TextView
                         android:id="@+id/widget_money_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -207,13 +185,10 @@
                         android:textStyle="bold"
                         android:visibility="visible"
                         tools:text="$0"/>
-                </LinearLayout>
-                
-                
-            </LinearLayout>
-        </RelativeLayout>
-
-        <LinearLayout
+        </LinearLayout>
+      </LinearLayout>
+    </RelativeLayout>
+    <LinearLayout
             android:id="@+id/widget_main_container_bars"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -222,29 +197,25 @@
             android:layout_marginTop="4dp"
             android:weightSum="4"
             android:baselineAligned="false">
-
-            <LinearLayout
+      <LinearLayout
                 android:id="@+id/widget_container_bars_left"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_weight="4">
-
-                <LinearLayout
+        <LinearLayout
                     android:id="@+id/widget_container_bars_stats"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center">
-
-                    <LinearLayout
+          <LinearLayout
                         android:id="@+id/widget_energy_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_weight="1">
-
-                        <TextView
+            <TextView
                             android:id="@+id/widget_energy_text"
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
@@ -254,14 +225,12 @@
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
                             tools:text="1000/1000"/>
-
-                        <LinearLayout
+            <LinearLayout
                             android:id="@+id/widget_energy_box_top"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
-
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_energy_mini"
                                 android:layout_width="wrap_content"
                                 android:layout_height="10dp"
@@ -269,25 +238,22 @@
                                 android:layout_marginEnd="2dp"
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/energy_mini" />
-
-                            <ProgressBar
+              <ProgressBar
                                 android:id="@+id/widget_energy_bar"
                                 style="?android:attr/progressBarStyleHorizontal"
                                 android:layout_width="60dp"
                                 android:layout_height="wrap_content"
                                 android:progress="50"
                                 android:progressTint="#45C145" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
+            </LinearLayout>
+          </LinearLayout>
+          <LinearLayout
                         android:id="@+id/widget_nerve_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_weight="1">
-
-                        <TextView
+            <TextView
                             android:id="@+id/widget_nerve_text"
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
@@ -297,14 +263,12 @@
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
                             tools:text="100/100"/>
-
-                        <LinearLayout
+            <LinearLayout
                             android:id="@+id/widget_nerve_box_top"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
-
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_nerve_mini"
                                 android:layout_width="wrap_content"
                                 android:layout_height="10dp"
@@ -312,25 +276,22 @@
                                 android:layout_marginEnd="2dp"
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/nerve_mini" />
-
-                            <ProgressBar
+              <ProgressBar
                                 android:id="@+id/widget_nerve_bar"
                                 style="?android:attr/progressBarStyleHorizontal"
                                 android:layout_width="60dp"
                                 android:layout_height="wrap_content"
                                 android:progress="50"
                                 android:progressTint="#C60303" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
+            </LinearLayout>
+          </LinearLayout>
+          <LinearLayout
                         android:id="@+id/widget_happy_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:layout_weight="1">
-
-                        <TextView
+            <TextView
                             android:id="@+id/widget_happy_text"
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
@@ -340,14 +301,12 @@
                             android:layout_marginBottom="-4dp"
                             android:textColor="#000000"
                             tools:text="1000"/>
-
-                        <LinearLayout
+            <LinearLayout
                             android:id="@+id/widget_happy_box_top"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
-
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_happy_mini"
                                 android:layout_width="wrap_content"
                                 android:layout_height="10dp"
@@ -355,54 +314,47 @@
                                 android:layout_marginEnd="2dp"
                                 android:adjustViewBounds="true"
                                 android:src="@drawable/happy_mini" />
-
-                            <ProgressBar
+              <ProgressBar
                                 android:id="@+id/widget_happy_bar"
                                 style="?android:attr/progressBarStyleHorizontal"
                                 android:layout_width="60dp"
                                 android:layout_height="wrap_content"
                                 android:progress="50"
                                 android:progressTint="#E6AD02" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <RelativeLayout
+            </LinearLayout>
+          </LinearLayout>
+        </LinearLayout>
+        <RelativeLayout
                     android:id="@+id/widget_container_bars_bottom"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
                     android:orientation="horizontal">
-
-                    <LinearLayout
+          <LinearLayout
                         android:id="@+id/widget_update_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
-                        <RelativeLayout
+            <RelativeLayout
                             android:id="@+id/widget_reload_box"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:orientation="horizontal">
-
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_reload"
                                 android:layout_width="20dp"
                                 android:layout_height="15dp"
                                 android:layout_marginEnd="5dp"
                                 android:src="@drawable/icon_reload"
                                 android:visibility="visible" />
-
-                            <ProgressBar
+              <ProgressBar
                                 android:id="@+id/widget_icon_reload_active"
                                 android:layout_width="20dp"
                                 android:layout_height="18dp"
                                 android:visibility="invisible" />
-                        </RelativeLayout>
-
-                        <TextView
+            </RelativeLayout>
+            <TextView
                             android:id="@+id/widget_last_updated"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -410,166 +362,176 @@
                             android:text="Last update"
                             android:textColor="#000000"
                             android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
+          </LinearLayout>
+          <LinearLayout
                         android:id="@+id/widget_cooldowns_box"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
                         android:layout_toRightOf="@id/widget_update_box"
                         android:orientation="horizontal">
-
-                        <RelativeLayout
+            <RelativeLayout
                             android:id="@+id/widget_drugs_box"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal">
-
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_drugs1"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/drug1"
                                 android:visibility="visible" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_drugs2"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/drug2"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_drugs3"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/drug3"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_drugs4"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/drug4"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_drugs5"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/drug5"
                                 android:visibility="gone" />
-                        </RelativeLayout>
-
-                        <RelativeLayout
+            </RelativeLayout>
+            <RelativeLayout
                             android:id="@+id/widget_medical_box"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
                             android:orientation="horizontal">
-
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_medical1"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/medical1"
                                 android:visibility="visible" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_medical2"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/medical2"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_medical3"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/medical3"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_medical4"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/medical4"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_medical5"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/medical5"
                                 android:visibility="gone" />
-                        </RelativeLayout>
-
-                        <RelativeLayout
+            </RelativeLayout>
+            <RelativeLayout
                             android:id="@+id/widget_booster_box"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
                             android:orientation="horizontal">
-
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_booster1"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/booster1"
                                 android:visibility="visible" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_booster2"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/booster2"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_booster3"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/booster3"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_booster4"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/booster4"
                                 android:visibility="gone" />
-                            <ImageView
+              <ImageView
                                 android:id="@+id/widget_icon_booster5"
                                 android:layout_width="25dp"
                                 android:layout_height="18dp"
                                 android:layout_marginTop="3dp"
                                 android:src="@drawable/booster5"
                                 android:visibility="gone" />
-                        </RelativeLayout>
-
-                    </LinearLayout>
-                </RelativeLayout>
-            </LinearLayout>
-
-            <LinearLayout
+            </RelativeLayout>
+            <RelativeLayout
+                            android:id="@+id/widget_racing_box"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:orientation="horizontal">
+              <ImageView
+                                android:id="@+id/widget_icon_racing_progress"
+                                android:layout_width="25dp"
+                                android:layout_height="18dp"
+                                android:layout_marginTop="3dp"
+                                android:src="@drawable/racing_progress"
+                                android:visibility="visible" />
+              <ImageView
+                                android:id="@+id/widget_icon_racing_completed"
+                                android:layout_width="25dp"
+                                android:layout_height="18dp"
+                                android:layout_marginTop="3dp"
+                                android:src="@drawable/racing_completed"
+                                android:visibility="gone" />
+            </RelativeLayout>
+          </LinearLayout>
+        </RelativeLayout>
+      </LinearLayout>
+      <LinearLayout
                 android:id="@+id/widget_end_box"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="vertical">
-
-                <LinearLayout
+        <LinearLayout
                     android:id="@+id/widget_life_box"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:orientation="vertical">
-
-                    <TextView
+          <TextView
                         android:id="@+id/widget_life_text"
                         android:layout_width="60dp"
                         android:layout_height="wrap_content"
@@ -579,14 +541,12 @@
                         android:layout_marginBottom="-4dp"
                         android:textColor="#000000"
                         tools:text="1000"/>
-
-                    <LinearLayout
+          <LinearLayout
                         android:id="@+id/widget_life_box_top"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
-                        <ImageView
+            <ImageView
                             android:id="@+id/widget_life_mini"
                             android:layout_width="wrap_content"
                             android:layout_height="10dp"
@@ -594,26 +554,23 @@
                             android:layout_marginEnd="2dp"
                             android:adjustViewBounds="true"
                             android:src="@drawable/life_mini" />
-
-                        <ProgressBar
+            <ProgressBar
                             android:id="@+id/widget_life_bar"
                             style="?android:attr/progressBarStyleHorizontal"
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:progress="50"
                             android:progressTint="#03A9F4" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
+          </LinearLayout>
+        </LinearLayout>
+        <LinearLayout
                     android:id="@+id/widget_chain_box"
                     android:layout_width="wrap_content"
                     android:layout_height="0dp"
                     android:gravity="center"
                     android:orientation="vertical"
                     android:layout_weight="1">
-
-                    <TextView
+          <TextView
                         android:id="@+id/widget_chain_text"
                         android:layout_width="60dp"
                         android:layout_height="wrap_content"
@@ -623,14 +580,12 @@
                         android:layout_marginBottom="-4dp"
                         android:textColor="#000000"
                         tools:text="25000"/>
-
-                    <LinearLayout
+          <LinearLayout
                         android:id="@+id/widget_chain_box_top"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-
-                        <ImageView
+            <ImageView
                             android:id="@+id/widget_chain_mini"
                             android:layout_width="wrap_content"
                             android:layout_height="10dp"
@@ -638,20 +593,18 @@
                             android:layout_marginEnd="2dp"
                             android:adjustViewBounds="true"
                             android:src="@drawable/chain_mini" />
-
-                        <ProgressBar
+            <ProgressBar
                             android:id="@+id/widget_chain_bar"
                             style="?android:attr/progressBarStyleHorizontal"
                             android:layout_width="60dp"
                             android:layout_height="wrap_content"
                             android:progress="50"
                             android:progressTint="#673AB7" />
-                    </LinearLayout>
-                </LinearLayout>
-            </LinearLayout>
+          </LinearLayout>
         </LinearLayout>
-
-        <LinearLayout
+      </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
             android:id="@+id/widget_shortcuts_box"
             android:layout_width="match_parent"
             android:layout_height="250dp"
@@ -659,16 +612,14 @@
             android:gravity="center"
             android:layout_below="@id/widget_main_container_bars"
             android:orientation="vertical">
-
-            <LinearLayout
+      <LinearLayout
                 android:id="@+id/widget_shortcuts_empty_box"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:visibility="gone"
                 android:orientation="horizontal">
-
-                <TextView
+        <TextView
                     android:id="@+id/widget_shortcuts_empty_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -676,17 +627,15 @@
                     android:textColor="#000000"
                     android:layout_marginEnd="5dp"
                     tools:text="No shortcuts configured, add some?" />
-
-                <ImageView
+        <ImageView
                     android:id="@+id/widget_shortcuts_empty_icon"
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:layout_marginStart="5dp"
                     android:adjustViewBounds="true"
                     android:src="@drawable/shortcut_icon" />
-            </LinearLayout>
-
-            <LinearLayout
+      </LinearLayout>
+      <LinearLayout
                 android:id="@+id/widget_shortcuts_top_box"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -695,14 +644,12 @@
                 android:visibility="visible"
                 android:layout_weight="1"
                 android:orientation="horizontal">
-
-                <LinearLayout
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut1_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -718,14 +665,13 @@
                         android:textSize="9sp"
                         android:visibility="visible"
                         tools:text="Shortcut 1" />
-                </LinearLayout>
-
-                <LinearLayout
+        </LinearLayout>
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut2_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -741,14 +687,13 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 2" />
-                </LinearLayout>
-
-                <LinearLayout
+        </LinearLayout>
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut3_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -764,10 +709,9 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 3" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
+        </LinearLayout>
+      </LinearLayout>
+      <LinearLayout
                 android:id="@+id/widget_shortcuts_middle_box"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -776,13 +720,12 @@
                 android:visibility="visible"
                 android:layout_weight="1"
                 android:orientation="horizontal">
-
-                <LinearLayout
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut4_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -798,14 +741,13 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 4" />
-                </LinearLayout>
-
-                <LinearLayout
+        </LinearLayout>
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center">
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut5_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -821,14 +763,13 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 5" />
-                </LinearLayout>
-
-                <LinearLayout
+        </LinearLayout>
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut6_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -844,10 +785,9 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 6" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
+        </LinearLayout>
+      </LinearLayout>
+      <LinearLayout
                 android:id="@+id/widget_shortcuts_bottom_box"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -856,13 +796,12 @@
                 android:visibility="visible"
                 android:layout_weight="1"
                 android:orientation="horizontal">
-
-                <LinearLayout
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut7_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -878,14 +817,13 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 7" />
-                </LinearLayout>
-
-                <LinearLayout
+        </LinearLayout>
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut8_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -901,14 +839,13 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 8" />
-                </LinearLayout>
-
-                <LinearLayout
+        </LinearLayout>
+        <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center" >
-                    <TextView
+          <TextView
                         android:id="@+id/widget_shortcuts_shortcut9_text"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -924,22 +861,18 @@
                         android:visibility="visible"
                         android:background="@drawable/shortcut_background"
                         tools:text="Shortcut 9" />
-                </LinearLayout>
-
-            </LinearLayout>
-
         </LinearLayout>
-    </RelativeLayout>
-
-    <!-- ERROR LAYOUT -->
-    <LinearLayout
+      </LinearLayout>
+    </LinearLayout>
+  </RelativeLayout>
+  <!-- ERROR LAYOUT -->
+  <LinearLayout
         android:id="@+id/widget_error_layout"
         android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
-
-        <ImageView
+    <ImageView
             android:id="@+id/widget_pda_logo_error"
             android:layout_width="41dp"
             android:layout_height="41dp"
@@ -947,13 +880,11 @@
             android:layout_marginTop="12dp"
             android:adjustViewBounds="true"
             android:src="@drawable/torn_pda" />
-
-        <LinearLayout
+    <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
-
-            <TextView
+      <TextView
                 android:id="@+id/widget_error_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -963,13 +894,11 @@
                 android:textStyle="bold"
                 android:textColor="#000000"
                 tools:text="Loading..." />
-
-            <RelativeLayout
+      <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
-
-                <TextView
+        <TextView
                     android:id="@+id/widget_error_action_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -979,8 +908,7 @@
                     android:textStyle="bold"
                     android:textColor="#000000"
                     android:text="Reload" />
-
-                <ImageView
+        <ImageView
                     android:id="@+id/widget_icon_reload_error"
                     android:layout_width="12dp"
                     android:layout_height="12dp"
@@ -989,19 +917,14 @@
                     android:adjustViewBounds="true"
                     android:layout_toEndOf="@id/widget_error_action_text"
                     android:src="@drawable/icon_reload" />
-
-                <ProgressBar
+        <ProgressBar
                     android:id="@+id/widget_icon_reload_error_active"
                     android:layout_width="20dp"
                     android:layout_height="17dp"
                     android:layout_marginTop="3dp"
                     android:layout_toEndOf="@id/widget_error_action_text"
                     android:visibility="invisible" />
-
-            </RelativeLayout>
-
-        </LinearLayout>
-
+      </RelativeLayout>
     </LinearLayout>
-
+  </LinearLayout>
 </FrameLayout>

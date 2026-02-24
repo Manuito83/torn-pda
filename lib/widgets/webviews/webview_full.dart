@@ -1344,7 +1344,6 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addLoadoutChangeHandler(
               webview: webViewController!,
-              reloadCallback: _reload,
             );
 
             WebviewHandlers.addScriptApiHandlers(webview: webViewController!);

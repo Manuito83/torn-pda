@@ -493,6 +493,7 @@ class Prefs {
   final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown_v2";
   final String _kAppwidgetCooldownTapOpensBrowser = "pda__appwidgetCooldownTapOpensBrowser";
   final String _kAppwidgetCooldownTapOpensBrowserDestination = "pda__appwidgetCooldownTapOpensBrowserDestination";
+  final String _kAppwidgetRacingTapOpensBrowser = "pda__appwidgetRacingTapOpensBrowser";
 
   // Permissions
   final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
@@ -3996,6 +3997,16 @@ class Prefs {
 
   Future setAppwidgetCooldownTapOpensBrowserDestination(String value) async {
     return await PrefsDatabase.setString(_kAppwidgetCooldownTapOpensBrowserDestination, value);
+  }
+
+  // ---
+
+  Future<bool> getAppwidgetRacingTapOpensBrowser() async {
+    return await PrefsDatabase.getBool(_kAppwidgetRacingTapOpensBrowser, false);
+  }
+
+  Future setAppwidgetRacingTapOpensBrowser(bool value) async {
+    return await PrefsDatabase.setBool(_kAppwidgetRacingTapOpensBrowser, value);
   }
 
   // ---

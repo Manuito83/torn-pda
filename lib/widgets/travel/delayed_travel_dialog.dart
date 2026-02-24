@@ -361,8 +361,8 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     const String channelTitle = 'Manual flight departure';
     const String channelSubtitle = 'Manual flight departure';
     const String channelDescription = 'Manual notifications for delayed flight departure';
-    String notificationTitle = "You flight to ${widget.country} is ready for boarding!";
-    String notificationSubtitle = "Remember to bring you ${widget.stockName} import papers!";
+    String notificationTitle = "Your flight to ${widget.country} is ready for boarding!";
+    String notificationSubtitle = "Remember to bring your ${widget.stockName} import papers!";
     final int notificationId = int.parse("211${widget.countryId}${widget.itemId}");
 
     if (_settingsProvider.discreetNotifications) {

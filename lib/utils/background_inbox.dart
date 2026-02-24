@@ -23,14 +23,14 @@ Future<void> messagingBackgroundHandler(RemoteMessage message) async {
 
   try {
     await _handleStockAlert(data, message.notification);
-  } catch (_) {
-    //
+  } catch (e) {
+    debugPrint('FCM stock alert error: $e');
   }
 
   try {
     await _handleSendbirdAlert(data);
-  } catch (_) {
-    //
+  } catch (e) {
+    debugPrint('FCM sendbird alert error: $e');
   }
 }
 
@@ -53,8 +53,8 @@ Future<void> _drainStockInbox() async {
 
     await Prefs().setDataStockMarket(combined);
     await prefs.remove(_kPendingStockUpdateInboxKey);
-  } catch (_) {
-    // This runs on main isolate and should not crash startup
+  } catch (e) {
+    debugPrint('Drain stock inbox error: $e');
   }
 }
 
@@ -70,8 +70,8 @@ Future<void> _handleStockAlert(Map<String, dynamic> data, RemoteNotification? no
     final existing = prefs.getStringList(_kPendingStockUpdateInboxKey) ?? <String>[];
     existing.add(body);
     await prefs.setStringList(_kPendingStockUpdateInboxKey, existing);
-  } catch (_) {
-    // Avoid crashing headless isolate
+  } catch (e) {
+    debugPrint('Handle stock alert error: $e');
   }
 }
 

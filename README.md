@@ -7,7 +7,7 @@ Torn PDA is an all-in-one assistant developed for players of [TORN City](https:/
 
 Torn PDA was first released in May 2020, and since then it has been evolving to meet the needs of the community. It was originally developed for private use to solve simple issues like forgetting that I had landed already a few minutes ago (which often results in getting mugged), or managing chains without constantly switching apps. The app was later made public to help other players facing similar challenges.
 
-It is officially endorsed by the developers of Torn (who also provide financial support for the servers used by the app for some applications), and as of the end of 2024 it is used by more than 40k players.
+It is officially endorsed by the developers of Torn (who also provide financial support for the servers used by the app for some applications), and as of the end of 2025 it is used by more than 50k players.
 
 Torn PDA provides easy access to key game information and offers shortcuts to reduce the time needed for common actions. You can view stats, manage chaining targets, and even call for revives, all within the app. Below is a list of the main features Torn PDA offers to enhance your Torn experience.
 
@@ -78,6 +78,12 @@ We welcome contributions at different levels!
 
 <br />
 
+## Building from Source
+
+If you want to build the app from a fork, see the [Building from Source](docs/README.md#building-from-source) section in the developer docs.
+
+<br />
+
 ## Development Team and Partners
 
 ### Lead Developers
@@ -88,12 +94,15 @@ We welcome contributions at different levels!
 
 ### Contributors
 
-- **Phillip_J_Fry**: Discord management and user support
-- **VioletStorm**: Support on Discord and user engagement
-- **Kivou**: Resources and support from YATA
+- [**Kivou**](https://www.torn.com/profiles.php?XID=2000607): Resources and support from YATA
 - **Lazerpent**: Loot Rangers
-- **IceBlueFire**: Contributions through Torn Stats
-- **Knoxby**: Developer of the JavaScript API for cross-origin HTTP requests used in userscripts
+- [**IceBlueFire**](https://www.torn.com/profiles.php?XID=776): Contributions through Torn Stats
+- [**Knoxby**](https://www.torn.com/profiles.php?XID=2503189): JavaScript API for cross-origin HTTP requests in userscripts
+- [**bombel**](https://www.torn.com/profiles.php?XID=2362436): Android Travel Live Updates, bug fixes and memory leak improvements
+- [**tiksan**](https://www.torn.com/profiles.php?XID=2383326): GM_xmlhttpRequest and PDA_httpGet handler improvements
+- [**Tenren**](https://www.torn.com/profiles.php?XID=3373820): Player level calculation fix
+- [**TheProgrammer**](https://www.torn.com/profiles.php?XID=2782979): Torn ToS table in Settings
+- [**HangingLow**](https://www.torn.com/profiles.php?XID=3128897): Flight notification fixes
 
 ### Partners
 
@@ -105,6 +114,7 @@ Thank you to our partners who have chosen Torn PDA as their mobile interface:
 - **Torn Spies Central**
 - **Prometheus**
 - **Loot Rangers**
+- **FFScouter**
 - **Reviving Providers**: Nuke, UHC, HeLa, WTF, Midnight X, and others
 
 Additionally, some scripts, concepts, and features have been adapted from pre-existing tools like **YATA**, **Torn Tools**, or **DocTorn**.

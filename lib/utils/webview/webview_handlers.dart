@@ -360,7 +360,6 @@ class WebviewHandlers {
   /// [reloadCallback]: Callback to trigger reload action in web
   static void addLoadoutChangeHandler({
     required InAppWebViewController webview,
-    required VoidCallback reloadCallback,
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'loadoutChangeHandler',
@@ -372,7 +371,6 @@ class WebviewHandlers {
             final match = regex.firstMatch(message);
             if (match != null) {
               final loadout = match.group(1);
-              reloadCallback();
               BotToast.showText(
                 text: "Loadout $loadout activated!",
                 textStyle: const TextStyle(
