@@ -78,9 +78,31 @@ class TargetsListState extends State<TargetsList> {
             label: 'Remove',
             backgroundColor: Colors.red,
             icon: Icons.delete,
-            onPressed: (context) {
+            onPressed: (context) async {
+              final target = widget.targets[index];
+              final hasNote = playerNote != null && playerNote.note.trim().isNotEmpty;
+
+              if (hasNote) {
+                final confirmed = await showDialog<bool>(
+                  context: this.context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Remove target?'),
+                    content: Text(
+                      '${target.name} has a note attached. '
+                      'Removing this target will not delete the note, '
+                      'but the target will be removed from your list.',
+                    ),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Remove')),
+                    ],
+                  ),
+                );
+                if (confirmed != true) return;
+              }
+
               BotToast.showText(
-                text: 'Deleted ${widget.targets[index].name}!',
+                text: 'Deleted ${target.name}!',
                 textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
@@ -89,7 +111,7 @@ class TargetsListState extends State<TargetsList> {
                 duration: const Duration(seconds: 5),
                 contentPadding: const EdgeInsets.all(10),
               );
-              _targetsProvider.deleteTarget(widget.targets[index]);
+              _targetsProvider.deleteTarget(target);
             },
           ),
         ],
