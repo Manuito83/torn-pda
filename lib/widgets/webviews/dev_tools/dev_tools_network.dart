@@ -480,7 +480,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
                           curve: Curves.fastOutSlowIn,
                           tween: Tween<double>(
                             begin: 100.0,
-                            end: isZoomed ? MediaQuery.of(context).size.height * 0.5 : 100.0,
+                            end: isZoomed ? MediaQuery.sizeOf(context).height * 0.5 : 100.0,
                           ),
                           builder: (BuildContext context, double height, Widget? child) {
                             return SizedBox(

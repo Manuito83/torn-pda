@@ -189,10 +189,10 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    _settingsProvider = Provider.of<SettingsProvider>(context);
-    _webViewProvider = Provider.of<WebViewProvider>(context);
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
-    final screenSize = MediaQuery.of(context).size;
+    final screenSize = MediaQuery.sizeOf(context);
     final dialogWidth = (screenSize.width - 40) > 600 ? 600.0 : (screenSize.width - 40);
     final dialogHeight = screenSize.height * 0.85;
 

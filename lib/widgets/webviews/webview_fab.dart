@@ -321,8 +321,8 @@ class _ExpandableFabState extends State<ExpandableFab>
         // Restores saved position if it is within boundaries
         final savedX = _webviewProvider.fabSavedPositionXY[0].toDouble();
         final savedY = _webviewProvider.fabSavedPositionXY[1].toDouble();
-        final screenWidth = MediaQuery.of(context).size.width;
-        final screenHeight = MediaQuery.of(context).size.height;
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final screenHeight = MediaQuery.sizeOf(context).height;
         final bounds = _calculateFabBounds(screenWidth, screenHeight);
 
         double newX = savedX.clamp(bounds['minX']!, bounds['maxX']!);
@@ -426,8 +426,8 @@ class _ExpandableFabState extends State<ExpandableFab>
             final dx = details.globalPosition.dx - _dragStartPos.dx;
             final dy = details.globalPosition.dy - _dragStartPos.dy;
 
-            final screenWidth = MediaQuery.of(context).size.width;
-            final screenHeight = MediaQuery.of(context).size.height;
+            final screenWidth = MediaQuery.sizeOf(context).width;
+            final screenHeight = MediaQuery.sizeOf(context).height;
 
             double newX = _initialFabPos.dx + dx;
             double newY = _initialFabPos.dy + dy;

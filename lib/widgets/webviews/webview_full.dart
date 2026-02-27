@@ -5735,8 +5735,8 @@ class WebViewFullState extends State<WebViewFull>
           sharePositionOrigin: Rect.fromLTWH(
             0,
             0,
-            MediaQuery.of(context).size.width,
-            MediaQuery.of(context).size.height / 2,
+            MediaQuery.sizeOf(context).width,
+            MediaQuery.sizeOf(context).height / 2,
           ),
         );
         await SharePlus.instance.share(shareParams);
@@ -5781,8 +5781,8 @@ class WebViewFullState extends State<WebViewFull>
           sharePositionOrigin: Rect.fromLTWH(
             0,
             0,
-            MediaQuery.of(context).size.width,
-            MediaQuery.of(context).size.height / 2,
+            MediaQuery.sizeOf(context).width,
+            MediaQuery.sizeOf(context).height / 2,
           ),
         );
         await SharePlus.instance.share(shareParams);
@@ -6465,7 +6465,7 @@ class DownloadProgressToastState extends State<DownloadProgressToast> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width - 80;
+    double screenWidth = MediaQuery.sizeOf(context).width - 80;
 
     return Material(
       type: MaterialType.transparency,

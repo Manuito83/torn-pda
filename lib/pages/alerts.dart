@@ -92,7 +92,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    _webViewProvider = Provider.of<WebViewProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
     return Scaffold(
       backgroundColor: _themeProvider!.canvas,

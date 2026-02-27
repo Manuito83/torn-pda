@@ -7415,8 +7415,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       sharePositionOrigin: Rect.fromLTWH(
         0,
         0,
-        MediaQuery.of(context).size.width,
-        MediaQuery.of(context).size.height / 2,
+        MediaQuery.sizeOf(context).width,
+        MediaQuery.sizeOf(context).height / 2,
       ),
     ));
   }

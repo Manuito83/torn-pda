@@ -38,8 +38,8 @@ class CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
           child: ClipRect(
             child: Transform.scale(
               scale: tweenScale.evaluate(animation),
-              child: Opacity(
-                opacity: animation.value,
+              child: FadeTransition(
+                opacity: animation,
                 child: child,
               ),
             ),

@@ -283,8 +283,8 @@ class CustomSlidingUpPanelState extends State<CustomSlidingUpPanel> with SingleT
                     animation: _ac,
                     builder: (context, _) {
                       return Container(
-                        height: MediaQuery.of(context).size.height,
-                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.sizeOf(context).height,
+                        width: MediaQuery.sizeOf(context).width,
                         color: _ac.value == 0.0
                             ? null
                             : widget.backdropColor.withAlpha(
