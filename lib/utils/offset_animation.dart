@@ -15,7 +15,7 @@ class CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
   late Tween<Offset> tweenOffset;
   late Tween<double> tweenScale;
 
-  late Animation<double> animation;
+  late CurvedAnimation animation;
 
   @override
   void initState() {
@@ -26,6 +26,12 @@ class CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
     tweenScale = Tween<double>(begin: 0.3, end: 1.0);
     animation = CurvedAnimation(parent: widget.controller!, curve: Curves.decelerate);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    animation.dispose();
+    super.dispose();
   }
 
   @override
