@@ -108,7 +108,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.sizeOf(context).height * 0.8,
       decoration: BoxDecoration(
         color: themeProvider.secondBackground,
         borderRadius: const BorderRadius.only(

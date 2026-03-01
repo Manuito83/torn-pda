@@ -173,7 +173,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                         );
                       }
 
-                      double screenHeight = MediaQuery.of(context).size.height;
+                      double screenHeight = MediaQuery.sizeOf(context).height;
                       return Flexible(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(maxHeight: screenHeight > 500 ? 500 : screenHeight),

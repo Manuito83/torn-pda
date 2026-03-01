@@ -13,7 +13,7 @@ Future<void> openSimpleWebViewDialog({
   required String url,
   String title = '',
 }) async {
-  final double width = MediaQuery.of(context).size.width;
+  final double width = MediaQuery.sizeOf(context).width;
   double hPad = 15;
   double frame = 6;
 

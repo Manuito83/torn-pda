@@ -68,7 +68,7 @@ class _TargetsSortSheetState extends State<TargetsSortSheet> with SingleTickerPr
           topRight: Radius.circular(20),
         ),
       ),
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.sizeOf(context).height * 0.8,
       child: Column(
         children: [
           Container(

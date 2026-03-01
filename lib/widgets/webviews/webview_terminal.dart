@@ -278,7 +278,7 @@ class TerminalDialog extends StatelessWidget {
       backgroundColor: Colors.grey[900]!,
       content: SizedBox(
         width: double.maxFinite,
-        height: MediaQuery.of(context).size.height * 0.9,
+        height: MediaQuery.sizeOf(context).height * 0.9,
         child: Column(
           children: [
             Expanded(

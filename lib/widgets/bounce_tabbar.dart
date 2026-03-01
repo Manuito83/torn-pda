@@ -86,6 +86,12 @@ class BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSta
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     double currentWidth = width;
@@ -181,5 +187,5 @@ class CircleItemPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CircleItemPainter oldDelegate) => oldDelegate.progress != progress;
 }

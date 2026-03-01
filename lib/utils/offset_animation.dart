@@ -15,7 +15,7 @@ class CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
   late Tween<Offset> tweenOffset;
   late Tween<double> tweenScale;
 
-  late Animation<double> animation;
+  late CurvedAnimation animation;
 
   @override
   void initState() {
@@ -29,6 +29,12 @@ class CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
   }
 
   @override
+  void dispose() {
+    animation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: widget.controller!,
@@ -38,8 +44,8 @@ class CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
           child: ClipRect(
             child: Transform.scale(
               scale: tweenScale.evaluate(animation),
-              child: Opacity(
-                opacity: animation.value,
+              child: FadeTransition(
+                opacity: animation,
                 child: child,
               ),
             ),

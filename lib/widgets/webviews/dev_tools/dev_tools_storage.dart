@@ -199,7 +199,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
               title: Text(title, style: const TextStyle(fontSize: 18), overflow: TextOverflow.ellipsis),
               content: Container(
                 width: double.maxFinite,
-                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
+                constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.4),
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

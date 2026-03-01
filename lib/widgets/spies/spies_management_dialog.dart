@@ -102,7 +102,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
 
     return Container(
       width: double.maxFinite,
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.sizeOf(context).height * 0.8,
       padding: const EdgeInsets.only(
         top: 25,
         bottom: 16,

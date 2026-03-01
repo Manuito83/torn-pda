@@ -44,7 +44,6 @@ dependencies:
   dio: 5.8.0+1
   device_info_plus: 11.5.0
   easy_rich_text: 2.2.0
-  encrypt_shared_preferences: 0.9.10
   envied: 1.2.1
   expandable: 5.0.1
   file_picker: 10.3.1
@@ -83,14 +82,12 @@ dependencies:
   internet_connection_checker_plus: 2.7.2
   intl: 0.20.2
   json_annotation: 4.9.0 # Used by swagger_dart_code_generator
-  lints: 6.0.0
   flutter_material_design_icons: 1.1.7447
   path_provider: 2.1.5
   ## Bug submitted for v4.2.5 (plane icon out of place)
   percent_indicator: 4.2.3
   flutter_refresh_rate_control: ^0.0.4+1
   provider: 6.1.5
-  pull_to_refresh: 2.0.0
   quick_actions: 1.1.0
   receive_intent:
     git:
@@ -139,6 +136,7 @@ dependencies:
   #    path: ./flutter_inappwebview_ios
 
 dev_dependencies:
+  lints: 6.0.0
   build_runner: ^2.7.1
   # Used by swagger_dart_code_generator
   chopper_generator: 8.4.0 

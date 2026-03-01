@@ -3907,7 +3907,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         });
 
         if (_settingsProvider.browserShowNavArrowsAppbar == "narrow") {
-          double width = MediaQuery.of(context).size.width;
+          double width = MediaQuery.sizeOf(context).width;
           if (width < 500) {
             BotToast.showText(
               clickClose: true,
