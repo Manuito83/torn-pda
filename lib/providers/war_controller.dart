@@ -793,6 +793,28 @@ class WarController extends GetxController {
     }
   }
 
+  Future<void> reloadFFScouterSettings() async {
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
+    update();
+  }
+
+  /// Returns the actual API fair_fight value if it exists and is not -1.
+  /// Otherwise, if FFScouter overrides are enabled, dynamically fetches
+  /// the fair fight from the cache instead of mutating the local object storage.
+  double getEffectiveFairFight(Member member) {
+    if (member.fairFight != null && member.fairFight != -1) {
+      return member.fairFight!;
+    }
+    if (_preferFFScouterOverEstimated && member.memberId != null) {
+      final ffsEntry = _ffScouterCache.get(member.memberId!);
+      if (ffsEntry != null && ffsEntry.fairFight != null) {
+        return ffsEntry.fairFight!;
+      }
+    }
+    return -1.0;
+  }
+
   void _getRespectFF(
     AttackModel attackModel,
     Member? member, {
@@ -1849,8 +1871,9 @@ class WarController extends GetxController {
     // Fair Fight
     // Normalize 0.0 (1.0 FF) to 1.0 (3.0 FF)
     double? ffScore;
-    if (member.fairFight != null && member.fairFight! >= 1.0) {
-      double ff = member.fairFight!;
+    double effectiveFF = getEffectiveFairFight(member);
+    if (effectiveFF >= 1.0) {
+      double ff = effectiveFF;
       if (ff < 1.0) ff = 1.0;
       if (ff > 3.0) ff = 3.0;
       // Map 1.0->0.0, 3.0->1.0

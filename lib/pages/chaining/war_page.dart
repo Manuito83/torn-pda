@@ -1794,9 +1794,8 @@ class WarTargetsListState extends State<WarTargetsList> {
         }
 
         if (settings.fairFightRange != null) {
-          if (thisMember.fairFight == null ||
-              thisMember.fairFight! < settings.fairFightRange!.start ||
-              thisMember.fairFight! > settings.fairFightRange!.end) {
+          double effFF = widget.warController.getEffectiveFairFight(thisMember);
+          if (effFF == -1 || effFF < settings.fairFightRange!.start || effFF > settings.fairFightRange!.end) {
             continue;
           }
         }

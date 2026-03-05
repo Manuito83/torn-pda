@@ -216,7 +216,7 @@ class TargetCardState extends State<TargetCard> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      _returnRespectFF(_target!.respectGain, _target!.fairFight),
+                      _returnRespectFF(_target!.respectGain, _targetsProvider.getEffectiveFairFight(_target!)),
                       _returnHealth(_target!),
                     ],
                   ),

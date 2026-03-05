@@ -41,6 +41,26 @@ class RetalsController extends GetxController {
 
   // FFScouter cache integration
   late final FFScouterCacheController _ffScouterCache = Get.find<FFScouterCacheController>();
+  bool _preferFFScouterOverEstimated = false;
+
+  @override
+  Future<void> onInit() async {
+    super.onInit();
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+  }
+
+  double getEffectiveFairFight(Retal retal) {
+    if (retal.fairFight != null && retal.fairFight != -1) {
+      return retal.fairFight!;
+    }
+    if (_preferFFScouterOverEstimated && retal.retalId != null) {
+      final ffsEntry = _ffScouterCache.get(retal.retalId!);
+      if (ffsEntry != null && ffsEntry.fairFight != null) {
+        return ffsEntry.fairFight!;
+      }
+    }
+    return -1.0;
+  }
 
   Future<Retal?> getInfoForNewRetal(String retalId, {dynamic allAttacks, dynamic ownStats}) async {
     final retal = Retal(lastAction: LastAction(), status: Status());

@@ -102,6 +102,16 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.12.3 - Build 631 - built 05/03/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.12.3'
+        ..date = '25 MAR 2026'
+        ..features = [
+          "Added FF calculation from FFScouter in war targets cards",
+        ],
+    );
+
     // v3.12.2 - Build 630 - built 21/02/2026
     itemList.add(
       ChangeLogItem()

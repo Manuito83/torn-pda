@@ -25,6 +25,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart' show Status;
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -78,8 +79,24 @@ class TargetsProvider extends ChangeNotifier {
 
   TargetSortType? currentSort;
 
+  bool _preferFFScouterOverEstimated = false;
+  late final FFScouterCacheController _ffScouterCache = Get.find<FFScouterCacheController>();
+
   TargetsProvider() {
     restorePreferences();
+  }
+
+  double getEffectiveFairFight(TargetModel target) {
+    if (target.fairFight != null && target.fairFight != -1) {
+      return target.fairFight!;
+    }
+    if (_preferFFScouterOverEstimated && target.playerId != null) {
+      final ffsEntry = _ffScouterCache.get(target.playerId!);
+      if (ffsEntry != null && ffsEntry.fairFight != null) {
+        return ffsEntry.fairFight!;
+      }
+    }
+    return -1.0;
   }
 
   @override
@@ -129,6 +146,10 @@ class TargetsProvider extends ChangeNotifier {
         // Parse bounty ammount if it exists
         if (myNewTargetModel.basicicons?.icon13 != null) {
           myNewTargetModel.bountyAmount = _getBountyAmount(myNewTargetModel);
+        }
+
+        if (_preferFFScouterOverEstimated && myNewTargetModel.playerId != null) {
+          await _ffScouterCache.ensureFresh([myNewTargetModel.playerId!]);
         }
 
         _targets.add(myNewTargetModel);
@@ -246,6 +267,10 @@ class TargetsProvider extends ChangeNotifier {
     targetToUpdate.isUpdating = true;
     notifyListeners();
 
+    if (_preferFFScouterOverEstimated && targetToUpdate.playerId != null) {
+      await _ffScouterCache.ensureFresh([targetToUpdate.playerId!]);
+    }
+
     try {
       final dynamic myUpdatedTargetModel = await ApiCallsV1.getTarget(playerId: targetToUpdate.playerId.toString());
       if (myUpdatedTargetModel is TargetModel) {
@@ -291,6 +316,13 @@ class TargetsProvider extends ChangeNotifier {
       tar.isUpdating = true;
     }
     notifyListeners();
+
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    if (_preferFFScouterOverEstimated) {
+      final allIds = _targets.where((t) => t.playerId != null).map((t) => t.playerId!).toList();
+      await _ffScouterCache.ensureFresh(allIds);
+    }
+
     // Then start the real update
     final dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
@@ -346,6 +378,12 @@ class TargetsProvider extends ChangeNotifier {
     // so that other attacks are possible
     List<String> lastAttackedCopy = List<String>.from(lastAttackedTargets);
     await Future.delayed(const Duration(seconds: 15));
+
+    if (_preferFFScouterOverEstimated) {
+      final List<int> idsToUpdate =
+          lastAttackedCopy.map((idStr) => int.tryParse(idStr)).where((id) => id != null).cast<int>().toList();
+      await _ffScouterCache.ensureFresh(idsToUpdate);
+    }
 
     // Get attacks full to use later
     final dynamic attacks = await getAttacks();
@@ -504,9 +542,9 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.respectAsc:
         _targets.sort((a, b) => a.respectGain!.compareTo(b.respectGain!));
       case TargetSortType.ffDes:
-        _targets.sort((a, b) => b.fairFight!.compareTo(a.fairFight!));
+        _targets.sort((a, b) => getEffectiveFairFight(b).compareTo(getEffectiveFairFight(a)));
       case TargetSortType.ffAsc:
-        _targets.sort((a, b) => a.fairFight!.compareTo(b.fairFight!));
+        _targets.sort((a, b) => getEffectiveFairFight(a).compareTo(getEffectiveFairFight(b)));
       case TargetSortType.nameDes:
         _targets.sort((a, b) => b.name!.toLowerCase().compareTo(a.name!.toLowerCase()));
       case TargetSortType.nameAsc:
@@ -713,9 +751,9 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.respectAsc:
         return (a.respectGain ?? -1).compareTo(b.respectGain ?? -1);
       case TargetSortType.ffDes:
-        return (b.fairFight ?? -1).compareTo(a.fairFight ?? -1);
+        return getEffectiveFairFight(b).compareTo(getEffectiveFairFight(a));
       case TargetSortType.ffAsc:
-        return (a.fairFight ?? -1).compareTo(b.fairFight ?? -1);
+        return getEffectiveFairFight(a).compareTo(getEffectiveFairFight(b));
       case TargetSortType.nameDes:
         return (b.name ?? '').toLowerCase().compareTo((a.name ?? '').toLowerCase());
       case TargetSortType.nameAsc:
@@ -783,8 +821,8 @@ class TargetsProvider extends ChangeNotifier {
 
     // Fair fight
     if (filters.fairFightRange != null) {
-      final ff = t.fairFight;
-      if (ff == null || ff < filters.fairFightRange!.start || ff > filters.fairFightRange!.end) return false;
+      final ff = getEffectiveFairFight(t);
+      if (ff < filters.fairFightRange!.start || ff > filters.fairFightRange!.end) return false;
     }
 
     // Hospital time (minutes). hospitalSort stores epoch seconds when hospital ends.
@@ -807,11 +845,20 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   Future<void> restorePreferences() async {
+    _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+
     // Target list
     List<String> jsonTargets = await Prefs().getTargetsList();
     for (final jTar in jsonTargets) {
       final thisTarget = targetModelFromJson(jTar);
       _targets.add(thisTarget);
+    }
+
+    if (_preferFFScouterOverEstimated && _targets.isNotEmpty) {
+      final allIds = _targets.where((t) => t.playerId != null).map((t) => t.playerId!).toList();
+      _ffScouterCache.ensureFresh(allIds).then((fetched) {
+        if (fetched > 0) notifyListeners();
+      });
     }
 
     // Target sort
@@ -1019,6 +1066,13 @@ class TargetsProvider extends ChangeNotifier {
 
     _targets = merged;
     sortTargets(currentSort ?? TargetSortType.nameAsc);
+
+    if (_preferFFScouterOverEstimated) {
+      final allIds = _targets.where((t) => t.playerId != null).map((t) => t.playerId!).toList();
+      _ffScouterCache.ensureFresh(allIds).then((fetched) {
+        if (fetched > 0) notifyListeners();
+      });
+    }
 
     return TornTargetsImportResult(
       success: true,

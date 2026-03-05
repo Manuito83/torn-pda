@@ -292,7 +292,7 @@ class WarCardState extends State<WarCard> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      _returnRespectFF(_member.respectGain, _member.fairFight),
+                      _returnRespectFF(_member.respectGain, _w.getEffectiveFairFight(_member)),
                       CombinedHealthBars(
                         member: _member,
                         warController: _w,

@@ -176,7 +176,7 @@ class RetalCardState extends State<RetalCard> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      _returnRespectFF(_retal!.respectGain, _retal!.fairFight),
+                      _returnRespectFF(_retal!.respectGain, _r.getEffectiveFairFight(_retal!)),
                       if (!_retal!.overrideEasyLife) _returnEasyHealth(_retal) else _returnFullHealth(_retal),
                     ],
                   ),
