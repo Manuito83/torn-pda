@@ -109,7 +109,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '25 MAR 2026'
         ..features = [
           "Added FF calculation from FFScouter in war targets cards",
-          "Added option to close browser in floating action button ",
+          "Added option to close browser in floating action button",
+          "Local backups can now be exported in a shareable mode without API keys or auth data",
         ],
     );
 

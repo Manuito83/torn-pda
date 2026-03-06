@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 
 class BackupReminderDialog extends StatefulWidget {
@@ -25,8 +24,6 @@ class BackupReminderDialogState extends State<BackupReminderDialog> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill with API Key as suggestion
-    _passwordController.text = UserHelper.apiKey;
   }
 
   @override
@@ -64,8 +61,8 @@ class BackupReminderDialogState extends State<BackupReminderDialog> {
 
     try {
       final result = await PrefsBackupWidget.createBackup(
-        key,
-        customName: 'pda_backup_${_getTimestamp()}',
+        key: key,
+        customName: 'pda_settings_private_${_getTimestamp()}',
       );
 
       if (result != null) {
@@ -169,7 +166,7 @@ class BackupReminderDialogState extends State<BackupReminderDialog> {
 
               // Info text
               Text(
-                'Your API Key has been pre-filled as a suggestion. You can use any password you prefer.',
+                'Use a password you will remember. This reminder creates a private backup for your own use.',
                 style: TextStyle(
                   fontSize: 12,
                   color: themeProvider.mainText.withValues(alpha: 0.7),

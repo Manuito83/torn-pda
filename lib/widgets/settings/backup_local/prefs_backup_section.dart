@@ -22,8 +22,12 @@ class PrefsBackupWidget extends StatefulWidget {
   PrefsBackupWidgetState createState() => PrefsBackupWidgetState();
 
   // Static method for creating backups from outside the widget
-  static Future<String?> createBackup(String key, {String? customName}) async {
-    final data = await PrefsBackupService.exportPrefs(key);
+  static Future<String?> createBackup({
+    String? key,
+    String? customName,
+    BackupExportMode mode = BackupExportMode.private,
+  }) async {
+    final data = await PrefsBackupService.exportPrefs(key: key, mode: mode);
     final bytes = Uint8List.fromList(utf8.encode(data));
 
     String timestamp() {
@@ -32,8 +36,12 @@ class PrefsBackupWidget extends StatefulWidget {
       return '${d.year}${two(d.month)}${two(d.day)}_${two(d.hour)}${two(d.minute)}${two(d.second)}';
     }
 
+    final defaultName = mode == BackupExportMode.shareable
+        ? 'pda_settings_shareable_${timestamp()}'
+        : 'pda_settings_private_${timestamp()}';
+
     final result = await FileSaver.instance.saveAs(
-      name: customName ?? 'prefs_backup_${timestamp()}',
+      name: customName ?? defaultName,
       bytes: bytes,
       fileExtension: 'pda',
       mimeType: MimeType.custom,
@@ -149,106 +157,150 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
   Future<void> _save(BuildContext ctx) async {
     final keyCtl = TextEditingController();
     final warnColor = ctx.read<ThemeProvider>().getTextColor(Colors.red);
+    BackupExportMode selectedMode = BackupExportMode.private;
 
     final choice = await showDialog<String>(
       context: ctx,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Enter encryption key'),
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
+      builder: (_) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            title: const Text('Create local backup'),
+            content: SingleChildScrollView(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'You will need this key to restore the settings in the future, so make sure to remember!',
+                    'Choose whether this backup is only for you or safe to share with other players.',
                     style: TextStyle(fontSize: 13),
                   ),
-                  Text(
-                    '\nWARNING: if configured, your API Key, alternative API keys for external providers, email address, etc.,'
-                    ' will be included in the backup\n\nDO NOT SHARE IT WITH OTHERS!',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: warnColor,
-                    ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<BackupExportMode>(
+                    showSelectedIcon: false,
+                    multiSelectionEnabled: false,
+                    segments: const [
+                      ButtonSegment<BackupExportMode>(
+                        value: BackupExportMode.private,
+                        label: Text('Private'),
+                        icon: Icon(Icons.lock),
+                      ),
+                      ButtonSegment<BackupExportMode>(
+                        value: BackupExportMode.shareable,
+                        label: Text('Shareable'),
+                        icon: Icon(Icons.share),
+                      ),
+                    ],
+                    selected: <BackupExportMode>{selectedMode},
+                    onSelectionChanged: (selection) {
+                      setStateDialog(() {
+                        selectedMode = selection.first;
+                      });
+                    },
                   ),
+                  const SizedBox(height: 12),
+                  if (selectedMode == BackupExportMode.private)
+                    const Text(
+                      'Encrypted. Keeps API keys, auth-related data and personal session state.',
+                      style: TextStyle(fontSize: 12),
+                    )
+                  else
+                    const Text(
+                      'No password. Excludes API keys, native login data, Firebase tokens and browser session state.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  const SizedBox(height: 8),
+                  if (selectedMode == BackupExportMode.private) ...[
+                    const Text(
+                      'You will need this key to restore the settings in the future, so make sure to remember it.',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    Text(
+                      '\nWARNING: if configured, your API Key, alternative API keys for external providers, email address, etc.,'
+                      ' will be included in the backup\n\nDO NOT SHARE IT WITH OTHERS!',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: warnColor,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: keyCtl,
+                      maxLength: 20,
+                      decoration: const InputDecoration(
+                        labelText: 'Encryption key',
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                      ),
+                      style: const TextStyle(fontSize: 15),
+                    ),
+                  ] else
+                    Text(
+                      'This backup will be saved without a password and suggested as pda_settings_shareable_...\n\n'
+                      'Sensitive authentication-related data will be excluded automatically.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: ctx.read<ThemeProvider>().mainText,
+                      ),
+                    ),
                 ],
               ),
             ),
-          ],
-        ),
-        content: TextField(
-          controller: keyCtl,
-          maxLength: 20,
-          decoration: const InputDecoration(
-            labelText: 'Encryption key',
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-          ),
-          style: const TextStyle(fontSize: 15),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(_, 'local'),
-                  icon: const Icon(Icons.save),
-                  label: const Text('Local Save'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(_, 'other'),
-                  icon: const Icon(Icons.share),
-                  label: const Text('Other Apps'),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(_, null),
-                  child: const Text('Cancel'),
-                ),
-              ],
-            ),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(_, null),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(_, 'local'),
+                icon: const Icon(Icons.save),
+                label: const Text('Local Save'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(_, 'other'),
+                icon: const Icon(Icons.share),
+                label: const Text('Other Apps'),
+              ),
+            ],
+          );
+        },
       ),
     );
 
     if (choice == null) return; // cancelled
     final key = keyCtl.text.trim();
-    if (key.isEmpty) {
+    final mode = selectedMode;
+
+    if (mode == BackupExportMode.private && key.isEmpty) {
       _showToast('No key entered', ToastificationType.error);
       return;
     }
 
     if (choice == 'local') {
-      await _savePrefsToDisk(ctx, key);
+      await _savePrefsToDisk(ctx, key: key, mode: mode);
     } else if (choice == 'other') {
-      await _saveWithShareIntent(ctx, key);
+      await _saveWithShareIntent(ctx, key: key, mode: mode);
     }
   }
 
-  Future<void> _savePrefsToDisk(BuildContext ctx, String key) async {
-    final result = await PrefsBackupWidget.createBackup(key);
+  Future<void> _savePrefsToDisk(
+    BuildContext ctx, {
+    required String? key,
+    required BackupExportMode mode,
+  }) async {
+    final result = await PrefsBackupWidget.createBackup(key: key, mode: mode);
     if (result != null) {
       _showToast('Backup saved', ToastificationType.success);
     }
   }
 
-  Future<void> _saveWithShareIntent(BuildContext ctx, String key) async {
-    final data = await PrefsBackupService.exportPrefs(key);
+  Future<void> _saveWithShareIntent(
+    BuildContext ctx, {
+    required String? key,
+    required BackupExportMode mode,
+  }) async {
+    final data = await PrefsBackupService.exportPrefs(key: key, mode: mode);
 
     // Create timestamp similar to the static method
     final d = DateTime.now();
@@ -256,12 +308,18 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
     final timestamp = '${d.year}${two(d.month)}${two(d.day)}_${two(d.hour)}${two(d.minute)}${two(d.second)}';
 
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/pda_prefs_backup_$timestamp.pda');
+    final prefix = mode == BackupExportMode.shareable ? 'pda_settings_shareable' : 'pda_settings_private';
+    final file = File('${dir.path}/${prefix}_$timestamp.pda');
     await file.writeAsString(data);
 
+    final renderObject = ctx.findRenderObject();
+    final shareOrigin = renderObject is RenderBox
+        ? renderObject.localToGlobal(Offset.zero) & renderObject.size
+        : const Rect.fromLTWH(0, 0, 1, 1);
+
     final shareParams = ShareParams(
-      text: 'PDA Preferences Backup',
       files: [XFile(file.path)],
+      sharePositionOrigin: shareOrigin,
     );
     final res = await SharePlus.instance.share(shareParams);
 
@@ -280,11 +338,18 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
       return;
     }
 
-    final key = await _askKey(ctx, false);
-    if (key == null || key.isEmpty) return;
+    final encoded = utf8.decode(file.bytes!);
+    final inspection = PrefsBackupService.inspectBackup(encoded);
+
+    String key = '';
+    if (inspection.requiresKey) {
+      final enteredKey = await _askKey(ctx, false);
+      if (enteredKey == null || enteredKey.isEmpty) return;
+      key = enteredKey;
+    }
 
     try {
-      final decoded = _decodeBackup(file.bytes!, key);
+      final decoded = PrefsBackupService.decodeBackup(encoded, key);
 
       // Get current keys from Sembast
       final currentKeys = await PrefsDatabase.getKeys();
@@ -305,6 +370,18 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
             children: [
               Text('Identified $backupKeys saved preferences in this file.'
                   '\n\nRestore on next launch?'),
+              if (inspection.mode == BackupExportMode.shareable)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    'This is a shareable backup. API keys, auth-related data and browser session state were excluded.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: ctx.read<ThemeProvider>().mainText,
+                    ),
+                  ),
+                ),
               Text(
                 '\nNote: restart app to apply changes',
                 style: TextStyle(
@@ -323,18 +400,11 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
       );
       if (confirm != true) return;
 
-      await PrefsBackupService.scheduleImport(utf8.decode(file.bytes!), key);
+      await PrefsBackupService.scheduleImport(encoded, key);
       _showToast('Settings restore scheduled, please restart Torn PDA', ToastificationType.success);
     } catch (_) {
       _showToast('Invalid key or corrupt file', ToastificationType.error);
     }
-  }
-
-  Map<String, dynamic> _decodeBackup(Uint8List bytes, String key) {
-    final cipher = base64Decode(utf8.decode(bytes));
-    final keyBytes = utf8.encode(key);
-    final plain = List<int>.generate(cipher.length, (i) => cipher[i] ^ keyBytes[i % keyBytes.length]);
-    return jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
   }
 
   @override
@@ -344,7 +414,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
       children: [
         const Text(
           'Save current settings to a file and restore them on next app launch. '
-          'A key is required for loading backups.',
+          'Private backups use a key; shareable backups exclude sensitive authentication data.',
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
         const SizedBox(height: 15),

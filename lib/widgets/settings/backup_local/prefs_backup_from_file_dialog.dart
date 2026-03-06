@@ -12,6 +12,8 @@ class PreferencesImportDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final encoded = utf8.decode(bytes);
+    final inspection = PrefsBackupService.inspectBackup(encoded);
     final keyCtl = TextEditingController();
 
     return AlertDialog(
@@ -23,13 +25,22 @@ class PreferencesImportDialog extends StatelessWidget {
             'A backup file was detected. Importing will overwrite ALL current settings',
             style: TextStyle(fontSize: 12),
           ),
+          if (inspection.mode == BackupExportMode.shareable)
+            const Padding(
+              padding: EdgeInsets.only(top: 12),
+              child: Text(
+                'This is a shareable backup, so no password is needed. Sensitive auth-related data was excluded.',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ),
           const SizedBox(height: 16),
-          TextField(
-            controller: keyCtl,
-            decoration: const InputDecoration(labelText: 'Decryption key'),
-            autofocus: true,
-            maxLength: 15,
-          ),
+          if (inspection.requiresKey)
+            TextField(
+              controller: keyCtl,
+              decoration: const InputDecoration(labelText: 'Decryption key'),
+              autofocus: true,
+              maxLength: 15,
+            ),
         ],
       ),
       actions: [
@@ -40,7 +51,7 @@ class PreferencesImportDialog extends StatelessWidget {
         ElevatedButton(
           onPressed: () async {
             final key = keyCtl.text.trim();
-            if (key.isEmpty) {
+            if (inspection.requiresKey && key.isEmpty) {
               toastification.show(
                 context: context,
                 title: const Text('No key entered'),
@@ -50,7 +61,6 @@ class PreferencesImportDialog extends StatelessWidget {
               return;
             }
 
-            final encoded = utf8.decode(bytes);
             try {
               // validate backup with provided key
               PrefsBackupService.decodeBackup(encoded, key);
