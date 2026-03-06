@@ -16,6 +16,7 @@ enum WebviewFabAction {
   reload,
   openTabsMenu,
   closeCurrentTab,
+  closeBrowser,
 }
 
 extension FabActionExtension on WebviewFabAction {
@@ -33,6 +34,8 @@ extension FabActionExtension on WebviewFabAction {
         return 'Open tab menu';
       case WebviewFabAction.closeCurrentTab:
         return 'Close current tab';
+      case WebviewFabAction.closeBrowser:
+        return 'Close browser';
     }
   }
 
@@ -57,6 +60,7 @@ class FabSettings {
     WebviewFabAction.reload,
     WebviewFabAction.openTabsMenu,
     WebviewFabAction.closeCurrentTab,
+    WebviewFabAction.closeBrowser,
   ];
 
   static VoidCallback? getCallbackForAction(
@@ -76,15 +80,12 @@ class FabSettings {
       case WebviewFabAction.openTabsMenu:
         return () => toggleVerticalMenu(webviewProvider);
       case WebviewFabAction.closeCurrentTab:
-        return () {
-          if (!webviewProvider.tabList[webviewProvider.currentTab].isLocked) {
-            webviewProvider.removeTab(position: webviewProvider.currentTab);
-          } else {
-            if (context.read<SettingsProvider>().showTabLockWarnings) {
-              showLockedTabWarning(context, webviewProvider);
-            }
-          }
-        };
+        return () => closeCurrentTab(context, webviewProvider);
+      case WebviewFabAction.closeBrowser:
+        if (webviewProvider.webViewSplitActive) {
+          return null;
+        }
+        return webviewProvider.closeWebViewFromOutside;
     }
   }
 
@@ -120,6 +121,16 @@ class FabSettings {
       style: ToastificationStyle.simple,
       borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
     );
+  }
+
+  static void closeCurrentTab(BuildContext context, WebViewProvider webviewProvider) {
+    if (!webviewProvider.tabList[webviewProvider.currentTab].isLocked) {
+      webviewProvider.removeTab(position: webviewProvider.currentTab);
+    } else {
+      if (context.read<SettingsProvider>().showTabLockWarnings) {
+        showLockedTabWarning(context, webviewProvider);
+      }
+    }
   }
 }
 
@@ -199,57 +210,13 @@ class WebviewFab extends StatelessWidget {
         return Icons.tab;
       case WebviewFabAction.closeCurrentTab:
         return Icons.delete_forever_outlined;
+      case WebviewFabAction.closeBrowser:
+        return Icons.close;
     }
   }
 
   VoidCallback? _getCallbackForAction(BuildContext context, WebViewProvider webviewProvider, WebviewFabAction action) {
-    switch (action) {
-      case WebviewFabAction.home:
-        return () => webviewProvider.loadCurrentTabUrl("https://www.torn.com");
-      case WebviewFabAction.back:
-        return webviewProvider.tryGoBack;
-      case WebviewFabAction.forward:
-        return webviewProvider.tryGoForward;
-      case WebviewFabAction.reload:
-        return webviewProvider.reloadFromOutside;
-      case WebviewFabAction.openTabsMenu:
-        return () => _toggleVerticalMenu(webviewProvider);
-      case WebviewFabAction.closeCurrentTab:
-        return () {
-          if (!webviewProvider.tabList[webviewProvider.currentTab].isLocked) {
-            webviewProvider.removeTab(position: webviewProvider.currentTab);
-          } else {
-            if (context.read<SettingsProvider>().showTabLockWarnings) {
-              _showLockedTabWarning(context, webviewProvider);
-            }
-          }
-        };
-    }
-  }
-
-  void _toggleVerticalMenu(WebViewProvider webviewProvider) {
-    webviewProvider.verticalMenuCurrentIndex = webviewProvider.currentTab;
-    if (webviewProvider.verticalMenuIsOpen) {
-      webviewProvider.verticalMenuClose();
-    } else {
-      webviewProvider.verticalMenuOpen();
-    }
-  }
-
-  void _showLockedTabWarning(BuildContext context, WebViewProvider webviewProvider) {
-    toastification.show(
-      alignment: Alignment.bottomCenter,
-      margin: const EdgeInsets.only(bottom: 50),
-      title: Icon(
-        Icons.lock,
-        color: webviewProvider.tabList[webviewProvider.currentTab].isLockFull ? Colors.red : Colors.orange,
-      ),
-      autoCloseDuration: const Duration(seconds: 2),
-      animationDuration: const Duration(milliseconds: 0),
-      showProgressBar: false,
-      style: ToastificationStyle.simple,
-      borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-    );
+    return FabSettings.getCallbackForAction(context, webviewProvider, action);
   }
 }
 
