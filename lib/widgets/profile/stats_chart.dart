@@ -18,6 +18,38 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 enum TornStatsChartType { Line, Pie }
 
+String formatTornStatsErrorMessage(
+  String? message, {
+  String prefix = '',
+}) {
+  final normalized = (message ?? '').replaceFirst(RegExp(r'^ERROR:\s*', caseSensitive: false), '').trim();
+  final baseMessage = normalized.isEmpty ? 'Unknown error' : normalized;
+
+  final formattedMessage = baseMessage.toLowerCase() == 'user not found.'
+      ? 'User not found. Please make sure you are using the same API key in Torn Stats and Torn PDA, '
+          'or configure your Torn Stats API key in Torn PDA Settings > Alternative API Keys'
+      : baseMessage;
+
+  return prefix.isEmpty ? formattedMessage : '$prefix$formattedMessage';
+}
+
+String formatTornStatsHttpError(
+  int statusCode, {
+  String prefix = '',
+}) {
+  final message = switch (statusCode) {
+    401 ||
+    403 =>
+      'Torn Stats rejected the request. Please check that your API key is correct in Torn PDA Settings > Alternative API Keys.',
+    404 => 'Torn Stats could not find this resource. The service may be temporarily unavailable.',
+    429 => 'Torn Stats is receiving too many requests right now. Please try again in a moment.',
+    500 || 502 || 503 || 504 => 'Torn Stats had a server problem. Please try again later.',
+    _ => 'Request failed with HTTP $statusCode.',
+  };
+
+  return prefix.isEmpty ? message : '$prefix$message';
+}
+
 class StatsChart extends StatefulWidget {
   final TornStatsChartType chartType;
   final StatsChartTornStats? statsData;
@@ -184,7 +216,13 @@ class _StatsChartState extends State<StatsChart> {
                   message = statsJson.message!;
                   success = true;
                   widget.callbackStatsUpdate();
+                } else {
+                  message = formatTornStatsErrorMessage(statsJson.message, prefix: 'Error updating stats: ');
                 }
+              } else if (resp.statusCode == 404 && resp.body.contains('User not found')) {
+                message = formatTornStatsErrorMessage('User not found.', prefix: 'Error updating stats: ');
+              } else {
+                message = formatTornStatsHttpError(resp.statusCode, prefix: 'Error updating stats: ');
               }
             } on TimeoutException {
               message = "Error updating stats: Torn Stats did not respond, it might be unavailable at this time";

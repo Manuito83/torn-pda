@@ -5983,7 +5983,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 5));
       if (resp.statusCode == 200) {
         final StatsChartTornStats statsJson = statsChartTornStatsFromJson(resp.body);
-        if (!statsJson.message!.contains("ERROR")) {
+        if (statsJson.status == true && statsJson.data != null && statsJson.data!.isNotEmpty) {
           setState(() {
             _statsChartModel = statsJson;
             _statsChartIsCached = false;
@@ -5993,33 +5993,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           Prefs().setTornStatsChartSave(resp.body);
           _settingsProvider!.setTornStatsChartDateTime = DateTime.now().millisecondsSinceEpoch;
         } else {
-          await loadFromCacheOrError(statsJson.message ?? "Unknown");
+          final errorMsg = formatTornStatsErrorMessage(statsJson.message);
+          await loadFromCacheOrError(
+            errorMsg,
+            forceShow: errorMsg.toLowerCase().contains('user not found'),
+          );
         }
       } else {
         String errorMsg;
         bool forceShow = false;
         if (resp.statusCode == 404 && resp.body.contains("User not found")) {
-          errorMsg = "User not found. Please check your Torn Stats API Key in Settings > Alternative Keys, "
-              "or disable the Torn Stats chart entirely by using the gear icon at the top of this section";
+          errorMsg = formatTornStatsErrorMessage('User not found.');
           forceShow = true;
         } else {
-          switch (resp.statusCode) {
-            case 401:
-            case 403:
-              errorMsg = "unauthorized";
-              break;
-            case 404:
-              errorMsg = "server not found";
-              break;
-            case 500:
-            case 502:
-            case 503:
-            case 504:
-              errorMsg = "server error";
-              break;
-            default:
-              errorMsg = "HTTP ${resp.statusCode}";
-          }
+          errorMsg = formatTornStatsHttpError(resp.statusCode);
         }
         await loadFromCacheOrError(errorMsg, forceShow: forceShow);
       }

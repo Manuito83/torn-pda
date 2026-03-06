@@ -111,6 +111,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added FF calculation from FFScouter in war targets cards",
           "Added option to close browser in floating action button",
           "Local backups can now be exported in a shareable mode without API keys or auth data",
+          "Fixed Torn Stats error message toast",
         ],
     );
 
