@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -24,11 +24,11 @@
 		32CA1C422C371F140099E06D /* car_start.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 32CA1C412C371F140099E06D /* car_start.aiff */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
-		C1A7E0022F29810000000001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A7E0012F29810000000001 /* SceneDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		B6E9D7E92F0E3B9300D8D9B1 /* AlarmKitHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6E9D7E82F0E3B9300D8D9B1 /* AlarmKitHandler.swift */; };
+		C1A7E0022F29810000000001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A7E0012F29810000000001 /* SceneDelegate.swift */; };
 		D1EE7EB842CF23911A09F69D /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2E5F02EFE30AF10A77C27CC /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
 
@@ -479,9 +479,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -534,9 +538,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -987,7 +995,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 631;
+				CURRENT_PROJECT_VERSION = 632;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 53KVJRJS99;
 				ENABLE_BITCODE = NO;
@@ -1005,7 +1013,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.12.3;
+				MARKETING_VERSION = 3.13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.manuito.tornpda;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1136,7 +1144,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 631;
+				CURRENT_PROJECT_VERSION = 632;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 53KVJRJS99;
 				ENABLE_BITCODE = NO;
@@ -1154,7 +1162,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.12.3;
+				MARKETING_VERSION = 3.13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.manuito.tornpda;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1177,7 +1185,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 631;
+				CURRENT_PROJECT_VERSION = 632;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 53KVJRJS99;
 				ENABLE_BITCODE = NO;
@@ -1195,7 +1203,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.12.3;
+				MARKETING_VERSION = 3.13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.manuito.tornpda;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
