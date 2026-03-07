@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:html/dom.dart' as dom;
 
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/trades/trade_price_provider.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_in.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_item.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
+import 'package:torn_pda/models/trades/trade_sync_item.dart';
+import 'package:torn_pda/models/trades/torn_w3b/torn_w3b_receipt.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/external/torn_exchange_comm.dart';
+import 'package:torn_pda/utils/external/torn_w3b_comm.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -26,6 +30,23 @@ class TradesContainer {
   List<TradeItem> rightProperties = [];
   List<TradeItem> rightShares = [];
 
+  // Active trade sync provider
+  TradePriceProvider tradePriceProvider = TradePriceProvider.none;
+  String tradePriceProviderName = "";
+  bool tradePriceProviderActive = false;
+  bool tradePriceProviderProfitActive = false;
+  bool tradePriceProviderSupportsProviderProfit = false;
+  String tradePriceProviderTotalMoney = "";
+  String tradePriceProviderProfit = "";
+  bool tradePriceProviderServerError = false;
+  String tradePriceProviderServerErrorReason = "";
+  List<TradeSyncItem> tradePriceProviderItems = <TradeSyncItem>[];
+  List<String> tradePriceProviderWarningsNotFound = <String>[];
+  List<String> tradePriceProviderWarningsNotPriced = <String>[];
+  Map<int, int> tradePriceProviderSpecialMarketPrices = <int, int>{};
+  TradeSyncReceiptRequest? tradePriceProviderReceiptRequest;
+  TradeSyncReceiptData? tradePriceProviderReceiptData;
+
   // Torn Exchange Config
   String tornExchangeBuyerName = "";
   int tornExchangeBuyerId = 0;
@@ -43,6 +64,9 @@ class TradesContainer {
   // Arson Warehouse
   bool awhActive = false;
 }
+
+const int flowerSetTradeSyncItemId = -1;
+const int plushieSetTradeSyncItemId = -2;
 
 // Lists of individual item names that make up each type of set.
 // When TE says "Flower Set", we subtract one of each name below.
@@ -79,6 +103,15 @@ const List<String> plushieSetItems = [
 class TradesProvider extends ChangeNotifier {
   int? playerId;
   TradesContainer container = TradesContainer();
+
+  void updateTradeSyncReceiptData(TradeSyncReceiptData receiptData) {
+    container
+      ..tradePriceProviderReceiptData = receiptData
+      ..tradePriceProviderTotalMoney = receiptData.totalValue.toString()
+      ..tradePriceProviderItems = receiptData.items;
+
+    notifyListeners();
+  }
 
   Future<void> updateTrades({
     required int playerId,
@@ -169,78 +202,31 @@ class TradesProvider extends ChangeNotifier {
         // Check Arson Warehouse (disabled).
         // tradesContainer.awhActive = await Prefs().getAWHEnabled();
 
-        // If Torn Exchange is enabled, we integrate TE’s data.
-        var tornExchangeActive = await Prefs().getTornExchangeEnabled() && tornExchangeActiveRemoteConfig;
-        var tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
+        final selectedProvider = await Prefs().getTradePriceProvider();
+        final tornExchangeActive =
+            selectedProvider == TradePriceProvider.tornExchange && tornExchangeActiveRemoteConfig;
+        final tornW3bActive = selectedProvider == TradePriceProvider.tornW3b;
+        final tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
 
-        if (rightItemsElements.isNotEmpty && tornExchangeActive) {
-          TornExchangeInModel tornExchangeIn = await TornExchangeComm.submitItems(
-            tradesContainer.rightItems,
-            sellerName,
-            tradeId,
-            playerName,
-          );
-
-          if (tornExchangeIn.serverError) {
-            tradesContainer
-              ..tornExchangeActive = true
-              ..tornExchangeProfitActive = tornExchangeProfitActive
-              ..tornExchangeServerError = tornExchangeIn.serverError
-              ..tornExchangeServerErrorReason = tornExchangeIn.serverErrorReason;
-          } else {
-            try {
-              // TE might send items like ["African Violet", "Flower Set"] with prices & quantities.
-              // We merge them into our existing rightItems, subtracting the relevant items if TE says there’s a set,
-              // and preserving any leftover items that TE doesn’t mention.
-              // This also ensures we keep original market prices for items that TE sets to zero.
-
-              // Apply Torn Exchange data to our existing rightItems
-              tradesContainer.rightItems = applyTornExchangeIn(
-                tradesContainer.rightItems,
-                tornExchangeIn,
-              );
-
-              // Calculate TE totals (prices and profit).
-              int totalPrices = 0;
-              int totalProfit = 0;
-              for (int i = 0; i < tornExchangeIn.prices.length; i++) {
-                totalPrices += tornExchangeIn.prices[i] * tornExchangeIn.quantities[i];
-                totalProfit += tornExchangeIn.profitPerItem[i];
-              }
-
-              // Build a user-friendly list of TE items (only those with price > 0, if desired).
-              List<TornExchangeItem> tornExchangeItems = [];
-              for (int i = 0; i < tornExchangeIn.items.length; i++) {
-                // Skip items that have no price in Torn Exchange, so the user knows they are not included
-                if (tornExchangeIn.prices[i] == 0) continue;
-                tornExchangeItems.add(
-                  TornExchangeItem()
-                    ..name = tornExchangeIn.items[i]
-                    ..quantity = tornExchangeIn.quantities[i]
-                    ..price = tornExchangeIn.prices[i]
-                    ..totalPrice = tornExchangeIn.prices[i] * tornExchangeIn.quantities[i]
-                    ..profit = tornExchangeIn.profitPerItem[i],
-                );
-              }
-
-              tradesContainer
-                ..tornExchangeBuyerId = playerId
-                ..tornExchangeBuyerName = playerName
-                ..tornExchangeActive = true
-                ..tornExchangeProfitActive = tornExchangeProfitActive
-                ..tornExchangeTotalMoney = totalPrices.toString()
-                ..tornExchangeProfit = totalProfit.toString()
-                ..tornExchangeItems = tornExchangeItems
-                ..tornExchangeNames = tornExchangeIn.items
-                ..tornExchangeQuantities = tornExchangeIn.quantities
-                ..tornExchangePrices = tornExchangeIn.prices;
-            } catch (e) {
-              tradesContainer
-                ..tornExchangeActive = true
-                ..tornExchangeProfitActive = tornExchangeProfitActive
-                ..tornExchangeServerError = tornExchangeIn.serverError
-                ..tornExchangeServerErrorReason = tornExchangeIn.serverErrorReason;
-            }
+        if (rightItemsElements.isNotEmpty) {
+          if (tornExchangeActive) {
+            await _populateTornExchangeData(
+              tradesContainer: tradesContainer,
+              playerId: playerId,
+              playerName: playerName,
+              sellerName: sellerName,
+              tradeId: tradeId,
+              tornExchangeProfitActive: tornExchangeProfitActive,
+            );
+          } else if (tornW3bActive) {
+            await _populateTornW3bData(
+              tradesContainer: tradesContainer,
+              playerId: playerId,
+              playerName: playerName,
+              sellerName: sellerName,
+              tradeId: tradeId,
+              tornExchangeProfitActive: tornExchangeProfitActive,
+            );
           }
         }
       }
@@ -373,6 +359,321 @@ class TradesProvider extends ChangeNotifier {
     }
 
     return finalItems;
+  }
+
+  Future<void> _populateTornExchangeData({
+    required TradesContainer tradesContainer,
+    required int playerId,
+    required String playerName,
+    required String sellerName,
+    required int tradeId,
+    required bool tornExchangeProfitActive,
+  }) async {
+    TornExchangeInModel tornExchangeIn = await TornExchangeComm.submitItems(
+      tradesContainer.rightItems,
+      sellerName,
+      tradeId,
+      playerName,
+    );
+
+    if (tornExchangeIn.serverError) {
+      tradesContainer
+        ..tornExchangeActive = true
+        ..tornExchangeProfitActive = tornExchangeProfitActive
+        ..tornExchangeServerError = tornExchangeIn.serverError
+        ..tornExchangeServerErrorReason = tornExchangeIn.serverErrorReason;
+
+      _setActiveTradeSyncError(
+        tradesContainer,
+        provider: TradePriceProvider.tornExchange,
+        profitActive: tornExchangeProfitActive,
+        errorReason: tornExchangeIn.serverErrorReason,
+      );
+      return;
+    }
+
+    try {
+      tradesContainer.rightItems = applyTornExchangeIn(
+        tradesContainer.rightItems,
+        tornExchangeIn,
+      );
+
+      int totalPrices = 0;
+      int totalProfit = 0;
+      for (int i = 0; i < tornExchangeIn.prices.length; i++) {
+        totalPrices += tornExchangeIn.prices[i] * tornExchangeIn.quantities[i];
+        totalProfit += tornExchangeIn.profitPerItem[i];
+      }
+
+      List<TornExchangeItem> tornExchangeItems = [];
+      List<TradeSyncItem> tradeSyncItems = [];
+      for (int i = 0; i < tornExchangeIn.items.length; i++) {
+        if (tornExchangeIn.prices[i] == 0) continue;
+
+        tornExchangeItems.add(
+          TornExchangeItem()
+            ..name = tornExchangeIn.items[i]
+            ..quantity = tornExchangeIn.quantities[i]
+            ..price = tornExchangeIn.prices[i]
+            ..totalPrice = tornExchangeIn.prices[i] * tornExchangeIn.quantities[i]
+            ..profit = tornExchangeIn.profitPerItem[i],
+        );
+
+        tradeSyncItems.add(
+          TradeSyncItem(
+            name: tornExchangeIn.items[i],
+            quantity: tornExchangeIn.quantities[i],
+            price: tornExchangeIn.prices[i],
+            totalPrice: tornExchangeIn.prices[i] * tornExchangeIn.quantities[i],
+            providerProfit: tornExchangeIn.profitPerItem[i],
+            hasProviderProfit: true,
+          ),
+        );
+      }
+
+      tradesContainer
+        ..tornExchangeBuyerId = playerId
+        ..tornExchangeBuyerName = playerName
+        ..tornExchangeActive = true
+        ..tornExchangeProfitActive = tornExchangeProfitActive
+        ..tornExchangeTotalMoney = totalPrices.toString()
+        ..tornExchangeProfit = totalProfit.toString()
+        ..tornExchangeItems = tornExchangeItems
+        ..tornExchangeNames = tornExchangeIn.items
+        ..tornExchangeQuantities = tornExchangeIn.quantities
+        ..tornExchangePrices = tornExchangeIn.prices;
+
+      tradesContainer
+        ..tradePriceProvider = TradePriceProvider.tornExchange
+        ..tradePriceProviderName = TradePriceProvider.tornExchange.label
+        ..tradePriceProviderActive = true
+        ..tradePriceProviderProfitActive = tornExchangeProfitActive
+        ..tradePriceProviderSupportsProviderProfit = true
+        ..tradePriceProviderTotalMoney = totalPrices.toString()
+        ..tradePriceProviderProfit = totalProfit.toString()
+        ..tradePriceProviderServerError = false
+        ..tradePriceProviderServerErrorReason = ''
+        ..tradePriceProviderItems = tradeSyncItems
+        ..tradePriceProviderWarningsNotFound = []
+        ..tradePriceProviderWarningsNotPriced = []
+        ..tradePriceProviderReceiptData = null
+        ..tradePriceProviderReceiptRequest = TradeSyncReceiptRequest(
+          ownerUserId: playerId,
+          ownerUsername: playerName,
+          sellerUserId: tradesContainer.sellerId,
+          sellerUsername: sellerName,
+          tradeId: tradeId,
+          items: List<TradeSyncReceiptRequestItem>.generate(
+            tornExchangeIn.items.length,
+            (index) => TradeSyncReceiptRequestItem(
+              name: tornExchangeIn.items[index],
+              quantity: tornExchangeIn.quantities[index],
+              price: tornExchangeIn.prices[index],
+            ),
+          ),
+        );
+    } catch (e) {
+      tradesContainer
+        ..tornExchangeActive = true
+        ..tornExchangeProfitActive = tornExchangeProfitActive
+        ..tornExchangeServerError = tornExchangeIn.serverError
+        ..tornExchangeServerErrorReason = tornExchangeIn.serverErrorReason;
+
+      _setActiveTradeSyncError(
+        tradesContainer,
+        provider: TradePriceProvider.tornExchange,
+        profitActive: tornExchangeProfitActive,
+        errorReason: tornExchangeIn.serverErrorReason,
+      );
+    }
+  }
+
+  Future<void> _populateTornW3bData({
+    required TradesContainer tradesContainer,
+    required int playerId,
+    required String playerName,
+    required String sellerName,
+    required int tradeId,
+    required bool tornExchangeProfitActive,
+  }) async {
+    final request = TradeSyncReceiptRequest(
+      ownerUserId: playerId,
+      ownerUsername: playerName,
+      sellerUserId: tradesContainer.sellerId,
+      sellerUsername: sellerName,
+      tradeId: tradeId,
+      items: tradesContainer.rightItems
+          .map(
+            (item) => TradeSyncReceiptRequestItem(
+              itemId: item.id,
+              name: item.name,
+              quantity: item.quantity,
+            ),
+          )
+          .toList(),
+    );
+
+    try {
+      Map<int, int> marketplacePrices = {};
+      try {
+        marketplacePrices = await TornW3bComm.getMarketplacePrices();
+      } catch (_) {}
+
+      if (marketplacePrices.isNotEmpty) {
+        _applyW3bMarketplacePrices(tradesContainer.rightItems, marketplacePrices);
+        _applyW3bMarketplacePrices(tradesContainer.rightOriginalItemsBeforeTornExchange, marketplacePrices);
+      }
+
+      final response = await TornW3bComm.generateReceipt(
+        playerId,
+        TornW3bReceiptRequest(
+          items: request.items
+              .map(
+                (item) => TornW3bReceiptRequestItem(
+                  itemId: item.itemId > 0 ? item.itemId : null,
+                  name: item.itemId > 0 ? null : item.name,
+                  quantity: item.quantity,
+                ),
+              )
+              .toList(),
+          username: playerName,
+          tradeId: tradeId,
+          includeMessage: true,
+        ),
+      );
+
+      final tradeSyncItems = _buildW3bTradeSyncItems(
+        response.receipt.items,
+        request.items,
+      );
+
+      final receiptId = _receiptIdFromUrl(response.receiptUrl);
+      final receiptMessage = _defaultReceiptMessage(
+        providerName: TradePriceProvider.tornW3b.label,
+        receiptUrl: response.receiptUrl,
+      );
+
+      tradesContainer
+        ..tradePriceProvider = TradePriceProvider.tornW3b
+        ..tradePriceProviderName = TradePriceProvider.tornW3b.label
+        ..tradePriceProviderActive = true
+        ..tradePriceProviderProfitActive = tornExchangeProfitActive
+        ..tradePriceProviderSupportsProviderProfit = false
+        ..tradePriceProviderTotalMoney = response.receipt.totalValue.toString()
+        ..tradePriceProviderProfit = ''
+        ..tradePriceProviderServerError = false
+        ..tradePriceProviderServerErrorReason = ''
+        ..tradePriceProviderItems = tradeSyncItems
+        ..tradePriceProviderWarningsNotFound = response.warnings.notFound
+        ..tradePriceProviderWarningsNotPriced = response.warnings.notPriced
+        ..tradePriceProviderSpecialMarketPrices = {
+          for (final entry in marketplacePrices.entries)
+            if (entry.key < 0) entry.key: entry.value,
+        }
+        ..tradePriceProviderReceiptRequest = request
+        ..tradePriceProviderReceiptData = TradeSyncReceiptData(
+          receiptId: receiptId,
+          message: receiptMessage,
+          url: response.receiptUrl,
+          totalValue: response.receipt.totalValue,
+          canEdit: true,
+          items: tradeSyncItems,
+        );
+    } catch (e) {
+      _setActiveTradeSyncError(
+        tradesContainer,
+        provider: TradePriceProvider.tornW3b,
+        profitActive: tornExchangeProfitActive,
+        errorReason: e.toString(),
+      );
+    }
+  }
+
+  void _applyW3bMarketplacePrices(List<TradeItem> items, Map<int, int> marketplacePrices) {
+    for (final item in items) {
+      if (item.id <= 0) {
+        continue;
+      }
+
+      final marketPrice = marketplacePrices[item.id];
+      if (marketPrice == null || marketPrice <= 0) {
+        continue;
+      }
+
+      item.marketPricePerUnit = marketPrice;
+      item.totalBuyPrice = marketPrice * item.quantity;
+    }
+  }
+
+  List<TradeSyncItem> _buildW3bTradeSyncItems(
+    List<TornW3bReceiptResponseItem> responseItems,
+    List<TradeSyncReceiptRequestItem> requestItems,
+  ) {
+    final tradeSyncItems = <TradeSyncItem>[];
+
+    for (int index = 0; index < responseItems.length; index++) {
+      final responseItem = responseItems[index];
+      final requestItem = index < requestItems.length ? requestItems[index] : null;
+
+      final itemId = responseItem.itemId > 0 ? responseItem.itemId : (requestItem?.itemId ?? 0);
+      final quantity = responseItem.quantity > 0 ? responseItem.quantity : (requestItem?.quantity ?? 0);
+      final totalPrice = responseItem.totalValue;
+      final resolvedPrice = responseItem.priceUsed > 0
+          ? responseItem.priceUsed
+          : (quantity > 0 && totalPrice > 0)
+              ? (totalPrice / quantity).round()
+              : 0;
+
+      tradeSyncItems.add(
+        TradeSyncItem(
+          itemId: itemId,
+          name: responseItem.name.isNotEmpty ? responseItem.name : (requestItem?.name ?? ''),
+          quantity: quantity,
+          price: resolvedPrice,
+          totalPrice: totalPrice > 0 ? totalPrice : resolvedPrice * quantity,
+        ),
+      );
+    }
+
+    return tradeSyncItems;
+  }
+
+  void _setActiveTradeSyncError(
+    TradesContainer tradesContainer, {
+    required TradePriceProvider provider,
+    required bool profitActive,
+    required String errorReason,
+  }) {
+    tradesContainer
+      ..tradePriceProvider = provider
+      ..tradePriceProviderName = provider.label
+      ..tradePriceProviderActive = true
+      ..tradePriceProviderProfitActive = profitActive
+      ..tradePriceProviderSupportsProviderProfit = provider.supportsProviderProfit
+      ..tradePriceProviderServerError = true
+      ..tradePriceProviderServerErrorReason = errorReason
+      ..tradePriceProviderItems = []
+      ..tradePriceProviderWarningsNotFound = []
+      ..tradePriceProviderWarningsNotPriced = []
+      ..tradePriceProviderReceiptRequest = null
+      ..tradePriceProviderReceiptData = null;
+  }
+
+  String _receiptIdFromUrl(String url) {
+    final parsed = Uri.tryParse(url);
+
+    if (parsed == null || parsed.pathSegments.isEmpty) {
+      return '';
+    }
+
+    return parsed.pathSegments.last;
+  }
+
+  String _defaultReceiptMessage({
+    required String providerName,
+    required String receiptUrl,
+  }) {
+    return 'Thanks for the trade! Your $providerName receipt is available at $receiptUrl';
   }
 
   /// Helper method that subtracts `quantityToSubtract` from items in `items`

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
+import 'package:torn_pda/models/trades/trade_price_provider.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
@@ -317,6 +318,7 @@ class Prefs {
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
   final String _kTornExchangeEnabled = "pda_tornExchangeActive";
+  final String _kTradePriceProvider = "pda_tradePriceProvider";
   final String _kTornExchangeProfitEnabled = "pda_tornExchangeProfitActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
   final String _kAwardsSort = "pda_awardsSort";
@@ -2910,11 +2912,49 @@ class Prefs {
   }
 
   Future<bool> getTornExchangeEnabled() async {
-    return await PrefsDatabase.getBool(_kTornExchangeEnabled, true);
+    return await getTradePriceProvider() == TradePriceProvider.tornExchange;
   }
 
   Future setTornExchangeEnabled(bool value) async {
+    final currentProvider = await getTradePriceProvider();
+
+    if (value) {
+      await setTradePriceProvider(TradePriceProvider.tornExchange);
+    } else if (currentProvider == TradePriceProvider.tornExchange) {
+      await setTradePriceProvider(TradePriceProvider.none);
+    }
+
     return await PrefsDatabase.setBool(_kTornExchangeEnabled, value);
+  }
+
+  Future<TradePriceProvider> getTradePriceProvider() async {
+    final storedValue = await PrefsDatabase.getString(_kTradePriceProvider, '');
+
+    if (storedValue.isNotEmpty) {
+      return tradePriceProviderFromStorage(storedValue);
+    }
+
+    final tornExchangeEnabled = await PrefsDatabase.getBool(_kTornExchangeEnabled, true);
+    return tornExchangeEnabled ? TradePriceProvider.tornExchange : TradePriceProvider.none;
+  }
+
+  Future setTradePriceProvider(TradePriceProvider provider) async {
+    await PrefsDatabase.setString(_kTradePriceProvider, provider.storageValue);
+    await PrefsDatabase.setBool(_kTornExchangeEnabled, provider == TradePriceProvider.tornExchange);
+  }
+
+  Future<bool> getTornW3bEnabled() async {
+    return await getTradePriceProvider() == TradePriceProvider.tornW3b;
+  }
+
+  Future setTornW3bEnabled(bool value) async {
+    final currentProvider = await getTradePriceProvider();
+
+    if (value) {
+      await setTradePriceProvider(TradePriceProvider.tornW3b);
+    } else if (currentProvider == TradePriceProvider.tornW3b) {
+      await setTradePriceProvider(TradePriceProvider.none);
+    }
   }
 
   Future<bool> getTornExchangeProfitEnabled() async {

@@ -13,10 +13,10 @@ import 'package:intl/intl.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/trades/awh_out.dart';
-import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_receipt.dart';
 // Project imports:
+import 'package:torn_pda/models/trades/trade_price_provider.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/models/trades/trade_sync_item.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
@@ -45,8 +45,8 @@ class TradesWidgetState extends State<TradesWidget> {
 
   late TradesProvider _tradesProv;
 
-  late bool _tornExchangeActive;
-  late bool _tornExchangeProfitActive;
+  late bool _tradeSyncActive;
+  late bool _tradeSyncProfitActive;
 
   @override
   void dispose() {
@@ -57,9 +57,8 @@ class TradesWidgetState extends State<TradesWidget> {
   @override
   Widget build(BuildContext context) {
     _tradesProv = Provider.of<TradesProvider>(context);
-    _tornExchangeActive = _tradesProv.container.tornExchangeActive &&
-        Provider.of<SettingsProvider>(context).tornExchangeEnabledStatusRemoteConfig;
-    _tornExchangeProfitActive = _tradesProv.container.tornExchangeProfitActive;
+    _tradeSyncActive = _tradesProv.container.tradePriceProviderActive;
+    _tradeSyncProfitActive = _tradesProv.container.tradePriceProviderProfitActive;
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
@@ -96,7 +95,7 @@ class TradesWidgetState extends State<TradesWidget> {
                     ),
                   ],
                 ),
-                if (!_tornExchangeActive)
+                if (!_tradeSyncActive)
                   const SizedBox(width: 90)
                 else
                   Row(
@@ -104,15 +103,15 @@ class TradesWidgetState extends State<TradesWidget> {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'TORN EXCHANGE',
+                          Text(
+                            _tradesProv.container.tradePriceProviderName.toUpperCase(),
                             style: TextStyle(
                               fontSize: 10,
-                              color: Color(0xffd186cf),
+                              color: _tradeSyncColor(),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          if (_tradesProv.container.tornExchangeServerError)
+                          if (_tradesProv.container.tradePriceProviderServerError)
                             Row(
                               children: [
                                 const Text(
@@ -131,9 +130,10 @@ class TradesWidgetState extends State<TradesWidget> {
                                     iconSize: 20,
                                     onPressed: () {
                                       String errorString = "";
-                                      if (_tradesProv.container.tornExchangeServerError) {
-                                        errorString = "There was an error contacting Torn Exchange.\n\n"
-                                            "Details: ${_tradesProv.container.tornExchangeServerErrorReason}";
+                                      if (_tradesProv.container.tradePriceProviderServerError) {
+                                        errorString =
+                                            'There was an error contacting ${_tradesProv.container.tradePriceProviderName}.\n\n'
+                                            'Details: ${_tradesProv.container.tradePriceProviderServerErrorReason}';
                                       }
                                       BotToast.showText(
                                         text: errorString,
@@ -192,8 +192,7 @@ class TradesWidgetState extends State<TradesWidget> {
               ),
             ),
             ConstrainedBox(
-              // Take into account Torn Exchange to leave more or less space
-              constraints: _tornExchangeActive && (!_tradesProv.container.tornExchangeServerError)
+              constraints: _tradeSyncActive && (!_tradesProv.container.tradePriceProviderServerError)
                   ? BoxConstraints.loose(
                       Size.fromHeight(
                             MediaQuery.sizeOf(context).height - kToolbarHeight * 3 - AppBar().preferredSize.height,
@@ -242,6 +241,226 @@ class TradesWidgetState extends State<TradesWidget> {
         ),
       ),
     );
+  }
+
+  Color _tradeSyncColor() {
+    return _tradesProv.container.tradePriceProvider == TradePriceProvider.tornW3b ? const Color(0xff4dd0e1) : ttColor;
+  }
+
+  bool _isTradeSyncGroupingItem(String itemName) {
+    return itemName == 'Flower Set' || itemName == 'Plushie Set';
+  }
+
+  List<String>? _tradeSyncGroupingComponents(String itemName) {
+    if (itemName == 'Flower Set') {
+      return flowerSetItems;
+    }
+
+    if (itemName == 'Plushie Set') {
+      return plushieSetItems;
+    }
+
+    return null;
+  }
+
+  List<TradeSyncItem> _displayTradeSyncItems(List<TradeSyncItem> providerItems) {
+    if (_tradesProv.container.tradePriceProvider != TradePriceProvider.tornW3b) {
+      return providerItems;
+    }
+
+    final workingItems = providerItems
+        .map(
+          (item) => TradeSyncItem(
+            itemId: item.itemId,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            totalPrice: item.totalPrice,
+            providerProfit: item.providerProfit,
+            hasProviderProfit: item.hasProviderProfit,
+          ),
+        )
+        .toList();
+
+    final groupedItems = <TradeSyncItem>[];
+
+    void consumeSet(String setName, List<String> componentNames) {
+      // Build as many complete sets as possible from the provider's individual
+      // items, then leave any extra flowers/plushies as standalone leftovers
+      final componentItems = <TradeSyncItem>[];
+      for (final componentName in componentNames) {
+        final index = workingItems.indexWhere(
+          (item) => item.name == componentName && item.quantity > 0,
+        );
+        if (index == -1) {
+          return;
+        }
+
+        componentItems.add(workingItems[index]);
+      }
+
+      final completeSets =
+          componentItems.map((item) => item.quantity).reduce((value, element) => value < element ? value : element);
+
+      if (completeSets <= 0) {
+        return;
+      }
+
+      final setPrice = componentItems.fold<int>(0, (sum, item) => sum + item.price);
+
+      groupedItems.add(
+        TradeSyncItem(
+          itemId: setName == 'Flower Set' ? flowerSetTradeSyncItemId : plushieSetTradeSyncItemId,
+          name: setName,
+          quantity: completeSets,
+          price: setPrice,
+          totalPrice: setPrice * completeSets,
+        ),
+      );
+
+      for (final componentItem in componentItems) {
+        componentItem.quantity -= completeSets;
+        componentItem.totalPrice = componentItem.price * componentItem.quantity;
+      }
+    }
+
+    consumeSet('Flower Set', flowerSetItems);
+    consumeSet('Plushie Set', plushieSetItems);
+
+    for (final item in workingItems) {
+      if (item.quantity <= 0) {
+        continue;
+      }
+
+      groupedItems.add(
+        TradeSyncItem(
+          itemId: item.itemId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          totalPrice: item.price * item.quantity,
+          providerProfit: item.providerProfit,
+          hasProviderProfit: item.hasProviderProfit,
+        ),
+      );
+    }
+
+    return groupedItems;
+  }
+
+  int _marketProfitForTradeSyncItem(List<TradeItem> sideItems, TradeSyncItem tradeSyncProduct) {
+    final groupingComponents = _tradeSyncGroupingComponents(tradeSyncProduct.name);
+    if (groupingComponents != null) {
+      final specialSetMarketPrice =
+          _tradesProv.container.tradePriceProviderSpecialMarketPrices[tradeSyncProduct.itemId];
+      if (specialSetMarketPrice != null && specialSetMarketPrice > 0) {
+        return (specialSetMarketPrice * tradeSyncProduct.quantity) - tradeSyncProduct.totalPrice;
+      }
+
+      int marketTotal = 0;
+
+      for (final componentName in groupingComponents) {
+        final componentItem = sideItems.cast<TradeItem?>().firstWhere(
+              (item) => item?.name == componentName,
+              orElse: () => null,
+            );
+
+        if (componentItem == null) {
+          return 0;
+        }
+
+        marketTotal += componentItem.marketPricePerUnit * tradeSyncProduct.quantity;
+      }
+
+      return marketTotal - tradeSyncProduct.totalPrice;
+    }
+
+    for (final marketItem in sideItems) {
+      if (_providerItemMatchesTradeItem(marketItem, tradeSyncProduct)) {
+        final matchedQuantity =
+            tradeSyncProduct.quantity <= marketItem.quantity ? tradeSyncProduct.quantity : marketItem.quantity;
+        return (marketItem.marketPricePerUnit - tradeSyncProduct.price) * matchedQuantity;
+      }
+    }
+
+    return 0;
+  }
+
+  List<TradeItem> _consumeTradeSyncItemFromSideItems(List<TradeItem> sideItems, TradeSyncItem tradeSyncProduct) {
+    final updatedItems = sideItems
+        .map(
+          (item) => TradeItem()
+            ..id = item.id
+            ..name = item.name
+            ..quantity = item.quantity
+            ..marketPricePerUnit = item.marketPricePerUnit
+            ..totalBuyPrice = item.totalBuyPrice
+            ..happiness = item.happiness
+            ..shareUnit = item.shareUnit,
+        )
+        .toList();
+
+    final groupingComponents = _tradeSyncGroupingComponents(tradeSyncProduct.name);
+    if (groupingComponents != null) {
+      for (final componentName in groupingComponents) {
+        final index = updatedItems.indexWhere((item) => item.name == componentName);
+        if (index == -1) {
+          continue;
+        }
+
+        updatedItems[index].quantity -= tradeSyncProduct.quantity;
+        updatedItems[index].totalBuyPrice = updatedItems[index].marketPricePerUnit * updatedItems[index].quantity;
+      }
+
+      updatedItems.removeWhere((item) => item.quantity <= 0);
+      return updatedItems;
+    }
+
+    final index = updatedItems.indexWhere((item) => _providerItemMatchesTradeItem(item, tradeSyncProduct));
+    if (index == -1) {
+      return updatedItems;
+    }
+
+    updatedItems[index].quantity -= tradeSyncProduct.quantity;
+    updatedItems[index].totalBuyPrice = updatedItems[index].marketPricePerUnit * updatedItems[index].quantity;
+    updatedItems.removeWhere((item) => item.quantity <= 0);
+    return updatedItems;
+  }
+
+  bool _providerItemMatchesTradeItem(TradeItem tradeItem, TradeSyncItem providerItem) {
+    if (tradeItem.id > 0 && providerItem.itemId > 0) {
+      return tradeItem.id == providerItem.itemId;
+    }
+
+    return tradeItem.name == providerItem.name;
+  }
+
+  bool _itemsNotConfiguredInTradeSync() {
+    bool itemsNotConfigured = _tradesProv.container.tradePriceProviderWarningsNotFound.isNotEmpty ||
+        _tradesProv.container.tradePriceProviderWarningsNotPriced.isNotEmpty;
+
+    for (final sellerItem in _tradesProv.container.rightItems) {
+      bool thisFound = false;
+      for (final providerItem in _tradesProv.container.tradePriceProviderItems) {
+        if (_providerItemMatchesTradeItem(sellerItem, providerItem)) {
+          thisFound = true;
+          break;
+        }
+      }
+
+      if (!thisFound) {
+        itemsNotConfigured = true;
+        break;
+      }
+    }
+
+    if (_tradesProv.container.rightMoney != 0 ||
+        _tradesProv.container.rightProperties.isNotEmpty ||
+        _tradesProv.container.rightShares.isNotEmpty) {
+      itemsNotConfigured = true;
+    }
+
+    return itemsNotConfigured;
   }
 
   Widget _headerTotals(String side) {
@@ -304,9 +523,8 @@ class TradesWidgetState extends State<TradesWidget> {
         iconSize: 23,
         onPressed: () {
           String amountCopied;
-          // Also takes into account Torn Exchange Server error, in which case we copy the standard value below
-          if (_tornExchangeActive && !_tradesProv.container.tornExchangeServerError && side == 'right') {
-            amountCopied = _tradesProv.container.tornExchangeTotalMoney.replaceAll("\$", "").replaceAll(",", "");
+          if (_tradeSyncActive && !_tradesProv.container.tradePriceProviderServerError && side == 'right') {
+            amountCopied = _tradesProv.container.tradePriceProviderTotalMoney.replaceAll("\$", "").replaceAll(",", "");
             amountCopied = _moneyFormat.format(int.parse(amountCopied));
           } else {
             amountCopied = _moneyFormat.format(total);
@@ -326,7 +544,7 @@ class TradesWidgetState extends State<TradesWidget> {
       return const SizedBox.shrink();
     }
 
-    if (!_tornExchangeActive || (_tornExchangeActive && (_tradesProv.container.tornExchangeServerError))) {
+    if (!_tradeSyncActive || (_tradeSyncActive && (_tradesProv.container.tradePriceProviderServerError))) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -371,46 +589,23 @@ class TradesWidgetState extends State<TradesWidget> {
           ],
         );
       } else {
-        // Do out best to parse the Torn Exchange total money and add money formatting
-        String tornExchangeTotalString = "";
-        int tornExchangeTotalMoney = int.tryParse(_tradesProv.container.tornExchangeTotalMoney) ?? -1;
-        if (tornExchangeTotalMoney != -1) {
-          tornExchangeTotalString = _moneyFormat.format(tornExchangeTotalMoney);
+        String tradeSyncTotalString = "";
+        int tradeSyncTotalMoney = int.tryParse(_tradesProv.container.tradePriceProviderTotalMoney) ?? -1;
+        if (tradeSyncTotalMoney != -1) {
+          tradeSyncTotalString = _moneyFormat.format(tradeSyncTotalMoney);
         } else {
-          tornExchangeTotalString = _tradesProv.container.tornExchangeTotalMoney;
+          tradeSyncTotalString = _tradesProv.container.tradePriceProviderTotalMoney;
         }
 
-        String tornExchangeProfit = "";
-        int? tornExchangeTotalProfit = int.tryParse(_tradesProv.container.tornExchangeProfit);
-        if (tornExchangeTotalProfit != null) {
-          tornExchangeProfit = _moneyFormat.format(tornExchangeTotalProfit);
+        String tradeSyncProfit = "";
+        int? tradeSyncTotalProfit = int.tryParse(_tradesProv.container.tradePriceProviderProfit);
+        if (tradeSyncTotalProfit != null) {
+          tradeSyncProfit = _moneyFormat.format(tradeSyncTotalProfit);
         } else {
-          tornExchangeProfit = _tradesProv.container.tornExchangeProfit;
+          tradeSyncProfit = _tradesProv.container.tradePriceProviderProfit;
         }
 
-        // Alert the user at the top that some items (or shared, properties and money) are not within the TE price
-        bool itemsNotConfiguredInTornExchange = false;
-
-        for (var sellerItem in _tradesProv.container.rightItems) {
-          bool thisFound = false;
-          for (final tornExchangeItem in _tradesProv.container.tornExchangeItems) {
-            if (sellerItem.name == tornExchangeItem.name) {
-              thisFound = true;
-              break;
-            }
-          }
-
-          if (!thisFound) {
-            itemsNotConfiguredInTornExchange = true;
-            break;
-          }
-        }
-
-        if (_tradesProv.container.rightMoney != 0 ||
-            _tradesProv.container.rightProperties.isNotEmpty ||
-            _tradesProv.container.rightShares.isNotEmpty) {
-          itemsNotConfiguredInTornExchange = true;
-        }
+        final itemsNotConfiguredInTradeSync = _itemsNotConfiguredInTradeSync();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -426,15 +621,15 @@ class TradesWidgetState extends State<TradesWidget> {
                         'LIST',
                         textAlign: TextAlign.end,
                         style: TextStyle(
-                            color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
+                            color: itemsNotConfiguredInTradeSync ? Colors.orange : _tradeSyncColor(),
                             fontWeight: FontWeight.bold,
                             fontSize: 8),
                       ),
                       Text(
-                        '\$$tornExchangeTotalString',
+                        '\$$tradeSyncTotalString',
                         textAlign: TextAlign.end,
                         style: TextStyle(
-                          color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
+                          color: itemsNotConfiguredInTradeSync ? Colors.orange : _tradeSyncColor(),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -444,7 +639,7 @@ class TradesWidgetState extends State<TradesWidget> {
               ],
             ),
             const SizedBox(height: 5),
-            if (itemsNotConfiguredInTornExchange)
+            if (itemsNotConfiguredInTradeSync)
               const Column(
                 children: [
                   Row(
@@ -475,7 +670,7 @@ class TradesWidgetState extends State<TradesWidget> {
                     '\$${_moneyFormat.format(total)} market price',
                     textAlign: TextAlign.end,
                     style: TextStyle(
-                      color: total <= tornExchangeTotalMoney ? Colors.orange : Colors.green,
+                      color: total <= tradeSyncTotalMoney ? Colors.orange : Colors.green,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -484,8 +679,8 @@ class TradesWidgetState extends State<TradesWidget> {
               ],
             ),
             const SizedBox(height: 5),
-            if (_tornExchangeProfitActive)
-              if (itemsNotConfiguredInTornExchange)
+            if (_tradeSyncProfitActive)
+              if (itemsNotConfiguredInTradeSync)
                 const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -507,20 +702,21 @@ class TradesWidgetState extends State<TradesWidget> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Flexible(
-                      child: Text(
-                        '\$$tornExchangeProfit profit (TE)',
-                        textAlign: TextAlign.end,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                    if (_tradesProv.container.tradePriceProviderSupportsProviderProfit)
+                      Flexible(
+                        child: Text(
+                          '\$$tradeSyncProfit profit (${_tradesProv.container.tradePriceProvider.shortLabel})',
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
-                    ),
                     Flexible(
                       child: Text(
-                        '\$${_moneyFormat.format(total - int.parse(_tradesProv.container.tornExchangeTotalMoney))} '
+                        '\$${_moneyFormat.format(total - int.parse(_tradesProv.container.tradePriceProviderTotalMoney))} '
                         'profit (market)',
                         textAlign: TextAlign.end,
                         style: const TextStyle(
@@ -535,14 +731,11 @@ class TradesWidgetState extends State<TradesWidget> {
             const SizedBox(height: 5),
             TradeReceiptRow(
               clipboardIcon: clipboardIcon,
-              tornExchangeOutModel: TornExchangeReceiptOutModel(
-                ownerUserId: _tradesProv.container.tornExchangeBuyerId,
-                ownerUsername: _tradesProv.container.tornExchangeBuyerName,
-                sellerUsername: _tradesProv.container.sellerName,
-                prices: _tradesProv.container.tornExchangePrices,
-                itemQuantities: _tradesProv.container.tornExchangeQuantities,
-                itemNames: _tradesProv.container.tornExchangeNames,
-              ),
+              tradePriceProvider: _tradesProv.container.tradePriceProvider,
+              providerName: _tradesProv.container.tradePriceProviderName,
+              receiptRequest: _tradesProv.container.tradePriceProviderReceiptRequest,
+              initialReceiptData: _tradesProv.container.tradePriceProviderReceiptData,
+              onReceiptUpdated: _tradesProv.updateTradeSyncReceiptData,
             ),
           ],
         );
@@ -570,51 +763,42 @@ class TradesWidgetState extends State<TradesWidget> {
       sideShares = _tradesProv.container.rightShares;
     }
 
-    // Torn Trades appears before rest of items
-    if (_tornExchangeActive && side == 'right' && (!_tradesProv.container.tornExchangeServerError)) {
-      final tornExchangeItems = _tradesProv.container.tornExchangeItems;
+    if (_tradeSyncActive && side == 'right' && (!_tradesProv.container.tradePriceProviderServerError)) {
+      final tradeSyncItems = _displayTradeSyncItems(_tradesProv.container.tradePriceProviderItems);
 
-      int tornExchangeListedItems = 0;
-      for (final tornExchangeProduct in tornExchangeItems) {
-        if (tornExchangeProduct.price == 0) {
+      int tradeSyncListedItems = 0;
+      for (final tradeSyncProduct in tradeSyncItems) {
+        if (tradeSyncProduct.price == 0) {
           continue;
         }
 
-        if (tornExchangeListedItems == 0) {
-          items.add(const Padding(
+        if (tradeSyncListedItems == 0) {
+          items.add(Padding(
             padding: EdgeInsets.only(bottom: 6),
-            child: Text('LISTED ITEMS', style: TextStyle(color: ttColor, fontSize: 8, fontWeight: FontWeight.bold)),
+            child: Text(
+              'PRICED ITEMS',
+              style: TextStyle(color: _tradeSyncColor(), fontSize: 8, fontWeight: FontWeight.bold),
+            ),
           ));
-          tornExchangeListedItems = 1;
+          tradeSyncListedItems = 1;
         }
 
-        String itemName = tornExchangeProduct.name;
-        if (tornExchangeProduct.quantity > 1) {
-          itemName += ' x${tornExchangeProduct.quantity}';
+        String itemName = tradeSyncProduct.name;
+        if (tradeSyncProduct.quantity > 1) {
+          itemName += ' x${tradeSyncProduct.quantity}';
         }
 
-        items.add(Text(itemName, style: const TextStyle(color: ttColor, fontSize: 13)));
+        items.add(Text(itemName, style: TextStyle(color: _tradeSyncColor(), fontSize: 13)));
 
-        // Item price
-        final String itemPriceTotal = "\$${_moneyFormat.format(tornExchangeProduct.totalPrice)}";
+        final String itemPriceTotal = "\$${_moneyFormat.format(tradeSyncProduct.totalPrice)}";
         String itemPriceIndividual = "";
-        if (tornExchangeProduct.quantity > 1) {
-          itemPriceIndividual += '(@ \$${_moneyFormat.format(tornExchangeProduct.price)})';
+        if (tradeSyncProduct.quantity > 1) {
+          itemPriceIndividual += '(@ \$${_moneyFormat.format(tradeSyncProduct.price)})';
         }
 
-        // Torn Exchange profit
-        String tornExchangeItemProfit = '\$${_moneyFormat.format(tornExchangeProduct.profit)}';
+        String providerItemProfit = '\$${_moneyFormat.format(tradeSyncProduct.providerProfit)}';
 
-        // Market profit
-        int thisItemTotalMarketProfit = 0;
-        for (var marketItem in sideItems) {
-          if (marketItem.name == tornExchangeProduct.name) {
-            int thisItemMarketPrice = marketItem.marketPricePerUnit;
-            int thisItemMarketQuantity = marketItem.quantity;
-            thisItemTotalMarketProfit = (thisItemMarketPrice - tornExchangeProduct.price) * thisItemMarketQuantity;
-            break;
-          }
-        }
+        final int thisItemTotalMarketProfit = _marketProfitForTradeSyncItem(sideItems, tradeSyncProduct);
         String marketItemProfit = '\$${_moneyFormat.format(thisItemTotalMarketProfit)}';
 
         items.add(
@@ -645,23 +829,28 @@ class TradesWidgetState extends State<TradesWidget> {
                   ),
                 ],
               ),
-              if (_tornExchangeProfitActive)
+              if (_tradeSyncProfitActive &&
+                  (tradeSyncProduct.hasProviderProfit ||
+                      !_isTradeSyncGroupingItem(tradeSyncProduct.name) ||
+                      _tradesProv.container.tradePriceProvider == TradePriceProvider.tornW3b))
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Flexible(
-                      child: Text(
-                        '$tornExchangeItemProfit profit (TE)',
-                        textAlign: TextAlign.end,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                    if (tradeSyncProduct.hasProviderProfit)
+                      Flexible(
+                        child: Text(
+                          '$providerItemProfit profit (${_tradesProv.container.tradePriceProvider.shortLabel})',
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
-                    ),
-                    if (itemName != "Flower Set" && itemName != "Plushie Set")
+                    if (!_isTradeSyncGroupingItem(tradeSyncProduct.name) ||
+                        _tradesProv.container.tradePriceProvider == TradePriceProvider.tornW3b)
                       Flexible(
                         child: Text(
                           '$marketItemProfit profit (market)',
@@ -682,14 +871,8 @@ class TradesWidgetState extends State<TradesWidget> {
         items.add(const SizedBox(height: 10));
 
         // We need to remove this product from the ones we have in the normal list,
-        // so that only non-TornExchange products remain there
-        final newSideItemList = List<TradeItem>.from(sideItems);
-        for (final standardItem in sideItems) {
-          if (standardItem.name == tornExchangeProduct.name) {
-            newSideItemList.remove(standardItem);
-          }
-        }
-        sideItems = List<TradeItem>.from(newSideItemList);
+        // so that only non-provider products remain there.
+        sideItems = _consumeTradeSyncItemFromSideItems(sideItems, tradeSyncProduct);
 
         // If we only find TornExchange items, the standard item list will be empty
         // and a warning will show. We need to prevent it with this setting
@@ -712,14 +895,14 @@ class TradesWidgetState extends State<TradesWidget> {
           ),
         );
         items.add(
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Flexible(
                 child: Text(
-                  'ITEMS NOT CONFIGURED\nIN TORN EXCHANGE',
+                  'ITEMS NOT CONFIGURED\nIN ${_tradesProv.container.tradePriceProviderName.toUpperCase()}',
                   textAlign: TextAlign.end,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.orange,
                     fontSize: 10,
                   ),

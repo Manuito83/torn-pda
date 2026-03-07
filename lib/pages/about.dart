@@ -466,6 +466,14 @@ class AboutPageState extends State<AboutPage> {
                 alignment: Alignment.bottomLeft,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+                  child: Text('The Trade Calculator also supports external pricing workflows such as '
+                      'Torn Exchange and TornW3B.'),
+                ),
+              ),
+              const Align(
+                alignment: Alignment.bottomLeft,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
                   child: Text('Some scripts, concepts, and features have been '
                       'adapted from preexisting ones in tools like YATA, '
                       'Torn Tools or DocTorn.'),

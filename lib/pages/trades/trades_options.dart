@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
+import 'package:torn_pda/models/trades/trade_price_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -24,7 +25,7 @@ class TradesOptions extends StatefulWidget {
 class TradesOptionsState extends State<TradesOptions> {
   bool _tradeCalculatorEnabled = true;
   //bool _awhEnabled = true;
-  bool _tornExchangeEnabled = true;
+  TradePriceProvider _tradePriceProvider = TradePriceProvider.none;
   bool _tornExchangeProfitEnabled = true;
 
   Future? _preferencesLoaded;
@@ -40,6 +41,10 @@ class TradesOptionsState extends State<TradesOptions> {
     routeWithDrawer = false;
     routeName = "trades_options";
   }
+
+  bool get _tornExchangeEnabled => _tradePriceProvider == TradePriceProvider.tornExchange;
+
+  bool get _tornW3bEnabled => _tradePriceProvider == TradePriceProvider.tornW3b;
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +166,18 @@ class TradesOptionsState extends State<TradesOptions> {
                                 // ),
                                 const SizedBox(height: 10),
                                 Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'Only one external trading service can be active at a time.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Padding(
                                   padding: const EdgeInsets.fromLTRB(10, 0, 15, 0),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -208,7 +225,7 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig && _tornExchangeEnabled)
+                                if (_tornExchangeEnabled)
                                   Padding(
                                     padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
                                     child: Column(
@@ -232,6 +249,74 @@ class TradesOptionsState extends State<TradesOptions> {
                                           'Torn PDA also shows the difference between Torn market price and your '
                                           'buying price as a more commonly understood measure of profit, '
                                           'albeit one that sometimes works poorly for infrequently traded items.',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                const SizedBox(height: 15),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 40),
+                                  child: Divider(),
+                                ),
+                                const SizedBox(height: 10),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.hub_outlined,
+                                            color: Color(0xff4dd0e1),
+                                            size: 26,
+                                          ),
+                                          SizedBox(width: 10),
+                                          Text("TornW3B"),
+                                        ],
+                                      ),
+                                      tornW3bSwitch(),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                                  child: Text(
+                                    'TornW3B is a focused lens on the Torn economy. It aggregates bazaar and market '
+                                    'signals so traders can price items quickly and generate editable receipts.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                if (_tornW3bEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Flexible(
+                                              child: Text("Show detailed profits"),
+                                            ),
+                                            tornExchangeProfitSwitch(),
+                                          ],
+                                        ),
+                                        Text(
+                                          'By enabling this option, Torn PDA will show detailed market-based '
+                                          'profit comparisons for TornW3B-priced items, both per item and for the '
+                                          'whole trade.\n\n'
+                                          'These figures compare TornW3B receipt prices against the latest market '
+                                          'prices available to the app, which makes them especially useful as a '
+                                          'quick pricing reference while trading.',
                                           style: TextStyle(
                                             color: Colors.grey[600],
                                             fontSize: 12,
@@ -301,9 +386,29 @@ class TradesOptionsState extends State<TradesOptions> {
       value: _tornExchangeEnabled,
       onChanged: _tradeCalculatorEnabled
           ? (activated) async {
+              await Prefs().setTradePriceProvider(
+                activated ? TradePriceProvider.tornExchange : TradePriceProvider.none,
+              );
               setState(() {
-                _tornExchangeEnabled = activated;
-                Prefs().setTornExchangeEnabled(activated);
+                _tradePriceProvider = activated ? TradePriceProvider.tornExchange : TradePriceProvider.none;
+              });
+            }
+          : null,
+    );
+  }
+
+  Switch tornW3bSwitch() {
+    return Switch(
+      activeThumbColor: const Color(0xff4dd0e1),
+      activeTrackColor: Colors.cyan,
+      value: _tornW3bEnabled,
+      onChanged: _tradeCalculatorEnabled
+          ? (activated) async {
+              await Prefs().setTradePriceProvider(
+                activated ? TradePriceProvider.tornW3b : TradePriceProvider.none,
+              );
+              setState(() {
+                _tradePriceProvider = activated ? TradePriceProvider.tornW3b : TradePriceProvider.none;
               });
             }
           : null,
@@ -329,13 +434,13 @@ class TradesOptionsState extends State<TradesOptions> {
   Future _restorePreferences() async {
     final tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
     //final awhActive = await Prefs().getAWHEnabled();
-    final tornExchangeActive = await Prefs().getTornExchangeEnabled();
+    final tradePriceProvider = await Prefs().getTradePriceProvider();
     final tornExchangeProfitActive = await Prefs().getTornExchangeProfitEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;
       //_awhEnabled = awhActive;
-      _tornExchangeEnabled = tornExchangeActive;
+      _tradePriceProvider = tradePriceProvider;
       _tornExchangeProfitEnabled = tornExchangeProfitActive;
     });
   }

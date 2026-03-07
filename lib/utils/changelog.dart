@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.12.3'
         ..date = '25 MAR 2026'
         ..features = [
+          "Trades: added TornW3B sync support",
           "Added FF calculation from FFScouter in war targets cards",
           "Added option to close browser in floating action button",
           "Local backups can now be exported in a shareable mode without API keys or auth data",
