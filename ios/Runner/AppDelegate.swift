@@ -13,7 +13,7 @@ import workmanager_apple
 #endif
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
 
   var iconChannel: FlutterMethodChannel!
   var memoryChannel: FlutterMethodChannel!
@@ -56,8 +56,6 @@ import workmanager_apple
       UNUserNotificationCenter.current().delegate = self
     }
 
-    GeneratedPluginRegistrant.register(with: self)
-
     if #available(iOS 17, *) {
       HomeWidgetBackgroundWorker.setPluginRegistrantCallback { registry in
         GeneratedPluginRegistrant.register(with: registry)
@@ -81,11 +79,17 @@ import workmanager_apple
 
     WorkmanagerDebug.setCurrent(LoggingDebugHandler())
 
-    let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+    let messenger = engineBridge.applicationRegistrar.messenger()
 
     // Set up the Flutter channel to handle AlarmKit
     let alarmChannel = FlutterMethodChannel(
-      name: "tornpda/alarm", binaryMessenger: controller.binaryMessenger)
+      name: "tornpda/alarm", binaryMessenger: messenger)
     alarmChannel.setMethodCallHandler {
       (call: FlutterMethodCall, result: @escaping FlutterResult) in
 
@@ -100,7 +104,7 @@ import workmanager_apple
 
     // Set up the Flutter channel to check protected data availability (Keychain diagnostics)
     let protectedDataChannel = FlutterMethodChannel(
-      name: "tornpda/protected_data", binaryMessenger: controller.binaryMessenger)
+      name: "tornpda/protected_data", binaryMessenger: messenger)
     protectedDataChannel.setMethodCallHandler {
       (call: FlutterMethodCall, result: @escaping FlutterResult) in
       if call.method == "isProtectedDataAvailable" {
@@ -112,7 +116,7 @@ import workmanager_apple
 
     // Set up the Flutter channel to handle icon changes
     iconChannel = FlutterMethodChannel(
-      name: "tornpda/icon", binaryMessenger: controller.binaryMessenger)
+      name: "tornpda/icon", binaryMessenger: messenger)
     iconChannel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
       if call.method == "changeIcon" {
         // Handle the passed arguments properly
@@ -131,7 +135,7 @@ import workmanager_apple
 
     // Set up the Flutter channel to handle memory info
     memoryChannel = FlutterMethodChannel(
-      name: "tornpda/memory", binaryMessenger: controller.binaryMessenger)
+      name: "tornpda/memory", binaryMessenger: messenger)
     memoryChannel.setMethodCallHandler { call, result in
       // Prevent uncaught errors from crashing the app
       do {
@@ -219,7 +223,7 @@ import workmanager_apple
     // MARK: - Live Activity Channel Initialization
     liveActivityChannel = FlutterMethodChannel(
       name: "com.tornpda.liveactivity",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: messenger
     )
 
     if #available(iOS 16.2, *) {
@@ -461,12 +465,11 @@ import workmanager_apple
         )
       }
     }
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    handleSceneDidBecomeActive()
   }
 
-  // MARK: - Application Lifecycle (Live Activities)
-  override func applicationDidBecomeActive(_ application: UIApplication) {
-    super.applicationDidBecomeActive(application)
+  // MARK: - Scene Lifecycle (Live Activities)
+  func handleSceneDidBecomeActive() {
     if #available(iOS 16.2, *) {
       self.activityManager?.checkAndAdoptExistingActivities()
       self.racingActivityManager?.checkAndAdoptExistingActivities()

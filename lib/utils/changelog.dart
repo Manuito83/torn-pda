@@ -105,13 +105,14 @@ class ChangeLogState extends State<ChangeLog> {
     // v3.12.3 - Build 631 - built 05/03/2026
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.12.3'
+        ..version = 'Torn PDA v3.13.0'
         ..date = '25 MAR 2026'
         ..features = [
           "Trades: added TornW3B sync support",
           "Added FF calculation from FFScouter in war targets cards",
           "Added option to close browser in floating action button",
           "Local backups can now be exported in a shareable mode without API keys or auth data",
+          "Fixed Quick Items response box using personal items for faction links",
           "Fixed Torn Stats error message toast",
         ],
     );
