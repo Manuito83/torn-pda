@@ -2,7 +2,7 @@ import { ForumsApiResponse } from './interfaces/forums_interface';
 const { tornParam } = require('../key/torn_key.js');
 
 export async function getUsersStat(apiKey: string) {
-  const response = await fetch(`https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents&key=${apiKey}&comment=PDA-Alerts&${tornParam}`);
+  const response = await fetch(`https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents,timestamp&key=${apiKey}&comment=PDA-Alerts&${tornParam}`);
   if (!response.ok) {
     return { error: { error: `HTTP ${response.status}` } };
   }

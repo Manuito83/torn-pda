@@ -9,6 +9,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum LiveActivityType {
   travel,
+  racing,
 }
 
 class LiveActivityBridgeController extends GetxController {
@@ -86,6 +87,31 @@ class LiveActivityBridgeController extends GetxController {
     }
   }
 
+  Future<LiveUpdateStartResult> startRacingActivity({
+    required Map<String, dynamic> arguments,
+  }) async {
+    if (!_isInitialized) {
+      initializeHandler();
+    }
+    try {
+      final dynamic response = await _channel.invokeMethod('startRacingActivity', arguments);
+      final result = LiveUpdateStartResult.fromDynamic(response);
+      if (result.capabilitySnapshot != null) {
+        _emitCapabilitySnapshot(result.capabilitySnapshot!);
+      }
+      return result;
+    } on PlatformException catch (e) {
+      log("LiveActivityBridgeService: PlatformException during racing start/update: ${e.message} - Details: ${e.details}");
+      return LiveUpdateStartResult(
+        status: LiveUpdateRequestStatus.error,
+        errorMessage: e.message,
+      );
+    } catch (e) {
+      log("LiveActivityBridgeService: Generic error during racing start/update: $e");
+      return const LiveUpdateStartResult(status: LiveUpdateRequestStatus.error);
+    }
+  }
+
   Future<LiveUpdateEndResult> endActivity({String? sessionId}) async {
     if (!_isInitialized) initializeHandler();
     try {
@@ -111,6 +137,32 @@ class LiveActivityBridgeController extends GetxController {
       return isActive;
     } catch (e) {
       log("LiveActivityBridgeService: Error checking if any activity is active: $e");
+      return false;
+    }
+  }
+
+  Future<LiveUpdateEndResult> endRacingActivity() async {
+    if (!_isInitialized) initializeHandler();
+    try {
+      final dynamic response = await _channel.invokeMethod('endRacingActivity');
+      log("LiveActivityBridgeService: endRacingActivity method invoked.");
+      return LiveUpdateEndResult.fromDynamic(response);
+    } on PlatformException catch (e) {
+      log("LiveActivityBridgeService: PlatformException ending racing activity: ${e.message} - Details: ${e.details}");
+      return LiveUpdateEndResult(success: false, errorMessage: e.message);
+    } catch (e) {
+      log("LiveActivityBridgeService: Generic error ending racing activity: $e");
+      return const LiveUpdateEndResult(success: false);
+    }
+  }
+
+  Future<bool> isAnyRacingActivityActive() async {
+    if (!_isInitialized) initializeHandler();
+    try {
+      final bool isActive = await _channel.invokeMethod('isAnyRacingActivityActive');
+      return isActive;
+    } catch (e) {
+      log("LiveActivityBridgeService: Error checking if any racing activity is active: $e");
       return false;
     }
   }

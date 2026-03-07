@@ -6,6 +6,7 @@ struct TravelActivityBundle: WidgetBundle {
   var body: some Widget {
     if #available(iOS 16.2, *) {
       TravelActivityLiveActivity()
+      RacingActivityLiveActivity()
     }
   }
 }

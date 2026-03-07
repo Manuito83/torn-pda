@@ -25,6 +25,7 @@ import { getUsersStat } from "./torn_api";
 const privateKey = require("../key/torn_key");
 
 import { handleTravelLiveActivity } from "./la_travel_handler";
+import { handleRacingLiveActivity } from "./la_racing_handler";
 
 export async function getStockMarket(apiKey: string) {
   const response = await fetch(
@@ -82,7 +83,7 @@ export const checkIOS = onSchedule(
         .where("alertsEnabled", "==", true)
         .get();
 
-      const laOnlyUsersQuery = admin
+      const laTravelOnlyUsersQuery = admin
         .firestore()
         .collection("players")
         .where("active", "==", true)
@@ -91,15 +92,30 @@ export const checkIOS = onSchedule(
         .where("la_travel_push_token", ">", "")
         .get();
 
-      const [alertsUsersSnapshot, laOnlyUsersSnapshot] = await Promise.all([
+      const laRacingOnlyUsersQuery = admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("platform", "==", "ios")
+        .where("alertsEnabled", "==", false)
+        .where("la_racing_push_token", ">", "")
+        .get();
+
+      const [alertsUsersSnapshot, laTravelOnlyUsersSnapshot, laRacingOnlyUsersSnapshot] = await Promise.all([
         alertsUsersQuery,
-        laOnlyUsersQuery,
+        laTravelOnlyUsersQuery,
+        laRacingOnlyUsersQuery,
       ]);
 
       const alertsUsers = alertsUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
-      const laOnlyUsers = laOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      const laTravelOnlyUsers = laTravelOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      const laRacingOnlyUsers = laRacingOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
 
-      const subscribers = [...alertsUsers, ...laOnlyUsers];
+      const subscribers = Array.from(
+        new Map(
+          [...alertsUsers, ...laTravelOnlyUsers, ...laRacingOnlyUsers].map((subscriber) => [subscriber.uid, subscriber])
+        ).values()
+      );
       let iOSBlocks = 0;
 
       const batchSize = 500;
@@ -128,7 +144,7 @@ export const checkIOS = onSchedule(
       const difference = (millisAfterFinish - millisAtStart) / 1000;
 
       logger.info(
-        `Processing ${subscribers.length} iOS users (${alertsUsers.length} with alerts, ${laOnlyUsers.length} with LA only). Blocks: ${iOSBlocks}. Time: ${difference}s`
+        `Processing ${subscribers.length} iOS users (${alertsUsers.length} with alerts, ${subscribers.length - alertsUsers.length} with LA only). Blocks: ${iOSBlocks}. Time: ${difference}s`
       );
     }
 
@@ -309,6 +325,9 @@ async function sendNotificationForProfile(
       // This is a direct async call, independent of other alerts.
       if (subscriber.la_travel_push_token) {
         allPromises.push(handleTravelLiveActivity(userStats, subscriber));
+      }
+      if (subscriber.la_racing_push_token) {
+        allPromises.push(handleRacingLiveActivity(userStats, subscriber));
       }
 
       // 2. Prepare an array to collect results conditionally

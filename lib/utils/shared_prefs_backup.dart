@@ -56,6 +56,7 @@ class PrefsBackupService {
     'pda_sendbirdSessionToken',
     'pda_sendbirdTimestamp',
     'pda_iosLiveActivityTravelPushToken',
+    'pda_iosLiveActivityRacingPushToken',
   };
 
   /// Export preferences for local backup.

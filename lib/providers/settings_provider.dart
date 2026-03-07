@@ -1491,6 +1491,25 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
+  bool _iosLiveActivitiesRacingEnabled = false;
+  bool get iosLiveActivityRacingEnabled => _iosLiveActivitiesRacingEnabled;
+  set iosLiveActivityRacingEnabled(bool enabled) {
+    _iosLiveActivitiesRacingEnabled = enabled;
+    Prefs().setIosLiveActivityRacingEnabled(enabled);
+    notifyListeners();
+
+    if (enabled) {
+      if (kSdkIos >= 17.2) {
+        log("Racing Live Activities enabled by user. Requesting push-to-start token...");
+        final bridgeController = Get.find<LiveActivityBridgeController>();
+        bridgeController.getPushToStartTokenAndSendToFirebase(force: true, activityType: LiveActivityType.racing);
+      }
+    } else {
+      FirestoreHelper().disableLiveActivityRacing();
+      Prefs().setLaPushToken(token: null, activityType: LiveActivityType.racing);
+    }
+  }
+
   bool _androidLiveActivitiesTravelEnabled = false;
   bool get androidLiveActivityTravelEnabled => _androidLiveActivitiesTravelEnabled;
   set androidLiveActivityTravelEnabled(bool enabled) {
@@ -1762,6 +1781,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
     _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
+    _iosLiveActivitiesRacingEnabled = await Prefs().getIosLiveActivityRacingEnabled();
 
     _joblessWarningEnabled = await Prefs().getJoblessWarningEnabled();
 

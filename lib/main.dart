@@ -67,6 +67,7 @@ import 'package:torn_pda/utils/background_inbox.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -712,6 +713,9 @@ Future<void> _initializeGetXControllers() async {
     }
     if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26)) {
       Get.put(LiveActivityTravelController(), permanent: true);
+    }
+    if (Platform.isIOS && kSdkIos >= 16.2) {
+      Get.put(LiveActivityRacingController(), permanent: true);
     }
   } catch (e, stackTrace) {
     log("Error initializing GetX controllers: $e");

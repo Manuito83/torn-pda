@@ -47,6 +47,39 @@ class FirebaseRtdbHelper {
     }
   }
 
+  Future<void> liveActivityRacingStateSync({
+    required String uid,
+    required String stateIdentifier,
+    String? phase,
+    int? targetTimestamp,
+  }) async {
+    final DatabaseReference ref = _rtdb.ref("live_activities/racing_status/$uid");
+
+    try {
+      log("RTDB Helper: Syncing racing LA state ($stateIdentifier) for user $uid...");
+      await ref.set({
+        'stateIdentifier': stateIdentifier,
+        'phase': phase,
+        'targetTimestamp': targetTimestamp,
+      }..removeWhere((key, value) => value == null));
+      log("RTDB Helper: Racing LA state synced successfully for user $uid");
+    } catch (e) {
+      log("RTDB Helper: Error syncing racing LA state for user $uid: $e");
+    }
+  }
+
+  Future<void> liveActivityRacingClearState({required String uid}) async {
+    final DatabaseReference ref = _rtdb.ref("live_activities/racing_status/$uid");
+
+    try {
+      log("RTDB Helper: Clearing racing LA state from RTDB for user $uid...");
+      await ref.remove();
+      log("RTDB Helper: Racing LA state cleared successfully for user $uid");
+    } catch (e) {
+      log("RTDB Helper: Error clearing racing LA state for user $uid: $e");
+    }
+  }
+
   /// Get foreign stocks data from Torn PDA Database (Realtime Database) as fallback
   Future<Map<String, dynamic>?> getTornPDAStocksData() async {
     try {

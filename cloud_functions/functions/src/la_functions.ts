@@ -29,7 +29,7 @@ export const registerPushToStartToken = onCall({
             'The function must be called with a "token" and "activityType".'
         );
     }
-    if (activityType !== "travel") {
+    if (!["travel", "racing"].includes(activityType)) {
         throw new HttpsError(
             "invalid-argument",
             `Activity type "${activityType}" is not supported.`

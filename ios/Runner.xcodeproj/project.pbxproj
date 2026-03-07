@@ -114,6 +114,7 @@
 		1749F0962DE20067008EAB69 /* Exceptions for "TravelActivity" folder in "Runner" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				RacingActivityAttributes.swift,
 				TravelActivityAttributes.swift,
 			);
 			target = 97C146ED1CF9000F007C117D /* Runner */;

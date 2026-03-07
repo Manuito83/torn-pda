@@ -1,3 +1,4 @@
+import 'package:torn_pda/utils/live_activities/racing_live_activity_parser.dart';
 // Dart imports:
 import 'dart:async';
 import 'dart:developer';
@@ -8932,16 +8933,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   DateTime? _parseRaceTime(String input) {
-    final raceStartRegex =
-        RegExp(r"Waiting for a race to start - (\d+ days?,)? (\d+ hours?,)? (\d+) minutes and (\d+) seconds");
-    final match = raceStartRegex.firstMatch(input);
-    if (match != null) {
-      int days = int.tryParse(match.group(1)?.replaceAll(RegExp(r'[^0-9]'), '') ?? '0') ?? 0;
-      int hours = int.tryParse(match.group(2)?.replaceAll(RegExp(r'[^0-9]'), '') ?? '0') ?? 0;
-      int minutes = int.tryParse(match.group(3) ?? '0') ?? 0;
-      int seconds = int.tryParse(match.group(4) ?? '0') ?? 0;
-      return DateTime.now().add(Duration(days: days, hours: hours, minutes: minutes, seconds: seconds));
-    }
-    return null;
+    final int? totalSeconds = RacingLiveActivityParser.parseRelativeSeconds(input);
+    if (totalSeconds == null) return null;
+    return DateTime.now().add(Duration(seconds: totalSeconds));
   }
 }

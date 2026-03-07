@@ -28,6 +28,14 @@ export const onPlayerAdded = onDocumentCreated(
       promises.push(manageStats("android", 1));
     }
 
+    if (beforeStat.la_travel_push_token) {
+      promises.push(manageStats("la_travel_enabled", 1));
+    }
+
+    if (beforeStat.la_racing_push_token) {
+      promises.push(manageStats("la_racing_enabled", 1));
+    }
+
     await Promise.all(promises);
   }
 );
@@ -128,6 +136,10 @@ export const onPlayerDeleted = onDocumentDeleted(
 
     if (beforeStat.la_travel_push_token) {
       promises.push(manageStats("la_travel_enabled", -1));
+    }
+
+    if (beforeStat.la_racing_push_token) {
+      promises.push(manageStats("la_racing_enabled", -1));
     }
 
     if (beforeStat.platform === "android") {
@@ -272,6 +284,14 @@ export const onPlayerUpdated = onDocumentUpdated({
   if (wasLaEnabled !== isLaEnabled) {
     promises.push(
       manageStats("la_travel_enabled", isLaEnabled ? 1 : -1)
+    );
+  }
+
+  const wasRacingLaEnabled = beforeStat.la_racing_push_token ? true : false;
+  const isRacingLaEnabled = afterStat.la_racing_push_token ? true : false;
+  if (wasRacingLaEnabled !== isRacingLaEnabled) {
+    promises.push(
+      manageStats("la_racing_enabled", isRacingLaEnabled ? 1 : -1)
     );
   }
 

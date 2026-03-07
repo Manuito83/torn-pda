@@ -289,16 +289,28 @@ class FirestoreHelper {
 
       if (Platform.isIOS && kSdkIos >= 17.2) {
         final laTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
-        if (laTravelEnabled) {
+        final laRacingEnabled = await Prefs().getIosLiveActivityRacingEnabled();
+        if (laTravelEnabled || laRacingEnabled) {
           final bridgeController = Get.find<LiveActivityBridgeController>();
 
-          // We are getting a new or existing token, it depends on the evaluation
-          final String? tokenToUpdate =
-              await bridgeController.getPushToStartTokenOnly(activityType: LiveActivityType.travel);
+          if (laTravelEnabled) {
+            final String? tokenToUpdate =
+                await bridgeController.getPushToStartTokenOnly(activityType: LiveActivityType.travel);
 
-          if (tokenToUpdate != null) {
-            updatePayload['la_travel_push_token'] = tokenToUpdate;
-            await Prefs().setLaPushToken(token: tokenToUpdate, activityType: LiveActivityType.travel);
+            if (tokenToUpdate != null) {
+              updatePayload['la_travel_push_token'] = tokenToUpdate;
+              await Prefs().setLaPushToken(token: tokenToUpdate, activityType: LiveActivityType.travel);
+            }
+          }
+
+          if (laRacingEnabled) {
+            final String? tokenToUpdate =
+                await bridgeController.getPushToStartTokenOnly(activityType: LiveActivityType.racing);
+
+            if (tokenToUpdate != null) {
+              updatePayload['la_racing_push_token'] = tokenToUpdate;
+              await Prefs().setLaPushToken(token: tokenToUpdate, activityType: LiveActivityType.racing);
+            }
           }
         }
       }
@@ -552,6 +564,15 @@ class FirestoreHelper {
     log("Disabling Live Activities for travel. Deleting token from Firestore");
     await _firestore.collection("players").doc(_uid).update({
       "la_travel_push_token": FieldValue.delete(),
+    });
+  }
+
+  Future<void> disableLiveActivityRacing() async {
+    if (_uid == null) return;
+
+    log("Disabling Live Activities for racing. Deleting token from Firestore");
+    await _firestore.collection("players").doc(_uid).update({
+      "la_racing_push_token": FieldValue.delete(),
     });
   }
 }

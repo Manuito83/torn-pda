@@ -545,8 +545,10 @@ class Prefs {
 
   // Live Activities
   final String _kIosLiveActivityTravelEnabled = "pda_iosLiveActivityTravelEnabled";
+  final String _kIosLiveActivityRacingEnabled = "pda_iosLiveActivityRacingEnabled";
   final String _kAndroidLiveActivityTravelEnabled = "pda_androidLiveActivityTravelEnabled";
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
+  final String _kIosLiveActivityRacingPushToken = "pda_iosLiveActivityRacingPushToken";
   // Android-only: used to avoid repeating "Arrived" Live Update after app relaunch
   final String _kAndroidLiveActivityTravelLastArrivalId = "pda_androidLiveActivityTravelLastArrivalId";
   final String _kLiveActivityCurrentTripBackup = "pda_liveActivityCurrentTripBackup";
@@ -4359,6 +4361,8 @@ class Prefs {
     switch (activityType) {
       case LiveActivityType.travel:
         return _kIosLiveActivityTravelPushToken;
+      case LiveActivityType.racing:
+        return _kIosLiveActivityRacingPushToken;
     }
   }
 
@@ -4388,6 +4392,14 @@ class Prefs {
 
   Future setIosLiveActivityTravelEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kIosLiveActivityTravelEnabled, value);
+  }
+
+  Future<bool> getIosLiveActivityRacingEnabled() async {
+    return await PrefsDatabase.getBool(_kIosLiveActivityRacingEnabled, false);
+  }
+
+  Future setIosLiveActivityRacingEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kIosLiveActivityRacingEnabled, value);
   }
 
   Future<bool> getAndroidLiveActivityTravelEnabled() async {

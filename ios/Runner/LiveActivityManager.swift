@@ -422,3 +422,237 @@ class LiveActivityManager {
     }
   }
 }
+
+@available(iOS 16.2, *)
+class RacingLiveActivityManager {
+
+  private var currentActivity: Activity<RacingActivityAttributes>?
+
+  enum RacingLiveActivityError: Error, LocalizedError {
+    case notEnabledByUser
+    case activityRequestFailed(String)
+    case noActiveActivityToUpdateOrUserDismissed
+
+    var errorDescription: String? {
+      switch self {
+      case .notEnabledByUser:
+        return "Live Activities are not enabled by the user in system settings"
+      case .activityRequestFailed(let message):
+        return "Failed to request Racing Live Activity: \(message)"
+      case .noActiveActivityToUpdateOrUserDismissed:
+        return "No active Racing Live Activity to update, or it was dismissed by the user"
+      }
+    }
+  }
+
+  func startRacingActivity(
+    stateIdentifier: String,
+    phase: String,
+    titleText: String,
+    bodyText: String,
+    targetTimeTimestamp: Int?,
+    currentServerTimestamp: Int,
+    showTimer: Bool
+  ) async throws {
+    guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+      throw RacingLiveActivityError.notEnabledByUser
+    }
+
+    if let existingActivity = currentActivity {
+      let existingIdentifier = existingActivity.content.state.stateIdentifier
+      if existingIdentifier == stateIdentifier {
+        try await updateRacingActivity(
+          stateIdentifier: stateIdentifier,
+          phase: phase,
+          titleText: titleText,
+          bodyText: bodyText,
+          targetTimeTimestamp: targetTimeTimestamp,
+          currentServerTimestamp: currentServerTimestamp,
+          showTimer: showTimer
+        )
+        return
+      } else {
+        await endActivityInternal(activity: existingActivity, isBeingReplaced: true)
+      }
+    }
+
+    let attributes = RacingActivityAttributes(activityName: "Torn PDA Racing")
+    let initialState = RacingActivityAttributes.ContentState(
+      stateIdentifier: stateIdentifier,
+      phase: phase,
+      titleText: titleText,
+      bodyText: bodyText,
+      targetTimeTimestamp: targetTimeTimestamp,
+      currentServerTimestamp: currentServerTimestamp,
+      showTimer: showTimer
+    )
+
+    let activityContent = ActivityContent(
+      state: initialState,
+      staleDate: staleDate(for: phase, targetTimeTimestamp: targetTimeTimestamp),
+      relevanceScore: relevanceScore(for: phase)
+    )
+
+    do {
+      let activity = try Activity<RacingActivityAttributes>.request(
+        attributes: attributes,
+        content: activityContent,
+        pushType: .token
+      )
+      self.currentActivity = activity
+      observeActivity(activity: activity)
+    } catch {
+      throw RacingLiveActivityError.activityRequestFailed(error.localizedDescription)
+    }
+  }
+
+  func updateRacingActivity(
+    stateIdentifier: String,
+    phase: String,
+    titleText: String,
+    bodyText: String,
+    targetTimeTimestamp: Int?,
+    currentServerTimestamp: Int,
+    showTimer: Bool
+  ) async throws {
+    guard let activityToUpdate = self.currentActivity, activityToUpdate.activityState == .active
+    else {
+      throw RacingLiveActivityError.noActiveActivityToUpdateOrUserDismissed
+    }
+
+    let newState = RacingActivityAttributes.ContentState(
+      stateIdentifier: stateIdentifier,
+      phase: phase,
+      titleText: titleText,
+      bodyText: bodyText,
+      targetTimeTimestamp: targetTimeTimestamp,
+      currentServerTimestamp: currentServerTimestamp,
+      showTimer: showTimer
+    )
+
+    let updatedContent = ActivityContent(
+      state: newState,
+      staleDate: staleDate(for: phase, targetTimeTimestamp: targetTimeTimestamp),
+      relevanceScore: relevanceScore(for: phase)
+    )
+
+    await activityToUpdate.update(updatedContent)
+  }
+
+  func endCurrentRacingActivity() async {
+    guard let activityToEnd = currentActivity else {
+      return
+    }
+    await endActivityInternal(activity: activityToEnd)
+  }
+
+  func checkAndAdoptExistingActivities() {
+    Task {
+      var adoptedActivityThisCheck: Activity<RacingActivityAttributes>? = nil
+
+      for systemActivity in Activity<RacingActivityAttributes>.activities {
+        switch systemActivity.activityState {
+        case .active:
+          if self.currentActivity == nil {
+            if adoptedActivityThisCheck == nil {
+              self.currentActivity = systemActivity
+              observeActivity(activity: systemActivity)
+              adoptedActivityThisCheck = systemActivity
+            } else {
+              await systemActivity.end(nil, dismissalPolicy: .immediate)
+            }
+          } else if self.currentActivity?.id == systemActivity.id {
+            observeActivity(activity: systemActivity)
+            adoptedActivityThisCheck = systemActivity
+          } else {
+            await systemActivity.end(nil, dismissalPolicy: .immediate)
+          }
+        case .ended, .dismissed:
+          if self.currentActivity?.id == systemActivity.id {
+            self.currentActivity = nil
+          }
+        case .stale:
+          await systemActivity.end(nil, dismissalPolicy: .immediate)
+        @unknown default:
+          break
+        }
+      }
+
+      if let tracked = self.currentActivity, adoptedActivityThisCheck?.id != tracked.id {
+        self.currentActivity = nil
+      }
+    }
+  }
+
+  func isAnyRacingActivityActive() -> Bool {
+    return !Activity<RacingActivityAttributes>.activities.isEmpty
+  }
+
+  private func staleDate(for phase: String, targetTimeTimestamp: Int?) -> Date {
+    switch phase {
+    case "finished":
+      return Date().addingTimeInterval(10 * 60)
+    case "waitingUnknown":
+      return Date().addingTimeInterval(15 * 60)
+    default:
+      if let targetTimeTimestamp, targetTimeTimestamp > 0 {
+        return Date(timeIntervalSince1970: TimeInterval(targetTimeTimestamp)).addingTimeInterval(
+          2 * 60)
+      }
+      return Date().addingTimeInterval(10 * 60)
+    }
+  }
+
+  private func relevanceScore(for phase: String) -> Double {
+    switch phase {
+    case "racing":
+      return 100.0
+    case "waiting", "waitingUnknown":
+      return 80.0
+    case "finished":
+      return 40.0
+    default:
+      return 60.0
+    }
+  }
+
+  private func endActivityInternal(
+    activity: Activity<RacingActivityAttributes>,
+    isBeingReplaced: Bool = false
+  ) async {
+    guard activity.activityState == .active else {
+      if activity.id == self.currentActivity?.id {
+        self.currentActivity = nil
+      }
+      return
+    }
+
+    await activity.end(nil, dismissalPolicy: .immediate)
+
+    if !isBeingReplaced && activity.id == self.currentActivity?.id {
+      self.currentActivity = nil
+    }
+  }
+
+  private func observeActivity(activity activityToObserve: Activity<RacingActivityAttributes>) {
+    guard activityToObserve.id == self.currentActivity?.id else {
+      return
+    }
+
+    Task { [weak self] in
+      guard let self = self else { return }
+      for await stateUpdate in activityToObserve.activityStateUpdates {
+        guard activityToObserve.id == self.currentActivity?.id else {
+          break
+        }
+
+        if stateUpdate == .ended || stateUpdate == .dismissed {
+          if activityToObserve.id == self.currentActivity?.id {
+            self.currentActivity = nil
+          }
+          break
+        }
+      }
+    }
+  }
+}

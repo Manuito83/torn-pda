@@ -33,6 +33,20 @@ import workmanager_apple
     return liveActivityManager as? LiveActivityManager
   }
 
+  lazy var racingLiveActivityManager: Any? = {
+    if #available(iOS 16.2, *) {
+      let manager = RacingLiveActivityManager()
+      return manager
+    } else {
+      return nil
+    }
+  }()
+
+  @available(iOS 16.2, *)
+  private var racingActivityManager: RacingLiveActivityManager? {
+    return racingLiveActivityManager as? RacingLiveActivityManager
+  }
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -210,7 +224,10 @@ import workmanager_apple
 
     if #available(iOS 16.2, *) {
       liveActivityChannel.setMethodCallHandler { [weak self] (call, result) in
-        guard let self = self, let manager = self.activityManager else {
+        guard let self = self,
+          let manager = self.activityManager,
+          let racingManager = self.racingActivityManager
+        else {
           result(
             FlutterError(
               code: "UNAVAILABLE",
@@ -336,6 +353,60 @@ import workmanager_apple
             }
           }
 
+        case "startRacingActivity":
+          guard let currentArgs = args,
+            let stateIdentifier = currentArgs["stateIdentifier"] as? String,
+            let phase = currentArgs["phase"] as? String,
+            let titleText = currentArgs["titleText"] as? String,
+            let bodyText = currentArgs["bodyText"] as? String,
+            let currentServerTimestamp = currentArgs["currentServerTimestamp"] as? Int,
+            let showTimer = currentArgs["showTimer"] as? Bool
+          else {
+            result(
+              FlutterError(
+                code: "INVALID_ARGUMENTS",
+                message: "Missing or invalid arguments for startRacingActivity.",
+                details: nil
+              )
+            )
+            return
+          }
+          let targetTimeTimestamp = currentArgs["targetTimeTimestamp"] as? Int
+          Task {
+            do {
+              try await racingManager.startRacingActivity(
+                stateIdentifier: stateIdentifier,
+                phase: phase,
+                titleText: titleText,
+                bodyText: bodyText,
+                targetTimeTimestamp: targetTimeTimestamp,
+                currentServerTimestamp: currentServerTimestamp,
+                showTimer: showTimer
+              )
+              result(nil)
+            } catch {
+              let nsError = error as NSError
+              result(
+                FlutterError(
+                  code: "START_FAILED",
+                  message: error.localizedDescription,
+                  details: [
+                    "domain": nsError.domain, "code": nsError.code, "userInfo": nsError.userInfo,
+                  ]
+                )
+              )
+            }
+          }
+
+        case "endRacingActivity":
+          Task {
+            await racingManager.endCurrentRacingActivity()
+            result(nil)
+          }
+
+        case "isAnyRacingActivityActive":
+          result(racingManager.isAnyRacingActivityActive())
+
         case "endTravelActivity":
           Task {
             await manager.endCurrentTravelActivity()
@@ -356,7 +427,17 @@ import workmanager_apple
           }
 
           if #available(iOS 17.2, *) {
-            let token = manager.getPushToStartToken(for: activityType)
+            let token: String?
+            switch activityType {
+            case "travel":
+              token = manager.getPushToStartToken(for: activityType)
+            case "racing":
+              token = Activity<RacingActivityAttributes>.pushToStartToken?.map {
+                String(format: "%02x", $0)
+              }.joined()
+            default:
+              token = nil
+            }
             result(token)
           } else {
             result(nil)
@@ -367,6 +448,7 @@ import workmanager_apple
         }
       }
       self.activityManager?.checkAndAdoptExistingActivities()
+      self.racingActivityManager?.checkAndAdoptExistingActivities()
     } else {
       liveActivityChannel.setMethodCallHandler { (call, result) in
         print("Live Activities method '\(call.method)' called on unsupported iOS version.")
@@ -387,6 +469,7 @@ import workmanager_apple
     super.applicationDidBecomeActive(application)
     if #available(iOS 16.2, *) {
       self.activityManager?.checkAndAdoptExistingActivities()
+      self.racingActivityManager?.checkAndAdoptExistingActivities()
     }
   }
 

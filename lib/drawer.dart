@@ -75,6 +75,7 @@ import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
@@ -3260,12 +3261,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (!isAndroid && !isIos) return;
       final bool enabledForPlatform = isAndroid
           ? _settingsProvider.androidLiveActivityTravelEnabled
-          : _settingsProvider.iosLiveActivityTravelEnabled;
+          : (_settingsProvider.iosLiveActivityTravelEnabled || _settingsProvider.iosLiveActivityRacingEnabled);
       if (!enabledForPlatform) return;
 
       if (isIos && kSdkIos < 16.2) {
         // Regardless of user settings, disable Live Activities on iOS versions below 16.2
         _settingsProvider.iosLiveActivityTravelEnabled = false;
+        _settingsProvider.iosLiveActivityRacingEnabled = false;
         return;
       }
 
@@ -3277,7 +3279,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       final travelController = Get.find<LiveActivityTravelController>();
 
       bridgeController.initializeHandler();
-      await travelController.activate();
+      if (isAndroid || _settingsProvider.iosLiveActivityTravelEnabled) {
+        await travelController.activate();
+      }
+      if (isIos && _settingsProvider.iosLiveActivityRacingEnabled) {
+        await Get.find<LiveActivityRacingController>().activate();
+      }
     });
   }
 

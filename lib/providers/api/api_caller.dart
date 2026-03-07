@@ -344,7 +344,7 @@ class ApiCallerController extends GetxController {
         url += 'faction/?selections=chain';
         break;
       case ApiSelection_v1.barsAndPlayerStatus:
-        url += 'user/?selections=bars,profile,travel,cooldowns,money';
+        url += 'user/?selections=bars,profile,travel,cooldowns,money,icons';
         break;
       case ApiSelection_v1.items:
         url += 'torn/?selections=items';

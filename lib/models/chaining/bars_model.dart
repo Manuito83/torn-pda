@@ -176,6 +176,8 @@ class Basicicons {
   String? icon27;
   String? icon9;
   String? icon35;
+  String? icon17;
+  String? icon18;
 
   Basicicons({
     this.icon6,
@@ -185,6 +187,8 @@ class Basicicons {
     this.icon27,
     this.icon9,
     this.icon35,
+    this.icon17,
+    this.icon18,
   });
 
   factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
@@ -195,6 +199,8 @@ class Basicicons {
         icon27: json["icon27"],
         icon9: json["icon9"],
         icon35: json["icon35"],
+        icon17: json["icon17"],
+        icon18: json["icon18"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -205,6 +211,8 @@ class Basicicons {
         "icon27": icon27,
         "icon9": icon9,
         "icon35": icon35,
+        "icon17": icon17,
+        "icon18": icon18,
       };
 }
 

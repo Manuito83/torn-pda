@@ -34,6 +34,16 @@ interface TravelLAContentState {
   hasArrived: boolean;
 }
 
+interface RacingLAContentState {
+  stateIdentifier: string;
+  phase: string;
+  titleText: string;
+  bodyText: string;
+  targetTimeTimestamp?: number;
+  currentServerTimestamp: number;
+  showTimer: boolean;
+}
+
 export async function sendTravelPushToStart(
   pushToStartToken: string,
   contentState: TravelLAContentState
@@ -86,6 +96,65 @@ export async function sendTravelPushToStart(
     return false;
   } catch (error) {
     logger.error("@parse/node-apn - An unexpected error occurred:", error);
+    return false;
+  }
+}
+
+export async function sendRacingPushToStart(
+  pushToStartToken: string,
+  contentState: RacingLAContentState
+): Promise<boolean> {
+  const topic = `${apnsConfig.bundleId}.push-type.liveactivity`;
+
+  const notification = new apn.Notification();
+  notification.topic = topic;
+  notification.pushType = "liveactivity";
+
+  const staleDate = contentState.targetTimeTimestamp
+    ? contentState.targetTimeTimestamp + 2 * 60
+    : Math.floor(Date.now() / 1000) + 15 * 60;
+
+  notification.aps = {
+    timestamp: Math.floor(Date.now() / 1000),
+    event: "start",
+    "relevance-score": 1.0,
+    "stale-date": staleDate,
+    "content-state": contentState,
+    "attributes-type": "RacingActivityAttributes",
+    "attributes": {
+      activityName: "Torn PDA Racing",
+    },
+    alert: {
+      title: contentState.titleText,
+      body: contentState.bodyText,
+    }
+  };
+
+  notification.payload = {};
+
+  try {
+    logger.info(
+      `Sending racing LA push via @parse/node-apn to token: ${pushToStartToken.substring(0, 10)}...`,
+      { payload: notification.payload }
+    );
+
+    const result = await apnProvider.send(notification, pushToStartToken);
+
+    if (result.failed.length > 0) {
+      logger.warn(
+        `@parse/node-apn - Racing APNs push failed (reason: ${result.failed[0].response?.reason || "unknown"})`,
+      );
+      return false;
+    }
+
+    if (result.sent.length > 0) {
+      logger.info(`@parse/node-apn - Successfully sent racing push`);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    logger.error("@parse/node-apn - An unexpected error occurred while sending racing push:", error);
     return false;
   }
 }

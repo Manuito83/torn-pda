@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
@@ -1583,6 +1584,36 @@ class AlertsSettingsState extends State<AlertsSettings> {
             },
           ),
         ),
+        if (Platform.isIOS)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+            child: CheckboxListTile(
+              checkColor: Colors.white,
+              activeColor: Colors.blueGrey,
+              value: _settingsProvider.iosLiveActivityRacingEnabled,
+              title: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Racing"),
+                  Text("Live Activity", style: TextStyle(fontSize: 10)),
+                ],
+              ),
+              onChanged: (enabled) async {
+                if (enabled == null) return;
+
+                setState(() {
+                  _settingsProvider.iosLiveActivityRacingEnabled = enabled;
+                });
+
+                if (_settingsProvider.iosLiveActivityRacingEnabled) {
+                  await Get.find<LiveActivityRacingController>().activate();
+                  Get.find<LiveActivityBridgeController>().initializeHandler();
+                } else {
+                  Get.find<LiveActivityRacingController>().deactivate();
+                }
+              },
+            ),
+          ),
         const Divider(),
       ],
     );
