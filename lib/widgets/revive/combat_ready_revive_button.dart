@@ -140,6 +140,7 @@ Future<void> openCombatReadyReviveDialog(BuildContext _, ThemeProvider themeProv
                                 ),
                               ),
                               const TextSpan(text: ' for more information.'),
+                              // TODO: Remote Config
                               const TextSpan(
                                 text: "\n\nRevives cost \$1.5M or 2 Xanax, unless on a contract. "
                                     "Refusal to pay will result in being Blacklisted.",
