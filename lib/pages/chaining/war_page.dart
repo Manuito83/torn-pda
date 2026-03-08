@@ -910,6 +910,7 @@ class WarPageState extends State<WarPage> {
               }
               if (choice.description!.contains("The Wolverines") && !_w.wolverinesReviveActive) {
                 return false;
+              }
               if (choice.description!.contains("Combat Ready") && !_w.combatReadyReviveActive) {
                 return false;
               }
