@@ -9,6 +9,7 @@ data class LiveUpdateSessionState(
     val contentIdentifier: String?,
     val startedAtMs: Long,
     val lastUpdatedAtMs: Long,
+    val lastHasArrived: Boolean = false,
 )
 
 interface LiveUpdateSessionStore {
@@ -37,6 +38,7 @@ class LiveUpdateSessionRegistry(
             .putString(KEY_CONTENT_IDENTIFIER, state.contentIdentifier)
             .putLong(KEY_STARTED_AT, state.startedAtMs)
             .putLong(KEY_LAST_UPDATED_AT, state.lastUpdatedAtMs)
+            .putBoolean(KEY_LAST_HAS_ARRIVED, state.lastHasArrived)
             .apply()
     }
 
@@ -57,12 +59,14 @@ class LiveUpdateSessionRegistry(
         val storedType = LiveUpdateActivityType.fromWireName(prefs.getString(KEY_ACTIVITY_TYPE, activityType.wireName))
         val contentIdentifier = prefs.getString(KEY_CONTENT_IDENTIFIER, null)
             ?: if (storedType == LiveUpdateActivityType.TRAVEL) prefs.getString(KEY_LEGACY_TRAVEL_IDENTIFIER, null) else null
+        val lastHasArrived = prefs.getBoolean(KEY_LAST_HAS_ARRIVED, false)
         return LiveUpdateSessionState(
             sessionId = sessionId,
             activityType = storedType,
             contentIdentifier = contentIdentifier,
             startedAtMs = startedAt,
             lastUpdatedAtMs = lastUpdated,
+            lastHasArrived = lastHasArrived,
         )
     }
 
@@ -74,5 +78,6 @@ class LiveUpdateSessionRegistry(
         private const val KEY_LEGACY_TRAVEL_IDENTIFIER = "travel_identifier"
         private const val KEY_STARTED_AT = "started_at"
         private const val KEY_LAST_UPDATED_AT = "last_updated_at"
+        private const val KEY_LAST_HAS_ARRIVED = "last_has_arrived"
     }
 }

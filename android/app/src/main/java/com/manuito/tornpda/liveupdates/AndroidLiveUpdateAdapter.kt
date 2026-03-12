@@ -38,6 +38,17 @@ class AndroidTravelLiveUpdateAdapter(
             cachedPayload?.travelIdentifier != payload.travelIdentifier ||
             cachedPayload?.hasArrived != payload.hasArrived
 
+        // Defense-in-depth: skip redundant notification update for identical state
+        if (isExistingSession) {
+            val cached = cachedPayload!!
+            if (cached.travelIdentifier == payload.travelIdentifier
+                && cached.hasArrived == payload.hasArrived
+            ) {
+                cachedPayload = payload
+                return LiveUpdateAdapterResult(status = LiveUpdateRequestStatus.UPDATED)
+            }
+        }
+
         activeSessionId = sessionId
         cachedPayload = payload
 
