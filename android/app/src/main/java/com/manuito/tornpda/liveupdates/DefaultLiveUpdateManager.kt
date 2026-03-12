@@ -30,9 +30,9 @@ class DefaultLiveUpdateManager(
         }
 
         val eligibility = eligibilityProvider.evaluate()
-        notifyCapability(eligibility.snapshot)
 
         if (!eligibility.eligible) {
+            notifyCapability(eligibility.snapshot)
             return@synchronized LiveUpdateStartResult(
                 status = LiveUpdateRequestStatus.UNSUPPORTED,
                 reason = eligibility.reason,
@@ -43,12 +43,29 @@ class DefaultLiveUpdateManager(
         val now = System.currentTimeMillis()
         val existingSession = sessionStore.current()
         val sessionId = existingSession?.sessionId ?: sessionIdProvider()
+
+        // Dedup: skip adapter if same trip, same arrived state
+        if (existingSession != null
+            && existingSession.travelIdentifier == parsedPayload.travelIdentifier
+            && existingSession.lastHasArrived == parsedPayload.hasArrived
+        ) {
+            sessionStore.markActive(existingSession.copy(lastUpdatedAtMs = now))
+            return@synchronized LiveUpdateStartResult(
+                status = LiveUpdateRequestStatus.UPDATED,
+                sessionId = sessionId,
+                capabilitySnapshot = eligibility.snapshot,
+            )
+        }
+
+        notifyCapability(eligibility.snapshot)
+
         sessionStore.markActive(
             LiveUpdateSessionState(
                 sessionId = sessionId,
                 travelIdentifier = parsedPayload.travelIdentifier,
                 startedAtMs = existingSession?.startedAtMs ?: now,
                 lastUpdatedAtMs = now,
+                lastHasArrived = parsedPayload.hasArrived,
             ),
         )
 
