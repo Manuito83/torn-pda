@@ -11,9 +11,9 @@ void main() {
         deviceNowSeconds: 999800,
       );
       // deviceNow(999800) + timeLeft(300) = 1000100
-      expect(result['arrivalTimestamp'], 1000100);
+      expect(result.arrivalTimestamp, 1000100);
       // departure = arrival - totalDuration = 1000100 - 300 = 999800
-      expect(result['departureTimestamp'], 999800);
+      expect(result.departureTimestamp, 999800);
     });
 
     test('compensates for device clock offset behind server', () {
@@ -28,8 +28,8 @@ void main() {
       // Expected: 999970 + 300 = 1000270 (NOT server's 1000300)
       // Countdown: 1000270 - 999970 = 300s (matches Torn)
       // Without fix: 1000300 - 999970 = 330s (wrong!)
-      expect(result['arrivalTimestamp'], 1000270);
-      expect(result['departureTimestamp'], 999970);
+      expect(result.arrivalTimestamp, 1000270);
+      expect(result.departureTimestamp, 999970);
     });
 
     test('compensates for device clock offset ahead of server', () {
@@ -43,8 +43,8 @@ void main() {
       );
       // Expected: 1000030 + 300 = 1000330
       // Countdown: 1000330 - 1000030 = 300s (matches Torn)
-      expect(result['arrivalTimestamp'], 1000330);
-      expect(result['departureTimestamp'], 1000030);
+      expect(result.arrivalTimestamp, 1000330);
+      expect(result.departureTimestamp, 1000030);
     });
 
     test('computes consistent departure for progress bar', () {
@@ -57,12 +57,12 @@ void main() {
       // totalDuration = 1000600 - 1000000 = 600
       // arrival = 1000100 + 300 = 1000400
       // departure = 1000400 - 600 = 999800
-      expect(result['arrivalTimestamp'], 1000400);
-      expect(result['departureTimestamp'], 999800);
+      expect(result.arrivalTimestamp, 1000400);
+      expect(result.departureTimestamp, 999800);
       // Progress bar: (now - departure) / (arrival - departure)
       // = (1000100 - 999800) / (1000400 - 999800) = 300/600 = 50%
-      final elapsed = 1000100 - result['departureTimestamp']!;
-      final total = result['arrivalTimestamp']! - result['departureTimestamp']!;
+      final elapsed = 1000100 - result.departureTimestamp;
+      final total = result.arrivalTimestamp - result.departureTimestamp;
       expect(elapsed / total, closeTo(0.5, 0.001));
     });
 
@@ -73,8 +73,8 @@ void main() {
         timeLeftSeconds: null,
         deviceNowSeconds: 999970,
       );
-      expect(result['arrivalTimestamp'], 1000300);
-      expect(result['departureTimestamp'], 1000000);
+      expect(result.arrivalTimestamp, 1000300);
+      expect(result.departureTimestamp, 1000000);
     });
 
     test('returns server timestamps when timeLeft is zero', () {
@@ -84,8 +84,8 @@ void main() {
         timeLeftSeconds: 0,
         deviceNowSeconds: 1000300,
       );
-      expect(result['arrivalTimestamp'], 1000300);
-      expect(result['departureTimestamp'], 1000000);
+      expect(result.arrivalTimestamp, 1000300);
+      expect(result.departureTimestamp, 1000000);
     });
   });
 }

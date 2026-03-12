@@ -30,9 +30,9 @@ class DefaultLiveUpdateManager(
         }
 
         val eligibility = eligibilityProvider.evaluate()
-        notifyCapability(eligibility.snapshot)
 
         if (!eligibility.eligible) {
+            notifyCapability(eligibility.snapshot)
             return@synchronized LiveUpdateStartResult(
                 status = LiveUpdateRequestStatus.UNSUPPORTED,
                 reason = eligibility.reason,
@@ -56,6 +56,8 @@ class DefaultLiveUpdateManager(
                 capabilitySnapshot = eligibility.snapshot,
             )
         }
+
+        notifyCapability(eligibility.snapshot)
 
         sessionStore.markActive(
             LiveUpdateSessionState(
