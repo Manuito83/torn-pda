@@ -8,6 +8,7 @@ data class LiveUpdateSessionState(
     val travelIdentifier: String?,
     val startedAtMs: Long,
     val lastUpdatedAtMs: Long,
+    val lastHasArrived: Boolean = false,
 )
 
 interface LiveUpdateSessionStore {
@@ -32,6 +33,7 @@ class LiveUpdateSessionRegistry(context: Context) : LiveUpdateSessionStore {
             .putString(KEY_TRAVEL_IDENTIFIER, state.travelIdentifier)
             .putLong(KEY_STARTED_AT, state.startedAtMs)
             .putLong(KEY_LAST_UPDATED_AT, state.lastUpdatedAtMs)
+            .putBoolean(KEY_LAST_HAS_ARRIVED, state.lastHasArrived)
             .apply()
     }
 
@@ -50,11 +52,13 @@ class LiveUpdateSessionRegistry(context: Context) : LiveUpdateSessionStore {
         val startedAt = prefs.getLong(KEY_STARTED_AT, 0L)
         val lastUpdated = prefs.getLong(KEY_LAST_UPDATED_AT, startedAt)
         val travelIdentifier = prefs.getString(KEY_TRAVEL_IDENTIFIER, null)
+        val lastHasArrived = prefs.getBoolean(KEY_LAST_HAS_ARRIVED, false)
         return LiveUpdateSessionState(
             sessionId = sessionId,
             travelIdentifier = travelIdentifier,
             startedAtMs = startedAt,
             lastUpdatedAtMs = lastUpdated,
+            lastHasArrived = lastHasArrived,
         )
     }
 
@@ -64,5 +68,6 @@ class LiveUpdateSessionRegistry(context: Context) : LiveUpdateSessionStore {
         private const val KEY_TRAVEL_IDENTIFIER = "travel_identifier"
         private const val KEY_STARTED_AT = "started_at"
         private const val KEY_LAST_UPDATED_AT = "last_updated_at"
+        private const val KEY_LAST_HAS_ARRIVED = "last_has_arrived"
     }
 }

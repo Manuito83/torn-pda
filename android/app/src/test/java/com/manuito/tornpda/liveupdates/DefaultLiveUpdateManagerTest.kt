@@ -51,7 +51,7 @@ class DefaultLiveUpdateManagerTest {
         assertTrue(sessionStore.isActive())
 
         adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.UPDATED)
-        val secondResult = manager.startOrUpdate(payload())
+        val secondResult = manager.startOrUpdate(payload(hasArrived = true))
         assertEquals("session-xyz", secondResult.sessionId)
         assertEquals(2, adapter.startCalls)
     }
@@ -91,11 +91,69 @@ class DefaultLiveUpdateManagerTest {
         assertFalse(sessionStore.isActive())
     }
 
-    private fun payload(): Map<String, Any?> {
+    @Test
+    fun startWithIdenticalTravelStateSkipsAdapter() {
+        val eligibility = FakeEligibilityProvider(successResult())
+        val adapter = RecordingAdapter()
+        val sessionStore = RecordingSessionStore()
+        val manager = DefaultLiveUpdateManager(adapter, eligibility, sessionStore) { "session-dedup" }
+
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
+        manager.startOrUpdate(payload(hasArrived = false))
+        assertEquals(1, adapter.startCalls)
+
+        // Second identical call — same trip, same state (en-route)
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.UPDATED)
+        val result = manager.startOrUpdate(payload(hasArrived = false))
+        assertEquals(LiveUpdateRequestStatus.UPDATED, result.status)
+        assertEquals("session-dedup", result.sessionId)
+        // Adapter must NOT be called again
+        assertEquals(1, adapter.startCalls)
+    }
+
+    @Test
+    fun startTransitionToArrivedCallsAdapter() {
+        val eligibility = FakeEligibilityProvider(successResult())
+        val adapter = RecordingAdapter()
+        val sessionStore = RecordingSessionStore()
+        val manager = DefaultLiveUpdateManager(adapter, eligibility, sessionStore) { "session-arrive" }
+
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
+        manager.startOrUpdate(payload(hasArrived = false))
+        assertEquals(1, adapter.startCalls)
+
+        // Transition to arrived — adapter MUST be called
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.UPDATED)
+        manager.startOrUpdate(payload(hasArrived = true))
+        assertEquals(2, adapter.startCalls)
+    }
+
+    @Test
+    fun startWithDifferentTripCallsAdapter() {
+        val eligibility = FakeEligibilityProvider(successResult())
+        val adapter = RecordingAdapter()
+        val sessionStore = RecordingSessionStore()
+        val manager = DefaultLiveUpdateManager(adapter, eligibility, sessionStore) { "session-trips" }
+
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
+        manager.startOrUpdate(payload(travelIdentifier = "trip-A"))
+        assertEquals(1, adapter.startCalls)
+
+        // Different trip — adapter MUST be called
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.UPDATED)
+        manager.startOrUpdate(payload(travelIdentifier = "trip-B"))
+        assertEquals(2, adapter.startCalls)
+    }
+
+    private fun payload(
+        hasArrived: Boolean = false,
+        travelIdentifier: String = "torn-1700",
+    ): Map<String, Any?> {
         return mapOf(
             "arrivalTimeTimestamp" to 1700L,
             "departureTimeTimestamp" to 1600L,
-            "travelIdentifier" to "torn-1700",
+            "travelIdentifier" to travelIdentifier,
+            "hasArrived" to hasArrived,
         )
     }
 
@@ -119,9 +177,11 @@ class DefaultLiveUpdateManagerTest {
         var endCalls = 0
         var adapterListener: LiveUpdateAdapterListener? = null
         var nextResult: LiveUpdateAdapterResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
+        var lastPayload: LiveUpdatePayload? = null
 
         override fun startOrUpdate(sessionId: String, payload: LiveUpdatePayload): LiveUpdateAdapterResult {
             startCalls += 1
+            lastPayload = payload
             return nextResult
         }
 

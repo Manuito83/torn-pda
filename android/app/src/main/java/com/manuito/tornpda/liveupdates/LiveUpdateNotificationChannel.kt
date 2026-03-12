@@ -14,12 +14,21 @@ object LiveUpdateNotificationChannel {
     fun ensureCreated(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService<NotificationManager>() ?: return
-        if (manager.getNotificationChannel(CHANNEL_ID) != null) return
+
+        // Migrate existing HIGH-importance channel down to DEFAULT
+        val existing = manager.getNotificationChannel(CHANNEL_ID)
+        if (existing != null) {
+            if (existing.importance == NotificationManager.IMPORTANCE_HIGH) {
+                manager.deleteNotificationChannel(CHANNEL_ID)
+            } else {
+                return
+            }
+        }
 
         val channel = NotificationChannel(
             CHANNEL_ID,
             context.getString(R.string.live_update_channel_name),
-            NotificationManager.IMPORTANCE_HIGH,
+            NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
             description = context.getString(R.string.live_update_channel_description)
             enableVibration(false)

@@ -29,6 +29,7 @@ class LiveActivityTravelController extends GetxController {
   String _lastArrivalNotifiedTravelId = "";
   bool _hasArrivedNotified = false;
 
+  Completer<void>? _processGuard;
   bool _isMonitoring = false;
   Worker? _statusListenerWorker;
   StreamSubscription<LiveUpdateStatusEvent>? _statusEventSubscription;
@@ -37,6 +38,28 @@ class LiveActivityTravelController extends GetxController {
   static const int _arrivedLAAutoEndMinutes = 10;
   static const String _backupTaskUniqueName = "com.tornpda.liveactivity.arrival_backup";
   String? _activeSessionId;
+
+  @visibleForTesting
+  static Map<String, int> computeDeviceRelativeTimestamps({
+    required int serverArrivalTimestamp,
+    required int serverDepartureTimestamp,
+    required int? timeLeftSeconds,
+    required int deviceNowSeconds,
+  }) {
+    if (timeLeftSeconds != null && timeLeftSeconds > 0) {
+      final deviceArrival = deviceNowSeconds + timeLeftSeconds;
+      final totalDuration = serverArrivalTimestamp - serverDepartureTimestamp;
+      final deviceDeparture = deviceArrival - totalDuration;
+      return {
+        'arrivalTimestamp': deviceArrival,
+        'departureTimestamp': deviceDeparture,
+      };
+    }
+    return {
+      'arrivalTimestamp': serverArrivalTimestamp,
+      'departureTimestamp': serverDepartureTimestamp,
+    };
+  }
 
   @visibleForTesting
   bool get isLiveActivityActiveForTest => _isLALogicallyActive;
@@ -133,6 +156,7 @@ class LiveActivityTravelController extends GetxController {
           'destination': travel.destination!,
           'arrivalTimestamp': travel.timestamp!,
           'departureTimestamp': travel.departed!,
+          'timeLeft': travel.timeLeft,
         };
       }
     }
@@ -176,6 +200,12 @@ class LiveActivityTravelController extends GetxController {
       return;
     }
 
+    if (_processGuard != null && !_processGuard!.isCompleted) {
+      return; // skip concurrent call
+    }
+    _processGuard = Completer<void>();
+
+    try {
     bool isConsideredFirstValidRun = false;
     final apiData = _getCurrentTravelDataFromApi(statusData?.barsAndStatusModel);
 
@@ -294,6 +324,12 @@ class LiveActivityTravelController extends GetxController {
     // --- Perform the LA start/update if decided
     if (shouldStartOrUpdateLA && laArgs != null) {
       final bool isArrivalUpdate = laArgs['hasArrived'] == true;
+
+      // Optimistic state update before await to prevent duplicate calls
+      _isLALogicallyActive = true;
+      _lastProcessedTravelIdentifier = travelId;
+      _currentLAArrivalTimestamp = arrivalTimestamp;
+
       // log("TravelLiveActivityHandler: Calling bridge to start/update LA with args: $laArgs");
       final LiveUpdateStartResult result = await _bridgeController.startActivity(arguments: laArgs);
       applyStartResult(result);
@@ -301,8 +337,6 @@ class LiveActivityTravelController extends GetxController {
         log("TravelLiveActivityHandler: Native layer reported ${result.status} (${result.reason})");
         return;
       }
-      _currentLAArrivalTimestamp = arrivalTimestamp;
-      _lastProcessedTravelIdentifier = travelId;
       if (isArrivalUpdate) {
         _lastArrivalNotifiedTravelId = travelId;
         if (Platform.isAndroid) {
@@ -326,6 +360,9 @@ class LiveActivityTravelController extends GetxController {
         }
       }
     }
+    } finally {
+      _processGuard?.complete();
+    }
   }
 
   // Does not end the native Live Activity, just resets the internal state
@@ -336,6 +373,7 @@ class LiveActivityTravelController extends GetxController {
     _isLALogicallyActive = false;
     _activeSessionId = null;
     _currentLAArrivalTimestamp = 0;
+    _lastProcessedTravelIdentifier = "";
     _hasArrivedNotified = false;
 
     if (Platform.isAndroid) {
@@ -406,6 +444,28 @@ class LiveActivityTravelController extends GetxController {
 
     final int currentDeviceTimestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
+    int arrivalTimeForNotification = apiTravelData['arrivalTimestamp']!;
+    int departureTimeForNotification = apiTravelData['departureTimestamp']!;
+
+    if (!hasArrived && Platform.isAndroid) {
+      final deviceTimestamps = computeDeviceRelativeTimestamps(
+        serverArrivalTimestamp: apiTravelData['arrivalTimestamp']!,
+        serverDepartureTimestamp: apiTravelData['departureTimestamp']!,
+        timeLeftSeconds: apiTravelData['timeLeft'],
+        deviceNowSeconds: currentDeviceTimestamp,
+      );
+      arrivalTimeForNotification = deviceTimestamps['arrivalTimestamp']!;
+      departureTimeForNotification = deviceTimestamps['departureTimestamp']!;
+
+      // Recalculate earliestReturnTimestamp with device-relative arrival
+      if (earliestReturnTimestamp != null) {
+        int travelDuration = apiTravelData['arrivalTimestamp']! - apiTravelData['departureTimestamp']!;
+        if (travelDuration > 0) {
+          earliestReturnTimestamp = arrivalTimeForNotification + travelDuration;
+        }
+      }
+    }
+
     // Reconstruct the travelID to ensure uniqueness in session matching if needed by native side
     // (Though currently native relies largely on sessionID, having this consistent helps)
     String travelId =
@@ -417,8 +477,8 @@ class LiveActivityTravelController extends GetxController {
       'currentDestinationFlagAsset': currentDestinationFlagAsset,
       'originDisplayName': originDisplayName,
       'originFlagAsset': originFlagAsset,
-      'arrivalTimeTimestamp': apiTravelData['arrivalTimestamp']!,
-      'departureTimeTimestamp': apiTravelData['departureTimestamp']!,
+      'arrivalTimeTimestamp': arrivalTimeForNotification,
+      'departureTimeTimestamp': departureTimeForNotification,
       'currentServerTimestamp': currentDeviceTimestamp,
       'vehicleAssetName': vehicleAssetName,
       'earliestReturnTimestamp': earliestReturnTimestamp,
