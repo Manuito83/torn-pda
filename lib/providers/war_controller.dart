@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
+import 'package:torn_pda/models/chaining/ffscouter/ffscouter_cache_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
@@ -158,6 +159,14 @@ class WarController extends GetxController {
   set statsShareIncludeTargetsWithNoStatsAvailable(bool value) {
     _statsShareIncludeTargetsWithNoStatsAvailable = value;
     Prefs().setStatsShareIncludeTargetsWithNoStatsAvailable(value);
+    update();
+  }
+
+  bool _statsShareIncludeFFScouterFairFight = false;
+  bool get statsShareIncludeFFScouterFairFight => _statsShareIncludeFFScouterFairFight;
+  set statsShareIncludeFFScouterFairFight(bool value) {
+    _statsShareIncludeFFScouterFairFight = value;
+    Prefs().setStatsShareIncludeFFScouterFairFight(value);
     update();
   }
 
@@ -1047,6 +1056,7 @@ class WarController extends GetxController {
     _statsShareShowOnlyTotals = await Prefs().getStatsShareShowOnlyTotals();
     _statsShareShowEstimatesIfNoSpyAvailable = await Prefs().getStatsShareShowEstimatesIfNoSpyAvailable();
     _statsShareIncludeTargetsWithNoStatsAvailable = await Prefs().getStatsShareIncludeTargetsWithNoStatsAvailable();
+    _statsShareIncludeFFScouterFairFight = await Prefs().getStatsShareIncludeFFScouterFairFight();
 
     _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
     _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
@@ -2068,6 +2078,51 @@ class WarController extends GetxController {
     warCards.sort((a, b) => compareMembers(a.memberModel, b.memberModel, currentSort ?? WarSortType.levelDes));
   }
 
+  Future<bool> _prepareFFScouterStatsShare(List<Member> members) async {
+    final ffScouterEnabledStatus = await Prefs().getFFScouterEnabledStatus();
+    if (ffScouterEnabledStatus != 1 || !_ffScouterCache.remoteConfigEnabled) {
+      return false;
+    }
+
+    final memberIds = members.map((member) => member.memberId).whereType<int>().toList();
+    if (memberIds.isEmpty) {
+      return true;
+    }
+
+    await _ffScouterCache.ensureFresh(memberIds);
+    return true;
+  }
+
+  FFScouterCacheEntry? _getFFScouterShareEntry(
+    Member member, {
+    required bool ffScouterEnabled,
+  }) {
+    if (!ffScouterEnabled || member.memberId == null) {
+      return null;
+    }
+
+    final entry = _ffScouterCache.get(member.memberId!);
+    if (entry == null) {
+      return null;
+    }
+
+    final hasBattleScore = entry.bsEstimate != null && entry.bsEstimate! > 0;
+    final hasFairFight = entry.fairFight != null;
+    if (!hasBattleScore && !hasFairFight) {
+      return null;
+    }
+
+    return entry;
+  }
+
+  String _ffScouterUpdatedText(FFScouterCacheEntry entry, SpiesController spyController) {
+    if (entry.lastUpdatedByFFScouter == null || entry.lastUpdatedByFFScouter! <= 0) {
+      return '';
+    }
+
+    return spyController.statsOld(entry.lastUpdatedByFFScouter!);
+  }
+
   void shareStats(BuildContext context) async {
     try {
       StringBuffer statsBuffer = StringBuffer();
@@ -2099,8 +2154,12 @@ class WarController extends GetxController {
       sortMembers(pinnedMembers);
       sortMembers(nonPinnedMembers);
       List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
+      final ffScouterEnabled = await _prepareFFScouterStatsShare(sortedMembers);
 
       for (final member in sortedMembers) {
+        final ffsEntry = _getFFScouterShareEntry(member, ffScouterEnabled: ffScouterEnabled);
+        final hasFFScouterStats = ffsEntry != null;
+
         // Determine if the member has any stats (spied or estimated)
         bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
             (member.statsSpd != null && member.statsSpd != -1) ||
@@ -2110,8 +2169,8 @@ class WarController extends GetxController {
 
         bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
 
-        // Skip member if no stats are available and we shouldn't show estimates
-        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats)) {
+        // Skip member if no stats are available from any supported source.
+        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats) && !hasFFScouterStats) {
           if (!statsShareIncludeTargetsWithNoStatsAvailable) {
             continue; // Skip member if no stats and we don't include targets without stats
           } else {
@@ -2152,8 +2211,30 @@ class WarController extends GetxController {
             statsBuffer.writeln("Energy drinks (Cans): ${member.memberCans ?? ''}");
             statsBuffer.writeln("SSL probability: ${calculateSSLProbability(member)}");
           }
+        } else if (hasFFScouterStats) {
+          final updatedText = _ffScouterUpdatedText(ffsEntry, spyController);
+          if (ffsEntry.bsEstimate != null && ffsEntry.bsEstimate! > 0) {
+            statsBuffer.writeln(
+              "FFScouter battle score: ~${ffsEntry.displayText}${updatedText.isNotEmpty ? " ($updatedText)" : ""}",
+            );
+          }
+          if (statsShareIncludeFFScouterFairFight && ffsEntry.fairFight != null) {
+            statsBuffer.writeln("FFScouter fair fight: ${ffsEntry.fairFight!.toStringAsFixed(2)}");
+          }
         } else {
           statsBuffer.writeln("Unknown stats!");
+        }
+
+        if (hasFFScouterStats && !(!hasExactStats && !hasEstimatedStats)) {
+          if (ffsEntry.bsEstimate != null && ffsEntry.bsEstimate! > 0) {
+            final updatedText = _ffScouterUpdatedText(ffsEntry, spyController);
+            statsBuffer.writeln(
+              "FFScouter battle score: ~${ffsEntry.displayText}${updatedText.isNotEmpty ? " ($updatedText)" : ""}",
+            );
+          }
+          if (statsShareIncludeFFScouterFairFight && ffsEntry.fairFight != null) {
+            statsBuffer.writeln("FFScouter fair fight: ${ffsEntry.fairFight!.toStringAsFixed(2)}");
+          }
         }
 
         statsBuffer.writeln("");
@@ -2196,6 +2277,9 @@ class WarController extends GetxController {
           'Type of Stats',
           'Total',
           'Total Updated',
+          'FFScouter Battle Score',
+          'FFScouter Updated',
+          if (statsShareIncludeFFScouterFairFight) 'FFScouter Fair Fight',
         ]);
       } else {
         csvData.add([
@@ -2218,6 +2302,9 @@ class WarController extends GetxController {
           'Enhancers',
           'Energy Drinks',
           'SSL Probability',
+          'FFScouter Battle Score',
+          'FFScouter Updated',
+          if (statsShareIncludeFFScouterFairFight) 'FFScouter Fair Fight',
         ]);
       }
 
@@ -2247,8 +2334,11 @@ class WarController extends GetxController {
       sortMembers(pinnedMembers);
       sortMembers(nonPinnedMembers);
       List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
+      final ffScouterEnabled = await _prepareFFScouterStatsShare(sortedMembers);
 
       for (final member in sortedMembers) {
+        final ffsEntry = _getFFScouterShareEntry(member, ffScouterEnabled: ffScouterEnabled);
+        final hasFFScouterStats = ffsEntry != null;
         bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
             (member.statsSpd != null && member.statsSpd != -1) ||
             (member.statsDef != null && member.statsDef != -1) ||
@@ -2257,48 +2347,106 @@ class WarController extends GetxController {
 
         bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
 
-        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats)) {
+        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats) && !hasFFScouterStats) {
           if (!statsShareIncludeTargetsWithNoStatsAvailable) {
             continue; // Skip member if no stats and we don't include targets without stats
           }
         }
 
-        final List<String> rowData = [
-          member.name ?? '',
-          member.memberId?.toString() ?? '',
-          HtmlParser.fix(member.factionName),
-          '', // Type of Stats
-          '', // Total
-          '', // Total Updated
-        ];
+        final ffScouterBattleScore = hasFFScouterStats && ffsEntry.bsEstimate != null && ffsEntry.bsEstimate! > 0
+            ? '~${ffsEntry.displayText}'
+            : '';
+        final ffScouterUpdated = hasFFScouterStats ? _ffScouterUpdatedText(ffsEntry, spyController) : '';
+        final ffScouterFairFight =
+          statsShareIncludeFFScouterFairFight && hasFFScouterStats && ffsEntry.fairFight != null
+            ? ffsEntry.fairFight!.toStringAsFixed(2)
+            : '';
 
+        final String typeOfStats;
         if (hasExactStats) {
-          rowData[3] = 'Spied';
-          rowData[4] = member.statsExactTotal != null && member.statsExactTotal != -1
-              ? formatBigNumbers(member.statsExactTotal!)
-              : '?';
-          rowData[5] =
-              member.statsExactUpdated != null && member.statsExactUpdated != -1 && member.statsExactUpdated! > 0
-                  ? spyController.statsOld(member.statsExactUpdated!)
-                  : '';
+          typeOfStats = 'Spied';
         } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
-          rowData[3] = 'Estimated';
-          rowData[4] = member.statsEstimated!;
-          rowData[5] = ''; // No Total Updated for estimated stats
-
-          if (!statsShareShowOnlyTotals) {
-            rowData.addAll([
-              member.memberXanax?.toString() ?? '',
-              member.memberRefill?.toString() ?? '',
-              member.memberEnhancement?.toString() ?? '',
-              member.memberCans?.toString() ?? '',
-              calculateSSLProbability(member),
-            ]);
-          }
+          typeOfStats = 'Estimated';
+        } else if (hasFFScouterStats) {
+          typeOfStats = 'FFScouter';
         } else {
-          rowData[3] = 'Unknown';
-          rowData[4] = '?';
+          typeOfStats = 'Unknown';
         }
+
+        final String totalValue = hasExactStats
+            ? member.statsExactTotal != null && member.statsExactTotal != -1
+                ? formatBigNumbers(member.statsExactTotal!)
+                : '?'
+            : statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats
+                ? member.statsEstimated!
+                : hasFFScouterStats && ffScouterBattleScore.isNotEmpty
+                    ? ffScouterBattleScore
+                    : '?';
+        final String totalUpdated = hasExactStats &&
+                member.statsExactUpdated != null &&
+                member.statsExactUpdated != -1 &&
+                member.statsExactUpdated! > 0
+            ? spyController.statsOld(member.statsExactUpdated!)
+            : '';
+
+        final List<String> rowData = statsShareShowOnlyTotals
+            ? [
+                member.name ?? '',
+                member.memberId?.toString() ?? '',
+                HtmlParser.fix(member.factionName),
+                typeOfStats,
+                totalValue,
+                totalUpdated,
+                ffScouterBattleScore,
+                ffScouterUpdated,
+                if (statsShareIncludeFFScouterFairFight) ffScouterFairFight,
+              ]
+            : [
+                member.name ?? '',
+                member.memberId?.toString() ?? '',
+                HtmlParser.fix(member.factionName),
+                typeOfStats,
+                hasExactStats && member.statsStr != null && member.statsStr != -1
+                    ? formatBigNumbers(member.statsStr!)
+                    : '',
+                hasExactStats && member.statsStrUpdated != null && member.statsStrUpdated != -1
+                    ? spyController.statsOld(member.statsStrUpdated!)
+                    : '',
+                hasExactStats && member.statsSpd != null && member.statsSpd != -1
+                    ? formatBigNumbers(member.statsSpd!)
+                    : '',
+                hasExactStats && member.statsSpdUpdated != null && member.statsSpdUpdated != -1
+                    ? spyController.statsOld(member.statsSpdUpdated!)
+                    : '',
+                hasExactStats && member.statsDef != null && member.statsDef != -1
+                    ? formatBigNumbers(member.statsDef!)
+                    : '',
+                hasExactStats && member.statsDefUpdated != null && member.statsDefUpdated != -1
+                    ? spyController.statsOld(member.statsDefUpdated!)
+                    : '',
+                hasExactStats && member.statsDex != null && member.statsDex != -1
+                    ? formatBigNumbers(member.statsDex!)
+                    : '',
+                hasExactStats && member.statsDexUpdated != null && member.statsDexUpdated != -1
+                    ? spyController.statsOld(member.statsDexUpdated!)
+                    : '',
+                totalValue,
+                totalUpdated,
+                statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats
+                    ? member.memberXanax?.toString() ?? ''
+                    : '',
+                statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats
+                    ? member.memberRefill?.toString() ?? ''
+                    : '',
+                statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats
+                    ? member.memberEnhancement?.toString() ?? ''
+                    : '',
+                statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats ? member.memberCans?.toString() ?? '' : '',
+                statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats ? calculateSSLProbability(member) : '',
+                ffScouterBattleScore,
+                ffScouterUpdated,
+                if (statsShareIncludeFFScouterFairFight) ffScouterFairFight,
+              ];
 
         csvData.add(rowData);
       }

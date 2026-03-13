@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 
 class ShareStatsDialog extends StatefulWidget {
@@ -14,6 +16,10 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider = context.watch<SettingsProvider>();
+    final ffScouterActive =
+        settingsProvider.ffScouterEnabledStatus == 1 && settingsProvider.ffScouterEnabledStatusRemoteConfig;
+
     return AlertDialog(
       title: const Text('Share stats'),
       content: SingleChildScrollView(
@@ -85,6 +91,19 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
                 });
               },
             ),
+            if (ffScouterActive)
+              SwitchListTile(
+                title: const Text(
+                  'Share FFScouter fair fight',
+                  style: TextStyle(fontSize: 13),
+                ),
+                value: _w.statsShareIncludeFFScouterFairFight,
+                onChanged: (bool value) {
+                  setState(() {
+                    _w.statsShareIncludeFFScouterFairFight = value;
+                  });
+                },
+              ),
           ],
         ),
       ),

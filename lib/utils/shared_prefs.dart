@@ -367,6 +367,7 @@ class Prefs {
   final String _kStatsShareShowOnlyTotals = "pda_statsShareShowOnlyTotals";
   final String _kStatsShareShowEstimatesIfNoSpyAvailable = "pda_statsShareShowEstimatesIfNoSpyAvailable";
   final String _kStatsShareIncludeTargetsWithNoStatsAvailable = "pda_statsShareIncludeTargetsWithNoStatsAvailable";
+  final String _kStatsShareIncludeFFScouterFairFight = "pda_statsShareIncludeFFScouterFairFight";
 
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
@@ -2719,6 +2720,16 @@ class Prefs {
 
   Future setStatsShareIncludeTargetsWithNoStatsAvailable(bool value) async {
     return await PrefsDatabase.setBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, value);
+  }
+
+  //
+
+  Future<bool> getStatsShareIncludeFFScouterFairFight() async {
+    return await PrefsDatabase.getBool(_kStatsShareIncludeFFScouterFairFight, false);
+  }
+
+  Future setStatsShareIncludeFFScouterFairFight(bool value) async {
+    return await PrefsDatabase.setBool(_kStatsShareIncludeFFScouterFairFight, value);
   }
 
   /// ----------------------------
