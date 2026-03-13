@@ -193,10 +193,9 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
           future: providerInitialised,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             return Scaffold(
-              resizeToAvoidBottomInset:
-                  _settingsProvider.androidFastKeyboard
-                      ? false
-                      : !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+              resizeToAvoidBottomInset: _settingsProvider.androidFastKeyboard
+                  ? false
+                  : !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
               backgroundColor: _themeProvider.statusBar,
               appBar: snapshot.connectionState != ConnectionState.done ? buildCustomAppBar() : null,
               body: snapshot.connectionState == ConnectionState.done
