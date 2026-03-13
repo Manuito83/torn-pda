@@ -43,6 +43,7 @@ import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wolverines_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
+import 'package:torn_pda/widgets/revive/combat_ready_revive_button.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
@@ -76,6 +77,9 @@ class WarOptions {
         // Own icon in widget
         break;
       case "The Wolverines revive":
+        // Own icon in widget
+        break;
+      case "Combat Ready revive":
         // Own icon in widget
         break;
     }
@@ -124,6 +128,7 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "WTF revive"),
     WarOptions(description: "Midnight X revive"),
     WarOptions(description: "The Wolverines revive"),
+    WarOptions(description: "Combat Ready revive"),
   ];
 
   @override
@@ -852,6 +857,8 @@ class WarPageState extends State<WarPage> {
                 openMidnightXReviveDialog(context, _themeProvider!, null);
               case "The Wolverines revive":
                 openWolverinesReviveDialog(context, _themeProvider!, null);
+              case "Combat Ready revive":
+                openCombatReadyReviveDialog(context, _themeProvider!, null);
             }
           },
           itemBuilder: (BuildContext context) {
@@ -902,6 +909,9 @@ class WarPageState extends State<WarPage> {
                 return false;
               }
               if (choice.description!.contains("The Wolverines") && !_w.wolverinesReviveActive) {
+                return false;
+              }
+              if (choice.description!.contains("Combat Ready") && !_w.combatReadyReviveActive) {
                 return false;
               }
               return true;
@@ -1060,6 +1070,21 @@ class WarPageState extends State<WarPage> {
                       ),
                       const SizedBox(width: 10),
                       const Flexible(child: Text("Request a revive (The Wolverines)")),
+                    ],
+                  ),
+                );
+              }
+              if (choice.description!.contains("Combat Ready")) {
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Image.asset('images/icons/combat_ready_revive.png', width: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Request a revive (Combat Ready)")),
                     ],
                   ),
                 );
