@@ -701,7 +701,9 @@ class WebViewFullState extends State<WebViewFull>
             return Scaffold(
               resizeToAvoidBottomInset:
                   // Dialog displaces the webview up by default
-                  !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+                  _settingsProvider.androidFastKeyboard
+                      ? false
+                      : !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
               backgroundColor: _themeProvider.canvas,
               appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
                   // Show appBar only if we are not showing the webView in a dialog style

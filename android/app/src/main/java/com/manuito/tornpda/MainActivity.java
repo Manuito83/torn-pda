@@ -19,6 +19,9 @@ import com.manuito.tornpda.liveupdates.LiveUpdateNotificationChannel;
 import android.os.Bundle;
 import android.window.SplashScreenView;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsAnimationCompat;
+import androidx.core.view.WindowInsetsCompat;
 import android.appwidget.AppWidgetManager;
 import android.os.PowerManager;
 import android.app.ActivityManager;
@@ -35,6 +38,18 @@ public class MainActivity extends FlutterActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Aligns the Flutter view vertically with the window.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        ViewCompat.setWindowInsetsAnimationCallback(
+                getWindow().getDecorView(),
+                new WindowInsetsAnimationCompat.Callback(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP) {
+                    @NonNull
+                    @Override
+                    public WindowInsetsCompat onProgress(
+                            @NonNull WindowInsetsCompat insets,
+                            @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+                        return insets;
+                    }
+                });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Disable the Android splash screen fade out animation to avoid

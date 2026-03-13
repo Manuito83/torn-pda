@@ -115,6 +115,15 @@ class ChangeLogState extends State<ChangeLog> {
           "Added Combat Ready as a new revive provider",
           "Added option to close browser in floating action button",
           "Local backups can now be exported in a shareable mode without API keys or auth data",
+          ComplexFeature(
+            "Added fast keyboard option for the browser",
+            explanation: "Disabled by default.\n\n"
+                "Go to Settings / Advanced Browser Settings and scroll down to the Maintenance section.\n\n"
+                "When enabled, the browser will no longer resize when the keyboard appears, "
+                "which might have a positive impact on keyboard animation speed (this is highly "
+                "dependent on the device and keyboard used).\n\n"
+                "IMPORTANT: the keyboard will overlay the bottom of the page (tab bar).",
+          ),
           "Fixed Quick Items response box using personal items for faction links",
           "Fixed Torn Stats error message toast",
         ],

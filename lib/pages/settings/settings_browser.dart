@@ -3162,6 +3162,41 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      SearchableRow(
+          label: "Fast keyboard",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Fast keyboard")),
+                    Switch(
+                      value: _settingsProvider.androidFastKeyboard,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.androidFastKeyboard = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "Prevents the browser from resizing when the keyboard appears, which can improve keyboard speed on some devices. The keyboard will overlay the bottom of the page instead",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
     ];
     return buildSectionWithRows(
       title: 'MAINTENANCE',

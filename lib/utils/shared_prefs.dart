@@ -149,6 +149,7 @@ class Prefs {
   final String _kFabTripleTapAction = "pda_fabTripleTapAction";
 
   final String _kBrowserDoNotPauseWebviews = "pda_browserDoNotPauseWebviews";
+  final String _kAndroidFastKeyboard = "pda_androidFastKeyboard";
 
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
@@ -1472,6 +1473,14 @@ class Prefs {
 
   Future setBrowserDoNotPauseWebviews(bool value) async {
     return await PrefsDatabase.setBool(_kBrowserDoNotPauseWebviews, value);
+  }
+
+  Future<bool> getAndroidFastKeyboard() async {
+    return await PrefsDatabase.getBool(_kAndroidFastKeyboard, false);
+  }
+
+  Future setAndroidFastKeyboard(bool value) async {
+    return await PrefsDatabase.setBool(_kAndroidFastKeyboard, value);
   }
 
   // Settings - Browser Gestures

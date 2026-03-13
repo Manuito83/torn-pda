@@ -601,6 +601,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _androidFastKeyboard = false;
+  bool get androidFastKeyboard => _androidFastKeyboard;
+  set androidFastKeyboard(bool value) {
+    _androidFastKeyboard = value;
+    Prefs().setAndroidFastKeyboard(_androidFastKeyboard);
+    notifyListeners();
+  }
+
   var _removeForeignItemsDetails = false;
   bool get removeForeignItemsDetails => _removeForeignItemsDetails;
   set removeForeignItemsDetails(bool value) {
@@ -1621,6 +1629,7 @@ class SettingsProvider extends ChangeNotifier {
     _highlightWordList = await Prefs().getHighlightWordList();
 
     _removeAirplane = await Prefs().getRemoveAirplane();
+    _androidFastKeyboard = await Prefs().getAndroidFastKeyboard();
     _removeForeignItemsDetails = await Prefs().getRemoveForeignItemsDetails();
     _preventBasketKeyboard = await Prefs().getPreventBasketKeyboard();
     _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
