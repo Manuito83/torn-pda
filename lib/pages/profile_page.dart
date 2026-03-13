@@ -77,6 +77,7 @@ import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wolverines_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
+import 'package:torn_pda/widgets/revive/combat_ready_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
@@ -1599,6 +1600,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Padding(
                             padding: const EdgeInsets.only(left: 13, top: 10),
                             child: WolverinesReviveButton(
+                              themeProvider: _themeProvider,
+                              user: _user,
+                              webViewProvider: _webViewProvider,
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                        if (_user!.status!.state == 'Hospital' && _w.combatReadyReviveActive)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13, top: 10),
+                            child: CombatReadyReviveButton(
                               themeProvider: _themeProvider,
                               user: _user,
                               webViewProvider: _webViewProvider,
