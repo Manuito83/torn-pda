@@ -1765,7 +1765,8 @@ class SettingsPageState extends State<SettingsPage> {
                 children: [
                   const Text("Choose reviving providers"),
                   IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                    icon: const Icon(MdiIcons.hospitalBoxOutline),
+                    color: _themeProvider.getTextColor(Colors.red.shade600),
                     onPressed: () {
                       showDialog(
                         useRootNavigator: false,

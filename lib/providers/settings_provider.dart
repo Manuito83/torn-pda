@@ -1428,6 +1428,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _reviveCombatReadyPrice = "1.5 million or 2 Xanax";
+  String get reviveCombatReadyPrice => _reviveCombatReadyPrice;
+  set reviveCombatReadyPrice(String value) {
+    _reviveCombatReadyPrice = value;
+    notifyListeners();
+  }
+
   bool _tctClockHighlightsEvents = true;
   bool get tctClockHighlightsEvents => _tctClockHighlightsEvents;
   set tctClockHighlightsEvents(bool value) {

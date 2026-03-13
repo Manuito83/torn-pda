@@ -1,5 +1,4 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -103,8 +102,7 @@ Future<void> openCombatReadyReviveDialog(BuildContext _, ThemeProvider themeProv
                       Flexible(
                         child: RichText(
                           text: TextSpan(
-                            text:
-                                "Combat Ready is a faction providing revive services."
+                            text: "Combat Ready is a faction providing revive services."
                                 "\n\nCheck out their ",
                             style: TextStyle(
                               color: context.read<ThemeProvider>().mainText,
@@ -140,10 +138,9 @@ Future<void> openCombatReadyReviveDialog(BuildContext _, ThemeProvider themeProv
                                 ),
                               ),
                               const TextSpan(text: ' for more information.'),
-                              // TODO: Remote Config
-                              const TextSpan(
-                                text: "\n\nRevives cost \$1.5M or 2 Xanax, unless on a contract. "
-                                    "Refusal to pay will result in being Blacklisted.",
+                              TextSpan(
+                                text: "\n\nRevives cost ${context.read<SettingsProvider>().reviveCombatReadyPrice}, "
+                                    "unless on a contract. Refusal to pay will result in being Blacklisted.",
                               ),
                             ],
                           ),

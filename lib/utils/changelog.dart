@@ -112,6 +112,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Trades: added TornW3B sync support",
           "Added fair fight calculation from FFScouter in war targets cards",
           "Added FFScouter data to War stats sharing",
+          "Added Combat Ready as a new revive provider",
           "Added option to close browser in floating action button",
           "Local backups can now be exported in a shareable mode without API keys or auth data",
           "Fixed Quick Items response box using personal items for faction links",

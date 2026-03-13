@@ -4,7 +4,6 @@ import 'dart:developer';
 // Package imports:
 import 'package:http/http.dart' as http;
 // Project imports:
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/revive_services/combat_ready_revive_model.dart';
 
 class CombatReadyRevive {
