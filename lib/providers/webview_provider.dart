@@ -193,6 +193,11 @@ class WebViewProvider extends ChangeNotifier {
       resumeAllWebviews();
       broadcastTabState();
     } else {
+      // Dismiss keyboard before hiding the browser
+      if (_dismissKeyboardOnBrowserClose) {
+        FocusManager.instance.primaryFocus?.unfocus();
+      }
+
       // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
       notifyListeners();
@@ -510,6 +515,14 @@ class WebViewProvider extends ChangeNotifier {
   set browserDoNotPauseWebview(bool value) {
     _browserDoNotPauseWebview = value;
     Prefs().setBrowserDoNotPauseWebviews(_browserDoNotPauseWebview);
+    notifyListeners();
+  }
+
+  bool _dismissKeyboardOnBrowserClose = true;
+  bool get dismissKeyboardOnBrowserClose => _dismissKeyboardOnBrowserClose;
+  set dismissKeyboardOnBrowserClose(bool value) {
+    _dismissKeyboardOnBrowserClose = value;
+    Prefs().setDismissKeyboardOnBrowserClose(_dismissKeyboardOnBrowserClose);
     notifyListeners();
   }
 
@@ -2228,6 +2241,7 @@ class WebViewProvider extends ChangeNotifier {
     _fabTripleTapAction = await Prefs().getFabTripleTapAction();
 
     _browserDoNotPauseWebview = await Prefs().getBrowserDoNotPauseWebviews();
+    _dismissKeyboardOnBrowserClose = await Prefs().getDismissKeyboardOnBrowserClose();
 
     String splitType = await Prefs().getSplitScreenWebview();
     switch (splitType) {

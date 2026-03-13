@@ -359,6 +359,41 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+      SearchableRow(
+        label: "Dismiss keyboard on close",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Dismiss keyboard on close")),
+                  Switch(
+                    value: _webViewProvider.dismissKeyboardOnBrowserClose,
+                    onChanged: (value) {
+                      setState(() {
+                        _webViewProvider.dismissKeyboardOnBrowserClose = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  "Automatically dismiss the keyboard when the browser is sent to the background",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
 
     return buildSectionWithRows(

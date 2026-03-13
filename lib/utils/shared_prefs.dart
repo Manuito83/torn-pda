@@ -150,6 +150,7 @@ class Prefs {
 
   final String _kBrowserDoNotPauseWebviews = "pda_browserDoNotPauseWebviews";
   final String _kAndroidFastKeyboard = "pda_androidFastKeyboard";
+  final String _kDismissKeyboardOnBrowserClose = "pda_dismissKeyboardOnBrowserClose";
 
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
@@ -1481,6 +1482,14 @@ class Prefs {
 
   Future setAndroidFastKeyboard(bool value) async {
     return await PrefsDatabase.setBool(_kAndroidFastKeyboard, value);
+  }
+
+  Future<bool> getDismissKeyboardOnBrowserClose() async {
+    return await PrefsDatabase.getBool(_kDismissKeyboardOnBrowserClose, true);
+  }
+
+  Future setDismissKeyboardOnBrowserClose(bool value) async {
+    return await PrefsDatabase.setBool(_kDismissKeyboardOnBrowserClose, value);
   }
 
   // Settings - Browser Gestures
