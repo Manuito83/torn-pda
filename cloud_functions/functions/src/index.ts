@@ -34,7 +34,7 @@ import {
 } from "./prefs_backup";
 import { sendTroubleshootingAutoNotification } from "./troubleshooting_notification";
 import { sendForumsSubscription } from "./forums";
-import { registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
+import { registerActivityToken, registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
 
 export const alerts = {
   checkIOS: checkIOS,
@@ -107,6 +107,7 @@ export const forums = {
 
 export const liveActivities = {
   registerPushToStartToken: registerPushToStartToken,
+  registerActivityToken: registerActivityToken,
   sendTestTravelPushToManuito: sendTestTravelPushToManuito,
 };
 

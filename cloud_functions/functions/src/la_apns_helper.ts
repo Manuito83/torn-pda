@@ -11,8 +11,7 @@ const options = {
     keyId: apnsConfig.keyId,
     teamId: apnsConfig.teamId,
   },
-  // TODO: if testing locally with debug device > false x 2!
-  // but DO NOT DEPLOY AS FALSE!
+  // Must be true in production (set both to false only for local debug builds)
   production: true,
   rejectUnauthorized: true,
 };
@@ -155,6 +154,58 @@ export async function sendRacingPushToStart(
     return false;
   } catch (error) {
     logger.error("@parse/node-apn - An unexpected error occurred while sending racing push:", error);
+    return false;
+  }
+}
+
+export async function sendRacingEnd(
+  activityPushToken: string,
+  contentState: RacingLAContentState
+): Promise<boolean> {
+  const topic = `${apnsConfig.bundleId}.push-type.liveactivity`;
+
+  const notification = new apn.Notification();
+  notification.topic = topic;
+  notification.pushType = "liveactivity";
+
+  notification.aps = {
+    timestamp: Math.floor(Date.now() / 1000),
+    event: "end",
+    "relevance-score": 0.1,
+    "dismissal-date": Math.floor(Date.now() / 1000),
+    "stale-date": Math.floor(Date.now() / 1000),
+    "content-state": contentState,
+    alert: {
+      title: contentState.titleText,
+      body: contentState.bodyText,
+    }
+  };
+
+  notification.payload = {};
+
+  try {
+    logger.info(
+      `Sending racing LA end via @parse/node-apn to token: ${activityPushToken.substring(0, 10)}...`,
+      { payload: notification.payload }
+    );
+
+    const result = await apnProvider.send(notification, activityPushToken);
+
+    if (result.failed.length > 0) {
+      logger.warn(
+        `@parse/node-apn - Racing LA end failed (reason: ${result.failed[0].response?.reason || "unknown"})`,
+      );
+      return false;
+    }
+
+    if (result.sent.length > 0) {
+      logger.info(`@parse/node-apn - Successfully sent racing end push`);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    logger.error("@parse/node-apn - An unexpected error occurred while sending racing end push:", error);
     return false;
   }
 }

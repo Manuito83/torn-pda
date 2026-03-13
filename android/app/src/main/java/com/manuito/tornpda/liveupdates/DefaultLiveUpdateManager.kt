@@ -4,6 +4,7 @@ import android.util.Log
 import java.util.UUID
 
 class DefaultLiveUpdateManager(
+    private val activityType: LiveUpdateActivityType,
     private val adapter: LiveUpdateAdapter,
     private val eligibilityProvider: LiveUpdateEligibilityProvider,
     private val sessionStore: LiveUpdateSessionStore,
@@ -19,13 +20,13 @@ class DefaultLiveUpdateManager(
     }
 
     override fun startOrUpdate(payload: Map<String, Any?>): LiveUpdateStartResult = synchronized(lock) {
-        val parsedPayload = LiveUpdatePayload.fromMap(payload)
-        if (!parsedPayload.isValid) {
+        val parsedPayload = LiveUpdatePayload.fromMap(activityType, payload)
+        if (!parsedPayload.isValidFor(activityType)) {
             Log.w(TAG, "Received invalid Live Update payload: $payload")
             return@synchronized LiveUpdateStartResult(
                 status = LiveUpdateRequestStatus.ERROR,
                 reason = LiveUpdateUnsupportedReason.INTERNAL_ERROR,
-                errorMessage = "Missing arrival/departure timestamps",
+                errorMessage = "Missing required ${activityType.wireName} live update fields",
             )
         }
 
@@ -46,7 +47,8 @@ class DefaultLiveUpdateManager(
         sessionStore.markActive(
             LiveUpdateSessionState(
                 sessionId = sessionId,
-                travelIdentifier = parsedPayload.travelIdentifier,
+                activityType = activityType,
+                contentIdentifier = parsedPayload.contentIdentifier,
                 startedAtMs = existingSession?.startedAtMs ?: now,
                 lastUpdatedAtMs = now,
             ),

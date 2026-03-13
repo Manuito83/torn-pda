@@ -1584,28 +1584,41 @@ class AlertsSettingsState extends State<AlertsSettings> {
             },
           ),
         ),
-        if (Platform.isIOS)
+        if (Platform.isIOS || Platform.isAndroid)
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
             child: CheckboxListTile(
               checkColor: Colors.white,
               activeColor: Colors.blueGrey,
-              value: _settingsProvider.iosLiveActivityRacingEnabled,
-              title: const Column(
+              value: Platform.isAndroid
+                  ? _settingsProvider.androidLiveActivityRacingEnabled
+                  : _settingsProvider.iosLiveActivityRacingEnabled,
+              title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Racing"),
-                  Text("Live Activity", style: TextStyle(fontSize: 10)),
+                  const Text("Racing"),
+                  Text(Platform.isAndroid ? "Live Update" : "Live Activity", style: const TextStyle(fontSize: 10)),
                 ],
               ),
               onChanged: (enabled) async {
                 if (enabled == null) return;
 
                 setState(() {
-                  _settingsProvider.iosLiveActivityRacingEnabled = enabled;
+                  if (Platform.isAndroid) {
+                    _settingsProvider.androidLiveActivityRacingEnabled = enabled;
+                  } else {
+                    _settingsProvider.iosLiveActivityRacingEnabled = enabled;
+                  }
                 });
 
-                if (_settingsProvider.iosLiveActivityRacingEnabled) {
+                final bool racingEnabled = Platform.isAndroid
+                    ? _settingsProvider.androidLiveActivityRacingEnabled
+                    : _settingsProvider.iosLiveActivityRacingEnabled;
+
+                if (racingEnabled) {
+                  if (Platform.isAndroid) {
+                    _checkAndroidBatteryOptimization();
+                  }
                   await Get.find<LiveActivityRacingController>().activate();
                   Get.find<LiveActivityBridgeController>().initializeHandler();
                 } else {

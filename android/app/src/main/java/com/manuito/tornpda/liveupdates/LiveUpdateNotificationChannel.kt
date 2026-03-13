@@ -9,19 +9,21 @@ import androidx.core.content.getSystemService
 import com.manuito.tornpda.R
 
 object LiveUpdateNotificationChannel {
-    const val CHANNEL_ID = "travel_live_updates"
+    const val TRAVEL_CHANNEL_ID = "live_updates_travel"
+    const val RACING_CHANNEL_ID = "live_updates_racing"
 
-    fun ensureCreated(context: Context) {
+    fun ensureCreated(context: Context, activityType: LiveUpdateActivityType) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService<NotificationManager>() ?: return
-        if (manager.getNotificationChannel(CHANNEL_ID) != null) return
+        val channelId = channelIdFor(activityType)
+        if (manager.getNotificationChannel(channelId) != null) return
 
         val channel = NotificationChannel(
-            CHANNEL_ID,
-            context.getString(R.string.live_update_channel_name),
+            channelId,
+            channelName(context, activityType),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = context.getString(R.string.live_update_channel_description)
+            description = channelDescription(context, activityType)
             enableVibration(false)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
@@ -29,5 +31,26 @@ object LiveUpdateNotificationChannel {
             setSound(null, null)
         }
         manager.createNotificationChannel(channel)
+    }
+
+    fun channelIdFor(activityType: LiveUpdateActivityType): String {
+        return when (activityType) {
+            LiveUpdateActivityType.TRAVEL -> TRAVEL_CHANNEL_ID
+            LiveUpdateActivityType.RACING -> RACING_CHANNEL_ID
+        }
+    }
+
+    private fun channelName(context: Context, activityType: LiveUpdateActivityType): String {
+        return when (activityType) {
+            LiveUpdateActivityType.TRAVEL -> context.getString(R.string.travel_live_update_channel_name)
+            LiveUpdateActivityType.RACING -> context.getString(R.string.racing_live_update_channel_name)
+        }
+    }
+
+    private fun channelDescription(context: Context, activityType: LiveUpdateActivityType): String {
+        return when (activityType) {
+            LiveUpdateActivityType.TRAVEL -> context.getString(R.string.travel_live_update_channel_description)
+            LiveUpdateActivityType.RACING -> context.getString(R.string.racing_live_update_channel_description)
+        }
     }
 }

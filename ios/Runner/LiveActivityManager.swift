@@ -428,6 +428,10 @@ class RacingLiveActivityManager {
 
   private var currentActivity: Activity<RacingActivityAttributes>?
 
+  public private(set) var activityPushToken: String?
+
+  var onNewActivityPushToken: ((String?) -> Void)?
+
   enum RacingLiveActivityError: Error, LocalizedError {
     case notEnabledByUser
     case activityRequestFailed(String)
@@ -475,6 +479,9 @@ class RacingLiveActivityManager {
         await endActivityInternal(activity: existingActivity, isBeingReplaced: true)
       }
     }
+
+    self.activityPushToken = nil
+    self.onNewActivityPushToken?(nil)
 
     let attributes = RacingActivityAttributes(activityName: "Torn PDA Racing")
     let initialState = RacingActivityAttributes.ContentState(
@@ -581,6 +588,24 @@ class RacingLiveActivityManager {
       if let tracked = self.currentActivity, adoptedActivityThisCheck?.id != tracked.id {
         self.currentActivity = nil
       }
+
+      if self.currentActivity == nil {
+        if self.activityPushToken != nil {
+          self.activityPushToken = nil
+          self.onNewActivityPushToken?(nil)
+        }
+      } else {
+        if let currentTokenData = self.currentActivity?.pushToken {
+          let tokenString = currentTokenData.map { String(format: "%02x", $0) }.joined()
+          if self.activityPushToken != tokenString {
+            self.activityPushToken = tokenString
+            self.onNewActivityPushToken?(tokenString)
+          }
+        } else if self.activityPushToken != nil {
+          self.activityPushToken = nil
+          self.onNewActivityPushToken?(nil)
+        }
+      }
     }
   }
 
@@ -623,14 +648,22 @@ class RacingLiveActivityManager {
     guard activity.activityState == .active else {
       if activity.id == self.currentActivity?.id {
         self.currentActivity = nil
+        if !isBeingReplaced && self.activityPushToken != nil {
+          self.activityPushToken = nil
+          self.onNewActivityPushToken?(nil)
+        }
       }
       return
     }
 
     await activity.end(nil, dismissalPolicy: .immediate)
 
-    if !isBeingReplaced && activity.id == self.currentActivity?.id {
+    if activity.id == self.currentActivity?.id {
       self.currentActivity = nil
+      if !isBeingReplaced && self.activityPushToken != nil {
+        self.activityPushToken = nil
+        self.onNewActivityPushToken?(nil)
+      }
     }
   }
 
@@ -649,8 +682,26 @@ class RacingLiveActivityManager {
         if stateUpdate == .ended || stateUpdate == .dismissed {
           if activityToObserve.id == self.currentActivity?.id {
             self.currentActivity = nil
+            if self.activityPushToken != nil {
+              self.activityPushToken = nil
+              self.onNewActivityPushToken?(nil)
+            }
           }
           break
+        }
+      }
+    }
+
+    Task { [weak self] in
+      guard let self = self else { return }
+      for await tokenData in activityToObserve.pushTokenUpdates {
+        guard activityToObserve.id == self.currentActivity?.id else {
+          break
+        }
+        let newToken = tokenData.map { String(format: "%02x", $0) }.joined()
+        if self.activityPushToken != newToken {
+          self.activityPushToken = newToken
+          self.onNewActivityPushToken?(newToken)
         }
       }
     }

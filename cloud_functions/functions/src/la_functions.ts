@@ -60,8 +60,65 @@ export const registerPushToStartToken = onCall({
     }
 });
 
+export const registerActivityToken = onCall({
+    region: "us-east4",
+    memory: "512MiB",
+    timeoutSeconds: 540
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError(
+            "unauthenticated",
+            "The function must be called while authenticated."
+        );
+    }
+
+    const { token, activityType } = request.data;
+    if (!activityType || typeof activityType !== "string") {
+        throw new HttpsError(
+            "invalid-argument",
+            'The function must be called with an "activityType".'
+        );
+    }
+    if (token != null && typeof token !== "string") {
+        throw new HttpsError(
+            "invalid-argument",
+            'The optional "token" must be a string or null.'
+        );
+    }
+    if (!["travel", "racing"].includes(activityType)) {
+        throw new HttpsError(
+            "invalid-argument",
+            `Activity type "${activityType}" is not supported.`
+        );
+    }
+
+    const uid = request.auth.uid;
+    const userDocRef = admin.firestore().collection("players").doc(uid);
+    const tokenFieldName = `la_${activityType}_activity_push_token`;
+
+    try {
+        await userDocRef.update({
+            [tokenFieldName]: token ?? admin.firestore.FieldValue.delete(),
+        });
+
+        logger.info(`Successfully registered activity token for user ${uid}, field: ${tokenFieldName}`);
+        return {
+            success: true,
+            message: token
+                ? `Activity token for ${activityType} registered.`
+                : `Activity token for ${activityType} cleared.`,
+        };
+    } catch (error) {
+        logger.error(`Error registering activity token for user ${uid}:`, error);
+        throw new HttpsError(
+            "internal",
+            "Failed to save activity token."
+        );
+    }
+});
+
 /*
- * DEBUG, see readme
+ * Sends a test travel push notification for diagnostics.
  */
 export const sendTestTravelPushToManuito = onCall({
     region: "us-east4",

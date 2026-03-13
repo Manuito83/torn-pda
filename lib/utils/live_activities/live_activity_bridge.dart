@@ -18,12 +18,10 @@ class LiveActivityBridgeController extends GetxController {
 
   final MethodChannel _channel;
 
-  // Stores the most recent push token received from the native side for the current Live Activity
-  // This token is specific to an active Live Activity instance and would be used if sending
-  // remote push notifications (e.g., for 'end' or 'update' events) directly to APNs for this LA
-  // Currently, this token is stored locally in the bridge service but not actively sent to a backend
+  // Most recent push token for the current Live Activity instance
   String? _currentActivityPushToken;
   String? get currentActivityPushToken => _currentActivityPushToken;
+  final Map<LiveActivityType, String?> _currentActivityPushTokens = {};
 
   bool _isInitialized = false;
 
@@ -45,7 +43,21 @@ class LiveActivityBridgeController extends GetxController {
   Future<void> _handleNativeMethodCalls(MethodCall call) async {
     log("LiveActivityBridgeService: Received call from native: ${call.method}");
     if (call.method == "liveActivityTokenUpdated") {
-      _currentActivityPushToken = call.arguments as String?;
+      final args = (call.arguments as Map?)?.cast<String, dynamic>();
+      final String? activityTypeRaw = args?['activityType'] as String?;
+      final String? token = args?['token'] as String?;
+      _currentActivityPushToken = token;
+
+      if (activityTypeRaw != null) {
+        final LiveActivityType? activityType = _activityTypeFromWireValue(activityTypeRaw);
+        if (activityType != null) {
+          _currentActivityPushTokens[activityType] = token;
+          await firebaseFunctions.registerLiveActivityActivityToken(
+            token: token,
+            activityType: activityType.name,
+          );
+        }
+      }
     } else if (call.method == "liveUpdateStatusChanged") {
       final args = (call.arguments as Map?)?.cast<String, dynamic>();
       if (args != null) {
@@ -213,6 +225,10 @@ class LiveActivityBridgeController extends GetxController {
     );
   }
 
+  String? currentActivityPushTokenFor(LiveActivityType activityType) {
+    return _currentActivityPushTokens[activityType];
+  }
+
   Future<String?> _getUpdatedLiveActivityTokenIfNeeded({
     required LiveActivityType activityType,
     required bool force,
@@ -246,6 +262,17 @@ class LiveActivityBridgeController extends GetxController {
     } catch (e) {
       log("LiveActivityBridge: Error getting token for '${activityType.name}': $e");
       return null;
+    }
+  }
+
+  LiveActivityType? _activityTypeFromWireValue(String rawValue) {
+    switch (rawValue) {
+      case 'travel':
+        return LiveActivityType.travel;
+      case 'racing':
+        return LiveActivityType.racing;
+      default:
+        return null;
     }
   }
 

@@ -714,7 +714,7 @@ Future<void> _initializeGetXControllers() async {
     if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26)) {
       Get.put(LiveActivityTravelController(), permanent: true);
     }
-    if (Platform.isIOS && kSdkIos >= 16.2) {
+    if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26)) {
       Get.put(LiveActivityRacingController(), permanent: true);
     }
   } catch (e, stackTrace) {

@@ -28,7 +28,7 @@ class DefaultLiveUpdateManagerTest {
         )
         val adapter = RecordingAdapter()
         val sessionStore = RecordingSessionStore()
-        val manager = DefaultLiveUpdateManager(adapter, eligibility, sessionStore) { "session-1" }
+        val manager = DefaultLiveUpdateManager(LiveUpdateActivityType.TRAVEL, adapter, eligibility, sessionStore) { "session-1" }
 
         val result = manager.startOrUpdate(payload())
 
@@ -43,7 +43,7 @@ class DefaultLiveUpdateManagerTest {
         val eligibility = FakeEligibilityProvider(successResult())
         val adapter = RecordingAdapter()
         val sessionStore = RecordingSessionStore()
-        val manager = DefaultLiveUpdateManager(adapter, eligibility, sessionStore) { "session-xyz" }
+        val manager = DefaultLiveUpdateManager(LiveUpdateActivityType.TRAVEL, adapter, eligibility, sessionStore) { "session-xyz" }
 
         adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
         val firstResult = manager.startOrUpdate(payload())
@@ -61,7 +61,7 @@ class DefaultLiveUpdateManagerTest {
         val eligibility = FakeEligibilityProvider(successResult())
         val adapter = RecordingAdapter()
         val sessionStore = RecordingSessionStore()
-        val manager = DefaultLiveUpdateManager(adapter, eligibility, sessionStore) { "session-end" }
+        val manager = DefaultLiveUpdateManager(LiveUpdateActivityType.TRAVEL, adapter, eligibility, sessionStore) { "session-end" }
         val listener = RecordingListener()
         manager.addListener(listener)
 
@@ -80,7 +80,7 @@ class DefaultLiveUpdateManagerTest {
         val eligibility = FakeEligibilityProvider(successResult())
         val adapter = RecordingAdapter()
         val sessionStore = RecordingSessionStore()
-        val manager = DefaultLiveUpdateManager(adapter, eligibility, sessionStore) { "session-timeout" }
+        val manager = DefaultLiveUpdateManager(LiveUpdateActivityType.TRAVEL, adapter, eligibility, sessionStore) { "session-timeout" }
 
         adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
         manager.startOrUpdate(payload())

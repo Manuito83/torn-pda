@@ -5845,9 +5845,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ..timeLeft = apiResponse.travel!.timeLeft
               ..timestamp = apiResponse.travel!.timestamp;
 
+            // Map icons from the profile response so Racing LA can detect
+            // race state immediately (icon17 = racing/waiting, icon18 = finished)
+            bars_model.Basicicons? chainBasicicons;
+            if (apiResponse.icons != null) {
+              chainBasicicons = bars_model.Basicicons(
+                icon17: apiResponse.icons!.icon17,
+                icon18: apiResponse.icons!.icon18,
+              );
+            }
+
             bars_model.BarsStatusCooldownsModel externalStatusModel = bars_model.BarsStatusCooldownsModel()
               ..status = chainStatusModel
-              ..travel = chainTravelModel;
+              ..travel = chainTravelModel
+              ..basicicons = chainBasicicons;
 
             _chainController.getOrSetStatus(externalStatusModel: externalStatusModel);
           }

@@ -46,13 +46,18 @@ class LiveUpdateNotificationContentBuilder(
      */
     fun computeRemainingTime(payload: LiveUpdatePayload): RemainingTime? {
         if (hasActuallyArrived(payload)) return null
-        val arrival = payload.arrivalTimeTimestamp ?: return null
-        val nowSec = timeProvider() / 1000
-        val remaining = arrival - nowSec
+        val remaining = computeRemainingSeconds(payload) ?: return null
         if (remaining <= 0) return null
         val hours = remaining / 3600
         val minutes = (remaining % 3600) / 60
         return RemainingTime(hours, minutes)
+    }
+
+    fun computeRemainingSeconds(payload: LiveUpdatePayload): Long? {
+        if (hasActuallyArrived(payload)) return null
+        val arrival = payload.arrivalTimeTimestamp ?: return null
+        val nowSec = timeProvider() / 1000
+        return arrival - nowSec
     }
 
     /** `true` when the notification should display an ETA (i.e. user is still en-route). */

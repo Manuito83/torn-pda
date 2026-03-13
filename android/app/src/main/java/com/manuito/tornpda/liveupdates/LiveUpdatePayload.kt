@@ -7,6 +7,7 @@ import java.util.HashMap
  * Keeps the most common fields typed while preserving the raw map for adapters that need it
  */
 data class LiveUpdatePayload(
+    val activityType: LiveUpdateActivityType,
     val currentDestinationDisplayName: String?,
     val currentDestinationFlagAsset: String?,
     val originDisplayName: String?,
@@ -21,11 +22,27 @@ data class LiveUpdatePayload(
     val hasArrived: Boolean,
     val travelIdentifier: String?,
     val destinationEmoji: String?,
+    val stateIdentifier: String?,
+    val phase: String?,
+    val titleText: String?,
+    val bodyText: String?,
+    val targetTimeTimestamp: Long?,
+    val showTimer: Boolean,
     val extras: Map<String, Any?>,
 ) {
 
-    val isValid: Boolean
-        get() = arrivalTimeTimestamp != null && departureTimeTimestamp != null
+    val contentIdentifier: String?
+        get() = when (activityType) {
+            LiveUpdateActivityType.TRAVEL -> travelIdentifier
+            LiveUpdateActivityType.RACING -> stateIdentifier
+        }
+
+    fun isValidFor(activityType: LiveUpdateActivityType = this.activityType): Boolean {
+        return when (activityType) {
+            LiveUpdateActivityType.TRAVEL -> arrivalTimeTimestamp != null && departureTimeTimestamp != null
+            LiveUpdateActivityType.RACING -> !stateIdentifier.isNullOrBlank() && !titleText.isNullOrBlank()
+        }
+    }
 
     fun withExtra(key: String, value: Any?): LiveUpdatePayload {
         val mutable = HashMap(extras)
@@ -38,9 +55,13 @@ data class LiveUpdatePayload(
     }
 
     companion object {
-        fun fromMap(arguments: Map<String, Any?>?): LiveUpdatePayload {
+        fun fromMap(
+            activityType: LiveUpdateActivityType = LiveUpdateActivityType.TRAVEL,
+            arguments: Map<String, Any?>?,
+        ): LiveUpdatePayload {
             val safeMap = arguments?.toMap().orEmpty()
             return LiveUpdatePayload(
+                activityType = activityType,
                 currentDestinationDisplayName = safeMap["currentDestinationDisplayName"] as? String,
                 currentDestinationFlagAsset = safeMap["currentDestinationFlagAsset"] as? String,
                 originDisplayName = safeMap["originDisplayName"] as? String,
@@ -55,6 +76,12 @@ data class LiveUpdatePayload(
                 hasArrived = safeMap["hasArrived"] == true,
                 travelIdentifier = safeMap["travelIdentifier"] as? String,
                 destinationEmoji = safeMap["destinationEmoji"] as? String,
+                stateIdentifier = safeMap["stateIdentifier"] as? String,
+                phase = safeMap["phase"] as? String,
+                titleText = safeMap["titleText"] as? String,
+                bodyText = safeMap["bodyText"] as? String,
+                targetTimeTimestamp = safeMap["targetTimeTimestamp"].toLongOrNull(),
+                showTimer = safeMap["showTimer"] == true,
                 extras = safeMap,
             )
         }

@@ -11,6 +11,8 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/racing_live_activity_background.dart';
+import 'package:torn_pda/utils/live_activities/racing_live_activity_parser.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -20,6 +22,11 @@ enum _MockLiveUpdateDirection {
   outbound,
   returnToTorn,
   repatriation,
+}
+
+enum _MockLiveUpdateTestType {
+  travel,
+  racing,
 }
 
 class _MockTravelScenario {
@@ -33,6 +40,20 @@ class _MockTravelScenario {
     required this.description,
     required this.secondsRemaining,
     required this.defaultHasArrived,
+  });
+}
+
+class _MockRacingScenario {
+  final String label;
+  final String description;
+  final RacingLivePhase phase;
+  final int? secondsRemaining;
+
+  const _MockRacingScenario({
+    required this.label,
+    required this.description,
+    required this.phase,
+    this.secondsRemaining,
   });
 }
 
@@ -89,9 +110,43 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
     ),
   ];
 
+  static const List<_MockRacingScenario> _mockRacingScenarioPresets = [
+    _MockRacingScenario(
+      label: "Start time pending",
+      description: "Simulates the waiting state without a reliable countdown yet.",
+      phase: RacingLivePhase.waitingUnknown,
+    ),
+    _MockRacingScenario(
+      label: "Race starts in 1 minute",
+      description: "Preview the waiting state shortly before the race begins.",
+      phase: RacingLivePhase.waiting,
+      secondsRemaining: 75,
+    ),
+    _MockRacingScenario(
+      label: "Race starts in ~10 minutes",
+      description: "Longer pre-race countdown used to test promoted ongoing behavior.",
+      phase: RacingLivePhase.waiting,
+      secondsRemaining: 600,
+    ),
+    _MockRacingScenario(
+      label: "Race ends in ~2 minutes",
+      description: "Active racing countdown with the chronometer already running.",
+      phase: RacingLivePhase.racing,
+      secondsRemaining: 120,
+    ),
+    _MockRacingScenario(
+      label: "Race finished",
+      description: "Terminal state useful for verifying the completed styling.",
+      phase: RacingLivePhase.finished,
+    ),
+  ];
+
   final TextEditingController _mockLiveUpdateLocationController = TextEditingController(text: "Mexico");
   _MockTravelScenario _selectedMockTravelScenario =
       _mockTravelScenarioPresets.length > 1 ? _mockTravelScenarioPresets[1] : _mockTravelScenarioPresets.first;
+  _MockRacingScenario _selectedMockRacingScenario =
+      _mockRacingScenarioPresets.length > 1 ? _mockRacingScenarioPresets[1] : _mockRacingScenarioPresets.first;
+  _MockLiveUpdateTestType _selectedMockLiveUpdateTestType = _MockLiveUpdateTestType.travel;
   _MockLiveUpdateDirection _mockLiveUpdateDirection = _MockLiveUpdateDirection.outbound;
   bool _mockLiveUpdateHasArrived =
       (_mockTravelScenarioPresets.length > 1 ? _mockTravelScenarioPresets[1] : _mockTravelScenarioPresets.first)
@@ -100,6 +155,10 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
   LiveUpdateRequestStatus? _lastMockLiveUpdateStatus;
   LiveUpdateUnsupportedReason? _lastMockLiveUpdateReason;
   String? _lastMockLiveUpdateSessionId;
+  bool _sendingMockRacingLiveUpdate = false;
+  LiveUpdateRequestStatus? _lastMockRacingLiveUpdateStatus;
+  LiveUpdateUnsupportedReason? _lastMockRacingLiveUpdateReason;
+  String? _lastMockRacingLiveUpdateSessionId;
 
   @override
   void dispose() {
@@ -315,11 +374,63 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Use this tester to confirm Travel Live Updates are working on this device.",
-          style: TextStyle(fontSize: 14),
+        Text(
+          Platform.isAndroid
+              ? "Use this tester to confirm Travel and Racing Live Updates are working on this device."
+              : "Use this tester to confirm Travel and Racing Live Activities are working on this device.",
+          style: const TextStyle(fontSize: 14),
         ),
         const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              Expanded(
+                child: ChoiceChip(
+                  label: const Center(child: Text("Travel")),
+                  selected: _selectedMockLiveUpdateTestType == _MockLiveUpdateTestType.travel,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedMockLiveUpdateTestType = _MockLiveUpdateTestType.travel;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Center(child: Text("Racing")),
+                  selected: _selectedMockLiveUpdateTestType == _MockLiveUpdateTestType.racing,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedMockLiveUpdateTestType = _MockLiveUpdateTestType.racing;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: _selectedMockLiveUpdateTestType == _MockLiveUpdateTestType.travel
+              ? _buildTravelMockTester()
+              : _buildRacingMockTester(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTravelMockTester() {
+    return Column(
+      key: const ValueKey<String>('travel-mock-tester'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         TextField(
           controller: _mockLiveUpdateLocationController,
           textCapitalization: TextCapitalization.words,
@@ -433,6 +544,82 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               _describeLastMockLiveUpdate(),
+              style: TextStyle(color: Colors.grey[700], fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRacingMockTester() {
+    return Column(
+      key: const ValueKey<String>('racing-mock-tester'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Use this builder to force local Racing Live Updates without waiting for a real race state.",
+          style: TextStyle(fontSize: 14),
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<_MockRacingScenario>(
+          decoration: const InputDecoration(labelText: "Scenario"),
+          isExpanded: true,
+          initialValue: _selectedMockRacingScenario,
+          items: _mockRacingScenarioPresets
+              .map(
+                (scenario) => DropdownMenuItem<_MockRacingScenario>(
+                  value: scenario,
+                  child: Text(scenario.label),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() {
+              _selectedMockRacingScenario = value;
+            });
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 12),
+          child: Text(
+            _selectedMockRacingScenario.description,
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _sendingMockRacingLiveUpdate ? null : _sendMockRacingLiveUpdate,
+                icon: _sendingMockRacingLiveUpdate
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.play_arrow),
+                label: Text(_sendingMockRacingLiveUpdate ? "Starting..." : "Start"),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _endMockRacingLiveUpdate,
+                icon: const Icon(Icons.stop),
+                label: const Text("End"),
+              ),
+            ),
+          ],
+        ),
+        if (_lastMockRacingLiveUpdateStatus != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              _describeLastMockRacingLiveUpdate(),
               style: TextStyle(color: Colors.grey[700], fontSize: 12),
             ),
           ),
@@ -630,6 +817,88 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
     }
   }
 
+  Future<void> _sendMockRacingLiveUpdate() async {
+    final bool liveUpdatesSupported = (Platform.isAndroid && kSdkAndroid >= 26) || (Platform.isIOS && kSdkIos >= 16.2);
+    if (!liveUpdatesSupported) {
+      BotToast.showText(text: "Live Updates are only available on Android 8+ or iOS 16.2+.");
+      return;
+    }
+
+    if (_sendingMockRacingLiveUpdate) return;
+
+    final LiveActivityBridgeController? controller = _ensureLiveActivityBridge();
+    if (controller == null) {
+      BotToast.showText(text: "Live Update bridge is unavailable.");
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _sendingMockRacingLiveUpdate = true;
+    });
+
+    try {
+      controller.initializeHandler();
+      final LiveUpdateStartResult result = await controller.startRacingActivity(
+        arguments: _buildMockRacingLiveUpdateArgs(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _sendingMockRacingLiveUpdate = false;
+        _lastMockRacingLiveUpdateStatus = result.status;
+        _lastMockRacingLiveUpdateReason = result.reason;
+        if (result.sessionId != null) {
+          _lastMockRacingLiveUpdateSessionId = result.sessionId;
+        }
+      });
+
+      if (result.isSuccess) {
+        BotToast.showText(text: "Mock Racing Live Update ${result.status.name} (${result.sessionId ?? "no session"})");
+      } else {
+        final reason = result.reason != null ? " (${_formatUnsupportedReason(result.reason!)})" : "";
+        BotToast.showText(text: "Racing Live Update unsupported$reason");
+      }
+    } catch (error, stackTrace) {
+      log("Mock Racing Live Update failed: $error");
+      logErrorToCrashlytics("Mock Racing Live Update failed", error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _sendingMockRacingLiveUpdate = false;
+        });
+      } else {
+        _sendingMockRacingLiveUpdate = false;
+      }
+      BotToast.showText(text: "Unable to start Racing Live Update");
+    }
+  }
+
+  Future<void> _endMockRacingLiveUpdate() async {
+    final LiveActivityBridgeController? controller = _ensureLiveActivityBridge();
+    if (controller == null) {
+      BotToast.showText(text: "Live Update bridge is unavailable.");
+      return;
+    }
+
+    try {
+      final result = await controller.endRacingActivity();
+      if (result.success) {
+        setState(() {
+          _lastMockRacingLiveUpdateSessionId = null;
+          _lastMockRacingLiveUpdateStatus = null;
+          _lastMockRacingLiveUpdateReason = null;
+        });
+        BotToast.showText(text: "Racing Live Update ended");
+      } else {
+        final reason = result.reason != null ? " (${_formatUnsupportedReason(result.reason!)})" : "";
+        BotToast.showText(text: "Unable to end Racing Live Update$reason");
+      }
+    } catch (error, stackTrace) {
+      log("Ending Racing Live Update failed: $error");
+      logErrorToCrashlytics("Ending Racing Live Update failed", error, stackTrace);
+      BotToast.showText(text: "Error ending Racing Live Update");
+    }
+  }
+
   LiveActivityBridgeController? _ensureLiveActivityBridge() {
     try {
       if (Get.isRegistered<LiveActivityBridgeController>()) {
@@ -715,6 +984,57 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
     return args;
   }
 
+  Map<String, dynamic> _buildMockRacingLiveUpdateArgs() {
+    final scenario = _selectedMockRacingScenario;
+    final int nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+
+    RacingLiveActivityState state;
+    switch (scenario.phase) {
+      case RacingLivePhase.waitingUnknown:
+        state = const RacingLiveActivityState(
+          phase: RacingLivePhase.waitingUnknown,
+          titleText: 'Waiting to race',
+          bodyText: 'Start time pending',
+          stateIdentifier: 'waiting-unknown',
+        );
+        break;
+      case RacingLivePhase.waiting:
+        final int target = nowSeconds + (scenario.secondsRemaining ?? 60);
+        state = RacingLiveActivityState(
+          phase: RacingLivePhase.waiting,
+          titleText: 'Waiting to race',
+          bodyText: 'Race starts in ${_formatMockDuration(scenario.secondsRemaining ?? 60)}',
+          stateIdentifier: 'waiting-$target',
+          targetTimestamp: target,
+        );
+        break;
+      case RacingLivePhase.racing:
+        final int target = nowSeconds + (scenario.secondsRemaining ?? 120);
+        state = RacingLiveActivityState(
+          phase: RacingLivePhase.racing,
+          titleText: 'Currently racing',
+          bodyText: 'Race ends in ${_formatMockDuration(scenario.secondsRemaining ?? 120)}',
+          stateIdentifier: 'racing-$target',
+          targetTimestamp: target,
+        );
+        break;
+      case RacingLivePhase.finished:
+        state = const RacingLiveActivityState(
+          phase: RacingLivePhase.finished,
+          titleText: 'Race finished',
+          bodyText: 'You came 3rd of 6 racers',
+          stateIdentifier: 'finished-mock-race',
+        );
+        break;
+    }
+
+    return buildRacingLiveActivityArgs(
+      racingState: state,
+      currentTimestamp: nowSeconds,
+      apiKey: UserHelper.isApiKeyValid ? UserHelper.apiKey : null,
+    );
+  }
+
   String _flagAssetForLocation(String location) {
     if (location.isEmpty) return "ball_torn";
     String normalized = location.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
@@ -753,6 +1073,31 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
       buffer.write(" • session $_lastMockLiveUpdateSessionId");
     }
     return buffer.toString();
+  }
+
+  String _describeLastMockRacingLiveUpdate() {
+    final status = _lastMockRacingLiveUpdateStatus;
+    if (status == null) return "";
+    final buffer = StringBuffer("Last request: ${status.name.toUpperCase()}");
+    if (_lastMockRacingLiveUpdateReason != null) {
+      buffer.write(" • ${_formatUnsupportedReason(_lastMockRacingLiveUpdateReason!)}");
+    }
+    if (_lastMockRacingLiveUpdateSessionId != null) {
+      buffer.write(" • session $_lastMockRacingLiveUpdateSessionId");
+    }
+    return buffer.toString();
+  }
+
+  String _formatMockDuration(int seconds) {
+    if (seconds < 60) {
+      return '$seconds seconds';
+    }
+    final int minutes = seconds ~/ 60;
+    final int remainingSeconds = seconds % 60;
+    if (remainingSeconds == 0) {
+      return '$minutes minute${minutes == 1 ? '' : 's'}';
+    }
+    return '$minutes minute${minutes == 1 ? '' : 's'} and $remainingSeconds seconds';
   }
 
   String _formatUnsupportedReason(LiveUpdateUnsupportedReason reason) {

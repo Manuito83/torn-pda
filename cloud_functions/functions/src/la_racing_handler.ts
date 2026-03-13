@@ -1,7 +1,7 @@
 import * as admin from "firebase-admin";
 import { logger } from "firebase-functions/v2";
 import { FieldValue } from "firebase-admin/firestore";
-import { sendRacingPushToStart } from "./la_apns_helper";
+import { sendRacingEnd, sendRacingPushToStart } from "./la_apns_helper";
 
 type RacingPhase = "waiting" | "waitingUnknown" | "racing" | "finished" | "none";
 
@@ -16,7 +16,7 @@ interface ParsedRacingState {
 export async function handleRacingLiveActivity(userStats: any, subscriber: any) {
     const uid = subscriber.uid;
     const icons = userStats.icons || {};
-    const currentTimestamp = userStats.timestamp || Math.floor(Date.now() / 1000);
+    const currentTimestamp = userStats.server_time || Math.floor(Date.now() / 1000);
 
     const laStatusRef = admin.database().ref(`live_activities/racing_status/${uid}`);
     const laStatusSnapshot = await laStatusRef.once("value");
@@ -31,17 +31,27 @@ export async function handleRacingLiveActivity(userStats: any, subscriber: any) 
 
         if (parsed.phase === "none" || parsed.phase === "finished") {
             if (activeLA) {
+                const activityPushToken = subscriber.la_racing_activity_push_token;
+                if (activityPushToken) {
+                    const finalState = buildFinalRacingState(parsed, currentTimestamp, activeLA);
+                    const endSentSuccessfully = await sendRacingEnd(activityPushToken, finalState);
+                    if (endSentSuccessfully) {
+                        await admin.firestore().collection("players").doc(uid).update({
+                            la_racing_activity_push_token: FieldValue.delete(),
+                        });
+                    }
+                }
                 await laStatusRef.remove();
             }
             return;
         }
 
-        // If there's already an active local or remote racing Live Activity, avoid starting duplicates.
+        // Skip if a racing Live Activity is already active locally or remotely
         if (activeLA) {
             return;
         }
 
-        // Remote push-to-start only supports the active-race countdown reliably.
+        // Remote push-to-start only supports the active-race countdown reliably
         if (parsed.phase !== "racing" || !parsed.stateIdentifier || !parsed.titleText || !parsed.bodyText) {
             return;
         }
@@ -114,7 +124,7 @@ function parseRacingState({
             const targetTimestamp = remainingSeconds == null ? undefined : currentTimestamp + remainingSeconds;
             return {
                 phase: "racing",
-                stateIdentifier: targetTimestamp == null ? "racing-unknown" : `racing-${targetTimestamp}`,
+                stateIdentifier: targetTimestamp == null ? "racing-unknown" : `racing-${bucketize(targetTimestamp)}`,
                 titleText: "Currently racing",
                 bodyText: detail,
                 targetTimestamp,
@@ -127,7 +137,7 @@ function parseRacingState({
             if (remainingSeconds != null) {
                 return {
                     phase: "waiting",
-                    stateIdentifier: `waiting-${currentTimestamp + remainingSeconds}`,
+                    stateIdentifier: `waiting-${bucketize(currentTimestamp + remainingSeconds)}`,
                     titleText: "Waiting to race",
                     bodyText: detail,
                     targetTimestamp: currentTimestamp + remainingSeconds,
@@ -183,6 +193,49 @@ function stripRacingPrefix(input: string): string {
     return input.replace(/^Racing\s*-\s*/i, "").trim();
 }
 
+/** Rounds to nearest 120s bucket so small API drift doesn't change the identifier. */
+function bucketize(timestamp: number): number {
+    return Math.floor(timestamp / 120) * 120;
+}
+
 function sanitizeIdentifier(input: string): string {
     return input.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
+}
+
+function buildFinalRacingState(
+    parsed: ParsedRacingState,
+    currentTimestamp: number,
+    activeLA: any,
+): RacingLAContentStateForEnd {
+    if (parsed.phase === "finished") {
+        return {
+            stateIdentifier: parsed.stateIdentifier || activeLA?.stateIdentifier || `finished-${currentTimestamp}`,
+            phase: "finished",
+            titleText: parsed.titleText || "Race finished",
+            bodyText: parsed.bodyText || "Race finished",
+            targetTimeTimestamp: parsed.targetTimestamp,
+            currentServerTimestamp: currentTimestamp,
+            showTimer: false,
+        };
+    }
+
+    return {
+        stateIdentifier: activeLA?.stateIdentifier || `finished-${currentTimestamp}`,
+        phase: "finished",
+        titleText: "Race finished",
+        bodyText: "Race completed",
+        targetTimeTimestamp: activeLA?.targetTimestamp,
+        currentServerTimestamp: currentTimestamp,
+        showTimer: false,
+    };
+}
+
+interface RacingLAContentStateForEnd {
+    stateIdentifier: string;
+    phase: string;
+    titleText: string;
+    bodyText: string;
+    targetTimeTimestamp?: number;
+    currentServerTimestamp: number;
+    showTimer: boolean;
 }

@@ -19,29 +19,42 @@ object LiveUpdatePlugin {
         val appContext = context.applicationContext
         val capabilityStore = LiveUpdateCapabilityStore(appContext)
         val eligibilityEvaluator = LiveUpdateEligibilityEvaluator(appContext, capabilityStore)
-        val sessionRegistry = LiveUpdateSessionRegistry(appContext)
-        val adapter = createAdapter(appContext)
-        val manager = DefaultLiveUpdateManager(
-            adapter = adapter,
-            eligibilityProvider = eligibilityEvaluator,
-            sessionStore = sessionRegistry,
-        )
+        val travelManager = createManager(appContext, LiveUpdateActivityType.TRAVEL, eligibilityEvaluator)
+        val racingManager = createManager(appContext, LiveUpdateActivityType.RACING, eligibilityEvaluator)
         val bridge = LiveUpdateChannelBridge(
-            manager = manager,
+            travelManager = travelManager,
+            racingManager = racingManager,
             eventEmitter = MethodChannelEventEmitter(channel),
         )
         channel.setMethodCallHandler(bridge)
 
         val capabilityMonitor = LiveUpdateCapabilityMonitor(appContext, eligibilityEvaluator) { snapshot ->
-            manager.onCapability(snapshot)
+            travelManager.onCapability(snapshot)
+            racingManager.onCapability(snapshot)
         }
-        manager.attachCapabilityMonitor(capabilityMonitor)
+        travelManager.attachCapabilityMonitor(capabilityMonitor)
     }
 
-    private fun createAdapter(context: Context): LiveUpdateAdapter {
+    private fun createManager(
+        context: Context,
+        activityType: LiveUpdateActivityType,
+        eligibilityEvaluator: LiveUpdateEligibilityEvaluator,
+    ): DefaultLiveUpdateManager {
+        return DefaultLiveUpdateManager(
+            activityType = activityType,
+            adapter = createAdapter(context, activityType),
+            eligibilityProvider = eligibilityEvaluator,
+            sessionStore = LiveUpdateSessionRegistry(context, activityType),
+        )
+    }
+
+    private fun createAdapter(context: Context, activityType: LiveUpdateActivityType): LiveUpdateAdapter {
         val tapIntentFactory = LiveUpdateTapIntentFactory(context)
         return if (Build.VERSION.SDK_INT >= MIN_NATIVE_ADAPTER_API) {
-            AndroidLiveUpdateAdapter(context, tapIntentFactory)
+            when (activityType) {
+                LiveUpdateActivityType.TRAVEL -> AndroidTravelLiveUpdateAdapter(context, tapIntentFactory)
+                LiveUpdateActivityType.RACING -> AndroidRacingLiveUpdateAdapter(context, tapIntentFactory)
+            }
         } else {
             NoOpLiveUpdateAdapter()
         }

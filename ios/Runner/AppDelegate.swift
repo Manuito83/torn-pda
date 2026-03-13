@@ -227,6 +227,23 @@ import workmanager_apple
     )
 
     if #available(iOS 16.2, *) {
+      self.activityManager?.onNewActivityPushToken = { [weak self] token in
+        self?.liveActivityChannel.invokeMethod(
+          "liveActivityTokenUpdated",
+          arguments: [
+            "activityType": "travel",
+            "token": token as Any,
+          ])
+      }
+      self.racingActivityManager?.onNewActivityPushToken = { [weak self] token in
+        self?.liveActivityChannel.invokeMethod(
+          "liveActivityTokenUpdated",
+          arguments: [
+            "activityType": "racing",
+            "token": token as Any,
+          ])
+      }
+
       liveActivityChannel.setMethodCallHandler { [weak self] (call, result) in
         guard let self = self,
           let manager = self.activityManager,

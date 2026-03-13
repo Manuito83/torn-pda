@@ -161,7 +161,7 @@ class Prefs {
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
-  final String _kShowDateInClockString = "pda_showDateInClockString"; // changed from bool to string
+  final String _kShowDateInClockString = "pda_showDateInClockString"; // String-based (replaces legacy bool key)
   final String _kShowSecondsInClock = "pda_showSecondsInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kSpiesSource = "pda_SpiesSource";
@@ -547,6 +547,7 @@ class Prefs {
   final String _kIosLiveActivityTravelEnabled = "pda_iosLiveActivityTravelEnabled";
   final String _kIosLiveActivityRacingEnabled = "pda_iosLiveActivityRacingEnabled";
   final String _kAndroidLiveActivityTravelEnabled = "pda_androidLiveActivityTravelEnabled";
+  final String _kAndroidLiveActivityRacingEnabled = "pda_androidLiveActivityRacingEnabled";
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
   final String _kIosLiveActivityRacingPushToken = "pda_iosLiveActivityRacingPushToken";
   // Android-only: used to avoid repeating "Arrived" Live Update after app relaunch
@@ -4410,6 +4411,16 @@ class Prefs {
     return await PrefsDatabase.setBool(_kAndroidLiveActivityTravelEnabled, value);
   }
 
+  Future<bool> getAndroidLiveActivityRacingEnabled() async {
+    final prefs = SharedPreferencesAsync();
+    return await prefs.getBool(_kAndroidLiveActivityRacingEnabled) ?? false;
+  }
+
+  Future setAndroidLiveActivityRacingEnabled(bool value) async {
+    final prefs = SharedPreferencesAsync();
+    return await prefs.setBool(_kAndroidLiveActivityRacingEnabled, value);
+  }
+
   /// Android-only: persisted to avoid duplicating the last "Arrived" Live Update after relaunch
   Future<String?> getAndroidLiveActivityTravelLastArrivalId() async {
     final String value = await PrefsDatabase.getString(_kAndroidLiveActivityTravelLastArrivalId, "");
@@ -4422,15 +4433,17 @@ class Prefs {
   }
 
   Future<String?> getLiveActivityCurrentTripBackup() async {
-    final String value = await PrefsDatabase.getString(_kLiveActivityCurrentTripBackup, "");
+    final prefs = SharedPreferencesAsync();
+    final String value = await prefs.getString(_kLiveActivityCurrentTripBackup) ?? "";
     return value.isEmpty ? null : value;
   }
 
   Future setLiveActivityCurrentTripBackup(String? jsonString) async {
+    final prefs = SharedPreferencesAsync();
     if (jsonString == null) {
-      return await PrefsDatabase.setString(_kLiveActivityCurrentTripBackup, "");
+      return await prefs.setString(_kLiveActivityCurrentTripBackup, "");
     }
-    return await PrefsDatabase.setString(_kLiveActivityCurrentTripBackup, jsonString);
+    return await prefs.setString(_kLiveActivityCurrentTripBackup, jsonString);
   }
 
   /// ----------------------------

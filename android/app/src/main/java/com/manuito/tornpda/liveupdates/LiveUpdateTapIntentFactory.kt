@@ -9,13 +9,39 @@ import com.manuito.tornpda.MainActivity
 class LiveUpdateTapIntentFactory(private val context: Context) {
 
     fun buildTravelTapIntent(sessionId: String, travelIdentifier: String?): PendingIntent {
+        return buildTapIntent(
+            sessionId = sessionId,
+            action = LiveUpdateIntentExtras.ACTION_TRAVEL_LIVE_UPDATE,
+            route = LiveUpdateIntentExtras.ROUTE_TRAVEL,
+            entryPoint = LiveUpdateIntentExtras.ENTRY_POINT_TRAVEL,
+            contentIdentifier = travelIdentifier,
+        )
+    }
+
+    fun buildRacingTapIntent(sessionId: String, stateIdentifier: String?): PendingIntent {
+        return buildTapIntent(
+            sessionId = sessionId,
+            action = LiveUpdateIntentExtras.ACTION_RACING_LIVE_UPDATE,
+            route = LiveUpdateIntentExtras.ROUTE_RACING,
+            entryPoint = LiveUpdateIntentExtras.ENTRY_POINT_RACING,
+            contentIdentifier = stateIdentifier,
+        )
+    }
+
+    private fun buildTapIntent(
+        sessionId: String,
+        action: String,
+        route: String,
+        entryPoint: String,
+        contentIdentifier: String?,
+    ): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
-            action = LiveUpdateIntentExtras.ACTION_TRAVEL_LIVE_UPDATE
-            putExtra(LiveUpdateIntentExtras.EXTRA_TARGET_ROUTE, LiveUpdateIntentExtras.ROUTE_TRAVEL)
-            putExtra(LiveUpdateIntentExtras.EXTRA_ENTRY_POINT, LiveUpdateIntentExtras.ENTRY_POINT_TRAVEL)
+            this.action = action
+            putExtra(LiveUpdateIntentExtras.EXTRA_TARGET_ROUTE, route)
+            putExtra(LiveUpdateIntentExtras.EXTRA_ENTRY_POINT, entryPoint)
             putExtra(LiveUpdateIntentExtras.EXTRA_SESSION_ID, sessionId)
-            travelIdentifier?.let {
-                putExtra(LiveUpdateIntentExtras.EXTRA_TRAVEL_IDENTIFIER, it)
+            contentIdentifier?.let {
+                putExtra(LiveUpdateIntentExtras.EXTRA_CONTENT_IDENTIFIER, it)
             }
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }

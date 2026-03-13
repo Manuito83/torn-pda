@@ -1518,6 +1518,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _androidLiveActivitiesRacingEnabled = false;
+  bool get androidLiveActivityRacingEnabled => _androidLiveActivitiesRacingEnabled;
+  set androidLiveActivityRacingEnabled(bool enabled) {
+    _androidLiveActivitiesRacingEnabled = enabled;
+    Prefs().setAndroidLiveActivityRacingEnabled(enabled);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1541,6 +1549,7 @@ class SettingsProvider extends ChangeNotifier {
     _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
 
     _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
+    _androidLiveActivitiesRacingEnabled = await Prefs().getAndroidLiveActivityRacingEnabled();
 
     // Gestures
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
@@ -1780,6 +1789,7 @@ class SettingsProvider extends ChangeNotifier {
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
     _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
+    _androidLiveActivitiesRacingEnabled = await Prefs().getAndroidLiveActivityRacingEnabled();
     _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
     _iosLiveActivitiesRacingEnabled = await Prefs().getIosLiveActivityRacingEnabled();
 

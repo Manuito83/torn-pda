@@ -46,7 +46,7 @@ class RacingLiveActivityParser {
           phase: RacingLivePhase.racing,
           titleText: 'Currently racing',
           bodyText: detail,
-          stateIdentifier: targetTimestamp == null ? 'racing-unknown' : 'racing-$targetTimestamp',
+          stateIdentifier: targetTimestamp == null ? 'racing-unknown' : 'racing-${_bucketize(targetTimestamp)}',
           targetTimestamp: targetTimestamp,
         );
       }
@@ -60,7 +60,7 @@ class RacingLiveActivityParser {
             phase: RacingLivePhase.waiting,
             titleText: 'Waiting to race',
             bodyText: detail,
-            stateIdentifier: 'waiting-$targetTimestamp',
+            stateIdentifier: 'waiting-${_bucketize(targetTimestamp)}',
             targetTimestamp: targetTimestamp,
           );
         }
@@ -113,6 +113,11 @@ class RacingLiveActivityParser {
   static String _stripRacingPrefix(String input) {
     return input.replaceFirst(RegExp(r'^Racing\s*-\s*', caseSensitive: false), '').trim();
   }
+
+  /// Rounds a timestamp to the nearest 120 s bucket so that small API
+  /// time-drift between polls doesn't produce a different
+  /// stateIdentifier for the same race
+  static int _bucketize(int timestamp) => (timestamp ~/ 120) * 120;
 
   static String _sanitizeIdentifier(String input) {
     final sanitized = input

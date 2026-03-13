@@ -3260,7 +3260,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       if (!isAndroid && !isIos) return;
       final bool enabledForPlatform = isAndroid
-          ? _settingsProvider.androidLiveActivityTravelEnabled
+          ? (_settingsProvider.androidLiveActivityTravelEnabled || _settingsProvider.androidLiveActivityRacingEnabled)
           : (_settingsProvider.iosLiveActivityTravelEnabled || _settingsProvider.iosLiveActivityRacingEnabled);
       if (!enabledForPlatform) return;
 
@@ -3282,7 +3282,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (isAndroid || _settingsProvider.iosLiveActivityTravelEnabled) {
         await travelController.activate();
       }
-      if (isIos && _settingsProvider.iosLiveActivityRacingEnabled) {
+      if ((isIos && _settingsProvider.iosLiveActivityRacingEnabled) ||
+          (isAndroid && _settingsProvider.androidLiveActivityRacingEnabled)) {
         await Get.find<LiveActivityRacingController>().activate();
       }
     });

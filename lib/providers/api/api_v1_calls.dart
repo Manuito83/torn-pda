@@ -304,6 +304,28 @@ class ApiCallsV1 {
     }
   }
 
+  static Future<dynamic> getBarsAndPlayerStatusBackground({required String? forcedApiKey}) async {
+    dynamic apiResult;
+    final apiCaller = ApiCallerController();
+    await apiCaller
+        .enqueueApiCall(apiSelection: ApiSelection_v1.barsAndPlayerStatus, forcedApiKey: forcedApiKey)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return BarsStatusCooldownsModel.fromJson(apiResult as Map<String, dynamic>);
+      } catch (e, trace) {
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
   static Future<dynamic> getItems() async {
     dynamic apiResult;
     final apiCaller = Get.find<ApiCallerController>();

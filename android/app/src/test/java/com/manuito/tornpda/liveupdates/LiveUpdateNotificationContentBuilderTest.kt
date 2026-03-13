@@ -19,6 +19,7 @@ class LiveUpdateNotificationContentBuilderTest {
         arrivalTimestamp: Long? = null,
         departureTimestamp: Long? = null,
     ) = LiveUpdatePayload(
+        activityType = LiveUpdateActivityType.TRAVEL,
         currentDestinationDisplayName = "Mexico",
         currentDestinationFlagAsset = null,
         originDisplayName = "Torn",
@@ -33,6 +34,12 @@ class LiveUpdateNotificationContentBuilderTest {
         hasArrived = hasArrived,
         travelIdentifier = "travel-1",
         destinationEmoji = null,
+        stateIdentifier = null,
+        phase = null,
+        titleText = null,
+        bodyText = null,
+        targetTimeTimestamp = null,
+        showTimer = false,
         extras = emptyMap(),
     )
 

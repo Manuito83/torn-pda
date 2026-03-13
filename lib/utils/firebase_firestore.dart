@@ -64,8 +64,7 @@ class FirestoreHelper {
     }
     log("FCM token: $token");
 
-    // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
-    // Otherwise, an empty object will be returned
+    // Fetch existing Firebase profile or return a default empty model
     _firebaseUserModel = await getUserProfile(force: true);
 
     final payload = {
@@ -84,7 +83,7 @@ class FirestoreHelper {
       "platform": platform,
       "version": appVersion,
       "faction": profile.faction!.factionId,
-      // Ensures all users have a refill time after v2.6.0.
+      // Ensure all users have a refill time set
       "refillsTime": _firebaseUserModel!.refillsTime, // Defaults to 22 if null (new user)
       "factionAssistMessage": _firebaseUserModel!.factionAssistMessage, // Defaults to true
 
@@ -100,7 +99,7 @@ class FirestoreHelper {
 
   Future<void> toggleDiscreet(bool discreet) async {
     await _firestore.collection("players").doc(_uid).update({
-      "discrete": discreet, // We need to accept this typo (discreet)
+      "discrete": discreet, // Legacy field name (typo kept for compatibility)
     });
   }
 
@@ -117,8 +116,8 @@ class FirestoreHelper {
   }
 
   Future<void> subscribeToForeignRestockNotification(bool? subscribe) async {
-    // If we had already foreign stocks chosen as alerts, we need to update them to the
-    // current timestamp, so that alerts are not sent on first pass (if restocks alerts were off)
+    // Reset existing stock alert timestamps to now so alerts are not
+    // triggered on the first pass after enabling
     Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
     final now = DateTime.now().millisecondsSinceEpoch;
     previous.forEach((key, value) {
@@ -156,9 +155,7 @@ class FirestoreHelper {
   Future<void> subscribeToNerveNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "nerveNotification": subscribe,
-      // Nerve was implemented in v1.8.7, so we need to manually create this field and set it
-      // to TRUE for users that were already in the DB. New users (or upon API reload) will have
-      // the field created normally
+      // Initialize field for existing users who might not have nerve notifications
       "nerveLastCheckFull": true,
     });
   }
@@ -166,9 +163,7 @@ class FirestoreHelper {
   Future<void> subscribeToLifeNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "lifeNotification": subscribe,
-      // Life was implemented in v3.4.3, so we need to manually create this field and set it
-      // to TRUE for users that were already in the DB. New users (or upon API reload) will have
-      // the field created normally
+      // Initialize field for existing users who predate life notifications
       "lifeLastCheckFull": true,
     });
   }
@@ -176,7 +171,7 @@ class FirestoreHelper {
   Future<void> subscribeToDrugsNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "drugsNotification": subscribe,
-      // Same reason for this than in Nerve (see comment)
+      // Initialize field for existing users who predate drugs notifications
       "drugsInfluence": false,
     });
   }
@@ -184,7 +179,7 @@ class FirestoreHelper {
   Future<void> subscribeToMedicalNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "medicalNotification": subscribe,
-      // Same reason for this than in Nerve (see comment)
+      // Initialize field for existing users who predate medical notifications
       "medicalInfluence": false,
     });
   }
@@ -192,7 +187,7 @@ class FirestoreHelper {
   Future<void> subscribeToBoosterNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "boosterNotification": subscribe,
-      // Same reason for this than in Nerve (see comment)
+      // Initialize field for existing users who predate booster notifications
       "boosterInfluence": false,
     });
   }
@@ -200,7 +195,7 @@ class FirestoreHelper {
   Future<void> subscribeToRacingNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "racingNotification": subscribe,
-      // Same reason for this than in Nerve (see comment)
+      // Initialize field for existing users who predate racing notifications
       "racingSent": true,
     });
   }
@@ -329,12 +324,11 @@ class FirestoreHelper {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
     final userReceived = await _firestore.collection("players").doc(_uid).get();
     if (userReceived.data() == null) {
-      // New user does not return anything, so we use default fields in the model
+      // New user returns nothing, so use default model fields
       return FirebaseUserModel();
     }
     _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data()!);
-    // Always persist a local snapshot when we fetch a fresh profile, so we have a backup
-    // in case that Firebase auth fails (in which case the Auth Recovery in Drawer will try to restore from it)
+    // Persist a local snapshot for auth-recovery fallback
     _persistLocalSnapshot();
     return _firebaseUserModel;
   }
@@ -454,7 +448,7 @@ class FirestoreHelper {
 
   Future<bool> addStockMarketShare(String? ticker, String action) async {
     final List currentStocks = _firebaseUserModel!.stockMarketShares;
-    // Code is ticker-gain-price-loss-price. 'n' for empty.
+    // Format: ticker-gain-price-loss-price ('n' for empty)
     // Example: YAZ-G-840-L-n
     // Example to delete: YAZ-remove
     currentStocks.removeWhere((element) => element.contains(ticker));
@@ -541,7 +535,7 @@ class FirestoreHelper {
   }
 
   Future<String> _getMessagingToken() async {
-    // On iOS, ensure we have an APNS token before getting the FCM one
+    // On iOS, ensure the APNS token exists before getting the FCM one
     if (Platform.isIOS) {
       await FirebaseMessaging.instance.getAPNSToken();
     }
@@ -564,6 +558,7 @@ class FirestoreHelper {
     log("Disabling Live Activities for travel. Deleting token from Firestore");
     await _firestore.collection("players").doc(_uid).update({
       "la_travel_push_token": FieldValue.delete(),
+      "la_travel_activity_push_token": FieldValue.delete(),
     });
   }
 
@@ -573,6 +568,7 @@ class FirestoreHelper {
     log("Disabling Live Activities for racing. Deleting token from Firestore");
     await _firestore.collection("players").doc(_uid).update({
       "la_racing_push_token": FieldValue.delete(),
+      "la_racing_activity_push_token": FieldValue.delete(),
     });
   }
 }

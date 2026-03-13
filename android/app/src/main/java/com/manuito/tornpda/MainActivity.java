@@ -145,7 +145,8 @@ public class MainActivity extends FlutterActivity {
             for (StatusBarNotification notification : activeNotifications) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     String channelId = notification.getNotification().getChannelId();
-                    if (LiveUpdateNotificationChannel.CHANNEL_ID.equals(channelId)) {
+                    if (LiveUpdateNotificationChannel.TRAVEL_CHANNEL_ID.equals(channelId)
+                            || LiveUpdateNotificationChannel.RACING_CHANNEL_ID.equals(channelId)) {
                         continue;
                     }
                 }

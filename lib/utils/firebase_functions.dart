@@ -329,4 +329,32 @@ class _FirebaseFunctions {
       log("Error calling registerPushToStartToken: $e");
     }
   }
+
+  Future<void> registerLiveActivityActivityToken({
+    required String? token,
+    required String activityType,
+  }) async {
+    if (!Platform.isIOS) return;
+
+    final String functionName = 'liveActivities-registerActivityToken';
+
+    Map<String, dynamic> data = {
+      'token': token,
+      'activityType': activityType,
+    };
+
+    try {
+      if (Platform.isWindows) {
+        await _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+      } else {
+        final HttpsCallable callable = FirebaseFunctions.instanceFor(
+          region: 'us-east4',
+        ).httpsCallable(functionName);
+        await callable.call(data);
+      }
+      log("Successfully called registerActivityToken for type: $activityType");
+    } catch (e) {
+      log("Error calling registerActivityToken: $e");
+    }
+  }
 }
