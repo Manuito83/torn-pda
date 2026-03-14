@@ -122,15 +122,15 @@ class LiveActivityRacingController extends GetxController {
     if (racingState == null) {
       if (_isLALogicallyActive) {
         // After adopting an existing LA, the first tick may carry stale data
-        // that predates the race, skip one null before ending
+        // that predates the race — skip one null before ending
         if (_skipNextNullAfterAdopt) {
           _skipNextNullAfterAdopt = false;
           log('RacingLiveActivityHandler: Skipping first null racing state after adopt — waiting for fresh data.');
           return;
         }
         await _bridgeController.endRacingActivity();
+        _resetLAState();
       }
-      _resetLAState();
       return;
     }
     _skipNextNullAfterAdopt = false;
