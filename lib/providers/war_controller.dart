@@ -2131,6 +2131,22 @@ class WarController extends GetxController {
     return spyController.statsOld(entry.lastUpdatedByFFScouter!);
   }
 
+  void _appendFFScouterShareText(
+    StringBuffer statsBuffer,
+    FFScouterCacheEntry entry,
+    SpiesController spyController,
+  ) {
+    final updatedText = _ffScouterUpdatedText(entry, spyController);
+    if (entry.bsEstimate != null && entry.bsEstimate! > 0) {
+      statsBuffer.writeln(
+        "FFScouter battle score: ~${entry.displayText}${updatedText.isNotEmpty ? " ($updatedText)" : ""}",
+      );
+    }
+    if (statsShareIncludeFFScouterFairFight && entry.fairFight != null) {
+      statsBuffer.writeln("FFScouter fair fight: ${entry.fairFight!.toStringAsFixed(2)}");
+    }
+  }
+
   void shareStats(BuildContext context) async {
     try {
       StringBuffer statsBuffer = StringBuffer();
@@ -2176,9 +2192,11 @@ class WarController extends GetxController {
             (member.statsExactTotal != null && member.statsExactTotal != -1);
 
         bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
+        final usedEstimatedStats = statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats;
+        final usedPrimaryNonFFSStats = hasExactStats || usedEstimatedStats;
 
         // Skip member if no stats are available from any supported source.
-        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats) && !hasFFScouterStats) {
+        if (!hasExactStats && !usedEstimatedStats && !hasFFScouterStats) {
           if (!statsShareIncludeTargetsWithNoStatsAvailable) {
             continue; // Skip member if no stats and we don't include targets without stats
           } else {
@@ -2208,7 +2226,7 @@ class WarController extends GetxController {
             statsBuffer.writeln(
                 "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
           }
-        } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
+        } else if (usedEstimatedStats) {
           if (statsShareShowOnlyTotals) {
             statsBuffer.writeln("Estimated stats: ${member.statsEstimated}");
           } else {
@@ -2220,29 +2238,13 @@ class WarController extends GetxController {
             statsBuffer.writeln("SSL probability: ${calculateSSLProbability(member)}");
           }
         } else if (hasFFScouterStats) {
-          final updatedText = _ffScouterUpdatedText(ffsEntry, spyController);
-          if (ffsEntry.bsEstimate != null && ffsEntry.bsEstimate! > 0) {
-            statsBuffer.writeln(
-              "FFScouter battle score: ~${ffsEntry.displayText}${updatedText.isNotEmpty ? " ($updatedText)" : ""}",
-            );
-          }
-          if (statsShareIncludeFFScouterFairFight && ffsEntry.fairFight != null) {
-            statsBuffer.writeln("FFScouter fair fight: ${ffsEntry.fairFight!.toStringAsFixed(2)}");
-          }
+          _appendFFScouterShareText(statsBuffer, ffsEntry, spyController);
         } else {
           statsBuffer.writeln("Unknown stats!");
         }
 
-        if (hasFFScouterStats && !(!hasExactStats && !hasEstimatedStats)) {
-          if (ffsEntry.bsEstimate != null && ffsEntry.bsEstimate! > 0) {
-            final updatedText = _ffScouterUpdatedText(ffsEntry, spyController);
-            statsBuffer.writeln(
-              "FFScouter battle score: ~${ffsEntry.displayText}${updatedText.isNotEmpty ? " ($updatedText)" : ""}",
-            );
-          }
-          if (statsShareIncludeFFScouterFairFight && ffsEntry.fairFight != null) {
-            statsBuffer.writeln("FFScouter fair fight: ${ffsEntry.fairFight!.toStringAsFixed(2)}");
-          }
+        if (hasFFScouterStats && usedPrimaryNonFFSStats) {
+          _appendFFScouterShareText(statsBuffer, ffsEntry, spyController);
         }
 
         statsBuffer.writeln("");
@@ -2354,8 +2356,10 @@ class WarController extends GetxController {
             (member.statsExactTotal != null && member.statsExactTotal != -1);
 
         bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
+        final usedEstimatedStats = statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats;
+        final usedPrimaryNonFFSStats = hasExactStats || usedEstimatedStats;
 
-        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats) && !hasFFScouterStats) {
+        if (!hasExactStats && !usedEstimatedStats && !hasFFScouterStats) {
           if (!statsShareIncludeTargetsWithNoStatsAvailable) {
             continue; // Skip member if no stats and we don't include targets without stats
           }
@@ -2366,14 +2370,14 @@ class WarController extends GetxController {
             : '';
         final ffScouterUpdated = hasFFScouterStats ? _ffScouterUpdatedText(ffsEntry, spyController) : '';
         final ffScouterFairFight =
-          statsShareIncludeFFScouterFairFight && hasFFScouterStats && ffsEntry.fairFight != null
-            ? ffsEntry.fairFight!.toStringAsFixed(2)
-            : '';
+            statsShareIncludeFFScouterFairFight && hasFFScouterStats && ffsEntry.fairFight != null
+                ? ffsEntry.fairFight!.toStringAsFixed(2)
+                : '';
 
         final String typeOfStats;
         if (hasExactStats) {
           typeOfStats = 'Spied';
-        } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
+        } else if (usedEstimatedStats) {
           typeOfStats = 'Estimated';
         } else if (hasFFScouterStats) {
           typeOfStats = 'FFScouter';
@@ -2385,10 +2389,10 @@ class WarController extends GetxController {
             ? member.statsExactTotal != null && member.statsExactTotal != -1
                 ? formatBigNumbers(member.statsExactTotal!)
                 : '?'
-            : statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats
+            : usedEstimatedStats
                 ? member.statsEstimated!
-                : hasFFScouterStats && ffScouterBattleScore.isNotEmpty
-                    ? ffScouterBattleScore
+                : hasFFScouterStats && !usedPrimaryNonFFSStats
+                    ? ''
                     : '?';
         final String totalUpdated = hasExactStats &&
                 member.statsExactUpdated != null &&
