@@ -121,6 +121,12 @@ class StakeoutsController extends GetxController {
     initialise();
   }
 
+  @override
+  void onClose() {
+    _stakeoutTimer?.cancel();
+    super.onClose();
+  }
+
   Future initialise() async {
     await _loadPreferences();
     startTimer();
