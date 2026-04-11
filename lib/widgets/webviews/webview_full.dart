@@ -3050,6 +3050,7 @@ class WebViewFullState extends State<WebViewFull>
     _assessExitFullScreenScript(document);
     _assessProfileAgeToWords();
     _assessBugReportsWarning();
+    _assessOldLoaderRedirect(document);
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -4222,6 +4223,20 @@ class WebViewFullState extends State<WebViewFull>
           ),
         ),
       );
+    }
+  }
+
+  void _assessOldLoaderRedirect(dom.Document document) {
+    if (!_currentUrl.contains("loader.php")) return;
+    if (document.outerHtml.contains("Please use the new endpoints instead (page.php).")) {
+      try {
+        final newUrl = _currentUrl.replaceFirst("loader.php", "page.php");
+        BotToast.showText(text: "Redirecting to Torn's updated loader (page.php)...");
+        _loadUrl(newUrl);
+      } on Exception catch (e) {
+        logToUser("Failed to redirect to new loader: $e");
+        BotToast.showText(text: "Failed to redirect to Torn's updated loader.", backgroundColor: Colors.red);
+      }
     }
   }
 
