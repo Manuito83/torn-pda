@@ -986,6 +986,7 @@ class WebViewFullState extends State<WebViewFull>
                               ],
                             ),
                           if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                                  _currentUrl.contains("www.torn.com/page.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
                               UserHelper.factionId != 0)
                             Text(
@@ -2666,6 +2667,7 @@ class WebViewFullState extends State<WebViewFull>
     }
 
     final bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+            _currentUrl.contains("www.torn.com/page.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
         UserHelper.factionId != 0;
 
@@ -3131,7 +3133,7 @@ class WebViewFullState extends State<WebViewFull>
         getProfile = true;
       }
 
-      const attackUrl = 'loader.php?sid=attack&user2ID=';
+      const attackUrl = 'page.php?sid=attack&user2ID=';
       const attackUrl2 = 'loader2.php?sid=getInAttack&user2ID=';
       if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
           (!_currentUrl.contains(attackUrl2) && _attackTriggered) ||
@@ -3225,6 +3227,7 @@ class WebViewFullState extends State<WebViewFull>
       _cityTriggered = false;
       _attackTriggered = false;
     } else if ((_currentUrl.contains("loader.php?sid=attack&user2ID=") ||
+            _currentUrl.contains("page.php?sid=attack&user2ID=") ||
             _currentUrl.contains("loader2.php?sid=getInAttack&user2ID=")) &&
         _attackTriggered) {
       _crimesTriggered = false;
@@ -4226,6 +4229,7 @@ class WebViewFullState extends State<WebViewFull>
   Future _assessProfileAttack({required dom.Document document, String pageTitle = ""}) async {
     if (mounted) {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
+          !_currentUrl.contains("page.php?sid=attack&user2ID=") &&
           !_currentUrl.contains('loader2.php?sid=getInAttack&user2ID=') &&
           !_currentUrl.contains('torn.com/profiles.php?XID=') &&
           !_currentUrl.contains('torn.com/profiles.php?NID=')) {
@@ -4294,6 +4298,7 @@ class WebViewFullState extends State<WebViewFull>
           userId = 0;
         }
       } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=') ||
+          _currentUrl.contains("page.php?sid=attack&user2ID=") ||
           _currentUrl.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (_attackTriggered && _currentUrl == _lastProfileVisited) {
           return;
@@ -4737,7 +4742,7 @@ class WebViewFullState extends State<WebViewFull>
                   GestureDetector(
                     child: Image.asset('images/icons/home/crimes.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
-                      _loadUrl("https://www.torn.com/loader.php?sid=crimes");
+                      _loadUrl("https://www.torn.com/page.php?sid=crimes");
                       toastification.dismissAll();
                     },
                   )
@@ -5991,7 +5996,7 @@ class WebViewFullState extends State<WebViewFull>
           contentPadding: const EdgeInsets.all(10),
         );
 
-        const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+        const nextBaseUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
         if (!mounted) return;
         await _loadUrl('$nextBaseUrl${_chainingPayload!.attackIdList[_attackNumber]}');
         if (_chainingPayload!.war) {
@@ -6053,7 +6058,7 @@ class WebViewFullState extends State<WebViewFull>
 
   /// Not to be used right after launch
   Future<void> _launchNextAttack() async {
-    const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+    const nextBaseUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
     // Turn button grey
     setState(() {
       _nextButtonPressed = true;

@@ -652,7 +652,7 @@ class LootPageState extends State<LootPage> {
                 color: currentLevel >= 4 ? Colors.red : _themeProvider!.mainText,
               ),
               onTap: () async {
-                final url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+                final url = 'https://www.torn.com/page.php?sid=attack&user2ID=$npcId';
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
@@ -660,7 +660,7 @@ class LootPageState extends State<LootPage> {
                     );
               },
               onLongPress: () async {
-                final url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+                final url = 'https://www.torn.com/page.php?sid=attack&user2ID=$npcId';
                 await context.read<WebViewProvider>().openBrowserPreference(
                       context: context,
                       url: url,
@@ -1074,7 +1074,7 @@ class LootPageState extends State<LootPage> {
                       // Open chaining browser for Loot Rangers
                       context.read<WebViewProvider>().openBrowserPreference(
                             context: context,
-                            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
+                            url: "https://www.torn.com/page.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
                             browserTapType: BrowserTapType.chainShort,
                             isChainingBrowser: true,
                             chainingPayload: ChainingPayload()

@@ -3705,7 +3705,7 @@ class Prefs {
 
   // -- LockedTabsNavigationExceptions
   final List<List<String>> _defaultFullLockedTabsNavigationExceptions = [
-    ["https://www.torn.com/item.php", "https://www.torn.com/loader.php?sid=itemsMods"],
+    ["https://www.torn.com/item.php", "https://www.torn.com/page.php?sid=itemsMods"],
     ["https://www.torn.com/item.php", "https://www.torn.com/page.php?sid=ammo"],
   ];
 

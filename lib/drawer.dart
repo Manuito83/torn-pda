@@ -1452,14 +1452,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (!_settingsProvider.retaliationSectionEnabled ||
           (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
         launchBrowserWithUrl = true;
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=$assistId";
       } else {
         // Even if we meet above requirements, call the API and assess whether the user
         // as API permits (if he does not, open the browser anyway as he can't use the retals section)
         final attacksResult = await ApiCallsV1.getFactionAttacks();
         if (attacksResult is! FactionAttacksModel) {
           launchBrowserWithUrl = true;
-          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=$assistId";
         } else {
           // If we pass all checks above, redirect to the retals section
           _retalsRedirection = true;
@@ -1475,7 +1475,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
       launchBrowserWithUrl = true;
-      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=$assistId";
 
       Color? totalColor = Colors.grey[700];
       try {
@@ -1574,7 +1574,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
         // This is a standard loot alert for a single NPC
         launchBrowserWithUrl = true;
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=$assistId";
       } else if (incomingIds[0].contains("[")) {
         // This is a Loot Rangers alert for one or more NPCs
         final ids = <String>[];
@@ -1596,7 +1596,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // Open chaining browser for Loot Rangers
         _webViewProvider.openBrowserPreference(
           context: context,
-          url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+          url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
           browserTapType: BrowserTapType.chainShort,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -1734,7 +1734,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('400-')) {
         launchBrowserWithUrl = true;
         final npcId = payload.split('-')[1];
-        browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+        browserUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=$npcId';
       } else if (payload.contains('499-')) {
         // Loot Rangers payload is (split by -)
         // [0] 499
@@ -1761,7 +1761,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // Open chaining browser for Loot Rangers
         _webViewProvider.openBrowserPreference(
           context: context,
-          url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
+          url: "https://www.torn.com/page.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
           browserTapType: BrowserTapType.chainShort,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -1774,7 +1774,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             ..showOnlineFactionWarning = false,
         );
 
-        browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$lootRangersNpcsIds';
+        browserUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=$lootRangersNpcsIds';
       } else if (payload.contains('tornMessageId:')) {
         launchBrowserWithUrl = true;
         final messageId = payload.split(':');
@@ -1815,14 +1815,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (!_settingsProvider.retaliationSectionEnabled ||
             (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
           launchBrowserWithUrl = true;
-          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=$assistId";
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
           final attacksResult = await ApiCallsV1.getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowserWithUrl = true;
-            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+            browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=$assistId";
           } else {
             // If we pass all checks above, redirect to the retals section
             _retalsRedirection = true;
@@ -1840,7 +1840,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final assistId = assistSplit[0].split(':');
         final assistBody = assistSplit[1].split('assistDetails:');
         final bulkDetails = assistSplit[2].split('bulkDetails:');
-        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
+        browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=${assistId[1]}";
 
         Color? totalColor = Colors.grey[700];
         try {
@@ -1930,7 +1930,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (incomingIds.length == 1 && !incomingIds[0].contains("[")) {
           // This is a standard loot alert for a single NPC
           launchBrowserWithUrl = true;
-          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+          browserUrl = "https://www.torn.com/page.php?sid=attack&user2ID=$assistId";
         } else if (incomingIds[0].contains("[")) {
           // This is a Loot Rangers alert for one or more NPCs
           final ids = <String>[];
@@ -1952,7 +1952,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // Open chaining browser for Loot Rangers
           _webViewProvider.openBrowserPreference(
             context: context,
-            url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
+            url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
             browserTapType: BrowserTapType.chainShort,
             isChainingBrowser: true,
             chainingPayload: ChainingPayload()

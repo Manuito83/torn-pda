@@ -1783,7 +1783,7 @@ class WebViewProvider extends ChangeNotifier {
       String authUrlToLoad;
       if (!originalInitUrl.contains("torn.com")) return inputUrl;
       // Auth redirects to attack pages might fail
-      if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
+      if (originalInitUrl.contains("page.php?sid=attack&user")) return inputUrl;
 
       final int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inHours;
       if (elapsedSinceLastAuth > 6) {
@@ -2074,6 +2074,7 @@ class WebViewProvider extends ChangeNotifier {
       "sid=crimes": {'type': 'asset', 'path': 'images/icons/home/crimes.png'},
 
       "loader.php?sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
+      "page.php?sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
       "sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
 
       "bounties.php": {'type': 'asset', 'path': 'images/icons/home/bounty.png'},
@@ -2313,18 +2314,22 @@ class WebViewProvider extends ChangeNotifier {
       // Special check for attack loader URLs which are equivalent
       // https://www.torn.com/loader2.php?sid=getInAttack&user2ID=...
       // https://www.torn.com/loader.php?sid=attack&user2ID=...
-      if ((uri1.path.contains('loader.php') || uri1.path.contains('loader2.php')) &&
-          (uri2.path.contains('loader.php') || uri2.path.contains('loader2.php'))) {
-        final user1 = uri1.queryParameters['user2ID'];
-        final user2 = uri2.queryParameters['user2ID'];
 
-        if (user1 != null && user1 == user2) {
-          final sid1 = uri1.queryParameters['sid'];
-          final sid2 = uri2.queryParameters['sid'];
-          if ((sid1 == 'attack' || sid1 == 'getInAttack') && (sid2 == 'attack' || sid2 == 'getInAttack')) {
-            return true;
-          }
-        }
+      /// Returns the int of attacker ID, or null if not an attack loader URL
+      int? getAttackerIdOrNull(Uri uri) {
+        // `loader2.php` will match `loader.php` so we don't need to check both
+        if (!uri.path.contains("loader.php") && !uri.path.contains("page.php")) return null;
+        final sid = uri.queryParameters['sid'];
+        if (sid != "attack" && sid != "getInAttack") return null;
+        final user2Id = uri.queryParameters["user2ID"];
+        if (user2Id == null) return null;
+        return int.tryParse(user2Id);
+      }
+
+      final attackerId1 = getAttackerIdOrNull(uri1);
+      final attackerId2 = getAttackerIdOrNull(uri2);
+      if (attackerId1 is int && attackerId1 == attackerId2) {
+        return true;
       }
     } catch (e) {
       // Ignore
