@@ -1278,10 +1278,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Race Track"
         ..nickname = "Race Track"
-        ..url = "https://www.torn.com/loader.php?sid=racing"
+        ..url = "https://www.torn.com/page.php?sid=racing"
         ..originalName = "Race Track"
         ..originalNickname = "Race Track"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=racing"
+        ..originalUrl = "https://www.torn.com/page.php?sid=racing"
         ..originalName = "Race Track"
         ..iconUrl = "images/icons/map/race_track.png"
         ..color = Colors.green[700],

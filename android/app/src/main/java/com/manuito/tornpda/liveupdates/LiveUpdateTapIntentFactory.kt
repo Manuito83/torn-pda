@@ -41,7 +41,7 @@ class LiveUpdateTapIntentFactory(private val context: Context) {
             data = Uri.parse(
                 when (route) {
                     LiveUpdateIntentExtras.ROUTE_TRAVEL -> "tornpda://travel/live"
-                    LiveUpdateIntentExtras.ROUTE_RACING -> "tornpda://www.torn.com/loader.php?sid=racing"
+                    LiveUpdateIntentExtras.ROUTE_RACING -> "tornpda://www.torn.com/page.php?sid=racing"
                     else -> "tornpda://www.torn.com"
                 }
             )

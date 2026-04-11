@@ -2132,6 +2132,7 @@ class WebViewProvider extends ChangeNotifier {
       "travelagency.php": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
       "sid=travel": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
 
+      "page.php?sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
       "loader.php?sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
       "sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
     };
