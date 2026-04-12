@@ -126,7 +126,9 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") && UserHelper.factionId != 0)
+                    if ((widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                            widget.url.contains("www.torn.com/page.php?sid=attack&user2ID=")) &&
+                        UserHelper.factionId != 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: ElevatedButton(

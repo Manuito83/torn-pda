@@ -5200,10 +5200,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 InkWell(
                   borderRadius: BorderRadius.circular(100),
                   onLongPress: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: false);
                   },
                   onTap: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: true);
                   },
                   child: const Padding(
                     padding: EdgeInsets.only(left: 5),
@@ -5218,10 +5218,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(100),
                   onLongPress: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: false);
                   },
                   onTap: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: true);
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(left: 5),

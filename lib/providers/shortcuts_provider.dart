@@ -302,10 +302,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Missions"
         ..nickname = "Missions"
-        ..url = "https://www.torn.com/loader.php?sid=missions"
+        ..url = "https://www.torn.com/page.php?sid=missions"
         ..originalName = "Missions"
         ..originalNickname = "Missions"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=missions"
+        ..originalUrl = "https://www.torn.com/page.php?sid=missions"
         ..iconUrl = "images/icons/home/missions.png"
         ..color = Colors.grey[600],
       Shortcut()
@@ -990,10 +990,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Casino: Craps"
         ..nickname = "Craps"
-        ..url = "https://www.torn.com/loader.php?sid=craps"
+        ..url = "https://www.torn.com/page.php?sid=craps"
         ..originalName = "Casino: Craps"
         ..originalNickname = "Craps"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=craps"
+        ..originalUrl = "https://www.torn.com/page.php?sid=craps"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
@@ -1278,10 +1278,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Race Track"
         ..nickname = "Race Track"
-        ..url = "https://www.torn.com/loader.php?sid=racing"
+        ..url = "https://www.torn.com/page.php?sid=racing"
         ..originalName = "Race Track"
         ..originalNickname = "Race Track"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=racing"
+        ..originalUrl = "https://www.torn.com/page.php?sid=racing"
         ..originalName = "Race Track"
         ..iconUrl = "images/icons/map/race_track.png"
         ..color = Colors.green[700],
