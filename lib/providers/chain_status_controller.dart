@@ -264,6 +264,14 @@ class ChainStatusController extends GetxController {
     log("Chain watcher timers deactivated!");
   }
 
+  @override
+  void onClose() {
+    _tickerDecreaseCount?.cancel();
+    _tickerCallFullChainApi?.cancel();
+    _tickerCallOnlyStatusColorApi?.cancel();
+    super.onClose();
+  }
+
   // MARK: - Watcher Control
   void activateWatcher() {
     _watcherActive = true;
