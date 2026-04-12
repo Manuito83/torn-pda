@@ -24,7 +24,10 @@ class Shortcut {
     this.originalNickname = '',
     this.originalUrl = '',
     this.iconUrl = '',
+    this.originalIconUrl = '',
     this.color = Colors.grey,
+    this.originalColor = Colors.grey,
+    this.iconColor,
     this.isCustom = false,
     this.addPlayerId = false,
     this.addFactionId = false,
@@ -40,7 +43,10 @@ class Shortcut {
   String? originalNickname;
   String? originalUrl;
   String? iconUrl;
+  String? originalIconUrl;
   Color? color;
+  Color? originalColor;
+  Color? iconColor;
   bool? isCustom;
   bool? addPlayerId;
   bool? addFactionId;
@@ -56,7 +62,10 @@ class Shortcut {
         originalNickname: json["originalNickname"],
         originalUrl: json["originalUrl"],
         iconUrl: json["iconUrl"],
+        originalIconUrl: json["originalIconUrl"] ?? json["iconUrl"],
         color: getColorFromJson(json["color"]),
+        originalColor: getColorFromJson(json["originalColor"] ?? json["color"]),
+        iconColor: getColorFromJson(json["iconColor"]),
         isCustom: json["isCustom"],
         addPlayerId: json["addPlayerId"],
         addFactionId: json["addFactionId"],
@@ -73,7 +82,10 @@ class Shortcut {
         "originalNickname": originalNickname,
         "originalUrl": originalUrl,
         "iconUrl": iconUrl,
+        "originalIconUrl": originalIconUrl,
         "color": color?.toARGB32(),
+        "originalColor": originalColor?.toARGB32(),
+        "iconColor": iconColor?.toARGB32(),
         "isCustom": isCustom,
         "addPlayerId": addPlayerId,
         "addFactionId": addFactionId,

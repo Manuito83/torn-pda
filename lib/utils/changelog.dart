@@ -108,6 +108,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.13.4'
         ..date = '20 APR 2026'
         ..features = [
+          "Player profile widget now shows active bounties",
+          "Shortcuts can now be customized with different icons, color overlays, and border colors",
           "Added grid carousel display mode for shortcuts in Profile [shahiutsav]",
           "Fixed URL redirects [Kwack]",
           "Fixed bazaar Fill Max button [Kwack]",

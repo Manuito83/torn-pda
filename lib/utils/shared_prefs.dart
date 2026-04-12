@@ -183,6 +183,7 @@ class Prefs {
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
+  final String _kBountyAlertEnabled = "pda_bountyAlertEnabled";
   final String _kHitInMiniProfileOpensNewTab = "pda__hitInMiniProfileOpensNewTab";
   final String _kHitInMiniProfileOpensNewTabAndChangeTab = "pda__hitInMiniProfileOpensNewTabAndChangeTab";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
@@ -1902,6 +1903,15 @@ class Prefs {
 
   Future setExtraPlayerNetworth(bool value) async {
     return await PrefsDatabase.setBool(_kExtraPlayerNetworth, value);
+  }
+
+  // *************
+  Future<bool> getBountyAlertEnabled() async {
+    return await PrefsDatabase.getBool(_kBountyAlertEnabled, true);
+  }
+
+  Future setBountyAlertEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kBountyAlertEnabled, value);
   }
 
   // *************

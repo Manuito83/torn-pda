@@ -810,6 +810,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _bountyAlertEnabled = true;
+  bool get bountyAlertEnabled => _bountyAlertEnabled;
+  set changeBountyAlertEnabled(bool value) {
+    _bountyAlertEnabled = value;
+    Prefs().setBountyAlertEnabled(_bountyAlertEnabled);
+    notifyListeners();
+  }
+
   var _hitInMiniProfileOpensNewTab = false;
   bool get hitInMiniProfileOpensNewTab => _hitInMiniProfileOpensNewTab;
   set hitInMiniProfileOpensNewTab(bool value) {
@@ -1674,6 +1682,7 @@ class SettingsProvider extends ChangeNotifier {
     _notesWidgetEnabledProfile = await Prefs().getNotesWidgetEnabledProfile();
     _notesWidgetEnabledProfileWhenEmpty = await Prefs().getNotesWidgetEnabledProfileWhenEmpty();
     _extraPlayerNetworth = await Prefs().getExtraPlayerNetworth();
+    _bountyAlertEnabled = await Prefs().getBountyAlertEnabled();
 
     _hitInMiniProfileOpensNewTab = await Prefs().getHitInMiniProfileOpensNewTab();
     _hitInMiniProfileOpensNewTabAndChangeTab = await Prefs().getHitInMiniProfileOpensNewTabAndChangeTab();

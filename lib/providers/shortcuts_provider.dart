@@ -56,6 +56,9 @@ class ShortcutsProvider extends ChangeNotifier {
     inactiveShortcut.name = inactiveShortcut.originalName;
     inactiveShortcut.nickname = inactiveShortcut.originalNickname;
     inactiveShortcut.url = inactiveShortcut.originalUrl;
+    inactiveShortcut.iconUrl = inactiveShortcut.originalIconUrl;
+    inactiveShortcut.color = inactiveShortcut.originalColor;
+    inactiveShortcut.iconColor = null;
     _activeShortcuts.remove(inactiveShortcut);
     _saveListAfterChanges();
     notifyListeners();
@@ -66,6 +69,9 @@ class ShortcutsProvider extends ChangeNotifier {
     existing.name = edited.name;
     existing.nickname = edited.name;
     existing.url = edited.url;
+    existing.iconUrl = edited.iconUrl;
+    existing.color = edited.color;
+    existing.iconColor = edited.iconColor;
     _saveListAfterChanges();
     notifyListeners();
   }
@@ -76,6 +82,9 @@ class ShortcutsProvider extends ChangeNotifier {
       short.name = short.originalName;
       short.nickname = short.originalNickname;
       short.url = short.originalUrl;
+      short.iconUrl = short.originalIconUrl;
+      short.color = short.originalColor;
+      short.iconColor = null;
     }
     _activeShortcuts.clear();
     _saveListAfterChanges();
@@ -131,7 +140,10 @@ class ShortcutsProvider extends ChangeNotifier {
               stockShort
                 ..name = savedShort.name
                 ..nickname = savedShort.nickname
-                ..url = savedShort.url;
+                ..url = savedShort.url
+                ..iconUrl = savedShort.iconUrl ?? stockShort.originalIconUrl
+                ..color = savedShort.color ?? stockShort.originalColor
+                ..iconColor = savedShort.iconColor;
               activateSavedShortcut(stockShort);
             }
           }
@@ -1375,5 +1387,10 @@ class ShortcutsProvider extends ChangeNotifier {
         ..iconUrl = "images/icons/map/visitor_center.png"
         ..color = Colors.red[200],
     });
+
+    for (final short in _allShortcuts) {
+      short.originalIconUrl = short.iconUrl;
+      short.originalColor = short.color;
+    }
   }
 }

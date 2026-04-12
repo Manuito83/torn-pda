@@ -2870,6 +2870,43 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+      if (_settingsProvider.extraPlayerInformation)
+        SearchableRow(
+          label: "Show bounty alert",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Show bounty alert")),
+                    Switch(
+                      value: _settingsProvider.bountyAlertEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.changeBountyAlertEnabled = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'If enabled, a bounty indicator will be shown when visiting the profile of a player who has an active bounty',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       SearchableRow(
         label: "Mini-profile name tap opens new tab",
         searchText: _searchText,

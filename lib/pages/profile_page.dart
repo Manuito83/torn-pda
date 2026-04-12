@@ -1,5 +1,6 @@
 import 'package:torn_pda/utils/live_activities/racing_live_activity_parser.dart';
 import 'package:torn_pda/widgets/profile/shortcut_paged_grid.dart';
+import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
 // Dart imports:
 import 'dart:async';
 import 'dart:developer';
@@ -1002,7 +1003,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Image.asset(
                   thisShortcut.iconUrl!,
                   width: 16,
-                  color: _themeProvider!.mainText,
+                  color: isFullColorShortcutIcon(thisShortcut.iconUrl)
+                      ? null
+                      : (thisShortcut.iconColor ?? _themeProvider!.mainText),
                 ),
               ),
               const SizedBox(height: 3),
@@ -1033,7 +1036,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: Image.asset(
               thisShortcut.iconUrl!,
               width: 16,
-              color: _themeProvider!.mainText,
+              color: isFullColorShortcutIcon(thisShortcut.iconUrl)
+                  ? null
+                  : (thisShortcut.iconColor ?? _themeProvider!.mainText),
             ),
           ),
         );
