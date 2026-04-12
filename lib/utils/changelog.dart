@@ -105,7 +105,7 @@ class ChangeLogState extends State<ChangeLog> {
     // v3.13.3 - Build 640 - built 12/04/2026
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.13.4'
+        ..version = 'Torn PDA v3.13.3'
         ..date = '20 APR 2026'
         ..features = [
           "Player profile widget now shows active bounties",
