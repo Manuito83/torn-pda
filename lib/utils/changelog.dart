@@ -111,7 +111,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added grid carousel display mode for shortcuts in Profile [shahiutsav]",
           "Fixed URL redirects [Kwack]",
           "Fixed bazaar Fill Max button [Kwack]",
-          ""
+          "General code fixes [AlexTzib]",
         ],
     );
 
