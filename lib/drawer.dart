@@ -1378,7 +1378,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       browserUrl = "https://www.torn.com/travelagency.php";
     } else if (racing) {
       launchBrowserWithUrl = true;
-      browserUrl = "https://www.torn.com/loader.php?sid=racing";
+      browserUrl = "https://www.torn.com/page.php?sid=racing";
     } else if (messages) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/messages.php";
@@ -1716,7 +1716,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com';
       } else if (payload.contains('racing') || payload.contains('race')) {
         launchBrowserWithUrl = true;
-        browserUrl = 'https://www.torn.com/loader.php?sid=racing';
+        browserUrl = 'https://www.torn.com/page.php?sid=racing';
       } else if (payload.contains("scriptupdate")) {
         setState(() {
           _webViewProvider.browserShowInForeground = false;
