@@ -527,13 +527,7 @@ class WebViewFullState extends State<WebViewFull>
       CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
     );
 
-    _progressAnimation.addListener(() {
-      if (mounted) {
-        setState(() {
-          _animatedProgress = _progressAnimation.value;
-        });
-      }
-    });
+    _progressAnimation.addListener(_onProgressAnimationUpdate);
   }
 
   String _buildUserAgentSuffix() {
@@ -578,6 +572,7 @@ class WebViewFullState extends State<WebViewFull>
       );
 
       WidgetsBinding.instance.removeObserver(this);
+      _findController.removeListener(onFindInputTextChange);
       _findController.dispose();
       _findFocus.dispose();
 
@@ -590,6 +585,7 @@ class WebViewFullState extends State<WebViewFull>
       _scrollControllerBugsReport.dispose();
 
       // Dispose progress animation controller
+      _progressAnimation.removeListener(_onProgressAnimationUpdate);
       _progressController.dispose();
 
       webViewController?.dispose();
@@ -6389,6 +6385,14 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  void _onProgressAnimationUpdate() {
+    if (mounted) {
+      setState(() {
+        _animatedProgress = _progressAnimation.value;
+      });
+    }
+  }
+
   void _animateProgressTo(double newProgress) {
     if (!mounted) return;
 
@@ -6397,6 +6401,7 @@ class WebViewFullState extends State<WebViewFull>
 
     if (targetProgress < currentProgress && currentProgress > 0.1) return;
 
+    _progressAnimation.removeListener(_onProgressAnimationUpdate);
     _progressAnimation = Tween<double>(
       begin: currentProgress,
       end: targetProgress,
@@ -6404,6 +6409,7 @@ class WebViewFullState extends State<WebViewFull>
       parent: _progressController,
       curve: Curves.easeOut,
     ));
+    _progressAnimation.addListener(_onProgressAnimationUpdate);
 
     _progressController.reset();
     _progressController.forward();
