@@ -1474,42 +1474,7 @@ class WebViewFullState extends State<WebViewFull>
 
             // Check for content-type header to prevent loading of non-JS files.
             // Add anyway if there's no header, as it's probably a userscript.
-            if (incomingUrl.endsWith(".user.js") &&
-                (action.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
-              // First look for existing script with this url
-              final existingScript = _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == incomingUrl);
-              late String message;
-              if (existingScript != null) {
-                message = "UserScript already exists, opening dialog...";
-                showDialog(
-                    context: context,
-                    builder: (_) => UserScriptsAddDialog(
-                          editingExistingScript: true,
-                          scriptBeingEdited: existingScript,
-                          defaultPage: 1,
-                          // No need for default URL as it already exists in the script object
-                        ));
-              } else {
-                message = "UserScript detected, redirecting...";
-                showDialog(
-                    builder: (_) => UserScriptsAddDialog(
-                          editingExistingScript: false,
-                          defaultUrl: incomingUrl,
-                          defaultPage: 1,
-                        ),
-                    context: context);
-              }
-              BotToast.showText(
-                text: message,
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.blue,
-                duration: const Duration(seconds: 3),
-                contentPadding: const EdgeInsets.all(10),
-                clickClose: true,
-              );
+            if (_interceptUserScriptUrl(incomingUrl)) {
               return NavigationActionPolicy.CANCEL;
             }
 
@@ -1518,6 +1483,12 @@ class WebViewFullState extends State<WebViewFull>
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
             final String url = request.request.url.toString().replaceAll("http:", "https:");
+
+            // On Android, userscript URLs can sometimes be detected here
+            if (url.endsWith(".user.js")) {
+              _interceptUserScriptUrl(url);
+              return false;
+            }
 
             // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
             // to open a window, a new tab is created but we can't see it and looks like a glitch)
@@ -5384,6 +5355,46 @@ class WebViewFullState extends State<WebViewFull>
         ''',
       );
     } catch (_) {}
+  }
+
+  /// Checks if [url] is a userscript (.user.js) and, if so, opens the add/edit dialog.
+  /// Returns true if the URL was intercepted.
+  bool _interceptUserScriptUrl(String url) {
+    if (!url.endsWith(".user.js")) return false;
+
+    final existingScript = _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == url);
+    late String message;
+    if (existingScript != null) {
+      message = "UserScript already exists, redirecting!";
+      showDialog(
+          context: context,
+          builder: (_) => UserScriptsAddDialog(
+                editingExistingScript: true,
+                scriptBeingEdited: existingScript,
+                defaultPage: 1,
+              ));
+    } else {
+      message = "UserScript detected, redirecting!";
+      showDialog(
+          builder: (_) => UserScriptsAddDialog(
+                editingExistingScript: false,
+                defaultUrl: url,
+                defaultPage: 1,
+              ),
+          context: context);
+    }
+    BotToast.showText(
+      text: message,
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.blue,
+      duration: const Duration(seconds: 3),
+      contentPadding: const EdgeInsets.all(10),
+      clickClose: true,
+    );
+    return true;
   }
 
   Future _loadUrl(String? inputUrl) async {

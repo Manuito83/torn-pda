@@ -1351,31 +1351,7 @@ class WebViewProvider extends ChangeNotifier {
   bool tryGoBack() {
     final tab = _tabList[currentTab];
 
-    final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
-    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
-    if (cancelDueLock != null && cancelDueLock) {
-      return false;
-    }
-
-    if (tab.historyBack.isNotEmpty) {
-      addToHistoryForward(tab: tab, url: tab.currentUrl);
-      tab.historyBack.removeLast();
-      // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
-      tab.currentUrl = previous;
-      _saveTabs();
-      BotToast.showText(
-        text: "Back",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600]!,
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-      return true;
-    } else {
+    if (tab.historyBack.isEmpty) {
       BotToast.showText(
         text: "Can't go back!",
         textStyle: const TextStyle(
@@ -1388,37 +1364,36 @@ class WebViewProvider extends ChangeNotifier {
       );
       return false;
     }
-  }
 
-  bool tryGoForward() {
-    final tab = _tabList[currentTab];
-
-    final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
+    final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
     final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
     if (cancelDueLock != null && cancelDueLock) {
       return false;
     }
 
-    if (tab.historyForward.isNotEmpty) {
-      addToHistoryBack(tab: tab, currentUrl: tab.currentUrl);
+    addToHistoryForward(tab: tab, url: tab.currentUrl);
+    tab.historyBack.removeLast();
+    // Call child method directly, otherwise the 'back' button will only work with the first webView
+    tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
+    tab.currentUrl = previous;
+    _saveTabs();
+    BotToast.showText(
+      text: "Back",
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.grey[600]!,
+      duration: const Duration(seconds: 1),
+      contentPadding: const EdgeInsets.all(10),
+    );
+    return true;
+  }
 
-      tab.historyForward.removeLast();
-      // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
-      tab.currentUrl = previous;
-      _saveTabs();
-      BotToast.showText(
-        text: "Forward",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600]!,
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-      return true;
-    } else {
+  bool tryGoForward() {
+    final tab = _tabList[currentTab];
+
+    if (tab.historyForward.isEmpty) {
       BotToast.showText(
         text: "Can't go forward!",
         textStyle: const TextStyle(
@@ -1431,6 +1406,31 @@ class WebViewProvider extends ChangeNotifier {
       );
       return false;
     }
+
+    final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
+    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
+    if (cancelDueLock != null && cancelDueLock) {
+      return false;
+    }
+
+    addToHistoryBack(tab: tab, currentUrl: tab.currentUrl);
+
+    tab.historyForward.removeLast();
+    // Call child method directly, otherwise the 'back' button will only work with the first webView
+    tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
+    tab.currentUrl = previous;
+    _saveTabs();
+    BotToast.showText(
+      text: "Forward",
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.grey[600]!,
+      duration: const Duration(seconds: 1),
+      contentPadding: const EdgeInsets.all(10),
+    );
+    return true;
   }
 
   Future<void> assessLoginErrorsFromPdaIcon() async {
