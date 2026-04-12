@@ -2318,8 +2318,9 @@ class WebViewProvider extends ChangeNotifier {
 
       /// Returns the int of attacker ID, or null if not an attack loader URL
       int? getAttackerIdOrNull(Uri uri) {
-        // `loader2.php` will match `loader.php` so we don't need to check both
-        if (!uri.path.contains("loader.php") && !uri.path.contains("page.php")) return null;
+        if (!uri.path.contains("loader.php") && !uri.path.contains("loader2.php") && !uri.path.contains("page.php")) {
+          return null;
+        }
         final sid = uri.queryParameters['sid'];
         if (sid != "attack" && sid != "getInAttack") return null;
         final user2Id = uri.queryParameters["user2ID"];

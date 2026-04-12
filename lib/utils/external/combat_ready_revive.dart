@@ -23,7 +23,7 @@ class CombatReadyRevive {
     final modelOut = CombatReadyReviveModel()
       ..userId = tornId.toString()
       ..userName = username
-      ..faction = faction;
+      ..faction = faction
       ..country = country;
 
     final bodyOut = combatReadyReviveModelToJson(modelOut);
@@ -41,7 +41,8 @@ class CombatReadyRevive {
       String? message = json.decode(response.body)["message"];
 
       if (code == "403") {
-        message = "Your account is blacklisted from Combat Ready revive services. Contact CR leadership if you believe this is an error.";
+        message =
+            "Your account is blacklisted from Combat Ready revive services. Contact CR leadership if you believe this is an error.";
       } else if (code == "500") {
         message = "Error: an unknown error has occurred, please report this to Combat Ready leadership";
       }

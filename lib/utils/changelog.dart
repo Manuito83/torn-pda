@@ -102,6 +102,19 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.13.3 - Build 640 - built 12/04/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.13.4'
+        ..date = '20 APR 2026'
+        ..features = [
+          "Added grid carousel display mode for shortcuts in Profile [shahiutsav]",
+          "Fixed URL redirects [Kwack]",
+          "Fixed bazaar Fill Max button [Kwack]",
+          ""
+        ],
+    );
+
     // v3.13.2 - Build 639 - built 30/03/2026
     itemList.add(
       ChangeLogItem()

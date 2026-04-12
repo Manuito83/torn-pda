@@ -1490,7 +1490,7 @@ class WebViewFullState extends State<WebViewFull>
                           // No need for default URL as it already exists in the script object
                         ));
               } else {
-                message = "UserScript detected, opening dialog...";
+                message = "UserScript detected, redirecting...";
                 showDialog(
                     builder: (_) => UserScriptsAddDialog(
                           editingExistingScript: false,
