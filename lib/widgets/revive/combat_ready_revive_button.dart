@@ -196,6 +196,7 @@ Future<void> openCombatReadyReviveDialog(BuildContext _, ThemeProvider themeProv
                                 tornId: user!.playerId,
                                 username: user!.name,
                                 faction: user!.faction!.factionName,
+                                country: user!.travel!.destination,
                               );
 
                               combatReady.callMedic().then((args) {
