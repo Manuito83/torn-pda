@@ -65,7 +65,7 @@ class Shortcut {
         originalIconUrl: json["originalIconUrl"] ?? json["iconUrl"],
         color: getColorFromJson(json["color"]),
         originalColor: getColorFromJson(json["originalColor"] ?? json["color"]),
-        iconColor: getColorFromJson(json["iconColor"]),
+        iconColor: json["iconColor"] != null ? getColorFromJson(json["iconColor"]) : null,
         isCustom: json["isCustom"],
         addPlayerId: json["addPlayerId"],
         addFactionId: json["addFactionId"],

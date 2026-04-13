@@ -132,6 +132,10 @@ class ShortcutsProvider extends ChangeNotifier {
     for (final savedShortRaw in savedLoad) {
       try {
         final savedShort = shortcutFromJson(savedShortRaw);
+        // Black was never a selectable color; treat it as null (bug from earlier beta)
+        if (savedShort.iconColor?.toARGB32() == Colors.black.toARGB32()) {
+          savedShort.iconColor = null;
+        }
         if (savedShort.isCustom!) {
           activateSavedShortcut(savedShort);
         } else {

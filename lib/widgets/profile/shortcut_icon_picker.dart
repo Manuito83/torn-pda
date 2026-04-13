@@ -122,6 +122,8 @@ const List<ShortcutIconOption> shortcutIconOptions = [
 ];
 
 const List<Color> shortcutPickerColors = [
+  Color(0xFF212121),
+  Color(0xFFF5F5F5),
   Color(0xFFFF8F00),
   Color(0xFF757575),
   Color(0xFF388E3C),
@@ -180,7 +182,7 @@ class ShortcutIconPicker extends StatelessWidget {
                   spacing: 6,
                   runSpacing: 6,
                   children: normalIcons.map((option) {
-                    return _iconTile(option, hasOverlay);
+                    return _iconTile(option, hasOverlay, themeProvider.mainText);
                   }).toList(),
                 ),
                 if (fullColorIcons.isNotEmpty) ...[
@@ -194,7 +196,7 @@ class ShortcutIconPicker extends StatelessWidget {
                     spacing: 6,
                     runSpacing: 6,
                     children: fullColorIcons.map((option) {
-                      return _iconTile(option, false);
+                      return _iconTile(option, false, themeProvider.mainText);
                     }).toList(),
                   ),
                 ],
@@ -242,7 +244,7 @@ class ShortcutIconPicker extends StatelessWidget {
     );
   }
 
-  Widget _iconTile(ShortcutIconOption option, bool applyOverlay) {
+  Widget _iconTile(ShortcutIconOption option, bool applyOverlay, Color mainText) {
     final isSelected = option.iconUrl == selectedIconUrl;
     return GestureDetector(
       onTap: () {
@@ -269,7 +271,7 @@ class ShortcutIconPicker extends StatelessWidget {
             option.iconUrl,
             width: 24,
             height: 24,
-            color: applyOverlay ? selectedIconColor : null,
+            color: option.fullColor ? null : (applyOverlay ? selectedIconColor : mainText),
           ),
         ),
       ),
