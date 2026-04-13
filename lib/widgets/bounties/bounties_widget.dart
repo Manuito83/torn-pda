@@ -52,6 +52,7 @@ class BountiesWidgetState extends State<BountiesWidget> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _expandableController.dispose();
     super.dispose();
   }
 

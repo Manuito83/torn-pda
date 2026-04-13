@@ -77,8 +77,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.13.3';
-const String androidCompilation = '640';
-const String iosCompilation = '640';
+const String androidCompilation = '641';
+const String iosCompilation = '641';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration

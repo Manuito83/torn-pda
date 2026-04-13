@@ -1017,11 +1017,27 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _travelDrugCooldownWarningThreshold = 0;
+  int get travelDrugCooldownWarningThreshold => _travelDrugCooldownWarningThreshold;
+  set travelDrugCooldownWarningThreshold(int choice) {
+    _travelDrugCooldownWarningThreshold = choice;
+    Prefs().setTravelDrugCooldownWarningThreshold(_travelDrugCooldownWarningThreshold);
+    notifyListeners();
+  }
+
   var _travelBoosterCooldownWarning = true;
   bool get travelBoosterCooldownWarning => _travelBoosterCooldownWarning;
   set travelBoosterCooldownWarning(bool choice) {
     _travelBoosterCooldownWarning = choice;
     Prefs().setTravelBoosterCooldownWarning(_travelBoosterCooldownWarning);
+    notifyListeners();
+  }
+
+  var _travelBoosterCooldownWarningThreshold = 0;
+  int get travelBoosterCooldownWarningThreshold => _travelBoosterCooldownWarningThreshold;
+  set travelBoosterCooldownWarningThreshold(int choice) {
+    _travelBoosterCooldownWarningThreshold = choice;
+    Prefs().setTravelBoosterCooldownWarningThreshold(_travelBoosterCooldownWarningThreshold);
     notifyListeners();
   }
 
@@ -1750,7 +1766,9 @@ class SettingsProvider extends ChangeNotifier {
     _travelLifeExcessWarning = await Prefs().getTravelLifeExcessWarning();
     _travelLifeExcessWarningThreshold = await Prefs().getTravelLifeExcessWarningThreshold();
     _travelDrugCooldownWarning = await Prefs().getTravelDrugCooldownWarning();
+    _travelDrugCooldownWarningThreshold = await Prefs().getTravelDrugCooldownWarningThreshold();
     _travelBoosterCooldownWarning = await Prefs().getTravelBoosterCooldownWarning();
+    _travelBoosterCooldownWarningThreshold = await Prefs().getTravelBoosterCooldownWarningThreshold();
     _travelWalletMoneyWarning = await Prefs().getTravelWalletMoneyWarning();
     _travelWalletMoneyWarningThreshold = await Prefs().getTravelWalletMoneyWarningThreshold();
 

@@ -396,6 +396,7 @@ class CustomSlidingUpPanelState extends State<CustomSlidingUpPanel> with SingleT
   @override
   void dispose() {
     _ac.dispose();
+    _sc.dispose();
     super.dispose();
   }
 

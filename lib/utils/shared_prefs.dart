@@ -251,7 +251,9 @@ class Prefs {
   final String _kTravelLifeExcessWarning = "pda_travelLifeExcessWarning";
   final String _kTravelLifeExcessWarningThreshold = "pda_travelLifeExcessWarningThreshold";
   final String _kTravelDrugCooldownWarning = "pda_travelDrugCooldownWarning";
+  final String _kTravelDrugCooldownWarningThreshold = "pda_travelDrugCooldownWarningThreshold";
   final String _kTravelBoosterCooldownWarning = "pda_travelBoosterCooldownWarning";
+  final String _kTravelBoosterCooldownWarningThreshold = "pda_travelBoosterCooldownWarningThreshold";
   final String _kTravelWalletMoneyWarning = "pda_travelWalletMoneyWarning";
   final String _kTravelWalletMoneyWarningThreshold = "pda_travelWalletMoneyWarningThreshold";
   final String _kExpandEvents = "pda_ExpandEvents";
@@ -2435,12 +2437,28 @@ class Prefs {
     return await PrefsDatabase.setBool(_kTravelDrugCooldownWarning, value);
   }
 
+  Future<int> getTravelDrugCooldownWarningThreshold() async {
+    return await PrefsDatabase.getInt(_kTravelDrugCooldownWarningThreshold, 0);
+  }
+
+  Future setTravelDrugCooldownWarningThreshold(int value) async {
+    return await PrefsDatabase.setInt(_kTravelDrugCooldownWarningThreshold, value);
+  }
+
   Future<bool> getTravelBoosterCooldownWarning() async {
     return await PrefsDatabase.getBool(_kTravelBoosterCooldownWarning, true);
   }
 
   Future setTravelBoosterCooldownWarning(bool value) async {
     return await PrefsDatabase.setBool(_kTravelBoosterCooldownWarning, value);
+  }
+
+  Future<int> getTravelBoosterCooldownWarningThreshold() async {
+    return await PrefsDatabase.getInt(_kTravelBoosterCooldownWarningThreshold, 0);
+  }
+
+  Future setTravelBoosterCooldownWarningThreshold(int value) async {
+    return await PrefsDatabase.setInt(_kTravelBoosterCooldownWarningThreshold, value);
   }
 
   Future<bool> getTravelWalletMoneyWarning() async {

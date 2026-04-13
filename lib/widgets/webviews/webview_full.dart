@@ -527,13 +527,7 @@ class WebViewFullState extends State<WebViewFull>
       CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
     );
 
-    _progressAnimation.addListener(() {
-      if (mounted) {
-        setState(() {
-          _animatedProgress = _progressAnimation.value;
-        });
-      }
-    });
+    _progressAnimation.addListener(_onProgressAnimationUpdate);
   }
 
   String _buildUserAgentSuffix() {
@@ -578,6 +572,7 @@ class WebViewFullState extends State<WebViewFull>
       );
 
       WidgetsBinding.instance.removeObserver(this);
+      _findController.removeListener(onFindInputTextChange);
       _findController.dispose();
       _findFocus.dispose();
 
@@ -590,6 +585,7 @@ class WebViewFullState extends State<WebViewFull>
       _scrollControllerBugsReport.dispose();
 
       // Dispose progress animation controller
+      _progressAnimation.removeListener(_onProgressAnimationUpdate);
       _progressController.dispose();
 
       webViewController?.dispose();
@@ -4804,7 +4800,16 @@ class WebViewFullState extends State<WebViewFull>
 
       final drugsCooldownCheck = _settingsProvider.travelDrugCooldownWarning;
       if (drugsCooldownCheck) {
-        if (stats.cooldowns!.drug == 0) {
+        final drugThresholdSeconds = _settingsProvider.travelDrugCooldownWarningThreshold * 3600;
+        if (stats.cooldowns!.drug! <= drugThresholdSeconds) {
+          String drugWarningText;
+          if (stats.cooldowns!.drug == 0) {
+            drugWarningText = 'No drugs cooldown!';
+          } else {
+            final hours = stats.cooldowns!.drug! ~/ 3600;
+            final minutes = (stats.cooldowns!.drug! % 3600) ~/ 60;
+            drugWarningText = 'Drug cooldown: ${hours}h ${minutes}m remaining!';
+          }
           cooldownRows.add(
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -4817,9 +4822,9 @@ class WebViewFullState extends State<WebViewFull>
                       children: [
                         Image.asset('images/icons/cooldowns/drug5.png', width: 24, color: Colors.grey),
                         const SizedBox(width: 20),
-                        const Flexible(
+                        Flexible(
                           child: Text(
-                            'No drugs cooldown!',
+                            drugWarningText,
                           ),
                         ),
                       ],
@@ -4859,7 +4864,16 @@ class WebViewFullState extends State<WebViewFull>
 
       final boosterCooldownCheck = _settingsProvider.travelBoosterCooldownWarning;
       if (boosterCooldownCheck) {
-        if (stats.cooldowns!.booster == 0) {
+        final thresholdSeconds = _settingsProvider.travelBoosterCooldownWarningThreshold * 3600;
+        if (stats.cooldowns!.booster! <= thresholdSeconds) {
+          String warningText;
+          if (stats.cooldowns!.booster == 0) {
+            warningText = 'No booster cooldown!';
+          } else {
+            final hours = stats.cooldowns!.booster! ~/ 3600;
+            final minutes = (stats.cooldowns!.booster! % 3600) ~/ 60;
+            warningText = 'Booster cooldown: ${hours}h ${minutes}m remaining!';
+          }
           cooldownRows.add(
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -4872,9 +4886,9 @@ class WebViewFullState extends State<WebViewFull>
                       children: [
                         Image.asset('images/icons/cooldowns/booster5.png', width: 24, color: Colors.grey),
                         const SizedBox(width: 20),
-                        const Flexible(
+                        Flexible(
                           child: Text(
-                            'No booster cooldown!',
+                            warningText,
                           ),
                         ),
                       ],
@@ -6420,6 +6434,14 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  void _onProgressAnimationUpdate() {
+    if (mounted) {
+      setState(() {
+        _animatedProgress = _progressAnimation.value;
+      });
+    }
+  }
+
   void _animateProgressTo(double newProgress) {
     if (!mounted) return;
 
@@ -6428,6 +6450,7 @@ class WebViewFullState extends State<WebViewFull>
 
     if (targetProgress < currentProgress && currentProgress > 0.1) return;
 
+    _progressAnimation.removeListener(_onProgressAnimationUpdate);
     _progressAnimation = Tween<double>(
       begin: currentProgress,
       end: targetProgress,
@@ -6435,6 +6458,7 @@ class WebViewFullState extends State<WebViewFull>
       parent: _progressController,
       curve: Curves.easeOut,
     ));
+    _progressAnimation.addListener(_onProgressAnimationUpdate);
 
     _progressController.reset();
     _progressController.forward();

@@ -2593,13 +2593,48 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
               Text(
-                "If enabled, you'll get a warning when you access the Travel Agency with no drug cooldown time, just in case you forgot",
+                "If enabled, you'll get a warning when you access the Travel Agency with drug cooldown "
+                "below the threshold. Set to 0h to only warn when there's no cooldown at all",
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               )
             ],
           ),
         ),
       ),
+      if (_settingsProvider.travelDrugCooldownWarning)
+        SearchableRow(
+          label: "Threshold",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 25),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Threshold", style: TextStyle(fontSize: 12)),
+                Row(
+                  children: [
+                    Text(
+                      "${_settingsProvider.travelDrugCooldownWarningThreshold}h",
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    Slider(
+                      min: 0,
+                      max: 48,
+                      divisions: 48,
+                      value: _settingsProvider.travelDrugCooldownWarningThreshold.toDouble(),
+                      label: "${_settingsProvider.travelDrugCooldownWarningThreshold}h",
+                      onChanged: (double value) {
+                        setState(() {
+                          _settingsProvider.travelDrugCooldownWarningThreshold = value.round();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       SearchableRow(
         label: "Booster cooldown warning",
         searchText: _searchText,
@@ -2624,13 +2659,48 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
               Text(
-                "If enabled, you'll get a warning when you access the Travel Agency with no booster cooldown time, just in case you forgot",
+                "If enabled, you'll get a warning when you access the Travel Agency with booster cooldown "
+                "below the threshold. Set to 0h to only warn when there's no cooldown at all",
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               )
             ],
           ),
         ),
       ),
+      if (_settingsProvider.travelBoosterCooldownWarning)
+        SearchableRow(
+          label: "Threshold",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 25),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Threshold", style: TextStyle(fontSize: 12)),
+                Row(
+                  children: [
+                    Text(
+                      "${_settingsProvider.travelBoosterCooldownWarningThreshold}h",
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    Slider(
+                      min: 0,
+                      max: 48,
+                      divisions: 48,
+                      value: _settingsProvider.travelBoosterCooldownWarningThreshold.toDouble(),
+                      label: "${_settingsProvider.travelBoosterCooldownWarningThreshold}h",
+                      onChanged: (double value) {
+                        setState(() {
+                          _settingsProvider.travelBoosterCooldownWarningThreshold = value.round();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
     ];
     return buildSectionWithRows(
       title: 'TRAVEL EXPENDITURE WARNING',
