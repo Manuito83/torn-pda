@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Flutter SDK ──────────────────────────────────────────────
-ENV FLUTTER_VERSION="3.27.4"
+ENV FLUTTER_VERSION="3.32.8"
 ENV FLUTTER_HOME="/opt/flutter"
 ENV PATH="${FLUTTER_HOME}/bin:${FLUTTER_HOME}/bin/cache/dart-sdk/bin:${PATH}"
 
