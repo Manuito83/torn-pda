@@ -9,6 +9,13 @@ MAIN INDEX
   [Testing Guide](./testing.md)
 <br></br>
 
+- ## Docker Development Environment
+
+  Run Flutter tests, analysis and debug builds without installing anything except Docker. Includes TLS/proxy support and automatic config stub setup.
+
+  [Docker Setup](../docker/README.md)
+<br></br>
+
 - ## Javascript-webview communication
 
   Refer to the [specific documentation](./webview/webview-handlers.md).
