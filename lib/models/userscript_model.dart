@@ -295,6 +295,12 @@ class UserScriptModel {
   static bool _matchPattern(String pattern, String url) {
     if (pattern == '*') return true;
     try {
+      // Normalise URLs without a path (e.g. "https://example.com") so
+      // the regex always has a "/" to match against.
+      final uri = Uri.tryParse(url);
+      if (uri != null && uri.path.isEmpty) {
+        url = '$url/';
+      }
       return _patternToRegex(pattern).hasMatch(url);
     } catch (_) {
       // Fall back to the old "contains" heuristic so we don't break scripts
