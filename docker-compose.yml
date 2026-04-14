@@ -20,6 +20,9 @@ services:
       # Mount the project so changes are reflected immediately.
       # The entrypoint handles pub get and config stubs.
       - .:/app
+      # Mount host CA bundle so Dart/pub trusts the same certs
+      # as the host (covers corporate proxies, TLS inspection).
+      - /etc/ssl/certs:/etc/ssl/certs:ro
       # Persist Gradle and pub caches between runs so rebuilds
       # don't re-download the internet every time.
       - gradle-cache:/root/.gradle

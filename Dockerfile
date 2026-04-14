@@ -29,12 +29,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         openjdk-21-jdk-headless \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Extra CA certificates (corporate proxies / TLS inspection) ─
-# If extra-ca-certs/ exists and contains .crt files, they are
-# added to the system trust store. Create docker/extra-ca-certs/
-# and drop your proxy/corporate .crt files there.
-COPY docker/extra-ca-certs/ /usr/local/share/ca-certificates/extra/
-RUN update-ca-certificates
+# ── TLS: accept all certs (dev image only) ────────────────────
+# Skip certificate verification for git and curl during build.
+# At runtime the host's CA bundle is mounted via docker-compose.
+ENV GIT_SSL_NO_VERIFY=true
 
 # ── Flutter SDK ──────────────────────────────────────────────
 ENV FLUTTER_VERSION="3.41.6"

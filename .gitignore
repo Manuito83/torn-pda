@@ -7,10 +7,6 @@
 .kiro/
 .shotgun/
 
-# Docker — local CA certs (corporate/proxy)
-docker/extra-ca-certs/*.crt
-docker/extra-ca-certs/*.pem
-
 # Miscellaneoussure
 *.class
 *.lock
