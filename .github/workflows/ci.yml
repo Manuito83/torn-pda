@@ -49,6 +49,7 @@ jobs:
           for f in *.dart.example; do
             cp "$f" "${f%.example}"
           done
+          cp firebase_options.dart.example ../firebase_options.dart
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
           cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
@@ -83,6 +84,7 @@ jobs:
           for f in *.dart.example; do
             cp "$f" "${f%.example}"
           done
+          cp firebase_options.dart.example ../firebase_options.dart
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
           cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
@@ -130,6 +132,7 @@ jobs:
           for f in *.dart.example; do
             cp "$f" "${f%.example}"
           done
+          cp firebase_options.dart.example ../firebase_options.dart
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
           cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
