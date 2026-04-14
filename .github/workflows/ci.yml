@@ -141,7 +141,7 @@ jobs:
           cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
           cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
           # Android Firebase config stub for APK build
-          cp ../../android/app/google-services.json.example ../../android/app/google-services.json
+          cp ../android/app/google-services.json.example ../android/app/google-services.json
 
       - name: Install dependencies
         run: flutter pub get
