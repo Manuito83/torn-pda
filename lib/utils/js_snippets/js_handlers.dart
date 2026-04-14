@@ -227,6 +227,47 @@ String handler_pdaAPI() {
 
         return window.flutter_inappwebview.callHandler("PDA_httpDelete", url, headers);
     }
+
+    // Performs a PATCH request to the provided URL
+    // The expected arguments are:
+    //     url
+    //     headers - Object with key, value string pairs
+    //     body - String or Object with key, value string pairs. If it's an object,
+    //            it will be encoded as form fields
+    //
+    // Returns a promise for a response object that has these properties:
+    //     responseHeaders: String, with CRLF line terminators.
+    //     responseText
+    //     status
+    //     statusText
+    //
+    // NOTE: in order to make the function available ASAP and ensure compatibility is all operating systems, 
+    // it will be declared several times while the page loads. However, it will only accept one call with the same
+    // URL as a parameter each second
+
+    // Check if loadedPdaApiPatchUrls has been declared before, if not, declare it.
+    if (typeof loadedPdaApiPatchUrls === 'undefined') {
+        var loadedPdaApiPatchUrls = {};
+    }
+
+    async function PDA_httpPatch(url, headers, body) {
+        let parameters = `\${url}+\${JSON.stringify(headers)}+\${body}`;
+        let now = Date.now();
+        
+        // If this PATCH was sent less than 2 seconds ago, return immediately
+        if (loadedPdaApiPatchUrls[parameters] && (now - loadedPdaApiPatchUrls[parameters] < 2000)) {
+            // Skip request
+            return;
+        }
+        
+        // Update the timestamp for this PATCH request
+        loadedPdaApiPatchUrls[parameters] = now;
+        
+        console.log("Handler: pdaHandler_httpPatch");
+        await __PDA_platformReadyPromise;
+        
+        return flutter_inappwebview.callHandler("PDA_httpPatch", url, headers, body);
+    }
   ''';
 }
 
@@ -377,20 +418,25 @@ String handler_GM() {
   						i.addEventListener("abort", () => t("Request aborted")),
   						a.addEventListener("abort", () =>
   							t("Request timed out")
-  						),
-  						u && "put" === u.toLowerCase()
-  							? (PDA_httpPut(l, c ?? {}, p ?? "")
-  									.then(e)
-  									.catch(t),
-  							  b?.())
-  							: u && "delete" === u.toLowerCase()
-  							? (PDA_httpDelete(l, c ?? {}).then(e).catch(t), b?.())
-  							: u && "post" === u.toLowerCase()
-  							? (PDA_httpPost(l, c ?? {}, p ?? "")
-  									.then(e)
-  									.catch(t),
-  							  b?.())
-  							: (PDA_httpGet(l, c ?? {}).then(e).catch(t), b?.());
+  						);
+  					switch ((u || "").toLowerCase()) {
+  						case "post":
+  							PDA_httpPost(l, c ?? {}, p ?? "").then(e).catch(t);
+  							break;
+  						case "put":
+  							PDA_httpPut(l, c ?? {}, p ?? "").then(e).catch(t);
+  							break;
+  						case "delete":
+  							PDA_httpDelete(l, c ?? {}).then(e).catch(t);
+  							break;
+  						case "patch":
+  							PDA_httpPatch(l, c ?? {}, p ?? "").then(e).catch(t);
+  							break;
+  						default:
+  							PDA_httpGet(l, c ?? {}).then(e).catch(t);
+  							break;
+  					}
+  					b?.();
   				} catch (e) {
   					t(e);
   				}

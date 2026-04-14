@@ -145,26 +145,34 @@
 				timeoutSignal.addEventListener("abort", () =>
 					rej("Request timed out")
 				);
-				if (!method || method.toLowerCase() === "get") {
-					PDA_httpGet(url, headers ?? {}).then(res).catch(rej);
-					onprogress?.();
-				} else if (method.toLowerCase() === "post") {
-					PDA_httpPost(url, headers ?? {}, data ?? "")
-						.then(res)
-						.catch(rej);
-					onprogress?.();
-				} else if (method.toLowerCase() === "put") {
-					PDA_httpPut(url, headers ?? {}, data ?? "")
-						.then(res)
-						.catch(rej);
-					onprogress?.();
-				} else if (method.toLowerCase() === "delete") {
-					PDA_httpDelete(url, headers ?? {}).then(res).catch(rej);
-					onprogress?.();
-				} else {
-					PDA_httpGet(url, headers ?? {}).then(res).catch(rej);
-					onprogress?.();
+				switch ((method || "").toLowerCase()) {
+					case "post":
+						PDA_httpPost(url, headers ?? {}, data ?? "")
+							.then(res)
+							.catch(rej);
+						break;
+					case "put":
+						PDA_httpPut(url, headers ?? {}, data ?? "")
+							.then(res)
+							.catch(rej);
+						break;
+					case "delete":
+						PDA_httpDelete(url, headers ?? {})
+							.then(res)
+							.catch(rej);
+						break;
+					case "patch":
+						PDA_httpPatch(url, headers ?? {}, data ?? "")
+							.then(res)
+							.catch(rej);
+						break;
+					default:
+						PDA_httpGet(url, headers ?? {})
+							.then(res)
+							.catch(rej);
+						break;
 				}
+				onprogress?.();
 			} catch (e) {
 				rej(e);
 			}
