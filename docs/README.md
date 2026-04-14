@@ -2,6 +2,12 @@
 
 MAIN INDEX
 
+- ## Testing
+
+  How to set up the test environment, run unit tests, write new ones, and use Docker for headless testing on any platform.
+
+  [Testing Guide](./testing.md)
+<br></br>
 
 - ## Javascript-webview communication
 
