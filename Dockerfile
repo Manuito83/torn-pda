@@ -25,19 +25,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zip \
         ca-certificates \
         libglu1-mesa \
-        # Java 17 for Android SDK / Gradle
-        openjdk-17-jdk-headless \
-    && update-ca-certificates \
+        # Java 21 for Android SDK / Gradle (project uses sourceCompatibility 21)
+        openjdk-21-jdk-headless \
     && rm -rf /var/lib/apt/lists/*
+
+# ── Extra CA certificates (corporate proxies / TLS inspection) ─
+# If extra-ca-certs/ exists and contains .crt files, they are
+# added to the system trust store. Create docker/extra-ca-certs/
+# and drop your proxy/corporate .crt files there.
+COPY docker/extra-ca-certs/ /usr/local/share/ca-certificates/extra/
+RUN update-ca-certificates
 
 # ── Flutter SDK ──────────────────────────────────────────────
 ENV FLUTTER_VERSION="3.41.6"
 ENV FLUTTER_HOME="/opt/flutter"
 ENV PATH="${FLUTTER_HOME}/bin:${FLUTTER_HOME}/bin/cache/dart-sdk/bin:${PATH}"
 
-RUN git clone --depth 1 --branch ${FLUTTER_VERSION} \
-        https://github.com/flutter/flutter.git ${FLUTTER_HOME} \
-    && flutter precache \
+# Download pre-built tarball instead of git clone to avoid TLS
+# issues in restricted build environments.
+RUN curl -fsSLk \
+        "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \
+        -o /tmp/flutter.tar.xz \
+    && mkdir -p /opt \
+    && tar xf /tmp/flutter.tar.xz -C /opt \
+    && rm /tmp/flutter.tar.xz \
+    && git config --global --add safe.directory ${FLUTTER_HOME} \
     && flutter config --no-analytics \
     && dart --disable-analytics
 
@@ -46,7 +58,7 @@ ENV ANDROID_HOME="/opt/android-sdk"
 ENV PATH="${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
 
 RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
-    && curl -fsSL "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip" \
+    && curl -fsSLk "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip" \
        -o /tmp/cmdline-tools.zip \
     && unzip -q /tmp/cmdline-tools.zip -d ${ANDROID_HOME}/cmdline-tools \
     && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest \

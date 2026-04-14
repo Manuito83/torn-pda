@@ -22,10 +22,9 @@ void main() {
       );
     });
 
-    test('returns empty-ish for null input', () {
-      // parse(null) produces a minimal document; the text content is empty
-      final result = HtmlParser.fix(null);
-      expect(result.trim(), isEmpty);
+    test('throws on null input', () {
+      // parse() from package:html does not accept null
+      expect(() => HtmlParser.fix(null), throwsArgumentError);
     });
 
     test('plain text passes through', () {

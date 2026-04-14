@@ -14,6 +14,9 @@ if [ -d "lib/config" ]; then
   for f in *.dart.example; do
     [ -f "$f" ] && target="${f%.example}" && [ ! -f "$target" ] && cp "$f" "$target"
   done
+  # firebase_options.dart lives one level up (lib/firebase_options.dart)
+  [ -f firebase_options.dart.example ] && [ ! -f ../firebase_options.dart ] && \
+    cp firebase_options.dart.example ../firebase_options.dart
   cd ../..
 fi
 
@@ -39,6 +42,11 @@ if [ -d "lib/torn-pda-native" ] || [ -d "lib/config" ]; then
   [ -f lib/config/stats_controller.dart.example ] && \
     [ ! -f lib/torn-pda-native/stats/stats_controller.dart ] && \
     cp lib/config/stats_controller.dart.example lib/torn-pda-native/stats/stats_controller.dart
+fi
+
+# Android Firebase config stub
+if [ -f "android/app/google-services.json.example" ] && [ ! -f "android/app/google-services.json" ]; then
+  cp android/app/google-services.json.example android/app/google-services.json
 fi
 
 # Install deps if pubspec exists and .dart_tool is missing

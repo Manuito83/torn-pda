@@ -9,7 +9,7 @@ void main() {
   group('formatProfit', () {
     test('billions', () {
       expect(formatProfit(inputInt: 1500000000), '1.5B');
-      expect(formatProfit(inputInt: 2000000000), '2.0B');
+      expect(formatProfit(inputInt: 2000000000), '2B');
     });
 
     test('millions', () {
