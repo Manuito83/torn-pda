@@ -145,13 +145,24 @@
 				timeoutSignal.addEventListener("abort", () =>
 					rej("Request timed out")
 				);
-				if (!method || method.toLowerCase() !== "post") {
+				if (!method || method.toLowerCase() === "get") {
 					PDA_httpGet(url, headers ?? {}).then(res).catch(rej);
 					onprogress?.();
-				} else {
+				} else if (method.toLowerCase() === "post") {
 					PDA_httpPost(url, headers ?? {}, data ?? "")
 						.then(res)
 						.catch(rej);
+					onprogress?.();
+				} else if (method.toLowerCase() === "put") {
+					PDA_httpPut(url, headers ?? {}, data ?? "")
+						.then(res)
+						.catch(rej);
+					onprogress?.();
+				} else if (method.toLowerCase() === "delete") {
+					PDA_httpDelete(url, headers ?? {}).then(res).catch(rej);
+					onprogress?.();
+				} else {
+					PDA_httpGet(url, headers ?? {}).then(res).catch(rej);
 					onprogress?.();
 				}
 			} catch (e) {

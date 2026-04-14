@@ -147,6 +147,86 @@ String handler_pdaAPI() {
         
         return flutter_inappwebview.callHandler("PDA_httpPost", url, headers, body);
     }
+
+    // Performs a PUT request to the provided URL
+    // The expected arguments are:
+    //     url
+    //     headers - Object with key, value string pairs
+    //     body - String or Object with key, value string pairs. If it's an object,
+    //            it will be encoded as form fields
+    //
+    // Returns a promise for a response object that has these properties:
+    //     responseHeaders: String, with CRLF line terminators.
+    //     responseText
+    //     status
+    //     statusText
+    //
+    // NOTE: in order to make the function available ASAP and ensure compatibility is all operating systems, 
+    // it will be declared several times while the page loads. However, it will only accept one call with the same
+    // URL as a parameter each second
+
+    // Check if loadedPdaApiPutUrls has been declared before, if not, declare it.
+    if (typeof loadedPdaApiPutUrls === 'undefined') {
+        var loadedPdaApiPutUrls = {};
+    }
+
+    async function PDA_httpPut(url, headers, body) {
+        let parameters = `\${url}+\${JSON.stringify(headers)}+\${body}`;
+        let now = Date.now();
+        
+        // If this PUT was sent less than 2 seconds ago, return immediately
+        if (loadedPdaApiPutUrls[parameters] && (now - loadedPdaApiPutUrls[parameters] < 2000)) {
+            // Skip request
+            return;
+        }
+        
+        // Update the timestamp for this PUT request
+        loadedPdaApiPutUrls[parameters] = now;
+        
+        console.log("Handler: pdaHandler_httpPut");
+        await __PDA_platformReadyPromise;
+        
+        return flutter_inappwebview.callHandler("PDA_httpPut", url, headers, body);
+    }
+
+    // Performs a DELETE request to the provided URL
+    // The expected arguments are:
+    //     url
+    //     headers - Object with key, value string pairs (optional)
+    //
+    // Returns a promise for a response object that has these properties:
+    //     responseHeaders - String, with CRLF line terminators.
+    //     responseText
+    //     status
+    //     statusText
+    //
+    // NOTE: in order to make the function available ASAP and ensure compatibility is all operating systems, 
+    // it will be declared several times while the page loads. However, it will only accept one call with the same
+    // URL as a parameter each second
+
+    // Check if loadedPdaApiDeleteUrls has been declared before, if not, declare it.
+    if (typeof loadedPdaApiDeleteUrls === 'undefined') {
+        var loadedPdaApiDeleteUrls = {};
+    }
+
+    async function PDA_httpDelete(url, headers = {}) {
+        let parameters = `\${url}+\${JSON.stringify(headers)}`;
+        let now = Date.now();
+
+        // If this DELETE was sent less than 2 seconds ago, return immediately
+        if (loadedPdaApiDeleteUrls[parameters] && (now - loadedPdaApiDeleteUrls[parameters] < 2000)) {
+            // Skip request
+            return;
+        }
+
+        // Update the timestamp for this DELETE request
+        loadedPdaApiDeleteUrls[parameters] = now;
+
+        console.log("Handler: pdaHandler_httpDelete");
+        await __PDA_platformReadyPromise;
+
+        return window.flutter_inappwebview.callHandler("PDA_httpDelete", url, headers);
+    }
   ''';
 }
 
@@ -298,7 +378,14 @@ String handler_GM() {
   						a.addEventListener("abort", () =>
   							t("Request timed out")
   						),
-  						u && "post" === u.toLowerCase()
+  						u && "put" === u.toLowerCase()
+  							? (PDA_httpPut(l, c ?? {}, p ?? "")
+  									.then(e)
+  									.catch(t),
+  							  b?.())
+  							: u && "delete" === u.toLowerCase()
+  							? (PDA_httpDelete(l, c ?? {}).then(e).catch(t), b?.())
+  							: u && "post" === u.toLowerCase()
   							? (PDA_httpPost(l, c ?? {}, p ?? "")
   									.then(e)
   									.catch(t),
