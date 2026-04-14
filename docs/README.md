@@ -2,6 +2,12 @@
 
 MAIN INDEX
 
+- ## Architecture overview
+
+  High-level map of the codebase with Mermaid diagrams covering startup, widget tree, navigation, state management, the WebView system, userscript pipeline, API layer, data persistence and notifications. Good starting point if you're new to the project.
+
+  [Architecture Overview](./architecture.md)
+<br></br>
 
 - ## Javascript-webview communication
 
