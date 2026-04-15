@@ -1351,31 +1351,7 @@ class WebViewProvider extends ChangeNotifier {
   bool tryGoBack() {
     final tab = _tabList[currentTab];
 
-    final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
-    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
-    if (cancelDueLock != null && cancelDueLock) {
-      return false;
-    }
-
-    if (tab.historyBack.isNotEmpty) {
-      addToHistoryForward(tab: tab, url: tab.currentUrl);
-      tab.historyBack.removeLast();
-      // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
-      tab.currentUrl = previous;
-      _saveTabs();
-      BotToast.showText(
-        text: "Back",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600]!,
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-      return true;
-    } else {
+    if (tab.historyBack.isEmpty) {
       BotToast.showText(
         text: "Can't go back!",
         textStyle: const TextStyle(
@@ -1388,37 +1364,36 @@ class WebViewProvider extends ChangeNotifier {
       );
       return false;
     }
-  }
 
-  bool tryGoForward() {
-    final tab = _tabList[currentTab];
-
-    final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
+    final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
     final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
     if (cancelDueLock != null && cancelDueLock) {
       return false;
     }
 
-    if (tab.historyForward.isNotEmpty) {
-      addToHistoryBack(tab: tab, currentUrl: tab.currentUrl);
+    addToHistoryForward(tab: tab, url: tab.currentUrl);
+    tab.historyBack.removeLast();
+    // Call child method directly, otherwise the 'back' button will only work with the first webView
+    tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
+    tab.currentUrl = previous;
+    _saveTabs();
+    BotToast.showText(
+      text: "Back",
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.grey[600]!,
+      duration: const Duration(seconds: 1),
+      contentPadding: const EdgeInsets.all(10),
+    );
+    return true;
+  }
 
-      tab.historyForward.removeLast();
-      // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
-      tab.currentUrl = previous;
-      _saveTabs();
-      BotToast.showText(
-        text: "Forward",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.grey[600]!,
-        duration: const Duration(seconds: 1),
-        contentPadding: const EdgeInsets.all(10),
-      );
-      return true;
-    } else {
+  bool tryGoForward() {
+    final tab = _tabList[currentTab];
+
+    if (tab.historyForward.isEmpty) {
       BotToast.showText(
         text: "Can't go forward!",
         textStyle: const TextStyle(
@@ -1431,6 +1406,31 @@ class WebViewProvider extends ChangeNotifier {
       );
       return false;
     }
+
+    final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
+    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
+    if (cancelDueLock != null && cancelDueLock) {
+      return false;
+    }
+
+    addToHistoryBack(tab: tab, currentUrl: tab.currentUrl);
+
+    tab.historyForward.removeLast();
+    // Call child method directly, otherwise the 'back' button will only work with the first webView
+    tab.webViewKey?.currentState?.loadFromExterior(url: previous, omitHistory: true);
+    tab.currentUrl = previous;
+    _saveTabs();
+    BotToast.showText(
+      text: "Forward",
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.grey[600]!,
+      duration: const Duration(seconds: 1),
+      contentPadding: const EdgeInsets.all(10),
+    );
+    return true;
   }
 
   Future<void> assessLoginErrorsFromPdaIcon() async {
@@ -1783,7 +1783,7 @@ class WebViewProvider extends ChangeNotifier {
       String authUrlToLoad;
       if (!originalInitUrl.contains("torn.com")) return inputUrl;
       // Auth redirects to attack pages might fail
-      if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
+      if (originalInitUrl.contains("page.php?sid=attack&user")) return inputUrl;
 
       final int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inHours;
       if (elapsedSinceLastAuth > 6) {
@@ -2074,6 +2074,7 @@ class WebViewProvider extends ChangeNotifier {
       "sid=crimes": {'type': 'asset', 'path': 'images/icons/home/crimes.png'},
 
       "loader.php?sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
+      "page.php?sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
       "sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
 
       "bounties.php": {'type': 'asset', 'path': 'images/icons/home/bounty.png'},
@@ -2131,6 +2132,7 @@ class WebViewProvider extends ChangeNotifier {
       "travelagency.php": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
       "sid=travel": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
 
+      "page.php?sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
       "loader.php?sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
       "sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
     };
@@ -2313,18 +2315,23 @@ class WebViewProvider extends ChangeNotifier {
       // Special check for attack loader URLs which are equivalent
       // https://www.torn.com/loader2.php?sid=getInAttack&user2ID=...
       // https://www.torn.com/loader.php?sid=attack&user2ID=...
-      if ((uri1.path.contains('loader.php') || uri1.path.contains('loader2.php')) &&
-          (uri2.path.contains('loader.php') || uri2.path.contains('loader2.php'))) {
-        final user1 = uri1.queryParameters['user2ID'];
-        final user2 = uri2.queryParameters['user2ID'];
 
-        if (user1 != null && user1 == user2) {
-          final sid1 = uri1.queryParameters['sid'];
-          final sid2 = uri2.queryParameters['sid'];
-          if ((sid1 == 'attack' || sid1 == 'getInAttack') && (sid2 == 'attack' || sid2 == 'getInAttack')) {
-            return true;
-          }
+      /// Returns the int of attacker ID, or null if not an attack loader URL
+      int? getAttackerIdOrNull(Uri uri) {
+        if (!uri.path.contains("loader.php") && !uri.path.contains("loader2.php") && !uri.path.contains("page.php")) {
+          return null;
         }
+        final sid = uri.queryParameters['sid'];
+        if (sid != "attack" && sid != "getInAttack") return null;
+        final user2Id = uri.queryParameters["user2ID"];
+        if (user2Id == null) return null;
+        return int.tryParse(user2Id);
+      }
+
+      final attackerId1 = getAttackerIdOrNull(uri1);
+      final attackerId2 = getAttackerIdOrNull(uri2);
+      if (attackerId1 is int && attackerId1 == attackerId2) {
+        return true;
       }
     } catch (e) {
       // Ignore

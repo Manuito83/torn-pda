@@ -1327,7 +1327,7 @@ class WarCardState extends State<WarCard> {
 
         _webViewProvider.openBrowserPreference(
           context: context,
-          url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+          url: 'https://www.torn.com/page.php?sid=attack&user2ID=${attacksIds[0]}',
           browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -1342,7 +1342,7 @@ class WarCardState extends State<WarCard> {
         );
 
       case BrowserSetting.external:
-        final url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_member.memberId}';
+        final url = 'https://www.torn.com/page.php?sid=attack&user2ID=${_member.memberId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }

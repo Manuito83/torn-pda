@@ -1301,7 +1301,7 @@ class RetalCardState extends State<RetalCard> {
         _r.browserIsOpen = true;
         await _webViewProvider.openBrowserPreference(
           context: context,
-          url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+          url: 'https://www.torn.com/page.php?sid=attack&user2ID=${attacksIds[0]}',
           browserTapType: BrowserTapType.chainShort,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -1317,7 +1317,7 @@ class RetalCardState extends State<RetalCard> {
         _r.browserIsOpen = false;
 
       case BrowserSetting.external:
-        final url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_retal!.retalId}';
+        final url = 'https://www.torn.com/page.php?sid=attack&user2ID=${_retal!.retalId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }

@@ -56,6 +56,9 @@ class ShortcutsProvider extends ChangeNotifier {
     inactiveShortcut.name = inactiveShortcut.originalName;
     inactiveShortcut.nickname = inactiveShortcut.originalNickname;
     inactiveShortcut.url = inactiveShortcut.originalUrl;
+    inactiveShortcut.iconUrl = inactiveShortcut.originalIconUrl;
+    inactiveShortcut.color = inactiveShortcut.originalColor;
+    inactiveShortcut.iconColor = null;
     _activeShortcuts.remove(inactiveShortcut);
     _saveListAfterChanges();
     notifyListeners();
@@ -66,6 +69,9 @@ class ShortcutsProvider extends ChangeNotifier {
     existing.name = edited.name;
     existing.nickname = edited.name;
     existing.url = edited.url;
+    existing.iconUrl = edited.iconUrl;
+    existing.color = edited.color;
+    existing.iconColor = edited.iconColor;
     _saveListAfterChanges();
     notifyListeners();
   }
@@ -76,6 +82,9 @@ class ShortcutsProvider extends ChangeNotifier {
       short.name = short.originalName;
       short.nickname = short.originalNickname;
       short.url = short.originalUrl;
+      short.iconUrl = short.originalIconUrl;
+      short.color = short.originalColor;
+      short.iconColor = null;
     }
     _activeShortcuts.clear();
     _saveListAfterChanges();
@@ -123,6 +132,10 @@ class ShortcutsProvider extends ChangeNotifier {
     for (final savedShortRaw in savedLoad) {
       try {
         final savedShort = shortcutFromJson(savedShortRaw);
+        // Black was never a selectable color; treat it as null (bug from earlier beta)
+        if (savedShort.iconColor?.toARGB32() == Colors.black.toARGB32()) {
+          savedShort.iconColor = null;
+        }
         if (savedShort.isCustom!) {
           activateSavedShortcut(savedShort);
         } else {
@@ -131,7 +144,10 @@ class ShortcutsProvider extends ChangeNotifier {
               stockShort
                 ..name = savedShort.name
                 ..nickname = savedShort.nickname
-                ..url = savedShort.url;
+                ..url = savedShort.url
+                ..iconUrl = savedShort.iconUrl ?? stockShort.originalIconUrl
+                ..color = savedShort.color ?? stockShort.originalColor
+                ..iconColor = savedShort.iconColor;
               activateSavedShortcut(stockShort);
             }
           }
@@ -302,10 +318,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Missions"
         ..nickname = "Missions"
-        ..url = "https://www.torn.com/loader.php?sid=missions"
+        ..url = "https://www.torn.com/page.php?sid=missions"
         ..originalName = "Missions"
         ..originalNickname = "Missions"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=missions"
+        ..originalUrl = "https://www.torn.com/page.php?sid=missions"
         ..iconUrl = "images/icons/home/missions.png"
         ..color = Colors.grey[600],
       Shortcut()
@@ -990,10 +1006,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Casino: Craps"
         ..nickname = "Craps"
-        ..url = "https://www.torn.com/loader.php?sid=craps"
+        ..url = "https://www.torn.com/page.php?sid=craps"
         ..originalName = "Casino: Craps"
         ..originalNickname = "Craps"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=craps"
+        ..originalUrl = "https://www.torn.com/page.php?sid=craps"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
@@ -1278,10 +1294,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Race Track"
         ..nickname = "Race Track"
-        ..url = "https://www.torn.com/loader.php?sid=racing"
+        ..url = "https://www.torn.com/page.php?sid=racing"
         ..originalName = "Race Track"
         ..originalNickname = "Race Track"
-        ..originalUrl = "https://www.torn.com/loader.php?sid=racing"
+        ..originalUrl = "https://www.torn.com/page.php?sid=racing"
         ..originalName = "Race Track"
         ..iconUrl = "images/icons/map/race_track.png"
         ..color = Colors.green[700],
@@ -1375,5 +1391,10 @@ class ShortcutsProvider extends ChangeNotifier {
         ..iconUrl = "images/icons/map/visitor_center.png"
         ..color = Colors.red[200],
     });
+
+    for (final short in _allShortcuts) {
+      short.originalIconUrl = short.iconUrl;
+      short.originalColor = short.color;
+    }
   }
 }

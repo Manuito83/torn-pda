@@ -1204,7 +1204,7 @@ class FFScouterPageState extends State<FFScouterPage> {
 
     _webViewProvider.openBrowserPreference(
       context: context,
-      url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attackIds[0]}',
+      url: 'https://www.torn.com/page.php?sid=attack&user2ID=${attackIds[0]}',
       browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
       isChainingBrowser: true,
       chainingPayload: ChainingPayload()

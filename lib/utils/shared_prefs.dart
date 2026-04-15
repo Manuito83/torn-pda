@@ -183,6 +183,7 @@ class Prefs {
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
+  final String _kBountyAlertEnabled = "pda_bountyAlertEnabled";
   final String _kHitInMiniProfileOpensNewTab = "pda__hitInMiniProfileOpensNewTab";
   final String _kHitInMiniProfileOpensNewTabAndChangeTab = "pda__hitInMiniProfileOpensNewTabAndChangeTab";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
@@ -250,7 +251,9 @@ class Prefs {
   final String _kTravelLifeExcessWarning = "pda_travelLifeExcessWarning";
   final String _kTravelLifeExcessWarningThreshold = "pda_travelLifeExcessWarningThreshold";
   final String _kTravelDrugCooldownWarning = "pda_travelDrugCooldownWarning";
+  final String _kTravelDrugCooldownWarningThreshold = "pda_travelDrugCooldownWarningThreshold";
   final String _kTravelBoosterCooldownWarning = "pda_travelBoosterCooldownWarning";
+  final String _kTravelBoosterCooldownWarningThreshold = "pda_travelBoosterCooldownWarningThreshold";
   final String _kTravelWalletMoneyWarning = "pda_travelWalletMoneyWarning";
   final String _kTravelWalletMoneyWarningThreshold = "pda_travelWalletMoneyWarningThreshold";
   final String _kExpandEvents = "pda_ExpandEvents";
@@ -1905,6 +1908,15 @@ class Prefs {
   }
 
   // *************
+  Future<bool> getBountyAlertEnabled() async {
+    return await PrefsDatabase.getBool(_kBountyAlertEnabled, true);
+  }
+
+  Future setBountyAlertEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kBountyAlertEnabled, value);
+  }
+
+  // *************
   Future<bool> getHitInMiniProfileOpensNewTab() async {
     return await PrefsDatabase.getBool(_kHitInMiniProfileOpensNewTab, false);
   }
@@ -2425,12 +2437,28 @@ class Prefs {
     return await PrefsDatabase.setBool(_kTravelDrugCooldownWarning, value);
   }
 
+  Future<int> getTravelDrugCooldownWarningThreshold() async {
+    return await PrefsDatabase.getInt(_kTravelDrugCooldownWarningThreshold, 0);
+  }
+
+  Future setTravelDrugCooldownWarningThreshold(int value) async {
+    return await PrefsDatabase.setInt(_kTravelDrugCooldownWarningThreshold, value);
+  }
+
   Future<bool> getTravelBoosterCooldownWarning() async {
     return await PrefsDatabase.getBool(_kTravelBoosterCooldownWarning, true);
   }
 
   Future setTravelBoosterCooldownWarning(bool value) async {
     return await PrefsDatabase.setBool(_kTravelBoosterCooldownWarning, value);
+  }
+
+  Future<int> getTravelBoosterCooldownWarningThreshold() async {
+    return await PrefsDatabase.getInt(_kTravelBoosterCooldownWarningThreshold, 0);
+  }
+
+  Future setTravelBoosterCooldownWarningThreshold(int value) async {
+    return await PrefsDatabase.setInt(_kTravelBoosterCooldownWarningThreshold, value);
   }
 
   Future<bool> getTravelWalletMoneyWarning() async {
@@ -3705,7 +3733,7 @@ class Prefs {
 
   // -- LockedTabsNavigationExceptions
   final List<List<String>> _defaultFullLockedTabsNavigationExceptions = [
-    ["https://www.torn.com/item.php", "https://www.torn.com/loader.php?sid=itemsMods"],
+    ["https://www.torn.com/item.php", "https://www.torn.com/page.php?sid=itemsMods"],
     ["https://www.torn.com/item.php", "https://www.torn.com/page.php?sid=ammo"],
   ];
 

@@ -66,6 +66,7 @@ class JailWidgetState extends State<JailWidget> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _expandableController.dispose();
     super.dispose();
   }
 

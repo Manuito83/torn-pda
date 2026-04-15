@@ -58,6 +58,12 @@ class ItemCardState extends State<ItemCard> {
   }
 
   @override
+  void dispose() {
+    _expandableController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       child: ClipPath(
