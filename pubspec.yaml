@@ -144,6 +144,8 @@ dev_dependencies:
   chopper_generator: 8.4.0 
   envied_generator: 1.3.0
   flutter_launcher_icons: 0.14.4
+  flutter_test:
+    sdk: flutter
   # Used by swagger_dart_code_generator
   json_serializable: 6.11.1 
   ## flutter pub run import_sorter:main
