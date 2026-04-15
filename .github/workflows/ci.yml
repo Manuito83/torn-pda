@@ -49,6 +49,7 @@ jobs:
           for f in *.dart.example; do
             cp "$f" "${f%.example}"
           done
+          cp firebase_options.dart.example ../firebase_options.dart
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
           cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
@@ -83,6 +84,7 @@ jobs:
           for f in *.dart.example; do
             cp "$f" "${f%.example}"
           done
+          cp firebase_options.dart.example ../firebase_options.dart
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
           cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
@@ -122,7 +124,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Copy config stubs
         run: |
@@ -130,6 +132,7 @@ jobs:
           for f in *.dart.example; do
             cp "$f" "${f%.example}"
           done
+          cp firebase_options.dart.example ../firebase_options.dart
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
           cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
@@ -137,6 +140,8 @@ jobs:
           cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
           cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
           cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+          # Android Firebase config stub for APK build
+          cp ../android/app/google-services.json.example ../android/app/google-services.json
 
       - name: Install dependencies
         run: flutter pub get
