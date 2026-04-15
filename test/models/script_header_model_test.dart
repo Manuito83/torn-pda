@@ -5,7 +5,7 @@ import 'package:torn_pda/models/userscripts/script_header_model.dart';
 void main() {
   group('ScriptHeaderModel', () {
     test('parses version with pre-release', () {
-      final model = ScriptHeaderModel.fromHeaderText('@version 1.0.0-alpha\n@name Test');
+      final model = ScriptHeaderModel.fromHeaderText('// @version 1.0.0-alpha\n// @name Test');
       expect(model.version.major, 1);
       expect(model.version.minor, 0);
       expect(model.version.patch, 0);
@@ -13,7 +13,7 @@ void main() {
     });
 
     test('parses version without pre-release', () {
-      final model = ScriptHeaderModel.fromHeaderText('@version 2.3.4\n@name Test');
+      final model = ScriptHeaderModel.fromHeaderText('// @version 2.3.4\n// @name Test');
       expect(model.version.major, 2);
       expect(model.version.minor, 3);
       expect(model.version.patch, 4);
@@ -35,12 +35,12 @@ void main() {
 
     test('gets header values', () {
       final model = ScriptHeaderModel.fromHeaderText('''
-@version 1.0.0
-@name Test Script
-@match https://example.com/*
-@match https://example2.com/*
-@grant GM_xmlhttpRequest
-@require https://example.com/library.js
+// @version 1.0.0
+// @name Test Script
+// @match https://example.com/*
+// @match https://example2.com/*
+// @grant GM_xmlhttpRequest
+// @require https://example.com/library.js
 ''');
       expect(model.getHeader('name'), ['test script']);
       expect(model.getHeader('match'), ['https://example.com/*', 'https://example2.com/*']);
