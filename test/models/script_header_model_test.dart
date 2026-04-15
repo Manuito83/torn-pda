@@ -5,7 +5,7 @@ import 'package:torn_pda/models/userscripts/script_header_model.dart';
 void main() {
   group('ScriptHeaderModel', () {
     test('parses version with pre-release', () {
-      final model = ScriptHeaderModel.fromHeaderText('@version 1.0.0-alpha');
+      final model = ScriptHeaderModel.fromHeaderText('@version 1.0.0-alpha\n@name Test');
       expect(model.version.major, 1);
       expect(model.version.minor, 0);
       expect(model.version.patch, 0);
@@ -13,7 +13,7 @@ void main() {
     });
 
     test('parses version without pre-release', () {
-      final model = ScriptHeaderModel.fromHeaderText('@version 2.3.4');
+      final model = ScriptHeaderModel.fromHeaderText('@version 2.3.4\n@name Test');
       expect(model.version.major, 2);
       expect(model.version.minor, 3);
       expect(model.version.patch, 4);
@@ -35,6 +35,7 @@ void main() {
 
     test('gets header values', () {
       final model = ScriptHeaderModel.fromHeaderText('''
+@version 1.0.0
 @name Test Script
 @match https://example.com/*
 @match https://example2.com/*
@@ -70,13 +71,14 @@ void main() {
       final model = UserScriptModel(
         name: 'Test',
         source: '// ==UserScript==\n// @name Test\n// ==/UserScript==\n',
-        matches: ['https://*.example.com/*', 'https://example.com/path/*'],
+        matches: ['*torn.com*', 'torn.com/path*'],
         isExample: false,
       );
 
-      // Test wildcard patterns
-      expect(model.shouldInject('https://sub.example.com/'), true);
-      expect(model.shouldInject('https://example.com/path/test'), true);
+      // Test simple wildcard patterns (original behavior)
+      expect(model.shouldInject('https://torn.com/'), true);
+      expect(model.shouldInject('https://sub.torn.com/'), true);
+      expect(model.shouldInject('https://torn.com/path/test'), true);
       expect(model.shouldInject('https://other.com/'), false);
     });
 

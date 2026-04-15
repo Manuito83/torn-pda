@@ -63,21 +63,18 @@ The `@match` header specifies which URLs the script should run on. Pattern match
 // ==/UserScript==
 ```
 
-**Improvements:**
-- Better wildcard support (converts to regex patterns)
-- URL normalization (adds trailing slash for consistent matching)
-- Case-insensitive matching
-
-**Currently supported:**
+**Current implementation:**
 - Simple wildcard patterns (*)
-- Domain wildcards (*.example.com)
-- Path wildcards (/path/*)
+- Substring matching (e.g., `*torn.com*` matches `https://torn.com/`)
+- Case-insensitive matching
 
 **TODO:**
 - Implement full ViolentMonkey-style pattern matching
 - Add support for @exclude patterns
 - Add support for @include patterns
 - Add scheme wildcards (http://, https://, *)
+- Add domain wildcards (*.example.com)
+- Add path wildcards (/path/*)
 
 ## Version Matching
 

@@ -263,34 +263,7 @@ class UserScriptModel {
   bool shouldInject(String url, [UserScriptTime? time]) =>
       enabled &&
       (this.time == time || time == null) &&
-      _matchesUrl(url);
-
-  bool _matchesUrl(String url) {
-    // Normalize URL by adding trailing slash if missing
-    final normalizedUrl = url.endsWith('/') ? url : '$url/';
-    
-    return matches.any((pattern) => _matchPattern(pattern, normalizedUrl));
-  }
-
-  bool _matchPattern(String pattern, String url) {
-    // Handle wildcard pattern
-    if (pattern == "*") return true;
-
-    // Normalize pattern by adding trailing slash if missing
-    final normalizedPattern = pattern.endsWith('/') ? pattern : '$pattern/';
-
-    // Simple implementation: check if URL contains the pattern with wildcards replaced
-    // TODO: Implement full ViolentMonkey-style pattern matching with:
-    // - Scheme wildcards (http://, https://, *)
-    // - Domain wildcards (*.example.com)
-    // - Path wildcards (/path/*)
-    // - Exclude patterns (@exclude)
-    // - Include patterns (@include)
-    final regexPattern = normalizedPattern
-        .replaceAll('*', '.*')
-        .replaceAll('?', '.');
-    return RegExp(regexPattern, caseSensitive: false).hasMatch(url);
-  }
+      matches.any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
 
   void update({
     bool? enabled,
