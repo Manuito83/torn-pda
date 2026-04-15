@@ -1,6 +1,6 @@
 # Torn PDA — CI Pipeline
 #
-# Runs on every push and pull request against master.
+# Runs on every push and pull request against develop and master.
 # Three jobs that execute in parallel:
 #   1. analyze  — dart static analysis (catches type errors, unused imports, etc.)
 #   2. test     — flutter unit & widget tests
@@ -15,9 +15,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [develop, master]
   pull_request:
-    branches: [master]
+    branches: [develop, master]
 
 # Cancel previous runs for the same PR / branch to save minutes.
 concurrency:
