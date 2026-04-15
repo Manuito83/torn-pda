@@ -1,10 +1,9 @@
 # Torn PDA — CI Pipeline
 #
 # Runs on every push and pull request against develop and master.
-# Three jobs that execute in parallel:
-#   1. analyze  — dart static analysis (catches type errors, unused imports, etc.)
-#   2. test     — flutter unit & widget tests
-#   3. build    — confirms the Android APK still compiles
+#   1. analyze  — dart static analysis (push + PR)
+#   2. test     — flutter unit & widget tests (push + PR)
+#   3. build    — confirms the Android APK still compiles (PR only)
 #
 # All jobs run on GitHub-hosted runners. Public repos get unlimited
 # free minutes, so this costs nothing.
@@ -25,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.41.6"   # needs Dart >=3.9.0 for sembast, >=3.8.0 for swagger
+  FLUTTER_VERSION: "3.41.6" # needs Dart >=3.9.0 for sembast, >=3.8.0 for swagger
 
 jobs:
   # ──────────────────────────────────────────────
@@ -108,10 +107,11 @@ jobs:
           retention-days: 14
 
   # ──────────────────────────────────────────────
-  # 3. Build (APK) — proves the project compiles
+  # 3. Build (APK) — proves the project compiles (PR only)
   # ──────────────────────────────────────────────
   build:
     name: Build APK
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

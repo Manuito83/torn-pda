@@ -8,8 +8,9 @@
 | **test** | `flutter test --coverage` — runs everything under `test/` | ~2 min |
 | **build** | `flutter build apk --debug` — proves the project still compiles | ~5 min |
 
-All three jobs run **in parallel** on every push to `develop` or `master`
-and every PR targeting either branch.
+`analyze` and `test` run **in parallel** on every push to `develop` or `master`
+and every PR targeting either branch. `build` only runs on **pull requests**
+(skipped on direct pushes to save time).
 
 ## Costs
 
