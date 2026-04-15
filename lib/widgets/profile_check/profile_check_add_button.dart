@@ -136,6 +136,7 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
       if (!_settingsProvider.showCases.contains("profile_check_button")) {
         // Prevent the showcase from activating if we have reset the showcase while a tab with a profile is open
         if (!webviewProvider.currentTabUrl()!.contains('loader.php?sid=attack&user2ID=') &&
+            !webviewProvider.currentTabUrl()!.contains('page.php?sid=attack&user2ID=') &&
             !webviewProvider.currentTabUrl()!.contains('loader2.php?sid=getInAttack&user2ID=') &&
             !webviewProvider.currentTabUrl()!.contains('torn.com/profiles.php?XID=')) {
           return;

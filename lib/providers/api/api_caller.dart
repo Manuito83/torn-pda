@@ -494,7 +494,7 @@ class ApiCallerController extends GetxController {
     required Future<chopper.Response<T>> Function(TornV2 client, String apiKey) apiCall,
   }) async {
     final UserController user = Get.find<UserController>();
-    final String apiKey = user.apiKey!;
+    final String apiKey = user.apiKey ?? "";
 
     // Make sure we don't allow calls without an API key
     // (e.g. when checking something in Drawer on first launch)

@@ -14,6 +14,11 @@ MAIN INDEX
   Run Flutter tests, analysis and debug builds without installing anything except Docker. Includes TLS/proxy support and automatic config stub setup.
 
   [Docker Setup](../docker/README.md)
+- ## Architecture overview
+
+  High-level map of the codebase with Mermaid diagrams covering startup, widget tree, navigation, state management, the WebView system, userscript pipeline, API layer, data persistence and notifications. Good starting point if you're new to the project.
+
+  [Architecture Overview](./architecture.md)
 <br></br>
 
 - ## Javascript-webview communication

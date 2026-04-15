@@ -107,7 +107,7 @@ class WebViewPanicState extends State<WebViewPanic> {
 
     _loadPreferences();
 
-    _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
+    _initialUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
     _attackedIds.add(widget.attackIdList[0]);
     if (_chainStatusProvider.watcherActive) {
@@ -582,7 +582,7 @@ class WebViewPanicState extends State<WebViewPanic> {
           contentPadding: const EdgeInsets.all(10),
         );
 
-        const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+        const nextBaseUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
         if (!mounted) return;
         await _webViewController!.loadRequest(Uri.parse('$nextBaseUrl${widget.attackIdList[_attackNumber]}'));
         _attackedIds.add(widget.attackIdList[_attackNumber]);
@@ -630,7 +630,7 @@ class WebViewPanicState extends State<WebViewPanic> {
 
   /// Not to be used right after launch
   Future<void> _launchNextAttack() async {
-    const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+    const nextBaseUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
     // Turn button grey
     setState(() {
       _nextButtonPressed = true;
@@ -900,6 +900,7 @@ class WebViewPanicState extends State<WebViewPanic> {
   Future _assessProfileAttack(String page) async {
     if (mounted) {
       if (!page.contains('loader.php?sid=attack&user2ID=') &&
+          !page.contains('page.php?sid=attack&user2ID=') &&
           !page.contains('loader2.php?sid=getInAttack&user2ID=') &&
           !page.contains('torn.com/profiles.php?XID=')) {
         _profileAttackWidget = const SizedBox.shrink();
@@ -932,6 +933,7 @@ class WebViewPanicState extends State<WebViewPanic> {
           userId = 0;
         }
       } else if (page.contains('loader.php?sid=attack&user2ID=') ||
+          page.contains('page.php?sid=attack&user2ID=') ||
           page.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (page == _lastProfileVisited) {
           return;

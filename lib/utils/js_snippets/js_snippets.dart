@@ -861,7 +861,15 @@ String addOthersBazaarFillButtonsJS() {
             }
         });
 
-        observer.observe(doc.body, { childList: true, subtree: true });
+        if (doc.body) {
+          observer.observe(doc.body, { childList: true, subtree: true });
+        } else {
+          // Document body is not available, begin observing on document ready
+          console.warn("PDA addOthersBazaarFillButtonsJS: doc.body not available, waiting for DOMContentLoaded");
+          document.addEventListener("DOMContentLoaded", function() {
+            observer.observe(doc.body, { childList: true, subtree: true });
+          });
+        }
 
         const urlHeartbeat = setInterval(() => {
             if (!window.location.href.includes('bazaar.php?userId=')) {

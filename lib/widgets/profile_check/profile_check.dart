@@ -75,6 +75,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   var _isOwnFaction = false;
   var _isFriendlyFaction = false;
   var _isWorkColleague = false;
+  var _hasBounty = false;
   // This one will take own player, own faction or friendly faction (so that
   // we don't show them separately, but by importance (first one self, then
   // own faction and lastly friendly faction)
@@ -89,6 +90,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   Widget _friendsWidget = const SizedBox.shrink();
   Widget _friendlyFactionWidget = const SizedBox.shrink();
   Widget _workColleagueWidget = const SizedBox.shrink();
+  Widget _bountyWidget = const SizedBox.shrink();
   Widget _playerOrFactionWidget = const SizedBox.shrink();
   Widget _networthWidget = const SizedBox.shrink();
 
@@ -187,13 +189,19 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: _workColleagueWidget,
                   ),
+                if (_hasBounty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _bountyWidget,
+                  ),
                 if (_isWorkColleague ||
                     _isFriendlyFaction ||
                     _isFriendlyFaction ||
                     _isFriend ||
                     _isOwnFaction ||
                     _isPartner ||
-                    _isOwnPlayer)
+                    _isOwnPlayer ||
+                    _hasBounty)
                   const SizedBox(height: 2)
               ],
             ),
@@ -439,6 +447,30 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   style: TextStyle(
                     color: partnerColor,
                     fontWeight: partnerText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        if (otherProfile.hasBounty && _settingsProvider.bountyAlertEnabled) {
+          _hasBounty = true;
+          String bountyText = otherProfile.bountyDescription ?? "This player has an active bounty!";
+          _bountyWidget = Row(
+            children: [
+              Image.asset(
+                'images/icons/status/icon13.png',
+                width: 16,
+                height: 16,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  bountyText,
+                  style: TextStyle(
+                    color: Colors.orange[700],
                     fontSize: 12,
                   ),
                 ),

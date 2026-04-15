@@ -13,6 +13,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewShortcutsDialog extends StatefulWidget {
@@ -153,7 +154,9 @@ class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
             child: Image.asset(
               thisShortcut.iconUrl!,
               width: 16,
-              color: _themeProvider.mainText,
+              color: isFullColorShortcutIcon(thisShortcut.iconUrl)
+                  ? null
+                  : (thisShortcut.iconColor ?? _themeProvider.mainText),
             ),
           ),
           const SizedBox(height: 3),

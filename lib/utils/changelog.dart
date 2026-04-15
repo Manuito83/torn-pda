@@ -102,6 +102,24 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.13.3 - Build 642 - built 13/04/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.13.3'
+        ..date = '20 APR 2026'
+        ..features = [
+          "Player profile widget now shows active bounties",
+          "Shortcuts can now be customized with different icons, color overlays, and border colors",
+          "Added grid carousel display mode for shortcuts in Profile [shahiutsav]",
+          "Drug and booster cooldown travel warnings now support a configurable time threshold",
+          "Dev: new architecture overview docs [DarXide]",
+          "Several code fixes to prevent memory leaks [DarXide]",
+          "Fixed URL redirects [Kwack]",
+          "Fixed bazaar Fill Max button [Kwack]",
+          "Fixed user script detection logic from browser",
+        ],
+    );
+
     // v3.13.2 - Build 639 - built 30/03/2026
     itemList.add(
       ChangeLogItem()

@@ -4306,6 +4306,19 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "gridcarousel",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Grid carousel",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         setState(() {
