@@ -41,7 +41,7 @@ dependencies:
   dart_ping: 9.0.1
   dart_ping_ios: 4.0.2
   dbcrypt: 2.0.0
-  dio: 5.8.0+1
+  dio: 5.9.2
   device_info_plus: 11.5.0
   easy_rich_text: 2.2.0
   encrypt_shared_preferences: 0.9.10
