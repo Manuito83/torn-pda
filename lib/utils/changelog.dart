@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.13.3 - Build 642 - built 13/04/2026
+    // v3.13.3 - Build 643 - built 16/04/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.13.3'
