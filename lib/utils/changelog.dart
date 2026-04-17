@@ -102,6 +102,17 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.13.4 - Build 644 - built 17/04/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.13.4'
+        ..date = '01 MAY 2026'
+        ..features = [
+          "Fixed alarm icon not turning green when active in some devices",
+          "Fixed travel return button not working in some cases",
+        ],
+    );
+
     // v3.13.3 - Build 643 - built 16/04/2026
     itemList.add(
       ChangeLogItem()

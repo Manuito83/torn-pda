@@ -2541,7 +2541,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _refreshActiveAlarmKitIds() async {
     if (!Platform.isIOS) return;
     if (!_isAlarmKitAvailableIos) return;
-    if (!_hasProfileAlarmMode()) return;
     final ids = await AlarmKitServiceIos.listLogicalIds();
 
     if (mounted) {
@@ -2551,20 +2550,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ..addAll(ids);
       });
     }
-  }
-
-  bool _hasProfileAlarmMode() {
-    return _travelNotificationType == NotificationType.alarm ||
-        _energyNotificationType == NotificationType.alarm ||
-        _nerveNotificationType == NotificationType.alarm ||
-        _lifeNotificationType == NotificationType.alarm ||
-        _drugsNotificationType == NotificationType.alarm ||
-        _medicalNotificationType == NotificationType.alarm ||
-        _boosterNotificationType == NotificationType.alarm ||
-        _hospitalNotificationType == NotificationType.alarm ||
-        _jailNotificationType == NotificationType.alarm ||
-        _rankedWarNotificationType == NotificationType.alarm ||
-        _raceStartNotificationType == NotificationType.alarm;
   }
 
   Widget _notificationIcon(
@@ -8011,22 +7996,36 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         return;
       }
 
-      await AlarmKitServiceIos.setAlarm(
-        targetTime: alarmDateTime,
-        label: message,
-        id: descriptor.alarmId,
-        metadata: AlarmKitServiceIos.buildMetadata(
-          alarmId: descriptor.alarmId,
-          context: descriptor.context,
-          details: 'Triggers at ${TimeFormatter(
-            inputTime: alarmDateTime,
-            timeFormatSetting: _settingsProvider!.currentTimeFormat,
-            timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHourWithDaysElapsed()}',
-          payload: descriptor.payload,
-          timeMillis: alarmDateTime.millisecondsSinceEpoch,
-        ),
-      );
+      try {
+        await AlarmKitServiceIos.setAlarm(
+          targetTime: alarmDateTime,
+          label: message,
+          id: descriptor.alarmId,
+          metadata: AlarmKitServiceIos.buildMetadata(
+            alarmId: descriptor.alarmId,
+            context: descriptor.context,
+            details: 'Triggers at ${TimeFormatter(
+              inputTime: alarmDateTime,
+              timeFormatSetting: _settingsProvider!.currentTimeFormat,
+              timeZoneSetting: _settingsProvider!.currentTimeZone,
+            ).formatHourWithDaysElapsed()}',
+            payload: descriptor.payload,
+            timeMillis: alarmDateTime.millisecondsSinceEpoch,
+          ),
+        );
+      } catch (e) {
+        BotToast.showText(
+          text: 'Could not schedule alarm!',
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: _themeProvider!.getTextColor(Colors.red),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
+        );
+        return;
+      }
       await _refreshActiveAlarmKitIds();
       return;
     }
