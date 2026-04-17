@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Item Market Auto Price
 // @namespace    dev.kwack.torn.imarket-auto-price
-// @version      1.0.2
+// @version      1.0.3
 // @description  Automatically set the price of items relative to the current market
 // @author       Kwack [2190604]
-// @match        https://www.torn.com/page.php?sid=ItemMarket
+// @match        https://www.torn.com/page.php?sid=ItemMarket*
 // @connect      api.torn.com
 // ==/UserScript==
 

@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Custom Gym Ratios
-// @version      2.5 (updated by Kwack)
+// @version      2.6 (updated by Kwack)
 // @description  Monitors battle stat ratios and provides warnings if they approach levels that would preclude access to special gyms
 // @author       RGiskard [1953860], assistance by Xiphias [187717] - Torn PDA adaptation v1 [Manuito]
-// @match      	 torn.com/gym.php
+// @match      	 https://www.torn.com/gym.php*
 // ==/UserScript==
 
 function loadGym() {
