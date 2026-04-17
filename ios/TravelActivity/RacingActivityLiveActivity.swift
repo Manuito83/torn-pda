@@ -228,6 +228,6 @@ private func racingDynamicIsland(context: ActivityViewContext<RacingActivityAttr
         .foregroundColor(tint)
     }
   )
-  .widgetURL(URL(string: "tornpda://www.torn.com/loader.php?sid=racing"))
+  .widgetURL(URL(string: "tornpda://www.torn.com/page.php?sid=racing"))
   .keylineTint(tint)
 }

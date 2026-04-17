@@ -1,4 +1,6 @@
 import 'package:torn_pda/utils/live_activities/racing_live_activity_parser.dart';
+import 'package:torn_pda/widgets/profile/shortcut_paged_grid.dart';
+import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
 // Dart imports:
 import 'dart:async';
 import 'dart:developer';
@@ -1001,7 +1003,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Image.asset(
                   thisShortcut.iconUrl!,
                   width: 16,
-                  color: _themeProvider!.mainText,
+                  color: isFullColorShortcutIcon(thisShortcut.iconUrl)
+                      ? null
+                      : (thisShortcut.iconColor ?? _themeProvider!.mainText),
                 ),
               ),
               const SizedBox(height: 3),
@@ -1032,7 +1036,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: Image.asset(
               thisShortcut.iconUrl!,
               width: 16,
-              color: _themeProvider!.mainText,
+              color: isFullColorShortcutIcon(thisShortcut.iconUrl)
+                  ? null
+                  : (thisShortcut.iconColor ?? _themeProvider!.mainText),
             ),
           ),
         );
@@ -1138,7 +1144,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return semantics;
     }
 
-    // Main menu, returns either slidable list or wrap (grid)
+    // Main menu, returns either slidable list, wrap (grid), or paged grid carousel
     Widget shortcutMenu() {
       if (_shortcutsProv.shortcutMenu == "carousel") {
         return ListView.builder(
@@ -1155,6 +1161,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: ExcludeSemantics(child: shortcutTile(thisShortcut)),
             );
           },
+        );
+      } else if (_shortcutsProv.shortcutMenu == "gridcarousel") {
+        return ShortcutPagedGrid(
+          shortcuts: _shortcutsProv.activeShortcuts,
+          showEditIcon: _showShortcutEditIcon,
+          shortcutTile: _shortcutsProv.shortcutTile,
+          shortcutTileBuilder: (s) => shortcutTile(s),
+          editTileBuilder: ({required width, required height}) => editShortcutTile(width: width, height: height),
         );
       } else {
         final wrapItems = <Widget>[];
@@ -1250,13 +1264,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
+    // Grid carousel and grid manage their own height; carousel needs a fixed SizedBox
+    final bool needsFixedHeight = _shortcutsProv.shortcutMenu == "carousel";
     return SizedBox(
-      // We only need a SizedBox height for the listView, the wrap will expand
-      height: _shortcutsProv.shortcutMenu == "grid"
-          ? null
-          : _shortcutsProv.shortcutTile == 'both'
-              ? 60
-              : 40,
+      height: needsFixedHeight ? (_shortcutsProv.shortcutTile == 'both' ? 60 : 40) : null,
       child: _shortcutsProv.activeShortcuts.isEmpty ? emptyShortcutsState() : shortcutMenu(),
     );
   }
@@ -5200,10 +5211,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 InkWell(
                   borderRadius: BorderRadius.circular(100),
                   onLongPress: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: false);
                   },
                   onTap: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: true);
                   },
                   child: const Padding(
                     padding: EdgeInsets.only(left: 5),
@@ -5218,10 +5229,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(100),
                   onLongPress: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: false);
                   },
                   onTap: () {
-                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                    _launchBrowser(url: 'https://www.torn.com/page.php?sid=racing', shortTap: true);
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(left: 5),

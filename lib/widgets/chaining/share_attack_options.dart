@@ -52,7 +52,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
 
   Future<void> _prepareData() async {
     final id = widget.member.memberId.toString();
-    _attackUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$id';
+    _attackUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=$id';
     _estStats = widget.member.statsEstimated ?? '';
 
     if (widget.member.statsExactTotalKnown != -1 && widget.member.statsExactTotalUpdated != null) {

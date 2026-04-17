@@ -527,13 +527,7 @@ class WebViewFullState extends State<WebViewFull>
       CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
     );
 
-    _progressAnimation.addListener(() {
-      if (mounted) {
-        setState(() {
-          _animatedProgress = _progressAnimation.value;
-        });
-      }
-    });
+    _progressAnimation.addListener(_onProgressAnimationUpdate);
   }
 
   String _buildUserAgentSuffix() {
@@ -578,6 +572,7 @@ class WebViewFullState extends State<WebViewFull>
       );
 
       WidgetsBinding.instance.removeObserver(this);
+      _findController.removeListener(onFindInputTextChange);
       _findController.dispose();
       _findFocus.dispose();
 
@@ -590,6 +585,7 @@ class WebViewFullState extends State<WebViewFull>
       _scrollControllerBugsReport.dispose();
 
       // Dispose progress animation controller
+      _progressAnimation.removeListener(_onProgressAnimationUpdate);
       _progressController.dispose();
 
       webViewController?.dispose();
@@ -986,6 +982,7 @@ class WebViewFullState extends State<WebViewFull>
                               ],
                             ),
                           if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                                  _currentUrl.contains("www.torn.com/page.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
                               UserHelper.factionId != 0)
                             Text(
@@ -1473,42 +1470,7 @@ class WebViewFullState extends State<WebViewFull>
 
             // Check for content-type header to prevent loading of non-JS files.
             // Add anyway if there's no header, as it's probably a userscript.
-            if (incomingUrl.endsWith(".user.js") &&
-                (action.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
-              // First look for existing script with this url
-              final existingScript = _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == incomingUrl);
-              late String message;
-              if (existingScript != null) {
-                message = "UserScript already exists, opening dialog...";
-                showDialog(
-                    context: context,
-                    builder: (_) => UserScriptsAddDialog(
-                          editingExistingScript: true,
-                          scriptBeingEdited: existingScript,
-                          defaultPage: 1,
-                          // No need for default URL as it already exists in the script object
-                        ));
-              } else {
-                message = "UserScript detected, opening dialog...";
-                showDialog(
-                    builder: (_) => UserScriptsAddDialog(
-                          editingExistingScript: false,
-                          defaultUrl: incomingUrl,
-                          defaultPage: 1,
-                        ),
-                    context: context);
-              }
-              BotToast.showText(
-                text: message,
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.blue,
-                duration: const Duration(seconds: 3),
-                contentPadding: const EdgeInsets.all(10),
-                clickClose: true,
-              );
+            if (_interceptUserScriptUrl(incomingUrl)) {
               return NavigationActionPolicy.CANCEL;
             }
 
@@ -1517,6 +1479,12 @@ class WebViewFullState extends State<WebViewFull>
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
             final String url = request.request.url.toString().replaceAll("http:", "https:");
+
+            // On Android, userscript URLs can sometimes be detected here
+            if (url.endsWith(".user.js")) {
+              _interceptUserScriptUrl(url);
+              return false;
+            }
 
             // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
             // to open a window, a new tab is created but we can't see it and looks like a glitch)
@@ -2666,6 +2634,7 @@ class WebViewFullState extends State<WebViewFull>
     }
 
     final bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+            _currentUrl.contains("www.torn.com/page.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
         UserHelper.factionId != 0;
 
@@ -3048,6 +3017,7 @@ class WebViewFullState extends State<WebViewFull>
     _assessExitFullScreenScript(document);
     _assessProfileAgeToWords();
     _assessBugReportsWarning();
+    _assessOldLoaderRedirect(document);
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -3131,7 +3101,7 @@ class WebViewFullState extends State<WebViewFull>
         getProfile = true;
       }
 
-      const attackUrl = 'loader.php?sid=attack&user2ID=';
+      const attackUrl = 'page.php?sid=attack&user2ID=';
       const attackUrl2 = 'loader2.php?sid=getInAttack&user2ID=';
       if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
           (!_currentUrl.contains(attackUrl2) && _attackTriggered) ||
@@ -3225,6 +3195,7 @@ class WebViewFullState extends State<WebViewFull>
       _cityTriggered = false;
       _attackTriggered = false;
     } else if ((_currentUrl.contains("loader.php?sid=attack&user2ID=") ||
+            _currentUrl.contains("page.php?sid=attack&user2ID=") ||
             _currentUrl.contains("loader2.php?sid=getInAttack&user2ID=")) &&
         _attackTriggered) {
       _crimesTriggered = false;
@@ -4222,10 +4193,25 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  void _assessOldLoaderRedirect(dom.Document document) {
+    if (!_currentUrl.contains("loader.php")) return;
+    if (document.outerHtml.contains("Please use the new endpoints instead (page.php).")) {
+      try {
+        final newUrl = _currentUrl.replaceFirst("loader.php", "page.php");
+        BotToast.showText(text: "Redirecting to Torn's updated loader (page.php)...");
+        _loadUrl(newUrl);
+      } on Exception catch (e) {
+        logToUser("Failed to redirect to new loader: $e");
+        BotToast.showText(text: "Failed to redirect to Torn's updated loader.", backgroundColor: Colors.red);
+      }
+    }
+  }
+
   // ASSESS PROFILES
   Future _assessProfileAttack({required dom.Document document, String pageTitle = ""}) async {
     if (mounted) {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
+          !_currentUrl.contains("page.php?sid=attack&user2ID=") &&
           !_currentUrl.contains('loader2.php?sid=getInAttack&user2ID=') &&
           !_currentUrl.contains('torn.com/profiles.php?XID=') &&
           !_currentUrl.contains('torn.com/profiles.php?NID=')) {
@@ -4294,6 +4280,7 @@ class WebViewFullState extends State<WebViewFull>
           userId = 0;
         }
       } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=') ||
+          _currentUrl.contains("page.php?sid=attack&user2ID=") ||
           _currentUrl.contains('loader2.php?sid=getInAttack&user2ID=')) {
         if (_attackTriggered && _currentUrl == _lastProfileVisited) {
           return;
@@ -4737,7 +4724,7 @@ class WebViewFullState extends State<WebViewFull>
                   GestureDetector(
                     child: Image.asset('images/icons/home/crimes.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
-                      _loadUrl("https://www.torn.com/loader.php?sid=crimes");
+                      _loadUrl("https://www.torn.com/page.php?sid=crimes");
                       toastification.dismissAll();
                     },
                   )
@@ -4813,7 +4800,16 @@ class WebViewFullState extends State<WebViewFull>
 
       final drugsCooldownCheck = _settingsProvider.travelDrugCooldownWarning;
       if (drugsCooldownCheck) {
-        if (stats.cooldowns!.drug == 0) {
+        final drugThresholdSeconds = _settingsProvider.travelDrugCooldownWarningThreshold * 3600;
+        if (stats.cooldowns!.drug! <= drugThresholdSeconds) {
+          String drugWarningText;
+          if (stats.cooldowns!.drug == 0) {
+            drugWarningText = 'No drugs cooldown!';
+          } else {
+            final hours = stats.cooldowns!.drug! ~/ 3600;
+            final minutes = (stats.cooldowns!.drug! % 3600) ~/ 60;
+            drugWarningText = 'Drug cooldown: ${hours}h ${minutes}m remaining!';
+          }
           cooldownRows.add(
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -4826,9 +4822,9 @@ class WebViewFullState extends State<WebViewFull>
                       children: [
                         Image.asset('images/icons/cooldowns/drug5.png', width: 24, color: Colors.grey),
                         const SizedBox(width: 20),
-                        const Flexible(
+                        Flexible(
                           child: Text(
-                            'No drugs cooldown!',
+                            drugWarningText,
                           ),
                         ),
                       ],
@@ -4868,7 +4864,16 @@ class WebViewFullState extends State<WebViewFull>
 
       final boosterCooldownCheck = _settingsProvider.travelBoosterCooldownWarning;
       if (boosterCooldownCheck) {
-        if (stats.cooldowns!.booster == 0) {
+        final thresholdSeconds = _settingsProvider.travelBoosterCooldownWarningThreshold * 3600;
+        if (stats.cooldowns!.booster! <= thresholdSeconds) {
+          String warningText;
+          if (stats.cooldowns!.booster == 0) {
+            warningText = 'No booster cooldown!';
+          } else {
+            final hours = stats.cooldowns!.booster! ~/ 3600;
+            final minutes = (stats.cooldowns!.booster! % 3600) ~/ 60;
+            warningText = 'Booster cooldown: ${hours}h ${minutes}m remaining!';
+          }
           cooldownRows.add(
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -4881,9 +4886,9 @@ class WebViewFullState extends State<WebViewFull>
                       children: [
                         Image.asset('images/icons/cooldowns/booster5.png', width: 24, color: Colors.grey),
                         const SizedBox(width: 20),
-                        const Flexible(
+                        Flexible(
                           child: Text(
-                            'No booster cooldown!',
+                            warningText,
                           ),
                         ),
                       ],
@@ -5364,6 +5369,46 @@ class WebViewFullState extends State<WebViewFull>
         ''',
       );
     } catch (_) {}
+  }
+
+  /// Checks if [url] is a userscript (.user.js) and, if so, opens the add/edit dialog.
+  /// Returns true if the URL was intercepted.
+  bool _interceptUserScriptUrl(String url) {
+    if (!url.endsWith(".user.js")) return false;
+
+    final existingScript = _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == url);
+    late String message;
+    if (existingScript != null) {
+      message = "UserScript already exists, redirecting!";
+      showDialog(
+          context: context,
+          builder: (_) => UserScriptsAddDialog(
+                editingExistingScript: true,
+                scriptBeingEdited: existingScript,
+                defaultPage: 1,
+              ));
+    } else {
+      message = "UserScript detected, redirecting!";
+      showDialog(
+          builder: (_) => UserScriptsAddDialog(
+                editingExistingScript: false,
+                defaultUrl: url,
+                defaultPage: 1,
+              ),
+          context: context);
+    }
+    BotToast.showText(
+      text: message,
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.blue,
+      duration: const Duration(seconds: 3),
+      contentPadding: const EdgeInsets.all(10),
+      clickClose: true,
+    );
+    return true;
   }
 
   Future _loadUrl(String? inputUrl) async {
@@ -5991,7 +6036,7 @@ class WebViewFullState extends State<WebViewFull>
           contentPadding: const EdgeInsets.all(10),
         );
 
-        const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+        const nextBaseUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
         if (!mounted) return;
         await _loadUrl('$nextBaseUrl${_chainingPayload!.attackIdList[_attackNumber]}');
         if (_chainingPayload!.war) {
@@ -6053,7 +6098,7 @@ class WebViewFullState extends State<WebViewFull>
 
   /// Not to be used right after launch
   Future<void> _launchNextAttack() async {
-    const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+    const nextBaseUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
     // Turn button grey
     setState(() {
       _nextButtonPressed = true;
@@ -6389,6 +6434,14 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  void _onProgressAnimationUpdate() {
+    if (mounted) {
+      setState(() {
+        _animatedProgress = _progressAnimation.value;
+      });
+    }
+  }
+
   void _animateProgressTo(double newProgress) {
     if (!mounted) return;
 
@@ -6397,6 +6450,7 @@ class WebViewFullState extends State<WebViewFull>
 
     if (targetProgress < currentProgress && currentProgress > 0.1) return;
 
+    _progressAnimation.removeListener(_onProgressAnimationUpdate);
     _progressAnimation = Tween<double>(
       begin: currentProgress,
       end: targetProgress,
@@ -6404,6 +6458,7 @@ class WebViewFullState extends State<WebViewFull>
       parent: _progressController,
       curve: Curves.easeOut,
     ));
+    _progressAnimation.addListener(_onProgressAnimationUpdate);
 
     _progressController.reset();
     _progressController.forward();

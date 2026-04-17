@@ -28,6 +28,7 @@ import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
+import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
@@ -126,7 +127,9 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") && UserHelper.factionId != 0)
+                    if ((widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                            widget.url.contains("www.torn.com/page.php?sid=attack&user2ID=")) &&
+                        UserHelper.factionId != 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: ElevatedButton(
@@ -828,6 +831,10 @@ class CustomShortcutDialogState extends State<CustomShortcutDialog> {
   final _customShortcutNameKey = GlobalKey<FormState>();
   final _customShortcutURLKey = GlobalKey<FormState>();
 
+  ShortcutIconOption _selectedIcon = shortcutIconOptions.first;
+  Color? _selectedIconColor;
+  Color _selectedBorderColor = Colors.orange[500]!;
+
   @override
   @override
   void initState() {
@@ -949,6 +956,27 @@ class CustomShortcutDialogState extends State<CustomShortcutDialog> {
                       ],
                     ),
                     const SizedBox(height: 8),
+                    ShortcutIconPicker(
+                      selectedIconUrl: _selectedIcon.iconUrl,
+                      selectedIconColor: _selectedIconColor,
+                      selectedBorderColor: _selectedBorderColor,
+                      onIconSelected: (option) {
+                        setState(() {
+                          _selectedIcon = option;
+                        });
+                      },
+                      onIconColorChanged: (color) {
+                        setState(() {
+                          _selectedIconColor = color;
+                        });
+                      },
+                      onBorderColorChanged: (color) {
+                        setState(() {
+                          _selectedBorderColor = color;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
@@ -966,8 +994,9 @@ class CustomShortcutDialogState extends State<CustomShortcutDialog> {
                               ..name = _customShortcutNameController.text
                               ..nickname = _customShortcutNameController.text
                               ..url = _customShortcutURLController.text
-                              ..iconUrl = 'images/icons/pda_icon.png'
-                              ..color = Colors.orange[500]
+                              ..iconUrl = _selectedIcon.iconUrl
+                              ..color = _selectedBorderColor
+                              ..iconColor = _selectedIconColor
                               ..isCustom = true;
 
                             _shortcutsProvider.activateShortcut(customShortcut);
@@ -1003,10 +1032,10 @@ class CustomShortcutDialogState extends State<CustomShortcutDialog> {
                     height: 25,
                     width: 25,
                     child: Image.asset(
-                      "images/icons/pda_icon.png",
+                      _selectedIcon.iconUrl,
                       width: 18,
                       height: 18,
-                      color: widget.themeProvider!.mainText,
+                      color: _selectedIconColor,
                     ),
                   ),
                 ),

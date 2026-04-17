@@ -68,7 +68,7 @@ There are many more features available, but listing them all would be too long. 
 
 ## Contribute
 
-We welcome contributions at different levels!
+We welcome contributions at different levels! See [CONTRIBUTING.md](CONTRIBUTING.md) for developer setup, testing, and PR guidelines.
 
 - **Developers**: Since Torn PDA is an open-source project, we invite developers to contribute. Join us on [Discord](https://discord.gg/vyP23kJ) to discuss how you can help. The app is open source, but you might need some assistance to set it up the first time, and we're here to guide you. Feel free to raise issues and/or fork the app, work with it and submit a PR if you have a suggestion.
 

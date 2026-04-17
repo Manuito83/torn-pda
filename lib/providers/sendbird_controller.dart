@@ -179,9 +179,9 @@ class SendbirdController extends GetxController {
   }
 
   @override
-  void dispose() async {
-    await SendbirdChat.disconnect();
-    super.dispose();
+  void onClose() {
+    SendbirdChat.disconnect();
+    super.onClose();
   }
 
   Future register() async {

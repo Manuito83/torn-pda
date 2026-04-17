@@ -1,0 +1,34 @@
+# ──────────────────────────────────────────────────────────────
+# Torn PDA — Docker Compose for development
+#
+# Usage:
+#   docker compose build           # build the image (first time ~5 min)
+#   docker compose run --rm app flutter test
+#   docker compose run --rm app flutter analyze
+#   docker compose run --rm app flutter build apk --debug
+#   docker compose run --rm app bash   # interactive shell
+#
+# See docker/README.md for details.
+# ──────────────────────────────────────────────────────────────
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Mount the project so changes are reflected immediately.
+      # The entrypoint handles pub get and config stubs.
+      - .:/app
+      # Mount host CA bundle so Dart/pub trusts the same certs
+      # as the host (covers corporate proxies, TLS inspection).
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+      # Persist Gradle and pub caches between runs so rebuilds
+      # don't re-download the internet every time.
+      - gradle-cache:/root/.gradle
+      - pub-cache:/root/.pub-cache
+    working_dir: /app
+
+volumes:
+  gradle-cache:
+  pub-cache:

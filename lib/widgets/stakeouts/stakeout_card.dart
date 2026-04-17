@@ -72,7 +72,9 @@ class StakeoutCardState extends State<StakeoutCard> {
 
   @override
   void dispose() {
-    //_expandableController.dispose();
+    _expandableController.dispose();
+    _lifePercentageTextController.dispose();
+    _offlineHoursTextController.dispose();
     super.dispose();
   }
 

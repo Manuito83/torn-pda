@@ -905,7 +905,7 @@ class TargetCardState extends State<TargetCard> {
 
         _webViewProvider.openBrowserPreference(
           context: context,
-          url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+          url: 'https://www.torn.com/page.php?sid=attack&user2ID=${attacksIds[0]}',
           browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
@@ -919,7 +919,7 @@ class TargetCardState extends State<TargetCard> {
         );
 
       case BrowserSetting.external:
-        final url = 'https://www.torn.com/loader.php?sid='
+        final url = 'https://www.torn.com/page.php?sid='
             'attack&user2ID=${_target!.playerId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);

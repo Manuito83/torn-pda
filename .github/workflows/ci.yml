@@ -1,0 +1,150 @@
+# Torn PDA — CI Pipeline
+#
+# Runs on every push and pull request against develop and master.
+#   1. analyze  — dart static analysis (push + PR)
+#   2. test     — flutter unit & widget tests (push + PR)
+#   3. build    — confirms the Android APK still compiles (PR only)
+#
+# All jobs run on GitHub-hosted runners. Public repos get unlimited
+# free minutes, so this costs nothing.
+#
+# See .github/workflows/README.md for maintenance notes.
+
+name: CI
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+    branches: [develop, master]
+
+# Cancel previous runs for the same PR / branch to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.41.6" # needs Dart >=3.9.0 for sembast, >=3.8.0 for swagger
+
+jobs:
+  # ──────────────────────────────────────────────
+  # 1. Static analysis
+  # ──────────────────────────────────────────────
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # Copy config stubs so the analyzer can resolve all imports.
+      - name: Copy config stubs
+        run: |
+          cd lib/config
+          for f in *.dart.example; do
+            cp "$f" "${f%.example}"
+          done
+          cp firebase_options.dart.example ../firebase_options.dart
+          cd ..
+          mkdir -p torn-pda-native/auth torn-pda-native/stats
+          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
+          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
+          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
+          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
+          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run analyzer
+        run: flutter analyze --no-fatal-infos
+
+  # ──────────────────────────────────────────────
+  # 2. Unit & widget tests
+  # ──────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Copy config stubs
+        run: |
+          cd lib/config
+          for f in *.dart.example; do
+            cp "$f" "${f%.example}"
+          done
+          cp firebase_options.dart.example ../firebase_options.dart
+          cd ..
+          mkdir -p torn-pda-native/auth torn-pda-native/stats
+          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
+          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
+          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
+          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
+          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test --coverage
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          retention-days: 14
+
+  # ──────────────────────────────────────────────
+  # 3. Build (APK) — proves the project compiles (PR only)
+  # ──────────────────────────────────────────────
+  build:
+    name: Build APK
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Copy config stubs
+        run: |
+          cd lib/config
+          for f in *.dart.example; do
+            cp "$f" "${f%.example}"
+          done
+          cp firebase_options.dart.example ../firebase_options.dart
+          cd ..
+          mkdir -p torn-pda-native/auth torn-pda-native/stats
+          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
+          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
+          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
+          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
+          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+          # Android Firebase config stub for APK build
+          cp ../android/app/google-services.json.example ../android/app/google-services.json
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build debug APK
+        run: flutter build apk --debug
