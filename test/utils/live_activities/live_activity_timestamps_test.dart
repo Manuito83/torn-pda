@@ -25,9 +25,7 @@ void main() {
         timeLeftSeconds: 300,
         deviceNowSeconds: 999970,
       );
-      // Expected: 999970 + 300 = 1000270 (NOT server's 1000300)
-      // Countdown: 1000270 - 999970 = 300s (matches Torn)
-      // Without fix: 1000300 - 999970 = 330s (wrong!)
+      // arrival = 999970 + 300 = 1000270; countdown = 300s (matches Torn)
       expect(result.arrivalTimestamp, 1000270);
       expect(result.departureTimestamp, 999970);
     });

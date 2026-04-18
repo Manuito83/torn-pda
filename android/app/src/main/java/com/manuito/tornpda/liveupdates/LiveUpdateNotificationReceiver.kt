@@ -186,7 +186,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_IMMUTABLE)
         }
 
-        val destinationIcon = getDestinationIcon(destination)
+        val destinationIcon = TravelLiveUpdateAssets.trackerIconFor(destination)
         val timeFormat = android.text.format.DateFormat.getTimeFormat(context)
         val nowFormatted = timeFormat.format(java.util.Date())
 
@@ -226,17 +226,6 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         route?.let { builder.setSubText(it) }
 
         androidx.core.app.NotificationManagerCompat.from(context).notify(sessionId.hashCode(), builder.build())
-    }
-
-    /**
-     * Returns the appropriate drawable resource ID for the given travel destination
-     * Uses plane_left when returning to Torn, plane_right when traveling abroad
-     */
-    private fun getDestinationIcon(destination: String?): Int {
-        return when (destination?.lowercase()) {
-            "torn" -> com.manuito.tornpda.R.drawable.plane_left
-            else -> com.manuito.tornpda.R.drawable.plane_right
-        }
     }
 
     companion object {

@@ -195,9 +195,7 @@ class LiveActivityBridgeController extends GetxController {
     return _latestCapabilitySnapshot;
   }
 
-  /// Opens the system settings page that lets the user toggle promoted
-  /// notifications for this app (Android 16+). Returns `false` when the
-  /// platform/route can't be resolved.
+  /// Android 16+: returns `false` on older SDKs or when the route can't be resolved.
   Future<bool> openPromotedNotificationsSettings() async {
     if (!Platform.isAndroid) return false;
     try {

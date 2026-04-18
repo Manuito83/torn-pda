@@ -209,11 +209,9 @@ class LiveActivityTravelController extends GetxController {
 
       if (_isFirstValidProcessingPending) {
         if (apiData != null) {
-          // We have valid API data for the first time this activation cycle
           isConsideredFirstValidRun = true;
           _isFirstValidProcessingPending = false;
         } else {
-          // Still waiting for valid data on the first go, do nothing yet.
           return;
         }
       }
@@ -224,11 +222,10 @@ class LiveActivityTravelController extends GetxController {
       final repatriating = _isPlayerStatusHospitalizedAndPotentiallyReturning(currentStatusColor, currentModel);
 
       if (apiData == null) {
-        // If no travel data from API, end any LA that Dart thinks is active
         if (_isLALogicallyActive) {
           log("TravelLiveActivityHandler: No API travel data. Ending active LA (if any).");
-          _bridgeController.endActivity(); // Tell native to end
-          _resetLAStateInternal(); // Reset Dart's logical state
+          _bridgeController.endActivity();
+          _resetLAStateInternal();
         }
         return;
       }
@@ -242,9 +239,7 @@ class LiveActivityTravelController extends GetxController {
       final arrivalTimestamp = apiData['arrivalTimestamp']!;
       final hasPlayerArrived = nowSeconds >= arrivalTimestamp;
 
-      // --- Main logic to determine LA action ---
       if (traveling || repatriating) {
-        // Player is currently traveling or repatriating according to API
         bool isArrivalStale = hasPlayerArrived && (nowSeconds - arrivalTimestamp) > _staleArrivalThresholdSeconds;
 
         // CASE 0: First valid processing run, player has arrived, and the arrival is "stale"
@@ -300,7 +295,6 @@ class LiveActivityTravelController extends GetxController {
         }
       }
 
-      // --- Perform the LA start/update if decided
       if (shouldStartOrUpdateLA && laArgs != null) {
         final bool isArrivalUpdate = laArgs['hasArrived'] == true;
 
@@ -427,7 +421,6 @@ class LiveActivityTravelController extends GetxController {
       arrivalTimeForNotification = deviceTimestamps.arrivalTimestamp;
       departureTimeForNotification = deviceTimestamps.departureTimestamp;
 
-      // Recalculate earliestReturnTimestamp with device-relative arrival
       if (earliestReturnTimestamp != null && travelDuration > 0) {
         earliestReturnTimestamp = arrivalTimeForNotification + travelDuration;
       }

@@ -65,7 +65,7 @@ class TravelLiveUpdateNotificationFactory(
         dismissIntent: android.app.PendingIntent,
     ): Notification {
         val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
-        val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
+        val destinationIcon = TravelLiveUpdateAssets.trackerIconFor(payload.currentDestinationDisplayName)
         val remainingText = formatRemaining(payload)
         val earliestReturnText = formatEarliestReturn(payload)
         val arrivalClockTime = formatArrivalClockTime(payload)
@@ -152,7 +152,7 @@ class TravelLiveUpdateNotificationFactory(
         dismissIntent: android.app.PendingIntent,
     ): Notification {
         val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
-        val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
+        val destinationIcon = TravelLiveUpdateAssets.trackerIconFor(payload.currentDestinationDisplayName)
         val remainingText = formatRemaining(payload)
         val earliestReturnText = formatEarliestReturn(payload)
         val arrivalClockTime = formatArrivalClockTime(payload)
@@ -301,13 +301,7 @@ class TravelLiveUpdateNotificationFactory(
         }
     }
 
-    /**
-     * Configures `Notification.ProgressStyle` (Android 16+, the canonical
-     * "tracker" UI for start→end journeys). Returns `true` when applied so
-     * the caller can skip the BigTextStyle fallback. Reflective so the build
-     * still compiles and runs cleanly on devices/SDKs where the API isn't
-     * yet present (developer previews, OEM forks, etc.).
-     */
+    // Reflective because compileSdk may be below 36 (ProgressStyle is Android 16+).
     @SuppressLint("NewApi")
     private fun applyProgressStyleIfAvailable(
         builder: Notification.Builder,
@@ -316,6 +310,7 @@ class TravelLiveUpdateNotificationFactory(
     ): Boolean {
         if (Build.VERSION.SDK_INT < 36) return false
         progress ?: return false
+        val refs = ProgressStyleRefs.resolve() ?: return false
 
         val total = progress.totalSeconds.toInt().coerceAtLeast(1)
         val elapsed = progress.elapsedSeconds.toInt().coerceIn(0, total)
@@ -324,25 +319,13 @@ class TravelLiveUpdateNotificationFactory(
         val trackerIcon = TravelLiveUpdateAssets.trackerIconFor(payload.currentDestinationDisplayName)
 
         return try {
-            val styleClass = Class.forName("android.app.Notification\$ProgressStyle")
-            val style = styleClass.getDeclaredConstructor().newInstance()
-
-            styleClass.getMethod("setProgress", Int::class.javaPrimitiveType)
-                .invoke(style, elapsed)
-            styleClass.getMethod("setProgressTrackerIcon", Icon::class.java)
-                .invoke(style, Icon.createWithResource(context, trackerIcon))
-            styleClass.getMethod("setProgressStartIcon", Icon::class.java)
-                .invoke(style, Icon.createWithResource(context, originIcon))
-            styleClass.getMethod("setProgressEndIcon", Icon::class.java)
-                .invoke(style, Icon.createWithResource(context, destinationIcon))
-
-            val segmentClass = Class.forName("android.app.Notification\$ProgressStyle\$Segment")
-            val segment = segmentClass
-                .getDeclaredConstructor(Int::class.javaPrimitiveType)
-                .newInstance(total)
-            styleClass.getMethod("addProgressSegment", segmentClass)
-                .invoke(style, segment)
-
+            val style = refs.styleCtor.newInstance()
+            refs.setProgress.invoke(style, elapsed)
+            refs.setTrackerIcon.invoke(style, Icon.createWithResource(context, trackerIcon))
+            refs.setStartIcon.invoke(style, Icon.createWithResource(context, originIcon))
+            refs.setEndIcon.invoke(style, Icon.createWithResource(context, destinationIcon))
+            val segment = refs.segmentCtor.newInstance(total)
+            refs.addSegment.invoke(style, segment)
             builder.setStyle(style as Notification.Style)
             true
         } catch (t: Throwable) {
@@ -354,13 +337,14 @@ class TravelLiveUpdateNotificationFactory(
     @SuppressLint("NewApi")
     private fun warnIfNotPromotable(notification: Notification) {
         if (Build.VERSION.SDK_INT < 36) return
+        val method = PromotableRef.resolve(notification.javaClass) ?: return
         try {
-            val method = notification.javaClass.getMethod("hasPromotableCharacteristics")
             val promotable = method.invoke(notification) as? Boolean ?: return
             if (!promotable) {
                 Log.w(TAG, "Live Update notification did not qualify for promotion")
             }
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
+            Log.d(TAG, "hasPromotableCharacteristics invocation failed", t)
         }
     }
 
@@ -380,15 +364,66 @@ class TravelLiveUpdateNotificationFactory(
         }
     }
 
-    private fun getDestinationIcon(destination: String?): Int {
-        return when (destination?.lowercase()) {
-            "torn" -> R.drawable.plane_left
-            else -> R.drawable.plane_right
+    companion object {
+        private const val TAG = "TravelLiveUpdate"
+    }
+
+    private class ProgressStyleRefs(
+        val styleCtor: java.lang.reflect.Constructor<*>,
+        val segmentCtor: java.lang.reflect.Constructor<*>,
+        val setProgress: java.lang.reflect.Method,
+        val setTrackerIcon: java.lang.reflect.Method,
+        val setStartIcon: java.lang.reflect.Method,
+        val setEndIcon: java.lang.reflect.Method,
+        val addSegment: java.lang.reflect.Method,
+    ) {
+        companion object {
+            @Volatile
+            private var cached: ProgressStyleRefs? = null
+
+            @Volatile
+            private var unavailable = false
+
+            fun resolve(): ProgressStyleRefs? {
+                cached?.let { return it }
+                if (unavailable) return null
+                return try {
+                    val styleClass = Class.forName("android.app.Notification\$ProgressStyle")
+                    val segmentClass = Class.forName("android.app.Notification\$ProgressStyle\$Segment")
+                    ProgressStyleRefs(
+                        styleCtor = styleClass.getDeclaredConstructor(),
+                        segmentCtor = segmentClass.getDeclaredConstructor(Int::class.javaPrimitiveType),
+                        setProgress = styleClass.getMethod("setProgress", Int::class.javaPrimitiveType),
+                        setTrackerIcon = styleClass.getMethod("setProgressTrackerIcon", Icon::class.java),
+                        setStartIcon = styleClass.getMethod("setProgressStartIcon", Icon::class.java),
+                        setEndIcon = styleClass.getMethod("setProgressEndIcon", Icon::class.java),
+                        addSegment = styleClass.getMethod("addProgressSegment", segmentClass),
+                    ).also { cached = it }
+                } catch (_: Throwable) {
+                    unavailable = true
+                    null
+                }
+            }
         }
     }
 
-    companion object {
-        private const val TAG = "TravelLiveUpdate"
+    private object PromotableRef {
+        @Volatile
+        private var cached: java.lang.reflect.Method? = null
+
+        @Volatile
+        private var unavailable = false
+
+        fun resolve(notificationClass: Class<*>): java.lang.reflect.Method? {
+            cached?.let { return it }
+            if (unavailable) return null
+            return try {
+                notificationClass.getMethod("hasPromotableCharacteristics").also { cached = it }
+            } catch (_: Throwable) {
+                unavailable = true
+                null
+            }
+        }
     }
 
     private fun LiveUpdatePayload.toExtrasBundle(): android.os.Bundle {
