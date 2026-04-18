@@ -29,7 +29,7 @@ class LiveActivityTravelController extends GetxController {
   String _lastArrivalNotifiedTravelId = "";
   bool _hasArrivedNotified = false;
 
-  Completer<void>? _processGuard;
+  bool _isProcessing = false;
   bool _isMonitoring = false;
   Worker? _statusListenerWorker;
   StreamSubscription<LiveUpdateStatusEvent>? _statusEventSubscription;
@@ -200,10 +200,8 @@ class LiveActivityTravelController extends GetxController {
       return;
     }
 
-    if (_processGuard != null && !_processGuard!.isCompleted) {
-      return; // skip concurrent call
-    }
-    _processGuard = Completer<void>();
+    if (_isProcessing) return;
+    _isProcessing = true;
 
     try {
       bool isConsideredFirstValidRun = false;
@@ -306,17 +304,14 @@ class LiveActivityTravelController extends GetxController {
       if (shouldStartOrUpdateLA && laArgs != null) {
         final bool isArrivalUpdate = laArgs['hasArrived'] == true;
 
-        // Optimistic state update before await to prevent duplicate calls
-        _isLALogicallyActive = true;
-        _lastProcessedTravelIdentifier = travelId;
-        _currentLAArrivalTimestamp = arrivalTimestamp;
-
         final LiveUpdateStartResult result = await _bridgeController.startActivity(arguments: laArgs);
         applyStartResult(result);
         if (!result.isSuccess) {
           log("TravelLiveActivityHandler: Native layer reported ${result.status} (${result.reason})");
           return;
         }
+        _currentLAArrivalTimestamp = arrivalTimestamp;
+        _lastProcessedTravelIdentifier = travelId;
         if (isArrivalUpdate) {
           _lastArrivalNotifiedTravelId = travelId;
           if (Platform.isAndroid) {
@@ -338,7 +333,7 @@ class LiveActivityTravelController extends GetxController {
         }
       }
     } finally {
-      _processGuard?.complete();
+      _isProcessing = false;
     }
   }
 

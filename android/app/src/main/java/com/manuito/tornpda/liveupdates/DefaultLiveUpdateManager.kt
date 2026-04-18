@@ -45,12 +45,12 @@ class DefaultLiveUpdateManager(
         val existingSession = sessionStore.current()
         val sessionId = existingSession?.sessionId ?: sessionIdProvider()
 
-        // Dedup: skip adapter if same content, same arrived state
+        // Skip adapter when nothing observable changed — avoids re-popping the heads-up
+        // notification and re-arming WorkManager alarms on every poll.
         if (existingSession != null
             && existingSession.contentIdentifier == parsedPayload.contentIdentifier
             && existingSession.lastHasArrived == parsedPayload.hasArrived
         ) {
-            sessionStore.markActive(existingSession.copy(lastUpdatedAtMs = now))
             return@synchronized LiveUpdateStartResult(
                 status = LiveUpdateRequestStatus.UPDATED,
                 sessionId = sessionId,
