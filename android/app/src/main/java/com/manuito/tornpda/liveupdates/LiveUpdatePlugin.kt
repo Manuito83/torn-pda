@@ -25,6 +25,7 @@ object LiveUpdatePlugin {
             travelManager = travelManager,
             racingManager = racingManager,
             eventEmitter = MethodChannelEventEmitter(channel),
+            context = appContext,
         )
         channel.setMethodCallHandler(bridge)
 

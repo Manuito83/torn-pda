@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
@@ -192,6 +193,20 @@ class LiveActivityBridgeController extends GetxController {
       log("LiveActivityBridgeService: Error getting capability snapshot: $e");
     }
     return _latestCapabilitySnapshot;
+  }
+
+  /// Opens the system settings page that lets the user toggle promoted
+  /// notifications for this app (Android 16+). Returns `false` when the
+  /// platform/route can't be resolved.
+  Future<bool> openPromotedNotificationsSettings() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      final dynamic response = await _channel.invokeMethod('openPromotedNotificationsSettings');
+      return response == true;
+    } catch (e) {
+      log("LiveActivityBridgeService: Error opening promoted notifications settings: $e");
+      return false;
+    }
   }
 
   Future<void> getPushToStartTokenAndSendToFirebase({

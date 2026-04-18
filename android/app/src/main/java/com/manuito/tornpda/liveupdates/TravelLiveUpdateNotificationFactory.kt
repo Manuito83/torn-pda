@@ -3,7 +3,9 @@ package com.manuito.tornpda.liveupdates
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.content.Context
+import android.graphics.drawable.Icon
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.manuito.tornpda.R
 
@@ -197,19 +199,25 @@ class TravelLiveUpdateNotificationFactory(
             builder.setContentTitle("$title $destination")
             builder.setContentText(contentTextParts.joinToString(" • "))
             builder.setSubText(secondary)
-            builder.setStyle(
-                Notification.BigTextStyle().bigText(
-                    buildList {
-                        add(secondary)
-                        add(contentTextParts.joinToString(" • "))
-                        earliestReturnText?.let { add(it) }
-                    }.joinToString("\n"),
-                ),
-            )
 
-            contentBuilder.computeProgress(payload)?.let {
-                builder.setProgress(it.totalSeconds.toInt(), it.elapsedSeconds.toInt(), false)
-            } ?: builder.setProgress(0, 0, false)
+            val progressInfo = contentBuilder.computeProgress(payload)
+            val styleApplied = applyProgressStyleIfAvailable(builder, payload, progressInfo)
+            if (!styleApplied) {
+                builder.setStyle(
+                    Notification.BigTextStyle().bigText(
+                        buildList {
+                            add(secondary)
+                            add(contentTextParts.joinToString(" • "))
+                            earliestReturnText?.let { add(it) }
+                        }.joinToString("\n"),
+                    ),
+                )
+                if (progressInfo != null) {
+                    builder.setProgress(progressInfo.totalSeconds.toInt(), progressInfo.elapsedSeconds.toInt(), false)
+                } else {
+                    builder.setProgress(0, 0, false)
+                }
+            }
 
             val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
             if (arrivalMillis > 0) {
@@ -222,7 +230,9 @@ class TravelLiveUpdateNotificationFactory(
             }
         }
 
-        return builder.build()
+        val notification = builder.build()
+        warnIfNotPromotable(notification)
+        return notification
     }
 
     private fun formatEta(payload: LiveUpdatePayload): String {
@@ -291,6 +301,69 @@ class TravelLiveUpdateNotificationFactory(
         }
     }
 
+    /**
+     * Configures `Notification.ProgressStyle` (Android 16+, the canonical
+     * "tracker" UI for start→end journeys). Returns `true` when applied so
+     * the caller can skip the BigTextStyle fallback. Reflective so the build
+     * still compiles and runs cleanly on devices/SDKs where the API isn't
+     * yet present (developer previews, OEM forks, etc.).
+     */
+    @SuppressLint("NewApi")
+    private fun applyProgressStyleIfAvailable(
+        builder: Notification.Builder,
+        payload: LiveUpdatePayload,
+        progress: LiveUpdateNotificationContentBuilder.ProgressInfo?,
+    ): Boolean {
+        if (Build.VERSION.SDK_INT < 36) return false
+        progress ?: return false
+
+        val total = progress.totalSeconds.toInt().coerceAtLeast(1)
+        val elapsed = progress.elapsedSeconds.toInt().coerceIn(0, total)
+        val originIcon = TravelLiveUpdateAssets.flagIconFor(payload.originDisplayName)
+        val destinationIcon = TravelLiveUpdateAssets.flagIconFor(payload.currentDestinationDisplayName)
+        val trackerIcon = TravelLiveUpdateAssets.trackerIconFor(payload.currentDestinationDisplayName)
+
+        return try {
+            val styleClass = Class.forName("android.app.Notification\$ProgressStyle")
+            val style = styleClass.getDeclaredConstructor().newInstance()
+
+            styleClass.getMethod("setProgress", Int::class.javaPrimitiveType)
+                .invoke(style, elapsed)
+            styleClass.getMethod("setProgressTrackerIcon", Icon::class.java)
+                .invoke(style, Icon.createWithResource(context, trackerIcon))
+            styleClass.getMethod("setProgressStartIcon", Icon::class.java)
+                .invoke(style, Icon.createWithResource(context, originIcon))
+            styleClass.getMethod("setProgressEndIcon", Icon::class.java)
+                .invoke(style, Icon.createWithResource(context, destinationIcon))
+
+            val segmentClass = Class.forName("android.app.Notification\$ProgressStyle\$Segment")
+            val segment = segmentClass
+                .getDeclaredConstructor(Int::class.javaPrimitiveType)
+                .newInstance(total)
+            styleClass.getMethod("addProgressSegment", segmentClass)
+                .invoke(style, segment)
+
+            builder.setStyle(style as Notification.Style)
+            true
+        } catch (t: Throwable) {
+            Log.w(TAG, "ProgressStyle unavailable, falling back to BigTextStyle", t)
+            false
+        }
+    }
+
+    @SuppressLint("NewApi")
+    private fun warnIfNotPromotable(notification: Notification) {
+        if (Build.VERSION.SDK_INT < 36) return
+        try {
+            val method = notification.javaClass.getMethod("hasPromotableCharacteristics")
+            val promotable = method.invoke(notification) as? Boolean ?: return
+            if (!promotable) {
+                Log.w(TAG, "Live Update notification did not qualify for promotion")
+            }
+        } catch (_: Throwable) {
+        }
+    }
+
     private fun invokeFrameworkShortCriticalText(builder: Notification.Builder, text: CharSequence) {
         try {
             val extras = android.os.Bundle().apply {
@@ -312,6 +385,10 @@ class TravelLiveUpdateNotificationFactory(
             "torn" -> R.drawable.plane_left
             else -> R.drawable.plane_right
         }
+    }
+
+    companion object {
+        private const val TAG = "TravelLiveUpdate"
     }
 
     private fun LiveUpdatePayload.toExtrasBundle(): android.os.Bundle {

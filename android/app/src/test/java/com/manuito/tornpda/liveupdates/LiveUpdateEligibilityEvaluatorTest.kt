@@ -57,6 +57,22 @@ class LiveUpdateEligibilityEvaluatorTest {
     }
 
     @Test
+    fun promotedNotificationsDisabledProducesPromotedDisabledReason() {
+        val evaluator = createEvaluator(
+            apiLevel = 40,
+            notificationsAllowed = true,
+            promotedNotificationsAllowed = false,
+            batteryOptimized = false,
+        )
+
+        val result = evaluator.evaluate()
+
+        assertFalse(result.eligible)
+        assertEquals(LiveUpdateUnsupportedReason.PROMOTED_DISABLED, result.reason)
+        assertFalse(result.snapshot.promotedNotificationsEnabled)
+    }
+
+    @Test
     fun eligibleSnapshotIncludesVendor() {
         val evaluator = createEvaluator(
             apiLevel = 40,
@@ -76,6 +92,7 @@ class LiveUpdateEligibilityEvaluatorTest {
         cache: InMemoryCapabilityCache = InMemoryCapabilityCache(),
         apiLevel: Int,
         notificationsAllowed: Boolean,
+        promotedNotificationsAllowed: Boolean = true,
         batteryOptimized: Boolean,
         vendor: String = "Pixel",
     ): LiveUpdateEligibilityEvaluator {
@@ -86,6 +103,7 @@ class LiveUpdateEligibilityEvaluatorTest {
             requiredApiLevel = 35,
             apiLevelProvider = { apiLevel },
             notificationsAllowedProvider = { notificationsAllowed },
+            promotedNotificationsAllowedProvider = { promotedNotificationsAllowed },
             batteryOptimizedProvider = { batteryOptimized },
             vendorProvider = { vendor },
         )
