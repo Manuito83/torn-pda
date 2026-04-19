@@ -398,7 +398,7 @@ class WebviewHandlers {
     );
   }
 
-  /// Registers the Script API handlers for HTTP GET, POST and JavaScript evaluation
+  /// Registers the Script API handlers for HTTP GET, POST, PUT, DELETE, PATCH and JavaScript evaluation
   static void addScriptApiHandlers({
     required InAppWebViewController webview,
   }) {
@@ -423,6 +423,52 @@ class WebviewHandlers {
           body = Map<String, String>.from(body);
         }
         final http.Response resp = await http.post(
+          WebUri(args[0]),
+          headers: Map<String, String>.from(args[1]),
+          body: body,
+        );
+        return _makeScriptApiResponse(resp);
+      },
+    );
+
+    // HTTP PUT Handler
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_httpPut',
+      callback: (args) async {
+        Object? body = args[2];
+        if (body is Map<String, dynamic>) {
+          body = Map<String, String>.from(body);
+        }
+        final http.Response resp = await http.put(
+          WebUri(args[0]),
+          headers: Map<String, String>.from(args[1]),
+          body: body,
+        );
+        return _makeScriptApiResponse(resp);
+      },
+    );
+
+    // HTTP DELETE Handler
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_httpDelete',
+      callback: (args) async {
+        final http.Response resp = await http.delete(
+          WebUri(args[0]),
+          headers: Map<String, String>.from(args[1]),
+        );
+        return _makeScriptApiResponse(resp);
+      },
+    );
+
+    // HTTP PATCH Handler
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_httpPatch',
+      callback: (args) async {
+        Object? body = args[2];
+        if (body is Map<String, dynamic>) {
+          body = Map<String, String>.from(body);
+        }
+        final http.Response resp = await http.patch(
           WebUri(args[0]),
           headers: Map<String, String>.from(args[1]),
           body: body,
