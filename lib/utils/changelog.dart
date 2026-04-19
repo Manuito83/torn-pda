@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.13.4'
         ..date = '01 MAY 2026'
         ..features = [
+          "Added PUT and DELETE HTTP request handlers for userscripts [DarXide]",
           if (Platform.isAndroid) "Fixed several Live Updates issues [bombel]",
           "Fixed alarm icon not turning green when active in some devices",
           "Fixed travel return button not working in some cases",

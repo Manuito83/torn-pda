@@ -91,7 +91,7 @@ Using either of these approaches ensures that your code will not attempt to call
 
 ## HTTP handlers
 
-- [HTTP Handlers](./http-handlers.md) – HTTP GET and POST handlers for data fetching.
+- [HTTP Handlers](./http-handlers.md) – HTTP GET, POST, PUT, PATCH and DELETE handlers for data fetching.
 
 <br></br>
 

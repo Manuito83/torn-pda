@@ -73,7 +73,7 @@ window.flutter_inappwebview.callHandler('PDA_httpPost', url, headers, body)
 ```
 
 ## Notes:
-- Both HTTP handlers are asynchronous and return promises.
+- All HTTP handlers are asynchronous and return promises.
 - Ensure that the URL and headers are correctly provided.
 
 ---
