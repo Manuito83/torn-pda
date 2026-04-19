@@ -16,18 +16,26 @@ object LiveUpdateNotificationChannel {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService<NotificationManager>() ?: return
         val channelId = channelIdFor(activityType)
-        if (manager.getNotificationChannel(channelId) != null) return
+
+        // Migrate HIGH-importance channels down to DEFAULT; HIGH re-popped heads-up on every refresh.
+        val existing = manager.getNotificationChannel(channelId)
+        if (existing != null) {
+            if (existing.importance == NotificationManager.IMPORTANCE_HIGH) {
+                manager.deleteNotificationChannel(channelId)
+            } else {
+                return
+            }
+        }
 
         val channel = NotificationChannel(
             channelId,
             channelName(context, activityType),
-            NotificationManager.IMPORTANCE_HIGH,
+            NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
             description = channelDescription(context, activityType)
             enableVibration(false)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            // Configure channel to be silent
             setSound(null, null)
         }
         manager.createNotificationChannel(channel)

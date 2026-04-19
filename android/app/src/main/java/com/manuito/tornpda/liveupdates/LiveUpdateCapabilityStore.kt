@@ -22,6 +22,7 @@ class LiveUpdateCapabilityStore(context: Context) : LiveUpdateCapabilityCache {
             putBoolean(KEY_SUPPORTED_API, snapshot.supportedApi)
             putBoolean(KEY_OEM_CAPSULE, snapshot.oemCapsule)
             putBoolean(KEY_NOTIFICATIONS_ENABLED, snapshot.notificationsEnabled)
+            putBoolean(KEY_PROMOTED_NOTIFICATIONS_ENABLED, snapshot.promotedNotificationsEnabled)
             putBoolean(KEY_BATTERY_OPTIMIZED, snapshot.batteryOptimized)
             putString(KEY_VENDOR, snapshot.vendor)
             snapshot.timestampMs?.let { putLong(KEY_TIMESTAMP, it) } ?: remove(KEY_TIMESTAMP)
@@ -34,6 +35,7 @@ class LiveUpdateCapabilityStore(context: Context) : LiveUpdateCapabilityCache {
             supportedApi = prefs.getBoolean(KEY_SUPPORTED_API, false),
             oemCapsule = prefs.getBoolean(KEY_OEM_CAPSULE, false),
             notificationsEnabled = prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, false),
+            promotedNotificationsEnabled = prefs.getBoolean(KEY_PROMOTED_NOTIFICATIONS_ENABLED, true),
             batteryOptimized = prefs.getBoolean(KEY_BATTERY_OPTIMIZED, true),
             vendor = prefs.getString(KEY_VENDOR, "unknown").orEmpty(),
             timestampMs = if (prefs.contains(KEY_TIMESTAMP)) prefs.getLong(KEY_TIMESTAMP, 0L) else null,
@@ -45,6 +47,7 @@ class LiveUpdateCapabilityStore(context: Context) : LiveUpdateCapabilityCache {
         private const val KEY_SUPPORTED_API = "supported_api"
         private const val KEY_OEM_CAPSULE = "oem_capsule"
         private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        private const val KEY_PROMOTED_NOTIFICATIONS_ENABLED = "promoted_notifications_enabled"
         private const val KEY_BATTERY_OPTIMIZED = "battery_optimized"
         private const val KEY_VENDOR = "vendor"
         private const val KEY_TIMESTAMP = "timestamp"

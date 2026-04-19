@@ -28,6 +28,7 @@ enum class LiveUpdateUnsupportedReason(val wireName: String) {
     API_TOO_OLD("API_TOO_OLD"),
     OEM_UNAVAILABLE("OEM_UNAVAILABLE"),
     PERMISSION_DENIED("PERMISSION_DENIED"),
+    PROMOTED_DISABLED("PROMOTED_DISABLED"),
     BATTERY_RESTRICTED("BATTERY_RESTRICTED"),
     INTERNAL_ERROR("INTERNAL_ERROR"),
     UNKNOWN("UNKNOWN");
@@ -54,6 +55,7 @@ data class LiveUpdateCapabilitySnapshot(
     val supportedApi: Boolean,
     val oemCapsule: Boolean,
     val notificationsEnabled: Boolean,
+    val promotedNotificationsEnabled: Boolean = true,
     val batteryOptimized: Boolean,
     val vendor: String,
     val timestampMs: Long? = null,
@@ -62,6 +64,7 @@ data class LiveUpdateCapabilitySnapshot(
         "supportedApi" to supportedApi,
         "oemCapsule" to oemCapsule,
         "notificationsEnabled" to notificationsEnabled,
+        "promotedNotificationsEnabled" to promotedNotificationsEnabled,
         "batteryOptimized" to batteryOptimized,
         "vendor" to vendor,
         "timestamp" to timestampMs,
