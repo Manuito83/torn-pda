@@ -1110,6 +1110,8 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
         return "OEM capsule unavailable";
       case LiveUpdateUnsupportedReason.permissionDenied:
         return "Permission denied";
+      case LiveUpdateUnsupportedReason.promotedDisabled:
+        return "Promoted notifications disabled";
       case LiveUpdateUnsupportedReason.batteryRestricted:
         return "Battery optimization";
       case LiveUpdateUnsupportedReason.internalError:

@@ -1,5 +1,10 @@
 package com.manuito.tornpda.liveupdates
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
@@ -7,6 +12,7 @@ class LiveUpdateChannelBridge(
     private val travelManager: LiveUpdateManager,
     private val racingManager: LiveUpdateManager,
     private val eventEmitter: LiveUpdateEventEmitter,
+    private val context: Context? = null,
 ) : MethodChannel.MethodCallHandler, LiveUpdateManagerListener {
 
     init {
@@ -59,6 +65,10 @@ class LiveUpdateChannelBridge(
                     result.success(null)
                 }
 
+                OPEN_PROMOTED_NOTIFICATIONS_SETTINGS -> {
+                    result.success(openPromotedNotificationsSettings())
+                }
+
                 else -> result.notImplemented()
             }
         } catch (exception: Exception) {
@@ -79,6 +89,24 @@ class LiveUpdateChannelBridge(
         racingManager.removeListener(this)
     }
 
+    private fun openPromotedNotificationsSettings(): Boolean {
+        val ctx = context ?: return false
+        val action = if (Build.VERSION.SDK_INT >= 36) {
+            "android.settings.MANAGE_APP_PROMOTED_NOTIFICATIONS"
+        } else {
+            Settings.ACTION_APP_NOTIFICATION_SETTINGS
+        }
+        val intent = Intent(action)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return try {
+            ctx.startActivity(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        }
+    }
+
     companion object {
         const val CHANNEL_NAME = "com.tornpda.liveactivity"
         private const val START_TRAVEL_ACTIVITY = "startTravelActivity"
@@ -89,5 +117,6 @@ class LiveUpdateChannelBridge(
         private const val IS_ANY_RACING_ACTIVITY_ACTIVE = "isAnyRacingActivityActive"
         private const val GET_PUSH_TO_START_TOKEN = "getPushToStartToken"
         private const val GET_LIVE_UPDATE_CAPABILITIES = "getLiveUpdateCapabilities"
+        private const val OPEN_PROMOTED_NOTIFICATIONS_SETTINGS = "openPromotedNotificationsSettings"
     }
 }

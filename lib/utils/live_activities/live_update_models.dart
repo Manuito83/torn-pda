@@ -11,6 +11,7 @@ enum LiveUpdateUnsupportedReason {
   apiTooOld,
   oemUnavailable,
   permissionDenied,
+  promotedDisabled,
   batteryRestricted,
   internalError,
   unknown,
@@ -39,6 +40,7 @@ class LiveUpdateCapabilitySnapshot {
   final bool supportedApi;
   final bool oemCapsule;
   final bool notificationsEnabled;
+  final bool promotedNotificationsEnabled;
   final bool batteryOptimized;
   final String vendor;
   final DateTime? timestamp;
@@ -47,6 +49,7 @@ class LiveUpdateCapabilitySnapshot {
     required this.supportedApi,
     required this.oemCapsule,
     required this.notificationsEnabled,
+    this.promotedNotificationsEnabled = true,
     required this.batteryOptimized,
     required this.vendor,
     this.timestamp,
@@ -57,6 +60,7 @@ class LiveUpdateCapabilitySnapshot {
       supportedApi: json['supportedApi'] == true,
       oemCapsule: json['oemCapsule'] == true,
       notificationsEnabled: json['notificationsEnabled'] == true,
+      promotedNotificationsEnabled: json['promotedNotificationsEnabled'] != false,
       batteryOptimized: json['batteryOptimized'] == true,
       vendor: (json['vendor'] ?? '') as String,
       timestamp:
@@ -69,6 +73,7 @@ class LiveUpdateCapabilitySnapshot {
       'supportedApi': supportedApi,
       'oemCapsule': oemCapsule,
       'notificationsEnabled': notificationsEnabled,
+      'promotedNotificationsEnabled': promotedNotificationsEnabled,
       'batteryOptimized': batteryOptimized,
       'vendor': vendor,
       'timestamp': timestamp?.millisecondsSinceEpoch,
@@ -131,6 +136,8 @@ class LiveUpdateStartResult {
         return LiveUpdateUnsupportedReason.oemUnavailable;
       case 'PERMISSION_DENIED':
         return LiveUpdateUnsupportedReason.permissionDenied;
+      case 'PROMOTED_DISABLED':
+        return LiveUpdateUnsupportedReason.promotedDisabled;
       case 'BATTERY_RESTRICTED':
         return LiveUpdateUnsupportedReason.batteryRestricted;
       case 'INTERNAL_ERROR':
