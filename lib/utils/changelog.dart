@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Fixed alarm icon not turning green when active in some devices",
           "Fixed travel return button not working in some cases",
+          if (Platform.isIOS) "Fixed app icon not updating correctly",
         ],
     );
 

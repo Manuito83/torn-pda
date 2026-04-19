@@ -1882,8 +1882,9 @@ class SettingsProvider extends ChangeNotifier {
       final stValentineEnd = DateTime(now.year, 02, 15, 10, 30);
       final stPatrickStart = DateTime(now.year, 03, 16, 10, 30);
       final stPatrickEnd = DateTime(now.year, 03, 18, 10, 30);
-      final easterStart = DateTime(now.year, 04, 17, 10, 30);
-      final easterEnd = DateTime(now.year, 04, 24, 10, 30);
+      final easterSunday = _calculateEasterSunday(now.year);
+      final easterStart = easterSunday.subtract(const Duration(days: 3)).add(const Duration(hours: 10, minutes: 30));
+      final easterEnd = easterSunday.add(const Duration(days: 4)).add(const Duration(hours: 10, minutes: 30));
       final halloweenStart = DateTime(now.year, 10, 25);
       final halloweenEnd = DateTime(now.year, 11, 1, 23, 59, 59);
       final christmasStart = DateTime(now.year, 12, 19);
@@ -1954,6 +1955,25 @@ class SettingsProvider extends ChangeNotifier {
     } on PlatformException catch (e) {
       log("Failed to reset icon: ${e.message}");
     }
+  }
+
+  /// Calculates Easter Sunday for a given year
+  static DateTime _calculateEasterSunday(int year) {
+    final a = year % 19;
+    final b = year ~/ 100;
+    final c = year % 100;
+    final d = b ~/ 4;
+    final e = b % 4;
+    final f = (b + 8) ~/ 25;
+    final g = (b - f + 1) ~/ 3;
+    final h = (19 * a + b - d - g + 15) % 30;
+    final i = c ~/ 4;
+    final k = c % 4;
+    final l = (32 + 2 * e + 2 * i - h - k) % 7;
+    final m = (a + 11 * h + 22 * l) ~/ 451;
+    final month = (h + l - 7 * m + 114) ~/ 31;
+    final day = (h + l - 7 * m + 114) % 31 + 1;
+    return DateTime(year, month, day);
   }
 
   /// Determine whether the user is still using OC v1 or is already in OC v2
