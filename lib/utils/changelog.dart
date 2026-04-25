@@ -102,13 +102,15 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.13.4 - Build 645 - built 19/04/2026
+    // v3.13.4 - Build 646 - built 26/04/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.13.4'
-        ..date = '01 MAY 2026'
+        ..date = '04 MAY 2026'
         ..features = [
-          "Added PUT and DELETE HTTP request handlers for userscripts [DarXide]",
+          "Userscripts: added PUT and DELETE HTTP request handlers [DarXide]",
+          "Userscripts: fixed @match pattern handling [DarXide]",
+          "Userscripts: implemented additional GM compatibility features [DarXide]",
           if (Platform.isAndroid) "Fixed several Live Updates issues [bombel]",
           "Fixed alarm icon not turning green when active in some devices",
           "Fixed travel return button not working in some cases",
