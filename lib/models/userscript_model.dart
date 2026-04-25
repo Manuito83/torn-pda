@@ -263,7 +263,84 @@ class UserScriptModel {
   bool shouldInject(String url, [UserScriptTime? time]) =>
       enabled &&
       (this.time == time || time == null) &&
-      matches.any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
+      matches.any((match) => _matchPattern(match, url));
+
+  /// Converts a Tampermonkey-style @match pattern to a [RegExp].
+  ///
+  /// Supports standard patterns like `*://*.example.com/path/*` where:
+  /// - Scheme `*` matches http or https
+  /// - Host `*.example.com` matches any subdomain (including none)
+  /// - `*` in the path matches any characters
+  ///
+  /// For backwards compatibility, patterns without a protocol get `*://`
+  /// prepended, and patterns without a path get `/*` appended.
+  static RegExp _patternToRegex(String pattern) {
+    final fullMatch = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+    RegExpMatch? match = fullMatch;
+
+    if (match == null) {
+      // Try without a path (e.g. "https://example.com")
+      final noPath = RegExp(r'^(https?|file|\*):\/\/([^/]*)$').firstMatch(pattern);
+      if (noPath != null) {
+        pattern = '$pattern/*';
+        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      }
+    }
+
+    if (match == null) {
+      // Legacy pattern without protocol – prepend *://
+      pattern = '*://$pattern';
+      match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      if (match == null) {
+        // Still no path component
+        pattern = '$pattern/*';
+        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      }
+    }
+
+    if (match == null) {
+      throw FormatException('Invalid @match pattern: $pattern');
+    }
+
+    final scheme = match.group(1)!;
+    final host = match.group(2)!;
+    final path = match.group(3)!;
+
+    final schemeRe = scheme == '*' ? 'https?' : RegExp.escape(scheme);
+
+    String hostRe = RegExp.escape(host);
+    // Handle *.example.com  →  optional subdomain prefix
+    if (host.startsWith('*.')) {
+      hostRe = '(?:[^/]+\\.)?${RegExp.escape(host.substring(2))}';
+    } else {
+      hostRe = hostRe.replaceAll(r'\*', '[^/]*');
+    }
+
+    final pathRe = RegExp.escape(path).replaceAll(r'\*', '.*');
+
+    return RegExp('^$schemeRe://$hostRe/$pathRe\$');
+  }
+
+  /// Returns `true` when [url] satisfies the given @match [pattern].
+  ///
+  /// A bare `*` is kept as the universal wildcard for backwards compatibility.
+  /// Invalid patterns silently return `false` to avoid breaking the app.
+  static bool _matchPattern(String pattern, String url) {
+    if (pattern == '*') return true;
+    try {
+      // Normalise URLs without a path (e.g. "https://example.com") so
+      // the regex always has a "/" to match against.
+      final uri = Uri.tryParse(url);
+      if (uri != null && uri.path.isEmpty) {
+        url = '$url/';
+      }
+      return _patternToRegex(pattern).hasMatch(url);
+    } catch (_) {
+      // Fall back to the old "contains" heuristic so we don't break scripts
+      // that use a non-standard pattern we haven't accounted for.
+      return url.contains(pattern.replaceAll('*', ''));
+    }
+  }
 
   void update({
     bool? enabled,
