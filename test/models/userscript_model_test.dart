@@ -167,15 +167,14 @@ void main() {
       expect(m.shouldInject('http://www.torn.com/page'), isFalse);
     });
 
-    test('subdomain wildcard *.torn.com (naive: stripped contains check)', () {
-      // NOTE: the current implementation uses url.contains(match.replaceAll("*",""))
-      // which strips wildcards to "://.torn.com/" — this doesn't substring-match
-      // any real URLs. PR #409 replaces this with proper regex-based matching.
+    test('subdomain wildcard *.torn.com matches subdomains correctly', () {
+      // PR #409 implemented proper regex-based matching for wildcard patterns.
+      // *.torn.com should match any subdomain of torn.com (including bare torn.com).
       final m = _model(matches: ['*://*.torn.com/*']);
-      // With naive matching, ://.torn.com/ is never a substring of a real URL:
-      expect(m.shouldInject('https://www.torn.com/page'), isFalse);
-      expect(m.shouldInject('https://api.torn.com/user'), isFalse);
-      expect(m.shouldInject('https://torn.com/page'), isFalse);
+      expect(m.shouldInject('https://www.torn.com/page'), isTrue);
+      expect(m.shouldInject('https://api.torn.com/user'), isTrue);
+      expect(m.shouldInject('https://torn.com/page'), isTrue);
+      // Should NOT match other domains
       expect(m.shouldInject('https://nottorn.com/page'), isFalse);
     });
 
