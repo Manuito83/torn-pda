@@ -1554,7 +1554,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       } catch (e) {
         // Leave as it was
-        print(e);
+        debugPrint('Drawer notification parse error: $e');
       }
 
       BotToast.showText(
