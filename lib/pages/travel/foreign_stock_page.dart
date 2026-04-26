@@ -1515,10 +1515,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _allTornItems = itemsResponse;
   }
 
+  // TODO: Torn removed the inventory API endpoint. They mentioned they would
+  // reinstate it, but haven't yet. This function is kept in case the API
+  // returns. See: https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
   Future inventory() async {
     return null;
 
-    // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
     /*
     dynamic inventoryResponse = await ApiCallsV1.getInventory();
 
