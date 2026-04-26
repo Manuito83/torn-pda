@@ -9,34 +9,10 @@ enum TravelTicket {
 }
 
 class TravelTimes {
+  /// Converts a plain country name to CountryName enum.
+  /// Delegates to CountryHelper for centralized mapping.
   static CountryName getCountry({required String plainName}) {
-    switch (plainName) {
-      case "Torn":
-        return CountryName.TORN;
-      case "Argentina":
-        return CountryName.ARGENTINA;
-      case "Canada":
-        return CountryName.CANADA;
-      case "Cayman Islands":
-        return CountryName.CAYMAN_ISLANDS;
-      case "China":
-        return CountryName.CHINA;
-      case "Hawaii":
-        return CountryName.HAWAII;
-      case "Japan":
-        return CountryName.JAPAN;
-      case "Mexico":
-        return CountryName.MEXICO;
-      case "South Africa":
-        return CountryName.SOUTH_AFRICA;
-      case "Switzerland":
-        return CountryName.SWITZERLAND;
-      case "UAE":
-        return CountryName.UAE;
-      case "United Kingdom":
-        return CountryName.UNITED_KINGDOM;
-    }
-    return CountryName.TORN;
+    return CountryHelper.fromName(plainName);
   }
 
   /// Provide either a capitalized ("Argentina") name for [countryName] or a CountryName for [code]
