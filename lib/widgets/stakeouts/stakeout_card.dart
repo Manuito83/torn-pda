@@ -80,7 +80,7 @@ class StakeoutCardState extends State<StakeoutCard> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Slidable(
       startActionPane: ActionPane(
         motion: const ScrollMotion(),

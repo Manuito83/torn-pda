@@ -156,7 +156,7 @@ class WarCardState extends State<WarCard> {
   @override
   Widget build(BuildContext context) {
     _returnLastUpdated();
-    _themeProvider = Provider.of<ThemeProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
       child: Card(

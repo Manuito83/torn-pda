@@ -74,7 +74,7 @@ class TargetCardState extends State<TargetCard> {
   Widget build(BuildContext context) {
     _target = widget.targetModel;
     _returnLastUpdated();
-    _themeProvider = Provider.of<ThemeProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Card(
