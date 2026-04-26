@@ -1397,8 +1397,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
 
       bool anyDelayedAffectation = false;
 
-      final Duration extraTime = _delayedDepartureTime.difference(DateTime.now());
-      final DateTime earliestBackToTornDelayed = DateTime.now().add(Duration(seconds: extraTime.inSeconds));
+      // Calculate return time for delayed departure: departure time + round trip travel time
+      final DateTime earliestBackToTornDelayed = _delayedDepartureTime.add(Duration(seconds: _travelSeconds * 2));
 
       // Energy delayed
       if (energyTime.isBefore(earliestBackToTornDelayed)) {
