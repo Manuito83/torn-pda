@@ -3,6 +3,8 @@
 Run Flutter tests, analysis and builds without installing anything
 except Docker.
 
+> **Prefer a local Flutter install?** See [Building from Source](../docs/README.md#building-from-source) in the main docs.
+
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) (20.10+)
