@@ -1171,10 +1171,130 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     }
   }
 
+  /// Helper to build a single bar/cooldown check widget
+  /// Returns a tuple of (widget, wasAffected) where wasAffected is true if the bar/cooldown
+  /// will be ready before the return time
+  ({Widget widget, bool affected}) _buildBarCheck({
+    required int fulltime,
+    required DateTime returnTime,
+    required String labelFull,
+    required String labelOk,
+    required String labelWillBeFull,
+  }) {
+    final DateTime readyTime = DateTime.now().add(Duration(seconds: fulltime));
+    
+    if (readyTime.isBefore(returnTime)) {
+      final Duration gap = returnTime.difference(readyTime);
+      String message;
+      if (fulltime == 0 || readyTime.isBefore(DateTime.now())) {
+        message = labelFull;
+      } else if (gap.inHours > 24) {
+        message = "$labelWillBeFull more than a day before your return";
+      } else {
+        message = "$labelWillBeFull ${_formatDuration(gap)} before your return";
+      }
+      
+      return (
+        widget: Padding(
+          padding: const EdgeInsets.only(left: 5),
+          child: Text(
+            message,
+            style: TextStyle(
+              color: _themeProvider.getTextColor(Colors.orange),
+              fontSize: 12,
+            ),
+          ),
+        ),
+        affected: true,
+      );
+    } else {
+      return (
+        widget: Padding(
+          padding: const EdgeInsets.only(left: 5),
+          child: Text(
+            labelOk,
+            style: TextStyle(
+              color: _themeProvider.getTextColor(Colors.green),
+              fontSize: 12,
+            ),
+          ),
+        ),
+        affected: false,
+      );
+    }
+  }
+
+  /// Builds all bar/cooldown check widgets for a given return time
+  /// Returns list of widgets and whether any affectation was found
+  ({List<Widget> widgets, bool anyAffected}) _buildAllBarChecks({
+    required DateTime returnTime,
+    required bool showOkStatus,
+  }) {
+    final List<Widget> widgets = [];
+    bool anyAffected = false;
+
+    // Energy
+    final energy = _buildBarCheck(
+      fulltime: widget.profile!.energy!.fulltime!,
+      returnTime: returnTime,
+      labelFull: "- Energy is full",
+      labelOk: "- Energy OK",
+      labelWillBeFull: "- Energy will be full",
+    );
+    if (energy.affected || showOkStatus) widgets.add(energy.widget);
+    anyAffected = anyAffected || energy.affected;
+
+    // Nerve
+    final nerve = _buildBarCheck(
+      fulltime: widget.profile!.nerve!.fulltime!,
+      returnTime: returnTime,
+      labelFull: "- Nerve is full",
+      labelOk: "- Nerve OK",
+      labelWillBeFull: "- Nerve will be full",
+    );
+    if (nerve.affected || showOkStatus) widgets.add(nerve.widget);
+    anyAffected = anyAffected || nerve.affected;
+
+    // Drug cooldown
+    final drug = _buildBarCheck(
+      fulltime: widget.profile!.cooldowns!.drug!,
+      returnTime: returnTime,
+      labelFull: "- No drug cooldown",
+      labelOk: "- Drug cooldown OK",
+      labelWillBeFull: "- Drug cooldown will be over",
+    );
+    if (drug.affected || showOkStatus) widgets.add(drug.widget);
+    anyAffected = anyAffected || drug.affected;
+
+    // Medical cooldown
+    final medical = _buildBarCheck(
+      fulltime: widget.profile!.cooldowns!.medical!,
+      returnTime: returnTime,
+      labelFull: "- No medical cooldown",
+      labelOk: "- Medical cooldown OK",
+      labelWillBeFull: "- Medical cooldown will be over",
+    );
+    if (medical.affected || showOkStatus) widgets.add(medical.widget);
+    anyAffected = anyAffected || medical.affected;
+
+    // Booster cooldown
+    final booster = _buildBarCheck(
+      fulltime: widget.profile!.cooldowns!.booster!,
+      returnTime: returnTime,
+      labelFull: "- No booster cooldown",
+      labelOk: "- Booster cooldown OK",
+      labelWillBeFull: "- Booster cooldown will be over",
+    );
+    if (booster.affected || showOkStatus) widgets.add(booster.widget);
+    anyAffected = anyAffected || booster.affected;
+
+    return (widgets: widgets, anyAffected: anyAffected);
+  }
+
   Widget _affectedBars() {
     List<Widget> affected = <Widget>[];
-    List<Widget> affectedDelayed = <Widget>[];
 
+    // Immediate departure section
     affected.add(
       const Text(
         "Bars/cooldowns (immediate departure):",
@@ -1184,184 +1304,13 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       ),
     );
 
-    bool anyAffectation = false;
+    final immediateChecks = _buildAllBarChecks(
+      returnTime: _earliestBackToTorn,
+      showOkStatus: true,
+    );
+    affected.addAll(immediateChecks.widgets);
 
-    final DateTime energyTime = DateTime.now().add(Duration(seconds: widget.profile!.energy!.fulltime!));
-    if (energyTime.isBefore(_earliestBackToTorn)) {
-      anyAffectation = true;
-      final Duration energyGap = _earliestBackToTorn.difference(energyTime);
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            widget.profile!.energy!.fulltime! == 0 || energyTime.isBefore(DateTime.now())
-                ? "- Energy is full"
-                : energyGap.inHours > 24
-                    ? "- Energy will be full more than a day before your return"
-                    : "- Energy will be full ${_formatDuration(energyGap)} before your return",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.orange),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    } else {
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            "- Energy OK",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.green),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final DateTime nerveTime = DateTime.now().add(Duration(seconds: widget.profile!.nerve!.fulltime!));
-    if (nerveTime.isBefore(_earliestBackToTorn)) {
-      anyAffectation = true;
-      final Duration nerveGap = _earliestBackToTorn.difference(nerveTime);
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            widget.profile!.nerve!.fulltime! == 0 || nerveTime.isBefore(DateTime.now())
-                ? "- Nerve is full"
-                : nerveGap.inHours > 24
-                    ? "- Nerve will be full more than a day before your return"
-                    : "- Nerve will be full ${_formatDuration(nerveGap)} before your return",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.orange),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    } else {
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            "- Nerve OK",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.green),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final DateTime drugsTime = DateTime.now().add(Duration(seconds: widget.profile!.cooldowns!.drug!));
-    if (drugsTime.isBefore(_earliestBackToTorn)) {
-      anyAffectation = true;
-      final Duration drugsGap = _earliestBackToTorn.difference(drugsTime);
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            widget.profile!.cooldowns!.drug! == 0 || drugsTime.isBefore(DateTime.now())
-                ? "- No drug cooldown"
-                : drugsGap.inHours > 24
-                    ? "- Drug cooldown will be over more than a day before your return"
-                    : "- Drug cooldown will be over ${_formatDuration(drugsGap)} before your return",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.orange),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    } else {
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            "- Drug cooldown OK",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.green),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final DateTime medicalTime = DateTime.now().add(Duration(seconds: widget.profile!.cooldowns!.medical!));
-    if (medicalTime.isBefore(_earliestBackToTorn)) {
-      anyAffectation = true;
-      final Duration medicalGap = _earliestBackToTorn.difference(medicalTime);
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            widget.profile!.cooldowns!.medical! == 0 || medicalTime.isBefore(DateTime.now())
-                ? "- No medical cooldown"
-                : medicalGap.inHours > 24
-                    ? "- Medical cooldown will be over more than a day before your return"
-                    : "- Medical cooldown will be over ${_formatDuration(medicalGap)} before your return",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.orange),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    } else {
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            "- Medical cooldown OK",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.green),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final DateTime boosterTime = DateTime.now().add(Duration(seconds: widget.profile!.cooldowns!.booster!));
-    if (boosterTime.isBefore(_earliestBackToTorn)) {
-      anyAffectation = true;
-      final Duration boosterGap = _earliestBackToTorn.difference(boosterTime);
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            widget.profile!.cooldowns!.booster! == 0 || boosterTime.isBefore(DateTime.now())
-                ? "- No booster cooldown"
-                : boosterGap.inHours > 24
-                    ? "- Booster cooldown will be over more than a day before your return"
-                    : "- Booster cooldown will be over ${_formatDuration(boosterGap)} before your return",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.orange),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    } else {
-      affected.add(
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            "- Booster cooldown OK",
-            style: TextStyle(
-              color: _themeProvider.getTextColor(Colors.green),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (!anyAffectation) {
+    if (!immediateChecks.anyAffected) {
       affected.add(
         Padding(
           padding: const EdgeInsets.only(left: 5),
@@ -1376,7 +1325,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       );
     }
 
-    // DELAYED DEPARTURE
+    // Delayed departure section
     if (_delayedDepartureTime.isAfter(DateTime.now())) {
       String whenToTravel = "delayed departure: ${_timeFormatter(_delayedDepartureTime)}";
       if (_delayedDepartureTime.difference(DateTime.now()).inHours > 24) {
@@ -1395,123 +1344,16 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         ),
       );
 
-      bool anyDelayedAffectation = false;
+      // Calculate return time for delayed departure: departure time + round trip travel time
+      final DateTime earliestBackToTornDelayed = _delayedDepartureTime.add(Duration(seconds: _travelSeconds * 2));
 
-      final Duration extraTime = _delayedDepartureTime.difference(DateTime.now());
-      final DateTime earliestBackToTornDelayed = DateTime.now().add(Duration(seconds: extraTime.inSeconds));
+      final delayedChecks = _buildAllBarChecks(
+        returnTime: earliestBackToTornDelayed,
+        showOkStatus: false,
+      );
+      affected.addAll(delayedChecks.widgets);
 
-      // Energy delayed
-      if (energyTime.isBefore(earliestBackToTornDelayed)) {
-        anyDelayedAffectation = true;
-        final Duration energyGap = earliestBackToTornDelayed.difference(energyTime);
-        affected.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 5),
-            child: Text(
-              widget.profile!.energy!.fulltime! == 0 || energyTime.isBefore(DateTime.now())
-                  ? "- Energy is full"
-                  : energyGap.inHours > 24
-                      ? "- Energy will be full more than a day before your return"
-                      : "- Energy will be full ${_formatDuration(energyGap)} before your return",
-              style: TextStyle(
-                color: _themeProvider.getTextColor(Colors.orange),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        );
-      }
-
-      // Nerve delayed
-      if (nerveTime.isBefore(earliestBackToTornDelayed)) {
-        anyDelayedAffectation = true;
-        final Duration nerveGap = earliestBackToTornDelayed.difference(nerveTime);
-        affected.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 5),
-            child: Text(
-              widget.profile!.nerve!.fulltime! == 0 || nerveTime.isBefore(DateTime.now())
-                  ? "- Nerve is full"
-                  : nerveGap.inHours > 24
-                      ? "- Nerve will be full more than a day before your return"
-                      : "- Nerve will be full ${_formatDuration(nerveGap)} before your return",
-              style: TextStyle(
-                color: _themeProvider.getTextColor(Colors.orange),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        );
-      }
-
-      // Drug delayed
-      if (drugsTime.isBefore(earliestBackToTornDelayed)) {
-        anyDelayedAffectation = true;
-        final Duration drugsGap = earliestBackToTornDelayed.difference(drugsTime);
-        affected.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 5),
-            child: Text(
-              widget.profile!.cooldowns!.drug! == 0 || drugsTime.isBefore(DateTime.now())
-                  ? "- No drug cooldown"
-                  : drugsGap.inHours > 24
-                      ? "- Drug cooldown will be over more than a day before your return"
-                      : "- Drug cooldown will be over ${_formatDuration(drugsGap)} before your return",
-              style: TextStyle(
-                color: _themeProvider.getTextColor(Colors.orange),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        );
-      }
-
-      // Medical delayed
-      if (medicalTime.isBefore(earliestBackToTornDelayed)) {
-        anyDelayedAffectation = true;
-        final Duration medicalsGap = earliestBackToTornDelayed.difference(medicalTime);
-        affected.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 5),
-            child: Text(
-              widget.profile!.cooldowns!.medical! == 0 || medicalTime.isBefore(DateTime.now())
-                  ? "- No medical cooldown"
-                  : medicalsGap.inHours > 24
-                      ? "- Medical cooldown will be over more than a day before your return"
-                      : "- Medical cooldown will be over ${_formatDuration(medicalsGap)} before your return",
-              style: TextStyle(
-                color: _themeProvider.getTextColor(Colors.orange),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        );
-      }
-
-      // Booster delayed
-      if (boosterTime.isBefore(earliestBackToTornDelayed)) {
-        anyDelayedAffectation = true;
-        final Duration boostersGap = earliestBackToTornDelayed.difference(boosterTime);
-        affected.add(
-          Padding(
-            padding: const EdgeInsets.only(left: 5),
-            child: Text(
-              widget.profile!.cooldowns!.booster! == 0 || boosterTime.isBefore(DateTime.now())
-                  ? "- No booster cooldown"
-                  : boostersGap.inHours > 24
-                      ? "- Booster cooldown will be over more than a day before your return"
-                      : "- Booster cooldown will be over ${_formatDuration(boostersGap)} before your return",
-              style: TextStyle(
-                color: _themeProvider.getTextColor(Colors.orange),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        );
-      }
-
-      // No delayed affectation
-      if (!anyDelayedAffectation) {
+      if (!delayedChecks.anyAffected) {
         affected.add(
           Padding(
             padding: const EdgeInsets.only(left: 5),
@@ -1526,8 +1368,6 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         );
       }
     }
-
-    affected.addAll(affectedDelayed);
 
     return Padding(
       padding: const EdgeInsets.only(top: 10),
