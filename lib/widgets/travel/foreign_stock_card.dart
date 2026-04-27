@@ -1131,6 +1131,13 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       final lastEmptyDateTime = DateTime.fromMillisecondsSinceEpoch(lastEmpty * 1000);
       _projectedRestockDateTime = lastEmptyDateTime.add(Duration(seconds: _averageTimeToRestock));
 
+      // If the projected restock is in the past, advance by whole restock cycles until it's in the future
+      if (_averageTimeToRestock > 0) {
+        while (_projectedRestockDateTime.isBefore(DateTime.now())) {
+          _projectedRestockDateTime = _projectedRestockDateTime.add(Duration(seconds: _averageTimeToRestock));
+        }
+      }
+
       // CURRENT DEPLETION TREND
       if (widget.foreignStock.quantity! > 0) {
         final inverseList = [];
