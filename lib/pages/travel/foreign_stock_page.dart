@@ -69,12 +69,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     final destination = widget.temporaryDestinationCountry;
     if (destination == null || destination.isEmpty) return false;
 
-    return _returnCountryName(destination) != CountryName.TORN;
+    return CountryHelper.fromName(destination) != CountryName.TORN;
   }
 
   CountryName? get _temporaryDestinationCountryName {
     if (!_temporaryDestinationFilterActive) return null;
-    return _returnCountryName(widget.temporaryDestinationCountry);
+    return CountryHelper.fromName(widget.temporaryDestinationCountry);
   }
 
   bool get _hasItemFiltersApplied => _filteredTypes.any((enabled) => !enabled);
@@ -921,7 +921,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       ticket: _settingsProvider!.travelTicket,
       activeRestocks: _activeRestocks,
       travelingTimeStamp: _profile!.travel!.timestamp,
-      travelingCountry: _returnCountryName(_profile!.travel!.destination),
+      travelingCountry: CountryHelper.fromName(_profile!.travel!.destination),
       travelingCountryFullName: _profile!.travel!.destination,
       displayShowcase: displayShowcase,
       isDataFromCache: _isDataFromCache,
@@ -1059,43 +1059,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
             stock.itemType = ItemType.OTHER;
           }
 
-          // Assign actual profit depending on country (+ the country)
+          // Assign country from 3-letter code using centralized helper
           stock.countryCode = countryKey;
-          switch (countryKey) {
-            case 'jap':
-              stock.country = CountryName.JAPAN;
-              stock.countryFullName = "Japan";
-            case 'haw':
-              stock.country = CountryName.HAWAII;
-              stock.countryFullName = "Hawaii";
-            case 'chi':
-              stock.country = CountryName.CHINA;
-              stock.countryFullName = "China";
-            case 'arg':
-              stock.country = CountryName.ARGENTINA;
-              stock.countryFullName = "Argentina";
-            case 'uni':
-              stock.country = CountryName.UNITED_KINGDOM;
-              stock.countryFullName = "UK";
-            case 'cay':
-              stock.country = CountryName.CAYMAN_ISLANDS;
-              stock.countryFullName = "Cayman Islands";
-            case 'sou':
-              stock.country = CountryName.SOUTH_AFRICA;
-              stock.countryFullName = "South Africa";
-            case 'swi':
-              stock.country = CountryName.SWITZERLAND;
-              stock.countryFullName = "Switzerland";
-            case 'mex':
-              stock.country = CountryName.MEXICO;
-              stock.countryFullName = "Mexico";
-            case 'uae':
-              stock.country = CountryName.UAE;
-              stock.countryFullName = "UAE";
-            case 'can':
-              stock.country = CountryName.CANADA;
-              stock.countryFullName = "Canada";
-          }
+          stock.country = CountryHelper.fromCode(countryKey);
+          stock.countryFullName = CountryHelper.getFullName(stock.country);
 
           // Other fields contained in Yata and in Torn
           stock.profit = (stock.value /
@@ -1390,20 +1357,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   /// Convert Torn PDA Database format to ForeignStockInModel format
   /// Now uses real data from Realtime Database: id, cost, lastUpdated
   ForeignStockInModel _convertTornPDADataToModel(Map<String, dynamic> tornPDAData) {
-    final countryMapping = {
-      'Argentina': 'arg',
-      'Canada': 'can',
-      'Cayman Islands': 'cay',
-      'China': 'chi',
-      'Hawaii': 'haw',
-      'Japan': 'jap',
-      'Mexico': 'mex',
-      'South Africa': 'sou',
-      'Switzerland': 'swi',
-      'UAE': 'uae',
-      'UK': 'uni', // Firebase might store it as 'UK'
-    };
-
     Map<String, CountryDetails> countries = {};
     Map<String, List<ForeignStock>> stocksByCountry = {};
 
@@ -1428,7 +1381,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           // Skip if no country or name
           if (country.isEmpty || name.isEmpty || name == 'Unknown Item') return;
 
-          final countryCode = countryMapping[country] ?? country.toLowerCase().replaceAll(' ', '');
+          // Use centralized helper for country code conversion
+          final countryCode = CountryHelper.getCodeFromName(country) ?? country.toLowerCase().replaceAll(' ', '');
 
           final stock = ForeignStock(
             id: id,
@@ -1965,35 +1919,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   Future<void> _onRefresh() async {
     await _fetchApiInformation();
     if (mounted) setState(() {});
-  }
-
-  CountryName _returnCountryName(String? country) {
-    switch (country) {
-      case "Argentina":
-        return CountryName.ARGENTINA;
-      case "Canada":
-        return CountryName.CANADA;
-      case "Cayman Islands":
-        return CountryName.CAYMAN_ISLANDS;
-      case "China":
-        return CountryName.CHINA;
-      case "Hawaii":
-        return CountryName.HAWAII;
-      case "Japan":
-        return CountryName.JAPAN;
-      case "Mexico":
-        return CountryName.MEXICO;
-      case "South Africa":
-        return CountryName.SOUTH_AFRICA;
-      case "Switzerland":
-        return CountryName.SWITZERLAND;
-      case "UAE":
-        return CountryName.UAE;
-      case "United Kingdom":
-        return CountryName.UNITED_KINGDOM;
-      default:
-        return CountryName.TORN;
-    }
   }
 
   Future<void> _refreshMoney() async {
