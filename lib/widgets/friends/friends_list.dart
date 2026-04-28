@@ -16,28 +16,41 @@ class FriendsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
+    final String filter = friendsProvider.currentFilter;
+
+    // Filter friends by name
+    final filteredFriends = friends
+        .where((f) => f.name!.toUpperCase().contains(filter.toUpperCase()))
+        .toList();
+
+    // +1 for bottom padding SizedBox
+    final itemCount = filteredFriends.length + 1;
+
     if (MediaQuery.orientationOf(context) == Orientation.portrait) {
-      return ListView(children: getChildrenFriends(context));
+      return ListView.builder(
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          if (index == filteredFriends.length) {
+            // Avoid collisions with SnackBar
+            return const SizedBox(height: 50);
+          }
+          return FriendCard(friendModel: filteredFriends[index]);
+        },
+      );
     } else {
-      return ListView(
+      return ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        children: getChildrenFriends(context),
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          if (index == filteredFriends.length) {
+            // Avoid collisions with SnackBar
+            return const SizedBox(height: 50);
+          }
+          return FriendCard(friendModel: filteredFriends[index]);
+        },
       );
     }
-  }
-
-  List<Widget> getChildrenFriends(BuildContext _) {
-    final friendsProvider = Provider.of<FriendsProvider>(_, listen: false);
-    final String filter = friendsProvider.currentFilter;
-    List<Widget> filteredCards = <Widget>[];
-    for (final thisFriend in friends) {
-      if (thisFriend.name!.toUpperCase().contains(filter.toUpperCase())) {
-        filteredCards.add(FriendCard(friendModel: thisFriend));
-      }
-    }
-    // Avoid collisions with SnackBar
-    filteredCards.add(const SizedBox(height: 50));
-    return filteredCards;
   }
 }
