@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 StatsChartTornStats statsChartTornStatsFromJson(String str) => StatsChartTornStats.fromJson(json.decode(str));
 
 String statsChartTornStatsToJson(StatsChartTornStats data) => json.encode(data.toJson());
@@ -30,7 +32,7 @@ class StatsChartTornStats {
         data: json["data"] == null ? null : List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
       );
     } catch (e) {
-      print('Error parsing StatsChartTornStats: $e');
+      debugPrint('Error parsing StatsChartTornStats: $e');
       rethrow;
     }
   }

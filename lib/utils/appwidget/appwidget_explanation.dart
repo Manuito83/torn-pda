@@ -39,7 +39,7 @@ class _AppwidgetExplanationDialogState extends State<AppwidgetExplanationDialog>
       final bool isRestricted = await platform.invokeMethod('checkBatteryOptimization');
       return isRestricted;
     } catch (e) {
-      print("Error checking battery optimization: $e");
+      debugPrint("Error checking battery optimization: $e");
       return null; // Return null if there's an error
     }
   }
@@ -103,7 +103,7 @@ class _AppwidgetExplanationDialogState extends State<AppwidgetExplanationDialog>
                             try {
                               platform.invokeMethod('openBatterySettings');
                             } catch (e) {
-                              print("Error opening battery settings: $e");
+                              debugPrint("Error opening battery settings: $e");
                             }
                           },
                           child: const Text("Battery Settings"),

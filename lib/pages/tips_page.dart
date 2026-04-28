@@ -942,7 +942,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                                 await platform.invokeMethod('openBatterySettings');
                                 _refreshBatteryStatus();
                               } catch (e) {
-                                print("Error opening battery settings: $e");
+                                debugPrint("Error opening battery settings: $e");
                               }
                             },
                             child: const Text("Battery Settings"),
@@ -1589,7 +1589,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       final bool isRestricted = await platform.invokeMethod('checkBatteryOptimization');
       return isRestricted;
     } catch (e) {
-      print("Error checking battery optimization: $e");
+      debugPrint("Error checking battery optimization: $e");
       return null;
     }
   }

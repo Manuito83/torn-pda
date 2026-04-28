@@ -180,7 +180,7 @@ class TradesProvider extends ChangeNotifier {
       try {
         allTornItems = await ApiCallsV1.getItems();
       } catch (e) {
-        print(e);
+        debugPrint('Trades provider getItems error: $e');
       }
 
       if (allTornItems is ApiError) {
