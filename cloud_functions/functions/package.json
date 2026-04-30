@@ -24,7 +24,6 @@
     "node-forge": "^1.4.0",
     "npm-watch": "^0.13.0",
     "string-strip-html": "13.4.13",
-    "tsc": "^2.0.4",
     "typescript": "^5.9.2"
   },
   "devDependencies": {

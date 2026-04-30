@@ -6,10 +6,11 @@
 |-----|-------------|-------------|
 | **analyze** | `flutter analyze` — static analysis, catches type errors and lint violations | ~2 min |
 | **test** | `flutter test --coverage` — runs everything under `test/` | ~2 min |
+| **functions** | `npm ci`, `npm run lint`, `npm run build` under `cloud_functions/functions` | ~2 min |
 | **build** | `flutter build apk --debug` — proves the project still compiles | ~5 min |
 | **ios** | `flutter build ios --no-codesign` — proves the iOS project still compiles | ~10-15 min |
 
-`analyze` and `test` run **in parallel** on every push to `develop` or `master`
+`analyze`, `test`, and `functions` run **in parallel** on every push to `develop` or `master`
 and every PR targeting either branch. `build` and `ios` only run on **pull requests**
 (skipped on direct pushes to save time).
 
@@ -34,6 +35,11 @@ committed because real local/release builds need private Google/Firebase values.
 
 Change `FLUTTER_VERSION` in the `env:` block at the top of `ci.yml`. The
 `subosito/flutter-action` handles downloading and caching the SDK.
+
+## Updating the Node version
+
+The Cloud Functions job uses Node 22 to match `cloud_functions/functions/package.json`.
+If the Firebase Functions runtime changes, update both places together.
 
 ## Adding more jobs
 
