@@ -213,5 +213,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Install FlutterFire CLI
+        run: dart pub global activate flutterfire_cli
+
       - name: Build iOS without code signing
         run: flutter build ios --no-codesign
