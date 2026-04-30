@@ -7,9 +7,10 @@
 | **analyze** | `flutter analyze` — static analysis, catches type errors and lint violations | ~2 min |
 | **test** | `flutter test --coverage` — runs everything under `test/` | ~2 min |
 | **build** | `flutter build apk --debug` — proves the project still compiles | ~5 min |
+| **ios** | `flutter build ios --no-codesign` — proves the iOS project still compiles | ~10-15 min |
 
 `analyze` and `test` run **in parallel** on every push to `develop` or `master`
-and every PR targeting either branch. `build` only runs on **pull requests**
+and every PR targeting either branch. `build` and `ios` only run on **pull requests**
 (skipped on direct pushes to save time).
 
 ## Costs
@@ -25,6 +26,10 @@ imports resolve. This means CI builds with **placeholder values** — features
 that need real credentials (YATA proxy, native auth, TAC) won't work, but
 analysis and tests still pass.
 
+The iOS build also creates temporary CI-only stubs for `ios/Flutter/Secrets.xcconfig`
+and `ios/Runner/GoogleService-Info.plist`. Those files are intentionally not
+committed because real local/release builds need private Google/Firebase values.
+
 ## Updating the Flutter version
 
 Change `FLUTTER_VERSION` in the `env:` block at the top of `ci.yml`. The
@@ -35,7 +40,8 @@ Change `FLUTTER_VERSION` in the `env:` block at the top of `ci.yml`. The
 Common additions:
 - **Windows build**: add another job with `runs-on: windows-latest` and
   `flutter build windows`
-- **iOS build**: needs `runs-on: macos-latest` + Xcode (free but slower)
+- **iOS build**: already runs on PRs using `macos-latest` + Xcode. Keep it PR-only unless
+  we explicitly want slower direct-push checks too.
 - **Code coverage thresholds**: parse `coverage/lcov.info` and fail if
   coverage drops below a target
 

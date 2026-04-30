@@ -4,6 +4,7 @@
 #   1. analyze  — dart static analysis (push + PR)
 #   2. test     — flutter unit & widget tests (push + PR)
 #   3. build    — confirms the Android APK still compiles (PR only)
+#   4. ios      — confirms the iOS app still compiles without signing (PR only)
 #
 # All jobs run on GitHub-hosted runners. Public repos get unlimited
 # free minutes, so this costs nothing.
@@ -148,3 +149,69 @@ jobs:
 
       - name: Build debug APK
         run: flutter build apk --debug
+
+  # ──────────────────────────────────────────────
+  # 4. iOS build — proves the iOS project compiles (PR only)
+  # ──────────────────────────────────────────────
+  ios:
+    name: Build iOS
+    if: github.event_name == 'pull_request'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Copy config stubs
+        run: |
+          cd lib/config
+          for f in *.dart.example; do
+            cp "$f" "${f%.example}"
+          done
+          cp firebase_options.dart.example ../firebase_options.dart
+          cd ..
+          mkdir -p torn-pda-native/auth torn-pda-native/stats
+          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
+          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
+          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
+          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
+          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+
+      - name: Create iOS CI stubs
+        run: |
+          cat > ios/Flutter/Secrets.xcconfig <<'EOF'
+          GOOGLE_CLIENT_ID=stub.apps.googleusercontent.com
+          GOOGLE_REVERSED_CLIENT_ID=com.googleusercontent.apps.stub
+          EOF
+
+          cat > ios/Runner/GoogleService-Info.plist <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>API_KEY</key>
+            <string>stub</string>
+            <key>CLIENT_ID</key>
+            <string>stub.apps.googleusercontent.com</string>
+            <key>GCM_SENDER_ID</key>
+            <string>000000000000</string>
+            <key>GOOGLE_APP_ID</key>
+            <string>1:000000000000:ios:0000000000000000</string>
+            <key>PLIST_VERSION</key>
+            <string>1</string>
+            <key>BUNDLE_ID</key>
+            <string>com.manuito.tornpda</string>
+            <key>PROJECT_ID</key>
+            <string>torn-pda-stub</string>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS without code signing
+        run: flutter build ios --no-codesign
