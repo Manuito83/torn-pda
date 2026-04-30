@@ -182,6 +182,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.value),
     StockSort(type: StockSortType.profit),
     StockSort(type: StockSortType.arrivalTime),
+    StockSort(type: StockSortType.rarity),
   ];
 
   final List<ForeignStock> _hiddenStocks = <ForeignStock>[];
@@ -1745,6 +1746,13 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         case StockSortType.arrivalTime:
           _filteredStocksCards.sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
           Prefs().setStockSort('arrivalTime');
+        case StockSortType.rarity:
+          _filteredStocksCards.sort((a, b) {
+            final aCirculation = _allTornItems?.items?[a.id!.toString()]?.circulation ?? 999999;
+            final bCirculation = _allTornItems?.items?[b.id!.toString()]?.circulation ?? 999999;
+            return aCirculation.compareTo(bCirculation);
+          });
+          Prefs().setStockSort('rarity');
         /*
         case StockSortType.inventoryQuantity:
           _filteredStocksCards.sort((a, b) => b.inventoryQuantity!.compareTo(a.inventoryQuantity!));
@@ -1800,6 +1808,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       sortType = StockSortType.profit;
     } else if (sortString == 'arrivalTime') {
       sortType = StockSortType.arrivalTime;
+    } else if (sortString == 'rarity') {
+      sortType = StockSortType.rarity;
     } else if (sortString == 'inventoryQuantity') {
       // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
       //sortType = StockSortType.inventoryQuantity;
