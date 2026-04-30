@@ -197,6 +197,7 @@ class Prefs {
   final String _kForeignStocksDataProvider = "pda_foreignStocksDataProvider";
   final String _kActiveRestocks = "pda_activeRestocks";
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
+  final String _kBlacklistedForeignStockItems = "pda_blacklistedForeignStockItems";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
   final String _kRestocksEnabled = "pda_restocksEnabled";
 
@@ -2030,6 +2031,14 @@ class Prefs {
 
   Future setHiddenForeignStocks(List<String> value) async {
     return await PrefsDatabase.setStringList(_kHiddenForeignStocks, value);
+  }
+
+  Future<List<String>> getBlacklistedForeignStockItems() async {
+    return await PrefsDatabase.getStringList(_kBlacklistedForeignStockItems, []);
+  }
+
+  Future setBlacklistedForeignStockItems(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kBlacklistedForeignStockItems, value);
   }
 
   Future<bool> getCountriesAlphabeticalFilter() async {

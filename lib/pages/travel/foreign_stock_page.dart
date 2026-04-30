@@ -185,6 +185,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   ];
 
   final List<ForeignStock> _hiddenStocks = <ForeignStock>[];
+  final Set<int> _blacklistedItemIds = <int>{};
 
   late StreamSubscription _willPopSubscription;
 
@@ -404,7 +405,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         ),
         IconButton(
           icon: const Icon(MdiIcons.eyeRemoveOutline),
-          onPressed: _hiddenStocks.isEmpty
+          onPressed: _hiddenStocks.isEmpty && _blacklistedItemIds.isEmpty
               ? null
               : () {
                   showDialog<void>(
@@ -412,8 +413,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                     builder: (BuildContext context) {
                       return HiddenForeignStockDialog(
                         hiddenStocks: _hiddenStocks,
+                        blacklistedItemIds: _blacklistedItemIds,
+                        allTornItems: _allTornItems,
                         themeProvider: _themeProvider,
                         unhide: _unhideMember,
+                        unblacklist: _unblacklistItem,
                       );
                     },
                   );
@@ -687,11 +691,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       visibleStocks = visibleStocks.where((stock) => stock.country == temporaryCountry);
     }
 
-    if (_hiddenStocks.isEmpty) {
+    if (_hiddenStocks.isEmpty && _blacklistedItemIds.isEmpty) {
       return List<ForeignStock>.from(visibleStocks);
     }
 
     return visibleStocks.where((stock) {
+      if (_blacklistedItemIds.contains(stock.id)) return false;
       for (final h in _hiddenStocks) {
         if (h.id == stock.id && h.countryCode == stock.countryCode) {
           return false;
@@ -808,15 +813,20 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     );
 
     Widget hiddenDetails = const SizedBox.shrink();
-    if (_hiddenStocks.isNotEmpty) {
+    if (_hiddenStocks.isNotEmpty || _blacklistedItemIds.isNotEmpty) {
+      final parts = <String>[];
+      if (_hiddenStocks.isNotEmpty) {
+        parts.add('${_hiddenStocks.length} hidden stock${_hiddenStocks.length == 1 ? "" : "s"}');
+      }
+      if (_blacklistedItemIds.isNotEmpty) {
+        parts.add('${_blacklistedItemIds.length} blacklisted item${_blacklistedItemIds.length == 1 ? "" : "s"}');
+      }
       hiddenDetails = Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
         child: Row(
           children: <Widget>[
             Text(
-              'There ${_hiddenStocks.length == 1 ? "is" : "are"} '
-              '${_hiddenStocks.length}'
-              ' hidden stock${_hiddenStocks.length == 1 ? "" : "s"}',
+              parts.join(', '),
               style: TextStyle(fontSize: 11, color: Colors.orange[800]),
             ),
           ],
@@ -918,6 +928,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       flagPressedCallback: _onFlagPressed,
       requestMoneyRefresh: _refreshMoney,
       memberHiddenCallback: _hideMember,
+      memberBlacklistCallback: _blacklistItem,
       ticket: _settingsProvider!.travelTicket,
       activeRestocks: _activeRestocks,
       travelingTimeStamp: _profile!.travel!.timestamp,
@@ -1818,6 +1829,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     for (final s in savedHiddenRaw) {
       _hiddenStocks.add(foreignStockFromJson(s));
     }
+
+    List<String> savedBlacklist = await Prefs().getBlacklistedForeignStockItems();
+    for (final s in savedBlacklist) {
+      final id = int.tryParse(s);
+      if (id != null) _blacklistedItemIds.add(id);
+    }
   }
 
   Future<void> _showOptionsDialog() {
@@ -1958,18 +1975,45 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
     Prefs().setHiddenForeignStocks(hiddenSaveList);
   }
+
+  void _blacklistItem(ForeignStock stock) {
+    if (stock.id == null || _blacklistedItemIds.contains(stock.id)) return;
+    setState(() {
+      _blacklistedItemIds.add(stock.id!);
+    });
+    _saveBlacklistedItems();
+  }
+
+  void _unblacklistItem(int id) {
+    setState(() {
+      _blacklistedItemIds.remove(id);
+    });
+    _saveBlacklistedItems();
+  }
+
+  void _saveBlacklistedItems() {
+    Prefs().setBlacklistedForeignStockItems(
+      _blacklistedItemIds.map((id) => id.toString()).toList(),
+    );
+  }
 }
 
 class HiddenForeignStockDialog extends StatefulWidget {
   final ThemeProvider? themeProvider;
   final List<ForeignStock> hiddenStocks;
+  final Set<int> blacklistedItemIds;
+  final ItemsModel? allTornItems;
   final Function(int?, String?) unhide;
+  final Function(int) unblacklist;
 
   const HiddenForeignStockDialog({
     super.key,
     required this.themeProvider,
     required this.hiddenStocks,
+    required this.blacklistedItemIds,
+    required this.allTornItems,
     required this.unhide,
+    required this.unblacklist,
   });
 
   @override
@@ -1979,7 +2023,8 @@ class HiddenForeignStockDialog extends StatefulWidget {
 class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
   @override
   Widget build(BuildContext context) {
-    List<Widget> hiddenCards = buildCards(widget.hiddenStocks, context);
+    List<Widget> hiddenCards = _buildHiddenCards(context);
+    List<Widget> blacklistCards = _buildBlacklistCards(context);
     return AlertDialog(
       backgroundColor: widget.themeProvider!.secondBackground,
       shape: RoundedRectangleBorder(
@@ -1999,27 +2044,43 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "Reset hidden stocks",
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 15),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: hiddenCards,
+            if (hiddenCards.isNotEmpty) ...[
+              const Text(
+                "Hidden stocks",
+                style: TextStyle(fontSize: 14),
               ),
-            ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: hiddenCards,
+                ),
+              ),
+            ],
+            if (hiddenCards.isNotEmpty && blacklistCards.isNotEmpty) const SizedBox(height: 15),
+            if (blacklistCards.isNotEmpty) ...[
+              const Text(
+                "Blacklisted items",
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: blacklistCards,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  List<Widget> buildCards(List<ForeignStock> hiddenStocks, BuildContext context) {
-    List<Widget> hiddenCards = <Widget>[];
-    for (final ForeignStock s in hiddenStocks) {
-      hiddenCards.add(
+  List<Widget> _buildHiddenCards(BuildContext context) {
+    List<Widget> cards = <Widget>[];
+    for (final ForeignStock s in widget.hiddenStocks) {
+      cards.add(
         Row(
           children: [
             IconButton(
@@ -2029,7 +2090,7 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
                   widget.unhide(s.id, s.countryCode);
                 });
 
-                if (widget.hiddenStocks.isEmpty) {
+                if (widget.hiddenStocks.isEmpty && widget.blacklistedItemIds.isEmpty) {
                   Navigator.of(context).pop();
                 }
               },
@@ -2064,6 +2125,44 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
         ),
       );
     }
-    return hiddenCards;
+    return cards;
+  }
+
+  List<Widget> _buildBlacklistCards(BuildContext context) {
+    List<Widget> cards = <Widget>[];
+    for (final id in widget.blacklistedItemIds) {
+      final itemName = widget.allTornItems?.items?[id.toString()]?.name ?? 'Item #$id';
+      cards.add(
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.undo),
+              onPressed: () {
+                setState(() {
+                  widget.unblacklist(id);
+                });
+
+                if (widget.hiddenStocks.isEmpty && widget.blacklistedItemIds.isEmpty) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            Expanded(
+              child: Card(
+                color: widget.themeProvider!.cardColor,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
+                  child: Text(
+                    '$itemName (all countries)',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return cards;
   }
 }
