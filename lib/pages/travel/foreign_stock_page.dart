@@ -2069,9 +2069,17 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
             ],
             if (hiddenCards.isNotEmpty && blacklistCards.isNotEmpty) const SizedBox(height: 15),
             if (blacklistCards.isNotEmpty) ...[
-              const Text(
-                "Blacklisted items",
-                style: TextStyle(fontSize: 14),
+              const Column(
+                children: [
+                  Text(
+                    "Blacklisted items",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  Text(
+                    "(ALL COUNTRIES)",
+                    style: TextStyle(fontSize: 9),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               Flexible(
