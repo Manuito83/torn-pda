@@ -223,6 +223,8 @@
 				<string>Viewer</string>
 			</dict>
 		</array>
+		<key>GCSupportsGameMode</key>
+		<false />
 		<key>NSSupportsLiveActivities</key>
 		<true />
 		<key>UTExportedTypeDeclarations</key>
