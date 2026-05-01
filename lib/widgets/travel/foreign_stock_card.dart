@@ -42,6 +42,7 @@ class ForeignStockCard extends StatefulWidget {
   final Function flagPressedCallback;
   final Function requestMoneyRefresh;
   final Function(ForeignStock) memberHiddenCallback;
+  final Function(ForeignStock) memberBlacklistCallback;
   final TravelTicket? ticket;
   final Map<String, dynamic>? activeRestocks;
   final String? providerName;
@@ -63,6 +64,7 @@ class ForeignStockCard extends StatefulWidget {
     required this.flagPressedCallback,
     required this.requestMoneyRefresh,
     required this.memberHiddenCallback,
+    required this.memberBlacklistCallback,
     required this.ticket,
     required this.activeRestocks,
     required this.travelingTimeStamp,
@@ -182,6 +184,14 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 icon: MdiIcons.eyeRemoveOutline,
                 onPressed: (context) {
                   widget.memberHiddenCallback(widget.foreignStock);
+                },
+              ),
+              SlidableAction(
+                label: 'Blacklist',
+                backgroundColor: Colors.red[700]!,
+                icon: MdiIcons.closeOctagonOutline,
+                onPressed: (context) {
+                  widget.memberBlacklistCallback(widget.foreignStock);
                 },
               ),
             ],
