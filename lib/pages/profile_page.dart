@@ -33,6 +33,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
+import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/company/employees_model.dart';
 import 'package:torn_pda/models/education_model.dart';
@@ -130,7 +131,7 @@ extension ProfileNotificationExtension on ProfileNotification {
 }
 
 class ProfilePage extends StatefulWidget {
-  final Function callBackSection;
+  final Function(DrawerSection) callBackSection;
   final Function disableTravelSection;
 
   const ProfilePage({
@@ -2265,7 +2266,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               child: GestureDetector(
                                 onTap: () {
                                   // Open chaining section
-                                  widget.callBackSection(2);
+                                  widget.callBackSection(DrawerSection.chaining);
                                 },
                                 child: const Icon(
                                   MdiIcons.linkVariant,

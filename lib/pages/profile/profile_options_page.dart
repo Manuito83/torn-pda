@@ -40,7 +40,6 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _showHeaderWallet = true;
   bool _showHeaderIcons = true;
   bool _dedicatedTravelCard = true;
-  bool _disableTravelSection = false;
   bool _hideProfileFab = false;
   bool _expandEvents = false;
   bool _expandMessages = false;
@@ -389,10 +388,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                             _dedicatedTravelCard = value;
                                           });
 
-                                          if (!value) {
-                                            _disableTravelSection = false;
-                                            Prefs().setDisableTravelSection(value);
-                                          }
+
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
                                         activeThumbColor: Colors.green,
@@ -414,43 +410,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     ),
                                   ),
                                 ),
-                                if (_dedicatedTravelCard)
-                                  Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            const Text("Disable Travel Section"),
-                                            Switch(
-                                              value: _disableTravelSection,
-                                              onChanged: (value) {
-                                                Prefs().setDisableTravelSection(value);
-                                                setState(() {
-                                                  _disableTravelSection = value;
-                                                });
-                                              },
-                                              activeTrackColor: Colors.lightGreenAccent,
-                                              activeThumbColor: Colors.green,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                                        child: Text(
-                                          "If using the dedicated travel card, you can optionally disable the app's "
-                                          'Travel section entirely, as the same information is shown in both',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+
                                 const SizedBox(height: 15),
                                 const Divider(),
                                 const SizedBox(height: 5),
@@ -1446,7 +1406,6 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
     final headerWallet = await Prefs().getShowHeaderWallet();
     final headerIcons = await Prefs().getShowHeaderIcons();
     final dedTravel = await Prefs().getDedicatedTravelCard();
-    final disableTravel = await Prefs().getDisableTravelSection();
     final hideProfileFab = await Prefs().getHideProfileFab();
     final expandEvents = await Prefs().getExpandEvents();
     final eventsNumber = await Prefs().getEventsShowNumber();
@@ -1460,7 +1419,6 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _showHeaderWallet = headerWallet;
       _showHeaderIcons = headerIcons;
       _dedicatedTravelCard = dedTravel;
-      _disableTravelSection = disableTravel;
       _hideProfileFab = hideProfileFab;
       _expandEvents = expandEvents;
       _eventsNumber = eventsNumber;

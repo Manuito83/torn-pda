@@ -1507,6 +1507,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<String> _drawerSectionOrder = [];
+  List<String> get drawerSectionOrder => _drawerSectionOrder;
+  set drawerSectionOrder(List<String> value) {
+    _drawerSectionOrder = value;
+    Prefs().setDrawerSectionOrder(value);
+    notifyListeners();
+  }
+
+  List<String> _drawerSectionHidden = [];
+  List<String> get drawerSectionHidden => _drawerSectionHidden;
+  set drawerSectionHidden(List<String> value) {
+    _drawerSectionHidden = value;
+    Prefs().setDrawerSectionHidden(value);
+    notifyListeners();
+  }
+
   bool _showMemoryInDrawer = false;
   bool get showMemoryInDrawer => _showMemoryInDrawer;
   set showMemoryInDrawer(bool value) {
@@ -1852,6 +1868,15 @@ class SettingsProvider extends ChangeNotifier {
     _tctClockHighlightsEvents = await Prefs().getTctClockHighlightsEvents();
 
     _showWikiInDrawer = await Prefs().getShowWikiInDrawer();
+
+    _drawerSectionOrder = await Prefs().getDrawerSectionOrder();
+    _drawerSectionHidden = await Prefs().getDrawerSectionHidden();
+
+    // First time initialization: hide divider2 by default
+    if (_drawerSectionOrder.isEmpty && _drawerSectionHidden.isEmpty) {
+      _drawerSectionHidden = ['divider2'];
+      Prefs().setDrawerSectionHidden(_drawerSectionHidden);
+    }
 
     await WebviewConfig().generateUserAgentForUser();
 

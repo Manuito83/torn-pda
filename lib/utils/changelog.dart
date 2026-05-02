@@ -108,6 +108,15 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.13.4'
         ..date = '10 MAY 2026'
         ..features = [
+          ComplexFeature(
+            "Drawer sections can now be reordered, hidden and customized",
+            explanation: "Go to Settings / Drawer sections to configure.\n\n"
+                "You can now change the order of all sections in the app's main drawer menu, "
+                "as well as hide those you don't use. Settings and About are always visible.\n\n"
+                "Two dividers are also available and can be freely positioned within the list.\n\n"
+                "Previously scattered visibility options (Ranked Wars, Stock Market, Travel and Wiki) "
+                "have been consolidated into this new menu.",
+          ),
           "Added item blacklist to foreign stocks [DarXide]",
           "Added 'sort by rarity' option to foreign stocks [DarXide]",
           "Userscripts: added PUT and DELETE HTTP request handlers [DarXide]",

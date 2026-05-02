@@ -114,6 +114,8 @@ class Prefs {
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
+  final String _kDrawerSectionOrder = "pda_drawerSectionOrder";
+  final String _kDrawerSectionHidden = "pda_drawerSectionHidden";
 
   // Foreign Stocks
   final String _kForeignStockSellingFee = "pda_foreignStockSellingFee";
@@ -1204,11 +1206,34 @@ class Prefs {
   /// Methods for default launch section
   /// ----------------------------
   Future<String> getDefaultSection() async {
-    return await PrefsDatabase.getString(_kDefaultSection, '0');
+    return await PrefsDatabase.getString(_kDefaultSection, 'profile');
   }
 
   Future setDefaultSection(String value) async {
     return await PrefsDatabase.setString(_kDefaultSection, value);
+  }
+
+  /// ----------------------------
+  /// Methods for drawer section order and visibility
+  /// ----------------------------
+  Future<List<String>> getDrawerSectionOrder() async {
+    final raw = await PrefsDatabase.getString(_kDrawerSectionOrder, '');
+    if (raw.isEmpty) return [];
+    return raw.split(',');
+  }
+
+  Future setDrawerSectionOrder(List<String> value) async {
+    return await PrefsDatabase.setString(_kDrawerSectionOrder, value.join(','));
+  }
+
+  Future<List<String>> getDrawerSectionHidden() async {
+    final raw = await PrefsDatabase.getString(_kDrawerSectionHidden, '');
+    if (raw.isEmpty) return [];
+    return raw.split(',');
+  }
+
+  Future setDrawerSectionHidden(List<String> value) async {
+    return await PrefsDatabase.setString(_kDrawerSectionHidden, value.join(','));
   }
 
   /// ----------------------------

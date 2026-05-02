@@ -33,6 +33,7 @@ import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
+import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
@@ -111,29 +112,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   @override
   bool get wantKeepAlive => true;
 
-  final int _settingsPosition = 12;
-  final int _aboutPosition = 13;
-  var _allowSectionsWithoutKey = <int>[];
+  var _allowSectionsWithoutKey = <DrawerSection>[];
 
-  // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
-  // via callback, as it might need to be changed as well
-  final _drawerItemsList = [
-    "Profile",
-    "Travel",
-    "Chaining",
-    "Loot",
-    "Friends",
-    "Stakeouts",
-    "Awards",
-    "Items",
-    "Ranked Wars",
-    "Stock Market",
-    "Wiki",
-    "Alerts",
-    "Settings",
-    "About",
-    "Tips"
-  ];
+  // Drawer section order
+  final _drawerItemsList = DrawerSection.values;
 
   final StatsController _statsController = StatsController();
 
@@ -157,8 +139,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Used for the main UI loading (FutureBuilder)
   Future? _finishedWithPreferencesAndDialogs;
 
-  int _activeDrawerIndex = 0;
-  int _selected = 0;
+  DrawerSection _activeDrawerIndex = DrawerSection.profile;
+  DrawerSection _selected = DrawerSection.profile;
 
   bool _forceFireUserReload = false;
 
@@ -312,8 +294,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   void _initializeConfig() {
     try {
       _allowSectionsWithoutKey = [
-        _settingsPosition,
-        _aboutPosition,
+        DrawerSection.settings,
+        DrawerSection.about,
       ];
 
       _finishedWithPreferencesAndDialogs = _loadPreferencesAndDialogs();
@@ -1015,7 +997,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowser = true;
       browserUrl = "https://www.torn.com/page.php?sid=racing";
     } else if (intent.data!.contains("pdaWidget://chain:box:clicked")) {
-      _callSectionFromOutside(2); // Chaining
+      _callSectionFromOutside(DrawerSection.chaining); // Chaining
       return;
     } else if (intent.data!.contains("pdaWidget://empty:shortcuts:clicked")) {
       if (!_webViewProvider.webViewSplitActive) {
@@ -1147,7 +1129,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           }
 
           // Switch drawer to Settings
-          _callSectionFromOutside(_settingsPosition);
+          _callSectionFromOutside(DrawerSection.settings);
 
           if (pathSegments.isNotEmpty && pathSegments[0] == "browser") {
             // Push Advanced Browser Settings with highlight
@@ -1463,7 +1445,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         } else {
           // If we pass all checks above, redirect to the retals section
           _retalsRedirection = true;
-          _callSectionFromOutside(2);
+          _callSectionFromOutside(DrawerSection.chaining);
           Future.delayed(const Duration(seconds: 2)).then((_) {
             if (mounted) {
               _retalsRedirection = false;
@@ -1826,7 +1808,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           } else {
             // If we pass all checks above, redirect to the retals section
             _retalsRedirection = true;
-            _callSectionFromOutside(2);
+            _callSectionFromOutside(DrawerSection.chaining);
             Future.delayed(const Duration(seconds: 2)).then((value) {
               _retalsRedirection = false;
             });
@@ -2339,183 +2321,146 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     );
   }
 
-  Widget _getDrawerItems(SettingsProvider settingsProvider) {
-    final drawerOptions = <Widget>[];
-    // If API key is not valid, we just show the Settings + About pages
-    // (just don't add the other sections to the list)
+  List<DrawerSection> _getVisibleSections(SettingsProvider settingsProvider) {
     if (!UserHelper.isApiKeyValid) {
-      for (final position in _allowSectionsWithoutKey) {
-        drawerOptions.add(
-          ListTileTheme(
-            selectedColor: Colors.red,
-            iconColor: _themeProvider!.mainText,
-            child: Ink(
-              color: position == _selected ? Colors.grey[300] : Colors.transparent,
-              child: ListTile(
-                leading: _returnDrawerIcons(drawerPosition: position),
-                title: Text(
-                  _drawerItemsList[position],
-                  style: TextStyle(
-                    fontWeight: position == _selected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-                selected: position == _selected,
-                onTap: () => _onSelectItem(position),
-              ),
-            ),
-          ),
-        );
-      }
-    } else {
-      // Otherwise, if the key is valid, we loop all the sections
-      for (var i = 0; i < _drawerItemsList.length; i++) {
-        // For this two, it is necessary to call Settings Provider from the Drawer and pass the callbacks all the
-        // way to the relevant children. Otherwise, the drawer won't update in realtime (it's not listening)
-        if (settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
-          continue;
-        }
+      return _allowSectionsWithoutKey;
+    }
 
-        if (!settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
-          continue;
-        }
+    final order = settingsProvider.drawerSectionOrder;
+    final sectionsToIterate = order.isNotEmpty
+        ? order.map((id) => DrawerSection.fromId(id)).whereType<DrawerSection>().toList()
+        : _drawerItemsList.toList();
 
-        if (_drawerItemsList[i] == "Wiki") {
-          if (settingsProvider.showWikiInDrawer) {
-            drawerOptions.add(WikiMenu(themeProvider: _themeProvider!));
-          } else {
-            drawerOptions.add(const SizedBox.shrink());
-          }
-
-          continue;
-        }
-
-        if (!Platform.isWindows) {
-          if (!settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
-            continue;
-          }
-        }
-
-        // Adding divider just before SETTINGS
-        if (i == _settingsPosition) {
-          drawerOptions.add(
-            const Divider(),
-          );
-        }
-        drawerOptions.add(
-          ListTileTheme(
-            selectedColor: Colors.red,
-            iconColor: _themeProvider!.mainText,
-            child: Ink(
-              color: i == _selected ? Colors.grey[300] : Colors.transparent,
-              child: ListTile(
-                leading: _returnDrawerIcons(drawerPosition: i),
-                title: Text(
-                  _drawerItemsList[i],
-                  style: TextStyle(
-                    fontWeight: i == _selected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-                selected: i == _selected,
-                onTap: () => _onSelectItem(i),
-              ),
-            ),
-          ),
-        );
+    // Ensure any new sections not in the saved order are still shown
+    for (final section in _drawerItemsList) {
+      if (!sectionsToIterate.contains(section)) {
+        sectionsToIterate.add(section);
       }
     }
+
+    final visible = <DrawerSection>[];
+    for (final section in sectionsToIterate) {
+      // Existing feature toggles
+      if (settingsProvider.disableTravelSection && section == DrawerSection.travel) {
+        continue;
+      }
+      if (!settingsProvider.rankedWarsInMenu && section == DrawerSection.rankedWars) {
+        continue;
+      }
+      if (!Platform.isWindows) {
+        if (!settingsProvider.stockExchangeInMenu && section == DrawerSection.stockMarket) {
+          continue;
+        }
+      }
+      if (!settingsProvider.showWikiInDrawer && section == DrawerSection.wiki) {
+        continue;
+      }
+
+      // New user-defined visibility
+      if (settingsProvider.drawerSectionHidden.contains(section.name)) {
+        continue;
+      }
+
+      visible.add(section);
+    }
+
+    return visible;
+  }
+
+  Widget _getDrawerItems(SettingsProvider settingsProvider) {
+    final drawerOptions = <Widget>[];
+    final visibleSections = _getVisibleSections(settingsProvider);
+
+    for (final section in visibleSections) {
+      if (section.isDivider) {
+        drawerOptions.add(const Divider());
+        continue;
+      }
+
+      if (section == DrawerSection.wiki) {
+        drawerOptions.add(WikiMenu(themeProvider: _themeProvider!));
+        continue;
+      }
+
+      drawerOptions.add(
+        ListTileTheme(
+          selectedColor: Colors.red,
+          iconColor: _themeProvider!.mainText,
+          child: Ink(
+            color: section == _selected ? Colors.grey[300] : Colors.transparent,
+            child: ListTile(
+              leading: Icon(section.icon),
+              title: Text(
+                section.title,
+                style: TextStyle(
+                  fontWeight: section == _selected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              selected: section == _selected,
+              onTap: () => _onSelectItem(section),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Column(children: drawerOptions);
   }
 
   Widget _getPages() {
     switch (_activeDrawerIndex) {
-      case 0:
+      case DrawerSection.profile:
         return ProfilePage(
           callBackSection: _callSectionFromOutside,
           disableTravelSection: _onChangeDisableTravelSection,
         );
-      case 1:
+      case DrawerSection.travel:
         return const TravelPage();
-      case 2:
+      case DrawerSection.chaining:
         return ChainingPage(retalsRedirection: _retalsRedirection);
-      case 3:
+      case DrawerSection.loot:
         return LootPage();
-      case 4:
+      case DrawerSection.friends:
         return FriendsPage();
-      case 5:
+      case DrawerSection.stakeouts:
         return const StakeoutsPage();
-      case 6:
+      case DrawerSection.awards:
         return AwardsPage();
-      case 7:
+      case DrawerSection.items:
         return const ItemsPage();
-      case 8:
+      case DrawerSection.rankedWars:
         return const RankedWarsPage(calledFromMenu: true);
-      case 9:
+      case DrawerSection.stockMarket:
         return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
-      case 10:
+      case DrawerSection.wiki:
         return Column(
           children: [
             WikiMenu(themeProvider: _themeProvider!),
           ],
         );
-      case 11:
+      case DrawerSection.alerts:
         if (Platform.isWindows) return AlertsSettingsWindows();
         return AlertsSettings(_onChangeStockMarketInMenu);
-      case 12:
+      case DrawerSection.settings:
         return SettingsPage(
           changeUID: changeUID,
           statsController: _statsController,
         );
-      case 13:
+      case DrawerSection.about:
         return AboutPage(uid: _userUID);
-      case 14:
+      case DrawerSection.tips:
         return TipsPage();
-
-      default:
-        return const Text("Error");
-    }
-  }
-
-  Widget _returnDrawerIcons({int? drawerPosition}) {
-    switch (drawerPosition) {
-      case 0:
-        return const Icon(Icons.person);
-      case 1:
-        return const Icon(Icons.local_airport);
-      case 2:
-        return const Icon(MdiIcons.linkVariant);
-      case 3:
-        return const Icon(MdiIcons.knifeMilitary);
-      case 4:
-        return const Icon(Icons.people);
-      case 5:
-        return const Icon(MdiIcons.cctv);
-      case 6:
-        return const Icon(MdiIcons.trophy);
-      case 7:
-        return const Icon(MdiIcons.packageVariantClosed);
-      case 8:
-        return const Icon(MaterialCommunityIcons.sword_cross);
-      case 9:
-        return const Icon(MdiIcons.bankTransfer);
-      // Case 10 is Wiki, which is a widget with its own icon
-      case 11:
-        return const Icon(Icons.notifications_active);
-      case 12:
-        return const Icon(Icons.settings);
-      case 13:
-        return const Icon(Icons.info_outline);
-      case 14:
-        return const Icon(Icons.question_answer_outlined);
-      default:
+      case DrawerSection.divider1:
+      case DrawerSection.divider2:
         return const SizedBox.shrink();
     }
   }
 
-  Future<void> _onSelectItem(int index) async {
+  Future<void> _onSelectItem(DrawerSection section) async {
     Navigator.of(context).pop();
     setState(() {
-      _selected = index;
-      _activeDrawerIndex = index;
+      _selected = section;
+      _activeDrawerIndex = section;
     });
   }
 
@@ -2544,18 +2489,27 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // If key is empty, redirect to the Settings page.
     if (!userController.isApiKeyValid) {
-      _selected = _settingsPosition;
-      _activeDrawerIndex = _settingsPosition;
+      _selected = DrawerSection.settings;
+      _activeDrawerIndex = DrawerSection.settings;
     } else {
       String defaultSection = await Prefs().getDefaultSection();
 
       // If user wants to load the browser, change the default section to Profile
       if (defaultSection == "browser" || defaultSection == "browser_full") {
-        defaultSection = "0"; // Cambiar a Profile como base
+        defaultSection = DrawerSection.profile.name;
       }
 
-      _selected = int.parse(defaultSection);
-      _activeDrawerIndex = int.parse(defaultSection);
+      // Migrate old numeric indices (0-14) to symbolic names
+      DrawerSection resolvedSection = DrawerSection.profile;
+      final numericTry = int.tryParse(defaultSection);
+      if (numericTry != null) {
+        resolvedSection = DrawerSection.fromIndex(numericTry);
+      } else {
+        resolvedSection = DrawerSection.fromId(defaultSection) ?? DrawerSection.profile;
+      }
+
+      _selected = resolvedSection;
+      _activeDrawerIndex = resolvedSection;
 
       await _initializeAndHandleFirebaseAuth();
 
@@ -3062,7 +3016,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
-  void _callSectionFromOutside(int section) {
+  void _callSectionFromOutside(DrawerSection section) {
     setState(() {
       if (!_webViewProvider.webViewSplitActive) {
         _webViewProvider.browserShowInForeground = false;
