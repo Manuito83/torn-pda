@@ -238,6 +238,7 @@ class Prefs {
   final String _kShowShortcutEditIcon = "pda_showShortcutEditIcon";
   final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
+  final String _kHideProfileFab = "pda_hideProfileFab";
   final String _kDisableTravelSection = "pda_disableTravelSection";
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
@@ -2350,6 +2351,14 @@ class Prefs {
 
   Future setDedicatedTravelCard(bool value) async {
     return await PrefsDatabase.setBool(_kDedicatedTravelCard, value);
+  }
+
+  Future<bool> getHideProfileFab() async {
+    return await PrefsDatabase.getBool(_kHideProfileFab, false);
+  }
+
+  Future setHideProfileFab(bool value) async {
+    return await PrefsDatabase.setBool(_kHideProfileFab, value);
   }
 
   Future<bool> getDisableTravelSection() async {

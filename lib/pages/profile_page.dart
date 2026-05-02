@@ -287,6 +287,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _showHeaderIcons = false;
   bool _showShortcutEditIcon = true;
   bool _dedicatedTravelCard = false;
+  bool _hideProfileFab = false;
 
   late ChainModel _chainModel;
 
@@ -438,11 +439,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   child: buildAppBar(),
                 )
               : null,
-          floatingActionButton: Stack(
-            children: [
-              buildSpeedDial(),
-            ],
-          ),
+          floatingActionButton: _hideProfileFab
+              ? null
+              : Stack(
+                  children: [
+                    buildSpeedDial(),
+                  ],
+                ),
           body: Container(
             color: _themeProvider!.canvas,
             child: FutureBuilder(
@@ -897,6 +900,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
             final dedTravel = await Prefs().getDedicatedTravelCard();
             final disableTravel = await Prefs().getDisableTravelSection();
+            final hideProfileFab = await Prefs().getHideProfileFab();
             final expandEvents = await Prefs().getExpandEvents();
             final eventsNumber = await Prefs().getEventsShowNumber();
             final expandMessages = await Prefs().getExpandMessages();
@@ -923,6 +927,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _showHeaderIcons = headerIcons;
               _showShortcutEditIcon = showShortcutEditIcon;
               _dedicatedTravelCard = dedTravel;
+              _hideProfileFab = hideProfileFab;
               _eventsExpController.expanded = expandEvents;
               _messagesShowNumber = messagesNumber;
               _eventsShowNumber = eventsNumber;
@@ -7591,6 +7596,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _showHeaderIcons = await Prefs().getShowHeaderIcons();
     _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
+    _hideProfileFab = await Prefs().getHideProfileFab();
 
     if (Platform.isIOS) {
       _isAlarmKitAvailableIos = await AlarmKitServiceIos.isAvailable();

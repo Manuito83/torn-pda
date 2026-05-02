@@ -1351,6 +1351,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _hideProfileFab = false;
+  bool get hideProfileFab => _hideProfileFab;
+  set hideProfileFab(bool value) {
+    _hideProfileFab = value;
+    Prefs().setHideProfileFab(value);
+    notifyListeners();
+  }
+
   var _profileCheckAttackEnabled = true;
   bool get profileCheckAttackEnabled => _profileCheckAttackEnabled;
   set profileCheckAttackEnabled(bool value) {
@@ -1826,6 +1834,7 @@ class SettingsProvider extends ChangeNotifier {
     _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
+    _hideProfileFab = await Prefs().getHideProfileFab();
     _profileCheckAttackEnabled = await Prefs().getProfileCheckAttackEnabled();
     _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
 

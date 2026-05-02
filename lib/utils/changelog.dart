@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.13.4 - Build 647 - built 29/04/2026
+    // v3.13.4 - Build 648 - built 02/04/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.13.4'
@@ -114,6 +114,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Userscripts: fixed @match pattern handling [DarXide]",
           "Userscripts: implemented additional GM compatibility features [DarXide]",
           "Several performance, code and documentation improvements [DarXide]",
+          "Profile: floating action button can now be hidden",
           "Fixed time calculation for delayed travel departure [DarXide]",
           if (Platform.isAndroid) "Fixed several Live Updates issues [bombel]",
           "Fixed alarm icon not turning green when active in some devices",
