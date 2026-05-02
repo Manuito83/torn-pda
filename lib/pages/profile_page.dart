@@ -4676,6 +4676,25 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               SelectionArea(child: Text(decimalFormat.format(_miscModel!.workStats?.endurance ?? 0))),
                             ],
                           ),
+                          SizedBox(
+                            width: 50,
+                            child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Total: ',
+                                ),
+                              ),
+                              SelectionArea(
+                                child: Text(
+                                  decimalFormat.format(_miscModel!.workStats?.total ?? 0),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -7285,6 +7304,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       workString += '\nManual labor: ${decimalFormat.format(_miscModel!.workStats?.manualLabor)}';
       workString += '\nIntelligence: ${decimalFormat.format(_miscModel!.workStats?.intelligence)}';
       workString += '\nEndurance: ${decimalFormat.format(_miscModel!.workStats?.endurance)}';
+      workString += '\n-------';
+      workString += '\nTotal: ${decimalFormat.format(_miscModel!.workStats?.total)}';
       return workString;
     }
 

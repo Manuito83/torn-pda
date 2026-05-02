@@ -124,6 +124,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Userscripts: implemented additional GM compatibility features [DarXide]",
           "Several performance, code and documentation improvements [DarXide]",
           "Profile: floating action button can now be hidden",
+          "Profile: work stats now show a total in the expanded view",
           "Fixed time calculation for delayed travel departure [DarXide]",
           if (Platform.isAndroid) "Fixed several Live Updates issues [bombel]",
           "Fixed alarm icon not turning green when active in some devices",
