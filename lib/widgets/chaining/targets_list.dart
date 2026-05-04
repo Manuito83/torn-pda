@@ -84,28 +84,35 @@ class TargetsListState extends State<TargetsList> {
               final hasNote = playerNote != null && playerNote.note.trim().isNotEmpty;
 
               if (hasNote) {
-                final confirmed = await showDialog<bool>(
+                final action = await showDialog<String>(
                   context: this.context,
                   builder: (ctx) => AlertDialog(
                     title: const Text('Remove target?'),
                     content: Text(
-                      '$targetName has a note attached. Removing this target will not delete the note, '
-                      'but the target will be removed from your list.',
+                      '$targetName has a note attached. Do you want to keep or also delete the note?',
                     ),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
+                        onPressed: () => Navigator.pop(ctx, 'cancel'),
                         child: const Text('Cancel'),
                       ),
                       TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
+                        onPressed: () => Navigator.pop(ctx, 'remove'),
                         child: const Text('Remove'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, 'remove_and_delete_note'),
+                        child: const Text('Remove + delete note'),
                       ),
                     ],
                   ),
                 );
 
-                if (!mounted || confirmed != true) return;
+                if (!mounted || action == null || action == 'cancel') return;
+
+                if (action == 'remove_and_delete_note') {
+                  Get.find<PlayerNotesController>().removePlayerNote(target.playerId.toString());
+                }
               }
 
               BotToast.showText(
