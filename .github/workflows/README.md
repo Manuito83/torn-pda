@@ -6,13 +6,16 @@
 |-----|-------------|-------------|
 | **analyze** | `flutter analyze` — static analysis, catches type errors and lint violations | ~2 min |
 | **test** | `flutter test --coverage` — runs everything under `test/` | ~2 min |
+| **format** | `dart format --set-exit-if-changed lib test` — catches unformatted Dart code | <1 min |
+| **generated** | `dart run build_runner build --delete-conflicting-outputs` then `git diff --exit-code` — catches stale generated Dart output | ~3-6 min |
 | **functions** | `npm ci`, `npm run lint`, `npm run build` under `cloud_functions/functions` | ~2 min |
+| **dependency-review** | `actions/dependency-review-action` — fails PRs that introduce high/critical vulnerable dependencies | <1 min |
 | **build** | `flutter build apk --debug` — proves the project still compiles | ~5 min |
 | **ios** | `flutter build ios --no-codesign` — proves the iOS project still compiles | ~10-15 min |
 
-`analyze`, `test`, and `functions` run **in parallel** on every push to `develop` or `master`
-and every PR targeting either branch. `build` and `ios` only run on **pull requests**
-(skipped on direct pushes to save time).
+`analyze`, `test`, `format`, `generated`, and `functions` run **in parallel**
+on every push to `develop` or `master` and every PR targeting either branch.
+`dependency-review`, `build`, and `ios` only run on **pull requests**.
 
 ## Costs
 
@@ -30,6 +33,12 @@ analysis and tests still pass.
 The iOS build also creates temporary CI-only stubs for `ios/Flutter/Secrets.xcconfig`
 and `ios/Runner/GoogleService-Info.plist`. Those files are intentionally not
 committed because real local/release builds need private Google/Firebase values.
+
+## Experimental checks
+
+The `format`, `generated`, and `dependency-review` jobs were added as extra
+verification signals. If they prove too noisy, tune them before making them
+required branch-protection checks.
 
 ## Updating the Flutter version
 

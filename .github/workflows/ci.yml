@@ -3,9 +3,12 @@
 # Runs on every push and pull request against develop and master.
 #   1. analyze  — dart static analysis (push + PR)
 #   2. test     — flutter unit & widget tests (push + PR)
-#   3. functions — checks Cloud Functions install, lint, and TypeScript build (push + PR)
-#   4. ios      — confirms the iOS app still compiles without signing (PR only)
-#   5. build    — confirms the Android APK still compiles (PR only)
+#   3. format   — checks Dart formatting (push + PR)
+#   4. generated — checks generated Dart files are up to date (push + PR)
+#   5. functions — checks Cloud Functions install, lint, and TypeScript build (push + PR)
+#   6. dependency-review — checks PR dependency changes for vulnerabilities (PR only)
+#   7. ios      — confirms the iOS app still compiles without signing (PR only)
+#   8. build    — confirms the Android APK still compiles (PR only)
 #
 # All jobs run on GitHub-hosted runners. Public repos get unlimited
 # free minutes, so this costs nothing.
@@ -109,7 +112,62 @@ jobs:
           retention-days: 14
 
   # ──────────────────────────────────────────────
-  # 3. Cloud Functions — proves backend functions lint and compile
+  # 3. Formatting — proves Dart files are committed in canonical format
+  # ──────────────────────────────────────────────
+  format:
+    name: Dart Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Check Dart formatting
+        run: dart format --set-exit-if-changed lib test
+
+  # ──────────────────────────────────────────────
+  # 4. Generated code — proves generated Dart files are up to date
+  # ──────────────────────────────────────────────
+  generated:
+    name: Generated Code Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Copy config stubs
+        run: |
+          cd lib/config
+          for f in *.dart.example; do
+            cp "$f" "${f%.example}"
+          done
+          cp firebase_options.dart.example ../firebase_options.dart
+          cd ..
+          mkdir -p torn-pda-native/auth torn-pda-native/stats
+          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
+          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
+          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
+          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
+          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Regenerate Dart outputs
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Check generated files are committed
+        run: git diff --exit-code
+
+  # ──────────────────────────────────────────────
+  # 5. Cloud Functions — proves backend functions lint and compile
   # ──────────────────────────────────────────────
   functions:
     name: Cloud Functions
@@ -136,7 +194,24 @@ jobs:
         run: npm run build
 
   # ──────────────────────────────────────────────
-  # 4. iOS build — proves the iOS project compiles (PR only)
+  # 6. Dependency review — checks new PR dependency changes
+  # ──────────────────────────────────────────────
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+  # ──────────────────────────────────────────────
+  # 7. iOS build — proves the iOS project compiles (PR only)
   # ──────────────────────────────────────────────
   ios:
     name: Build iOS
@@ -205,7 +280,7 @@ jobs:
         run: flutter build ios --no-codesign
 
   # ──────────────────────────────────────────────
-  # 5. Build (APK) — proves the project compiles (PR only)
+  # 8. Build (APK) — proves the project compiles (PR only)
   # ──────────────────────────────────────────────
   build:
     name: Build APK
