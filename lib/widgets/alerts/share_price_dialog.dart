@@ -171,7 +171,7 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\+?\d+(\.)?(\d{1,2})?'),
+                                  RegExp(r'^\+?\d+([.,])?(\d{1,2})?'),
                                 )
                               ],
                               onChanged: (gainString) {
@@ -324,7 +324,7 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\-?\d+(\.)?(\d{1,2})?'),
+                                  RegExp(r'^\-?\d+([.,])?(\d{1,2})?'),
                                 )
                               ],
                               onChanged: (lossString) {
@@ -556,12 +556,12 @@ class SharePriceDialogState extends State<SharePriceDialog> {
 
   double _cleanNumber(String text) {
     if (text.isEmpty) return 0;
-    return double.parse(text);
+    return double.parse(text.replaceAll(",", "."));
   }
 
   double _cleanNumberAbs(String text) {
     if (text.isEmpty) return 0;
-    return double.parse(text).abs();
+    return double.parse(text.replaceAll(",", ".")).abs();
   }
 
   String removeZeroDecimals(double? input) {
