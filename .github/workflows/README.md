@@ -6,8 +6,8 @@
 |-----|-------------|-------------|
 | **analyze** | `flutter analyze` — static analysis, catches type errors and lint violations | ~2 min |
 | **test** | `flutter test --coverage` — runs everything under `test/` | ~2 min |
-| **format** | `dart format --set-exit-if-changed lib test` — catches unformatted Dart code | <1 min |
-| **generated** | `dart run build_runner build --delete-conflicting-outputs` then `git diff --exit-code` — catches stale generated Dart output | ~3-6 min |
+| **format** | `dart format --set-exit-if-changed` on changed Dart files under `lib/` and `test/` | <1 min |
+| **generated** | If generator inputs changed, runs `dart run build_runner build --delete-conflicting-outputs` then `git diff --exit-code` | ~3-6 min |
 | **functions** | `npm ci`, `npm run lint`, `npm run build` under `cloud_functions/functions` | ~2 min |
 | **dependency-review** | `actions/dependency-review-action` — fails PRs that introduce high/critical vulnerable dependencies | <1 min |
 | **build** | `flutter build apk --debug` — proves the project still compiles | ~5 min |
@@ -37,8 +37,13 @@ committed because real local/release builds need private Google/Firebase values.
 ## Experimental checks
 
 The `format`, `generated`, and `dependency-review` jobs were added as extra
-verification signals. If they prove too noisy, tune them before making them
-required branch-protection checks.
+verification signals. The format job intentionally checks only changed Dart
+files so existing repo-wide formatting drift does not block unrelated PRs.
+The generated-code job intentionally runs only when generator inputs change,
+because the repo currently has existing generated output drift.
+
+If these jobs prove too noisy, tune them before making them required
+branch-protection checks.
 
 ## Updating the Flutter version
 

@@ -119,14 +119,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      - name: Check Dart formatting
-        run: dart format --set-exit-if-changed lib test
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Find changed Dart files
+        id: changed-dart
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="HEAD~1"
+          fi
+
+          git diff --name-only --diff-filter=ACMRT "$base" HEAD -- 'lib/**/*.dart' 'test/**/*.dart' > /tmp/changed_dart_files.txt
+
+          if [ -s /tmp/changed_dart_files.txt ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            cat /tmp/changed_dart_files.txt
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changed Dart files under lib/ or test/."
+          fi
+
+      - name: Check changed Dart file formatting
+        if: steps.changed-dart.outputs.has_changes == 'true'
+        run: xargs dart format --set-exit-if-changed < /tmp/changed_dart_files.txt
 
   # ──────────────────────────────────────────────
   # 4. Generated code — proves generated Dart files are up to date
@@ -136,13 +165,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
+      - name: Check if generator inputs changed
+        id: generator-inputs
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            base="HEAD~1"
+          fi
+
+          git diff --name-only --diff-filter=ACMRT "$base" HEAD -- \
+            'lib/utils/env/env.dart' \
+            'lib/models/api_v2/swagger/**' \
+            'pubspec.yaml' \
+            'pubspec.lock' > /tmp/generator_input_files.txt
+
+          if [ -s /tmp/generator_input_files.txt ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            cat /tmp/generator_input_files.txt
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No generator inputs changed; skipping generated-code drift check."
+          fi
+
       - name: Copy config stubs
+        if: steps.generator-inputs.outputs.has_changes == 'true'
         run: |
           cd lib/config
           for f in *.dart.example; do
@@ -158,12 +217,15 @@ jobs:
           cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
 
       - name: Install dependencies
+        if: steps.generator-inputs.outputs.has_changes == 'true'
         run: flutter pub get
 
       - name: Regenerate Dart outputs
+        if: steps.generator-inputs.outputs.has_changes == 'true'
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Check generated files are committed
+        if: steps.generator-inputs.outputs.has_changes == 'true'
         run: git diff --exit-code
 
   # ──────────────────────────────────────────────
