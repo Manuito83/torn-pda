@@ -1735,7 +1735,7 @@ class WebViewFullState extends State<WebViewFull>
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
-              if (_scrollAfterLoad) {
+              if (_scrollAfterLoad && _settingsProvider.restoreScrollAfterReload) {
                 webViewController!.scrollTo(x: _scrollX!, y: _scrollY!);
                 _scrollAfterLoad = false;
               }

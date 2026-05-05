@@ -316,6 +316,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _restoreScrollAfterReload = true;
+  bool get restoreScrollAfterReload => _restoreScrollAfterReload;
+  set restoreScrollAfterReload(bool value) {
+    _restoreScrollAfterReload = value;
+    Prefs().setRestoreScrollAfterReload(_restoreScrollAfterReload);
+    notifyListeners();
+  }
+
   BrowserRefreshSetting? _browserRefreshMethod = BrowserRefreshSetting.both;
   BrowserRefreshSetting? get browserRefreshMethod => _browserRefreshMethod;
   set changeBrowserRefreshMethod(BrowserRefreshSetting value) {
@@ -1638,6 +1646,7 @@ class SettingsProvider extends ChangeNotifier {
     _browserExtendHeightForKeyboard = await Prefs().getBrowserExtendHeightForKeyboard();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
+    _restoreScrollAfterReload = await Prefs().getRestoreScrollAfterReload();
     _highRefreshRateEnabled = await Prefs().getHighRefreshRateEnabled();
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();

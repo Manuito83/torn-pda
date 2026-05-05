@@ -126,6 +126,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Profile: floating action button can now be hidden",
           "Profile: work stats now show a total in the expanded view",
           "Added confirmation dialog for deleting target with an attached note [DarXide]",
+          "Browser: restore scroll position on reload is now optional",
           "Fixed issue with stock alerts not accepting decimal values [DarXide]",
           "Fixed time calculation for delayed travel departure [DarXide]",
           if (Platform.isAndroid) "Fixed several Live Updates issues [bombel]",

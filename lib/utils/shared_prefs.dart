@@ -127,6 +127,7 @@ class Prefs {
   final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
+  final String _kRestoreScrollAfterReload = "pda_restoreScrollAfterReload";
   final String _kBrowserStyleBottomBarEnabled = "pda_browserStyleAlternativeEnabled";
   final String _kBrowserStyleBottomBarType = "pda_browserStyleAlternativeType";
   final String _kBrowserBottomBarStylePlaceTabsAtBottom = "pda_browserBottomBarStylePlaceTabsAtBottom";
@@ -1275,6 +1276,14 @@ class Prefs {
 
   Future setLoadBarBrowser(bool value) async {
     return await PrefsDatabase.setBool(_kLoadBarBrowser, value);
+  }
+
+  Future<bool> getRestoreScrollAfterReload() async {
+    return await PrefsDatabase.getBool(_kRestoreScrollAfterReload, true);
+  }
+
+  Future setRestoreScrollAfterReload(bool value) async {
+    return await PrefsDatabase.setBool(_kRestoreScrollAfterReload, value);
   }
 
   Future<String> getBrowserRefreshMethod() async {

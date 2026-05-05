@@ -299,6 +299,45 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ),
       SearchableRow(
+        label: "Restore scroll on reload",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Restore scroll on reload")),
+                  Switch(
+                    value: _settingsProvider.restoreScrollAfterReload,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.restoreScrollAfterReload = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  'When reloading a page, the browser will return to the same scroll position it was at before the reload',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
         label: "Refresh method",
         searchText: _searchText,
         child: Padding(
