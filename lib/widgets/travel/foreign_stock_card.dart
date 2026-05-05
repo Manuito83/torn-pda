@@ -81,6 +81,8 @@ class ForeignStockCard extends StatefulWidget {
 }
 
 class ForeignStockCardState extends State<ForeignStockCard> {
+  static const _restockSoonMaxAverage = Duration(hours: 5);
+
   final _expandableController = ExpandableController();
 
   Future? _footerInformationRetrieved;
@@ -92,6 +94,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   var _averageTimeToRestock = 0;
   var _restockReliability = 0;
   var _projectedRestockDateTime = DateTime.now();
+  var _hasProjectedRestockDateTime = false;
+  var _restockExpectedSoon = false;
   var _depletionTrendPerSecond = 0.0;
 
   int? _invQuantity = 0;
@@ -167,6 +171,42 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     _expandableController.dispose();
     _browserHasClosedSubscription.cancel();
     super.dispose();
+  }
+
+  ({DateTime dateTime, bool expectedSoon}) _nextProjectedRestockDateTime(DateTime lastEmptyDateTime) {
+    final now = DateTime.now();
+    final averageDuration = Duration(seconds: _averageTimeToRestock);
+    var projected = lastEmptyDateTime.add(averageDuration);
+
+    if (!projected.isAfter(now)) {
+      final soonCutoff = projected.add(Duration(seconds: _averageTimeToRestock ~/ 2));
+      if (averageDuration < _restockSoonMaxAverage && now.isBefore(soonCutoff)) {
+        return (dateTime: projected, expectedSoon: true);
+      }
+
+      final elapsedSeconds = now.difference(lastEmptyDateTime).inSeconds;
+      final intervalsToSkip = elapsedSeconds ~/ _averageTimeToRestock + 1;
+      projected = lastEmptyDateTime.add(
+        Duration(seconds: _averageTimeToRestock * intervalsToSkip),
+      );
+    }
+
+    return (dateTime: projected, expectedSoon: false);
+  }
+
+  String _projectedRestockText() {
+    if (!_hasProjectedRestockDateTime ||
+        _projectedRestockDateTime.isAfter(DateTime.now().add(const Duration(days: 7)))) {
+      return 'unknown';
+    }
+
+    if (_restockExpectedSoon) return 'anytime soon';
+
+    return TimeFormatter(
+      inputTime: _projectedRestockDateTime,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).formatHourWithDaysElapsed(includeToday: true);
   }
 
   @override
@@ -488,14 +528,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                             ),
                             Text(
-                              _projectedRestockDateTime.isAfter(DateTime.now().add(const Duration(days: 7))) ||
-                                      _projectedRestockDateTime.isBefore(DateTime.now().toLocal())
-                                  ? 'unknown'
-                                  : TimeFormatter(
-                                      inputTime: _projectedRestockDateTime,
-                                      timeFormatSetting: _settingsProvider.currentTimeFormat,
-                                      timeZoneSetting: _settingsProvider.currentTimeZone,
-                                    ).formatHourWithDaysElapsed(includeToday: true),
+                              _projectedRestockText(),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: reliabilityColor,
@@ -1139,7 +1172,13 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       // TIMES TO RESTOCK
       final lastEmpty = firestoreData.get('lastEmpty');
       final lastEmptyDateTime = DateTime.fromMillisecondsSinceEpoch(lastEmpty * 1000);
-      _projectedRestockDateTime = lastEmptyDateTime.add(Duration(seconds: _averageTimeToRestock));
+      _hasProjectedRestockDateTime = _averageTimeToRestock > 0 && lastEmpty > 0;
+      _restockExpectedSoon = false;
+      if (_hasProjectedRestockDateTime) {
+        final projectedRestock = _nextProjectedRestockDateTime(lastEmptyDateTime);
+        _projectedRestockDateTime = projectedRestock.dateTime;
+        _restockExpectedSoon = projectedRestock.expectedSoon;
+      }
 
       // CURRENT DEPLETION TREND
       if (widget.foreignStock.quantity! > 0) {
