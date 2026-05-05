@@ -3018,6 +3018,17 @@ class WebViewFullState extends State<WebViewFull>
     _assessProfileAgeToWords();
     _assessBugReportsWarning();
     _assessOldLoaderRedirect(document);
+    await _assessCityShopBuy100();
+  }
+
+  Future _assessCityShopBuy100() async {
+    if (!_currentUrl.contains('shops.php') &&
+        !_currentUrl.contains('bigalgunshop.php') &&
+        !_currentUrl.contains('token_shop.php')) {
+      return;
+    }
+
+    await webViewController?.evaluateJavascript(source: cityShopsBuy100JS());
   }
 
   Future _assessSectionsWithWidgets() async {
