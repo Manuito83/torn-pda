@@ -107,6 +107,33 @@ class EstimatedStatsDialog extends StatelessWidget {
       ],
     );
 
+    Widget awardsWidget = const SizedBox.shrink();
+    if (estimatedStatsPayload.awardsCompare != null) {
+      String awardsRelative = "";
+      if (estimatedStatsPayload.awardsCompare! > 0) {
+        awardsRelative = "${estimatedStatsPayload.awardsCompare!.abs()} MORE than you";
+      } else if (estimatedStatsPayload.awardsCompare == 0) {
+        awardsRelative = "SAME as you";
+      } else {
+        awardsRelative = "${estimatedStatsPayload.awardsCompare!.abs()} LESS than you";
+      }
+
+      awardsWidget = Row(
+        children: [
+          const Text(
+            "> Awards: ",
+            style: TextStyle(fontSize: 14),
+          ),
+          Flexible(
+            child: Text(
+              awardsRelative,
+              style: TextStyle(color: estimatedStatsPayload.awardsColor, fontSize: 14),
+            ),
+          ),
+        ],
+      );
+    }
+
     final Widget sslWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,6 +234,11 @@ class EstimatedStatsDialog extends StatelessWidget {
               padding: const EdgeInsets.only(top: 20, left: 4),
               child: cansWidget,
             ),
+            if (estimatedStatsPayload.awardsCompare != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: awardsWidget,
+              ),
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4),
               child: sslWidget,

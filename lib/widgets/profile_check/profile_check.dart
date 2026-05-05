@@ -643,6 +643,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     Color enhancementColor = Colors.white;
     int cansComparison = 0;
     Color cansColor = Colors.orange;
+    int awardsComparison = 0;
+    Color awardsColor = Colors.orange;
     Color sslColor = Colors.green;
     bool sslProb = true;
     int ecstasy = 0;
@@ -708,6 +710,20 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         style: TextStyle(color: cansColor, fontSize: 11),
       );
 
+      // AWARDS
+      final int otherAwards = otherProfile.awards ?? 0;
+      final int myAwards = UserHelper.awards;
+      awardsComparison = otherAwards - myAwards;
+      if (awardsComparison < 0) {
+        awardsColor = Colors.green;
+      } else if (awardsComparison > 0) {
+        awardsColor = Colors.red;
+      }
+      final Text awardsText = Text(
+        "AWD",
+        style: TextStyle(color: awardsColor, fontSize: 11),
+      );
+
       /// SSL
       /// If (xan + esc) > 150, SSL is blank;
       /// if (esc + xan) < 150 & LSD < 50, SSL is green;
@@ -741,6 +757,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       additional.add(enhancementText);
       additional.add(const SizedBox(width: 5));
       additional.add(cansText);
+      additional.add(const SizedBox(width: 5));
+      additional.add(awardsText);
       additional.add(const SizedBox(width: 5));
       additional.add(sslWidget);
       additional.add(const SizedBox(width: 5));
@@ -906,6 +924,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                               themeProvider: widget.themeProvider!,
                               estimatedStatsRange: estimatedStats,
+                              awardsCompare: awardsComparison,
+                              awardsColor: awardsColor,
                             ),
                             ffScouterStatsPayload:
                                 _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
@@ -1150,6 +1170,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                   otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                                   themeProvider: widget.themeProvider!,
                                   estimatedStatsRange: estimatedStats,
+                                  awardsCompare: awardsComparison,
+                                  awardsColor: awardsColor,
                                 );
 
                                 final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
@@ -1261,6 +1283,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                               themeProvider: widget.themeProvider!,
                               estimatedStatsRange: estimatedStats,
+                              awardsCompare: awardsComparison,
+                              awardsColor: awardsColor,
                             );
 
                             final ffScouterStatsPayload = FFScouterStatsPayload(targetId: otherProfile.id ?? 0);
