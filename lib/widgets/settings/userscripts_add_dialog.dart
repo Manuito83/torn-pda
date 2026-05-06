@@ -742,6 +742,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                                 isFromRemote: true, // isFromRemote
                                 customApiKey: _customApiKey,
                                 customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
+                                requiredSources: _fetchedRemoteModel!.requiredSources,
                               );
 
                               BotToast.showText(
@@ -777,6 +778,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       final inputName = _addNameController.text;
       final inputTime = _originalTime;
       final inputSource = _addSourceController.text;
+      Map<String, dynamic>? metaMap;
+      List<String> requiredSources = const [];
 
       _isCurrentScriptCandidateForCustomApiKey = inputSource.contains(pdaKeyWord);
 
@@ -789,12 +792,34 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         return;
       }
 
+      try {
+        metaMap = UserScriptModel.parseHeader(inputSource);
+        requiredSources = await _fetchRequiredSourcesForSave(metaMap);
+      } on Exception catch (e) {
+        if (e.toString().contains("No header found")) {
+          metaMap = null;
+        } else {
+          BotToast.showText(
+            align: const Alignment(0, 0),
+            clickClose: true,
+            text: "Error saving script: $e",
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+            contentColor: Colors.orange[800]!,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+          return;
+        }
+      }
+
       Navigator.of(context).pop();
 
       // This is a new script
       if (!widget.editingExistingScript) {
         try {
-          final metaMap = UserScriptModel.parseHeader(inputSource);
+          if (metaMap == null) {
+            throw Exception("No header found in userscript.");
+          }
           _userScriptsProvider.addUserScriptByModel(
             UserScriptModel.fromMetaMap(
               metaMap,
@@ -803,6 +828,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               time: inputTime,
               customApiKey: _customApiKey,
               customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
+              requiredSources: requiredSources,
             ),
           );
         } on Exception catch (e) {
@@ -861,6 +887,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
           isFromRemote: false,
           customApiKey: _customApiKey,
           customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
+          requiredSources: requiredSources,
         );
         if (!couldParseHeader) {
           BotToast.showText(
@@ -877,6 +904,12 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       _isCurrentScriptCandidateForCustomApiKey = false;
       _showCustomApiKeyButton = false;
     }
+  }
+
+  Future<List<String>> _fetchRequiredSourcesForSave(Map<String, dynamic> metaMap) async {
+    final requires = (metaMap["requires"] as List<String>?) ?? const <String>[];
+    if (requires.isEmpty) return const [];
+    return UserScriptModel.fetchRequiredSources(requires);
   }
 
   void _saveScriptWithoutApiKeyWarning() {

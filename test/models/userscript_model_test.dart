@@ -260,6 +260,7 @@ void main() {
         isExample: false,
         customApiKey: 'testkey',
         customApiKeyCandidate: true,
+        requiredSources: ['window.requiredLoaded = true;'],
       );
 
       final json = original.toJson();
@@ -273,6 +274,36 @@ void main() {
       expect(restored.isExample, original.isExample);
       expect(restored.customApiKey, original.customApiKey);
       expect(restored.customApiKeyCandidate, original.customApiKeyCandidate);
+      expect(restored.requiredSources, original.requiredSources);
+    });
+
+    test('sourceWithRequires prepends fetched dependencies in order', () {
+      final model = UserScriptModel(
+        name: 'With Requires',
+        source: 'window.mainLoaded = true;',
+        requiredSources: [
+          'window.firstRequired = true;',
+          'window.secondRequired = true;',
+        ],
+        isExample: false,
+      );
+
+      expect(
+        model.sourceWithRequires,
+        'window.firstRequired = true;\n;\n'
+        'window.secondRequired = true;\n;\n'
+        'window.mainLoaded = true;',
+      );
+    });
+
+    test('sourceWithRequires returns original source when no dependencies are cached', () {
+      final model = UserScriptModel(
+        name: 'Without Requires',
+        source: 'window.mainLoaded = true;',
+        isExample: false,
+      );
+
+      expect(model.sourceWithRequires, 'window.mainLoaded = true;');
     });
   });
 }
