@@ -717,6 +717,10 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                               return;
                             }
 
+                            if (!await _confirmGrantedAccess(_fetchedRemoteModel!.grants)) {
+                              return;
+                            }
+
                             Navigator.of(context).pop();
 
                             if (!widget.editingExistingScript) {
@@ -777,6 +781,24 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       final inputName = _addNameController.text;
       final inputTime = _originalTime;
       final inputSource = _addSourceController.text;
+      Map<String, dynamic>? metaMap;
+
+      try {
+        metaMap = UserScriptModel.parseHeader(inputSource);
+      } on Exception catch (e) {
+        if (!e.toString().contains("No header found")) {
+          BotToast.showText(
+            align: const Alignment(0, 0),
+            clickClose: true,
+            text: "Error parsing script: $e",
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+            contentColor: Colors.orange[800]!,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+          return;
+        }
+      }
 
       _isCurrentScriptCandidateForCustomApiKey = inputSource.contains(pdaKeyWord);
 
@@ -789,12 +811,18 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         return;
       }
 
+      if (!await _confirmGrantedAccess((metaMap?["grants"] as List<String>?) ?? const <String>[])) {
+        return;
+      }
+
       Navigator.of(context).pop();
 
       // This is a new script
       if (!widget.editingExistingScript) {
         try {
-          final metaMap = UserScriptModel.parseHeader(inputSource);
+          if (metaMap == null) {
+            throw Exception("No header found in userscript.");
+          }
           _userScriptsProvider.addUserScriptByModel(
             UserScriptModel.fromMetaMap(
               metaMap,
@@ -877,6 +905,49 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       _isCurrentScriptCandidateForCustomApiKey = false;
       _showCustomApiKeyButton = false;
     }
+  }
+
+  Future<bool> _confirmGrantedAccess(List<String> grants) async {
+    final visibleGrants = grants.where((grant) => grant.trim().isNotEmpty && grant.trim() != "none").toList();
+    if (visibleGrants.isEmpty) return true;
+
+    final accepted = await showDialog<bool>(
+      useRootNavigator: false,
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Script permissions"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                const Text(
+                  "This script declares access to the following userscript APIs. Only continue if you trust the script and understand what these permissions are used for.",
+                ),
+                const SizedBox(height: 12),
+                ...visibleGrants.map(
+                  (grant) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text("- $grant"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+            ),
+            TextButton(
+              child: const Text("Continue"),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    return accepted ?? false;
   }
 
   void _saveScriptWithoutApiKeyWarning() {
