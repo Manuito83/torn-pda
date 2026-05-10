@@ -102,11 +102,11 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.13.4 - Build 649 - built 04/04/2026
+    // v3.13.4 - Build 650 - built 05/04/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.13.4'
-        ..date = '10 MAY 2026'
+        ..date = '12 MAY 2026'
         ..features = [
           ComplexFeature(
             "Drawer sections can now be reordered, hidden and customized",
@@ -129,6 +129,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Browser: restore scroll position on reload is now optional",
           "Fixed issue with stock alerts not accepting decimal values [DarXide]",
           "Fixed time calculation for delayed travel departure [DarXide]",
+          "Fixed foreign restock estimates [DarXide]",
           if (Platform.isAndroid) "Fixed several Live Updates issues [bombel]",
           "Fixed alarm icon not turning green when active in some devices",
           "Fixed travel return button not working in some cases",
