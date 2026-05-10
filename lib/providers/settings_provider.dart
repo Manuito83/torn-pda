@@ -316,6 +316,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _restoreScrollAfterReload = true;
+  bool get restoreScrollAfterReload => _restoreScrollAfterReload;
+  set restoreScrollAfterReload(bool value) {
+    _restoreScrollAfterReload = value;
+    Prefs().setRestoreScrollAfterReload(_restoreScrollAfterReload);
+    notifyListeners();
+  }
+
   BrowserRefreshSetting? _browserRefreshMethod = BrowserRefreshSetting.both;
   BrowserRefreshSetting? get browserRefreshMethod => _browserRefreshMethod;
   set changeBrowserRefreshMethod(BrowserRefreshSetting value) {
@@ -1351,6 +1359,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _hideProfileFab = false;
+  bool get hideProfileFab => _hideProfileFab;
+  set hideProfileFab(bool value) {
+    _hideProfileFab = value;
+    Prefs().setHideProfileFab(value);
+    notifyListeners();
+  }
+
   var _profileCheckAttackEnabled = true;
   bool get profileCheckAttackEnabled => _profileCheckAttackEnabled;
   set profileCheckAttackEnabled(bool value) {
@@ -1499,6 +1515,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<String> _drawerSectionOrder = [];
+  List<String> get drawerSectionOrder => _drawerSectionOrder;
+  set drawerSectionOrder(List<String> value) {
+    _drawerSectionOrder = value;
+    Prefs().setDrawerSectionOrder(value);
+    notifyListeners();
+  }
+
+  List<String> _drawerSectionHidden = [];
+  List<String> get drawerSectionHidden => _drawerSectionHidden;
+  set drawerSectionHidden(List<String> value) {
+    _drawerSectionHidden = value;
+    Prefs().setDrawerSectionHidden(value);
+    notifyListeners();
+  }
+
   bool _showMemoryInDrawer = false;
   bool get showMemoryInDrawer => _showMemoryInDrawer;
   set showMemoryInDrawer(bool value) {
@@ -1614,6 +1646,7 @@ class SettingsProvider extends ChangeNotifier {
     _browserExtendHeightForKeyboard = await Prefs().getBrowserExtendHeightForKeyboard();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
+    _restoreScrollAfterReload = await Prefs().getRestoreScrollAfterReload();
     _highRefreshRateEnabled = await Prefs().getHighRefreshRateEnabled();
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
@@ -1826,6 +1859,7 @@ class SettingsProvider extends ChangeNotifier {
     _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
+    _hideProfileFab = await Prefs().getHideProfileFab();
     _profileCheckAttackEnabled = await Prefs().getProfileCheckAttackEnabled();
     _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
 
@@ -1843,6 +1877,15 @@ class SettingsProvider extends ChangeNotifier {
     _tctClockHighlightsEvents = await Prefs().getTctClockHighlightsEvents();
 
     _showWikiInDrawer = await Prefs().getShowWikiInDrawer();
+
+    _drawerSectionOrder = await Prefs().getDrawerSectionOrder();
+    _drawerSectionHidden = await Prefs().getDrawerSectionHidden();
+
+    // First time initialization: hide divider2 by default
+    if (_drawerSectionOrder.isEmpty && _drawerSectionHidden.isEmpty) {
+      _drawerSectionHidden = ['divider2'];
+      Prefs().setDrawerSectionHidden(_drawerSectionHidden);
+    }
 
     await WebviewConfig().generateUserAgentForUser();
 
@@ -1882,8 +1925,9 @@ class SettingsProvider extends ChangeNotifier {
       final stValentineEnd = DateTime(now.year, 02, 15, 10, 30);
       final stPatrickStart = DateTime(now.year, 03, 16, 10, 30);
       final stPatrickEnd = DateTime(now.year, 03, 18, 10, 30);
-      final easterStart = DateTime(now.year, 04, 17, 10, 30);
-      final easterEnd = DateTime(now.year, 04, 24, 10, 30);
+      final easterSunday = _calculateEasterSunday(now.year);
+      final easterStart = easterSunday.subtract(const Duration(days: 3)).add(const Duration(hours: 10, minutes: 30));
+      final easterEnd = easterSunday.add(const Duration(days: 4)).add(const Duration(hours: 10, minutes: 30));
       final halloweenStart = DateTime(now.year, 10, 25);
       final halloweenEnd = DateTime(now.year, 11, 1, 23, 59, 59);
       final christmasStart = DateTime(now.year, 12, 19);
@@ -1954,6 +1998,25 @@ class SettingsProvider extends ChangeNotifier {
     } on PlatformException catch (e) {
       log("Failed to reset icon: ${e.message}");
     }
+  }
+
+  /// Calculates Easter Sunday for a given year
+  static DateTime _calculateEasterSunday(int year) {
+    final a = year % 19;
+    final b = year ~/ 100;
+    final c = year % 100;
+    final d = b ~/ 4;
+    final e = b % 4;
+    final f = (b + 8) ~/ 25;
+    final g = (b - f + 1) ~/ 3;
+    final h = (19 * a + b - d - g + 15) % 30;
+    final i = c ~/ 4;
+    final k = c % 4;
+    final l = (32 + 2 * e + 2 * i - h - k) % 7;
+    final m = (a + 11 * h + 22 * l) ~/ 451;
+    final month = (h + l - 7 * m + 114) ~/ 31;
+    final day = (h + l - 7 * m + 114) % 31 + 1;
+    return DateTime(year, month, day);
   }
 
   /// Determine whether the user is still using OC v1 or is already in OC v2

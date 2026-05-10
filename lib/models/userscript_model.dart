@@ -5,6 +5,7 @@
 // Dart imports:
 import 'dart:convert';
 import "package:http/http.dart" as http;
+import 'userscripts/script_header_model.dart';
 
 UserScriptModel userScriptModelFromJson(String str) => UserScriptModel.fromJson(json.decode(str));
 
@@ -35,6 +36,8 @@ class UserScriptModel {
     required this.isExample,
     this.customApiKey = "",
     this.customApiKeyCandidate = false,
+    this.grants = const [],
+    this.requires = const [],
   });
 
   bool enabled;
@@ -49,6 +52,8 @@ class UserScriptModel {
   bool isExample;
   String customApiKey;
   bool customApiKeyCandidate;
+  List<String> grants;
+  List<String> requires;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     // First check if is old model
@@ -77,6 +82,8 @@ class UserScriptModel {
         url: url,
         updateStatus: updateStatus,
         isExample: isExample,
+        grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
+        requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
       );
     } else {
       return UserScriptModel(
@@ -92,6 +99,8 @@ class UserScriptModel {
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
         customApiKey: json["customApiKey"] ?? "",
         customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
+        grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
+        requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
       );
     }
   }
@@ -127,6 +136,8 @@ class UserScriptModel {
       isExample: isExample ?? false,
       customApiKey: customApiKey ?? "",
       customApiKeyCandidate: customApiKeyCandidate ?? false,
+      grants: metaMap["grants"] ?? [],
+      requires: metaMap["requires"] ?? [],
     );
   }
 
@@ -163,19 +174,26 @@ class UserScriptModel {
   }
 
   static bool isNewerVersion(String version1, String version2) {
-    final versionRegex = RegExp(r"^(?:\d+\.)+\d+$");
-    if (!versionRegex.hasMatch(version1) || !versionRegex.hasMatch(version2)) {
-      // Can't compare versions if they don't match the regex, so just return true if they are different
-      return version1 != version2;
-    }
-    final List<String> version1List = version1.split(".");
-    final List<String> version2List = version2.split(".");
-    for (int i = 0; i < version1List.length; i++) {
-      if (version2List.length <= i || int.parse(version1List[i]) > int.parse(version2List[i])) {
-        return true;
+    try {
+      final v1 = VersionModel.parse(version1);
+      final v2 = VersionModel.parse(version2);
+      return v1.compareTo(v2) > 0;
+    } catch (e) {
+      // Fall back to simple string comparison if version parsing fails
+      final versionRegex = RegExp(r"^(?:\d+\.)+\d+$");
+      if (!versionRegex.hasMatch(version1) || !versionRegex.hasMatch(version2)) {
+        // Can't compare versions if they don't match the regex, so just return true if they are different
+        return version1 != version2;
       }
+      final List<String> version1List = version1.split(".");
+      final List<String> version2List = version2.split(".");
+      for (int i = 0; i < version1List.length; i++) {
+        if (version2List.length <= i || int.parse(version1List[i]) > int.parse(version2List[i])) {
+          return true;
+        }
+      }
+      return false;
     }
-    return false;
   }
 
   Map<String, dynamic> toJson() => {
@@ -191,6 +209,8 @@ class UserScriptModel {
         "time": time == UserScriptTime.start ? "start" : "end",
         "customApiKey": customApiKey,
         "customApiKeyCandidate": customApiKeyCandidate,
+        "grants": grants,
+        "requires": requires,
       };
 
   static Map<String, dynamic> parseHeader(String source) {
@@ -201,7 +221,11 @@ class UserScriptModel {
       throw Exception("No header found in userscript.");
     }
     Iterable<RegExpMatch> metaMatches = RegExp(r"^(?:^|\n)\s*\/\/\x20(@\S+)(.*)$", multiLine: true).allMatches(meta);
-    Map<String, dynamic> metaMap = {"@match": <String>[]};
+    Map<String, dynamic> metaMap = {
+      "@match": <String>[],
+      "@grant": <String>[],
+      "@require": <String>[],
+    };
     for (final match in metaMatches) {
       if (match.groupCount < 2) {
         continue;
@@ -209,17 +233,26 @@ class UserScriptModel {
       if (match.group(1) == null || match.group(2) == null) {
         continue;
       }
-      if (match.group(1)?.toLowerCase() == "@match") {
-        metaMap["@match"].add(match.group(2)!.trim());
+      final key = match.group(1)!.trim().toLowerCase();
+      final value = match.group(2)!.trim();
+      
+      if (key == "@match") {
+        metaMap["@match"].add(value);
+      } else if (key == "@grant") {
+        metaMap["@grant"].add(value);
+      } else if (key == "@require") {
+        metaMap["@require"].add(value);
       } else {
-        metaMap[match.group(1)!.trim().toLowerCase()] = match.group(2)!.trim();
+        metaMap[key] = value;
       }
     }
     return {
       "name": metaMap["@name"],
       "version": metaMap["@version"],
       "author": metaMap["@author"],
-      "matches": metaMap["@match"].isEmpty ? ["*"] : metaMap["@match"],
+      "matches": (metaMap["@match"] as List<String>).isEmpty ? ["*"] : metaMap["@match"],
+      "grants": metaMap["@grant"],
+      "requires": metaMap["@require"],
       "injectionTime": metaMap["@run-at"] ?? "document-end",
       "downloadURL": metaMap["@downloadurl"],
       "updateURL": metaMap["@updateurl"],
@@ -230,7 +263,84 @@ class UserScriptModel {
   bool shouldInject(String url, [UserScriptTime? time]) =>
       enabled &&
       (this.time == time || time == null) &&
-      matches.any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
+      matches.any((match) => _matchPattern(match, url));
+
+  /// Converts a Tampermonkey-style @match pattern to a [RegExp].
+  ///
+  /// Supports standard patterns like `*://*.example.com/path/*` where:
+  /// - Scheme `*` matches http or https
+  /// - Host `*.example.com` matches any subdomain (including none)
+  /// - `*` in the path matches any characters
+  ///
+  /// For backwards compatibility, patterns without a protocol get `*://`
+  /// prepended, and patterns without a path get `/*` appended.
+  static RegExp _patternToRegex(String pattern) {
+    final fullMatch = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+    RegExpMatch? match = fullMatch;
+
+    if (match == null) {
+      // Try without a path (e.g. "https://example.com")
+      final noPath = RegExp(r'^(https?|file|\*):\/\/([^/]*)$').firstMatch(pattern);
+      if (noPath != null) {
+        pattern = '$pattern/*';
+        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      }
+    }
+
+    if (match == null) {
+      // Legacy pattern without protocol – prepend *://
+      pattern = '*://$pattern';
+      match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      if (match == null) {
+        // Still no path component
+        pattern = '$pattern/*';
+        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      }
+    }
+
+    if (match == null) {
+      throw FormatException('Invalid @match pattern: $pattern');
+    }
+
+    final scheme = match.group(1)!;
+    final host = match.group(2)!;
+    final path = match.group(3)!;
+
+    final schemeRe = scheme == '*' ? 'https?' : RegExp.escape(scheme);
+
+    String hostRe = RegExp.escape(host);
+    // Handle *.example.com  →  optional subdomain prefix
+    if (host.startsWith('*.')) {
+      hostRe = '(?:[^/]+\\.)?${RegExp.escape(host.substring(2))}';
+    } else {
+      hostRe = hostRe.replaceAll(r'\*', '[^/]*');
+    }
+
+    final pathRe = RegExp.escape(path).replaceAll(r'\*', '.*');
+
+    return RegExp('^$schemeRe://$hostRe/$pathRe\$');
+  }
+
+  /// Returns `true` when [url] satisfies the given @match [pattern].
+  ///
+  /// A bare `*` is kept as the universal wildcard for backwards compatibility.
+  /// Invalid patterns silently return `false` to avoid breaking the app.
+  static bool _matchPattern(String pattern, String url) {
+    if (pattern == '*') return true;
+    try {
+      // Normalise URLs without a path (e.g. "https://example.com") so
+      // the regex always has a "/" to match against.
+      final uri = Uri.tryParse(url);
+      if (uri != null && uri.path.isEmpty) {
+        url = '$url/';
+      }
+      return _patternToRegex(pattern).hasMatch(url);
+    } catch (_) {
+      // Fall back to the old "contains" heuristic so we don't break scripts
+      // that use a non-standard pattern we haven't accounted for.
+      return url.contains(pattern.replaceAll('*', ''));
+    }
+  }
 
   void update({
     bool? enabled,

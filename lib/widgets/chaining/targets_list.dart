@@ -78,9 +78,45 @@ class TargetsListState extends State<TargetsList> {
             label: 'Remove',
             backgroundColor: Colors.red,
             icon: Icons.delete,
-            onPressed: (context) {
+            onPressed: (context) async {
+              final target = widget.targets[index];
+              final targetName = target.name ?? "target";
+              final hasNote = playerNote != null && playerNote.note.trim().isNotEmpty;
+
+              if (hasNote) {
+                final action = await showDialog<String>(
+                  context: this.context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Remove target?'),
+                    content: Text(
+                      '$targetName has a note attached. Do you want to keep or also delete the note?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, 'cancel'),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, 'remove'),
+                        child: const Text('Remove'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, 'remove_and_delete_note'),
+                        child: const Text('Remove + delete note'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (!mounted || action == null || action == 'cancel') return;
+
+                if (action == 'remove_and_delete_note') {
+                  Get.find<PlayerNotesController>().removePlayerNote(target.playerId.toString());
+                }
+              }
+
               BotToast.showText(
-                text: 'Deleted ${widget.targets[index].name}!',
+                text: 'Deleted $targetName!',
                 textStyle: const TextStyle(
                   fontSize: 14,
                   color: Colors.white,
@@ -89,7 +125,7 @@ class TargetsListState extends State<TargetsList> {
                 duration: const Duration(seconds: 5),
                 contentPadding: const EdgeInsets.all(10),
               );
-              _targetsProvider.deleteTarget(widget.targets[index]);
+              _targetsProvider.deleteTarget(target);
             },
           ),
         ],

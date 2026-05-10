@@ -13,7 +13,7 @@ class LiveUpdateChannelBridgeTest {
     fun startCallReturnsStructuredResult() {
         val manager = FakeManager()
         val emitter = RecordingEmitter()
-        val bridge = LiveUpdateChannelBridge(manager, emitter)
+        val bridge = LiveUpdateChannelBridge(manager, manager, emitter)
 
         val call = MethodCall("startTravelActivity", mapOf("foo" to "bar"))
         val result = RecordingResult()
@@ -34,7 +34,7 @@ class LiveUpdateChannelBridgeTest {
     fun endCallPassesSessionId() {
         val manager = FakeManager()
         val emitter = RecordingEmitter()
-        val bridge = LiveUpdateChannelBridge(manager, emitter)
+        val bridge = LiveUpdateChannelBridge(manager, manager, emitter)
 
         val call = MethodCall("endTravelActivity", mapOf("sessionId" to "session-123"))
         val result = RecordingResult()
@@ -50,7 +50,7 @@ class LiveUpdateChannelBridgeTest {
     fun capabilityRequestsReturnCachedSnapshot() {
         val manager = FakeManager()
         val emitter = RecordingEmitter()
-        val bridge = LiveUpdateChannelBridge(manager, emitter)
+        val bridge = LiveUpdateChannelBridge(manager, manager, emitter)
 
         val result = RecordingResult()
         bridge.onMethodCall(MethodCall("getLiveUpdateCapabilities", null), result)
@@ -63,7 +63,7 @@ class LiveUpdateChannelBridgeTest {
     fun managerEventsEmitThroughEmitter() {
         val manager = FakeManager()
         val emitter = RecordingEmitter()
-        val bridge = LiveUpdateChannelBridge(manager, emitter)
+        val bridge = LiveUpdateChannelBridge(manager, manager, emitter)
 
         manager.emitStatus()
         manager.emitCapability()
@@ -84,7 +84,7 @@ class LiveUpdateChannelBridgeTest {
     fun unknownMethodReturnsNotImplemented() {
         val manager = FakeManager()
         val emitter = RecordingEmitter()
-        val bridge = LiveUpdateChannelBridge(manager, emitter)
+        val bridge = LiveUpdateChannelBridge(manager, manager, emitter)
 
         val result = RecordingResult()
         bridge.onMethodCall(MethodCall("unknown", null), result)

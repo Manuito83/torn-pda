@@ -33,6 +33,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
+import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/company/employees_model.dart';
 import 'package:torn_pda/models/education_model.dart';
@@ -130,7 +131,7 @@ extension ProfileNotificationExtension on ProfileNotification {
 }
 
 class ProfilePage extends StatefulWidget {
-  final Function callBackSection;
+  final Function(DrawerSection) callBackSection;
   final Function disableTravelSection;
 
   const ProfilePage({
@@ -287,6 +288,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _showHeaderIcons = false;
   bool _showShortcutEditIcon = true;
   bool _dedicatedTravelCard = false;
+  bool _hideProfileFab = false;
 
   late ChainModel _chainModel;
 
@@ -438,11 +440,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   child: buildAppBar(),
                 )
               : null,
-          floatingActionButton: Stack(
-            children: [
-              buildSpeedDial(),
-            ],
-          ),
+          floatingActionButton: _hideProfileFab
+              ? null
+              : Stack(
+                  children: [
+                    buildSpeedDial(),
+                  ],
+                ),
           body: Container(
             color: _themeProvider!.canvas,
             child: FutureBuilder(
@@ -897,6 +901,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
             final dedTravel = await Prefs().getDedicatedTravelCard();
             final disableTravel = await Prefs().getDisableTravelSection();
+            final hideProfileFab = await Prefs().getHideProfileFab();
             final expandEvents = await Prefs().getExpandEvents();
             final eventsNumber = await Prefs().getEventsShowNumber();
             final expandMessages = await Prefs().getExpandMessages();
@@ -923,6 +928,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _showHeaderIcons = headerIcons;
               _showShortcutEditIcon = showShortcutEditIcon;
               _dedicatedTravelCard = dedTravel;
+              _hideProfileFab = hideProfileFab;
               _eventsExpController.expanded = expandEvents;
               _messagesShowNumber = messagesNumber;
               _eventsShowNumber = eventsNumber;
@@ -2260,7 +2266,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               child: GestureDetector(
                                 onTap: () {
                                   // Open chaining section
-                                  widget.callBackSection(2);
+                                  widget.callBackSection(DrawerSection.chaining);
                                 },
                                 child: const Icon(
                                   MdiIcons.linkVariant,
@@ -2541,7 +2547,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _refreshActiveAlarmKitIds() async {
     if (!Platform.isIOS) return;
     if (!_isAlarmKitAvailableIos) return;
-    if (!_hasProfileAlarmMode()) return;
     final ids = await AlarmKitServiceIos.listLogicalIds();
 
     if (mounted) {
@@ -2551,20 +2556,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ..addAll(ids);
       });
     }
-  }
-
-  bool _hasProfileAlarmMode() {
-    return _travelNotificationType == NotificationType.alarm ||
-        _energyNotificationType == NotificationType.alarm ||
-        _nerveNotificationType == NotificationType.alarm ||
-        _lifeNotificationType == NotificationType.alarm ||
-        _drugsNotificationType == NotificationType.alarm ||
-        _medicalNotificationType == NotificationType.alarm ||
-        _boosterNotificationType == NotificationType.alarm ||
-        _hospitalNotificationType == NotificationType.alarm ||
-        _jailNotificationType == NotificationType.alarm ||
-        _rankedWarNotificationType == NotificationType.alarm ||
-        _raceStartNotificationType == NotificationType.alarm;
   }
 
   Widget _notificationIcon(
@@ -4683,6 +4674,25 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 child: Text('Endurance: '),
                               ),
                               SelectionArea(child: Text(decimalFormat.format(_miscModel!.workStats?.endurance ?? 0))),
+                            ],
+                          ),
+                          SizedBox(
+                            width: 50,
+                            child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Total: ',
+                                ),
+                              ),
+                              SelectionArea(
+                                child: Text(
+                                  decimalFormat.format(_miscModel!.workStats?.total ?? 0),
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -7294,6 +7304,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       workString += '\nManual labor: ${decimalFormat.format(_miscModel!.workStats?.manualLabor)}';
       workString += '\nIntelligence: ${decimalFormat.format(_miscModel!.workStats?.intelligence)}';
       workString += '\nEndurance: ${decimalFormat.format(_miscModel!.workStats?.endurance)}';
+      workString += '\n-------';
+      workString += '\nTotal: ${decimalFormat.format(_miscModel!.workStats?.total)}';
       return workString;
     }
 
@@ -7606,6 +7618,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _showHeaderIcons = await Prefs().getShowHeaderIcons();
     _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
+    _hideProfileFab = await Prefs().getHideProfileFab();
 
     if (Platform.isIOS) {
       _isAlarmKitAvailableIos = await AlarmKitServiceIos.isAvailable();
@@ -8011,22 +8024,36 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         return;
       }
 
-      await AlarmKitServiceIos.setAlarm(
-        targetTime: alarmDateTime,
-        label: message,
-        id: descriptor.alarmId,
-        metadata: AlarmKitServiceIos.buildMetadata(
-          alarmId: descriptor.alarmId,
-          context: descriptor.context,
-          details: 'Triggers at ${TimeFormatter(
-            inputTime: alarmDateTime,
-            timeFormatSetting: _settingsProvider!.currentTimeFormat,
-            timeZoneSetting: _settingsProvider!.currentTimeZone,
-          ).formatHourWithDaysElapsed()}',
-          payload: descriptor.payload,
-          timeMillis: alarmDateTime.millisecondsSinceEpoch,
-        ),
-      );
+      try {
+        await AlarmKitServiceIos.setAlarm(
+          targetTime: alarmDateTime,
+          label: message,
+          id: descriptor.alarmId,
+          metadata: AlarmKitServiceIos.buildMetadata(
+            alarmId: descriptor.alarmId,
+            context: descriptor.context,
+            details: 'Triggers at ${TimeFormatter(
+              inputTime: alarmDateTime,
+              timeFormatSetting: _settingsProvider!.currentTimeFormat,
+              timeZoneSetting: _settingsProvider!.currentTimeZone,
+            ).formatHourWithDaysElapsed()}',
+            payload: descriptor.payload,
+            timeMillis: alarmDateTime.millisecondsSinceEpoch,
+          ),
+        );
+      } catch (e) {
+        BotToast.showText(
+          text: 'Could not schedule alarm!',
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: _themeProvider!.getTextColor(Colors.red),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
+        );
+        return;
+      }
       await _refreshActiveAlarmKitIds();
       return;
     }

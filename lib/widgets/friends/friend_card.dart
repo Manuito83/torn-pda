@@ -57,7 +57,7 @@ class FriendCardState extends State<FriendCard> {
     _friend = widget.friendModel;
     _returnLastUpdated();
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Slidable(
       startActionPane: ActionPane(
         extentRatio: 0.25,

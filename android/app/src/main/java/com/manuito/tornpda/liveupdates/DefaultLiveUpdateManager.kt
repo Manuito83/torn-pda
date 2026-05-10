@@ -31,9 +31,9 @@ class DefaultLiveUpdateManager(
         }
 
         val eligibility = eligibilityProvider.evaluate()
-        notifyCapability(eligibility.snapshot)
 
         if (!eligibility.eligible) {
+            notifyCapability(eligibility.snapshot)
             return@synchronized LiveUpdateStartResult(
                 status = LiveUpdateRequestStatus.UNSUPPORTED,
                 reason = eligibility.reason,
@@ -44,6 +44,21 @@ class DefaultLiveUpdateManager(
         val now = System.currentTimeMillis()
         val existingSession = sessionStore.current()
         val sessionId = existingSession?.sessionId ?: sessionIdProvider()
+
+        // Dedup avoids re-popping the heads-up and re-arming WorkManager on every poll.
+        if (existingSession != null
+            && existingSession.contentIdentifier == parsedPayload.contentIdentifier
+            && existingSession.lastHasArrived == parsedPayload.hasArrived
+        ) {
+            return@synchronized LiveUpdateStartResult(
+                status = LiveUpdateRequestStatus.UPDATED,
+                sessionId = sessionId,
+                capabilitySnapshot = eligibility.snapshot,
+            )
+        }
+
+        notifyCapability(eligibility.snapshot)
+
         sessionStore.markActive(
             LiveUpdateSessionState(
                 sessionId = sessionId,
@@ -51,6 +66,7 @@ class DefaultLiveUpdateManager(
                 contentIdentifier = parsedPayload.contentIdentifier,
                 startedAtMs = existingSession?.startedAtMs ?: now,
                 lastUpdatedAtMs = now,
+                lastHasArrived = parsedPayload.hasArrived,
             ),
         )
 

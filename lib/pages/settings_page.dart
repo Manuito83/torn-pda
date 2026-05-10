@@ -25,6 +25,7 @@ import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
 import 'package:torn_pda/widgets/player_notes_list_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
@@ -49,6 +50,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
+import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discreet_info.dart';
@@ -2318,6 +2320,31 @@ class SettingsPageState extends State<SettingsPage> {
         ),
       ),
       SearchableRow(
+        label: "Drawer sections",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Drawer sections")),
+              Flexible(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => DrawerSectionsPage(),
+                      ),
+                    );
+                  },
+                  child: const Text("Configure"),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
         label: "Back button exits app",
         searchText: _searchText,
         child: Padding(
@@ -2333,37 +2360,6 @@ class SettingsPageState extends State<SettingsPage> {
               ),
               Text(
                 "This will only have effect on certain devices, depending on your configuration. Dictates how to proceed when the app detects a back button press or swipe that would otherwise close the app. Note: in the browser, the back button always triggers backwards navigation",
-                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-              )
-            ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Show Wiki",
-        searchText: _searchText,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Flexible(child: Text("Show Wiki")),
-                  Switch(
-                    value: _settingsProvider.showWikiInDrawer,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.showWikiInDrawer = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeThumbColor: Colors.green,
-                  ),
-                ],
-              ),
-              Text(
-                "If enabled, you will have quick access to the Torn wiki from the app drawer menu",
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               )
             ],
@@ -3341,8 +3337,8 @@ class SettingsPageState extends State<SettingsPage> {
   DropdownButton _openSectionDropdown() {
     return DropdownButton<String>(
       value: _openSectionValue,
-      items: const [
-        DropdownMenuItem(
+      items: [
+        const DropdownMenuItem(
           value: "browser",
           child: SizedBox(
             width: 80,
@@ -3353,7 +3349,7 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
-        DropdownMenuItem(
+        const DropdownMenuItem(
           value: "browser_full",
           child: SizedBox(
             width: 80,
@@ -3364,110 +3360,19 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
-        DropdownMenuItem(
-          value: "0",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Profile",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
+        ...DrawerSection.values.map((section) {
+          return DropdownMenuItem(
+            value: section.name,
+            child: SizedBox(
+              width: 80,
+              child: Text(
+                section.title,
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontSize: 14),
               ),
             ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "1",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Travel",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "2",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Chaining",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "3",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Loot",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "4",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Friends",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "5",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Stakeouts",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "6",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Awards",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "7",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Items",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
+          );
+        }),
       ],
       onChanged: (value) {
         Prefs().setDefaultSection(value!);
@@ -4153,8 +4058,14 @@ class SettingsPageState extends State<SettingsPage> {
     }
 
     await Prefs().getDefaultSection().then((onValue) {
+      // Migrate old numeric default section to symbolic names
+      String migrated = onValue;
+      final numericTry = int.tryParse(onValue);
+      if (numericTry != null) {
+        migrated = DrawerSection.fromIndex(numericTry).name;
+      }
       setState(() {
-        _openSectionValue = onValue;
+        _openSectionValue = migrated;
       });
     });
 

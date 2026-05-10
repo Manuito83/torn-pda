@@ -1,4 +1,4 @@
-enum StockSortType { country, name, type, quantity, price, value, profit, arrivalTime, inventoryQuantity }
+enum StockSortType { country, name, type, quantity, price, value, profit, arrivalTime, inventoryQuantity, rarity }
 
 class StockSort {
   StockSortType? type;
@@ -22,6 +22,8 @@ class StockSort {
         description = 'Sort by profit';
       case StockSortType.arrivalTime:
         description = 'Sort by arrival time';
+      case StockSortType.rarity:
+        description = 'Sort by rarity';
       /*
       case StockSortType.inventoryQuantity:
         description = 'Sort by quantity (inventory)';

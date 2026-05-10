@@ -114,6 +114,8 @@ class Prefs {
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
+  final String _kDrawerSectionOrder = "pda_drawerSectionOrder";
+  final String _kDrawerSectionHidden = "pda_drawerSectionHidden";
 
   // Foreign Stocks
   final String _kForeignStockSellingFee = "pda_foreignStockSellingFee";
@@ -125,6 +127,7 @@ class Prefs {
   final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
+  final String _kRestoreScrollAfterReload = "pda_restoreScrollAfterReload";
   final String _kBrowserStyleBottomBarEnabled = "pda_browserStyleAlternativeEnabled";
   final String _kBrowserStyleBottomBarType = "pda_browserStyleAlternativeType";
   final String _kBrowserBottomBarStylePlaceTabsAtBottom = "pda_browserBottomBarStylePlaceTabsAtBottom";
@@ -197,6 +200,7 @@ class Prefs {
   final String _kForeignStocksDataProvider = "pda_foreignStocksDataProvider";
   final String _kActiveRestocks = "pda_activeRestocks";
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
+  final String _kBlacklistedForeignStockItems = "pda_blacklistedForeignStockItems";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
   final String _kRestocksEnabled = "pda_restocksEnabled";
 
@@ -237,6 +241,7 @@ class Prefs {
   final String _kShowShortcutEditIcon = "pda_showShortcutEditIcon";
   final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
+  final String _kHideProfileFab = "pda_hideProfileFab";
   final String _kDisableTravelSection = "pda_disableTravelSection";
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
@@ -1202,11 +1207,34 @@ class Prefs {
   /// Methods for default launch section
   /// ----------------------------
   Future<String> getDefaultSection() async {
-    return await PrefsDatabase.getString(_kDefaultSection, '0');
+    return await PrefsDatabase.getString(_kDefaultSection, 'profile');
   }
 
   Future setDefaultSection(String value) async {
     return await PrefsDatabase.setString(_kDefaultSection, value);
+  }
+
+  /// ----------------------------
+  /// Methods for drawer section order and visibility
+  /// ----------------------------
+  Future<List<String>> getDrawerSectionOrder() async {
+    final raw = await PrefsDatabase.getString(_kDrawerSectionOrder, '');
+    if (raw.isEmpty) return [];
+    return raw.split(',');
+  }
+
+  Future setDrawerSectionOrder(List<String> value) async {
+    return await PrefsDatabase.setString(_kDrawerSectionOrder, value.join(','));
+  }
+
+  Future<List<String>> getDrawerSectionHidden() async {
+    final raw = await PrefsDatabase.getString(_kDrawerSectionHidden, '');
+    if (raw.isEmpty) return [];
+    return raw.split(',');
+  }
+
+  Future setDrawerSectionHidden(List<String> value) async {
+    return await PrefsDatabase.setString(_kDrawerSectionHidden, value.join(','));
   }
 
   /// ----------------------------
@@ -1248,6 +1276,14 @@ class Prefs {
 
   Future setLoadBarBrowser(bool value) async {
     return await PrefsDatabase.setBool(_kLoadBarBrowser, value);
+  }
+
+  Future<bool> getRestoreScrollAfterReload() async {
+    return await PrefsDatabase.getBool(_kRestoreScrollAfterReload, true);
+  }
+
+  Future setRestoreScrollAfterReload(bool value) async {
+    return await PrefsDatabase.setBool(_kRestoreScrollAfterReload, value);
   }
 
   Future<String> getBrowserRefreshMethod() async {
@@ -2032,6 +2068,14 @@ class Prefs {
     return await PrefsDatabase.setStringList(_kHiddenForeignStocks, value);
   }
 
+  Future<List<String>> getBlacklistedForeignStockItems() async {
+    return await PrefsDatabase.getStringList(_kBlacklistedForeignStockItems, []);
+  }
+
+  Future setBlacklistedForeignStockItems(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kBlacklistedForeignStockItems, value);
+  }
+
   Future<bool> getCountriesAlphabeticalFilter() async {
     return await PrefsDatabase.getBool(_kCountriesAlphabeticalFilter, true);
   }
@@ -2341,6 +2385,14 @@ class Prefs {
 
   Future setDedicatedTravelCard(bool value) async {
     return await PrefsDatabase.setBool(_kDedicatedTravelCard, value);
+  }
+
+  Future<bool> getHideProfileFab() async {
+    return await PrefsDatabase.getBool(_kHideProfileFab, false);
+  }
+
+  Future setHideProfileFab(bool value) async {
+    return await PrefsDatabase.setBool(_kHideProfileFab, value);
   }
 
   Future<bool> getDisableTravelSection() async {

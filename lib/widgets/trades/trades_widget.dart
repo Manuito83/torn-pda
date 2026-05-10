@@ -774,7 +774,7 @@ class TradesWidgetState extends State<TradesWidget> {
 
         if (tradeSyncListedItems == 0) {
           items.add(Padding(
-            padding: EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.only(bottom: 6),
             child: Text(
               'PRICED ITEMS',
               style: TextStyle(color: _tradeSyncColor(), fontSize: 8, fontWeight: FontWeight.bold),
@@ -908,8 +908,8 @@ class TradesWidgetState extends State<TradesWidget> {
                   ),
                 ),
               ),
-              SizedBox(width: 4),
-              Icon(Icons.warning_amber_outlined, size: 16, color: Colors.orange),
+              const SizedBox(width: 4),
+              const Icon(Icons.warning_amber_outlined, size: 16, color: Colors.orange),
             ],
           ),
         );

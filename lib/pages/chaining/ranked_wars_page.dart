@@ -18,7 +18,7 @@ import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_card.dart';
-import 'package:torn_pda/widgets/chaining/ranked_war_options.dart';
+
 
 class RankedWarsPage extends StatefulWidget {
   final bool calledFromMenu;
@@ -423,22 +423,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
                   }).toList();
                 },
               ),
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () async {
-                  return showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    barrierDismissible: true,
-                    builder: (BuildContext context) {
-                      return RankedWarOptions(
-                        _themeProvider,
-                        _settingsProvider,
-                      );
-                    },
-                  );
-                },
-              )
+
             ],
       bottom: _settingsProvider!.appBarTop && !_isSearching
           ? TabBar(

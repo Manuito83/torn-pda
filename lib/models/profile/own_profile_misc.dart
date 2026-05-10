@@ -528,6 +528,8 @@ class WorkStats {
   final int? intelligence;
   final int? endurance;
 
+  int get total => (manualLabor ?? 0) + (intelligence ?? 0) + (endurance ?? 0);
+
   WorkStats({
     this.manualLabor,
     this.intelligence,

@@ -609,6 +609,8 @@ class UserScriptsProvider extends ChangeNotifier {
 
   Future<void> loadPreferencesAndScripts() async {
     _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
+    _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
+    _userScriptsNotifyUpdates = await Prefs().getUserScriptsNotifyUpdates();
     _isSafeToSave = false; // Reset safety lock
 
     // Load Global Disable State

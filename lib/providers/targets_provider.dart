@@ -532,7 +532,7 @@ class TargetsProvider extends ChangeNotifier {
 
   void sortTargets(TargetSortType? sortType) async {
     currentSort = sortType ?? TargetSortType.nameAsc;
-    switch (sortType!) {
+    switch (currentSort!) {
       case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level!.compareTo(a.level!));
       case TargetSortType.levelAsc:

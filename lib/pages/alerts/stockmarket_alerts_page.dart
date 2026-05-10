@@ -19,7 +19,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
-import 'package:torn_pda/widgets/alerts/share_price_options.dart';
+
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
@@ -49,7 +49,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   Future? _stocksInitialised;
   bool _errorInitializing = false;
 
-  late StreamSubscription _willPopSubscription;
+  StreamSubscription? _willPopSubscription;
 
   @override
   void initState() {
@@ -75,7 +75,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   @override
   void dispose() {
-    _willPopSubscription.cancel();
+    _willPopSubscription?.cancel();
     super.dispose();
   }
 
@@ -251,22 +251,6 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           },
         ),
         const SizedBox(width: 5),
-        if (!Platform.isWindows)
-          IconButton(
-            icon: const Icon(
-              Icons.settings,
-            ),
-            onPressed: () async {
-              return showDialog(
-                useRootNavigator: false,
-                context: context,
-                barrierDismissible: true,
-                builder: (BuildContext context) {
-                  return SharePriceOptions(_themeProvider, _settingsP, widget.stockMarketInMenuCallback);
-                },
-              );
-            },
-          ),
       ],
     );
   }

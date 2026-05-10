@@ -119,3 +119,95 @@ enum CountryName {
   UNITED_KINGDOM,
   TORN,
 }
+
+/// Centralized country mapping utilities
+/// Consolidates all country code/name conversions in one place
+class CountryHelper {
+  /// 3-letter API code to CountryName enum
+  static const Map<String, CountryName> codeToCountry = {
+    'arg': CountryName.ARGENTINA,
+    'can': CountryName.CANADA,
+    'cay': CountryName.CAYMAN_ISLANDS,
+    'chi': CountryName.CHINA,
+    'haw': CountryName.HAWAII,
+    'jap': CountryName.JAPAN,
+    'mex': CountryName.MEXICO,
+    'sou': CountryName.SOUTH_AFRICA,
+    'swi': CountryName.SWITZERLAND,
+    'uae': CountryName.UAE,
+    'uni': CountryName.UNITED_KINGDOM,
+  };
+
+  /// CountryName enum to full display name
+  static const Map<CountryName, String> countryToFullName = {
+    CountryName.ARGENTINA: 'Argentina',
+    CountryName.CANADA: 'Canada',
+    CountryName.CAYMAN_ISLANDS: 'Cayman Islands',
+    CountryName.CHINA: 'China',
+    CountryName.HAWAII: 'Hawaii',
+    CountryName.JAPAN: 'Japan',
+    CountryName.MEXICO: 'Mexico',
+    CountryName.SOUTH_AFRICA: 'South Africa',
+    CountryName.SWITZERLAND: 'Switzerland',
+    CountryName.UAE: 'UAE',
+    CountryName.UNITED_KINGDOM: 'UK',
+    CountryName.TORN: 'Torn',
+  };
+
+  /// Full/plain name to CountryName enum
+  static const Map<String, CountryName> nameToCountry = {
+    'Argentina': CountryName.ARGENTINA,
+    'Canada': CountryName.CANADA,
+    'Cayman Islands': CountryName.CAYMAN_ISLANDS,
+    'China': CountryName.CHINA,
+    'Hawaii': CountryName.HAWAII,
+    'Japan': CountryName.JAPAN,
+    'Mexico': CountryName.MEXICO,
+    'South Africa': CountryName.SOUTH_AFRICA,
+    'Switzerland': CountryName.SWITZERLAND,
+    'UAE': CountryName.UAE,
+    'United Kingdom': CountryName.UNITED_KINGDOM,
+    'UK': CountryName.UNITED_KINGDOM,
+    'Torn': CountryName.TORN,
+  };
+
+  /// Full name to 3-letter API code (for Firebase cache conversion)
+  static const Map<String, String> nameToCode = {
+    'Argentina': 'arg',
+    'Canada': 'can',
+    'Cayman Islands': 'cay',
+    'China': 'chi',
+    'Hawaii': 'haw',
+    'Japan': 'jap',
+    'Mexico': 'mex',
+    'South Africa': 'sou',
+    'Switzerland': 'swi',
+    'UAE': 'uae',
+    'UK': 'uni',
+    'United Kingdom': 'uni',
+  };
+
+  /// Get CountryName from 3-letter code, returns null if not found
+  static CountryName? fromCode(String? code) {
+    if (code == null) return null;
+    return codeToCountry[code.toLowerCase()];
+  }
+
+  /// Get CountryName from plain/full name, returns TORN if not found
+  static CountryName fromName(String? name) {
+    if (name == null) return CountryName.TORN;
+    return nameToCountry[name] ?? CountryName.TORN;
+  }
+
+  /// Get full display name from CountryName
+  static String getFullName(CountryName? country) {
+    if (country == null) return 'Unknown';
+    return countryToFullName[country] ?? 'Unknown';
+  }
+
+  /// Get 3-letter code from full name
+  static String? getCodeFromName(String? name) {
+    if (name == null) return null;
+    return nameToCode[name];
+  }
+}

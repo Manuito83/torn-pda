@@ -576,12 +576,14 @@ String travelReturnHomeJS() {
   return '''
     function goHome() {
       const doc = document;
-      let travelHome = doc.querySelector('.travel-home-header-button');
+      let travelHome = doc.querySelector('.travel-home-header-button') 
+                     || doc.querySelector('a.travel-home');
       
       if (travelHome) {
           travelHome.click();
           setTimeout(function() {
-              let confirmBtn = doc.querySelector('#travel-home-panel button.torn-btn');
+              let confirmBtn = doc.querySelector('#travel-home-panel button.torn-btn')
+                            || doc.querySelector('.travel-back-link button.torn-btn');
               if (confirmBtn) {
                   confirmBtn.click();
               }

@@ -69,12 +69,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     final destination = widget.temporaryDestinationCountry;
     if (destination == null || destination.isEmpty) return false;
 
-    return _returnCountryName(destination) != CountryName.TORN;
+    return CountryHelper.fromName(destination) != CountryName.TORN;
   }
 
   CountryName? get _temporaryDestinationCountryName {
     if (!_temporaryDestinationFilterActive) return null;
-    return _returnCountryName(widget.temporaryDestinationCountry);
+    return CountryHelper.fromName(widget.temporaryDestinationCountry);
   }
 
   bool get _hasItemFiltersApplied => _filteredTypes.any((enabled) => !enabled);
@@ -182,9 +182,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.value),
     StockSort(type: StockSortType.profit),
     StockSort(type: StockSortType.arrivalTime),
+    StockSort(type: StockSortType.rarity),
   ];
 
   final List<ForeignStock> _hiddenStocks = <ForeignStock>[];
+  final Set<int> _blacklistedItemIds = <int>{};
 
   late StreamSubscription _willPopSubscription;
 
@@ -404,7 +406,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         ),
         IconButton(
           icon: const Icon(MdiIcons.eyeRemoveOutline),
-          onPressed: _hiddenStocks.isEmpty
+          onPressed: _hiddenStocks.isEmpty && _blacklistedItemIds.isEmpty
               ? null
               : () {
                   showDialog<void>(
@@ -412,8 +414,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                     builder: (BuildContext context) {
                       return HiddenForeignStockDialog(
                         hiddenStocks: _hiddenStocks,
+                        blacklistedItemIds: _blacklistedItemIds,
+                        allTornItems: _allTornItems,
                         themeProvider: _themeProvider,
                         unhide: _unhideMember,
+                        unblacklist: _unblacklistItem,
                       );
                     },
                   );
@@ -687,11 +692,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       visibleStocks = visibleStocks.where((stock) => stock.country == temporaryCountry);
     }
 
-    if (_hiddenStocks.isEmpty) {
+    if (_hiddenStocks.isEmpty && _blacklistedItemIds.isEmpty) {
       return List<ForeignStock>.from(visibleStocks);
     }
 
     return visibleStocks.where((stock) {
+      if (_blacklistedItemIds.contains(stock.id)) return false;
       for (final h in _hiddenStocks) {
         if (h.id == stock.id && h.countryCode == stock.countryCode) {
           return false;
@@ -808,15 +814,20 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     );
 
     Widget hiddenDetails = const SizedBox.shrink();
-    if (_hiddenStocks.isNotEmpty) {
+    if (_hiddenStocks.isNotEmpty || _blacklistedItemIds.isNotEmpty) {
+      final parts = <String>[];
+      if (_hiddenStocks.isNotEmpty) {
+        parts.add('${_hiddenStocks.length} hidden stock${_hiddenStocks.length == 1 ? "" : "s"}');
+      }
+      if (_blacklistedItemIds.isNotEmpty) {
+        parts.add('${_blacklistedItemIds.length} blacklisted item${_blacklistedItemIds.length == 1 ? "" : "s"}');
+      }
       hiddenDetails = Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
         child: Row(
           children: <Widget>[
             Text(
-              'There ${_hiddenStocks.length == 1 ? "is" : "are"} '
-              '${_hiddenStocks.length}'
-              ' hidden stock${_hiddenStocks.length == 1 ? "" : "s"}',
+              parts.join(', '),
               style: TextStyle(fontSize: 11, color: Colors.orange[800]),
             ),
           ],
@@ -918,10 +929,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       flagPressedCallback: _onFlagPressed,
       requestMoneyRefresh: _refreshMoney,
       memberHiddenCallback: _hideMember,
+      memberBlacklistCallback: _blacklistItem,
       ticket: _settingsProvider!.travelTicket,
       activeRestocks: _activeRestocks,
       travelingTimeStamp: _profile!.travel!.timestamp,
-      travelingCountry: _returnCountryName(_profile!.travel!.destination),
+      travelingCountry: CountryHelper.fromName(_profile!.travel!.destination),
       travelingCountryFullName: _profile!.travel!.destination,
       displayShowcase: displayShowcase,
       isDataFromCache: _isDataFromCache,
@@ -1059,43 +1071,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
             stock.itemType = ItemType.OTHER;
           }
 
-          // Assign actual profit depending on country (+ the country)
+          // Assign country from 3-letter code using centralized helper
           stock.countryCode = countryKey;
-          switch (countryKey) {
-            case 'jap':
-              stock.country = CountryName.JAPAN;
-              stock.countryFullName = "Japan";
-            case 'haw':
-              stock.country = CountryName.HAWAII;
-              stock.countryFullName = "Hawaii";
-            case 'chi':
-              stock.country = CountryName.CHINA;
-              stock.countryFullName = "China";
-            case 'arg':
-              stock.country = CountryName.ARGENTINA;
-              stock.countryFullName = "Argentina";
-            case 'uni':
-              stock.country = CountryName.UNITED_KINGDOM;
-              stock.countryFullName = "UK";
-            case 'cay':
-              stock.country = CountryName.CAYMAN_ISLANDS;
-              stock.countryFullName = "Cayman Islands";
-            case 'sou':
-              stock.country = CountryName.SOUTH_AFRICA;
-              stock.countryFullName = "South Africa";
-            case 'swi':
-              stock.country = CountryName.SWITZERLAND;
-              stock.countryFullName = "Switzerland";
-            case 'mex':
-              stock.country = CountryName.MEXICO;
-              stock.countryFullName = "Mexico";
-            case 'uae':
-              stock.country = CountryName.UAE;
-              stock.countryFullName = "UAE";
-            case 'can':
-              stock.country = CountryName.CANADA;
-              stock.countryFullName = "Canada";
-          }
+          stock.country = CountryHelper.fromCode(countryKey);
+          stock.countryFullName = CountryHelper.getFullName(stock.country);
 
           // Other fields contained in Yata and in Torn
           stock.profit = (stock.value /
@@ -1390,20 +1369,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   /// Convert Torn PDA Database format to ForeignStockInModel format
   /// Now uses real data from Realtime Database: id, cost, lastUpdated
   ForeignStockInModel _convertTornPDADataToModel(Map<String, dynamic> tornPDAData) {
-    final countryMapping = {
-      'Argentina': 'arg',
-      'Canada': 'can',
-      'Cayman Islands': 'cay',
-      'China': 'chi',
-      'Hawaii': 'haw',
-      'Japan': 'jap',
-      'Mexico': 'mex',
-      'South Africa': 'sou',
-      'Switzerland': 'swi',
-      'UAE': 'uae',
-      'UK': 'uni', // Firebase might store it as 'UK'
-    };
-
     Map<String, CountryDetails> countries = {};
     Map<String, List<ForeignStock>> stocksByCountry = {};
 
@@ -1428,7 +1393,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           // Skip if no country or name
           if (country.isEmpty || name.isEmpty || name == 'Unknown Item') return;
 
-          final countryCode = countryMapping[country] ?? country.toLowerCase().replaceAll(' ', '');
+          // Use centralized helper for country code conversion
+          final countryCode = CountryHelper.getCodeFromName(country) ?? country.toLowerCase().replaceAll(' ', '');
 
           final stock = ForeignStock(
             id: id,
@@ -1791,6 +1757,13 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         case StockSortType.arrivalTime:
           _filteredStocksCards.sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
           Prefs().setStockSort('arrivalTime');
+        case StockSortType.rarity:
+          _filteredStocksCards.sort((a, b) {
+            final aCirculation = _allTornItems?.items?[a.id!.toString()]?.circulation ?? 999999;
+            final bCirculation = _allTornItems?.items?[b.id!.toString()]?.circulation ?? 999999;
+            return aCirculation.compareTo(bCirculation);
+          });
+          Prefs().setStockSort('rarity');
         /*
         case StockSortType.inventoryQuantity:
           _filteredStocksCards.sort((a, b) => b.inventoryQuantity!.compareTo(a.inventoryQuantity!));
@@ -1846,6 +1819,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       sortType = StockSortType.profit;
     } else if (sortString == 'arrivalTime') {
       sortType = StockSortType.arrivalTime;
+    } else if (sortString == 'rarity') {
+      sortType = StockSortType.rarity;
     } else if (sortString == 'inventoryQuantity') {
       // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
       //sortType = StockSortType.inventoryQuantity;
@@ -1863,6 +1838,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     List<String> savedHiddenRaw = await Prefs().getHiddenForeignStocks();
     for (final s in savedHiddenRaw) {
       _hiddenStocks.add(foreignStockFromJson(s));
+    }
+
+    List<String> savedBlacklist = await Prefs().getBlacklistedForeignStockItems();
+    for (final s in savedBlacklist) {
+      final id = int.tryParse(s);
+      if (id != null) _blacklistedItemIds.add(id);
     }
   }
 
@@ -1967,35 +1948,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     if (mounted) setState(() {});
   }
 
-  CountryName _returnCountryName(String? country) {
-    switch (country) {
-      case "Argentina":
-        return CountryName.ARGENTINA;
-      case "Canada":
-        return CountryName.CANADA;
-      case "Cayman Islands":
-        return CountryName.CAYMAN_ISLANDS;
-      case "China":
-        return CountryName.CHINA;
-      case "Hawaii":
-        return CountryName.HAWAII;
-      case "Japan":
-        return CountryName.JAPAN;
-      case "Mexico":
-        return CountryName.MEXICO;
-      case "South Africa":
-        return CountryName.SOUTH_AFRICA;
-      case "Switzerland":
-        return CountryName.SWITZERLAND;
-      case "UAE":
-        return CountryName.UAE;
-      case "United Kingdom":
-        return CountryName.UNITED_KINGDOM;
-      default:
-        return CountryName.TORN;
-    }
-  }
-
   Future<void> _refreshMoney() async {
     final profileModel = await ApiCallsV1.getOwnProfileExtended(limit: 3);
     if (profileModel is OwnProfileExtended && mounted) {
@@ -2033,18 +1985,45 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
     Prefs().setHiddenForeignStocks(hiddenSaveList);
   }
+
+  void _blacklistItem(ForeignStock stock) {
+    if (stock.id == null || _blacklistedItemIds.contains(stock.id)) return;
+    setState(() {
+      _blacklistedItemIds.add(stock.id!);
+    });
+    _saveBlacklistedItems();
+  }
+
+  void _unblacklistItem(int id) {
+    setState(() {
+      _blacklistedItemIds.remove(id);
+    });
+    _saveBlacklistedItems();
+  }
+
+  void _saveBlacklistedItems() {
+    Prefs().setBlacklistedForeignStockItems(
+      _blacklistedItemIds.map((id) => id.toString()).toList(),
+    );
+  }
 }
 
 class HiddenForeignStockDialog extends StatefulWidget {
   final ThemeProvider? themeProvider;
   final List<ForeignStock> hiddenStocks;
+  final Set<int> blacklistedItemIds;
+  final ItemsModel? allTornItems;
   final Function(int?, String?) unhide;
+  final Function(int) unblacklist;
 
   const HiddenForeignStockDialog({
     super.key,
     required this.themeProvider,
     required this.hiddenStocks,
+    required this.blacklistedItemIds,
+    required this.allTornItems,
     required this.unhide,
+    required this.unblacklist,
   });
 
   @override
@@ -2054,7 +2033,8 @@ class HiddenForeignStockDialog extends StatefulWidget {
 class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
   @override
   Widget build(BuildContext context) {
-    List<Widget> hiddenCards = buildCards(widget.hiddenStocks, context);
+    List<Widget> hiddenCards = _buildHiddenCards(context);
+    List<Widget> blacklistCards = _buildBlacklistCards(context);
     return AlertDialog(
       backgroundColor: widget.themeProvider!.secondBackground,
       shape: RoundedRectangleBorder(
@@ -2074,27 +2054,51 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "Reset hidden stocks",
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 15),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: hiddenCards,
+            if (hiddenCards.isNotEmpty) ...[
+              const Text(
+                "Hidden stocks",
+                style: TextStyle(fontSize: 14),
               ),
-            ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: hiddenCards,
+                ),
+              ),
+            ],
+            if (hiddenCards.isNotEmpty && blacklistCards.isNotEmpty) const SizedBox(height: 15),
+            if (blacklistCards.isNotEmpty) ...[
+              const Column(
+                children: [
+                  Text(
+                    "Blacklisted items",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  Text(
+                    "(ALL COUNTRIES)",
+                    style: TextStyle(fontSize: 9),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: blacklistCards,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  List<Widget> buildCards(List<ForeignStock> hiddenStocks, BuildContext context) {
-    List<Widget> hiddenCards = <Widget>[];
-    for (final ForeignStock s in hiddenStocks) {
-      hiddenCards.add(
+  List<Widget> _buildHiddenCards(BuildContext context) {
+    List<Widget> cards = <Widget>[];
+    for (final ForeignStock s in widget.hiddenStocks) {
+      cards.add(
         Row(
           children: [
             IconButton(
@@ -2104,7 +2108,7 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
                   widget.unhide(s.id, s.countryCode);
                 });
 
-                if (widget.hiddenStocks.isEmpty) {
+                if (widget.hiddenStocks.isEmpty && widget.blacklistedItemIds.isEmpty) {
                   Navigator.of(context).pop();
                 }
               },
@@ -2139,6 +2143,44 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
         ),
       );
     }
-    return hiddenCards;
+    return cards;
+  }
+
+  List<Widget> _buildBlacklistCards(BuildContext context) {
+    List<Widget> cards = <Widget>[];
+    for (final id in widget.blacklistedItemIds) {
+      final itemName = widget.allTornItems?.items?[id.toString()]?.name ?? 'Item #$id';
+      cards.add(
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.undo),
+              onPressed: () {
+                setState(() {
+                  widget.unblacklist(id);
+                });
+
+                if (widget.hiddenStocks.isEmpty && widget.blacklistedItemIds.isEmpty) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            Expanded(
+              child: Card(
+                color: widget.themeProvider!.cardColor,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
+                  child: Text(
+                    '$itemName (all countries)',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return cards;
   }
 }

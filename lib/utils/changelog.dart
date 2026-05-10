@@ -102,6 +102,42 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.13.4 - Build 650 - built 05/04/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.13.4'
+        ..date = '12 MAY 2026'
+        ..features = [
+          ComplexFeature(
+            "Drawer sections can now be reordered, hidden and customized",
+            explanation: "Go to Settings / Drawer sections to configure.\n\n"
+                "You can now change the order of all sections in the app's main drawer menu, "
+                "as well as hide those you don't use. Settings and About are always visible.\n\n"
+                "Two dividers are also available and can be freely positioned within the list.\n\n"
+                "Previously scattered visibility options (Ranked Wars, Stock Market, Travel and Wiki) "
+                "have been consolidated into this new menu.",
+          ),
+          "Added item blacklist to foreign stocks [DarXide]",
+          "Added 'sort by rarity' option to foreign stocks [DarXide]",
+          "Userscripts: added PUT and DELETE HTTP request handlers [DarXide]",
+          "Userscripts: fixed @match pattern handling [DarXide]",
+          "Userscripts: implemented additional GM compatibility features [DarXide]",
+          "Several performance, code and documentation improvements [DarXide]",
+          "Profile: floating action button can now be hidden",
+          "Profile: work stats now show a total in the expanded view",
+          "Added confirmation dialog for deleting target with an attached note [DarXide]",
+          "Browser: restore scroll position on reload is now optional",
+          "Fixed issue with stock alerts not accepting decimal values [DarXide]",
+          "Fixed time calculation for delayed travel departure [DarXide]",
+          "Fixed foreign restock estimates [DarXide]",
+          if (Platform.isAndroid) "Fixed several Live Updates issues [bombel]",
+          "Fixed alarm icon not turning green when active in some devices",
+          "Fixed travel return button not working in some cases",
+          "Fixed userscripts toggle persistence",
+          if (Platform.isIOS) "Fixed app icon not updating correctly",
+        ],
+    );
+
     // v3.13.3 - Build 643 - built 16/04/2026
     itemList.add(
       ChangeLogItem()
