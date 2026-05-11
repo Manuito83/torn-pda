@@ -38,6 +38,7 @@ class UserScriptModel {
     this.customApiKeyCandidate = false,
     this.grants = const [],
     this.requires = const [],
+    this.requiredSources = const [],
   });
 
   bool enabled;
@@ -54,6 +55,7 @@ class UserScriptModel {
   bool customApiKeyCandidate;
   List<String> grants;
   List<String> requires;
+  List<String> requiredSources;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     // First check if is old model
@@ -84,6 +86,7 @@ class UserScriptModel {
         isExample: isExample,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
+        requiredSources: json["requiredSources"] is List<dynamic> ? json["requiredSources"].cast<String>() : [],
       );
     } else {
       return UserScriptModel(
@@ -101,6 +104,7 @@ class UserScriptModel {
         customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
+        requiredSources: json["requiredSources"] is List<dynamic> ? json["requiredSources"].cast<String>() : [],
       );
     }
   }
@@ -116,6 +120,7 @@ class UserScriptModel {
     String? customApiKey,
     bool? customApiKeyCandidate,
     bool? manuallyEdited,
+    List<String>? requiredSources,
   }) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
@@ -138,6 +143,7 @@ class UserScriptModel {
       customApiKeyCandidate: customApiKeyCandidate ?? false,
       grants: metaMap["grants"] ?? [],
       requires: metaMap["requires"] ?? [],
+      requiredSources: requiredSources ?? [],
     );
   }
 
@@ -146,6 +152,7 @@ class UserScriptModel {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final metaMap = UserScriptModel.parseHeader(response.body);
+        final requiredSources = await fetchRequiredSources((metaMap["requires"] as List<String>?) ?? []);
         return (
           success: true,
           message: "Success",
@@ -155,6 +162,7 @@ class UserScriptModel {
             updateStatus: UserScriptUpdateStatus.upToDate,
             isExample: isExample ?? false,
             manuallyEdited: false, // Not manually edited if loaded from URL
+            requiredSources: requiredSources,
           ),
         );
       } else {
@@ -211,7 +219,33 @@ class UserScriptModel {
         "customApiKeyCandidate": customApiKeyCandidate,
         "grants": grants,
         "requires": requires,
+        "requiredSources": requiredSources,
       };
+
+  String get sourceWithRequires {
+    if (requiredSources.isEmpty) return source;
+    return "${requiredSources.join("\n;\n")}\n;\n$source";
+  }
+
+  static Future<List<String>> fetchRequiredSources(List<String> requires) async {
+    final sources = <String>[];
+
+    for (final requireUrl in requires.where((url) => url.trim().isNotEmpty)) {
+      final uri = Uri.parse(requireUrl.trim());
+      if (uri.scheme != "https" && uri.scheme != "http") {
+        throw Exception("Unsupported @require URL: $requireUrl");
+      }
+
+      final response = await http.get(uri);
+      if (response.statusCode != 200) {
+        throw Exception("@require failed for $requireUrl with status ${response.statusCode}");
+      }
+
+      sources.add(response.body);
+    }
+
+    return sources;
+  }
 
   static Map<String, dynamic> parseHeader(String source) {
     // Thanks to [ViolentMonkey](https://github.com/violentmonkey/violentmonkey) for the following two regexes
@@ -353,6 +387,7 @@ class UserScriptModel {
     String? url,
     String? customApiKey,
     bool? customApiKeyCandidate,
+    List<String>? requiredSources,
     required UserScriptUpdateStatus updateStatus,
   }) {
     if (source != null) {
@@ -374,6 +409,8 @@ class UserScriptModel {
         if (metaMap["downloadURL"] != null) {
           this.url = metaMap["downloadURL"];
         }
+        grants = metaMap["grants"] ?? grants;
+        requires = metaMap["requires"] ?? requires;
       } catch (e) {
         // Do nothing
       }
@@ -404,6 +441,9 @@ class UserScriptModel {
     }
     if (customApiKeyCandidate != null) {
       this.customApiKeyCandidate = customApiKeyCandidate;
+    }
+    if (requiredSources != null) {
+      this.requiredSources = requiredSources;
     }
     this.updateStatus = updateStatus;
   }

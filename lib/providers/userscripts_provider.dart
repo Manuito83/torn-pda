@@ -171,7 +171,7 @@ class UserScriptsProvider extends ChangeNotifier {
                 injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
                 // If the script is a custom API key script, we need to replace the API key
                 source: adaptSource(
-                  source: s.source,
+                  source: s.sourceWithRequires,
                   scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
                 ),
               );
@@ -233,6 +233,7 @@ class UserScriptsProvider extends ChangeNotifier {
     List<String>? matches,
     String? customApiKey,
     bool? customApiKeyCandidate,
+    List<String>? requiredSources,
   }) async {
     _invalidateGlobalDisable();
     final newScript = UserScriptModel(
@@ -248,6 +249,7 @@ class UserScriptsProvider extends ChangeNotifier {
       isExample: isExample,
       customApiKey: customApiKey ?? "",
       customApiKeyCandidate: customApiKeyCandidate ?? false,
+      requiredSources: requiredSources ?? [],
     );
 
     if (_addScript(_userScriptList, newScript, "addUserScript")) {
@@ -267,6 +269,7 @@ class UserScriptsProvider extends ChangeNotifier {
     required bool isFromRemote,
     required String? customApiKey,
     required bool? customApiKeyCandidate,
+    List<String>? requiredSources,
   }) {
     _invalidateGlobalDisable();
     List<String>? matches;
@@ -284,6 +287,7 @@ class UserScriptsProvider extends ChangeNotifier {
           manuallyEdited: manuallyEdited,
           customApiKey: customApiKey ?? "",
           customApiKeyCandidate: customApiKeyCandidate ?? false,
+          requiredSources: requiredSources,
           matches: matches,
           updateStatus: () {
             // If the script comes from remote
