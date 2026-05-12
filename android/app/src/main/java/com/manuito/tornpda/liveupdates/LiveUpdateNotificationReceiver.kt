@@ -186,7 +186,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_IMMUTABLE)
         }
 
-        val destinationIcon = TravelLiveUpdateAssets.trackerIconFor(destination)
+        val notificationIcon = TravelLiveUpdateAssets.notificationIcon()
         val timeFormat = android.text.format.DateFormat.getTimeFormat(context)
         val nowFormatted = timeFormat.format(java.util.Date())
 
@@ -209,7 +209,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         }
 
         val builder = androidx.core.app.NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(destinationIcon)
+            .setSmallIcon(notificationIcon)
             .setContentTitle(arrivedTitle)
             .setContentText(arrivedContentText)
             .setContentIntent(tapIntent)
