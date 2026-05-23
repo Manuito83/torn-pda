@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 
 /// Tests for [UserScriptModel] — header parsing, version comparison and URL
 /// matching logic.
@@ -18,6 +19,8 @@ String _script({
   String match = '*',
   String runAt = 'document-end',
   String? downloadUrl,
+  List<String> grants = const [],
+  List<String> requires = const [],
   String body = 'console.log("hi");',
 }) {
   final lines = <String>[
@@ -27,6 +30,8 @@ String _script({
     '// @match        $match',
     '// @run-at       $runAt',
     if (downloadUrl != null) '// @downloadurl  $downloadUrl',
+    for (final grant in grants) '// @grant        $grant',
+    for (final require in requires) '// @require      $require',
     '// ==/UserScript==',
     body,
   ];
@@ -98,6 +103,23 @@ void main() {
       final source = _script(downloadUrl: 'https://example.com/script.js');
       final meta = UserScriptModel.parseHeader(source);
       expect(meta['downloadURL'], 'https://example.com/script.js');
+    });
+
+    test('collects grants and requires in declaration order', () {
+      final source = _script(
+        grants: ['GM_xmlhttpRequest', 'GM.setValue'],
+        requires: [
+          'https://cdn.example.com/first.js',
+          'https://cdn.example.com/second.js',
+        ],
+      );
+
+      final meta = UserScriptModel.parseHeader(source);
+      expect(meta['grants'], ['GM_xmlhttpRequest', 'GM.setValue']);
+      expect(meta['requires'], [
+        'https://cdn.example.com/first.js',
+        'https://cdn.example.com/second.js',
+      ]);
     });
 
     test('returns document-end as default injection time', () {
@@ -260,6 +282,8 @@ void main() {
         isExample: false,
         customApiKey: 'testkey',
         customApiKeyCandidate: true,
+        grants: ['GM_xmlhttpRequest'],
+        requires: ['https://cdn.example.com/lib.js'],
       );
 
       final json = original.toJson();
@@ -273,6 +297,47 @@ void main() {
       expect(restored.isExample, original.isExample);
       expect(restored.customApiKey, original.customApiKey);
       expect(restored.customApiKeyCandidate, original.customApiKeyCandidate);
+      expect(restored.grants, original.grants);
+      expect(restored.requires, original.requires);
+    });
+
+    test('fromMetaMap carries grants and requires into the model', () {
+      final source = _script(
+        grants: ['GM_xmlhttpRequest'],
+        requires: ['https://cdn.example.com/lib.js'],
+      );
+      final meta = UserScriptModel.parseHeader(source);
+
+      final model = UserScriptModel.fromMetaMap(meta, isExample: false);
+
+      expect(model.grants, ['GM_xmlhttpRequest']);
+      expect(model.requires, ['https://cdn.example.com/lib.js']);
+    });
+  });
+
+  group('source adaptation', () {
+    test('replaces the PDA API key placeholder before injection', () {
+      final provider = UserScriptsProvider();
+      final adapted = provider.adaptSource(
+        source: 'const key = "###PDA-APIKEY###";',
+        scriptFinalApiKey: 'abc123',
+      );
+
+      expect(adapted, contains('const key = "abc123";'));
+      expect(adapted, isNot(contains('###PDA-APIKEY###')));
+      expect(adapted, startsWith('(function() {'));
+      expect(adapted, endsWith('}());'));
+    });
+
+    test('normalizes smart quotes before injection', () {
+      final provider = UserScriptsProvider();
+      final adapted = provider.adaptSource(
+        source: 'const text = “value”; const other = ‘x’;',
+        scriptFinalApiKey: 'unused',
+      );
+
+      expect(adapted, contains('const text = "value";'));
+      expect(adapted, contains("const other = 'x';"));
     });
   });
 }
