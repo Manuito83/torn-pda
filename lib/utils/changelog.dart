@@ -102,6 +102,20 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.14.0 - Build 651 - built 23/05/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.14.0'
+        ..date = '27 MAY 2026'
+        ..features = [
+          "Added Buy 100 helper to city shops, Big Al's and the token shop [DarXide]",
+          "Added awards comparison to profile checks and the training comparison dialog [DarXide]",
+          "Foreign stocks: improved chart time spacing and restock highlighting [DarXide]",
+          "Userscripts: added a permissions warning dialog before saving or loading scripts that declare @grant entries [DarXide]",
+          "Userscripts: refreshed GM compatibility documentation and added test coverage for metadata contracts [DarXide]",
+        ],
+    );
+
     // v3.13.4 - Build 650 - built 05/04/2026
     itemList.add(
       ChangeLogItem()

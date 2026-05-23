@@ -4,8 +4,7 @@
 !/lib/config/README.md
 /lib/torn-pda-native/
 /android/app/sign-key.jks
-.kiro/
-.shotgun/
+
 
 # Miscellaneoussure
 *.class
@@ -135,3 +134,8 @@ ios/firebase_app_id_file.json
 .crashlytics/libssp-0.dll
 .crashlytics/libstdc++-6.dll
 .crashlytics/libwinpthread-1.dll
+
+# Not welcome here
+.kiro/
+.shotgun/
+.claude/

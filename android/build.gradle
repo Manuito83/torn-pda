@@ -34,6 +34,17 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 
+// The home_widget plugin declares "androidx.glance:glance-appwidget:1.+", a
+// dynamic range that resolves to pre-releases. glance 1.3.0-alpha01 requires
+// compileSdk 37 / AGP 9.1.0, breaking the build. Pin it to the latest stable.
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.glance:glance-appwidget:1.1.1'
+        }
+    }
+}
+
 subprojects {
     project.evaluationDependsOn(':app')
 }
