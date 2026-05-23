@@ -550,6 +550,193 @@ String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
   ''';
 }
 
+String cityShopsBuy100JS() {
+  return '''
+  (function() {
+    const BUTTON_CLASS = 'pda-buy-100-btn';
+    const STYLE_ID = 'pda-buy-100-style';
+    const TARGET_AMOUNT = 100;
+
+    function parseNumber(text) {
+      if (!text) return 0;
+      const clean = String(text).replace(/[^0-9]/g, '');
+      return clean ? parseInt(clean, 10) : 0;
+    }
+
+    function parseMoney(text) {
+      if (!text) return 0;
+      let clean = String(text).replace(/\\\$/g, '').replace(/,/g, '').trim().toLowerCase();
+      let multiplier = 1;
+      if (clean.endsWith('b')) {
+        multiplier = 1000000000;
+        clean = clean.substring(0, clean.length - 1);
+      } else if (clean.endsWith('m')) {
+        multiplier = 1000000;
+        clean = clean.substring(0, clean.length - 1);
+      } else if (clean.endsWith('k')) {
+        multiplier = 1000;
+        clean = clean.substring(0, clean.length - 1);
+      }
+      const value = parseFloat(clean.replace(/[^0-9.]/g, ''));
+      return Number.isNaN(value) ? 0 : Math.floor(value * multiplier);
+    }
+
+    function findMoney() {
+      const moneyEl = document.querySelector('#user-money') ||
+        document.querySelector('[data-currency-money]') ||
+        document.querySelector('.user-information .money');
+      if (!moneyEl) return 0;
+      return parseNumber(moneyEl.getAttribute('data-money') ||
+        moneyEl.getAttribute('data-currency-money') ||
+        moneyEl.textContent);
+    }
+
+    function hasMoneyIndicator() {
+      return !!(document.querySelector('#user-money') ||
+        document.querySelector('[data-currency-money]') ||
+        document.querySelector('.user-information .money'));
+    }
+
+    function findPrice(container) {
+      const priceCandidates = container.querySelectorAll(
+        '[class*="price"], [class*="cost"], span, div'
+      );
+      for (const el of priceCandidates) {
+        const text = el.textContent || '';
+        if (text.includes('\$')) {
+          const parsed = parseMoney(text);
+          if (parsed > 0) return parsed;
+        }
+      }
+      return 0;
+    }
+
+    function findStock(container) {
+      const stockCandidates = container.querySelectorAll(
+        '[class*="stock"], [class*="amount"], span, div'
+      );
+      for (const el of stockCandidates) {
+        const text = el.textContent || '';
+        if (/stock/i.test(text) || /x\\s*[0-9,]+/i.test(text)) {
+          const match = text.match(/x\\s*([0-9,]+)/i) || text.match(/([0-9,]+)/);
+          if (match) {
+            const parsed = parseNumber(match[1]);
+            if (parsed > 0) return parsed;
+          }
+        }
+      }
+      return 0;
+    }
+
+    function setNativeInputValue(input, value) {
+      const lastValue = input.value;
+      input.value = value;
+      const tracker = input._valueTracker;
+      if (tracker) tracker.setValue(lastValue);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function findQuantityInput(container) {
+      return container.querySelector('input.input-money') ||
+        container.querySelector('input[class*="buyAmountInput"]') ||
+        container.querySelector('input[type="number"]') ||
+        container.querySelector('input[type="text"]');
+    }
+
+    function getTargetQuantity(container, input) {
+      const price = findPrice(container);
+      const money = findMoney();
+      const stock = findStock(container);
+      const maxFromInput = parseNumber(input.getAttribute('data-money') || input.getAttribute('max'));
+
+      let quantity = TARGET_AMOUNT;
+      if (price > 0 && money > 0) {
+        quantity = Math.min(quantity, Math.floor(money / price));
+      }
+      if (stock > 0) {
+        quantity = Math.min(quantity, stock);
+      }
+      if (maxFromInput > 0) {
+        quantity = Math.min(quantity, maxFromInput);
+      }
+
+      return Math.max(quantity, 1);
+    }
+
+    function injectStyle() {
+      if (document.getElementById(STYLE_ID)) return;
+
+      const style = document.createElement('style');
+      style.id = STYLE_ID;
+      style.textContent = `
+        .\${BUTTON_CLASS} {
+          margin-left: 4px !important;
+          padding: 0 8px !important;
+          height: 30px !important;
+          line-height: 12px !important;
+          font-size: 11px !important;
+          flex: 0 0 auto !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    function fillBuy100(buyButton) {
+      const container = buyButton.closest('li') ||
+        buyButton.closest('form') ||
+        buyButton.closest('[class*="row"]') ||
+        buyButton.parentElement;
+      if (!container) return;
+
+      const input = findQuantityInput(container);
+      if (input) {
+        setNativeInputValue(input, getTargetQuantity(container, input));
+      }
+    }
+
+    function injectBuy100Buttons() {
+      if (!hasMoneyIndicator()) return;
+      injectStyle();
+
+      const buyButtons = document.querySelectorAll(
+        'button.torn-btn[type="submit"], button[aria-label*="Buy"], button[class*="buy"]'
+      );
+
+      buyButtons.forEach((buyButton) => {
+        const buttonText = (buyButton.textContent || buyButton.getAttribute('aria-label') || '').trim().toLowerCase();
+        if (buttonText && !buttonText.includes('buy')) return;
+        if (buyButton.closest('.' + BUTTON_CLASS)) return;
+        if (buyButton.parentElement && buyButton.parentElement.querySelector('.' + BUTTON_CLASS)) return;
+
+        const buy100Button = document.createElement('button');
+        buy100Button.type = 'button';
+        buy100Button.className = 'torn-btn ' + BUTTON_CLASS;
+        buy100Button.textContent = '100';
+        buy100Button.title = 'Buy 100';
+
+        buy100Button.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          fillBuy100(buyButton);
+        });
+
+        buyButton.insertAdjacentElement('afterend', buy100Button);
+      });
+    }
+
+    injectBuy100Buttons();
+
+    if (!window.__pdaCityShopsBuy100Observer) {
+      window.__pdaCityShopsBuy100Observer = new MutationObserver(() => injectBuy100Buttons());
+      window.__pdaCityShopsBuy100Observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    123;
+  })();
+  ''';
+}
+
 String travelRemovePlaneJS() {
   return '''
     var style = document.createElement('style');
