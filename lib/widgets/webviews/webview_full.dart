@@ -1293,14 +1293,14 @@ class WebViewFullState extends State<WebViewFull>
                 apiKey: UserHelper.apiKey,
                 tabUid: _tabUid,
               );
-              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
+              await _addUserScriptsAvoidDuplicates(handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
-              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+              await _addUserScriptsAvoidDuplicates(scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
                   widget.key,
@@ -1428,14 +1428,14 @@ class WebViewFullState extends State<WebViewFull>
                 apiKey: UserHelper.apiKey,
                 tabUid: _tabUid,
               );
-              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
+              await _addUserScriptsAvoidDuplicates(handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
-              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+              await _addUserScriptsAvoidDuplicates(scriptsToAdd);
 
               // DEBUG
               if (_debugScriptsInjection) {
@@ -2332,6 +2332,22 @@ class WebViewFullState extends State<WebViewFull>
         log("Webview controller is null at userscripts removal");
       }
     }
+  }
+
+  /// Adds user scripts to the WebView, first removing any previously registered
+  /// entries that share the same groupName. Without this, navigations that
+  /// call addUserScripts (e.g. shouldOverrideUrlLoading firing for the initialUrlRequest
+  /// in a child tab) accumulate multiple copies of the same script in the store,
+  /// causing each to be injected several times on the next page load
+  Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) async {
+    if (webViewController == null) return;
+    for (final s in scripts) {
+      final group = s.groupName;
+      if (group != null) {
+        await webViewController!.removeUserScriptsByGroupName(groupName: group);
+      }
+    }
+    await webViewController!.addUserScripts(userScripts: scripts.toList());
   }
 
   Future assessErrorCases({dom.Document? document}) async {
@@ -4440,7 +4456,7 @@ class WebViewFullState extends State<WebViewFull>
         pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
-      await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+      await _addUserScriptsAvoidDuplicates(scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
@@ -5447,7 +5463,7 @@ class WebViewFullState extends State<WebViewFull>
         pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
-      await webViewController?.addUserScripts(userScripts: scriptsToAdd);
+      await _addUserScriptsAvoidDuplicates(scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {

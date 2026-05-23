@@ -320,6 +320,12 @@ String handler_evaluateJS() {
 String handler_GM() {
   return '''
   ((e, t, o, r, n, i) => {
+    // GM (and the GM_* helpers below) are installed with configurable: false, so a
+    // second injection of this bundle in the same window (e.g. tabs spawned via
+    // window.open, see issue #463) would throw "Cannot redefine property: GM"
+    // Bail out if GM is already there.
+    if (t.getOwnPropertyDescriptor(e, 'GM')) return;
+    
   	    const s = {
   		script: {},
   		scriptHandler: "GMforPDA version 2.2",
