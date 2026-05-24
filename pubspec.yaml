@@ -34,10 +34,10 @@ dependencies:
   cloud_functions: 6.0.1
   collection: 1.19.1
   connectivity_plus: 6.1.5
-  cookie_jar: 4.0.8
-  crypto: 3.0.6
+  cookie_jar: 4.0.9
+  crypto: 3.0.7
   csv: 6.0.0
-  cupertino_icons: 1.0.8
+  cupertino_icons: 1.0.9
   dart_ping: 9.0.1
   dart_ping_ios: 4.0.2
   dbcrypt: 2.0.0
@@ -63,9 +63,9 @@ dependencies:
   flutter_inappwebview: 6.1.5
   flutter_local_notifications: 19.4.0
   flutter_secure_storage: ^10.0.0
-  flutter_slidable: 4.0.0
+  flutter_slidable: 4.0.3
   flutter_speed_dial: 7.0.0
-  flutter_svg: 2.2.0
+  flutter_svg: 2.2.4
   flutter_timezone: 4.1.1
   flutter_xlider: 3.5.0
   font_awesome_flutter: 10.8.0
@@ -89,7 +89,7 @@ dependencies:
   ## Bug submitted for v4.2.5 (plane icon out of place)
   percent_indicator: 4.2.3
   flutter_refresh_rate_control: ^0.0.4+1
-  provider: 6.1.5
+  provider: 6.1.5+1
   pull_to_refresh: 2.0.0
   quick_actions: 1.1.0
   receive_intent:
@@ -97,10 +97,10 @@ dependencies:
       url: https://github.com/daadu/receive_intent
       ref: master
   rxdart: 0.28.0
-  synchronized: 3.4.0
+  synchronized: 3.4.0+1
   sendbird_chat_sdk: 4.7.0
   share_plus: 12.0.0
-  shared_preferences: 2.5.3
+  shared_preferences: 2.5.5
   showcaseview: 4.0.1
   sign_in_with_apple: 7.0.1
   timeline_tile: 2.0.0
@@ -108,9 +108,9 @@ dependencies:
   toastification: 3.0.3
   toggle_switch: 2.3.0
   uri_to_file: 1.0.0
-  url_launcher: 6.3.1
+  url_launcher: 6.3.2
   uuid: ^4.5.1
-  vibration: 3.1.4
+  vibration: 3.1.8
   wakelock_plus: 1.4.0
   webview_flutter: 4.13.0
   workmanager: 0.9.0+3
