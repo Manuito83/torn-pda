@@ -23,7 +23,7 @@
     "fix-esm": "^1.0.1",
     "node-forge": "^1.4.0",
     "npm-watch": "^0.13.0",
-    "string-strip-html": "13.4.13",
+    "string-strip-html": "13.5.3",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
