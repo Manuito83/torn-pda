@@ -1986,7 +1986,7 @@ class WebViewFullState extends State<WebViewFull>
             if (result.extra == null) return;
             await _assessLongPressOptions(result, controller);
           },
-          onDownloadStartRequest: (controller, request) async {
+          onDownloadStarting: (controller, request) async {
             if (request.mimeType != null && request.mimeType!.contains("image/")) {
               // We don't want to download images automatically
               final String u = request.url.toString().replaceAll("http:", "https:");
@@ -2012,6 +2012,7 @@ class WebViewFullState extends State<WebViewFull>
             } else {
               await _downloadRequest(autoRequest: request);
             }
+            return null;
           },
           // Reload webview after memory leak
           onWebContentProcessDidTerminate: (c) {

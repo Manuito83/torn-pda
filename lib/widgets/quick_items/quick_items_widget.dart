@@ -488,7 +488,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
     try {
       controller.addJavaScriptHandler(
         handlerName: 'quickItemPickerCleanup',
-        callback: (args) {
+        callback: (JavaScriptHandlerFunctionData data) {
           if (mounted) {
             setState(() {
               _pickerActive = false;
@@ -501,7 +501,8 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
 
       controller.addJavaScriptHandler(
         handlerName: 'updateQuickItemInstanceId',
-        callback: (args) {
+        callback: (JavaScriptHandlerFunctionData data) {
+          final args = data.args;
           if (args.length >= 2) {
             final itemId = int.tryParse(args[0].toString());
             final instanceId = args[1].toString();
