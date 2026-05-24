@@ -114,6 +114,14 @@ class ChangeLogState extends State<ChangeLog> {
           "Userscripts: added a permissions warning dialog before saving or loading scripts that declare @grant entries [DarXide]",
           "Userscripts: refreshed GM compatibility documentation and added test coverage for metadata contracts [DarXide]",
           "Userscripts: fixed GM handlers duplication in child tabs",
+          ComplexFeature(
+            "Added a virus coding timer to Profile",
+            explanation: "When you are programming a virus, the remaining time now shows up "
+                "automatically in the MISC section of your Profile.\n\n"
+                "You can also enable a dedicated entry in the COOLDOWNS section "
+                "(Settings / Profile options / Show virus coding) to schedule a manual "
+                "notification, alarm or timer for when the virus is done.",
+          ),
           "Fixed API usage in Loot",
         ],
     );

@@ -141,6 +141,27 @@ final class _$TornV2 extends TornV2 {
   }
 
   @override
+  Future<Response<UserVirusResponse>> _userVirusGet({
+    String? timestamp,
+    String? comment,
+    String? key,
+  }) {
+    final Uri $url = Uri.parse('/user/virus');
+    final Map<String, dynamic> $params = <String, dynamic>{
+      'timestamp': timestamp,
+      'comment': comment,
+      'key': key,
+    };
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: {...$params, 'comment': 'PDA-App', 'legacy': apiV2LegacyRequests},
+    );
+    return client.send<UserVirusResponse, UserVirusResponse>($request);
+  }
+
+  @override
   Future<Response<UserCrimesResponse>> _userCrimeIdCrimesGet({
     required int? crimeId,
     String? timestamp,

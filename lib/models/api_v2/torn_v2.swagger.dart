@@ -247,6 +247,34 @@ abstract class TornV2 extends ChopperService {
     @Query('key') String? key,
   });
 
+  ///Get your virus coding information
+  ///@param timestamp Timestamp to bypass cache
+  ///@param comment Comment for your tool/service/bot/website to be visible in the logs.
+  ///@param key API key (Minimal).<br>It's not required to use this parameter when passing the API key via the Authorization header.
+  Future<chopper.Response<UserVirusResponse>> userVirusGet({
+    String? timestamp,
+    String? comment,
+    String? key,
+  }) {
+    generatedMapping.putIfAbsent(
+      UserVirusResponse,
+      () => UserVirusResponse.fromJsonFactory,
+    );
+
+    return _userVirusGet(timestamp: timestamp, comment: comment, key: key);
+  }
+
+  ///Get your virus coding information
+  ///@param timestamp Timestamp to bypass cache
+  ///@param comment Comment for your tool/service/bot/website to be visible in the logs.
+  ///@param key API key (Minimal).<br>It's not required to use this parameter when passing the API key via the Authorization header.
+  @GET(path: '/user/virus')
+  Future<chopper.Response<UserVirusResponse>> _userVirusGet({
+    @Query('timestamp') String? timestamp,
+    @Query('comment') String? comment,
+    @Query('key') String? key,
+  });
+
   ///Get your crime statistics
   ///@param crimeId Crime id
   ///@param timestamp Timestamp to bypass cache
@@ -11628,6 +11656,99 @@ extension $UserCalendarResponseExtension on UserCalendarResponse {
       calendar: (calendar != null ? calendar.value : this.calendar),
     );
   }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserVirus$Item {
+  const UserVirus$Item({required this.id, required this.name});
+
+  factory UserVirus$Item.fromJson(Map<String, dynamic> json) => _$UserVirus$ItemFromJson(json);
+
+  static const toJsonFactory = _$UserVirus$ItemToJson;
+  Map<String, dynamic> toJson() => _$UserVirus$ItemToJson(this);
+
+  @JsonKey(name: 'id')
+  final int id;
+  @JsonKey(name: 'name')
+  final String name;
+  static const fromJsonFactory = _$UserVirus$ItemFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserVirus$Item &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(name) ^
+      runtimeType.hashCode;
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserVirus {
+  const UserVirus({required this.item, required this.until});
+
+  factory UserVirus.fromJson(Map<String, dynamic> json) => _$UserVirusFromJson(json);
+
+  static const toJsonFactory = _$UserVirusToJson;
+  Map<String, dynamic> toJson() => _$UserVirusToJson(this);
+
+  @JsonKey(name: 'item')
+  final UserVirus$Item item;
+  @JsonKey(name: 'until')
+  final int until;
+  static const fromJsonFactory = _$UserVirusFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserVirus &&
+            (identical(other.item, item) || const DeepCollectionEquality().equals(other.item, item)) &&
+            (identical(other.until, until) || const DeepCollectionEquality().equals(other.until, until)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(item) ^
+      const DeepCollectionEquality().hash(until) ^
+      runtimeType.hashCode;
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserVirusResponse {
+  const UserVirusResponse({required this.virus});
+
+  factory UserVirusResponse.fromJson(Map<String, dynamic> json) => _$UserVirusResponseFromJson(json);
+
+  static const toJsonFactory = _$UserVirusResponseToJson;
+  Map<String, dynamic> toJson() => _$UserVirusResponseToJson(this);
+
+  @JsonKey(name: 'virus')
+  final dynamic virus;
+  static const fromJsonFactory = _$UserVirusResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserVirusResponse &&
+            (identical(other.virus, virus) || const DeepCollectionEquality().equals(other.virus, virus)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(virus) ^ runtimeType.hashCode;
 }
 
 @JsonSerializable(explicitToJson: true)

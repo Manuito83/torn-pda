@@ -1709,14 +1709,14 @@
                         "in": "query",
                         "description": "Selection names",
                         "required": false,
-                        "style": "form",
-                        "explode": false,
                         "schema": {
                             "type": "array",
                             "items": {
                                 "$ref": "#/components/schemas/UserSelectionName"
                             }
-                        }
+                        },
+                        "style": "form",
+                        "explode": false
                     },
                     {
                         "name": "id",
@@ -7199,6 +7199,45 @@
                                             "$ref": "#/components/schemas/TimestampResponse"
                                         }
                                     ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ],
+                "x-stability": "Stable"
+            }
+        },
+        "/user/virus": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get your virus coding information",
+                "description": "Requires minimal access key. <br>",
+                "operationId": "getMyVirusCodingInformation",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiTimestamp"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiComment"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiKeyMinimal"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserVirusResponse"
                                 }
                             }
                         }
@@ -25059,6 +25098,53 @@
                         "items": {
                             "$ref": "#/components/schemas/TornSelectionName"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "UserVirus": {
+                "required": [
+                    "item",
+                    "until"
+                ],
+                "properties": {
+                    "item": {
+                        "required": [
+                            "id",
+                            "name"
+                        ],
+                        "properties": {
+                            "id": {
+                                "$ref": "#/components/schemas/ItemId"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "until": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "type": "object"
+            },
+            "UserVirusResponse": {
+                "required": [
+                    "virus"
+                ],
+                "properties": {
+                    "virus": {
+                        "description": "Null if the player is currently not programming a virus.",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserVirus"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     }
                 },
                 "type": "object"

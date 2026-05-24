@@ -217,6 +217,8 @@ class Prefs {
   final String _kMedicalNotificationType = "pda_medicalNotificationType";
   final String _kEducationNotificationType = "pda_educationNotificationType";
   final String _kEducationBarEnabled = "pda_educationBarEnabled";
+  final String _kVirusNotificationType = "pda_virusNotificationType";
+  final String _kVirusBarEnabled = "pda_virusBarEnabled";
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kHospitalNotificationType = "pda_hospitalNotificationType";
   final String _kHospitalNotificationAhead = "pda_hospitalNotificationAhead";
@@ -2211,6 +2213,22 @@ class Prefs {
 
   Future setEducationBarEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kEducationBarEnabled, value);
+  }
+
+  Future<String> getVirusNotificationType() async {
+    return await PrefsDatabase.getString(_kVirusNotificationType, '0');
+  }
+
+  Future setVirusNotificationType(String value) async {
+    return await PrefsDatabase.setString(_kVirusNotificationType, value);
+  }
+
+  Future<bool> getVirusBarEnabled() async {
+    return await PrefsDatabase.getBool(_kVirusBarEnabled, true);
+  }
+
+  Future setVirusBarEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kVirusBarEnabled, value);
   }
 
   Future<String> getHospitalNotificationType() async {

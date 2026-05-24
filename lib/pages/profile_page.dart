@@ -96,6 +96,7 @@ enum ProfileNotification {
   drugs,
   medical,
   education,
+  virus,
   booster,
   rankedWar,
   raceStart,
@@ -124,6 +125,8 @@ extension ProfileNotificationExtension on ProfileNotification {
         return 'medical';
       case ProfileNotification.booster:
         return 'booster';
+      case ProfileNotification.virus:
+        return 'virus';
       default:
         return null;
     }
@@ -177,6 +180,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime? _drugsNotificationTime;
   DateTime? _medicalNotificationTime;
   DateTime? _educationNotificationTime;
+  DateTime? _virusNotificationTime;
   DateTime? _boosterNotificationTime;
   late DateTime _hospitalReleaseTime;
   late DateTime _jailReleaseTime;
@@ -203,6 +207,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _drugsNotificationsPending = false;
   bool _medicalNotificationsPending = false;
   bool _educationNotificationsPending = false;
+  bool _virusNotificationsPending = false;
   bool _boosterNotificationsPending = false;
   bool _hospitalNotificationsPending = false;
   bool _jailNotificationsPending = false;
@@ -219,6 +224,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   NotificationType _drugsNotificationType = NotificationType.notification;
   NotificationType _medicalNotificationType = NotificationType.notification;
   NotificationType _educationNotificationType = NotificationType.notification;
+  NotificationType _virusNotificationType = NotificationType.notification;
   NotificationType _boosterNotificationType = NotificationType.notification;
   NotificationType _hospitalNotificationType = NotificationType.notification;
   NotificationType _jailNotificationType = NotificationType.notification;
@@ -238,6 +244,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   IconData? _drugsNotificationIcon;
   IconData? _medicalNotificationIcon;
   IconData? _educationNotificationIcon;
+  IconData? _virusNotificationIcon;
   IconData? _boosterNotificationIcon;
   IconData? _hospitalNotificationIcon;
   IconData? _jailNotificationIcon;
@@ -251,6 +258,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   OwnProfileMisc? _miscModel;
   TornEducationModel? _tornEducationModel;
   UserItemMarketResponse? _marketItemsV2;
+  UserVirus? _virusModel;
 
   // API call rate limiting
   DateTime _lastFetchApiTime = DateTime.now();
@@ -2845,6 +2853,29 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationType = _educationNotificationType;
         notificationIcon = _educationNotificationIcon ?? Icons.chat_bubble_outline;
 
+      case ProfileNotification.virus:
+        semanticsLabel += "for virus";
+        if (_virusModel != null) {
+          secondsToGo = _virusModel!.until - (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+          _virusNotificationTime = DateTime.fromMillisecondsSinceEpoch(_virusModel!.until * 1000);
+        } else {
+          secondsToGo = 0;
+          _virusNotificationTime = DateTime.now();
+        }
+        notificationsPending = _virusNotificationsPending;
+        final formattedTime = TimeFormatter(
+          inputTime: _virusNotificationTime,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
+        ).formatHourWithDaysElapsed();
+        notificationSetString = 'Virus notification set for $formattedTime';
+        notificationCancelString = 'Virus notification cancelled!';
+        alarmSetString = 'Virus alarm set for $formattedTime';
+        alarmCancelString = 'Virus alarm cancelled!';
+        timerSetString = 'Virus timer set for $formattedTime';
+        notificationType = _virusNotificationType;
+        notificationIcon = _virusNotificationIcon ?? Icons.chat_bubble_outline;
+
       case ProfileNotification.hospital:
         semanticsLabel += "for hospital";
         _hospitalReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user!.status!.until! * 1000);
@@ -3105,11 +3136,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
+    bool showVirus = false;
+    if (_settingsProvider!.virusBarEnabled && _virusModel != null) {
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (_virusModel!.until > now) {
+        showVirus = true;
+      }
+    }
+
     Widget cooldownItems;
     if (_user!.cooldowns!.drug! > 0 ||
         _user!.cooldowns!.booster! > 0 ||
         _user!.cooldowns!.medical! > 0 ||
-        showEducation) {
+        showEducation ||
+        showVirus) {
       cooldownItems = Padding(
         padding: const EdgeInsets.only(left: 8),
         child: Column(
@@ -3226,6 +3266,34 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               )
             else
               const SizedBox.shrink(),
+            if (showVirus)
+              Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Expanded(
+                        child: Row(
+                          children: [
+                            _virusIcon(),
+                            const SizedBox(width: 10),
+                            _virusCounter(),
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _notificationIcon(ProfileNotification.virus),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              )
+            else
+              const SizedBox.shrink(),
           ],
         ),
       );
@@ -3325,6 +3393,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return Icon(MdiIcons.schoolOutline, size: 20, color: _themeProvider!.mainText);
   }
 
+  Widget _virusIcon() {
+    return Icon(MdiIcons.bug, size: 20, color: _themeProvider!.mainText);
+  }
+
   Widget _drugCounter() {
     final DateTime timeEnd = _serverTime.add(Duration(seconds: _user!.cooldowns!.drug!));
 
@@ -3378,6 +3450,22 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final DateTime timeEnd = DateTime.fromMillisecondsSinceEpoch(
       _miscModel!.education.current!.until * 1000,
     );
+    final formattedTime = TimeFormatter(
+      inputTime: timeEnd,
+      timeFormatSetting: _settingsProvider!.currentTimeFormat,
+      timeZoneSetting: _settingsProvider!.currentTimeZone,
+    ).formatHourWithDaysElapsed();
+    final String diff = _timeFormatted(timeEnd, previous: formattedTime);
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Text('@ $formattedTime$diff'),
+      ),
+    );
+  }
+
+  Widget _virusCounter() {
+    final DateTime timeEnd = DateTime.fromMillisecondsSinceEpoch(_virusModel!.until * 1000);
     final formattedTime = TimeFormatter(
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider!.currentTimeFormat,
@@ -5069,6 +5157,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool racingActive = false;
     bool bankActive = false;
     bool educationActive = false;
+    bool virusActive = false;
     bool propertyActive = false;
     bool donatorActive = false;
 
@@ -5517,6 +5606,60 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
+    // VIRUS
+    Widget virusWidget = const SizedBox.shrink();
+
+    if (_virusModel != null) {
+      final timeExpiry = DateTime.fromMillisecondsSinceEpoch(_virusModel!.until * 1000);
+      final timeDifference = timeExpiry.difference(DateTime.now());
+
+      if (!timeDifference.isNegative) {
+        showMisc = true;
+        virusActive = true;
+        Color? expiryColor = Colors.orange[800];
+        String expiryString;
+        if (timeDifference.inHours < 1) {
+          expiryString = 'less than an hour';
+        } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+          expiryString = 'about an hour';
+        } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+          expiryString = '${timeDifference.inHours} hours';
+        } else if (timeDifference.inDays == 1) {
+          expiryString = '1 day';
+          expiryColor = _themeProvider!.mainText;
+        } else {
+          expiryString = '${timeDifference.inDays} days';
+          expiryColor = _themeProvider!.mainText;
+        }
+
+        virusWidget = Semantics(
+          explicitChildNodes: true,
+          child: Row(
+            children: <Widget>[
+              const Icon(MdiIcons.bug),
+              const SizedBox(width: 10),
+              Flexible(
+                child: RichText(
+                  text: TextSpan(
+                    text: "Your virus: ",
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(text: _virusModel!.item.name),
+                      const TextSpan(text: ", will finish coding in "),
+                      TextSpan(
+                        text: expiryString,
+                        style: TextStyle(color: expiryColor),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          ),
+        );
+      }
+    }
+
     // PROPERTIES
     if (_rentedProperties > 0) {
       showMisc = true;
@@ -5608,6 +5751,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     Padding(
                       padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
                       child: educationWidget,
+                    ),
+                  if (virusActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: virusWidget,
                     ),
                   if (propertyActive)
                     Padding(
@@ -5956,6 +6104,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       var marketItems = await _getUserMarketItems();
       if (marketItems != null) {
         _marketItemsV2 = marketItems;
+      }
+
+      // Get Virus (separate v2 endpoint; null when not currently programming a virus)
+      final virus = await ApiCallsV2.getUserVirus_v2();
+      if (virus is UserVirus) {
+        _virusModel = virus;
+      } else if (virus == null) {
+        _virusModel = null;
       }
 
       // Get this async
@@ -6835,6 +6991,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _settingsProvider!.discreetNotifications ? "Done" : 'Your education course has finished!';
         notificationIconAndroid = "notification_items";
         notificationIconColor = Colors.blueGrey;
+      case ProfileNotification.virus:
+        notificationId = 114;
+        if (_virusNotificationTime != null) {
+          secondsToNotification = _virusNotificationTime!.difference(DateTime.now()).inSeconds;
+          final myTimeStamp = (_virusNotificationTime!.millisecondsSinceEpoch / 1000).floor();
+          notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        } else {
+          secondsToNotification = 0;
+        }
+        channelTitle = 'Manual virus';
+        channelSubtitle = 'Manual virus';
+        channelDescription = 'Manual notifications for virus coding';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "Vir" : 'Virus Coded';
+        notificationSubtitle =
+            _settingsProvider!.discreetNotifications ? "Done" : 'Your virus has finished coding!';
+        notificationIconAndroid = "notification_items";
+        notificationIconColor = Colors.deepPurple;
     }
 
     final modifier = await getNotificationChannelsModifiers();
@@ -6910,6 +7083,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool war = false;
     bool raceStart = false;
     bool education = false;
+    bool virus = false;
 
     final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -6951,6 +7125,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (notification.id == 113) {
           education = true;
         }
+        if (notification.id == 114) {
+          virus = true;
+        }
       }
     }
 
@@ -6968,6 +7145,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _rankedWarNotificationsPending = war;
         _raceStartNotificationsPending = raceStart;
         _educationNotificationsPending = education;
+        _virusNotificationsPending = virus;
       });
     }
 
@@ -7000,6 +7178,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         await flutterLocalNotificationsPlugin.cancel(110);
       case ProfileNotification.education:
         await flutterLocalNotificationsPlugin.cancel(113);
+      case ProfileNotification.virus:
+        await flutterLocalNotificationsPlugin.cancel(114);
     }
 
     _retrievePendingNotifications();
@@ -7585,6 +7765,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final drugs = await Prefs().getDrugNotificationType();
     final medical = await Prefs().getMedicalNotificationType();
     final education = await Prefs().getEducationNotificationType();
+    final virus = await Prefs().getVirusNotificationType();
     final booster = await Prefs().getBoosterNotificationType();
 
     final hospital = await Prefs().getHospitalNotificationType();
@@ -7713,6 +7894,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       } else {
         _educationNotificationType = NotificationType.notification;
         _educationNotificationIcon = Icons.chat_bubble_outline;
+      }
+
+      if (virus == '0') {
+        _virusNotificationType = NotificationType.notification;
+        _virusNotificationIcon = Icons.chat_bubble_outline;
+      } else if (virus == '1') {
+        _virusNotificationType = NotificationType.alarm;
+        _virusNotificationIcon = Icons.notifications_none;
+      } else if (virus == '2') {
+        _virusNotificationType = NotificationType.timer;
+        _virusNotificationIcon = Icons.timer_outlined;
+      } else {
+        _virusNotificationType = NotificationType.notification;
+        _virusNotificationIcon = Icons.chat_bubble_outline;
       }
 
       if (booster == '0') {
@@ -7991,6 +8186,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           moreThan24Hours = false;
         }
         message = isIOS ? 'Education' : 'Torn PDA Education';
+      case ProfileNotification.virus:
+        if (_virusNotificationTime != null) {
+          hour = _virusNotificationTime!.hour;
+          minute = _virusNotificationTime!.minute;
+          alarmDateTime = _virusNotificationTime;
+          Duration difference = currentTime.difference(_virusNotificationTime!);
+          moreThan24Hours = difference.inMinutes.abs() > 1439;
+        } else {
+          hour = currentTime.hour;
+          minute = currentTime.minute;
+          alarmDateTime = currentTime;
+          moreThan24Hours = false;
+        }
+        message = isIOS ? 'Virus' : 'Torn PDA Virus';
     }
 
     if (moreThan24Hours) {
@@ -8171,6 +8380,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.education:
         totalSeconds = _educationNotificationTime?.difference(DateTime.now()).inSeconds ?? 0;
         message = 'Torn PDA Education';
+      case ProfileNotification.virus:
+        totalSeconds = _virusNotificationTime?.difference(DateTime.now()).inSeconds ?? 0;
+        message = 'Torn PDA Virus';
     }
 
     final AndroidIntent intent = AndroidIntent(
@@ -8211,6 +8423,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         return "R";
       case ProfileNotification.education:
         return "Edu";
+      case ProfileNotification.virus:
+        return "Vir";
     }
   }
 
@@ -8240,6 +8454,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         return "R";
       case ProfileNotification.education:
         return "Edu";
+      case ProfileNotification.virus:
+        return "Vir";
     }
   }
 

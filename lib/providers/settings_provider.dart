@@ -934,6 +934,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _virusBarEnabled = true;
+  bool get virusBarEnabled => _virusBarEnabled;
+  set virusBarEnabled(bool value) {
+    _virusBarEnabled = value;
+    Prefs().setVirusBarEnabled(value);
+    notifyListeners();
+  }
+
   bool _colorCodedStatusCard = true;
   bool get colorCodedStatusCard => _colorCodedStatusCard;
   set colorCodedStatusCard(bool choice) {
@@ -1783,6 +1791,8 @@ class SettingsProvider extends ChangeNotifier {
     _lifeBarOption = await Prefs().getLifeBarOption();
 
     _educationBarEnabled = await Prefs().getEducationBarEnabled();
+
+    _virusBarEnabled = await Prefs().getVirusBarEnabled();
 
     _colorCodedStatusCard = await Prefs().getColorCodedStatusCard();
 
