@@ -114,6 +114,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Userscripts: added a permissions warning dialog before saving or loading scripts that declare @grant entries [DarXide]",
           "Userscripts: refreshed GM compatibility documentation and added test coverage for metadata contracts [DarXide]",
           "Userscripts: fixed GM handlers duplication in child tabs",
+          "Fixed API usage in Loot",
         ],
     );
 
