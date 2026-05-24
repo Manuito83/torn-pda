@@ -8,6 +8,9 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool? travelNotification = false;
   bool? foreignRestockNotification = false;
   bool? foreignRestockNotificationOnlyCurrentCountry = false;
+  bool? abroadStayNotification = false;
+  List<int> abroadStayIntervals = [];
+  bool abroadStayIncludeHospital = false;
   bool? energyNotification = false;
   bool energyLastCheckFull = true;
   bool? nerveNotification = false;
@@ -65,6 +68,9 @@ class FirebaseUserModel extends OwnProfileExtended {
       "travelNotification": travelNotification,
       "foreignRestockNotification": foreignRestockNotification,
       "foreignRestockNotificationOnlyCurrentCountry": foreignRestockNotificationOnlyCurrentCountry,
+      "abroadStayNotification": abroadStayNotification,
+      "abroadStayIntervals": abroadStayIntervals,
+      "abroadStayIncludeHospital": abroadStayIncludeHospital,
       "energyNotification": energyNotification,
       "energyLastCheckFull": energyLastCheckFull,
       "nerveNotification": nerveNotification,
@@ -108,6 +114,9 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..travelNotification = data["travelNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
       ..foreignRestockNotificationOnlyCurrentCountry = data["foreignRestockNotificationOnlyCurrentCountry"] ?? false
+      ..abroadStayNotification = data["abroadStayNotification"] ?? false
+      ..abroadStayIntervals = List<int>.from(data["abroadStayIntervals"] ?? const <int>[])
+      ..abroadStayIncludeHospital = data["abroadStayIncludeHospital"] ?? false
       ..energyNotification = data["energyNotification"] ?? false
       ..energyLastCheckFull = data["energyLastCheckFull"] ?? false
       ..nerveNotification = data["nerveNotification"] ?? false

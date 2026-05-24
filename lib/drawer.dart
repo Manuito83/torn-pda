@@ -1266,6 +1266,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool travel = false;
     bool hospital = false;
     bool restocks = false;
+    bool abroadStay = false;
     bool racing = false;
     bool messages = false;
     bool events = false;
@@ -1306,6 +1307,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (channel!.contains("Alerts travel")) {
       travel = true;
+    } else if (channel.contains("Alerts abroad stay")) {
+      abroadStay = true;
     } else if (channel.contains("Alerts hospital")) {
       hospital = true;
     } else if (channel.contains("Alerts restocks")) {
@@ -1356,6 +1359,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com";
     } else if (restocks) {
+      launchBrowserWithUrl = true;
+      browserUrl = "https://www.torn.com/travelagency.php";
+    } else if (abroadStay) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/travelagency.php";
     } else if (racing) {

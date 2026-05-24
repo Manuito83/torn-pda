@@ -345,6 +345,31 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel!.abroadStayNotification ?? false,
+                          title: const Text("Abroad stay reminders"),
+                          subtitle: const Text(
+                            "Get reminded at the intervals you choose after landing in a foreign country, so you "
+                            "don't forget you are sitting abroad. Reminders restart on every new trip and stop "
+                            "automatically once you return to Torn",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.abroadStayNotification = value;
+                            });
+                            FirestoreHelper().subscribeToAbroadStayNotification(value);
+                          },
+                        ),
+                      ),
+                      if (_firebaseUserModel!.abroadStayNotification ?? false) _abroadStayOptions(),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
                           value: _firebaseUserModel!.hospitalNotification ?? false,
                           title: const Text("Hospital admission and release"),
                           subtitle: const Text(
@@ -1538,6 +1563,109 @@ class AlertsSettingsState extends State<AlertsSettings> {
       ),
     ),
   ];
+
+  // Selectable intervals (in minutes) for the abroad-stay reminder.
+  static const List<(int minutes, String label)> _abroadStayIntervalChoices = [
+    (5, '5 min'),
+    (15, '15 min'),
+    (30, '30 min'),
+    (60, '1 h'),
+    (360, '6 h'),
+    (720, '12 h'),
+    (1440, '24 h'),
+  ];
+
+  Widget _abroadStayOptions() {
+    final selected = _firebaseUserModel!.abroadStayIntervals.toSet();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  "Pick the intervals you want to be reminded at:",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: _themeProvider!.mainText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 28),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: -4,
+              children: _abroadStayIntervalChoices.map((choice) {
+                final isSelected = selected.contains(choice.$1);
+                return FilterChip(
+                  label: Text(choice.$2),
+                  selected: isSelected,
+                  onSelected: (value) {
+                    setState(() {
+                      if (value) {
+                        selected.add(choice.$1);
+                      } else {
+                        selected.remove(choice.$1);
+                      }
+                      // Keep the list deterministic (ascending order) before persisting.
+                      final ordered = selected.toList()..sort();
+                      _firebaseUserModel!.abroadStayIntervals = ordered;
+                    });
+                    final ordered = selected.toList()..sort();
+                    FirestoreHelper().setAbroadStayIntervals(ordered);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              Flexible(
+                child: CheckboxListTile(
+                  checkColor: Colors.white,
+                  activeColor: Colors.blueGrey,
+                  value: _firebaseUserModel!.abroadStayIncludeHospital,
+                  title: const Text(
+                    "Include hospital stays",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    "If enabled, reminders keep firing while you are hospitalised abroad. If disabled, "
+                    "reminders pause during hospital stays and resume once you are out",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    final include = value ?? false;
+                    setState(() {
+                      _firebaseUserModel!.abroadStayIncludeHospital = include;
+                    });
+                    FirestoreHelper().setAbroadStayIncludeHospital(include);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _notificationDestinationSelector({
     required String value,

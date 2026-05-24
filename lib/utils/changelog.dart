@@ -108,6 +108,15 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.14.0'
         ..date = '27 MAY 2026'
         ..features = [
+          ComplexFeature(
+            "Alerts: added abroad stay reminders",
+            explanation: "Set notifications to remind you while you are sitting in a foreign country, "
+                "so you don't forget you are abroad.\n\n"
+                "Enable it in the Alerts section and pick the intervals you want (5 min, 15 min, 30 min, "
+                "1 h, 6 h, 12 h, 24 h) measured from the moment you land.\n\n"
+                "There is also an option to keep firing reminders while you are hospitalised abroad,"
+                "off by default, so hospital stays pause the reminders and resume them once you are out.",
+          ),
           "Added Buy 100 helper to city shops, Big Al's and the token shop [DarXide]",
           "Added awards comparison to profile checks and the training comparison dialog [DarXide]",
           "Foreign stocks: improved chart time spacing and restock highlighting [DarXide]",
@@ -123,6 +132,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "notification, alarm or timer for when the virus is done.",
           ),
           "Fixed API usage in Loot",
+          "Fixed travel indicator in several sections",
         ],
     );
 

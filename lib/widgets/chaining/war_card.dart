@@ -674,13 +674,13 @@ class WarCardState extends State<WarCard> {
                 Padding(
                   padding: const EdgeInsets.only(right: 3),
                   child: RotatedBox(
-                    quarterTurns: _member.status!.description!.contains('Traveling to ')
-                        ? 1 // If traveling to another country
-                        : _member.status!.description!.contains('Returning ')
-                            ? 3 // If returning to Torn
-                            : 0, // If staying abroad (blue but not moving)
+                    quarterTurns: switch (getTravelDirection(description: _member.status!.description)) {
+                      TravelDirection.outbound => 1, // If traveling to another country
+                      TravelDirection.returning => 3, // If returning to Torn
+                      TravelDirection.none => 0, // If staying abroad (blue but not moving)
+                    },
                     child: Icon(
-                      _member.status!.description!.contains('In ')
+                      isAtLocation(description: _member.status!.description)
                           ? Icons.location_city_outlined
                           : Icons.airplanemode_active,
                       color: Colors.blue,

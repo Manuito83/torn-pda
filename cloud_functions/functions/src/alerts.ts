@@ -15,6 +15,7 @@ import {
   sendMessagesNotification,
   sendEventsNotification,
   sendForeignRestockNotification,
+  sendAbroadStayNotification,
   sendStockMarketNotification,
   sendNotificationToUser,
   NotificationParams,
@@ -370,6 +371,9 @@ async function sendNotificationForProfile(
         checkResults.push(
           sendForeignRestockNotification(userStats, foreignStocks, subscriber)
         );
+      }
+      if (subscriber.abroadStayNotification) {
+        checkResults.push(sendAbroadStayNotification(userStats, subscriber));
       }
       if (subscriber.stockMarketNotification) {
         checkResults.push(sendStockMarketNotification(stockMarket, subscriber));
