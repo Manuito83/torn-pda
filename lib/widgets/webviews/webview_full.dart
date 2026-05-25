@@ -3039,9 +3039,11 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   Future _assessCityShopBuy100() async {
-    if (!_currentUrl.contains('shops.php') &&
-        !_currentUrl.contains('bigalgunshop.php') &&
-        !_currentUrl.contains('token_shop.php')) {
+    if (!_currentUrl.contains('shops.php') && !_currentUrl.contains('bigalgunshop.php')) {
+      return;
+    }
+
+    if (!await Prefs().getCityShopsBuyMaxEnabled()) {
       return;
     }
 

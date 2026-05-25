@@ -649,6 +649,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _cityShopsBuyMaxEnabled = true;
+  bool get cityShopsBuyMaxEnabled => _cityShopsBuyMaxEnabled;
+  set cityShopsBuyMaxEnabled(bool value) {
+    _cityShopsBuyMaxEnabled = value;
+    Prefs().setCityShopsBuyMaxEnabled(_cityShopsBuyMaxEnabled);
+    notifyListeners();
+  }
+
+  var _foreignStocksBuyMaxEnabled = true;
+  bool get foreignStocksBuyMaxEnabled => _foreignStocksBuyMaxEnabled;
+  set foreignStocksBuyMaxEnabled(bool value) {
+    _foreignStocksBuyMaxEnabled = value;
+    Prefs().setForeignStocksBuyMaxEnabled(_foreignStocksBuyMaxEnabled);
+    notifyListeners();
+  }
+
   var _removeTravelQuickReturnButton = false;
   bool get removeTravelQuickReturnButton => _removeTravelQuickReturnButton;
   set removeTravelQuickReturnButton(bool value) {
@@ -1715,6 +1731,8 @@ class SettingsProvider extends ChangeNotifier {
     _androidFastKeyboard = await Prefs().getAndroidFastKeyboard();
     _removeForeignItemsDetails = await Prefs().getRemoveForeignItemsDetails();
     _preventBasketKeyboard = await Prefs().getPreventBasketKeyboard();
+    _cityShopsBuyMaxEnabled = await Prefs().getCityShopsBuyMaxEnabled();
+    _foreignStocksBuyMaxEnabled = await Prefs().getForeignStocksBuyMaxEnabled();
     _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();

@@ -90,6 +90,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       _textScale(),
       _chat(),
       _travel(),
+      _shops(),
       _energyExpenditureWarning(),
       _travelExpenditureWarning(),
       _profile(),
@@ -2202,6 +2203,90 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     ];
     return buildSectionWithRows(
       title: 'TRAVEL',
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _shops() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Enable BUY MAX in city shops",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Enable BUY MAX in city shops")),
+                  Switch(
+                    value: _settingsProvider.cityShopsBuyMaxEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.cityShopsBuyMaxEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "When enabled, a BUY MAX button injected next to each item in Torn city shops, "
+                "to fill the quantity field with the max you can buy",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Enable BUY MAX in foreign stocks",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Enable BUY MAX in foreign stocks")),
+                  Switch(
+                    value: _settingsProvider.foreignStocksBuyMaxEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.foreignStocksBuyMaxEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "When enabled, a BUY MAX button is injected on foreign stock pages while abroad, filling the "
+                "purchase quantity with the maximum affordable",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+    return buildSectionWithRows(
+      title: 'SHOPS',
       rows: rows,
       searchText: _searchText,
     );
