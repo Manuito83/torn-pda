@@ -18,6 +18,7 @@ class StocksOptionsDialog extends StatefulWidget {
   final bool inventoryEnabled;
   final bool showArrivalTime;
   final bool showBarsCooldownAnalysis;
+  final bool autoFilterOnTravel;
   final SettingsProvider? settingsProvider;
 
   const StocksOptionsDialog({
@@ -26,6 +27,7 @@ class StocksOptionsDialog extends StatefulWidget {
     required this.inventoryEnabled,
     required this.showArrivalTime,
     required this.showBarsCooldownAnalysis,
+    required this.autoFilterOnTravel,
     required this.settingsProvider,
   });
 
@@ -40,6 +42,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
   late bool _inventoryEnabled;
   late bool _showArrivalTime;
   late bool _barsCooldownAnalysis;
+  late bool _autoFilterOnTravel;
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
     _inventoryEnabled = widget.inventoryEnabled;
     _showArrivalTime = widget.showArrivalTime;
     _barsCooldownAnalysis = widget.showBarsCooldownAnalysis;
+    _autoFilterOnTravel = widget.autoFilterOnTravel;
   }
 
   @override
@@ -151,7 +155,40 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      const Flexible(
+                        child: Text(
+                          "Auto-filter by destination",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _autoFilterOnTravel,
+                        onChanged: (value) {
+                          setState(() {
+                            _autoFilterOnTravel = value;
+                          });
+                          _callBackValues();
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeThumbColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'While traveling to or staying in a foreign country, show only that '
+                    "country's stocks automatically",
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -213,7 +250,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       fontStyle: FontStyle.italic,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -467,10 +504,11 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
   }
 
   void _callBackValues() {
-    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime, _barsCooldownAnalysis);
+    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime, _barsCooldownAnalysis, _autoFilterOnTravel);
     Prefs().setStockCapacity(_capacity);
     Prefs().setShowForeignInventory(_inventoryEnabled);
     Prefs().setShowArrivalTime(_showArrivalTime);
     Prefs().setShowBarsCooldownAnalysis(_barsCooldownAnalysis);
+    Prefs().setStockAutoFilterOnTravel(_autoFilterOnTravel);
   }
 }

@@ -182,6 +182,8 @@ class Prefs {
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
   final String _kPreventBasketKeyboard = "pda_preventBasketKeyboard";
+  final String _kCityShopsBuyMaxEnabled = "pda_cityShopsBuyMaxEnabled";
+  final String _kForeignStocksBuyMaxEnabled = "pda_foreignStocksBuyMaxEnabled";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
@@ -202,6 +204,7 @@ class Prefs {
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
   final String _kBlacklistedForeignStockItems = "pda_blacklistedForeignStockItems";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
+  final String _kStockAutoFilterOnTravel = "pda_stockAutoFilterOnTravel";
   final String _kRestocksEnabled = "pda_restocksEnabled";
 
   // Profile notifications
@@ -1826,6 +1829,22 @@ class Prefs {
     return await PrefsDatabase.setBool(_kPreventBasketKeyboard, value);
   }
 
+  Future<bool> getCityShopsBuyMaxEnabled() async {
+    return await PrefsDatabase.getBool(_kCityShopsBuyMaxEnabled, true);
+  }
+
+  Future setCityShopsBuyMaxEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kCityShopsBuyMaxEnabled, value);
+  }
+
+  Future<bool> getForeignStocksBuyMaxEnabled() async {
+    return await PrefsDatabase.getBool(_kForeignStocksBuyMaxEnabled, true);
+  }
+
+  Future setForeignStocksBuyMaxEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kForeignStocksBuyMaxEnabled, value);
+  }
+
   Future<bool> getRemoveTravelQuickReturnButton() async {
     return await PrefsDatabase.getBool(_kRemoveTravelQuickReturnButton, false);
   }
@@ -2084,6 +2103,14 @@ class Prefs {
 
   Future setCountriesAlphabeticalFilter(bool value) async {
     return await PrefsDatabase.setBool(_kCountriesAlphabeticalFilter, value);
+  }
+
+  Future<bool> getStockAutoFilterOnTravel() async {
+    return await PrefsDatabase.getBool(_kStockAutoFilterOnTravel, true);
+  }
+
+  Future setStockAutoFilterOnTravel(bool value) async {
+    return await PrefsDatabase.setBool(_kStockAutoFilterOnTravel, value);
   }
 
   /// ----------------------------

@@ -117,9 +117,17 @@ class ChangeLogState extends State<ChangeLog> {
                 "There is also an option to keep firing reminders while you are hospitalised abroad,"
                 "off by default, so hospital stays pause the reminders and resume them once you are out.",
           ),
-          "Added Buy 100 helper to city shops, Big Al's and the token shop [DarXide]",
+          "Added Buy 100 helper to city shops [DarXide]",
           "Added awards comparison to profile checks and the training comparison dialog [DarXide]",
           "Foreign stocks: improved chart time spacing and restock highlighting [DarXide]",
+          ComplexFeature(
+            "Foreign stocks: auto-filter by destination while traveling or abroad",
+            explanation: "When you open the Foreign Stock section while you are flying to a country "
+                "or already staying there, the list now shows only that country's stocks by default.\n\n"
+                "A banner at the top makes it obvious why the view is filtered.\n\n"
+                "If you prefer the old behavior, turn off 'Auto-filter by destination' in the "
+                "Foreign Stock options dialog (gear icon, top right). Enabled by default.",
+          ),
           "Userscripts: added a permissions warning dialog before saving or loading scripts that declare @grant entries [DarXide]",
           "Userscripts: refreshed GM compatibility documentation and added test coverage for metadata contracts [DarXide]",
           "Userscripts: fixed GM handlers duplication in child tabs",

@@ -26,6 +26,7 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
@@ -65,8 +66,35 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   // Filter sheet state
   bool _isFilterSheetOpen = false;
 
+  bool _autoFilterOnTravel = true;
+
+  /// Session-only dismissal: cancels the destination filter for this visit
+  /// without changing the auto-filter pref. Reset every time the page opens.
+  bool _destinationFilterDismissedForSession = false;
+
+  String? get _autoDerivedDestinationCountry {
+    if (!_autoFilterOnTravel) return null;
+    if (_profile?.status == null) return null;
+
+    final resolved = countryCheck(
+      state: _profile!.status!.state,
+      description: _profile!.status!.description,
+    );
+
+    if (resolved.isEmpty || resolved == "Torn" || resolved == "error") return null;
+    return resolved;
+  }
+
+  String? get _effectiveDestinationCountry {
+    final tapDestination = widget.temporaryDestinationCountry;
+    if (tapDestination != null && tapDestination.isNotEmpty) return tapDestination;
+    return _autoDerivedDestinationCountry;
+  }
+
   bool get _temporaryDestinationFilterActive {
-    final destination = widget.temporaryDestinationCountry;
+    if (_destinationFilterDismissedForSession) return false;
+
+    final destination = _effectiveDestinationCountry;
     if (destination == null || destination.isEmpty) return false;
 
     return CountryHelper.fromName(destination) != CountryName.TORN;
@@ -74,7 +102,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   CountryName? get _temporaryDestinationCountryName {
     if (!_temporaryDestinationFilterActive) return null;
-    return CountryHelper.fromName(widget.temporaryDestinationCountry);
+    return CountryHelper.fromName(_effectiveDestinationCountry);
+  }
+
+  bool get _temporaryDestinationFromTap {
+    final tap = widget.temporaryDestinationCountry;
+    return tap != null && tap.isNotEmpty && CountryHelper.fromName(tap) != CountryName.TORN;
   }
 
   bool get _hasItemFiltersApplied => _filteredTypes.any((enabled) => !enabled);
@@ -764,7 +797,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           const SizedBox(width: 2),
           Flexible(
             child: Text(
-              _temporaryDestinationFilterActive ? '${widget.temporaryDestinationCountry} only' : _countriesFilteredText,
+              _temporaryDestinationFilterActive ? '$_effectiveDestinationCountry only' : _countriesFilteredText,
               style: const TextStyle(fontSize: 11),
             ),
           ),
@@ -980,9 +1013,26 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Widget _temporaryDestinationBanner() {
+    final country = _effectiveDestinationCountry;
+    final state = _profile?.status?.state;
+    final String autoContext;
+    if (state == "Traveling") {
+      autoContext = 'you are traveling there';
+    } else if (state == "Abroad") {
+      autoContext = 'you are currently there';
+    } else if (state == "Hospital") {
+      autoContext = 'you are hospitalised there';
+    } else {
+      autoContext = 'you are traveling or abroad';
+    }
+
+    final bannerText = _temporaryDestinationFromTap
+        ? 'Showing only $country stocks from your travel tap'
+        : 'Showing only $country stocks ($autoContext)';
+
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.orange, width: 1),
         borderRadius: BorderRadius.circular(8),
@@ -994,8 +1044,24 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Showing only ${widget.temporaryDestinationCountry} stocks from your travel tap',
+              bannerText,
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: 'Remove this filter for the current session',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                setState(() {
+                  _destinationFilterDismissedForSession = true;
+                });
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.filter_alt_off, color: Colors.orange, size: 20),
+              ),
             ),
           ),
         ],
@@ -1832,6 +1898,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _inventoryEnabled = await Prefs().getShowForeignInventory();
     _showArrivalTime = await Prefs().getShowArrivalTime();
     _showBarsCooldownAnalysis = await Prefs().getShowBarsCooldownAnalysis();
+    _autoFilterOnTravel = await Prefs().getStockAutoFilterOnTravel();
 
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
 
@@ -1865,6 +1932,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               inventoryEnabled: _inventoryEnabled,
               showArrivalTime: _showArrivalTime,
               showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
+              autoFilterOnTravel: _autoFilterOnTravel,
               settingsProvider: _settingsProvider,
             ),
           ),
@@ -1909,6 +1977,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     bool inventoryEnabled,
     bool showArrivalTime,
     bool showBarsCooldownAnalysis,
+    bool autoFilterOnTravel,
   ) {
     _recalculateProfit();
     setState(() {
@@ -1916,6 +1985,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       _inventoryEnabled = inventoryEnabled;
       _showArrivalTime = showArrivalTime;
       _showBarsCooldownAnalysis = showBarsCooldownAnalysis;
+      _autoFilterOnTravel = autoFilterOnTravel;
     });
   }
 
