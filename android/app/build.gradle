@@ -25,6 +25,8 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
+    ndkVersion = "28.2.13676358"
+    
     compileSdkVersion 36
 
     namespace 'com.manuito.tornpda'

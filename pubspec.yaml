@@ -75,8 +75,8 @@ dependencies:
   home_widget:
     git:
       url: https://github.com/Manuito83/home_widget.git
-      ## branch pda-dev-0.8.0
-      ref: 85c37faa6cc62cd237264a82602eafd4eef937b1
+      ## branch pda-dev-0.9.2
+      ref: 0de8dc63df940cd70453b9d05465836a24a226ce
       path: packages/home_widget
   html: 0.15.6
   http: 1.5.0
