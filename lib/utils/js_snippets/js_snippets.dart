@@ -553,9 +553,11 @@ String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
 String cityShopsBuy100JS() {
   return '''
   (function() {
-    const BUTTON_CLASS = 'pda-buy-100-btn';
-    const STYLE_ID = 'pda-buy-100-style';
-    const TARGET_AMOUNT = 100;
+    const BUY_CLASS = 'pda-buy-100-btn';
+    const SELL_CLASS = 'pda-sell-max-btn';
+    const STYLE_ID = 'pda-shop-max-style';
+    const BUY_LABEL = 'MAX';
+    const SELL_LABEL = 'MAX';
 
     function parseNumber(text) {
       if (!text) return 0;
@@ -567,15 +569,15 @@ String cityShopsBuy100JS() {
       if (!text) return 0;
       let clean = String(text).replace(/\\\$/g, '').replace(/,/g, '').trim().toLowerCase();
       let multiplier = 1;
-      if (clean.endsWith('b')) {
+      if (/b\\b/.test(clean)) {
         multiplier = 1000000000;
-        clean = clean.substring(0, clean.length - 1);
-      } else if (clean.endsWith('m')) {
+        clean = clean.replace(/b\\b/g, '');
+      } else if (/m\\b/.test(clean)) {
         multiplier = 1000000;
-        clean = clean.substring(0, clean.length - 1);
-      } else if (clean.endsWith('k')) {
+        clean = clean.replace(/m\\b/g, '');
+      } else if (/k\\b/.test(clean)) {
         multiplier = 1000;
-        clean = clean.substring(0, clean.length - 1);
+        clean = clean.replace(/k\\b/g, '');
       }
       const value = parseFloat(clean.replace(/[^0-9.]/g, ''));
       return Number.isNaN(value) ? 0 : Math.floor(value * multiplier);
@@ -586,9 +588,9 @@ String cityShopsBuy100JS() {
         document.querySelector('[data-currency-money]') ||
         document.querySelector('.user-information .money');
       if (!moneyEl) return 0;
-      return parseNumber(moneyEl.getAttribute('data-money') ||
-        moneyEl.getAttribute('data-currency-money') ||
-        moneyEl.textContent);
+      const attr = moneyEl.getAttribute('data-money') || moneyEl.getAttribute('data-currency-money');
+      if (attr) return parseNumber(attr);
+      return parseMoney(moneyEl.textContent);
     }
 
     function hasMoneyIndicator() {
@@ -597,71 +599,84 @@ String cityShopsBuy100JS() {
         document.querySelector('.user-information .money'));
     }
 
-    function findPrice(container) {
-      const priceCandidates = container.querySelectorAll(
-        '[class*="price"], [class*="cost"], span, div'
-      );
-      for (const el of priceCandidates) {
-        const text = el.textContent || '';
-        if (text.includes('\$')) {
-          const parsed = parseMoney(text);
-          if (parsed > 0) return parsed;
-        }
-      }
-      return 0;
+    function findPrice(card) {
+      const priceEl = card.querySelector(':scope > .desc > .price');
+      if (priceEl) return parseMoney(priceEl.textContent);
+      const text = card.innerText || card.textContent || '';
+      const match = text.match(/\\\$\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*([kmb]\\b)?/i);
+      if (!match) return 0;
+      return parseMoney('\$' + match[1] + (match[2] || ''));
     }
 
-    function findStock(container) {
-      const stockCandidates = container.querySelectorAll(
-        '[class*="stock"], [class*="amount"], span, div'
-      );
-      for (const el of stockCandidates) {
-        const text = el.textContent || '';
-        if (/stock/i.test(text) || /x\\s*[0-9,]+/i.test(text)) {
-          const match = text.match(/x\\s*([0-9,]+)/i) || text.match(/([0-9,]+)/);
-          if (match) {
-            const parsed = parseNumber(match[1]);
-            if (parsed > 0) return parsed;
-          }
-        }
+    function findStock(card) {
+      const stockEl = card.querySelector(':scope > .desc > .stock');
+      if (stockEl) {
+        const t = stockEl.textContent;
+        if (/out of stock/i.test(t)) return 0;
+        const m = t.match(/\\(\\s*([0-9,]+)\\s+in\\s+stock\\s*\\)/i);
+        if (m) return parseNumber(m[1]);
       }
-      return 0;
+      return -1;
     }
 
     function setNativeInputValue(input, value) {
-      const lastValue = input.value;
-      input.value = value;
+      const proto = window.HTMLInputElement && window.HTMLInputElement.prototype;
+      const descriptor = proto && Object.getOwnPropertyDescriptor(proto, 'value');
+      if (descriptor && descriptor.set) {
+        descriptor.set.call(input, String(value));
+      } else {
+        input.value = value;
+      }
       const tracker = input._valueTracker;
-      if (tracker) tracker.setValue(lastValue);
+      if (tracker) tracker.setValue('');
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
+      if (window.jQuery) {
+        try { window.jQuery(input).val(value).trigger('change'); } catch (e) {}
+      }
     }
 
-    function findQuantityInput(container) {
-      return container.querySelector('input.input-money') ||
-        container.querySelector('input[class*="buyAmountInput"]') ||
-        container.querySelector('input[type="number"]') ||
-        container.querySelector('input[type="text"]');
+    function findBuyInput(card) {
+      const wrap = card.querySelector(':scope > .buy-act-wrap');
+      if (!wrap) return null;
+      return wrap.querySelector('input[name="buyAmount[]"]') ||
+        wrap.querySelector('input[name^="buyAmount"]') ||
+        wrap.querySelector('input.input-money') ||
+        wrap.querySelector('input[class*="buyAmountInput"]');
     }
 
-    function getTargetQuantity(container, input) {
-      const price = findPrice(container);
+    function findSellInput(card) {
+      return card.querySelector(':scope > li.amount input[id^="sell"]') ||
+        card.querySelector(':scope > li.amount input.input-money');
+    }
+
+    function getBuyTarget(card, input) {
+      const price = findPrice(card);
       const money = findMoney();
-      const stock = findStock(container);
-      const maxFromInput = parseNumber(input.getAttribute('data-money') || input.getAttribute('max'));
+      const stock = findStock(card);
+      const maxFromInput = parseNumber(input.getAttribute('max'));
 
-      let quantity = TARGET_AMOUNT;
+      let quantity = 100;
       if (price > 0 && money > 0) {
         quantity = Math.min(quantity, Math.floor(money / price));
       }
-      if (stock > 0) {
+      if (stock >= 0) {
         quantity = Math.min(quantity, stock);
       }
       if (maxFromInput > 0) {
         quantity = Math.min(quantity, maxFromInput);
       }
+      if (!isFinite(quantity) || quantity < 0) return 0;
+      return quantity;
+    }
 
-      return Math.max(quantity, 1);
+    function getSellTarget(input) {
+      const dataMoney = parseNumber(input.getAttribute('data-money'));
+      const maxFromInput = parseNumber(input.getAttribute('max'));
+      if (dataMoney > 0 && maxFromInput > 0) return Math.min(dataMoney, maxFromInput);
+      if (dataMoney > 0) return dataMoney;
+      if (maxFromInput > 0) return maxFromInput;
+      return 0;
     }
 
     function injectStyle() {
@@ -670,66 +685,112 @@ String cityShopsBuy100JS() {
       const style = document.createElement('style');
       style.id = STYLE_ID;
       style.textContent = `
-        .\${BUTTON_CLASS} {
-          margin-left: 4px !important;
-          padding: 0 8px !important;
-          height: 30px !important;
-          line-height: 12px !important;
-          font-size: 11px !important;
-          flex: 0 0 auto !important;
+        // Small inline MAX button
+        .\${BUY_CLASS} {
+          display: inline-block !important;
+          margin: 0 0 0 4px !important;
+          padding: 0 4px !important;
+          height: 16px !important;
+          line-height: 14px !important;
+          font-size: 9px !important;
+          font-weight: bold !important;
+          letter-spacing: 0.3px !important;
+          background: #777 !important;
+          color: #fff !important;
+          border: 1px solid #555 !important;
+          border-radius: 3px !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          vertical-align: middle !important;
+        }
+        // Sell button
+        .\${SELL_CLASS} {
+          display: inline-block !important;
+          margin: 0 0 0 4px !important;
+          padding: 0 4px !important;
+          height: 16px !important;
+          line-height: 14px !important;
+          font-size: 9px !important;
+          font-weight: bold !important;
+          letter-spacing: 0.3px !important;
+          background: #777 !important;
+          color: #fff !important;
+          border: 1px solid #555 !important;
+          border-radius: 3px !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          vertical-align: middle !important;
         }
       `;
       document.head.appendChild(style);
     }
 
-    function fillBuy100(buyButton) {
-      const container = buyButton.closest('li') ||
-        buyButton.closest('form') ||
-        buyButton.closest('[class*="row"]') ||
-        buyButton.parentElement;
-      if (!container) return;
-
-      const input = findQuantityInput(container);
-      if (input) {
-        setNativeInputValue(input, getTargetQuantity(container, input));
-      }
-    }
-
-    function injectBuy100Buttons() {
+    function injectButtons() {
       if (!hasMoneyIndicator()) return;
       injectStyle();
 
-      const buyButtons = document.querySelectorAll(
-        'button.torn-btn[type="submit"], button[aria-label*="Buy"], button[class*="buy"]'
-      );
+      document.querySelectorAll('.item-desc').forEach((card) => {
+        const wrap = card.querySelector(':scope > .buy-act-wrap');
+        if (!wrap) return;
+        if (card.querySelector('.' + BUY_CLASS)) return;
+        if (!findBuyInput(card)) return;
 
-      buyButtons.forEach((buyButton) => {
-        const buttonText = (buyButton.textContent || buyButton.getAttribute('aria-label') || '').trim().toLowerCase();
-        if (buttonText && !buttonText.includes('buy')) return;
-        if (buyButton.closest('.' + BUTTON_CLASS)) return;
-        if (buyButton.parentElement && buyButton.parentElement.querySelector('.' + BUTTON_CLASS)) return;
+        const price = card.querySelector(':scope > .desc > .price');
+        const name = card.querySelector(':scope > .desc > .name');
+        const slot = price || name;
+        if (!slot) return;
 
-        const buy100Button = document.createElement('button');
-        buy100Button.type = 'button';
-        buy100Button.className = 'torn-btn ' + BUTTON_CLASS;
-        buy100Button.textContent = '100';
-        buy100Button.title = 'Buy 100';
+        const buyButton = document.createElement('button');
+        buyButton.type = 'button';
+        buyButton.className = BUY_CLASS;
+        buyButton.textContent = BUY_LABEL;
+        buyButton.title = 'Buy max affordable / in stock';
+        buyButton.dataset.pdaBuyMax = '1';
 
-        buy100Button.addEventListener('click', (event) => {
+        buyButton.addEventListener('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-          fillBuy100(buyButton);
+          const liveCard = buyButton.closest('.item-desc');
+          if (!liveCard) return;
+          const liveInput = findBuyInput(liveCard);
+          if (liveInput) setNativeInputValue(liveInput, getBuyTarget(liveCard, liveInput));
         });
 
-        buyButton.insertAdjacentElement('afterend', buy100Button);
+        slot.appendChild(buyButton);
+      });
+
+      document.querySelectorAll('ul.item').forEach((card) => {
+        if (card.querySelector('.' + SELL_CLASS)) return;
+        const input = findSellInput(card);
+        if (!input) return;
+        const desc = card.querySelector(':scope > li.desc');
+        if (!desc) return;
+
+        const sellButton = document.createElement('button');
+        sellButton.type = 'button';
+        sellButton.className = SELL_CLASS;
+        sellButton.textContent = SELL_LABEL;
+        sellButton.title = 'Sell all owned';
+        sellButton.dataset.pdaSellMax = '1';
+
+        sellButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const liveCard = sellButton.closest('ul.item');
+          if (!liveCard) return;
+          const liveInput = findSellInput(liveCard);
+          if (liveInput) setNativeInputValue(liveInput, getSellTarget(liveInput));
+        });
+
+        desc.appendChild(sellButton);
       });
     }
 
-    injectBuy100Buttons();
+    injectButtons();
 
-    if (!window.__pdaCityShopsBuy100Observer) {
-      window.__pdaCityShopsBuy100Observer = new MutationObserver(() => injectBuy100Buttons());
-      window.__pdaCityShopsBuy100Observer.observe(document.body, { childList: true, subtree: true });
+    if (!window.__pdaShopMaxObserver) {
+      window.__pdaShopMaxObserver = new MutationObserver(() => injectButtons());
+      window.__pdaShopMaxObserver.observe(document.body, { childList: true, subtree: true });
     }
 
     123;
