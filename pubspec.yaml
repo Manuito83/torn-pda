@@ -115,26 +115,29 @@ dependencies:
   webview_flutter: 4.13.0
   workmanager: 0.9.0+3
 
-# Fork of flutter_inappwebview 6.2.0-beta.3 with a patch that defers the JS
+# Fork of flutter_inappwebview 6.2.0-beta.3 with patches that defer the JS
 # bridge native registrations (addJavascriptInterface, addDocumentStartJavaScript)
-# off the Android platform-view attach. Without this, onWebViewCreated fails to
-# fire on 50% of release-build cold starts on Android. Revert to pub.dev
-# versions once upstream merges the fix.
+# and the initial load IPC off the Android platform-view attach. Without this,
+# onWebViewCreated fails to fire on 50% of release-build cold starts on Android,
+# and on the launches where it does fire the bridge can race against the load
+# IPC so @document-start userscripts see window.flutter_inappwebview undefined
+# on cached or sleeping-tab pages. Revert to pub.dev versions once upstream
+# merges the fix.
 dependency_overrides:
   flutter_inappwebview:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 2e6064bc7a75e069a51a03fab9a5bcfcf63148c5
+      ref: 8f2edb9ab9a0473bc11d06f9b936064bf7465c4f
       path: ./flutter_inappwebview
   flutter_inappwebview_platform_interface:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 2e6064bc7a75e069a51a03fab9a5bcfcf63148c5
+      ref: 8f2edb9ab9a0473bc11d06f9b936064bf7465c4f
       path: ./flutter_inappwebview_platform_interface
   flutter_inappwebview_android:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 2e6064bc7a75e069a51a03fab9a5bcfcf63148c5
+      ref: 8f2edb9ab9a0473bc11d06f9b936064bf7465c4f
       path: ./flutter_inappwebview_android
 
 dev_dependencies:
