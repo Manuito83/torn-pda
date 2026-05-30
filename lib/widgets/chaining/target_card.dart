@@ -23,6 +23,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_activity_badge.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
 import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -250,6 +251,7 @@ class TargetCardState extends State<TargetCard> {
                                   : _target!.lastAction!.relative!.replaceAll(' ago', ''),
                             ),
                           ),
+                          FFScouterActivityBadge(playerId: _target!.playerId!, playerName: _target!.name),
                         ],
                       ),
                       Expanded(

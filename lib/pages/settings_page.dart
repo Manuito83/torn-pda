@@ -66,6 +66,7 @@ import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
+import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:vibration/vibration.dart';
 
@@ -1365,6 +1366,43 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _showFFScouterPremiumFeaturesDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("FFScouter premium features", style: TextStyle(fontSize: 16)),
+          content: GetBuilder<FFScouterPremiumController>(
+            builder: (p) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text("Stat distribution"),
+                  value: p.distributionEnabled,
+                  onChanged: (v) => p.distributionEnabled = v,
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text("Travel / landing timers"),
+                  value: p.flightsEnabled,
+                  onChanged: (v) => p.flightsEnabled = v,
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text("Activity tracker"),
+                  value: p.activityEnabled,
+                  onChanged: (v) => p.activityEnabled = v,
+                ),
+              ],
+            ),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text("Close"))],
+        );
+      },
+    );
+  }
+
   Widget _statsSection() {
     List<SearchableRow> rows = [];
 
@@ -1457,6 +1495,47 @@ class SettingsPageState extends State<SettingsPage> {
                 color: Colors.grey[600],
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // FFScouter premium features, opened via a sync/check
+    if (_settingsProvider.ffScouterEnabledStatusRemoteConfig && _settingsProvider.ffScouterEnabledStatus == 1) {
+      rows.add(
+        SearchableRow(
+          label: "FFScouter premium features",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
+            child: GetBuilder<FFScouterPremiumController>(
+              builder: (ffsPremium) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("FFScouter premium features")),
+                  if (ffsPremium.isPremium)
+                    OutlinedButton.icon(
+                      onPressed: _showFFScouterPremiumFeaturesDialog,
+                      icon: const Icon(Icons.tune, size: 16),
+                      label: const Text("Select"),
+                    )
+                  else
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await ffsPremium.refreshPremiumStatus(force: true);
+                        if (!mounted) return;
+                        if (ffsPremium.isPremium) {
+                          _showFFScouterPremiumFeaturesDialog();
+                        } else {
+                          BotToast.showText(text: "No active FFScouter premium found for your key");
+                        }
+                      },
+                      icon: const Icon(Icons.sync, size: 16),
+                      label: const Text("SYNC"),
+                    ),
+                ],
               ),
             ),
           ),

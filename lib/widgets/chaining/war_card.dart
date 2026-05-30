@@ -25,6 +25,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_activity_badge.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -317,6 +318,11 @@ class WarCardState extends State<WarCard> {
                           ),
                           _travelIcon(),
                           _lastOnlineWidget(),
+                          FFScouterActivityBadge(
+                            playerId: _member.memberId!,
+                            playerName: _member.name,
+                            isTopHitter: _w.getMemberTotalStatsWithFFS(_member) > UserHelper.totalStats,
+                          ),
                           const SizedBox(width: 5),
                           const Icon(Icons.refresh, size: 12),
                           const SizedBox(width: 2),

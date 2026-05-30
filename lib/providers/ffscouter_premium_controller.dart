@@ -19,6 +19,33 @@ class FFScouterPremiumController extends GetxController {
 
   bool _checking = false;
 
+  // per-feature enable toggles (default on)
+  bool _distributionEnabled = true;
+  bool _flightsEnabled = true;
+  bool _activityEnabled = true;
+
+  bool get distributionEnabled => _distributionEnabled;
+  bool get flightsEnabled => _flightsEnabled;
+  bool get activityEnabled => _activityEnabled;
+
+  set distributionEnabled(bool v) {
+    _distributionEnabled = v;
+    Prefs().setFFScouterPremiumDistribution(v);
+    update();
+  }
+
+  set flightsEnabled(bool v) {
+    _flightsEnabled = v;
+    Prefs().setFFScouterPremiumFlights(v);
+    update();
+  }
+
+  set activityEnabled(bool v) {
+    _activityEnabled = v;
+    Prefs().setFFScouterPremiumActivity(v);
+    update();
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -29,6 +56,9 @@ class FFScouterPremiumController extends GetxController {
     _isPremium = await Prefs().getFFScouterPremiumActive();
     _promoDismissed = await Prefs().getFFScouterPremiumPromoDismissed();
     _lastChecked = await Prefs().getFFScouterPremiumLastChecked();
+    _distributionEnabled = await Prefs().getFFScouterPremiumDistribution();
+    _flightsEnabled = await Prefs().getFFScouterPremiumFlights();
+    _activityEnabled = await Prefs().getFFScouterPremiumActivity();
     update();
   }
 

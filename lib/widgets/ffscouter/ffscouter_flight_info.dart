@@ -7,11 +7,11 @@ import 'package:torn_pda/providers/ffscouter_flights_controller.dart';
 import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 
 /// Remaining-time chip (blue) + info button, sits left of the card's travel
-/// icon. Premium only; nothing when not traveling.
+/// icon. Premium only; nothing when not traveling
 class FFScouterFlightInfo extends StatefulWidget {
   final int playerId;
 
-  /// Target is in transit (caller derives this from travel status).
+  /// Target is in transit (caller derives this from travel status)
   final bool isTraveling;
 
   const FFScouterFlightInfo({super.key, required this.playerId, required this.isTraveling});
@@ -33,7 +33,7 @@ class _FFScouterFlightInfoState extends State<FFScouterFlightInfo> {
   void initState() {
     super.initState();
     if (!widget.isTraveling) return;
-    if (_premium.isPremium) {
+    if (_premium.isPremium && _premium.flightsEnabled) {
       _load();
     } else {
       _premium.refreshPremiumStatus();
@@ -66,7 +66,7 @@ class _FFScouterFlightInfoState extends State<FFScouterFlightInfo> {
     if (!widget.isTraveling) return const SizedBox.shrink();
     return GetBuilder<FFScouterPremiumController>(
       builder: (premium) {
-        if (!premium.isPremium) return const SizedBox.shrink();
+        if (!premium.isPremium || !premium.flightsEnabled) return const SizedBox.shrink();
         // premium known late: fetch now
         if (!_loadStarted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -152,7 +152,7 @@ class _FFScouterFlightInfoState extends State<FFScouterFlightInfo> {
     );
   }
 
-  /// HH:MM in TCT (UTC).
+  /// HH:MM in TCT (UTC)
   String _fmtTct(int epochSec) {
     final dt = DateTime.fromMillisecondsSinceEpoch(epochSec * 1000, isUtc: true);
     return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";

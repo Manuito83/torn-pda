@@ -22,7 +22,7 @@ class FFScouterFlightsController extends GetxController {
 
   int get _now => DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
-  /// Returns fresh cached flights for [target], or null if missing/stale.
+  /// Returns fresh cached flights for [target], or null if missing/stale
   FFScouterFlightsResponse? get(int target) {
     final entry = _cache[target];
     if (entry == null) return null;

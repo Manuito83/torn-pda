@@ -23,12 +23,7 @@ class ComplexFeature {
   final int? secondsToShow;
   final bool closeButton;
 
-  ComplexFeature(
-    this.text, {
-    this.explanation,
-    this.secondsToShow,
-    this.closeButton = false,
-  });
+  ComplexFeature(this.text, {this.explanation, this.secondsToShow, this.closeButton = false});
 }
 
 class ChangeLog extends StatefulWidget {
@@ -110,7 +105,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           ComplexFeature(
             "Alerts: added abroad stay reminders",
-            explanation: "Set notifications to remind you while you are sitting in a foreign country, "
+            explanation:
+                "Set notifications to remind you while you are sitting in a foreign country, "
                 "so you don't forget you are abroad.\n\n"
                 "Enable it in the Alerts section and pick the intervals you want (5 min, 15 min, 30 min, "
                 "1 h, 6 h, 12 h, 24 h) measured from the moment you land.\n\n"
@@ -122,18 +118,33 @@ class ChangeLogState extends State<ChangeLog> {
           "Foreign stocks: improved chart time spacing and restock highlighting [DarXide]",
           ComplexFeature(
             "Foreign stocks: auto-filter by destination while traveling or abroad",
-            explanation: "When you open the Foreign Stock section while you are flying to a country "
+            explanation:
+                "When you open the Foreign Stock section while you are flying to a country "
                 "or already staying there, the list now shows only that country's stocks by default.\n\n"
                 "A banner at the top makes it obvious why the view is filtered.\n\n"
                 "If you prefer the old behavior, turn off 'Auto-filter by destination' in the "
                 "Foreign Stock options dialog (gear icon, top right). Enabled by default.",
+          ),
+          ComplexFeature(
+            "FFScouter premium: stat distribution, travel timers and activity tracking",
+            explanation:
+                "If your FFScouter key has an active premium subscription, you can use three new tools.\n\n"
+                "Toggle them in Settings > FFScouter.\n\n"
+                "Stat distribution: a target's stats breakdown in the FFScouter tab of the stats dialog.\n\n"
+                "Travel and landing timers: the predicted landing time (TCT countdown) shown next to the travel "
+                "icon on targets that are flying, in war and target cards and in profile checks. Tap it for the "
+                "arrival window and route.\n\n"
+                "Activity tracker: a 'likely online now' icon on each member (tap for their typical daily pattern "
+                "in TCT), plus an 'Enemy activity' panel on the War page with a 24h heatmap per faction and the "
+                "most-active members, flagging the strong ones who are online now.",
           ),
           "Userscripts: added a permissions warning dialog before saving or loading scripts that declare @grant entries [DarXide]",
           "Userscripts: refreshed GM compatibility documentation and added test coverage for metadata contracts [DarXide]",
           "Userscripts: fixed GM handlers duplication in child tabs",
           ComplexFeature(
             "Added a virus coding timer to Profile",
-            explanation: "When you are programming a virus, the remaining time now shows up "
+            explanation:
+                "When you are programming a virus, the remaining time now shows up "
                 "automatically in the MISC section of your Profile.\n\n"
                 "You can also enable a dedicated entry in the COOLDOWNS section "
                 "(Settings / Profile options / Show virus coding) to schedule a manual "
@@ -152,7 +163,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           ComplexFeature(
             "Drawer sections can now be reordered, hidden and customized",
-            explanation: "Go to Settings / Drawer sections to configure.\n\n"
+            explanation:
+                "Go to Settings / Drawer sections to configure.\n\n"
                 "You can now change the order of all sections in the app's main drawer menu, "
                 "as well as hide those you don't use. Settings and About are always visible.\n\n"
                 "Two dividers are also available and can be freely positioned within the list.\n\n"
@@ -203,9 +215,7 @@ class ChangeLogState extends State<ChangeLog> {
       ChangeLogItem()
         ..version = 'Torn PDA v3.13.2'
         ..date = '05 APR 2026'
-        ..features = [
-          "Fixed YATA Awards section [Kwack]",
-        ],
+        ..features = ["Fixed YATA Awards section [Kwack]"],
     );
 
     // v3.13.1 - Build 638 - built 22/03/2026
@@ -224,7 +234,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Local backups can now be exported in a shareable mode without API keys or auth data",
           ComplexFeature(
             "Added fast keyboard option for the browser",
-            explanation: "Disabled by default.\n\n"
+            explanation:
+                "Disabled by default.\n\n"
                 "Go to Settings / Advanced Browser Settings and scroll down to the Maintenance section.\n\n"
                 "When enabled, the browser will no longer resize when the keyboard appears, "
                 "which might have a positive impact on keyboard animation speed (this is highly "
@@ -278,7 +289,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           ComplexFeature(
             "Added FFScouter integration for battle score estimates",
-            explanation: "FFScouter is an external service that estimates battle scores for Torn players.\n\n"
+            explanation:
+                "FFScouter is an external service that estimates battle scores for Torn players.\n\n"
                 "Two new options are available in Settings (Stats & Player Notes):\n\n"
                 "1. Prefer FFScouter battle score: replaces the vague estimated stats range "
                 "(e.g. '2M - 25M') with FFScouter's battle score estimate on war cards, retal cards "
@@ -317,7 +329,8 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isAndroid)
             ComplexFeature(
               "Travel Live Updates are now available on Android [bombel]",
-              explanation: "Use the switch below to enable them.\n\n"
+              explanation:
+                  "Use the switch below to enable them.\n\n"
                   "When enabling, you'll be prompted to review battery optimization "
                   "settings to keep updates running in the background.\n\n"
                   "You can change this setting in the Alerts section later on.\n\n"
@@ -339,10 +352,7 @@ class ChangeLogState extends State<ChangeLog> {
                               "Travel Live Update",
                               style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              "(disabled by default)",
-                              style: TextStyle(fontStyle: FontStyle.italic),
-                            ),
+                            Text("(disabled by default)", style: TextStyle(fontStyle: FontStyle.italic)),
                           ],
                         ),
                       ),
@@ -364,7 +374,8 @@ class ChangeLogState extends State<ChangeLog> {
             ),
           ComplexFeature(
             "Overhauled Quick Items selection and categories (wiped existing ones)",
-            explanation: "Quick Items have been redesigned to that they can be selected from TORN's item list.\n\n"
+            explanation:
+                "Quick Items have been redesigned to that they can be selected from TORN's item list.\n\n"
                 "This also allows new categories of quick items (e.g. weapons, armor, etc.) to be selected.\n\n"
                 "Faction quick items remain unchanged.\n\n",
           ),
@@ -374,7 +385,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Added on time option for local notifications, alarms, and timers where applicable",
           ComplexFeature(
             "Dev: added 'tab state' webview handler (see details)",
-            explanation: "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"
+            explanation:
+                "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"
                 " and browser visibility) and stay in sync across tab switches.\n\n"
                 "Please visit the ./docs section in Github for more information.",
           ),
@@ -400,7 +412,8 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isIOS)
             ComplexFeature(
               "Alarms can now be used in addition to notifications (iOS 26+)",
-              explanation: "All Profile, Loot, Travel Boarding, and browser notifications can now "
+              explanation:
+                  "All Profile, Loot, Travel Boarding, and browser notifications can now "
                   "be activated as alarms instead.\n\n"
                   "Under the hood, they use native iOS AlarmKit which is only supported on iOS 26 and later\n\n"
                   "Current pending alarms can be seen (and cancelled) in Settings > Active Alarms",
@@ -426,7 +439,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Improved Torn Stats chart cache data handling",
           ComplexFeature(
             "Added browser handler to share files from user scripts (see details)",
-            explanation: "The new handler allows web content / user scripts to share files "
+            explanation:
+                "The new handler allows web content / user scripts to share files "
                 "(like CSVs or images) generated within the browser to the native side of the app, "
                 "triggering the system share sheet.\n\n"
                 "Please visit the ./docs section in Github for more information.",
@@ -500,7 +514,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Improved spies dialog with search and better performance",
           ComplexFeature(
             "Added option to display all rented out properties in the Misc card",
-            explanation: "Disabled by default"
+            explanation:
+                "Disabled by default"
                 "\n\nIf active, you will see all the properties you rent out to other players in the "
                 "Rented Properties section in the Miscellaneous card. If inactive, you will only "
                 "see the properties you rent (the ones you pay rent for)\n\n"
@@ -527,7 +542,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           ComplexFeature(
             "Player notes system overhauled",
-            explanation: "The player notes system has been completely redesigned so that all notes "
+            explanation:
+                "The player notes system has been completely redesigned so that all notes "
                 "are now shared between targets, war targets, stakeouts, friends and profile pages.\n\n"
                 "For this last item, a new widget can be enabled in the player profile page to show or allow to take "
                 "notes directly in the browser (see Settings / Advanced Browser Settings / Player Profiles)\n\n"
@@ -565,11 +581,7 @@ class ChangeLogState extends State<ChangeLog> {
                     const Flexible(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "(disabled by default)",
-                          ),
-                        ],
+                        children: [Text("(disabled by default)")],
                       ),
                     ),
                     Switch(
@@ -605,7 +617,8 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isAndroid) "Discreet notification setting now also applies to alarms and timers",
           ComplexFeature(
             "Added high refresh rate control",
-            explanation: "Settings > Screen Configuration (disabled by default)\n\n"
+            explanation:
+                "Settings > Screen Configuration (disabled by default)\n\n"
                 "Enables the highest available refresh rate on supported devices "
                 "(e.g., 90Hz, 120Hz) for smoother animations.\n\n"
                 "May increase battery consumption and device heat but provides smoother animations.",
@@ -628,7 +641,8 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isIOS) "Added native Apple and Google login (Settings)",
           ComplexFeature(
             "Added Developer Tools for advanced users",
-            explanation: "You can now access additional developer tools directly within the app\n\n"
+            explanation:
+                "You can now access additional developer tools directly within the app\n\n"
                 "To open them, tap the browser's title bar to open the URL Menu (or long-press the 'CLOSE' button in dialog mode) and select 'Open Dev Tools'.\n\n"
                 "This new screen provides three essential utilities for inspecting the WebView:\n\n"
                 "1. Terminal: another place to access the terminal, and execute JavaScript commands. Includes command history.\n\n"
@@ -673,10 +687,7 @@ class ChangeLogState extends State<ChangeLog> {
                               "Travel Live Activities",
                               style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              "(enabled by default)",
-                              style: TextStyle(fontStyle: FontStyle.italic),
-                            ),
+                            Text("(enabled by default)", style: TextStyle(fontStyle: FontStyle.italic)),
                           ],
                         ),
                       ),
@@ -695,7 +706,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Added accessibility (talkback) improvements in the Profile section",
           ComplexFeature(
             "Added browser handler to open other device applications (see details)",
-            explanation: "The new handler allows web content / user scripts to launch external applications "
+            explanation:
+                "The new handler allows web content / user scripts to launch external applications "
                 "(like Discord) by passing a URL from JavaScript to the native side of the app\n\n"
                 "Please visit the ./docs section in Github for more information.",
           ),
@@ -714,7 +726,8 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isIOS)
             ComplexFeature(
               "Added live activity support for traveling",
-              explanation: "Only available for iOS 16.2 and above\n\n"
+              explanation:
+                  "Only available for iOS 16.2 and above\n\n"
                   "See Alerts / Live Activities\n\n"
                   "This feature allows you to track your travel in real-time, "
                   "providing updates on your journey directly on your device's lock screen or dynamic island.\n\n"
@@ -743,7 +756,8 @@ class ChangeLogState extends State<ChangeLog> {
           "All Torn PDA settings can now be exported and imported locally",
           ComplexFeature(
             "Added share attack information functionality for war targets",
-            explanation: "You can now share (copy or send to your faction chat) the attack information "
+            explanation:
+                "You can now share (copy or send to your faction chat) the attack information "
                 "of any of your war targets.\n\n"
                 "This includes the target's name, stats (estimated but also spied and TSC when available), "
                 "together with the attack URL\n\n"
@@ -752,14 +766,16 @@ class ChangeLogState extends State<ChangeLog> {
           "Browser should now center fields correctly when the keyboard is shown",
           ComplexFeature(
             "Added memory usage widget to main drawer menu and browser appbar",
-            explanation: "Enable it in Settings, under the Troubleshooting section.\n\n"
+            explanation:
+                "Enable it in Settings, under the Troubleshooting section.\n\n"
                 "This widget is intended to help you understand how different configurations (e.g.: "
                 "browser tabs, scripts, etc.) affect Torn PDA's memory usage.\n\n"
                 "Be aware that memory usage information might not be accurate in some devices.",
           ),
           ComplexFeature(
             "Added API error log for troubleshooting",
-            explanation: "Torn PDA will record the latest 30 API errors for each session.\n\n"
+            explanation:
+                "Torn PDA will record the latest 30 API errors for each session.\n\n"
                 "This is useful for troubleshooting issues with the API, normally upon request "
                 "from Torn PDA developers.\n\n"
                 "It can be found in Settings, under the Troubleshooting section.",
@@ -782,7 +798,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Added Wiki to the main drawer menu",
           ComplexFeature(
             "Added accesible text color option",
-            explanation: "See Settings / Theme.\n\n"
+            explanation:
+                "See Settings / Theme.\n\n"
                 "Activate this option to replace all colored texts with the default text color (white or black). "
                 "\n\nThis can improve readability for users with color vision deficiencies, but might make "
                 "it harder to identify the performance of some indicators."
@@ -791,7 +808,8 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           ComplexFeature(
             "Added notes to player profile widgets",
-            explanation: "Enabled by default. See Settings / Advanced Browser Settings / Player Profiles\n\n"
+            explanation:
+                "Enabled by default. See Settings / Advanced Browser Settings / Player Profiles\n\n"
                 "If enabled, this will show a notes widget in the profile page "
                 "for those players that you have added notes to (as friends, stakeouts or targets)"
                 "\n\nThe notes icon is actionable (tap to change notes)",
@@ -815,7 +833,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Improved information provided for OC 2",
           ComplexFeature(
             "User scripts: added handlers to schedule notifications from JS code (see details)",
-            explanation: "You can trigger native notifications from your user scripts using the "
+            explanation:
+                "You can trigger native notifications from your user scripts using the "
                 "new handlers available. This also includes alarms and timers for Android.\n\n"
                 "Please refer to the disclaimer in the user scripts section, or visit Torn PDA's wiki or "
                 "./docs section in Github for more information.\n\n"
@@ -823,7 +842,8 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           ComplexFeature(
             "Browser: improved developer terminal (see details)",
-            explanation: "The terminal can now be resized, shared and its text is selectable.\n\n"
+            explanation:
+                "The terminal can now be resized, shared and its text is selectable.\n\n"
                 "You can also expand the terminal in a dialog covering the whole screen, which includes the capacity "
                 "to enter text and execute commands.\n\n"
                 "Terminals are now independent for each tab, and you can also clear them individually.",
@@ -847,7 +867,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Alerts: faction messages can now be filtered out in chat notifications",
           ComplexFeature(
             "Added navigation arrows to the browser (see details)",
-            explanation: "Forward and backward navigation arrows can now be shown in the browser "
+            explanation:
+                "Forward and backward navigation arrows can now be shown in the browser "
                 "when using the default browser style.\n\n"
                 "The default configuration is to show them only in wide-screen mode, but you can "
                 "force them to always be visible, even on narrower screens. In this case, please note that Torn PDA "
@@ -869,14 +890,16 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           ComplexFeature(
             "Alerts: added notification for subscribed forum threads",
-            explanation: "Disabled by default: you can enable it in Alerts"
+            explanation:
+                "Disabled by default: you can enable it in Alerts"
                 "\n\nNOTE: in order to reduce API load, checks will be performed "
                 "every 15 minutes, so the notification may not be immediate "
                 "after a new post is made",
           ),
           ComplexFeature(
             "Profile: added OC v2 information to the misc card",
-            explanation: "Torn PDA will try to assess whether your faction has already switched to OC v2 "
+            explanation:
+                "Torn PDA will try to assess whether your faction has already switched to OC v2 "
                 "every couple of days (in order to save API calls). Hoever, you can manually set the OC version in "
                 "Settings / Organized Crime\n\n"
                 "Should you wish to return to OC v1 (if you join a faction that hasn't changed yet), remember "
@@ -884,7 +907,8 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           ComplexFeature(
             "Clock now highlights active events and competitions",
-            explanation: "Enabled by default (can be disabled in Settings > Time).\n\n"
+            explanation:
+                "Enabled by default (can be disabled in Settings > Time).\n\n"
                 "Tapping the clock will now display a toast notification when an event or competition is active, showing "
                 "details and the remaining time until it ends.",
           ),
@@ -920,7 +944,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Profile: added user's market items details",
           ComplexFeature(
             "Browser: added Floating Action Button (see Tips!)",
-            explanation: "Disabled by default: you can enable it in Settings / Advanced Browser Settings"
+            explanation:
+                "Disabled by default: you can enable it in Settings / Advanced Browser Settings"
                 "\n\nIt is HIGHLY recommended that you visit the Tips section to understand "
                 "how to properly use this feature to its full potential"
                 "\n\nThe Floating Action Button is a feature that allows you to perform "
@@ -941,10 +966,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.6.4'
         ..date = '15 DEC 2024'
         ..hotfixes = ['Resolved incorrect estimated stats calculation in the War section']
-        ..features = [
-          "Fixed player profile widget",
-          "Fixed chat notifications in split screen",
-        ],
+        ..features = ["Fixed player profile widget", "Fixed chat notifications in split screen"],
     );
 
     // v3.6.2 - Build 467 - 07/11/2024
@@ -976,14 +998,16 @@ class ChangeLogState extends State<ChangeLog> {
           "Added browser links to the Events timeline in Profile",
           ComplexFeature(
             "Added option to remove unused tabs",
-            explanation: "Manual trigger: use the triple-dotted icon in the browser's tab bar, "
+            explanation:
+                "Manual trigger: use the triple-dotted icon in the browser's tab bar, "
                 "then tab the red bin icon to see more options.\n\n"
                 "Automatic task: activate a periodic removal in Settings / Advanced Browser Settings / Tabs",
           ),
           "War: added option to sort by travel distance",
           ComplexFeature(
             "Adapted auto-price script for new market [Kwack]",
-            explanation: "With the introduction of the new market system, "
+            explanation:
+                "With the introduction of the new market system, "
                 "the old bazaar auto-price script has been adapted to work with "
                 "this new market.\n\nIf you had the official script installed, "
                 "you will receive a notification to update; if you installed "
@@ -995,7 +1019,8 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isAndroid)
             ComplexFeature(
               "Added battery optimization checks for home widget",
-              explanation: "A battery optimization check has been added to Tips and the app widget "
+              explanation:
+                  "A battery optimization check has been added to Tips and the app widget "
                   "installation process to warn the user about battery settings (since "
                   "they might restrict the widget's funcionality).\n\n"
                   "If you already have a home widget installed, this will cause "
@@ -1004,7 +1029,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Chaining browser can now be opened in full-screen mode (disabled by default)",
           ComplexFeature(
             "Added option to remove quick return button when traveling",
-            explanation: "You can find this in Settings / Advanced Browser Settings / Travel\n\n"
+            explanation:
+                "You can find this in Settings / Advanced Browser Settings / Travel\n\n"
                 "Defaults to disabled (return button will show)",
           ),
           "Added app upgrade dialog",
@@ -1028,14 +1054,16 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           ComplexFeature(
             "Added option to open new tabs in the background",
-            explanation: "Go to Settings / Advanced Browser Settings\n\nLook for 'Tabs'\n\n"
+            explanation:
+                "Go to Settings / Advanced Browser Settings\n\nLook for 'Tabs'\n\n"
                 "By default, when you open a new tab via the 'open in new tab' option, when long-pressing "
                 "a link, the browser will change to the newly created tab. If you disable this, the new tab "
                 "will be created but you will remain in the current one",
           ),
           ComplexFeature(
             "Added option to open background tab from tabs with a full lock",
-            explanation: "Go to Settings / Advanced Browser Settings\n\nLook for 'Tab Locks'\n\n"
+            explanation:
+                "Go to Settings / Advanced Browser Settings\n\nLook for 'Tab Locks'\n\n"
                 'If enabled, a navigation attempt from a tab with a full lock will open a new tab in the background '
                 '(the tab will be added but the browser will not switch to it automatically)\n\n'
                 "(disabled by default)",
@@ -1043,14 +1071,16 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isAndroid)
             ComplexFeature(
               "Improved home screen widget functionality",
-              explanation: "Go to Settings / Home Screen Widget\n\n"
+              explanation:
+                  "Go to Settings / Home Screen Widget\n\n"
                   "An additional short layout with not shortcuts has been added\n\n"
                   "You can now choose the behavior when tapping on cooldowns and whether to browse to your own "
                   "items or to your faction's armoury",
             ),
           ComplexFeature(
             "Increased time selection for manual loot notifications",
-            explanation: "Go to Loot / Time icon (top right)\n\n"
+            explanation:
+                "Go to Loot / Time icon (top right)\n\n"
                 '8 & 10 minutes options have been added',
           ),
           "Improved backwards navigation in certain sections",
@@ -1331,7 +1361,8 @@ class ChangeLogState extends State<ChangeLog> {
     final v3_2_0 = ChangeLogItem();
     v3_2_0.version = 'Torn PDA v3.2.0';
     v3_2_0.date = '15 NOV 2023';
-    const String feat3_2_0_1 = "Reconfigured how spies are retrieved (now manually) to speed up loading times of the "
+    const String feat3_2_0_1 =
+        "Reconfigured how spies are retrieved (now manually) to speed up loading times of the "
         "Profile Widget, as well as the War and Retalation sections. Make sure to check Tips and Settings for further information.";
     const String feat3_2_0_2 = "Added Chain Watcher alert if API fails under watch";
     const String feat3_2_0_3 = "Fixed chat hide feature";
@@ -1415,7 +1446,8 @@ class ChangeLogState extends State<ChangeLog> {
     v3_1_4.version = 'Torn PDA v3.1.4';
     v3_1_4.date = '28 JUN 2023';
     const String feat3_1_4_1 = "Browser full screen: added gear icon to '...' vertical menu to access further options";
-    const String feat3_1_4_2 = "Browser full screen: added two extra tabs to exit and reload the "
+    const String feat3_1_4_2 =
+        "Browser full screen: added two extra tabs to exit and reload the "
         "browser directly (both disabled by default)";
     const String feat3_1_4_3 = "Fixed stock market alerts page for users with no shares";
     const String feat3_1_4_4 = "Fixed profile check widget in named URLs";
@@ -1453,7 +1485,8 @@ class ChangeLogState extends State<ChangeLog> {
     v3_1_1.version = 'Torn PDA v3.1.1';
     v3_1_1.date = '15 JUN 2023';
     const String feat3_1_1_1 = "Added browser styles (including the former quick browser appearance)";
-    const String feat3_1_1_2 = "Changed gesture settings in the ellipsis (...) browser button to allow a "
+    const String feat3_1_1_2 =
+        "Changed gesture settings in the ellipsis (...) browser button to allow a "
         "faster access to shortcuts (please see Tips)";
     const String feat3_1_1_3 = "Added wallet money to home screen widget (optional)";
     const String feat3_1_1_4 = "Fixed some reported problems with unresponsive browser";
@@ -1584,7 +1617,8 @@ class ChangeLogState extends State<ChangeLog> {
     v2_9_5.date = '01 FEB 2023';
     v2_9_5.hotfixes = ["Crashes in some iOS devices when launching the browser"];
     const String feat2_9_5_1 = "Added theme synchronization between app and web (can be disabled)";
-    const String feat2_9_5_2 = "User scripts' injection time can now be selected. NOTE: this might be "
+    const String feat2_9_5_2 =
+        "User scripts' injection time can now be selected. NOTE: this might be "
         "a breaking change for some scripts, that will require to be adapted. It is also recommended to restore "
         "the default script examples. Please read the documentation (in the user scripts section) for more information.";
     const String feat2_9_5_3 = "Added option to open tab in external browser (URL options dialog)";
@@ -1743,7 +1777,8 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat2_8_0_2 = "Quick items: divided faction refills in energy and nerve (need to be re-added)";
     const String feat2_8_0_3 =
         "Browser: Player Profile now includes Bazaar information (if net worth checks are enabled)";
-    const String feat2_8_0_4 = "Userscripts: added handler to evaluate javascript code passed to the app "
+    const String feat2_8_0_4 =
+        "Userscripts: added handler to evaluate javascript code passed to the app "
         "(advanced - more details in the userscripts section)";
     const String feat2_8_0_5 = "Removed TornCAT Player Filter from default userscripts (discontinued by its developer)";
     v2_8_0.features.add(feat2_8_0_1);
@@ -1901,7 +1936,8 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat2_6_1_5 =
         "Browser: long-pressing a link in Torn will open a contextual menu with options (interferes "
         "with link preview, consider disabling it)";
-    const String feat2_6_1_6 = "Browser: restore the previous browsing session, including browser type and active tab, "
+    const String feat2_6_1_6 =
+        "Browser: restore the previous browsing session, including browser type and active tab, "
         "by long-pressing the T menu floating icon in the Profile section";
     const String feat2_6_1_7 = "Browser: you can now choose the color of the tabs hide bar";
     const String feat2_6_1_8 = "Profile: properly separated jail from hospital manual notifications";
@@ -1933,7 +1969,8 @@ class ChangeLogState extends State<ChangeLog> {
     v2_6_0.version = 'Torn PDA v2.6.0';
     v2_6_0.date = '08 NOV 2021';
     const String feat2_6_0_1 = "Chaining: added War section";
-    const String feat2_6_0_2 = "Chaining: you can now send attack assistance notifications to your faction mates using "
+    const String feat2_6_0_2 =
+        "Chaining: you can now send attack assistance notifications to your faction mates using "
         "Torn PDA (see Tips section - Faction Communication)";
     const String feat2_6_0_3 = "Chaining: you can now sort targets by life";
     const String feat2_6_0_4 = "Chaining: added option to skip first target as well (disabled by default)";
@@ -2652,9 +2689,11 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.8.3
     final v1_8_3 = ChangeLogItem();
     v1_8_3.version = 'Torn PDA v1.8.3';
-    const String feat1_8_3_1 = "Chaining: added a chain watcher feature that can be activated both in "
+    const String feat1_8_3_1 =
+        "Chaining: added a chain watcher feature that can be activated both in "
         "the targets screen and while chaining";
-    const String feat1_8_3_2 = "Profile: when you are in hospital, you can now send Nuclear Central "
+    const String feat1_8_3_2 =
+        "Profile: when you are in hospital, you can now send Nuclear Central "
         "Hospital a revive request by clicking a button. This is an optional feature and "
         "a contract/payment will be required by them; Torn PDA does not get anything in return";
     const String feat1_8_3_3 = "Profile: added travel arrival time information in the status card";
@@ -2665,16 +2704,21 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.8.2
     final v1_8_2 = ChangeLogItem();
     v1_8_2.version = 'Torn PDA v1.8.2';
-    const String feat1_8_2_1 = "Chaining: targets that can't be attacked (red status or in a different country) "
+    const String feat1_8_2_1 =
+        "Chaining: targets that can't be attacked (red status or in a different country) "
         "will be skipped automatically. Maximum of 3 targets. This feature can be deactivated.";
-    const String feat1_8_2_2 = "Targets: added a hospital countdown and a clickable travel icon "
+    const String feat1_8_2_2 =
+        "Targets: added a hospital countdown and a clickable travel icon "
         "that shows your target's whereabouts";
-    const String feat1_8_2_3 = "Recent attacks: a new clickable faction icon will show you if the target "
+    const String feat1_8_2_3 =
+        "Recent attacks: a new clickable faction icon will show you if the target "
         "you are adding to your chaining list is a member of a faction";
     const String feat1_8_2_4 = "Profile: added a 'home' button and displaced the 'events' button to the events card";
-    const String feat1_8_2_5 = "You can now copy to the clipboard the full URL you are visiting in Torn's "
+    const String feat1_8_2_5 =
+        "You can now copy to the clipboard the full URL you are visiting in Torn's "
         "website by pressing the page title for a few seconds";
-    const String feat1_8_2_6 = "Bug fixes: travel percentage indicators and travel notification times "
+    const String feat1_8_2_6 =
+        "Bug fixes: travel percentage indicators and travel notification times "
         "were not working properly";
     v1_8_2.features.add(feat1_8_2_1);
     v1_8_2.features.add(feat1_8_2_2);
@@ -2687,7 +2731,8 @@ class ChangeLogState extends State<ChangeLog> {
     final v1_8_1 = ChangeLogItem();
     v1_8_1.version = 'Torn PDA v1.8.1';
     const String feat1_8_1_1 = "Loot: increased trigger options for loot notifications";
-    const String feat1_8_1_2 = "Profile: corrected an issue causing delays when updating miscellaneous "
+    const String feat1_8_1_2 =
+        "Profile: corrected an issue causing delays when updating miscellaneous "
         "information";
     v1_8_1.features.add(feat1_8_1_1);
     v1_8_1.features.add(feat1_8_1_2);
@@ -2695,16 +2740,20 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.8.0
     final v1_8_0 = ChangeLogItem();
     v1_8_0.version = 'Torn PDA v1.8.0';
-    const String feat1_8_0_1 = "Added a city item finder when you visit the city in Torn, with a list of "
+    const String feat1_8_0_1 =
+        "Added a city item finder when you visit the city in Torn, with a list of "
         "items found and highlights on the map";
-    const String feat1_8_0_2 = "Loot & Travel: you can now choose how long in advance will "
+    const String feat1_8_0_2 =
+        "Loot & Travel: you can now choose how long in advance will "
         "the notifications or other alerting methods be triggered";
     const String feat1_8_0_3 = "Browser: added a page refresh button at the top";
     const String feat1_8_0_4 = "Targets & Friends: you can now copy the ID to the clipboard";
     const String feat1_8_0_5 = "Profile: added a MISC section with bank and education expiries";
-    const String feat1_8_0_6 = "Chaining: the bandage icon now gives access to your personal items, but "
+    const String feat1_8_0_6 =
+        "Chaining: the bandage icon now gives access to your personal items, but "
         "also to your faction's armory";
-    const String feat1_8_0_7 = "Fixed issue with alerts not working. If you are affected, please "
+    const String feat1_8_0_7 =
+        "Fixed issue with alerts not working. If you are affected, please "
         "reload your API Key (just tap on 'reload')";
     v1_8_0.features.add(feat1_8_0_1);
     v1_8_0.features.add(feat1_8_0_2);
@@ -2717,18 +2766,24 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.7.1
     final v1_7_1 = ChangeLogItem();
     v1_7_1.version = 'Torn PDA v1.7.1';
-    const String feat1_7_1_1 = "Alerts section: added automatic alerts for hospital admission, "
+    const String feat1_7_1_1 =
+        "Alerts section: added automatic alerts for hospital admission, "
         "revives and hospital release";
     const String feat1_7_1_2 = "Profile section: added TCT clock at the top";
-    const String feat1_7_1_3 = "Chaining: added option to monitor your faction's chain while attacking "
+    const String feat1_7_1_3 =
+        "Chaining: added option to monitor your faction's chain while attacking "
         "several targets in a row";
-    const String feat1_7_1_4 = "Targets section: replaced target's ID string with an extended information "
+    const String feat1_7_1_4 =
+        "Targets section: replaced target's ID string with an extended information "
         "page for targets; also made the faction icon clickable for more details";
-    const String feat1_7_1_5 = "Targets section: search form moved to the top, similar to the "
+    const String feat1_7_1_5 =
+        "Targets section: search form moved to the top, similar to the "
         "current layout in the Friends section";
-    const String feat1_7_1_6 = "Travel section: added current item capacity value in the travel capacity "
+    const String feat1_7_1_6 =
+        "Travel section: added current item capacity value in the travel capacity "
         "dialog, so there is no need to move the slider to check it";
-    const String feat1_7_1_7 = "Travel section: corrected an issue that prevented travel notifications "
+    const String feat1_7_1_7 =
+        "Travel section: corrected an issue that prevented travel notifications "
         "from being manually activated in some cases";
     v1_7_1.features.add(feat1_7_1_1);
     v1_7_1.features.add(feat1_7_1_2);
@@ -2741,10 +2796,12 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.7.0
     final v1_7_0 = ChangeLogItem();
     v1_7_0.version = 'Torn PDA v1.7.0';
-    const String feat1_7_0_1 = "Added Trade Calculator, with total price calculation for cash, items and "
+    const String feat1_7_0_1 =
+        "Added Trade Calculator, with total price calculation for cash, items and "
         "shares, plus the ability to copy total figures for a quick trading. Also added trades as "
         "a quick link in the Profile section";
-    const String feat1_7_0_2 = "Decluttered the Travel section, with the foreign stocks page and "
+    const String feat1_7_0_2 =
+        "Decluttered the Travel section, with the foreign stocks page and "
         "notifications accessible through the floating button";
     const String feat1_7_0_3 = "Changed cooldown countdown to show total hours and minutes";
     v1_7_0.features.add(feat1_7_0_1);
@@ -2754,7 +2811,8 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.6.2
     final v1_6_2 = ChangeLogItem();
     v1_6_2.version = 'Torn PDA v1.6.2';
-    const String feat1_6_2_1 = "Fixes error when loading API Key and the profile page for players "
+    const String feat1_6_2_1 =
+        "Fixes error when loading API Key and the profile page for players "
         "that have deleted all their incoming events";
     v1_6_2.features.add(feat1_6_2_1);
 
@@ -2763,11 +2821,13 @@ class ChangeLogState extends State<ChangeLog> {
     v1_6_0.version = 'Torn PDA v1.6.0';
     const String feat1_6_0_1 = "New NPC Loot section";
     const String feat1_6_0_2 = "Added a quick crimes bar (internal app browser)";
-    const String feat1_6_0_3 = "Added option to fill max travel items taking into "
+    const String feat1_6_0_3 =
+        "Added option to fill max travel items taking into "
         "account current money and capacity, as well as a quick return button "
         "in the app bar";
     const String feat1_6_0_4 = "Added energy in the automatic alerts section (beta)";
-    const String feat1_6_0_5 = "Fixed issue with travel bar and timer not updating "
+    const String feat1_6_0_5 =
+        "Fixed issue with travel bar and timer not updating "
         "correctly after the flight has departed";
     v1_6_0.features.add(feat1_6_0_1);
     v1_6_0.features.add(feat1_6_0_2);
@@ -2778,11 +2838,14 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.5.0
     final v1_5_0 = ChangeLogItem();
     v1_5_0.version = 'Torn PDA v1.5.0';
-    const String feat1_5_0_1 = "New Alerts section with automatic notifications "
+    const String feat1_5_0_1 =
+        "New Alerts section with automatic notifications "
         "for travel";
-    const String feat1_5_0_2 = "You can now set a custom trigger for energy and "
+    const String feat1_5_0_2 =
+        "You can now set a custom trigger for energy and "
         "nerve notifications in the profile page";
-    const String feat1_5_0_3 = "Several changes and another try at fixing issues "
+    const String feat1_5_0_3 =
+        "Several changes and another try at fixing issues "
         "reported by some players with the in-app browsers";
     const String feat1_5_0_4 = "Several other bug fixes and changes";
     v1_5_0.features.add(feat1_5_0_1);
@@ -2793,10 +2856,12 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.4.1
     final v1_4_1 = ChangeLogItem();
     v1_4_1.version = 'Torn PDA v1.4.1';
-    const String feat1_4_1_1 = "[Android] Now you can choose different notification "
+    const String feat1_4_1_1 =
+        "[Android] Now you can choose different notification "
         "styles (notification, alarm or timer) for each of the status bars and "
         "cooldowns available in the Profile section";
-    const String feat1_4_1_2 = "Added option to select a test in-app browser, with a "
+    const String feat1_4_1_2 =
+        "Added option to select a test in-app browser, with a "
         "different engine, to try to solve issues reported by some players";
     const String feat1_4_1_3 = "Corrected Discord link in the About section";
     const String feat1_4_1_4 = "Several other bug fixes thanks to player feedback";
@@ -2811,12 +2876,15 @@ class ChangeLogState extends State<ChangeLog> {
     final v1_4_0 = ChangeLogItem();
     v1_4_0.version = 'Torn PDA v1.4.0';
     const String feat1_4_0_1 = "New 'About' section";
-    const String feat1_4_0_2 = "You can now choose between 12h/24h time systems & "
+    const String feat1_4_0_2 =
+        "You can now choose between 12h/24h time systems & "
         "local time (LT) or Torn City TIme (TCT) time zones";
     const String feat1_4_0_3 = "Added travel progress bar to the Travel section";
-    const String feat1_4_0_4 = "Fixed an issue causing user settings preferences not "
+    const String feat1_4_0_4 =
+        "Fixed an issue causing user settings preferences not "
         "to be applied after restarting the application";
-    const String feat1_4_0_5 = "Fixed several issues reported in previous version "
+    const String feat1_4_0_5 =
+        "Fixed several issues reported in previous version "
         "(thanks Kivou + JDTech)";
     v1_4_0.features.add(feat1_4_0_1);
     v1_4_0.features.add(feat1_4_0_2);
@@ -2827,15 +2895,19 @@ class ChangeLogState extends State<ChangeLog> {
     // VERSION 1.3.0
     final v1_3_0 = ChangeLogItem();
     v1_3_0.version = 'Torn PDA v1.3.0';
-    const String feat1_3_0_1 = "New Friends section, with quick access to player "
+    const String feat1_3_0_1 =
+        "New Friends section, with quick access to player "
         "details and in-game actions. Personal notes and "
         "backup functionality is also included";
-    const String feat1_3_0_2 = "New notifications (manually activated) added in the "
+    const String feat1_3_0_2 =
+        "New notifications (manually activated) added in the "
         "Profile section for energy, nerve, life and "
         "all cooldowns";
-    const String feat1_3_0_3 = "Energy and nerve had their colors corrected in the "
+    const String feat1_3_0_3 =
+        "Energy and nerve had their colors corrected in the "
         "Profile section to adapt to game colors";
-    const String feat1_3_0_4 = "Other bug fixes and corrections thanks to "
+    const String feat1_3_0_4 =
+        "Other bug fixes and corrections thanks to "
         "players suggestions";
     v1_3_0.features.add(feat1_3_0_1);
     v1_3_0.features.add(feat1_3_0_2);
@@ -2943,10 +3015,7 @@ class ChangeLogState extends State<ChangeLog> {
               "To ensure Live Updates work correctly in the background, please disable battery optimization for Torn PDA.",
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
@@ -2991,10 +3060,7 @@ class ChangeLogState extends State<ChangeLog> {
                   ),
                 ),
               ),
-              const Divider(
-                thickness: 1,
-                color: Colors.blueGrey,
-              ),
+              const Divider(thickness: 1, color: Colors.blueGrey),
               Padding(
                 padding: const EdgeInsets.all(5),
                 child: ElevatedButton(
@@ -3009,9 +3075,7 @@ class ChangeLogState extends State<ChangeLog> {
                   ),
                   child: Text(
                     _isCloseButtonEnabled ? 'Great!' : 'Great! ($_countdownSeconds)',
-                    style: const TextStyle(
-                      fontSize: 15,
-                    ),
+                    style: const TextStyle(fontSize: 15),
                   ),
                 ),
               ),
@@ -3026,50 +3090,28 @@ class ChangeLogState extends State<ChangeLog> {
     final itemList = <Widget>[];
     var itemNumber = 1;
 
-    itemList.add(
-      const Padding(
-        padding: EdgeInsets.only(bottom: 25),
-        child: Text("CHANGELOG"),
-      ),
-    );
+    itemList.add(const Padding(padding: EdgeInsets.only(bottom: 25), child: Text("CHANGELOG")));
 
     for (final entry in _changeLogItems.entries) {
       if (_showAllChanges || itemNumber <= _initialItemsToShow) {
         if (itemNumber > 1) {
           itemList.add(
             const Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: 24,
-                horizontal: 50,
-              ),
-              child: Divider(
-                thickness: 1,
-                color: Colors.blueGrey,
-              ),
+              padding: EdgeInsets.symmetric(vertical: 24, horizontal: 50),
+              child: Divider(thickness: 1, color: Colors.blueGrey),
             ),
           );
         }
         itemList.add(
           Padding(
             padding: const EdgeInsets.only(),
-            child: Text(
-              entry.key.version,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: Text(entry.key.version, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         );
         itemList.add(
           Padding(
             padding: const EdgeInsets.only(bottom: 15),
-            child: Text(
-              entry.key.date,
-              style: const TextStyle(
-                fontSize: 11,
-              ),
-            ),
+            child: Text(entry.key.date, style: const TextStyle(fontSize: 11)),
           ),
         );
 
@@ -3080,15 +3122,9 @@ class ChangeLogState extends State<ChangeLog> {
               padding: const EdgeInsets.fromLTRB(7, 10, 10, 10),
               child: Row(
                 children: <Widget>[
-                  const Icon(
-                    Icons.local_fire_department,
-                    color: Colors.orange,
-                    size: 20,
-                  ),
+                  const Icon(Icons.local_fire_department, color: Colors.orange, size: 20),
                   const Padding(padding: EdgeInsets.only(right: 12)),
-                  Flexible(
-                    child: Text(hotfix),
-                  ),
+                  Flexible(child: Text(hotfix)),
                 ],
               ),
             ),
@@ -3115,11 +3151,7 @@ class ChangeLogState extends State<ChangeLog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Flexible(
-                          child: Text(
-                            featDescription,
-                          ),
-                        ),
+                        Flexible(child: Text(featDescription)),
                         if (feat is ComplexFeature && feat.explanation != null) _complexFeatureToast(feat),
                       ],
                     ),
@@ -3150,10 +3182,7 @@ class ChangeLogState extends State<ChangeLog> {
                     _showAllChanges = true;
                   });
                 },
-                child: const Text(
-                  'Show earlier changes...',
-                  style: TextStyle(color: Colors.blue, fontSize: 15),
-                ),
+                child: const Text('Show earlier changes...', style: TextStyle(color: Colors.blue, fontSize: 15)),
               ),
             ],
           ),
@@ -3173,19 +3202,14 @@ class ChangeLogState extends State<ChangeLog> {
           toastification.show(
             closeOnClick: true,
             alignment: Alignment.center,
-            title: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                feat.explanation!,
-                maxLines: 100,
-              ),
-            ),
+            title: Padding(padding: const EdgeInsets.all(8.0), child: Text(feat.explanation!, maxLines: 100)),
             autoCloseDuration: feat.secondsToShow == null ? null : Duration(seconds: feat.secondsToShow!),
             animationDuration: const Duration(milliseconds: 200),
             showProgressBar: false,
             style: ToastificationStyle.flat,
-            closeButtonShowType:
-                feat.closeButton || feat.secondsToShow == null ? CloseButtonShowType.always : CloseButtonShowType.none,
+            closeButtonShowType: feat.closeButton || feat.secondsToShow == null
+                ? CloseButtonShowType.always
+                : CloseButtonShowType.none,
             icon: const Icon(Icons.info_outline),
             borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
           );
@@ -3197,13 +3221,7 @@ class ChangeLogState extends State<ChangeLog> {
   Widget _pdaIcon() {
     return const Padding(
       padding: EdgeInsets.only(right: 4),
-      child: SizedBox(
-        height: 18,
-        width: 18,
-        child: ImageIcon(
-          AssetImage('images/icons/pda_icon.png'),
-        ),
-      ),
+      child: SizedBox(height: 18, width: 18, child: ImageIcon(AssetImage('images/icons/pda_icon.png'))),
     );
   }
 }

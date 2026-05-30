@@ -254,12 +254,14 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
                 ],
               ),
             ),
-          const SizedBox(height: 20),
-          FFScouterPremiumGate(
-            featureName: "Stat distribution",
-            premiumDataExists: stats.premiumInsightsAvailable,
-            child: _distributionWidget(stats.distribution),
-          ),
+          if (Get.find<FFScouterPremiumController>().distributionEnabled) ...[
+            const SizedBox(height: 20),
+            FFScouterPremiumGate(
+              featureName: "Stat distribution",
+              premiumDataExists: stats.premiumInsightsAvailable,
+              child: _distributionWidget(stats.distribution),
+            ),
+          ],
         ],
       ),
     );

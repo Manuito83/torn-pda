@@ -57,6 +57,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/ffscouter_activity_controller.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/ffscouter_flights_controller.dart';
 import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
@@ -706,6 +707,7 @@ Future<void> _initializeGetXControllers() async {
     Get.put(FFScouterCacheController(), permanent: true);
     Get.put(FFScouterPremiumController(), permanent: true);
     Get.put(FFScouterFlightsController(), permanent: true);
+    Get.put(FFScouterActivityController(), permanent: true);
     Get.put(StakeoutsController(), permanent: true);
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);
