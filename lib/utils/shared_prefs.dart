@@ -83,6 +83,9 @@ class Prefs {
   final String _kFFScouterStatsCache = "pda_ffScouterStatsCache";
   final String _kPreferFFScouterOverEstimated = "pda_preferFFScouterOverEstimated";
   final String _kFfsOverrideSpyMonths = "pda_ffsOverrideSpyMonths";
+  final String _kFFScouterPremiumActive = "pda_ffScouterPremiumActive";
+  final String _kFFScouterPremiumPromoDismissed = "pda_ffScouterPremiumPromoDismissed";
+  final String _kFFScouterPremiumLastChecked = "pda_ffScouterPremiumLastChecked";
   final String _kFactionAssistPrefs = "pda_factionAssistPrefs";
 
   // Other
@@ -3389,6 +3392,30 @@ class Prefs {
 
   Future setPreferFFScouterOverEstimated(bool value) async {
     return await PrefsDatabase.setBool(_kPreferFFScouterOverEstimated, value);
+  }
+
+  Future<bool> getFFScouterPremiumActive() async {
+    return await PrefsDatabase.getBool(_kFFScouterPremiumActive, false);
+  }
+
+  Future setFFScouterPremiumActive(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPremiumActive, value);
+  }
+
+  Future<bool> getFFScouterPremiumPromoDismissed() async {
+    return await PrefsDatabase.getBool(_kFFScouterPremiumPromoDismissed, false);
+  }
+
+  Future setFFScouterPremiumPromoDismissed(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPremiumPromoDismissed, value);
+  }
+
+  Future<int> getFFScouterPremiumLastChecked() async {
+    return await PrefsDatabase.getInt(_kFFScouterPremiumLastChecked, 0);
+  }
+
+  Future setFFScouterPremiumLastChecked(int value) async {
+    return await PrefsDatabase.setInt(_kFFScouterPremiumLastChecked, value);
   }
 
   /// 0 = Off (FFS never overrides spied). 1-12 = months threshold.

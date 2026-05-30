@@ -26,6 +26,7 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_notes.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
@@ -59,6 +60,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   Future? _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
+  bool _isTravelingForFFS = false;
 
   late SettingsProvider _settingsProvider;
   final SpiesController _spyController = Get.find<SpiesController>();
@@ -149,6 +151,11 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 ),
               ],
             ),
+          ),
+        if (_isTravelingForFFS)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 4),
+            child: FFScouterFlightInfo(playerId: widget.profileId, isTraveling: true),
           ),
         if (_settingsProvider.notesWidgetEnabledProfile)
           ProfileCheckNotes(
@@ -241,6 +248,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _playerName = otherProfile.name;
         _factionName = otherProfile.factionName;
         _factionId = otherProfile.factionId;
+        _isTravelingForFFS = otherProfile.statusState == "Traveling";
 
         // Estimated stats is not awaited, since it can take a few seconds
         // to contact YATA / TS and decide what we show

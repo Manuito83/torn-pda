@@ -58,6 +58,8 @@ import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
+import 'package:torn_pda/providers/ffscouter_flights_controller.dart';
+import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
@@ -702,6 +704,8 @@ Future<void> _initializeGetXControllers() async {
     Get.put(ApiCallerController(), permanent: true);
     Get.put(WarController(), permanent: true);
     Get.put(FFScouterCacheController(), permanent: true);
+    Get.put(FFScouterPremiumController(), permanent: true);
+    Get.put(FFScouterFlightsController(), permanent: true);
     Get.put(StakeoutsController(), permanent: true);
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);
