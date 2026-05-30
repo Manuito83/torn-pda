@@ -88,13 +88,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          color: _themeProvider!.mainText,
-        ),
-      ),
+      child: Text(text, style: TextStyle(fontSize: 10, color: _themeProvider!.mainText)),
     );
   }
 
@@ -127,8 +121,9 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
   Widget _optionsCard() {
     return Consumer2<QuickItemsProvider, SettingsProvider>(
       builder: (context, itemsProvider, settingsProvider, child) {
-        final quickItemsEnabled =
-            widget.isFaction ? settingsProvider.quickItemsFactionEnabled : settingsProvider.quickItemsEnabled;
+        final quickItemsEnabled = widget.isFaction
+            ? settingsProvider.quickItemsFactionEnabled
+            : settingsProvider.quickItemsEnabled;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Card(
@@ -231,8 +226,9 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _settingsProvider = Provider.of<SettingsProvider>(context);
-    final quickItemsEnabled =
-        widget.isFaction ? _settingsProvider.quickItemsFactionEnabled : _settingsProvider.quickItemsEnabled;
+    final quickItemsEnabled = widget.isFaction
+        ? _settingsProvider.quickItemsFactionEnabled
+        : _settingsProvider.quickItemsEnabled;
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         _willPopCallback();
@@ -240,20 +236,17 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
       child: Container(
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                    ? _themeProvider!.statusBar
-                    : _themeProvider!.canvas
+                  ? Colors.blueGrey
+                  : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
             : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(
             backgroundColor: _themeProvider!.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
+                ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
                 : null,
             body: Container(
               color: _themeProvider!.canvas,
@@ -289,17 +282,11 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                 Text("ACTIVE QUICK ITEMS"),
                                 Padding(
                                   padding: EdgeInsets.only(left: 10),
-                                  child: Text(
-                                    'SWIPE TO REMOVE',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
+                                  child: Text('SWIPE TO REMOVE', style: TextStyle(fontSize: 10)),
                                 ),
                                 Padding(
                                   padding: EdgeInsets.only(left: 10),
-                                  child: Text(
-                                    'LONG-PRESS TO SORT',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
+                                  child: Text('LONG-PRESS TO SORT', style: TextStyle(fontSize: 10)),
                                 ),
                               ],
                             ),
@@ -314,11 +301,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                               widget.isFaction
                                   ? 'No quick items active, add some below!'
                                   : 'No quick items yet. Add them from Items with the "+" button, or pick loadouts below.',
-                              style: TextStyle(
-                                color: Colors.orange[800],
-                                fontStyle: FontStyle.italic,
-                                fontSize: 13,
-                              ),
+                              style: TextStyle(color: Colors.orange[800], fontStyle: FontStyle.italic, fontSize: 13),
                             ),
                           )
                         else
@@ -344,10 +327,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                     'If this takes too long, there might be a connection '
                                     'problem or Torn API might be down. Close the browser '
                                     'completely and try again in a while!',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      fontSize: 13,
-                                    ),
+                                    style: TextStyle(fontStyle: FontStyle.italic, fontSize: 13),
                                   ),
                                 ],
                               ),
@@ -383,19 +363,13 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
       ),
       actions: <Widget>[
         IconButton(
-          icon: Icon(
-            Icons.delete,
-            color: _themeProvider!.buttonText,
-          ),
+          icon: Icon(Icons.delete, color: _themeProvider!.buttonText),
           onPressed: () async {
             if ((!widget.isFaction && _itemsProvider!.activeQuickItems.isEmpty) ||
                 (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.isEmpty)) {
               BotToast.showText(
                 text: 'You have no active quick items, activate some!',
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                 contentColor: Colors.orange[800]!,
                 contentPadding: const EdgeInsets.all(10),
               );
@@ -439,9 +413,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0),
                         child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                             child: Row(
@@ -473,12 +445,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                       Flexible(
                                         child: Row(
                                           children: [
-                                            Flexible(
-                                              child: Text(
-                                                item.name!,
-                                                style: const TextStyle(fontSize: 13),
-                                              ),
-                                            ),
+                                            Flexible(child: Text(item.name!, style: const TextStyle(fontSize: 13))),
                                           ],
                                         ),
                                       ),
@@ -504,11 +471,8 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
               child: ReorderableListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                onReorder: (int oldIndex, int newIndex) {
-                  if (oldIndex < newIndex) {
-                    // removing the item at oldIndex will shorten the list by 1
-                    newIndex -= 1;
-                  }
+                onReorderItem: (int oldIndex, int newIndex) {
+                  // newIndex is already corrected by the framework as of Flutter 3.44
                   itemsProviderFaction.reorderQuickItem(
                     itemsProviderFaction.activeQuickItemsFaction[oldIndex],
                     oldIndex,
@@ -556,9 +520,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                   borderRadius: BorderRadius.circular(10),
                                   side: const BorderSide(color: Colors.blue, width: 1),
                                 )
-                              : RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
+                              : RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                             child: Row(
@@ -594,10 +556,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         ),
                                       ),
                                       if (!item.isLoadout! && item.inventory != null)
-                                        Text(
-                                          "(inv: x${item.inventory})",
-                                          style: const TextStyle(fontSize: 10),
-                                        ),
+                                        Text("(inv: x${item.inventory})", style: const TextStyle(fontSize: 10)),
                                       if (_statLine(item) != null) _statLine(item)!,
                                     ],
                                   ),
@@ -608,29 +567,20 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                     onTap: () {
                                       BotToast.showText(
                                         text: '${item.name}\n\n${item.description}',
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
+                                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                         contentColor: Colors.green[800]!,
                                         duration: const Duration(seconds: 5),
                                         contentPadding: const EdgeInsets.all(10),
                                       );
                                     },
-                                    child: const Icon(
-                                      Icons.info_outline,
-                                      size: 19,
-                                    ),
+                                    child: const Icon(Icons.info_outline, size: 19),
                                   )
                                 else if (item.isLoadout!)
                                   GestureDetector(
                                     onTap: () {
                                       _openLoadoutsNameDialog(item);
                                     },
-                                    child: const Icon(
-                                      Icons.edit,
-                                      size: 19,
-                                    ),
+                                    child: const Icon(Icons.edit, size: 19),
                                   ),
                                 const SizedBox(width: 10),
                                 const Icon(Icons.reorder),
@@ -650,16 +600,9 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
               child: ReorderableListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                onReorder: (int oldIndex, int newIndex) {
-                  if (oldIndex < newIndex) {
-                    // removing the item at oldIndex will shorten the list by 1
-                    newIndex -= 1;
-                  }
-                  _itemsProvider!.reorderQuickItem(
-                    itemsProvider.activeQuickItems[oldIndex],
-                    oldIndex,
-                    newIndex,
-                  );
+                onReorderItem: (int oldIndex, int newIndex) {
+                  // newIndex is already corrected by the framework as of Flutter 3.44
+                  _itemsProvider!.reorderQuickItem(itemsProvider.activeQuickItems[oldIndex], oldIndex, newIndex);
                 },
                 children: activeItems,
               ),
@@ -686,11 +629,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                   labelText: "Search",
                   counterText: "",
                   prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(6.0),
-                    ),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(6.0))),
                 ),
               ),
             ),
@@ -710,8 +649,9 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                         child: SizedBox(
                           height: 60,
                           child: Padding(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0,
+                            ),
                             child: Card(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -743,12 +683,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           Flexible(
                                             child: Row(
                                               children: [
-                                                Flexible(
-                                                  child: Text(
-                                                    item.name!,
-                                                    style: const TextStyle(fontSize: 13),
-                                                  ),
-                                                ),
+                                                Flexible(child: Text(item.name!, style: const TextStyle(fontSize: 13))),
                                               ],
                                             ),
                                           ),
@@ -760,19 +695,13 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         onTap: () {
                                           BotToast.showText(
                                             text: '${item.name}\n\n${item.description}\n\n',
-                                            textStyle: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.white,
-                                            ),
+                                            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                             contentColor: Colors.green[800]!,
                                             duration: const Duration(seconds: 5),
                                             contentPadding: const EdgeInsets.all(10),
                                           );
                                         },
-                                        child: const Icon(
-                                          Icons.info_outline,
-                                          size: 19,
-                                        ),
+                                        child: const Icon(Icons.info_outline, size: 19),
                                       ),
                                     TextButton(
                                       onPressed: !item.visible!
@@ -793,10 +722,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               // Reset visibility after animation
                                               item.visible = true;
                                             },
-                                      child: Text(
-                                        'ADD',
-                                        style: TextStyle(color: Colors.green[500]),
-                                      ),
+                                      child: Text('ADD', style: TextStyle(color: Colors.green[500])),
                                     ),
                                   ],
                                 ),
@@ -884,10 +810,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
 
                                           item.visible = true;
                                         },
-                                  child: Text(
-                                    'ADD',
-                                    style: TextStyle(color: Colors.green[500]),
-                                  ),
+                                  child: Text('ADD', style: TextStyle(color: Colors.green[500])),
                                 ),
                               ],
                             ),
@@ -916,9 +839,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -926,23 +847,12 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
+                    padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
                       color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
@@ -976,7 +886,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                               },
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -990,11 +900,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Icon(Icons.delete_forever_outlined),
-                      ),
+                      child: const SizedBox(height: 34, width: 34, child: Icon(Icons.delete_forever_outlined)),
                     ),
                   ),
                 ),
@@ -1011,11 +917,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return LoadoutsNameDialog(
-          themeProvider: _themeProvider,
-          quickItemsProvider: _itemsProvider,
-          loadout: item,
-        );
+        return LoadoutsNameDialog(themeProvider: _themeProvider, quickItemsProvider: _itemsProvider, loadout: item);
       },
     );
   }
@@ -1126,11 +1028,7 @@ class _LongPressConfirmationDialogState extends State<_LongPressConfirmationDial
                       alignment: Alignment.center,
                       child: Text(
                         _holding ? 'Keep holding...' : 'Hold to confirm',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                     ),
                   ),
@@ -1140,12 +1038,7 @@ class _LongPressConfirmationDialogState extends State<_LongPressConfirmationDial
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-      ],
+      actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel'))],
     );
   }
 }

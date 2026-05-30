@@ -54,24 +54,23 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider!.statusBar
-                  : _themeProvider!.canvas
+                ? Colors.blueGrey
+                : isStatusBarShown
+                ? _themeProvider!.statusBar
+                : _themeProvider!.canvas
           : _themeProvider!.canvas,
       child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
+        right:
+            context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
+        left:
+            context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider!.canvas,
           appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
+              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
               : null,
           body: Container(
             color: _themeProvider!.canvas,
@@ -96,11 +95,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                               ),
                             ),
                           ),
-                          child: Icon(
-                            Icons.add,
-                            size: 20,
-                            color: _themeProvider!.mainText,
-                          ),
+                          child: Icon(Icons.add, size: 20, color: _themeProvider!.mainText),
                           onPressed: () {
                             _showAddDialog(context);
                           },
@@ -115,18 +110,11 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                             shape: WidgetStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
-                                side: const BorderSide(
-                                  width: 2,
-                                  color: Colors.blueGrey,
-                                ),
+                                side: const BorderSide(width: 2, color: Colors.blueGrey),
                               ),
                             ),
                           ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 20,
-                            color: _themeProvider!.mainText,
-                          ),
+                          child: Icon(Icons.delete_outline, size: 20, color: _themeProvider!.mainText),
                           onPressed: () {
                             _openWipeDialog();
                           },
@@ -141,18 +129,12 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                       "Use the '+' button to add new friendly factions to the list. "
                       'Players in said factions will be flagged as allied when you visit their '
                       'profiles or try to attack them.',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                     ),
                   ),
                   const SizedBox(height: 10),
                   Flexible(
-                    child: Consumer<SettingsProvider>(
-                      builder: (context, settingsProvider, child) => factions(),
-                    ),
+                    child: Consumer<SettingsProvider>(builder: (context, settingsProvider, child) => factions()),
                   ),
                 ],
               ),
@@ -178,21 +160,13 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(HtmlParser.fix(fact.name)),
-                    Text(
-                      "[${fact.id}]",
-                      style: const TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text("[${fact.id}]", style: const TextStyle(fontSize: 12)),
                   ],
                 ),
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(
-                        Icons.delete_outline,
-                        color: Colors.red[300],
-                      ),
+                      icon: Icon(Icons.delete_outline, color: Colors.red[300]),
                       onPressed: () {
                         final currentFactions = _settingsProvider!.friendlyFactions;
                         currentFactions.removeWhere((element) => element.id == fact.id);
@@ -200,10 +174,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
                         BotToast.showText(
                           text: 'Removed ${fact.name}!',
-                          textStyle: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                           contentColor: Colors.green,
                           duration: const Duration(seconds: 3),
                           contentPadding: const EdgeInsets.all(10),
@@ -211,7 +182,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                       },
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
@@ -219,9 +190,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
       );
     }
 
-    return ListView(
-      children: factionList,
-    );
+    return ListView(children: factionList);
   }
 
   AppBar buildAppBar() {
@@ -239,14 +208,11 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
     );
   }
 
-  Future<void> _showAddDialog(BuildContext _) {
+  Future<void> _showAddDialog(BuildContext ctx) {
     return showDialog<void>(
-      context: _,
+      context: ctx,
       builder: (BuildContext context) {
-        return AddFriendlyFactionDialog(
-          themeProvider: _themeProvider,
-          settingsProvider: _settingsProvider,
-        );
+        return AddFriendlyFactionDialog(themeProvider: _themeProvider, settingsProvider: _settingsProvider);
       },
     );
   }
@@ -257,9 +223,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -267,32 +231,18 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
+                    padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
                       color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         const Flexible(
-                          child: Text(
-                            "CAUTION",
-                            style: TextStyle(fontSize: 13, color: Colors.red),
-                          ),
+                          child: Text("CAUTION", style: TextStyle(fontSize: 13, color: Colors.red)),
                         ),
                         const SizedBox(height: 10),
                         Flexible(
@@ -303,10 +253,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         ),
                         const SizedBox(height: 10),
                         Flexible(
-                          child: Text(
-                            "Are you sure?",
-                            style: TextStyle(fontSize: 12, color: _themeProvider!.mainText),
-                          ),
+                          child: Text("Are you sure?", style: TextStyle(fontSize: 12, color: _themeProvider!.mainText)),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -326,7 +273,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                               },
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -340,11 +287,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Icon(Icons.delete_forever_outlined),
-                      ),
+                      child: const SizedBox(height: 34, width: 34, child: Icon(Icons.delete_forever_outlined)),
                     ),
                   ),
                 ),
@@ -367,11 +310,7 @@ class AddFriendlyFactionDialog extends StatefulWidget {
   final ThemeProvider? themeProvider;
   final SettingsProvider? settingsProvider;
 
-  const AddFriendlyFactionDialog({
-    required this.themeProvider,
-    required this.settingsProvider,
-    super.key,
-  });
+  const AddFriendlyFactionDialog({required this.themeProvider, required this.settingsProvider, super.key});
 
   @override
   AddFriendlyFactionDialogState createState() => AddFriendlyFactionDialogState();
@@ -391,9 +330,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 0.0,
       backgroundColor: Colors.transparent,
       content: SingleChildScrollView(
@@ -401,23 +338,12 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: const EdgeInsets.only(
-                  top: 45,
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                ),
+                padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                 margin: const EdgeInsets.only(top: 30),
                 decoration: BoxDecoration(
                   color: widget.themeProvider!.secondBackground,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10.0,
-                      offset: Offset(0.0, 10.0),
-                    ),
-                  ],
+                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                 ),
                 child: Column(
                   children: [
@@ -426,11 +352,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                       'You can find the faction ID in the browser address bar when visiting '
                       'another faction. If in doubt, press the icon to the right to switch between faction ID '
                       'and player ID input',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 15),
                     Form(
@@ -496,7 +418,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                                 },
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -516,10 +438,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
                   child: SizedBox(
                     height: 20,
                     width: 20,
-                    child: Image.asset(
-                      'images/icons/faction.png',
-                      color: widget.themeProvider!.secondBackground,
-                    ),
+                    child: Image.asset('images/icons/faction.png', color: widget.themeProvider!.secondBackground),
                   ),
                 ),
               ),
@@ -557,10 +476,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         if (convertError.isNotEmpty) {
           BotToast.showText(
             text: convertError,
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.orange[700]!,
             duration: const Duration(seconds: 3),
             contentPadding: const EdgeInsets.all(10),
@@ -571,12 +487,10 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
 
       if (inputId == UserHelper.factionId.toString()) {
         BotToast.showText(
-          text: 'There is no need to add your own faction, you will be '
+          text:
+              'There is no need to add your own faction, you will be '
               'alerted about it by default!',
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.orange[700]!,
           duration: const Duration(seconds: 4),
           contentPadding: const EdgeInsets.all(10),
@@ -588,10 +502,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         if (faction.id.toString() == inputId) {
           BotToast.showText(
             text: 'This faction is already in the list!',
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.orange[700]!,
             duration: const Duration(seconds: 4),
             contentPadding: const EdgeInsets.all(10),
@@ -617,10 +528,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
 
           BotToast.showText(
             text: 'Added ${retrievedFaction.name}!',
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.green,
             duration: const Duration(seconds: 3),
             contentPadding: const EdgeInsets.all(10),
@@ -628,10 +536,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         } else {
           BotToast.showText(
             text: 'Could not retrieved any faction matching id $inputId!',
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.green,
             duration: const Duration(seconds: 3),
             contentPadding: const EdgeInsets.all(10),
@@ -640,10 +545,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
       } else {
         BotToast.showText(
           text: 'Error contacting API, please try again later!',
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.red[700]!,
           duration: const Duration(seconds: 3),
           contentPadding: const EdgeInsets.all(10),

@@ -15,8 +15,8 @@ publish_to: none
 version: 3.14.0+651
 
 environment:
-  sdk: ">=3.0.0"
-  flutter: ">=3.3.0"
+  sdk: ">=3.10.0"
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
@@ -59,7 +59,7 @@ dependencies:
   fl_chart: 1.0.0
   flex_color_picker: 3.7.1
   sembast: 3.8.6
-  flutter_font_icons: 2.2.7
+  flutter_font_icons: 3.0.0
   flutter_inappwebview: 6.2.0-beta.3
   flutter_local_notifications: 19.4.0
   flutter_secure_storage: ^10.0.0
@@ -68,7 +68,7 @@ dependencies:
   flutter_svg: 2.2.4
   flutter_timezone: 4.1.1
   flutter_xlider: 3.5.0
-  font_awesome_flutter: 10.8.0
+  font_awesome_flutter: 11.0.0
   # Temporary as per https://github.com/jonataslaw/getx/issues/3100
   get: 5.0.0-release-candidate-9.3.2
   google_sign_in: 7.1.0
@@ -84,7 +84,7 @@ dependencies:
   intl: 0.20.2
   json_annotation: 4.9.0 # Used by swagger_dart_code_generator
   lints: 6.0.0
-  flutter_material_design_icons: 1.1.7447
+  flutter_material_design_icons: 3.1.0+7447
   path_provider: 2.1.5
   ## Bug submitted for v4.2.5 (plane icon out of place)
   percent_indicator: 4.2.3
@@ -169,6 +169,13 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Disable SwiftPM at the project level. Several Firebase plugins (cloud_firestore 6.0.1,
+  # firebase_messaging 16.1.2) currently pin incompatible flutterfire SPM versions, which
+  # breaks `flutter build ios` when SwiftPM is enabled by default in Flutter 3.44.
+  # Re-enable once Firebase plugins align their SPM constraints.
+  config:
+    enable-swift-package-manager: false
 
   # To add assets to your application, add an assets section, like this:
   assets:

@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
@@ -119,10 +120,7 @@ class AwardsPageState extends State<AwardsPage> {
       backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
           : null,
       body: Container(
         color: _themeProvider.canvas,
@@ -148,13 +146,7 @@ class AwardsPageState extends State<AwardsPage> {
                   // Main content (ListView)
                   body: Scrollbar(
                     controller: _scrollController,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: _awardsListView(),
-                        ),
-                      ],
-                    ),
+                    child: Column(children: [Expanded(child: _awardsListView())]),
                   ),
 
                   // Panel content
@@ -186,11 +178,7 @@ class AwardsPageState extends State<AwardsPage> {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    const Text('Calling YATA...'),
-                    const SizedBox(height: 30),
-                    FlippingYata(),
-                  ],
+                  children: <Widget>[const Text('Calling YATA...'), const SizedBox(height: 30), FlippingYata()],
                 ),
               );
             }
@@ -203,12 +191,7 @@ class AwardsPageState extends State<AwardsPage> {
   Widget _header() {
     final pinnedCards = <Widget>[];
     for (final pinned in _pinProvider.pinnedAwards) {
-      pinnedCards.add(
-        AwardCardPin(
-          award: pinned,
-          pinConditionChange: _onPinnedConditionChange,
-        ),
-      );
+      pinnedCards.add(AwardCardPin(award: pinned, pinConditionChange: _onPinnedConditionChange));
     }
 
     final Widget pinnedSection = Column(children: pinnedCards);
@@ -222,12 +205,15 @@ class AwardsPageState extends State<AwardsPage> {
             padding: const EdgeInsets.only(left: 15, top: 15),
             child: Row(
               children: [
-                Text('Your rarity score: '
-                    '${double.parse((_headerInfo.playerScore! / 10000).toStringAsFixed(2))}'),
+                Text(
+                  'Your rarity score: '
+                  '${double.parse((_headerInfo.playerScore! / 10000).toStringAsFixed(2))}',
+                ),
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
-                    final String achievement = "Achieved ${_headerInfo.achievedAwards}"
+                    final String achievement =
+                        "Achieved ${_headerInfo.achievedAwards}"
                         "/${_headerInfo.totalAwards} awards\n\n"
                         "Medals ${_headerInfo.achievedMedals}"
                         "/${_headerInfo.totalMedals}\n"
@@ -236,19 +222,13 @@ class AwardsPageState extends State<AwardsPage> {
 
                     BotToast.showText(
                       text: achievement,
-                      textStyle: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white,
-                      ),
+                      textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                       contentColor: Colors.green[700]!,
                       duration: const Duration(seconds: 6),
                       contentPadding: const EdgeInsets.all(10),
                     );
                   },
-                  child: const Icon(
-                    Icons.info_outline,
-                    size: 19,
-                  ),
+                  child: const Icon(Icons.info_outline, size: 19),
                 ),
               ],
             ),
@@ -275,7 +255,7 @@ class AwardsPageState extends State<AwardsPage> {
     return ListView.builder(
       controller: _scrollController,
       // We need to paint more pixels in advance for to avoid jerks in the scrollbar
-      cacheExtent: 10000,
+      scrollCacheExtent: const ScrollCacheExtent.pixels(10000),
       itemCount: _allAwardsCards.length,
       itemBuilder: (BuildContext context, int index) {
         // Because we are adding a header and a footer that are standard widgets
@@ -305,27 +285,22 @@ class AwardsPageState extends State<AwardsPage> {
       decoration: BoxDecoration(
         color: _themeProvider.secondBackground,
         borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 2.0,
-            color: Colors.orange[800]!,
-          ),
-        ],
+        boxShadow: [BoxShadow(blurRadius: 2.0, color: Colors.orange[800]!)],
       ),
       margin: const EdgeInsets.all(24.0),
       child: Column(
         children: <Widget>[
-          const SizedBox(
-            height: 12.0,
-          ),
+          const SizedBox(height: 12.0),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
                 width: 30,
                 height: 5,
-                decoration:
-                    BoxDecoration(color: Colors.grey[400], borderRadius: const BorderRadius.all(Radius.circular(12.0))),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+                ),
               ),
             ],
           ),
@@ -354,15 +329,8 @@ class AwardsPageState extends State<AwardsPage> {
                 RawChip(
                   selected: _hiddenCategories.isEmpty ? true : false,
                   side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600]!, width: 1.5),
-                  avatar: CircleAvatar(
-                    backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
-                  ),
-                  label: const Text(
-                    "ALL",
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
+                  avatar: CircleAvatar(backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey),
+                  label: const Text("ALL", style: TextStyle(fontSize: 12)),
                   selectedColor: Colors.transparent,
                   disabledColor: Colors.grey,
                   onSelected: (bool isSelected) {
@@ -385,10 +353,7 @@ class AwardsPageState extends State<AwardsPage> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: _categoryFilterWrap(),
-          ),
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: _categoryFilterWrap()),
         ],
       ),
     );
@@ -405,12 +370,10 @@ class AwardsPageState extends State<AwardsPage> {
           GestureDetector(
             onTap: () {
               BotToast.showText(
-                text: "This section is part of YATA's mobile interface, all details "
+                text:
+                    "This section is part of YATA's mobile interface, all details "
                     "information and actions are directly linked to your YATA account.",
-                textStyle: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.white,
-                ),
+                textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                 contentColor: Colors.green[800]!,
                 duration: const Duration(seconds: 6),
                 contentPadding: const EdgeInsets.all(10),
@@ -442,10 +405,7 @@ class AwardsPageState extends State<AwardsPage> {
       actions: [
         if (_apiSuccess)
           IconButton(
-            icon: Icon(
-              Icons.bar_chart_outlined,
-              color: _themeProvider.buttonText,
-            ),
+            icon: Icon(Icons.bar_chart_outlined, color: _themeProvider.buttonText),
             onPressed: () async {
               // Only pass awards that are being shown in the active list
               final graphsToPass = <dynamic>[];
@@ -461,11 +421,7 @@ class AwardsPageState extends State<AwardsPage> {
 
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => AwardsGraphs(
-                    graphInfo: graphsToPass,
-                  ),
-                ),
+                MaterialPageRoute(builder: (context) => AwardsGraphs(graphInfo: graphsToPass)),
               );
             },
           )
@@ -473,20 +429,13 @@ class AwardsPageState extends State<AwardsPage> {
           const SizedBox.shrink(),
         if (_apiSuccess)
           PopupMenuButton<AwardsSort>(
-            icon: const Icon(
-              Icons.sort,
-            ),
+            icon: const Icon(Icons.sort),
             onSelected: _sortAwards,
             itemBuilder: (BuildContext context) {
               return _popupSortChoices.map((AwardsSort choice) {
                 return PopupMenuItem<AwardsSort>(
                   value: choice,
-                  child: Text(
-                    choice.description,
-                    style: const TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
+                  child: Text(choice.description, style: const TextStyle(fontSize: 13)),
                 );
               }).toList();
             },
@@ -521,17 +470,19 @@ class AwardsPageState extends State<AwardsPage> {
                   onTap: () async {
                     const url = 'https://yata.yt';
                     await context.read<WebViewProvider>().openBrowserPreference(
-                          context: context,
-                          url: url,
-                          browserTapType: BrowserTapType.short,
-                        );
+                      context: context,
+                      url: url,
+                      browserTapType: BrowserTapType.short,
+                    );
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),
                 const SizedBox(width: 10),
                 const Flexible(
-                  child: Text("Don't have one? Have you changed your API key recently? "
-                      'Login here with YATA (tap the icon) and then reload this section!'),
+                  child: Text(
+                    "Don't have one? Have you changed your API key recently? "
+                    'Login here with YATA (tap the icon) and then reload this section!',
+                  ),
                 ),
               ],
             ),
@@ -542,11 +493,7 @@ class AwardsPageState extends State<AwardsPage> {
                 ElevatedButton(
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.refresh),
-                      SizedBox(width: 6),
-                      Text('Reload'),
-                    ],
+                    children: [Icon(Icons.refresh), SizedBox(width: 6), Text('Reload')],
                   ),
                   onPressed: () {
                     setState(() {
@@ -557,8 +504,10 @@ class AwardsPageState extends State<AwardsPage> {
               ],
             ),
             const SizedBox(height: 30),
-            const Text('Otherwise, there might be a problem signing in with YATA, please '
-                'try again later!'),
+            const Text(
+              'Otherwise, there might be a problem signing in with YATA, please '
+              'try again later!',
+            ),
           ],
         ),
       );
@@ -574,9 +523,7 @@ class AwardsPageState extends State<AwardsPage> {
               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
-            Text(
-              'Please try again later.',
-            ),
+            Text('Please try again later.'),
             SizedBox(height: 20),
             Text('If this problem reoccurs, please let us know!'),
           ],
@@ -592,29 +539,13 @@ class AwardsPageState extends State<AwardsPage> {
       final catStats = _allCategories[cat] ?? _allCategories["Other"] ?? "0/0";
       switch (cat?.toLowerCase()) {
         case "crimes":
-          catIcon = Image.asset(
-            'images/awards/categories/fingerprint.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/fingerprint.png', height: 15, color: _themeProvider.mainText);
         case "drugs":
-          catIcon = Image.asset(
-            'images/awards/categories/cannabis.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/cannabis.png', height: 15, color: _themeProvider.mainText);
         case "attacks":
-          catIcon = Image.asset(
-            'images/awards/categories/crosshair.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/crosshair.png', height: 15, color: _themeProvider.mainText);
         case "faction":
-          catIcon = Image.asset(
-            'images/awards/categories/fist.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/fist.png', height: 15, color: _themeProvider.mainText);
         case "items":
           catIcon = Image.asset(
             'images/awards/categories/toilet_paper.png',
@@ -622,41 +553,17 @@ class AwardsPageState extends State<AwardsPage> {
             color: _themeProvider.mainText,
           );
         case "travel":
-          catIcon = Image.asset(
-            'images/awards/categories/plane.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/plane.png', height: 15, color: _themeProvider.mainText);
         case "work":
-          catIcon = Image.asset(
-            'images/awards/categories/graduate.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/graduate.png', height: 15, color: _themeProvider.mainText);
         case "gym":
-          catIcon = Image.asset(
-            'images/awards/categories/dumbbell.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/dumbbell.png', height: 15, color: _themeProvider.mainText);
         case "money":
-          catIcon = Image.asset(
-            'images/awards/categories/piggy_bank.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/piggy_bank.png', height: 15, color: _themeProvider.mainText);
         case "competitions":
-          catIcon = Image.asset(
-            'images/awards/trophy.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/trophy.png', height: 15, color: _themeProvider.mainText);
         case "commitment":
-          catIcon = Image.asset(
-            'images/awards/categories/hourglass.png',
-            height: 15,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Image.asset('images/awards/categories/hourglass.png', height: 15, color: _themeProvider.mainText);
 
         case "miscellaneous":
           catIcon = Image.asset(
@@ -665,17 +572,10 @@ class AwardsPageState extends State<AwardsPage> {
             color: _themeProvider.mainText,
           );
         case "hospital":
-          catIcon = Icon(
-            Icons.local_hospital_outlined,
-            size: 20,
-            color: _themeProvider.mainText,
-          );
+          catIcon = Icon(Icons.local_hospital_outlined, size: 20, color: _themeProvider.mainText);
 
         default:
-          catIcon = const Text(
-            '?',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-          );
+          catIcon = const Text('?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900));
           break;
       }
 
@@ -705,10 +605,7 @@ class AwardsPageState extends State<AwardsPage> {
 
             BotToast.showText(
               text: action,
-              textStyle: const TextStyle(
-                fontSize: 13,
-                color: Colors.white,
-              ),
+              textStyle: const TextStyle(fontSize: 13, color: Colors.white),
               contentColor: Colors.green[800]!,
               contentPadding: const EdgeInsets.all(10),
             );
@@ -717,10 +614,7 @@ class AwardsPageState extends State<AwardsPage> {
       );
     }
 
-    return Wrap(
-      spacing: 5,
-      children: catChips,
-    );
+    return Wrap(spacing: 5, children: catChips);
   }
 
   Future _fetchYataAndPopulate() async {
@@ -759,22 +653,14 @@ class AwardsPageState extends State<AwardsPage> {
           if (value["awardType"] == "Medal") {
             image = Image.asset(
               'images/awards/medals/${value["id"]}.png',
-              errorBuilder: (
-                BuildContext context,
-                Object exception,
-                StackTrace? stackTrace,
-              ) {
+              errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
                 return const SizedBox.shrink();
               },
             );
           } else {
             image = Image.asset(
               'images/awards/honors/${value["id"]}.png',
-              errorBuilder: (
-                BuildContext context,
-                Object exception,
-                StackTrace? stackTrace,
-              ) {
+              errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
                 return const SizedBox.shrink();
               },
             );
@@ -804,14 +690,14 @@ class AwardsPageState extends State<AwardsPage> {
             current: value["current"] == null
                 ? 0
                 : value["current"] is String
-                    ? double.parse(value["current"])
-                    : value["current"].toDouble(),
+                ? double.parse(value["current"])
+                : value["current"].toDouble(),
             dateAwarded: value["awarded_time"] == null ? 0 : value["awarded_time"].toDouble(),
             daysLeft: value["left"] == null
                 ? -99 // Means no time
                 : value["left"] is String
-                    ? double.parse(value["left"])
-                    : value["left"].toDouble(),
+                ? double.parse(value["left"])
+                : value["left"].toDouble(),
             // Avoid lists in comments (due to bug in imports from YATA)
             comment: value["comment"] is List<dynamic> ? "" : value["comment"],
             pinned: isPinned,
@@ -897,12 +783,7 @@ class AwardsPageState extends State<AwardsPage> {
     newList.add(header);
 
     for (final award in _allAwards) {
-      newList.add(
-        AwardCard(
-          award: award,
-          pinConditionChange: _onPinnedConditionChange,
-        ),
-      );
+      newList.add(AwardCard(award: award, pinConditionChange: _onPinnedConditionChange));
     }
 
     newList.add(footer);

@@ -48,9 +48,9 @@ class CombatReadyReviveButtonState extends State<CombatReadyReviveButton> {
   }
 }
 
-Future<void> openCombatReadyReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExtended? user) {
+Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themeProvider, OwnProfileExtended? user) {
   return showDialog<void>(
-    context: _,
+    context: ctx,
     barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(

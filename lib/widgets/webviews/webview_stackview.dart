@@ -32,15 +32,7 @@ import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 
-enum BrowserTapType {
-  short,
-  long,
-  chainShort,
-  chainLong,
-  notification,
-  deeplink,
-  quickItem,
-}
+enum BrowserTapType { short, long, chainShort, chainLong, notification, deeplink, quickItem }
 
 class WebViewStackView extends StatefulWidget {
   final String? initUrl;
@@ -124,15 +116,13 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
             top: _webViewProvider.currentUiMode == UiMode.window ? 45 : 0,
             bottom: _webViewProvider.currentUiMode == UiMode.window
                 ? _keyboardVisible
-                    ? 0
-                    : 45
+                      ? 0
+                      : 45
                 : 0,
             left: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
             right: _webViewProvider.currentUiMode == UiMode.window ? 8 : 0,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
           child: Container(
             color: _themeProvider.currentTheme == AppTheme.extraDark ? const Color(0xFF131313) : Colors.transparent,
             child: Padding(
@@ -140,8 +130,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                 top: _webViewProvider.currentUiMode == UiMode.window ? 6 : 0,
                 bottom: _webViewProvider.currentUiMode == UiMode.window
                     ? _themeProvider.currentTheme == AppTheme.extraDark
-                        ? 6
-                        : 4
+                          ? 6
+                          : 4
                     : 0,
                 left: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
                 right: _webViewProvider.currentUiMode == UiMode.window ? 5 : 0,
@@ -185,9 +175,9 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
 
     // Define the main UI widget once to avoid duplication
     final Widget mainUiContent = ShowCaseWidget(
-      builder: (_) {
+      builder: (ctx) {
         if (_webViewProvider.browserShowInForeground) {
-          _launchShowCases(_);
+          _launchShowCases(ctx);
         }
         return FutureBuilder(
           future: providerInitialised,
@@ -199,19 +189,10 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
               backgroundColor: _themeProvider.statusBar,
               appBar: snapshot.connectionState != ConnectionState.done ? buildCustomAppBar() : null,
               body: snapshot.connectionState == ConnectionState.done
-                  ? Stack(
-                      children: [
-                        buildMainContent(),
-                        shouldShowFab ? const WebviewFab() : const SizedBox.shrink(),
-                      ],
-                    )
+                  ? Stack(children: [buildMainContent(), shouldShowFab ? const WebviewFab() : const SizedBox.shrink()])
                   : Container(
                       color: Colors.blueGrey[800],
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: const Center(child: CircularProgressIndicator(color: Colors.white)),
                     ),
             );
           },
@@ -270,19 +251,21 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
       layoutChild = Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? (orientation == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                    ? _themeProvider.statusBar
-                    : Colors.grey[900])
+                  ? Colors.blueGrey
+                  : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : Colors.grey[900])
             : (_themeProvider.currentTheme == AppTheme.dark
-                ? Colors.grey[900]
-                : isStatusBarShown
-                    ? _themeProvider.statusBar
-                    : Colors.black),
+                  ? Colors.grey[900]
+                  : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : Colors.black),
         child: SafeArea(
-          top: !dialog &&
+          top:
+              !dialog &&
               !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-          bottom: !dialog &&
+          bottom:
+              !dialog &&
               !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
           left: applyLeftSafeArea,
           right: applyRightSafeArea,
@@ -336,32 +319,21 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
             )
           else
             // If tabs are disabled, just show the first one
-            AnimatedIndexedStack(
-              index: 0,
-              duration: 100,
-              errorCallback: _closeWithError,
-              children: [
-                allWebViews[0],
-              ],
-            ),
+            AnimatedIndexedStack(index: 0, duration: 100, errorCallback: _closeWithError, children: [allWebViews[0]]),
 
           // --- BOTTOM NAVIGATION / TABS BAR ---
           Padding(
             padding: EdgeInsets.only(
               bottom: _webViewProvider.bottomBarStyleEnabled && _webViewProvider.currentUiMode == UiMode.window
                   ? _webViewProvider.browserBottomBarStylePlaceTabsAtBottom
-                      ? 0
-                      : 38
+                        ? 0
+                        : 38
                   : 0,
             ),
             child: _settingsProvider.useTabsFullBrowser
                 ? (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window
-                    ? Divider(
-                        color: Color(_settingsProvider.tabsHideBarColor),
-                        thickness: 4,
-                        height: 4,
-                      )
-                    : _bottomNavBar(context))
+                      ? Divider(color: Color(_settingsProvider.tabsHideBarColor), thickness: 4, height: 4)
+                      : _bottomNavBar(context))
                 : const SizedBox.shrink(),
           ),
         ],
@@ -383,9 +355,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                 "There was an error loading the content: $e"
                 "\n\nPlease reset your browser cache in Settings / Advanced Browser Settings and try again"
                 "\n\nIf it reoccurs, you might have to force close the app and relaunch",
-                style: const TextStyle(
-                  color: Colors.amber,
-                ),
+                style: const TextStyle(color: Colors.amber),
               ),
             ),
           ),
@@ -416,7 +386,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
     }
   }
 
-  void _launchShowCases(BuildContext _) {
+  void _launchShowCases(BuildContext ctx) {
     if (!_webViewProvider.browserShowInForeground) return;
 
     // Ensure only one execution per minute, so that showcases wait even if the first mandatory ones are shown
@@ -456,7 +426,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
       }
 
       if (showCases.isNotEmpty) {
-        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
+        ShowCaseWidget.of(ctx).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
@@ -465,10 +435,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
     BotToast.showText(
       clickClose: true,
       text: "Something went wrong, please try again.",
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.deepOrangeAccent,
       duration: const Duration(seconds: 6),
       contentPadding: const EdgeInsets.all(10),
@@ -480,10 +447,10 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
   Future<bool> _initialiseSecondary() async {
     await Future.delayed(const Duration(milliseconds: 1000));
     if (!mounted) return false;
-    await Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
-      useTabs: _settingsProvider.useTabsFullBrowser,
-      recallLastSession: widget.recallLastSession,
-    );
+    await Provider.of<WebViewProvider>(
+      context,
+      listen: false,
+    ).initialiseSecondary(useTabs: _settingsProvider.useTabsFullBrowser, recallLastSession: widget.recallLastSession);
 
     // Once secondary tabs are loaded for the first time, assess if any needs to be removes
     // due to the user's preferences for auto-removal (unused tabs)
@@ -501,12 +468,15 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
     super.dispose();
   }
 
-  Widget _bottomNavBar(BuildContext _) {
+  Widget _bottomNavBar(BuildContext ctx) {
     if (_webViewProvider.tabList.isEmpty) return const SizedBox.shrink();
-    final bool isManuito = _webViewProvider.tabList[0].currentUrl!.contains("sid=attack&user2ID=2225097") ||
+    final bool isManuito =
+        _webViewProvider.tabList[0].currentUrl!.contains("sid=attack&user2ID=2225097") ||
         _webViewProvider.tabList[0].currentUrl!.contains("profiles.php?XID=2225097") ||
-        _webViewProvider.tabList[0].currentUrl!.contains("https://www.torn.com/forums.php#/"
-            "p=threads&f=67&t=16163503&b=0&a=0");
+        _webViewProvider.tabList[0].currentUrl!.contains(
+          "https://www.torn.com/forums.php#/"
+          "p=threads&f=67&t=16163503&b=0&a=0",
+        );
 
     final mainTab = CircularMenuTabs(
       tabIndex: 0,
@@ -534,8 +504,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
             color: _webViewProvider.currentTab == 0
                 ? _themeProvider.navSelected
                 : _themeProvider.currentTheme == AppTheme.extraDark
-                    ? Colors.black
-                    : _themeProvider.canvas,
+                ? Colors.black
+                : _themeProvider.canvas,
             child: Row(
               children: [
                 Padding(
@@ -556,20 +526,14 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              constraints: const BoxConstraints(
-                                maxWidth: 100,
-                                minWidth: 34,
-                              ),
+                              constraints: const BoxConstraints(maxWidth: 100, minWidth: 34),
                               child: Column(
                                 children: [
                                   if (_webViewProvider.tabList[0].isChainingBrowser)
                                     Text(
                                       "CHAIN",
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 8,
-                                        color: Colors.red[800],
-                                      ),
+                                      style: TextStyle(fontSize: 8, color: Colors.red[800]),
                                     ),
                                   Text(
                                     _webViewProvider.tabList[0].pageTitle!,
@@ -587,14 +551,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                           ],
                         ),
                 ),
-                SizedBox(
-                  height: 40,
-                  child: VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    color: Colors.grey[400],
-                  ),
-                ),
+                SizedBox(height: 40, child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey[400])),
               ],
             ),
           ),
@@ -624,12 +581,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
             width: 38,
             decoration: const BoxDecoration(
               color: Colors.transparent,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey,
-                  blurRadius: 2,
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.grey, blurRadius: 2)],
               shape: BoxShape.circle,
             ),
             child: ClipOval(
@@ -638,19 +590,13 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                 child: InkWell(
                   child: PopupMenuButton<HealingPages>(
                     padding: const EdgeInsets.all(6),
-                    icon: const Icon(
-                      Icons.healing,
-                      color: Colors.white,
-                    ),
+                    icon: const Icon(Icons.healing, color: Colors.white),
                     onSelected: (HealingPages choice) {
                       _webViewProvider.passHealingChoiceFromOutside(choice);
                     },
                     itemBuilder: (BuildContext context) {
                       return chainingAidPopupChoices.map((HealingPages choice) {
-                        return PopupMenuItem<HealingPages>(
-                          value: choice,
-                          child: Text(choice.description!),
-                        );
+                        return PopupMenuItem<HealingPages>(value: choice, child: Text(choice.description!));
                       }).toList();
                     },
                   ),
@@ -700,7 +646,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
       tooltipBackgroundColor: _themeProvider.secondBackground,
       key: _showcaseTabsGeneral,
       title: 'New tab...!',
-      description: "\nYou've opened a new tab!\n\nThere are two important things to remember: a DOUBLE TAP will "
+      description:
+          "\nYou've opened a new tab!\n\nThere are two important things to remember: a DOUBLE TAP will "
           "open a menu with a few options (including navigation arrows which might be useful in full screen "
           "mode!), and a TRIPLE TAP will instantly remove a tab (except for the first one, which is persistent)."
           "\n\nVisit the Tips section for more information!\n",
@@ -714,10 +661,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: [
-              Container(
-                height: 40,
-                color: _themeProvider.canvas,
-              ),
+              Container(height: 40, color: _themeProvider.canvas),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -728,21 +672,13 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                         mainTab,
                         SizedBox(
                           height: 40,
-                          child: VerticalDivider(
-                            width: 2,
-                            thickness: 2,
-                            color: _themeProvider.mainText,
-                          ),
+                          child: VerticalDivider(width: 2, thickness: 2, color: _themeProvider.mainText),
                         ),
                         // Main tabs widget
                         const Flexible(
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Flexible(
-                                child: TabsList(),
-                              ),
-                            ],
+                            children: [Flexible(child: TabsList())],
                           ),
                         ),
                       ],
@@ -751,7 +687,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                   Showcase(
                     key: _showQuickMenuButton,
                     title: 'Quick menu',
-                    description: '\nTap to show a quick list of quick actions, including shortcuts, '
+                    description:
+                        '\nTap to show a quick list of quick actions, including shortcuts, '
                         'fullscreen mode and more! Some quick shortcuts are:\n\n'
                         'Double tap to get quick access to shortcuts\n\n'
                         'When in full screen mode, long-press to revert to windowed mode immediately',
@@ -766,11 +703,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                       children: [
                         SizedBox(
                           height: 40,
-                          child: VerticalDivider(
-                            width: 2,
-                            thickness: 2,
-                            color: _themeProvider.mainText,
-                          ),
+                          child: VerticalDivider(width: 2, thickness: 2, color: _themeProvider.mainText),
                         ),
                         GetBuilder<ChainStatusController>(
                           builder: (statusP) {
@@ -839,11 +772,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                         ),
                                         SizedBox(
                                           height: 40,
-                                          child: VerticalDivider(
-                                            width: 1,
-                                            thickness: 1,
-                                            color: Colors.grey[400],
-                                          ),
+                                          child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey[400]),
                                         ),
                                       ],
                                     ),
@@ -934,7 +863,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                       if (!await Prefs().getFullScreenExplanationShown()) {
                                         Prefs().setFullScreenExplanationShown(true);
                                         return showWebviewDialog<void>(
-                                          context: _,
+                                          context: ctx,
                                           barrierDismissible: false,
                                           builder: (BuildContext context) {
                                             return const FullScreenExplanationDialog();
@@ -975,7 +904,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                     onTap: () {
                                       _webViewProvider.verticalMenuClose();
                                       showWebviewDialog<void>(
-                                        context: _,
+                                        context: ctx,
                                         barrierDismissible: false,
                                         builder: (BuildContext context) {
                                           return const TabsWipeDialog();
@@ -999,11 +928,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                           children: [
                             SizedBox(
                               height: 40,
-                              child: VerticalDivider(
-                                width: 1,
-                                thickness: 1,
-                                color: _themeProvider.mainText,
-                              ),
+                              child: VerticalDivider(width: 1, thickness: 1, color: _themeProvider.mainText),
                             ),
                             GestureDetector(
                               child: Container(
@@ -1012,10 +937,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
                                     width: 24,
-                                    child: Icon(
-                                      Icons.refresh,
-                                      color: _themeProvider.mainText,
-                                    ),
+                                    child: Icon(Icons.refresh, color: _themeProvider.mainText),
                                   ),
                                 ),
                               ),
@@ -1037,24 +959,14 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                           children: [
                             SizedBox(
                               height: 40,
-                              child: VerticalDivider(
-                                width: 1,
-                                thickness: 1,
-                                color: _themeProvider.mainText,
-                              ),
+                              child: VerticalDivider(width: 1, thickness: 1, color: _themeProvider.mainText),
                             ),
                             GestureDetector(
                               child: Container(
                                 color: _themeProvider.navSelected,
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: SizedBox(
-                                    width: 24,
-                                    child: Icon(
-                                      Icons.close,
-                                      color: Colors.orange[900],
-                                    ),
-                                  ),
+                                  child: SizedBox(width: 24, child: Icon(Icons.close, color: Colors.orange[900])),
                                 ),
                               ),
                               onTap: () async {
@@ -1069,7 +981,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                   Showcase(
                     key: _showCaseNewTabButton,
                     title: 'New tab button',
-                    description: '\nTap to add a new tab.'
+                    description:
+                        '\nTap to add a new tab.'
                         '\n\nLong-press to change between icons and page titles in your tabs.',
                     targetPadding: const EdgeInsets.all(10),
                     disableMovingAnimation: true,
@@ -1084,11 +997,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                           children: [
                             SizedBox(
                               height: 40,
-                              child: VerticalDivider(
-                                width: 1,
-                                thickness: 1,
-                                color: _themeProvider.mainText,
-                              ),
+                              child: VerticalDivider(width: 1, thickness: 1, color: _themeProvider.mainText),
                             ),
                             GestureDetector(
                               child: Container(
@@ -1097,10 +1006,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
                                     width: 24,
-                                    child: Icon(
-                                      Icons.add_circle_outline,
-                                      color: _themeProvider.mainText,
-                                    ),
+                                    child: Icon(Icons.add_circle_outline, color: _themeProvider.mainText),
                                   ),
                                 ),
                               ),
@@ -1108,14 +1014,14 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                 _webViewProvider.addTab();
                                 _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
                                 if (_settingsProvider.showCases.contains("tabs_general2")) {
-                                  ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
+                                  ShowCaseWidget.of(ctx).startShowCase([_showcaseTabsGeneral]);
                                   //_settingsProvider.addShowCase = "tabs_general2";
                                 }
 
                                 if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
                                   Prefs().setExcessTabsAlerted(true);
                                   return showWebviewDialog<void>(
-                                    context: _,
+                                    context: ctx,
                                     barrierDismissible: false,
                                     builder: (BuildContext context) {
                                       return const TabsExcessDialog();

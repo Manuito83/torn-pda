@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 
-
 class DrawerSectionsPage extends StatefulWidget {
   @override
   DrawerSectionsPageState createState() => DrawerSectionsPageState();
@@ -25,10 +24,7 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
     final order = _settingsProvider.drawerSectionOrder;
 
     if (order.isNotEmpty) {
-      _orderedSections = order
-          .map((id) => DrawerSection.fromId(id))
-          .whereType<DrawerSection>()
-          .toList();
+      _orderedSections = order.map((id) => DrawerSection.fromId(id)).whereType<DrawerSection>().toList();
       // Append any new sections not yet in the order
       for (final section in DrawerSection.values) {
         if (!_orderedSections.contains(section)) {
@@ -125,13 +121,9 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text("Reset to default?"),
-                    content: const Text(
-                        "This will restore the default order and visibility for all drawer sections."),
+                    content: const Text("This will restore the default order and visibility for all drawer sections."),
                     actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text("Cancel"),
-                      ),
+                      TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancel")),
                       TextButton(
                         onPressed: () {
                           _resetToDefaults();
@@ -143,19 +135,16 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
                   ),
                 );
               },
-              child: const Text(
-                "RESET",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text("RESET", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
         body: ReorderableListView.builder(
           padding: const EdgeInsets.only(bottom: 20),
           itemCount: _orderedSections.length,
-          onReorder: (oldIndex, newIndex) {
+          onReorderItem: (oldIndex, newIndex) {
+            // newIndex is already corrected by the framework as of Flutter 3.44
             setState(() {
-              if (newIndex > oldIndex) newIndex--;
               final item = _orderedSections.removeAt(oldIndex);
               _orderedSections.insert(newIndex, item);
             });
@@ -187,9 +176,7 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
                     const Icon(Icons.drag_handle),
                   ],
                 ),
-                tileColor: !isVisible
-                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08)
-                    : null,
+                tileColor: !isVisible ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08) : null,
               ),
             );
           },

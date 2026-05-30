@@ -20,12 +20,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsPage extends StatefulWidget {
-  const ProfileOptionsPage({
-    required this.apiValid,
-    required this.user,
-    required this.callBackTimings,
-    this.statsData,
-  });
+  const ProfileOptionsPage({required this.apiValid, required this.user, required this.callBackTimings, this.statsData});
 
   final bool apiValid;
   final OwnProfileExtended? user;
@@ -88,22 +83,21 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : _themeProvider.canvas
+                  ? Colors.blueGrey
+                  : _themeProvider.canvas
             : _themeProvider.canvas,
         child: SafeArea(
-          right: context.read<WebViewProvider>().webViewSplitActive &&
+          right:
+              context.read<WebViewProvider>().webViewSplitActive &&
               context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-          left: context.read<WebViewProvider>().webViewSplitActive &&
+          left:
+              context.read<WebViewProvider>().webViewSplitActive &&
               context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
+                ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
                 : null,
             body: Builder(
               builder: (BuildContext context) {
@@ -123,12 +117,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 15),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'MANUAL NOTIFICATIONS',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('MANUAL NOTIFICATIONS', style: TextStyle(fontSize: 10))],
                                 ),
                                 const SizedBox(height: 10),
                                 Padding(
@@ -177,12 +166,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'HEADER',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('HEADER', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -262,9 +246,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 Navigator.of(context).push(
                                                   MaterialPageRoute(
                                                     builder: (BuildContext context) {
-                                                      return IconsFilterPage(
-                                                        settingsProvider: _settingsProvider,
-                                                      );
+                                                      return IconsFilterPage(settingsProvider: _settingsProvider);
                                                     },
                                                   ),
                                                 );
@@ -280,12 +262,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'COOLDOWNS',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('COOLDOWNS', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
@@ -354,12 +331,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'STATUS CARD',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('STATUS CARD', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -398,12 +370,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'TRAVEL',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('TRAVEL', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -418,8 +385,6 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           setState(() {
                                             _dedicatedTravelCard = value;
                                           });
-
-
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
                                         activeThumbColor: Colors.green,
@@ -447,12 +412,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'RANKED WAR WIDGET',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('RANKED WAR WIDGET', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
@@ -528,30 +488,16 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'BARS BEHAVIOR',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('BARS BEHAVIOR', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 20, right: 20),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      const Flexible(
-                                        child: Text(
-                                          "Life bar",
-                                        ),
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 20),
-                                      ),
-                                      Flexible(
-                                        flex: 2,
-                                        child: _lifeBarDropdown(),
-                                      ),
+                                      const Flexible(child: Text("Life bar")),
+                                      const Padding(padding: EdgeInsets.only(left: 20)),
+                                      Flexible(flex: 2, child: _lifeBarDropdown()),
                                     ],
                                   ),
                                 ),
@@ -572,12 +518,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'ORGANIZED CRIMES',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('ORGANIZED CRIMES', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -616,21 +557,14 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'PROPERTIES RENTAL',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('PROPERTIES RENTAL', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      const Flexible(
-                                        child: Text("Show also rented out properties"),
-                                      ),
+                                      const Flexible(child: Text("Show also rented out properties")),
                                       Switch(
                                         value: _settingsProvider.showAllRentedOutProperties,
                                         onChanged: (value) {
@@ -662,12 +596,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'TORNSTATS CHART',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('TORNSTATS CHART', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -713,15 +642,9 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: <Widget>[
-                                            const Flexible(
-                                              child: Text("Chart type"),
-                                            ),
-                                            const Padding(
-                                              padding: EdgeInsets.only(left: 20),
-                                            ),
-                                            Flexible(
-                                              child: _chartTypeDropdown(),
-                                            ),
+                                            const Flexible(child: Text("Chart type")),
+                                            const Padding(padding: EdgeInsets.only(left: 20)),
+                                            Flexible(child: _chartTypeDropdown()),
                                           ],
                                         ),
                                       ),
@@ -749,15 +672,9 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: <Widget>[
-                                            const Flexible(
-                                              child: Text("Chart range"),
-                                            ),
-                                            const Padding(
-                                              padding: EdgeInsets.only(left: 20),
-                                            ),
-                                            Flexible(
-                                              child: _chartRangeDropdown(),
-                                            ),
+                                            const Flexible(child: Text("Chart range")),
+                                            const Padding(padding: EdgeInsets.only(left: 20)),
+                                            Flexible(child: _chartRangeDropdown()),
                                           ],
                                         ),
                                       ),
@@ -819,12 +736,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'EXPANDABLE PANELS',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('EXPANDABLE PANELS', style: TextStyle(fontSize: 10))],
                                 ),
                                 const SizedBox(height: 8),
                                 Padding(
@@ -865,15 +777,9 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      const Flexible(
-                                        child: Text("Events to show"),
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 20),
-                                      ),
-                                      Flexible(
-                                        child: _eventsNumberDropdown(),
-                                      ),
+                                      const Flexible(child: Text("Events to show")),
+                                      const Padding(padding: EdgeInsets.only(left: 20)),
+                                      Flexible(child: _eventsNumberDropdown()),
                                     ],
                                   ),
                                 ),
@@ -902,15 +808,9 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      const Flexible(
-                                        child: Text("Messages to show"),
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 20),
-                                      ),
-                                      Flexible(
-                                        child: _messagesNumberDropdown(),
-                                      ),
+                                      const Flexible(child: Text("Messages to show")),
+                                      const Padding(padding: EdgeInsets.only(left: 20)),
+                                      Flexible(child: _messagesNumberDropdown()),
                                     ],
                                   ),
                                 ),
@@ -959,12 +859,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'MISC',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('MISC', style: TextStyle(fontSize: 10))],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -1033,12 +928,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 const SizedBox(height: 5),
                                 const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'CARDS ORDER',
-                                      style: TextStyle(fontSize: 10),
-                                    ),
-                                  ],
+                                  children: [Text('CARDS ORDER', style: TextStyle(fontSize: 10))],
                                 ),
                                 const SizedBox(height: 5),
                                 Padding(
@@ -1048,11 +938,8 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     child: ReorderableListView(
                                       shrinkWrap: true,
                                       physics: const NeverScrollableScrollPhysics(),
-                                      onReorder: (int oldIndex, int newIndex) {
-                                        if (oldIndex < newIndex) {
-                                          // removing the item at oldIndex will shorten the list by 1
-                                          newIndex -= 1;
-                                        }
+                                      onReorderItem: (int oldIndex, int newIndex) {
+                                        // newIndex is already corrected by the framework as of Flutter 3.44
                                         final oldItem = _sectionList![oldIndex];
                                         setState(() {
                                           _sectionList!.removeAt(oldIndex);
@@ -1082,9 +969,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                             ),
                           );
                         } else {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
+                          return const Center(child: CircularProgressIndicator());
                         }
                       },
                     ),
@@ -1120,26 +1005,14 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
           value: "line",
           child: SizedBox(
             width: 60,
-            child: Text(
-              "Line",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Line", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "pie",
           child: SizedBox(
             width: 60,
-            child: Text(
-              "Pie",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Pie", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
       ],
@@ -1160,13 +1033,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
         value: value,
         child: SizedBox(
           width: 80,
-          child: Text(
-            text,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              fontSize: 14,
-            ),
-          ),
+          child: Text(text, textAlign: TextAlign.right, style: const TextStyle(fontSize: 14)),
         ),
       );
     }
@@ -1257,78 +1124,42 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
           value: "3",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "3",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("3", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "10",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "10",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("10", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "25",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "25",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("25", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "50",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "50",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("50", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "75",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "75",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("75", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "100",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "100",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("100", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
       ],
@@ -1349,78 +1180,42 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
           value: "3",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "3",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("3", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "10",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "10",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("10", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "25",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "25",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("25", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "50",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "50",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("50", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "75",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "75",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("75", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "100",
           child: SizedBox(
             width: 40,
-            child: Text(
-              "100",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("100", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
       ],
@@ -1481,12 +1276,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      section,
-                      style: const TextStyle(
-                        fontSize: 13,
-                      ),
-                    ),
+                    Text(section, style: const TextStyle(fontSize: 13)),
                     const Icon(Icons.menu, size: 16),
                   ],
                 ),
@@ -1507,39 +1297,21 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
           value: "ask",
           child: SizedBox(
             width: 80,
-            child: Text(
-              "Ask",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Ask", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "inventory",
           child: SizedBox(
             width: 80,
-            child: Text(
-              "Inventory",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Inventory", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "faction",
           child: SizedBox(
             width: 80,
-            child: Text(
-              "Faction",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Faction", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
       ],

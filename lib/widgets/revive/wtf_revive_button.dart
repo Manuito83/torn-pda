@@ -51,15 +51,13 @@ class WtfReviveButtonState extends State<WtfReviveButton> {
   }
 }
 
-Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExtended? user) {
+Future<void> openWtfReviveDialog(BuildContext ctx, ThemeProvider themeProvider, OwnProfileExtended? user) {
   return showDialog<void>(
-    context: _,
+    context: ctx,
     barrierDismissible: false, // user must tap button!
     builder: (BuildContext context) {
       return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 0.0,
         backgroundColor: Colors.transparent,
         content: SingleChildScrollView(
@@ -67,23 +65,12 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
             children: <Widget>[
               SingleChildScrollView(
                 child: Container(
-                  padding: const EdgeInsets.only(
-                    top: 45,
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                  ),
+                  padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                   margin: const EdgeInsets.only(top: 15),
                   decoration: BoxDecoration(
                     color: themeProvider.secondBackground,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10.0,
-                        offset: Offset(0.0, 10.0),
-                      ),
-                    ],
+                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min, // To make the card compact
@@ -109,47 +96,36 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
                                 "WTF are a collection of factions looking to bolster their ranks with new and veteran "
                                 "players alike. They provide Reviving and Attacking services."
                                 "\n\nCheck out their ",
-                            style: TextStyle(
-                              color: context.read<ThemeProvider>().mainText,
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: context.read<ThemeProvider>().mainText, fontSize: 13),
                             children: <InlineSpan>[
                               WidgetSpan(
                                 child: GestureDetector(
                                   onTap: () {
                                     Navigator.of(context).pop();
                                     context.read<WebViewProvider>().openBrowserPreference(
-                                          context: context,
-                                          url: 'https://www.torn.com/forums.php#/p=threads&f=24&t=16012007&b=0&a=0',
-                                          browserTapType: BrowserTapType.short,
-                                        );
+                                      context: context,
+                                      url: 'https://www.torn.com/forums.php#/p=threads&f=24&t=16012007&b=0&a=0',
+                                      browserTapType: BrowserTapType.short,
+                                    );
                                   },
                                   onLongPress: () {
                                     Navigator.of(context).pop();
                                     context.read<WebViewProvider>().openBrowserPreference(
-                                          context: context,
-                                          url: 'https://www.torn.com/forums.php#/p=threads&f=24&t=16012007&b=0&a=0',
-                                          browserTapType: BrowserTapType.long,
-                                        );
+                                      context: context,
+                                      url: 'https://www.torn.com/forums.php#/p=threads&f=24&t=16012007&b=0&a=0',
+                                      browserTapType: BrowserTapType.long,
+                                    );
                                   },
                                   child: const Text(
                                     'forum thread',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
-                                      fontSize: 13,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 13),
                                   ),
                                 ),
                               ),
                               const TextSpan(text: ' and '),
                               TextSpan(
                                 text: 'Discord server',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                  fontSize: 13,
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 13),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async {
                                     const url = 'https://discord.gg/S5Qp6aZd';
@@ -160,7 +136,8 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
                               ),
                               const TextSpan(text: ' for more information.'),
                               TextSpan(
-                                text: "\n\nRevives cost ${context.read<SettingsProvider>().reviveWtfPrice}, "
+                                text:
+                                    "\n\nRevives cost ${context.read<SettingsProvider>().reviveWtfPrice}, "
                                     "unless on contract. Refusal to pay will result in getting blacklisted.",
                               ),
                             ],
@@ -184,12 +161,10 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
 
                               if (user == null) {
                                 BotToast.showText(
-                                  text: 'There was an error contacting Torn API to get your current status, '
+                                  text:
+                                      'There was an error contacting Torn API to get your current status, '
                                       'please try again after a while!',
-                                  textStyle: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                                   contentColor: Colors.red[800]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -200,12 +175,10 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
 
                               if (user!.status!.color != 'red' && user!.status!.state != "Hospital") {
                                 BotToast.showText(
-                                  text: 'According to Torn you are not currently hospitalized, please wait a '
+                                  text:
+                                      'According to Torn you are not currently hospitalized, please wait a '
                                       'few seconds and try again!',
-                                  textStyle: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                                   contentColor: Colors.red[800]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -237,10 +210,7 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
 
                                 BotToast.showText(
                                   text: message,
-                                  textStyle: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                                   contentColor: resultColor!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -257,7 +227,7 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
                             },
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -271,13 +241,7 @@ Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, Ow
                   child: CircleAvatar(
                     backgroundColor: themeProvider.secondBackground,
                     radius: 22,
-                    child: SizedBox(
-                      height: 34,
-                      width: 34,
-                      child: Image.asset(
-                        'images/icons/wtf_revive.png',
-                      ),
-                    ),
+                    child: SizedBox(height: 34, width: 34, child: Image.asset('images/icons/wtf_revive.png')),
                   ),
                 ),
               ),

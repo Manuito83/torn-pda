@@ -210,8 +210,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   @override
   Widget build(BuildContext context) {
     return ShowCaseWidget(
-      builder: (_) {
-        _launchShowCases(_);
+      builder: (ctx) {
+        _launchShowCases(ctx);
         return Slidable(
           startActionPane: ActionPane(
             motion: const DrawerMotion(),
@@ -279,7 +279,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  Future<void> _launchShowCases(BuildContext _) async {
+  Future<void> _launchShowCases(BuildContext ctx) async {
     if (!widget.displayShowcase) return;
     await Future.delayed(const Duration(seconds: 1), () async {
       if (!mounted) return;
@@ -307,7 +307,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       }
 
       if (showCases.isNotEmpty) {
-        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
+        ShowCaseWidget.of(ctx).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
