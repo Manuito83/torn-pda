@@ -258,24 +258,27 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   Padding _alertActivator() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-      child: CheckboxListTile(
-        checkColor: Colors.white,
-        activeColor: Colors.blueGrey,
-        value: _fbUser!.stockMarketNotification ?? false,
-        title: const Text(
-          "Stock Market notification",
-          style: TextStyle(fontSize: 14),
+      child: Material(
+        type: MaterialType.transparency,
+        child: CheckboxListTile(
+          checkColor: Colors.white,
+          activeColor: Colors.blueGrey,
+          value: _fbUser!.stockMarketNotification ?? false,
+          title: const Text(
+            "Stock Market notification",
+            style: TextStyle(fontSize: 14),
+          ),
+          subtitle: const Text(
+            "Main toggle for the custom price alerts you set up below",
+            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+          ),
+          onChanged: (value) {
+            setState(() {
+              _fbUser?.stockMarketNotification = value;
+            });
+            FirestoreHelper().subscribeToStockMarketNotification(value);
+          },
         ),
-        subtitle: const Text(
-          "Main toggle for the custom price alerts you set up below",
-          style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-        ),
-        onChanged: (value) {
-          setState(() {
-            _fbUser?.stockMarketNotification = value;
-          });
-          FirestoreHelper().subscribeToStockMarketNotification(value);
-        },
       ),
     );
   }

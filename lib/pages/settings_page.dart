@@ -967,35 +967,38 @@ class SettingsPageState extends State<SettingsPage> {
                               detailsText = null; // Avoid repeating the scheduled time twice
                             }
 
-                            return ListTile(
-                              leading: CircleAvatar(
-                                radius: 18,
-                                backgroundColor: Colors.green[700],
-                                child: const Icon(Icons.notifications_active, color: Colors.white, size: 18),
-                              ),
-                              title: Text(display.label),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (timeString.isNotEmpty)
-                                    Text(
-                                      timeString,
-                                      style: const TextStyle(fontWeight: FontWeight.w600),
-                                    ),
-                                  if (detailsText != null)
-                                    Text(
-                                      detailsText,
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                    ),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () async {
-                                  await AlarmKitServiceIos.cancelAlarm(alarm['id']);
-                                  _refreshIosAlarms();
-                                },
+                            return Material(
+                              type: MaterialType.transparency,
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: Colors.green[700],
+                                  child: const Icon(Icons.notifications_active, color: Colors.white, size: 18),
+                                ),
+                                title: Text(display.label),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (timeString.isNotEmpty)
+                                      Text(
+                                        timeString,
+                                        style: const TextStyle(fontWeight: FontWeight.w600),
+                                      ),
+                                    if (detailsText != null)
+                                      Text(
+                                        detailsText,
+                                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      ),
+                                  ],
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () async {
+                                    await AlarmKitServiceIos.cancelAlarm(alarm['id']);
+                                    _refreshIosAlarms();
+                                  },
+                                ),
                               ),
                             );
                           }).toList(),

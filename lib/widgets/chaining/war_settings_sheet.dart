@@ -203,30 +203,33 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
 
     return Column(
       children: [
-        RadioListTile<WarSortType>(
-          title: Text(WarSort(type: type).description),
-          subtitle: subtitle != null
-              ? Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                )
-              : null,
-          value: type,
-          secondary: IconButton(
-            icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? Colors.orange : Colors.grey),
-            onPressed: () {
-              setState(() {
-                if (isFav) {
-                  _settings.favoriteSorts.remove(type.toString());
-                } else {
-                  _settings.favoriteSorts.add(type.toString());
-                }
-                _warController.savePreferences();
-              });
-            },
+        Material(
+          type: MaterialType.transparency,
+          child: RadioListTile<WarSortType>(
+            title: Text(WarSort(type: type).description),
+            subtitle: subtitle != null
+                ? Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  )
+                : null,
+            value: type,
+            secondary: IconButton(
+              icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? Colors.orange : Colors.grey),
+              onPressed: () {
+                setState(() {
+                  if (isFav) {
+                    _settings.favoriteSorts.remove(type.toString());
+                  } else {
+                    _settings.favoriteSorts.add(type.toString());
+                  }
+                  _warController.savePreferences();
+                });
+              },
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
           ),
-          controlAffinity: ListTileControlAffinity.leading,
-          dense: true,
         ),
         if (showHospitalSettings)
           Padding(
@@ -239,19 +242,22 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
               ),
               child: Column(
                 children: [
-                  SwitchListTile(
-                    title: const Text("Show 'Okay' targets at top", style: TextStyle(fontSize: 14)),
-                    subtitle: Text("Targets not in hospital will appear first.",
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                    value: _settings.okayTargetsAtTop,
-                    onChanged: (val) {
-                      setState(() {
-                        _settings.okayTargetsAtTop = val;
-                        _warController.savePreferences();
-                        _warController.update();
-                      });
-                    },
-                    dense: true,
+                  Material(
+                    type: MaterialType.transparency,
+                    child: SwitchListTile(
+                      title: const Text("Show 'Okay' targets at top", style: TextStyle(fontSize: 14)),
+                      subtitle: Text("Targets not in hospital will appear first.",
+                          style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      value: _settings.okayTargetsAtTop,
+                      onChanged: (val) {
+                        setState(() {
+                          _settings.okayTargetsAtTop = val;
+                          _warController.savePreferences();
+                          _warController.update();
+                        });
+                      },
+                      dense: true,
+                    ),
                   ),
                   if (_settings.okayTargetsAtTop)
                     Padding(
@@ -943,17 +949,20 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        SwitchListTile(
-          title: const Text("Enable Filters", style: TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: const Text("Only show targets matching these criteria"),
-          value: _settings.filtersEnabled,
-          onChanged: (val) {
-            setState(() {
-              _settings.filtersEnabled = val;
-              _warController.savePreferences();
-              _warController.update();
-            });
-          },
+        Material(
+          type: MaterialType.transparency,
+          child: SwitchListTile(
+            title: const Text("Enable Filters", style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text("Only show targets matching these criteria"),
+            value: _settings.filtersEnabled,
+            onChanged: (val) {
+              setState(() {
+                _settings.filtersEnabled = val;
+                _warController.savePreferences();
+                _warController.update();
+              });
+            },
+          ),
         ),
         const Divider(),
         if (!_settings.filtersEnabled)

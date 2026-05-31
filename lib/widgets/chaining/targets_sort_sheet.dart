@@ -147,15 +147,18 @@ class _TargetsSortSheetState extends State<TargetsSortSheet> with SingleTickerPr
 
     return Column(
       children: [
-        RadioListTile<TargetSortType>(
-          value: type,
-          title: Text(sort.description),
-          secondary: IconButton(
-            icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? Colors.orange : Colors.grey),
-            onPressed: () => provider.toggleFavoriteSort(type),
+        Material(
+          type: MaterialType.transparency,
+          child: RadioListTile<TargetSortType>(
+            value: type,
+            title: Text(sort.description),
+            secondary: IconButton(
+              icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? Colors.orange : Colors.grey),
+              onPressed: () => provider.toggleFavoriteSort(type),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
           ),
-          controlAffinity: ListTileControlAffinity.leading,
-          dense: true,
         ),
         if (isSelected && (type == TargetSortType.hospitalAsc || type == TargetSortType.hospitalDes))
           _buildHospitalSettings(provider, themeProvider),
@@ -182,16 +185,19 @@ class _TargetsSortSheetState extends State<TargetsSortSheet> with SingleTickerPr
         ),
         child: Column(
           children: [
-            SwitchListTile(
-              title: const Text("Show non-hospital at top", style: TextStyle(fontSize: 14)),
-              subtitle: const Text("Okay targets appear first when sorting by hospital.",
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
-              value: provider.hospitalOkayAtTop,
-              onChanged: (val) {
-                provider.setHospitalOkayAtTop(val);
-                setState(() {});
-              },
-              dense: true,
+            Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                title: const Text("Show non-hospital at top", style: TextStyle(fontSize: 14)),
+                subtitle: const Text("Okay targets appear first when sorting by hospital.",
+                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+                value: provider.hospitalOkayAtTop,
+                onChanged: (val) {
+                  provider.setHospitalOkayAtTop(val);
+                  setState(() {});
+                },
+                dense: true,
+              ),
             ),
             if (provider.hospitalOkayAtTop)
               Padding(
@@ -262,16 +268,19 @@ class _TargetsSortSheetState extends State<TargetsSortSheet> with SingleTickerPr
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            SwitchListTile(
-              title: const Text('Enable Filters', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Only show targets matching these criteria'),
-              value: local.enabled,
-              onChanged: (val) {
-                setStateSB(() {
-                  local.enabled = val;
-                  updateFilters(local);
-                });
-              },
+            Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                title: const Text('Enable Filters', style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: const Text('Only show targets matching these criteria'),
+                value: local.enabled,
+                onChanged: (val) {
+                  setStateSB(() {
+                    local.enabled = val;
+                    updateFilters(local);
+                  });
+                },
+              ),
             ),
             const Divider(),
             if (!local.enabled)
