@@ -97,11 +97,11 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.14.0 - Build 651 - built 23/05/2026
+    // v3.14.0 - Build 652 - built 31/05/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.14.0'
-        ..date = '27 MAY 2026'
+        ..date = '15 JUN 2026'
         ..features = [
           ComplexFeature(
             "Alerts: added abroad stay reminders",
