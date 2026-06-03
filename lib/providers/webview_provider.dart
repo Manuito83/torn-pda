@@ -1625,9 +1625,9 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  void changeTextScale(int size) {
+  void changeTextZoom(int zoom) {
     for (final tab in _tabList) {
-      tab.webViewKey?.currentState?.setBrowserTextScale(size);
+      tab.webViewKey?.currentState?.setBrowserTextZoom(zoom);
     }
   }
 

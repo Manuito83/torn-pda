@@ -144,7 +144,7 @@ class Prefs {
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
-  final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
+  final String _kAndroidBrowserTextZoom = "pda_androidBrowserTextZoom";
 
   // Webview FAB
   final String _kWebviewFabEnabled = "pda_webviewFabEnabled";
@@ -1381,12 +1381,12 @@ class Prefs {
     return await PrefsDatabase.setInt(_kAndroidBrowserScale, value);
   }
 
-  Future<int> getAndroidBrowserTextScale() async {
-    return await PrefsDatabase.getInt(_kAndroidBrowserTextScale, 8);
+  Future<int> getAndroidBrowserTextZoom() async {
+    return await PrefsDatabase.getInt(_kAndroidBrowserTextZoom, 100);
   }
 
-  Future setAndroidBrowserTextScale(int value) async {
-    return await PrefsDatabase.setInt(_kAndroidBrowserTextScale, value);
+  Future setAndroidBrowserTextZoom(int value) async {
+    return await PrefsDatabase.setInt(_kAndroidBrowserTextZoom, value);
   }
 
   // Settings - Browser FAB

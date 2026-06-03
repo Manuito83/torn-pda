@@ -202,6 +202,11 @@ class WebViewFullState extends State<WebViewFull>
 
   bool _heightExtendInjected = false;
 
+  // The handler bundle is constant for the life
+  // of the webview, so we register it once and never remove or re-add it
+  // to avoid collisions and ensure that they are active
+  bool _handlersInjected = false;
+
   bool _backButtonPopsContext = true;
 
   var _travelAbroad = false;
@@ -498,7 +503,11 @@ class WebViewFullState extends State<WebViewFull>
       allowsInlineMediaPlayback: true,
       //
       useOnDownloadStart: widget.allowDownloads,
-      minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
+      // Fixed accessibility (Android default). Proportional sizing is handled by textZoom.
+      minimumFontSize: Platform.isAndroid ? 8 : 0,
+      // Pin textZoom to 100 on Android so the webview ignores the system font scale
+      // From inappwebview 6.2.0-beta.3 textZoom defaults to null and the system scale leaks in
+      textZoom: Platform.isAndroid ? _settingsProvider.androidBrowserTextZoom : null,
     );
 
     _pullToRefreshController = Platform.isWindows
@@ -1195,11 +1204,7 @@ class WebViewFullState extends State<WebViewFull>
 
             // Userscripts initial load
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
-              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: UserHelper.apiKey,
-                tabUid: _tabUid,
-              );
-              await _addUserScriptsAvoidDuplicates(handlersScriptsToAdd);
+              await _ensureHandlersInjected();
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
@@ -1327,11 +1332,7 @@ class WebViewFullState extends State<WebViewFull>
 
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
-              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: UserHelper.apiKey,
-                tabUid: _tabUid,
-              );
-              await _addUserScriptsAvoidDuplicates(handlersScriptsToAdd);
+              await _ensureHandlersInjected();
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
@@ -1347,7 +1348,6 @@ class WebViewFullState extends State<WebViewFull>
                   addList.add(s.groupName);
                 }
                 log("Added normal scripts in shouldOverride: $addList");
-                log("Added handlers scripts in shouldOverride: $handlersScriptsToAdd");
               }
             }
 
@@ -1595,6 +1595,18 @@ class WebViewFullState extends State<WebViewFull>
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.end,
               );
+              // Guarantee the handler bundle (GM API, PDA API...) is present in this
+              // document before the document-end scripts run
+              // On cold starts / cached tabs the document-start registration can miss the
+              // initial load, leaving GM_* undefined
+              // Injecting it here directly should work (it will return if it's already injected)
+              if (scriptsToAdd.isNotEmpty) {
+                final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
+                for (final h in handlers) {
+                  await webViewController!.evaluateJavascript(source: h.source);
+                }
+              }
+
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (final script in scriptsToAdd) {
                 await webViewController!.evaluateJavascript(source: script.source);
@@ -1918,6 +1930,9 @@ class WebViewFullState extends State<WebViewFull>
           },
           // Reload webview after memory leak
           onWebContentProcessDidTerminate: (c) {
+            // The restart drops the registered document-start scripts,
+            // so allow the handler bundle to be re-injected on the next navigation
+            _handlersInjected = false;
             c.reload();
           },
           onReceivedHttpAuthRequest: (c, challenge) async {
@@ -2235,6 +2250,15 @@ class WebViewFullState extends State<WebViewFull>
       }
     }
     await webViewController!.addUserScripts(userScripts: scripts.toList());
+  }
+
+  /// Registers the handler bundle (GM API, PDA API,...)
+  /// These scripts never change, so unlike user scripts we must not remove them
+  Future<void> _ensureHandlersInjected() async {
+    if (webViewController == null || _handlersInjected) return;
+    final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
+    await webViewController!.addUserScripts(userScripts: handlers.toList());
+    _handlersInjected = true;
   }
 
   Future assessErrorCases({dom.Document? document}) async {
@@ -5278,9 +5302,9 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  Future<void> setBrowserTextScale(int value) async {
+  Future<void> setBrowserTextZoom(int value) async {
     final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
-    newSettings.minimumFontSize = value;
+    newSettings.textZoom = value;
     webViewController!.setSettings(settings: newSettings);
   }
 

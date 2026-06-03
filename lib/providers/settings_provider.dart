@@ -156,11 +156,11 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setAndroidBrowserScale(_androidBrowserScale);
   }
 
-  var _androidBrowserTextScale = 8;
-  int get androidBrowserTextScale => _androidBrowserTextScale;
-  set changeAndroidBrowserTextScale(int choice) {
-    _androidBrowserTextScale = choice;
-    Prefs().setAndroidBrowserTextScale(_androidBrowserTextScale);
+  var _androidBrowserTextZoom = 100;
+  int get androidBrowserTextZoom => _androidBrowserTextZoom;
+  set changeAndroidBrowserTextZoom(int choice) {
+    _androidBrowserTextZoom = choice;
+    Prefs().setAndroidBrowserTextZoom(_androidBrowserTextZoom);
     notifyListeners();
   }
 
@@ -1657,7 +1657,7 @@ class SettingsProvider extends ChangeNotifier {
     _disableUpdateDialog = await Prefs().getPdaUpdateDialogDisabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
-    _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
+    _androidBrowserTextZoom = await Prefs().getAndroidBrowserTextZoom();
 
     _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
     _androidLiveActivitiesRacingEnabled = await Prefs().getAndroidLiveActivityRacingEnabled();
