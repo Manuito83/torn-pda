@@ -125,8 +125,9 @@ class ChangeLogState extends State<ChangeLog> {
                 "If you prefer the old behavior, turn off 'Auto-filter by destination' in the "
                 "Foreign Stock options dialog (gear icon, top right). Enabled by default.",
           ),
+          "Foreign stocks: departure notifications can now also be scheduled ahead of calculated time",
           ComplexFeature(
-            "FFScouter premium: stat distribution, travel timers and activity tracking",
+            "FFScouter Premium: stat distribution, travel timers and activity tracking",
             explanation:
                 "If your FFScouter key has an active premium subscription, you can use three new tools.\n\n"
                 "Toggle them in Settings > FFScouter.\n\n"

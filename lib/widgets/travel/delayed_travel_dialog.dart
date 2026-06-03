@@ -69,23 +69,12 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
         children: <Widget>[
           SingleChildScrollView(
             child: Container(
-              padding: const EdgeInsets.only(
-                top: 45,
-                bottom: 16,
-                left: 16,
-                right: 16,
-              ),
+              padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
               margin: const EdgeInsets.only(top: 30),
               decoration: BoxDecoration(
                 color: _themeProvider.secondBackground,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10.0,
-                    offset: Offset(0.0, 10.0),
-                  ),
-                ],
+                boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min, // To make the card compact
@@ -95,23 +84,14 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Departure notification",
-                            style: TextStyle(
-                              fontSize: 13,
-                            ),
-                          ),
+                          const Text("Departure notification", style: TextStyle(fontSize: 13)),
                           _timeDropdown(),
                         ],
                       ),
                       Text(
                         'Be aware that the restock time calculation might not be exact. You can '
-                        'add extra minutes to your notification here',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 11,
-                          fontStyle: FontStyle.italic,
-                        ),
+                        'shift your notification earlier or later here',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 11, fontStyle: FontStyle.italic),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -128,10 +108,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 _cancelNotifications();
                                 BotToast.showText(
                                   text: 'Notification cancelled!',
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                   contentColor: Colors.orange[700]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -140,12 +117,10 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 _scheduleNotification();
                                 Navigator.of(context).pop();
                                 BotToast.showText(
-                                  text: 'Boarding call notification set for '
+                                  text:
+                                      'Boarding call notification set for '
                                       '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                   contentColor: Colors.green[700]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -165,10 +140,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                   await _cancelAlarmIOS();
                                   BotToast.showText(
                                     text: 'Boarding call alarm cancelled!',
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
+                                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                     contentColor: Colors.orange[700]!,
                                     duration: const Duration(seconds: 5),
                                     contentPadding: const EdgeInsets.all(10),
@@ -176,12 +148,10 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 } else {
                                   await _scheduleAlarmIOS();
                                   BotToast.showText(
-                                    text: 'Boarding call alarm set for '
+                                    text:
+                                        'Boarding call alarm set for '
                                         '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
+                                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                     contentColor: Colors.green[700]!,
                                     duration: const Duration(seconds: 5),
                                     contentPadding: const EdgeInsets.all(10),
@@ -192,18 +162,14 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                           if (Platform.isIOS) const SizedBox(width: 5),
                           if (Platform.isAndroid)
                             ActionChip(
-                              label: const Icon(
-                                Icons.notifications_none,
-                              ),
+                              label: const Icon(Icons.notifications_none),
                               onPressed: () {
                                 _setAlarm();
                                 BotToast.showText(
-                                  text: 'Boarding call alarm set for '
+                                  text:
+                                      'Boarding call alarm set for '
                                       '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                   contentColor: Colors.green[700]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -213,18 +179,14 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                           const SizedBox(width: 5),
                           if (Platform.isAndroid)
                             ActionChip(
-                              label: const Icon(
-                                Icons.timer,
-                              ),
+                              label: const Icon(Icons.timer),
                               onPressed: () {
                                 _setTimer();
                                 BotToast.showText(
-                                  text: 'Boarding call timer set for '
+                                  text:
+                                      'Boarding call timer set for '
                                       '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                   contentColor: Colors.green[700]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -249,7 +211,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -266,10 +228,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                 child: SizedBox(
                   height: 28,
                   width: 28,
-                  child: Icon(
-                    Icons.settings,
-                    color: _themeProvider.secondBackground,
-                  ),
+                  child: Icon(Icons.settings, color: _themeProvider.secondBackground),
                 ),
               ),
             ),
@@ -279,76 +238,40 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     );
   }
 
+  // Anticipate or delay the notification
+  // Options resulting in a time less than 5 minutes ahead are filtered out
+  static const List<int> _allDelayOptions = [-30, -20, -10, -5, 0, 5, 10, 20, 30];
+
+  String _delayLabel(int value) {
+    if (value == 0) return "On time";
+    return value > 0 ? "+$value min" : "$value min";
+  }
+
+  List<int> _validDelayOptions() {
+    final cutoff = DateTime.now().add(const Duration(minutes: 5));
+    final valid = _allDelayOptions.where((v) => widget.boardingTime.add(Duration(minutes: v)).isAfter(cutoff)).toList();
+    // Fallback to the largest delay if everything is too close
+    return valid.isEmpty ? [_allDelayOptions.last] : valid;
+  }
+
   DropdownButton _timeDropdown() {
+    final validValues = _validDelayOptions();
+    if (!validValues.contains(_delayMinutes)) {
+      _delayMinutes = validValues.first;
+    }
     return DropdownButton<int>(
       value: _delayMinutes,
-      items: const [
-        DropdownMenuItem(
-          value: 0,
-          child: SizedBox(
-            width: 70,
-            child: Text(
-              "On time",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
+      items: validValues
+          .map(
+            (v) => DropdownMenuItem(
+              value: v,
+              child: SizedBox(
+                width: 70,
+                child: Text(_delayLabel(v), textAlign: TextAlign.right, style: const TextStyle(fontSize: 14)),
               ),
             ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 5,
-          child: SizedBox(
-            width: 70,
-            child: Text(
-              "+5 min",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 10,
-          child: SizedBox(
-            width: 70,
-            child: Text(
-              "+10 min",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 20,
-          child: SizedBox(
-            width: 70,
-            child: Text(
-              "+20 min",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 30,
-          child: SizedBox(
-            width: 70,
-            child: Text(
-              "+30 min",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ],
+          )
+          .toList(),
       onChanged: (value) {
         setState(() {
           _delayMinutes = value;
@@ -384,10 +307,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
       ledOffMs: 500,
     );
 
-    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
-      presentSound: true,
-      sound: 'aircraft_seatbelt.aiff',
-    );
+    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
 
     final platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -407,7 +327,8 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
       platformChannelSpecifics,
       payload: '211',
       androidScheduleMode: exactAlarmsPermissionAndroid
-          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          ? AndroidScheduleMode
+                .exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
