@@ -115,30 +115,37 @@ dependencies:
   webview_flutter: 4.13.0
   workmanager: 0.9.0+3
 
-# Fork of flutter_inappwebview 6.2.0-beta.3 with patches that defer the JS
-# bridge native registrations (addJavascriptInterface, addDocumentStartJavaScript)
-# and the initial load IPC off the Android platform-view attach. Without this,
-# onWebViewCreated fails to fire on 50% of release-build cold starts on Android,
-# and on the launches where it does fire the bridge can race against the load
-# IPC so @document-start userscripts see window.flutter_inappwebview undefined
-# on cached or sleeping-tab pages. Revert to pub.dev versions once upstream
-# merges the fix.
+# Fork of flutter_inappwebview 6.2.0-beta.3 (branch torn-pda-dev, which merges
+# two independent fixes, each tracked in its own branch and upstream PR):
+#   1. Android: defer the JS bridge native registrations (addJavascriptInterface,
+#      addDocumentStartJavaScript) and the initial load IPC off the platform-view
+#      attach. Without this, onWebViewCreated fails to fire on 50% of release-build
+#      cold starts on Android, and on the launches where it does fire the bridge can
+#      race against the load IPC so @document-start userscripts see
+#      window.flutter_inappwebview undefined on cached or sleeping-tab pages.
+#   2. iOS: serialize console arguments so objects and Errors keep their data in the
+#      console bridge (previously coerced to [object Object] / message-less Errors).
 dependency_overrides:
   flutter_inappwebview:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 8f2edb9ab9a0473bc11d06f9b936064bf7465c4f
+      ref: 769753d156d8a375c0aec70b079d7f0e2ea9a136
       path: ./flutter_inappwebview
   flutter_inappwebview_platform_interface:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 8f2edb9ab9a0473bc11d06f9b936064bf7465c4f
+      ref: 769753d156d8a375c0aec70b079d7f0e2ea9a136
       path: ./flutter_inappwebview_platform_interface
   flutter_inappwebview_android:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 8f2edb9ab9a0473bc11d06f9b936064bf7465c4f
+      ref: 769753d156d8a375c0aec70b079d7f0e2ea9a136
       path: ./flutter_inappwebview_android
+  flutter_inappwebview_ios:
+    git:
+      url: https://github.com/Manuito83/flutter_inappwebview.git
+      ref: 769753d156d8a375c0aec70b079d7f0e2ea9a136
+      path: ./flutter_inappwebview_ios
 
 dev_dependencies:
   build_runner: ^2.7.1
