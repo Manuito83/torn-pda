@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GMforPDA
 // @namespace    https://github.com/Kwack-Kwack/GMforPDA
-// @version      2.2.1
+// @version      2.3.0
 // @description  A script that allows native GM functions to be called in Torn PDA.
 // @author       Kwack [2190604]
 // @match        *
@@ -9,6 +9,8 @@
 // ==/UserScript==
 
 ((window, Object, DOMException, AbortController, Promise, localStorage) => {
+	if ("GM" in window) return console.warn("GM already defined, skipping declaration");; // Prevent duplicate injections
+
 	const version = 2.2;
 
 	const __GM_info = {
@@ -29,13 +31,39 @@
 			return defaultValue;
 		}
 	}
+	function __GM_getValues(keys) {
+		if (Array.isArray(keys)) {
+			return keys.reduce((acc, key) => {
+				const value = __GM_getValue(key);
+				if (value !== undefined) acc[key] = value;
+				return acc;
+			}, {});
+		} else {
+			return Object.entries(keys).reduce((acc, [key, defaultValue]) => {
+				const value = __GM_getValue(key, defaultValue);
+				if (value === undefined) acc[key] = defaultValue;
+				else acc[key] = value;
+				return acc;
+			}, {});
+		}
+	}
 	function __GM_setValue(key, value) {
 		if (!key) throw new TypeError("No key supplied to GM_setValue");
 		localStorage.setItem(key, "GMV2_" + JSON.stringify(value));
 	}
+	function __GM_setValues(values) {
+		for (const [key, value] of Object.entries(values)) {
+			__GM_setValue(key, value);
+		}
+	}
 	function __GM_deleteValue(key) {
 		if (!key) throw new TypeError("No key supplied to GM_deleteValue");
 		localStorage.removeItem(key);
+	}
+	function __GM_deleteValues(keys) {
+		for (const key of keys) {
+			__GM_deleteValue(key);
+		}
 	}
 	function __GM_listValues() {
 		return Object.keys(localStorage);
@@ -45,7 +73,7 @@
 		const s = document.createElement("style");
 		s.type = "text/css";
 		s.innerHTML = style;
-		document.head.appendChild(s);
+		(document.head || document.documentElement).appendChild(s);
 	}
 	function __GM_notification(...args) {
 		if (typeof args[0] === "object") {
@@ -81,10 +109,12 @@
 		addStyle: __GM_addStyle,
 		deleteValue: async (key) => __GM_deleteValue(key),
 		getValue: async (key, defaultValue) => __GM_getValue(key, defaultValue),
+		getValues: async (keys) => __GM_getValues(keys),
 		listValues: async () => __GM_listValues(),
 		notification: __GM_notification,
 		setClipboard: __GM_setClipboard,
 		setValue: async (key, value) => __GM_setValue(key, value),
+		setValues: async (values) => __GM_setValues(values),
 		xmlHttpRequest: async (details) => {
 			if (!details || typeof details !== "object")
 				throw new TypeError(
@@ -99,8 +129,11 @@
 		GM: Object.freeze(GM),
 		GM_info: Object.freeze(__GM_info),
 		GM_getValue: __GM_getValue,
+		GM_getValues: __GM_getValues,
 		GM_setValue: __GM_setValue,
+		GM_setValues: __GM_setValues,
 		GM_deleteValue: __GM_deleteValue,
+		GM_deleteValues: __GM_deleteValues,
 		GM_listValues: __GM_listValues,
 		GM_addStyle: __GM_addStyle,
 		GM_notification: __GM_notification,
