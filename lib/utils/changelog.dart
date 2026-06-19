@@ -143,6 +143,17 @@ class ChangeLogState extends State<ChangeLog> {
           "Userscripts: refreshed GM compatibility documentation and added test coverage for metadata contracts [DarXide]",
           "Userscripts: fixed GM handlers duplication in child tabs",
           ComplexFeature(
+            "Userscripts: added GM bulk value methods [Kwack]",
+            explanation:
+                "Third-party scripts can now read, write and delete several stored values in a "
+                "single call, using GM.getValues / GM_getValues, GM.setValues / GM_setValues and "
+                "GM_deleteValues, matching modern scripting behavior.\n\n"
+                "GM injection is also more robust, with safer value reads and style insertion "
+                "before the page is fully ready.\n\n"
+                "See the GM compatibility documentation (docs/userscripts/gm-compatibility.md) for "
+                "the full list of supported APIs.",
+          ),
+          ComplexFeature(
             "Added a virus coding timer to Profile",
             explanation:
                 "When you are programming a virus, the remaining time now shows up "
