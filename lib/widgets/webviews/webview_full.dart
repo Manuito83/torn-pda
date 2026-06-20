@@ -65,6 +65,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
+import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -3797,10 +3798,8 @@ class WebViewFullState extends State<WebViewFull>
           if (itemMatch != null) itemsFound.add(itemMatch);
         }
         if (mounted) {
-          // Only show if we are still on city when the data arrives (avoids the widget loading
-          // after the user left the city). We check the URL rather than _cityTriggered because
-          // that flag can be transiently reset by URL churn during a fresh load (e.g. opening a
-          // tab directly in city), which would otherwise drop the widget even though we never left.
+          // Show only if still on city when data arrives, checking the URL not _cityTriggered
+          // (that flag gets transiently reset by URL churn on a fresh direct-open load)
           if (!_currentUrl.contains('city.php')) {
             setState(() {
               _cityExpandable = const SizedBox.shrink();
