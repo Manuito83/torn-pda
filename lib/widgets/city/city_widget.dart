@@ -7,17 +7,14 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 
 class CityWidget extends StatefulWidget {
   final InAppWebViewController? controller;
   final List<Item> cityItems;
   final bool error;
 
-  const CityWidget({
-    required this.controller,
-    required this.cityItems,
-    required this.error,
-  });
+  const CityWidget({required this.controller, required this.cityItems, required this.error});
 
   @override
   CityWidgetState createState() => CityWidgetState();
@@ -27,71 +24,87 @@ class CityWidgetState extends State<CityWidget> {
   final _scrollController = ScrollController();
   final _moneyFormat = NumberFormat("#,##0", "en_US");
 
+  // Whether the on-map item overlay is hidden
+  bool _itemsHiddenOnMap = false;
+
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _toggleItemsOnMap() {
+    setState(() => _itemsHiddenOnMap = !_itemsHiddenOnMap);
+    widget.controller?.evaluateJavascript(source: toggleCityItemsHighlightJS(hidden: _itemsHiddenOnMap));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(10),
-      child: ExpandablePanel(
-        theme: const ExpandableThemeData(
-          hasIcon: false,
-          iconColor: Colors.grey,
-          tapBodyToExpand: true,
-          tapHeaderToExpand: true,
-          tapBodyToCollapse: true,
-        ),
-        header: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Column(
-              children: [
-                Text(
-                  'City Finder',
-                  style: TextStyle(
-                    color: Colors.orange,
-                  ),
-                ),
-                Text(
-                  '(TAP TO EXPAND)',
-                  style: TextStyle(
-                    color: Colors.orange,
-                    fontSize: 8,
-                  ),
-                ),
-              ],
+      child: Stack(
+        children: [
+          _cityPanel(context),
+          if (widget.cityItems.isNotEmpty)
+            Positioned(
+              top: -6,
+              right: -6,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                visualDensity: VisualDensity.compact,
+                iconSize: 20,
+                color: Colors.orange,
+                tooltip: _itemsHiddenOnMap ? 'Show items on map' : 'Hide items from map',
+                icon: Icon(_itemsHiddenOnMap ? Icons.visibility_off : Icons.visibility),
+                onPressed: _toggleItemsOnMap,
+              ),
             ),
-          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _cityPanel(BuildContext context) {
+    return ExpandablePanel(
+      theme: const ExpandableThemeData(
+        hasIcon: false,
+        iconColor: Colors.grey,
+        tapBodyToExpand: true,
+        tapHeaderToExpand: true,
+        tapBodyToCollapse: true,
+      ),
+      header: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Column(
+            children: [
+              Text('City Finder', style: TextStyle(color: Colors.orange)),
+              Text('(TAP TO EXPAND)', style: TextStyle(color: Colors.orange, fontSize: 8)),
+            ],
+          ),
+        ],
+      ),
+      collapsed: ExpandableButton(
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(children: _returnItems(true)),
         ),
-        collapsed: ExpandableButton(
+      ),
+      expanded: ConstrainedBox(
+        constraints: BoxConstraints.loose(
+          Size.fromHeight(MediaQuery.sizeOf(context).height - kToolbarHeight - AppBar().preferredSize.height) / 3,
+        ),
+        child: Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: true,
           child: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              children: _returnItems(true),
-            ),
-          ),
-        ),
-        expanded: ConstrainedBox(
-          constraints: BoxConstraints.loose(
-            Size.fromHeight(MediaQuery.sizeOf(context).height - kToolbarHeight - AppBar().preferredSize.height) / 3,
-          ),
-          child: Scrollbar(
-            controller: _scrollController,
-            thumbVisibility: true,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 5),
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 0, 15),
-                  child: Column(
-                    children: _returnItems(false),
-                  ),
-                ),
+            padding: const EdgeInsets.only(bottom: 5),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 0, 15),
+                child: Column(children: _returnItems(false)),
               ),
             ),
           ),
@@ -115,13 +128,7 @@ class CityWidgetState extends State<CityWidget> {
           child: Row(
             children: [
               Flexible(
-                child: Text(
-                  noFoundText,
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontSize: 12,
-                  ),
-                ),
+                child: Text(noFoundText, style: const TextStyle(color: Colors.orange, fontSize: 12)),
               ),
             ],
           ),
@@ -136,15 +143,7 @@ class CityWidgetState extends State<CityWidget> {
         Padding(
           padding: const EdgeInsets.only(bottom: 2),
           child: Row(
-            children: [
-              Text(
-                "Found 1 item",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[300],
-                ),
-              ),
-            ],
+            children: [Text("Found 1 item", style: TextStyle(fontSize: 12, color: Colors.grey[300]))],
           ),
         ),
       );
@@ -159,20 +158,8 @@ class CityWidgetState extends State<CityWidget> {
           padding: const EdgeInsets.only(bottom: 2),
           child: Row(
             children: <Widget>[
-              Text(
-                "Found $itemQuantity items, total value ",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[300],
-                ),
-              ),
-              Text(
-                "\$${_moneyFormat.format(totalPrice)}",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.green[300],
-                ),
-              ),
+              Text("Found $itemQuantity items, total value ", style: TextStyle(fontSize: 12, color: Colors.grey[300])),
+              Text("\$${_moneyFormat.format(totalPrice)}", style: TextStyle(fontSize: 12, color: Colors.green[300])),
             ],
           ),
         ),
@@ -190,19 +177,10 @@ class CityWidgetState extends State<CityWidget> {
           padding: const EdgeInsets.fromLTRB(10, 3, 0, 0),
           child: Row(
             children: <Widget>[
-              Text(
-                "${item.name}: ",
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white,
-                ),
-              ),
+              Text("${item.name}: ", style: const TextStyle(fontSize: 12, color: Colors.white)),
               Text(
                 "\$${_moneyFormat.format(item.marketValue)}",
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.green,
-                ),
+                style: const TextStyle(fontSize: 12, color: Colors.green),
               ),
             ],
           ),

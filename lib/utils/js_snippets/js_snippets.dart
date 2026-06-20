@@ -1,8 +1,4 @@
-String easyCrimesJS({
-  required String nerve,
-  required String? crime,
-  required String doCrime,
-}) {
+String easyCrimesJS({required String nerve, required String? crime, required String doCrime}) {
   return '''
     var first_load = true;
     
@@ -846,65 +842,134 @@ String travelReturnHomeJS() {
   ''';
 }
 
+// New city map draws items on a canvas (no DOM element per item), so we read the live
+// markers from window.torn.map.lmap and overlay each item image
 String highlightCityItemsJS() {
   return '''
-    function addStyle(styleString) {
-        const style = document.createElement('style');
-        style.textContent = styleString;
-        document.head.append(style);
-    }
-      
-    addStyle(`
-      .pdaCityItem {
-        box-sizing: border-box;
-        box-shadow: rgb(195 20 20 / 0%) 0px 0px 20px 10px;
-        display: block !important;
-        width: 40px !important;
-        height: 40px !important;
-        left: -20px !important;
-        top: -20px !important;
-        z-index: 999 !important;
-        padding: 10px 0px;
-        border-width: medium;
-        border-style: dashed;
-        border-color: rgb(1 7 255);
-        border-image: initial;
-        border-radius: 100%;
-        background: rgb(206 202 184 / 77%);
-        transition: width 50ms cubic-bezier(0.65, 0.05, 0.36, 1), height 50ms cubic-bezier(0.65, 0.05, 0.36, 1), left 50ms cubic-bezier(0.65, 0.05, 0.36, 1), top 50ms cubic-bezier(0.65, 0.05, 0.36, 1), padding 50ms cubic-bezier(0.65, 0.05, 0.36, 1), background 50ms 0ms;
-        animation: svelte-1dz9z41-fade-in 500ms ease-out backwards;
+    (function() {
+      function addStyle(css) {
+        let s = document.getElementById('pda-cityitem-style');
+        if (!s) { s = document.createElement('style'); s.id = 'pda-cityitem-style'; document.head.append(s); }
+        s.textContent = css;
       }
-    `);
-      
-    function highlightItems() {
-      // Find items
-      for(let el of document.querySelectorAll("#map .leaflet-marker-pane *")){
-        let src = el.getAttribute("src");
-        if(src.indexOf("/images/items/") > -1){
-          el.classList.add("pdaCityItem");
+
+      function getMap() {
+        try {
+          if (window.torn && window.torn.map && window.torn.map.lmap) return window.torn.map.lmap;
+        } catch (e) {}
+        return null;
+      }
+
+      // City items are the canvas markers whose icon points at /city_items/<id>/
+      function collectItems(map) {
+        const out = [];
+        try {
+          map.eachLayer(function(l) {
+            try {
+              const o = l.options;
+              if (o && o.iconUrls && o.iconUrls[0] && typeof l.getLatLng === 'function') {
+                const m = String(o.iconUrls[0]).match(/city_items\\/(\\d+)\\//);
+                if (m) out.push({ marker: l, latlng: l.getLatLng(), id: m[1] });
+              }
+            } catch (e) {}
+          });
+        } catch (e) {}
+        return out;
+      }
+
+      function buildHighlights() {
+        const map = getMap();
+        if (!map || typeof L === 'undefined') return;
+
+        const items = collectItems(map);
+        const ids = items.map(function(it) { return it.id; });
+        window._pdaCityItemIds = ids; // stashed for the return value below
+
+        if (!window._pdaHighlightLayer) {
+          window._pdaHighlightLayer = L.layerGroup().addTo(map);
+        }
+        const layer = window._pdaHighlightLayer;
+
+        // Hidden via the widget toggle
+        if (window._pdaCityHighlightHidden) { layer.clearLayers(); window._pdaCityItemSig = null; return; }
+
+        // Only rebuild the rings when the set of items actually changed
+        const sig = ids.join(',');
+        if (sig === window._pdaCityItemSig) return;
+        window._pdaCityItemSig = sig;
+        layer.clearLayers();
+
+        const SIZE = 40;
+        for (let i = 0; i < items.length; i++) {
+          try {
+            const icon = L.divIcon({
+              className: '',
+              html: '<img class="pdaCityItemBig" src="/images/items/' + items[i].id + '/large.png">',
+              iconSize: [SIZE, SIZE],
+              iconAnchor: [SIZE / 2, SIZE / 2]
+            });
+
+            // Interactive so the whole 40px is clickable
+            const canvasMarker = items[i].marker;
+            L.marker(items[i].latlng, { icon: icon, interactive: true, keyboard: false, bubblingMouseEvents: false })
+              .on('click', function() { try { canvasMarker.fire('click'); } catch (e) {} })
+              .addTo(layer);
+          } catch (e) {}
         }
       }
-    }
-    
-    itemsLoaded().then(() => {
-      highlightItems();
-    });
-    
-    function itemsLoaded() {
-      return new Promise((resolve) => {
-        let checker = setInterval(() => {
-          if (document.querySelector("#map .leaflet-marker-pane *")) {
-          setInterval(() => {
-            resolve(true);
-          }, 300);
-          return clearInterval(checker);
-          }
-        });
-      });
-    } 
-    
-    // Return to avoid iOS WKErrorDomain
-    123;
+
+      // Exposed so the city widget show/hide button can toggle the overlay
+      window._pdaSetCityHighlightHidden = function(hidden) {
+        window._pdaCityHighlightHidden = !!hidden;
+        window._pdaCityItemSig = null;
+        buildHighlights();
+      };
+
+      addStyle(`
+        .pdaCityItemBig {
+          box-sizing: border-box !important;
+          display: block !important;
+          width: 40px !important;
+          height: 40px !important;
+          object-fit: contain;
+          border: 3px dashed rgb(21 101 255);
+          border-radius: 50% !important;
+          background: rgb(206 202 184 / 77%);
+          box-shadow: 0 0 6px 2px rgb(21 101 255 / 55%);
+          padding: 3px;
+          cursor: pointer;
+        }
+      `);
+
+      // Only start highlighting once the map is ready
+      if (getMap() && typeof L !== 'undefined') {
+        buildHighlights();
+        if (window._pdaHlInterval) clearInterval(window._pdaHlInterval);
+        window._pdaHlInterval = setInterval(buildHighlights, 2500);
+      }
+
+      // Single return for Flutter: the item ids, or NOT_READY while the map is still loading
+      try {
+        if (!(window.torn && window.torn.map && window.torn.map.lmap)) return "NOT_READY";
+        return JSON.stringify(window._pdaCityItemIds || []);
+      } catch (e) {
+        return "NOT_READY";
+      }
+    })();
+  ''';
+}
+
+// Shows/hides the on-map city item overlay without touching the city option. The item list
+// stays in the widget; only the map rings are toggled. No-op if the highlight has not run yet.
+String toggleCityItemsHighlightJS({required bool hidden}) {
+  final h = hidden ? 'true' : 'false';
+  return '''
+    (function() {
+      try {
+        if (window._pdaSetCityHighlightHidden) window._pdaSetCityHighlightHidden($h);
+      } catch (e) {}
+      return $h;
+    })();
   ''';
 }
 
@@ -1490,10 +1555,7 @@ String miniProfiles() {
   ''';
 }
 
-String bountiesJS({
-  required int? levelMax,
-  required bool? removeNotAvailable,
-}) {
+String bountiesJS({required int? levelMax, required bool? removeNotAvailable}) {
   return '''
     // Credit to TornTools for implementation logic
     var doc = window.document;

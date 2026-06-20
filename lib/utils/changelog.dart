@@ -162,6 +162,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "(Settings / Profile options / Show virus coding) to schedule a manual "
                 "notification, alarm or timer for when the virus is done.",
           ),
+          "Fixed City Finder widget",
           if (Platform.isAndroid) "Fixed live travel updates",
           "Fixed API usage in Loot",
           "Fixed travel indicator in several sections",

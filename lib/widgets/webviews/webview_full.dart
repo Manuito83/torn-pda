@@ -3745,36 +3745,40 @@ class WebViewFullState extends State<WebViewFull>
       return;
     }
 
-    // Retry several times and allow the map to load. If the user lands in the city list, this will
+    // The new map renders items on a Leaflet canvas (no DOM element per item),
+    // so we read the item IDs from the live map instead of parsing the page HTML.
+    //
+    // We retry several times and allow the map to load. If the user lands in the city list, this will
     // also trigger and the user will have 30 seconds to load the map (after that, only reloading
     // or browsing out/in of city will force a reload)
-    late List<dom.Element> query;
+    final mapItemsList = <String>[];
+    var mapReady = false;
     for (var i = 0; i < 30; i++) {
       if (!mounted) break;
-      query = document.querySelectorAll("#map .leaflet-marker-pane *");
-      if (query.isNotEmpty) {
-        break;
-      } else {
+      final dynamic jsResult = await webViewController!.evaluateJavascript(source: highlightCityItemsJS());
+      final resultStr = jsResult?.toString() ?? "";
+      if (resultStr.isEmpty || resultStr == "NOT_READY") {
         await Future.delayed(const Duration(seconds: 1));
-        if (!mounted) break;
-        final updatedHtml = await webViewController!.getHtml();
-        document = parse(updatedHtml);
+        continue;
+      }
+      try {
+        final decoded = jsonDecode(resultStr);
+        if (decoded is List) {
+          for (final id in decoded) {
+            mapItemsList.add(id.toString());
+          }
+        }
+        mapReady = true;
+        break;
+      } catch (_) {
+        await Future.delayed(const Duration(seconds: 1));
       }
     }
 
-    if (query.isEmpty) {
+    if (!mapReady) {
       // Set false so that the page can be reloaded if city widget didn't load
       _cityTriggered = false;
       return;
-    }
-
-    final mapItemsList = <String>[];
-    for (final mapFind in query) {
-      mapFind.attributes.forEach((key, value) {
-        if (key == "src" && value.contains("/images/items/")) {
-          mapItemsList.add(value.split("items/")[1].split("/")[0]);
-        }
-      });
     }
 
     // Pass items to widget (if nothing found, widget's list will be empty)
@@ -3788,13 +3792,16 @@ class WebViewFullState extends State<WebViewFull>
         final tornItems = apiResponse.items!.values.toList();
         final itemsFound = <Item>[];
         for (final mapItem in mapItemsList) {
-          final Item itemMatch = tornItems.firstWhere((element) => element.id == mapItem);
-          itemsFound.add(itemMatch);
+          // Skip any map id missing from the items API instead of blanking the whole widget
+          final Item? itemMatch = tornItems.firstWhereOrNull((element) => element.id == mapItem);
+          if (itemMatch != null) itemsFound.add(itemMatch);
         }
         if (mounted) {
-          // This last check prevents city widget from loading if we are leaving the city
-          // before it had time to load (which could collude with other widgets)
-          if (!_cityTriggered) {
+          // Only show if we are still on city when the data arrives (avoids the widget loading
+          // after the user left the city). We check the URL rather than _cityTriggered because
+          // that flag can be transiently reset by URL churn during a fresh load (e.g. opening a
+          // tab directly in city), which would otherwise drop the widget even though we never left.
+          if (!_currentUrl.contains('city.php')) {
             setState(() {
               _cityExpandable = const SizedBox.shrink();
             });
@@ -3810,7 +3817,6 @@ class WebViewFullState extends State<WebViewFull>
             });
           }
         }
-        webViewController!.evaluateJavascript(source: highlightCityItemsJS());
       } else {
         if (mounted) {
           setState(() {
