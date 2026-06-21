@@ -1701,6 +1701,9 @@ class WebViewFullState extends State<WebViewFull>
 
             publishTabState();
 
+            // Re-grant focus after navigation / back-forward
+            await _restoreNativeWebViewFocus();
+
             //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
           },
           onUpdateVisitedHistory: (c, uri, androidReload) async {
@@ -5161,6 +5164,44 @@ class WebViewFullState extends State<WebViewFull>
     if (publish) {
       await publishTabState();
     }
+
+    // Restore native focus on tab show
+    await _restoreNativeWebViewFocus();
+  }
+
+  /// Restores native focus on tab show so hasFocus()/focus events fire without a tap (#467)
+  Future<void> _restoreNativeWebViewFocus() async {
+    if (Platform.isWindows) return;
+    if (!mounted || webViewController == null) return;
+    if (!_settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed) return;
+
+    bool eligible() {
+      if (!mounted || webViewController == null) return false;
+      if (!_webViewProvider.browserShowInForeground) return false;
+      if (_webViewProvider.webViewSplitActive) return false;
+      if (!_webViewProvider.isTabUidActive(_tabUid)) return false;
+      if (_findFocus.hasFocus) return false; // a Flutter field owns input
+      return true;
+    }
+
+    if (!eligible()) return;
+
+    Future<void> tryFocus() async {
+      if (!eligible()) return;
+      try {
+        await webViewController?.requestFocus();
+      } catch (_) {}
+    }
+
+    // After the frame, so the shown tab is on stage
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await tryFocus();
+      // iOS needs a retry; the view isn't ready on the first frame
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 250));
+        await tryFocus();
+      }
+    });
   }
 
   Future<void> publishTabState({bool? isActiveTab, bool? isWebViewVisible}) async {

@@ -703,6 +703,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
         "browser_center_editing_text_field_allowed": true,
+        "browser_restore_webview_focus_allowed": true,
         "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
@@ -778,6 +779,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       );
       _settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed = remoteConfig.getBool(
         "browser_extend_height_for_keyboard_allowed",
+      );
+      _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_restore_webview_focus_allowed",
       );
 
       // Auth recovery (also persist to SharedPrefs for next app launch)

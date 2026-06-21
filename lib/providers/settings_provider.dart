@@ -23,26 +23,13 @@ import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
-enum BrowserSetting {
-  app,
-  external,
-}
+enum BrowserSetting { app, external }
 
-enum TimeFormatSetting {
-  h24,
-  h12,
-}
+enum TimeFormatSetting { h24, h12 }
 
-enum TimeZoneSetting {
-  localTime,
-  tornTime,
-}
+enum TimeZoneSetting { localTime, tornTime }
 
-enum BrowserRefreshSetting {
-  icon,
-  pull,
-  both,
-}
+enum BrowserRefreshSetting { icon, pull, both }
 
 class PdaUpdateDetails {
   final int latestVersionCode;
@@ -213,6 +200,14 @@ class SettingsProvider extends ChangeNotifier {
   bool get browserCenterEditingTextFieldRemoteConfigAllowed => _browserCenterEditingTextFieldRemoteConfigAllowed;
   set browserCenterEditingTextFieldRemoteConfigAllowed(bool value) {
     _browserCenterEditingTextFieldRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
+  // #467 focus-restore kill-switch (RemoteConfig)
+  bool _browserRestoreWebViewFocusRemoteConfigAllowed = true;
+  bool get browserRestoreWebViewFocusRemoteConfigAllowed => _browserRestoreWebViewFocusRemoteConfigAllowed;
+  set browserRestoreWebViewFocusRemoteConfigAllowed(bool value) {
+    _browserRestoreWebViewFocusRemoteConfigAllowed = value;
     notifyListeners();
   }
 
@@ -925,9 +920,7 @@ class SettingsProvider extends ChangeNotifier {
         DeviceOrientation.landscapeRight,
       ]);
     } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     }
 
     Prefs().setAllowScreenRotation(_allowScreenRotation);
