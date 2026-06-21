@@ -3221,9 +3221,11 @@ class ChangeLogState extends State<ChangeLog> {
             animationDuration: const Duration(milliseconds: 200),
             showProgressBar: false,
             style: ToastificationStyle.flat,
-            closeButtonShowType: feat.closeButton || feat.secondsToShow == null
-                ? CloseButtonShowType.always
-                : CloseButtonShowType.none,
+            closeButton: ToastCloseButton(
+              showType: feat.closeButton || feat.secondsToShow == null
+                  ? CloseButtonShowType.always
+                  : CloseButtonShowType.none,
+            ),
             icon: const Icon(Icons.info_outline),
             borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
           );

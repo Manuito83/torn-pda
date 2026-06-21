@@ -1633,7 +1633,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ? isChristmasPeriod()
                                       ? Transform(
                                           alignment: Alignment.center,
-                                          transform: Matrix4.identity()..scale(-1.0, 1.0),
+                                          transform: Matrix4.identity()..scaleByDouble(-1.0, 1.0, -1.0, 1.0),
                                           child: FaIcon(FontAwesomeIcons.sleigh, color: Colors.blue[900], size: 22),
                                         )
                                       : Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)

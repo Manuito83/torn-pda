@@ -36,7 +36,7 @@ class WebviewTerminalState extends State<WebviewTerminal> {
     double containerHeight = isExpanded ? 280 : 140;
 
     return Consumer<SettingsProvider>(
-      builder: (_, settings, __) {
+      builder: (_, settings, _) {
         if (settings.terminalEnabled) {
           return Stack(
             alignment: Alignment.topRight,
