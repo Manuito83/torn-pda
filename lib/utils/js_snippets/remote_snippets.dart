@@ -28,12 +28,18 @@ class RemoteSnippets {
   RemoteSnippets._();
 
   static const String cityItemsHighlight = 'city_items_highlight';
+  static const String travelRemovePlane = 'travel_remove_plane';
 
   static final Map<String, RemoteSnippet> _registry = {
     cityItemsHighlight: const RemoteSnippet(
       id: cityItemsHighlight,
       version: '1.0.0',
       buildBase: _cityItemsHighlightBaseJS,
+    ),
+    travelRemovePlane: const RemoteSnippet(
+      id: travelRemovePlane,
+      version: '1.0.0',
+      buildBase: _travelRemovePlaneBaseJS,
     ),
   };
 
@@ -172,7 +178,25 @@ class RemoteSnippets {
       })();
     ''';
   }
+
+  // travel_remove_plane base
+  static String _travelRemovePlaneBaseJS() {
+    return '''
+      (function() {
+        if (!document.getElementById('pda-remove-plane')) {
+          var s = document.createElement('style');
+          s.id = 'pda-remove-plane';
+          s.textContent = '[class*="airspaceScene___"],[class*="factWrapper___"]{display:none !important;}';
+          document.head.appendChild(s);
+        }
+        return 123;
+      })();
+    ''';
+  }
 }
 
 // city item highlighter (RC-overridable)
 String highlightCityItemsJS() => RemoteSnippets.resolve(RemoteSnippets.cityItemsHighlight);
+
+// remove the plane animation while traveling (RC-overridable)
+String travelRemovePlaneJS() => RemoteSnippets.resolve(RemoteSnippets.travelRemovePlane);
