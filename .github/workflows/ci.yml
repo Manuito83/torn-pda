@@ -43,21 +43,23 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      # Copy config stubs so the analyzer can resolve all imports.
+      # Copy config stubs so the analyzer can resolve all imports
+      # Guarded ([ ! -f ]) so running this locally never overwrites real private files
       - name: Copy config stubs
         run: |
           cd lib/config
           for f in *.dart.example; do
-            cp "$f" "${f%.example}"
+            target="${f%.example}"
+            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
           done
-          cp firebase_options.dart.example ../firebase_options.dart
+          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
-          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
-          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
-          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
-          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
-          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
+          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
+          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
 
       - name: Install dependencies
         run: flutter pub get
@@ -83,16 +85,17 @@ jobs:
         run: |
           cd lib/config
           for f in *.dart.example; do
-            cp "$f" "${f%.example}"
+            target="${f%.example}"
+            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
           done
-          cp firebase_options.dart.example ../firebase_options.dart
+          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
-          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
-          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
-          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
-          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
-          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
+          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
+          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
 
       - name: Install dependencies
         run: flutter pub get
@@ -154,16 +157,17 @@ jobs:
         run: |
           cd lib/config
           for f in *.dart.example; do
-            cp "$f" "${f%.example}"
+            target="${f%.example}"
+            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
           done
-          cp firebase_options.dart.example ../firebase_options.dart
+          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
-          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
-          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
-          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
-          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
-          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
+          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
+          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
 
       - name: Create iOS CI stubs
         run: |
@@ -228,18 +232,19 @@ jobs:
         run: |
           cd lib/config
           for f in *.dart.example; do
-            cp "$f" "${f%.example}"
+            target="${f%.example}"
+            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
           done
-          cp firebase_options.dart.example ../firebase_options.dart
+          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
           mkdir -p torn-pda-native/auth torn-pda-native/stats
-          cp config/native_auth_models.dart.example    torn-pda-native/auth/native_auth_models.dart
-          cp config/native_auth_provider.dart.example   torn-pda-native/auth/native_auth_provider.dart
-          cp config/native_user_provider.dart.example   torn-pda-native/auth/native_user_provider.dart
-          cp config/native_login_widget.dart.example    torn-pda-native/auth/native_login_widget.dart
-          cp config/stats_controller.dart.example       torn-pda-native/stats/stats_controller.dart
+          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
+          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
+          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
+          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
           # Android Firebase config stub for APK build
-          cp ../android/app/google-services.json.example ../android/app/google-services.json
+          if [ ! -f ../android/app/google-services.json ]; then cp ../android/app/google-services.json.example ../android/app/google-services.json; fi
 
       - name: Install dependencies
         run: flutter pub get
