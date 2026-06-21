@@ -97,11 +97,11 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.14.0 - Build 653 - built 03/06/2026
+    // v3.14.0 - Build 655 - built 21/06/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.14.0'
-        ..date = '15 JUN 2026'
+        ..date = '26 JUN 2026'
         ..features = [
           ComplexFeature(
             "Alerts: added abroad stay reminders",
@@ -164,6 +164,7 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           "Fixed City Finder widget and airplane removal when traveling",
           if (Platform.isAndroid) "Fixed live travel updates",
+          "Fixed browser focus events not firing until tap",
           "Fixed API usage in Loot",
           "Fixed travel indicator in several sections",
         ],
