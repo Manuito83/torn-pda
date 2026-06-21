@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.41.6" # needs Dart >=3.9.0 for sembast, >=3.8.0 for swagger
+  FLUTTER_VERSION: "3.44.0"
 
 jobs:
   # ──────────────────────────────────────────────
