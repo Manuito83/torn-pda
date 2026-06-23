@@ -1071,9 +1071,10 @@ String addHeightForPullToRefresh() {
 
       // Check if the website content overflows the viewport
       if (document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
-        // If not, add 10px to the body height
-        //console.log("Adding extra height for pull-to-refresh");
-        document.body.style.height = `\${viewportHeight + 20}px`;
+        // If not, give the body a minimum height so pull-to-refresh has room
+        // NOTE (v3.14.0!): must be min-height to work with TORN's drawer 
+        // (otherwise it will pin the body and scroll to the top when the drawer opens)
+        document.body.style.minHeight = `\${viewportHeight + 20}px`;
       }
     })();
   ''';
