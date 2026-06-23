@@ -83,6 +83,12 @@ import 'package:torn_pda/widgets/gym/steadfast_widget.dart';
 import 'package:torn_pda/widgets/jail/jail_widget.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
+import 'package:torn_pda/widgets/revive/combat_ready_revive_button.dart';
+import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
+import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
+import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
+import 'package:torn_pda/widgets/revive/wolverines_revive_button.dart';
+import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import "package:torn_pda/widgets/settings/userscripts_add_dialog.dart";
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
@@ -2795,6 +2801,7 @@ class WebViewFullState extends State<WebViewFull>
                 _crimesMenuIcon(),
                 _quickItemsMenuIcon(),
                 if (!_settingsProvider.removeTravelQuickReturnButton) _travelHomeIcon(),
+                _reviveServicesIcon(),
                 _vaultsPopUpIcon(),
                 _tradesMenuIcon(),
                 _vaultOptionsIcon(),
@@ -2863,6 +2870,62 @@ class WebViewFullState extends State<WebViewFull>
             ),
           )
         : const SizedBox.shrink();
+  }
+
+  Widget _reviveServicesIcon() {
+    final userStatus = UserHelper.basic?.status;
+    final inHospital = userStatus?.state == "Hospital";
+    if (!inHospital) return const SizedBox.shrink();
+
+    final warController = context.read<WarController>();
+    final services = <PopupMenuEntry<String>>[];
+
+    if (warController.nukeReviveActive) {
+      services.add(const PopupMenuItem(value: "nuke", child: Text("Nuke revive")));
+    }
+    if (warController.uhcReviveActive) {
+      services.add(const PopupMenuItem(value: "uhc", child: Text("UHC revive")));
+    }
+    if (warController.wtfReviveActive) {
+      services.add(const PopupMenuItem(value: "wtf", child: Text("WTF revive")));
+    }
+    if (warController.midnightXReviveActive) {
+      services.add(const PopupMenuItem(value: "midnight", child: Text("Midnight X revive")));
+    }
+    if (warController.wolverinesReviveActive) {
+      services.add(const PopupMenuItem(value: "wolverines", child: Text("The Wolverines revive")));
+    }
+    if (warController.combatReadyReviveActive) {
+      services.add(const PopupMenuItem(value: "combatReady", child: Text("Combat Ready revive")));
+    }
+
+    if (services.isEmpty) return const SizedBox.shrink();
+
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.medical_services_outlined,
+        color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+      ),
+      tooltip: "Revive services",
+      onSelected: (selection) {
+        _webViewProvider.verticalMenuClose();
+        switch (selection) {
+          case "nuke":
+            openNukeReviveDialog(context, _themeProvider, null);
+          case "uhc":
+            openUhcReviveDialog(context, _themeProvider, null);
+          case "wtf":
+            openWtfReviveDialog(context, _themeProvider, null);
+          case "midnight":
+            openMidnightXReviveDialog(context, _themeProvider, null);
+          case "wolverines":
+            openWolverinesReviveDialog(context, _themeProvider, null);
+          case "combatReady":
+            openCombatReadyReviveDialog(context, _themeProvider, null);
+        }
+      },
+      itemBuilder: (context) => services,
+    );
   }
 
   Future<void> _goBackOrForward(DragEndDetails details) async {
