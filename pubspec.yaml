@@ -70,7 +70,7 @@ dependencies:
   flutter_xlider: 3.5.0
   font_awesome_flutter: 11.0.0
   # Temporary as per https://github.com/jonataslaw/getx/issues/3100
-  get: 5.0.0-release-candidate-9.3.2
+  get: 5.0.0-release-candidate-9.3.3
   google_sign_in: 7.1.0
   home_widget:
     git:
