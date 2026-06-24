@@ -392,6 +392,8 @@ class AboutPageState extends State<AboutPage> {
                 _profileLink('Kwack', '2190604'),
                 const TextSpan(text: ', '),
                 _profileLink('Mavri', '2402357'),
+                const TextSpan(text: ', '),
+                _profileLink('DarXide', '4059250'),
               ]),
               _contributorLine('Partners: ', [
                 _profileLink('Kivou', '2000607'),

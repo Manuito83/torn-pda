@@ -1,14 +1,20 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ChangeLogItem {
   String version = "";
@@ -26,6 +32,175 @@ class ComplexFeature {
   ComplexFeature(this.text, {this.explanation, this.secondsToShow, this.closeButton = false});
 }
 
+// Modern changelog model (v3.14.0+)
+
+class _MItem {
+  final String text;
+  final String? detail;
+  final bool androidOnly;
+
+  const _MItem(this.text, {this.detail, this.androidOnly = false});
+
+  // Credits are tagged inline as "[Name]", same as the legacy changelog
+  String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
+  String get description => text.replaceAll(_creditTag, '').trim();
+}
+
+class _MSection {
+  final IconData icon;
+  final String title;
+  final Color color;
+  final List<_MItem> items;
+
+  const _MSection({required this.icon, required this.title, required this.color, required this.items});
+}
+
+class _MVersion {
+  final String version;
+  final String date;
+  final List<_MSection> sections;
+  final List<String> hotfixes;
+
+  const _MVersion({required this.version, required this.date, required this.sections, required this.hotfixes});
+
+  // Contributors ordered by items
+  List<String> get contributors {
+    final counts = <String, int>{};
+    for (final section in sections) {
+      for (final item in section.items) {
+        counts.update(item.author, (n) => n + 1, ifAbsent: () => 1);
+      }
+    }
+    return counts.keys.toList()..sort((a, b) {
+      final byCount = counts[b]!.compareTo(counts[a]!);
+      return byCount != 0 ? byCount : a.toLowerCase().compareTo(b.toLowerCase());
+    });
+  }
+}
+
+List<_MVersion> _modernChangelog() => [
+  _MVersion(
+    version: 'v3.14.0',
+    date: '26 Jun 2026',
+    hotfixes: [],
+    sections: [
+      const _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Alerts: added abroad stay reminders',
+            detail:
+                'Set notifications to remind you while you are sitting in a foreign country, '
+                "so you don't forget you are abroad.\n\n"
+                'Enable it in the Alerts section and pick the intervals you want (5 min, 15 min, 30 min, '
+                '1 h, 6 h, 12 h, 24 h) measured from the moment you land.\n\n'
+                'There is also an option to keep firing reminders while you are hospitalised abroad, '
+                'off by default, so hospital stays pause the reminders and resume them once you are out.',
+          ),
+          _MItem('Added Buy 100 helper to city shops [DarXide]'),
+          _MItem('Added awards comparison to profile checks and the training comparison dialog [DarXide]'),
+          _MItem(
+            'FFScouter Premium: stat distribution, travel timers and activity tracking',
+            detail:
+                'If your FFScouter key has an active premium subscription, you can use three new tools.\n\n'
+                'Toggle them in Settings > FFScouter.\n\n'
+                "Stat distribution: a target's stats breakdown in the FFScouter tab of the stats dialog.\n\n"
+                'Travel and landing timers: the predicted landing time (TCT countdown) shown next to the travel '
+                'icon on targets that are flying, in war and target cards and in profile checks. Tap it for the '
+                'arrival window and route.\n\n'
+                "Activity tracker: a 'likely online now' icon on each member (tap for their typical daily pattern "
+                "in TCT), plus an 'Enemy activity' panel on the War page with a 24h heatmap per faction and the "
+                'most-active members, flagging the strong ones who are online now.',
+          ),
+          _MItem(
+            'Added a virus coding timer to Profile',
+            detail:
+                'When you are programming a virus, the remaining time now shows up '
+                'automatically in the MISC section of your Profile.\n\n'
+                'You can also enable a dedicated entry in the COOLDOWNS section '
+                '(Settings / Profile options / Show virus coding) to schedule a manual '
+                'notification, alarm or timer for when the virus is done.',
+          ),
+          _MItem(
+            'Foreign stocks: auto-filter by destination while traveling or abroad',
+            detail:
+                'When you open the Foreign Stock section while you are flying to a country '
+                'or already staying there, the list now shows only that country\'s stocks by default.\n\n'
+                'A banner at the top makes it obvious why the view is filtered.\n\n'
+                "If you prefer the old behavior, turn off 'Auto-filter by destination' in the "
+                'Foreign Stock options dialog (gear icon, top right). Enabled by default.',
+          ),
+          _MItem(
+            'Userscripts: added a permissions warning dialog before saving or loading scripts that declare @grant entries [DarXide]',
+          ),
+          _MItem(
+            'Userscripts: added GM bulk value methods [Kwack]',
+            detail:
+                'Third-party scripts can now read, write and delete several stored values in a '
+                'single call, using GM.getValues / GM_getValues, GM.setValues / GM_setValues and '
+                'GM_deleteValues, matching modern scripting behavior.\n\n'
+                'GM injection is also more robust, with safer value reads and style insertion '
+                'before the page is fully ready.\n\n'
+                'See the GM compatibility documentation (docs/userscripts/gm-compatibility.md) for '
+                'the full list of supported APIs.',
+          ),
+        ],
+      ),
+      const _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [
+          _MItem('Foreign stocks: improved chart time spacing and restock highlighting [DarXide]'),
+          _MItem('Foreign stocks: departure notifications can now also be scheduled ahead of calculated time'),
+          _MItem('Userscripts: refreshed GM compatibility documentation and added test coverage [DarXide]'),
+        ],
+      ),
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: const Color(0xFF2E7D32),
+        items: [
+          const _MItem('Userscripts: fixed GM handlers duplication in child tabs'),
+          const _MItem('Fixed City Finder widget and airplane removal when traveling'),
+          _MItem('Fixed live travel updates', androidOnly: !Platform.isIOS),
+          const _MItem('Fixed browser focus events not firing until tap'),
+          const _MItem('Fixed API usage in Loot'),
+          const _MItem('Fixed travel indicator in several sections'),
+        ],
+      ),
+    ],
+  ),
+];
+
+const _defaultAuthor = 'Manuito';
+final _creditTag = RegExp(r'\s*\[([^\]]+)\]');
+
+const _contributorXids = <String, String>{'Manuito': '2225097', 'Kwack': '2190604', 'DarXide': '4059250'};
+
+const _contributorColors = <Color>[
+  Color(0xFF42A5F5),
+  Color(0xFFEF5350),
+  Color(0xFF66BB6A),
+  Color(0xFFAB47BC),
+  Color(0xFFFFA726),
+  Color(0xFF26C6DA),
+  Color(0xFFEC407A),
+];
+
+Color _colorFor(String name, List<String> ordered) {
+  final i = ordered.indexOf(name);
+  return _contributorColors[(i < 0 ? 0 : i) % _contributorColors.length];
+}
+
+Color _sectionAccent(Color base, bool isDark) {
+  if (!isDark) return base;
+  final hsl = HSLColor.fromColor(base);
+  return hsl.withLightness((hsl.lightness + 0.32).clamp(0.0, 0.80)).toColor();
+}
+
 class ChangeLog extends StatefulWidget {
   final bool autoTriggered;
 
@@ -41,6 +216,8 @@ class ChangeLogState extends State<ChangeLog> {
 
   bool _showAllChanges = false;
   static const int _initialItemsToShow = 3;
+
+  late List<_MVersion> _modernVersions;
 
   bool _isCloseButtonEnabled = false;
   int _countdownSeconds = 3;
@@ -87,88 +264,15 @@ class ChangeLogState extends State<ChangeLog> {
   }
 
   void _initializeItems() {
-    // Clear in case we reassemble
     _changeLogItems.clear();
+    _modernVersions = _modernChangelog();
     _createItems();
   }
 
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
-
-    // v3.14.0 - Build 656 - built 23/06/2026
-    itemList.add(
-      ChangeLogItem()
-        ..version = 'Torn PDA v3.14.0'
-        ..date = '26 JUN 2026'
-        ..features = [
-          ComplexFeature(
-            "Alerts: added abroad stay reminders",
-            explanation:
-                "Set notifications to remind you while you are sitting in a foreign country, "
-                "so you don't forget you are abroad.\n\n"
-                "Enable it in the Alerts section and pick the intervals you want (5 min, 15 min, 30 min, "
-                "1 h, 6 h, 12 h, 24 h) measured from the moment you land.\n\n"
-                "There is also an option to keep firing reminders while you are hospitalised abroad,"
-                "off by default, so hospital stays pause the reminders and resume them once you are out.",
-          ),
-          "Added Buy 100 helper to city shops [DarXide]",
-          "Added awards comparison to profile checks and the training comparison dialog [DarXide]",
-          "Foreign stocks: improved chart time spacing and restock highlighting [DarXide]",
-          ComplexFeature(
-            "Foreign stocks: auto-filter by destination while traveling or abroad",
-            explanation:
-                "When you open the Foreign Stock section while you are flying to a country "
-                "or already staying there, the list now shows only that country's stocks by default.\n\n"
-                "A banner at the top makes it obvious why the view is filtered.\n\n"
-                "If you prefer the old behavior, turn off 'Auto-filter by destination' in the "
-                "Foreign Stock options dialog (gear icon, top right). Enabled by default.",
-          ),
-          "Foreign stocks: departure notifications can now also be scheduled ahead of calculated time",
-          ComplexFeature(
-            "FFScouter Premium: stat distribution, travel timers and activity tracking",
-            explanation:
-                "If your FFScouter key has an active premium subscription, you can use three new tools.\n\n"
-                "Toggle them in Settings > FFScouter.\n\n"
-                "Stat distribution: a target's stats breakdown in the FFScouter tab of the stats dialog.\n\n"
-                "Travel and landing timers: the predicted landing time (TCT countdown) shown next to the travel "
-                "icon on targets that are flying, in war and target cards and in profile checks. Tap it for the "
-                "arrival window and route.\n\n"
-                "Activity tracker: a 'likely online now' icon on each member (tap for their typical daily pattern "
-                "in TCT), plus an 'Enemy activity' panel on the War page with a 24h heatmap per faction and the "
-                "most-active members, flagging the strong ones who are online now.",
-          ),
-          "Userscripts: added a permissions warning dialog before saving or loading scripts that declare @grant entries [DarXide]",
-          "Userscripts: refreshed GM compatibility documentation and added test coverage for metadata contracts [DarXide]",
-          "Userscripts: fixed GM handlers duplication in child tabs",
-          ComplexFeature(
-            "Userscripts: added GM bulk value methods [Kwack]",
-            explanation:
-                "Third-party scripts can now read, write and delete several stored values in a "
-                "single call, using GM.getValues / GM_getValues, GM.setValues / GM_setValues and "
-                "GM_deleteValues, matching modern scripting behavior.\n\n"
-                "GM injection is also more robust, with safer value reads and style insertion "
-                "before the page is fully ready.\n\n"
-                "See the GM compatibility documentation (docs/userscripts/gm-compatibility.md) for "
-                "the full list of supported APIs.",
-          ),
-          ComplexFeature(
-            "Added a virus coding timer to Profile",
-            explanation:
-                "When you are programming a virus, the remaining time now shows up "
-                "automatically in the MISC section of your Profile.\n\n"
-                "You can also enable a dedicated entry in the COOLDOWNS section "
-                "(Settings / Profile options / Show virus coding) to schedule a manual "
-                "notification, alarm or timer for when the virus is done.",
-          ),
-          "Fixed City Finder widget and airplane removal when traveling",
-          if (Platform.isAndroid) "Fixed live travel updates",
-          "Fixed browser focus events not firing until tap",
-          "Fixed API usage in Loot",
-          "Fixed travel indicator in several sections",
-        ],
-    );
+    // Modern versions live in _modernChangelog()
 
     // v3.13.4 - Build 650 - built 05/04/2026
     itemList.add(
@@ -3105,7 +3209,53 @@ class ChangeLogState extends State<ChangeLog> {
     final itemList = <Widget>[];
     var itemNumber = 1;
 
-    itemList.add(const Padding(padding: EdgeInsets.only(bottom: 25), child: Text("CHANGELOG")));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    itemList.add(
+      Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset('images/icons/torn_pda.png', width: 42, height: 42),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'TORN PDA',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2.5,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+                const _AnimatedChangelogWordmark(),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+
+    for (final version in _modernVersions) {
+      if (!_showAllChanges && itemNumber > _initialItemsToShow) break;
+      if (itemNumber > 1) {
+        itemList.add(
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24, horizontal: 50),
+            child: Divider(thickness: 1, color: Colors.blueGrey),
+          ),
+        );
+      }
+      itemList.add(_ModernVersionCard(version: version));
+      itemNumber++;
+    }
 
     for (final entry in _changeLogItems.entries) {
       if (_showAllChanges || itemNumber <= _initialItemsToShow) {
@@ -3180,7 +3330,7 @@ class ChangeLogState extends State<ChangeLog> {
       }
     }
 
-    if (!_showAllChanges && _changeLogItems.length > _initialItemsToShow) {
+    if (!_showAllChanges && _changeLogItems.length >= _initialItemsToShow) {
       itemList.add(
         Padding(
           padding: const EdgeInsets.only(top: 24.0),
@@ -3239,6 +3389,381 @@ class ChangeLogState extends State<ChangeLog> {
     return const Padding(
       padding: EdgeInsets.only(right: 4),
       child: SizedBox(height: 18, width: 18, child: ImageIcon(AssetImage('images/icons/pda_icon.png'))),
+    );
+  }
+}
+
+class _ModernVersionCard extends StatelessWidget {
+  final _MVersion version;
+
+  const _ModernVersionCard({required this.version});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = context.watch<ThemeProvider>();
+    final accent = theme.getTextColor(isDark ? const Color(0xFF64B5F6) : const Color(0xFF1565C0));
+    final dateColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final contributors = version.contributors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+            decoration: BoxDecoration(
+              border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  version.version,
+                  style: TextStyle(color: accent, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(version.date, style: TextStyle(color: dateColor, fontSize: 12)),
+              ],
+            ),
+          ),
+        ),
+        for (final hotfix in version.hotfixes)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(Icons.local_fire_department, color: Colors.orange, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(hotfix, style: const TextStyle(fontSize: 15, height: 1.4))),
+              ],
+            ),
+          ),
+        for (final section in version.sections) _ModernSectionTile(section: section, contributors: contributors),
+        _ContributorsFooter(contributors: contributors),
+      ],
+    );
+  }
+}
+
+class _ModernSectionTile extends StatelessWidget {
+  final _MSection section;
+  final List<String> contributors;
+
+  const _ModernSectionTile({required this.section, required this.contributors});
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleItems = section.items.where((i) => !i.androidOnly || Platform.isAndroid).toList();
+    if (visibleItems.isEmpty) return const SizedBox.shrink();
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = context.watch<ThemeProvider>().getTextColor(_sectionAccent(section.color, isDark));
+
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+        leading: Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: isDark ? 0.20 : 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(section.icon, size: 19, color: accent),
+        ),
+        title: Text(
+          section.title,
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: accent),
+        ),
+        childrenPadding: const EdgeInsets.only(left: 16, right: 4, bottom: 8),
+        children: [
+          for (final item in visibleItems)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: item.detail == null
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _AuthorDot(author: item.author, contributors: contributors),
+                        Expanded(child: Text(item.description, style: const TextStyle(fontSize: 15, height: 1.4))),
+                      ],
+                    )
+                  : _FlipItem(item: item, contributors: contributors, accent: accent),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlipItem extends StatefulWidget {
+  final _MItem item;
+  final List<String> contributors;
+  final Color accent;
+
+  const _FlipItem({required this.item, required this.contributors, required this.accent});
+
+  @override
+  State<_FlipItem> createState() => _FlipItemState();
+}
+
+class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  );
+
+  void _flip() {
+    if (_controller.isAnimating) return;
+    _controller.value < 0.5 ? _controller.forward() : _controller.reverse();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 250),
+      alignment: Alignment.topCenter,
+      curve: Curves.easeOut,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final showFront = _controller.value < 0.5;
+          final transform = Matrix4.identity()
+            ..setEntry(3, 2, 0.0012)
+            ..rotateY(_controller.value * pi);
+          return Transform(
+            alignment: Alignment.center,
+            transform: transform,
+            child: showFront
+                ? _front()
+                : Transform(alignment: Alignment.center, transform: Matrix4.identity()..rotateY(pi), child: _back()),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _front() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _AuthorDot(author: widget.item.author, contributors: widget.contributors),
+        Expanded(child: Text(widget.item.description, style: const TextStyle(fontSize: 15, height: 1.4))),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _flip,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Icon(Icons.info_outline, size: 22, color: widget.accent),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _back() {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _flip,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: widget.accent.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: widget.accent.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: Text(widget.item.detail!, style: const TextStyle(fontSize: 14, height: 1.4))),
+            const SizedBox(width: 8),
+            Icon(Icons.close, size: 18, color: widget.accent),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthorDot extends StatelessWidget {
+  final String author;
+  final List<String> contributors;
+
+  const _AuthorDot({required this.author, required this.contributors});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.watch<ThemeProvider>().getTextColor(_colorFor(author, contributors));
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, right: 10),
+      child: Tooltip(
+        message: author,
+        child: Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContributorsFooter extends StatelessWidget {
+  final List<String> contributors;
+
+  const _ContributorsFooter({required this.contributors});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final keyValid = Get.isRegistered<UserController>() && Get.find<UserController>().isApiKeyValid;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 18, 4, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.favorite, size: 15, color: labelColor),
+              const SizedBox(width: 7),
+              Text(
+                'Contributors',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: labelColor, letterSpacing: 0.5),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [for (final name in contributors) _contributorChip(context, name, isDark, keyValid)],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _contributorChip(BuildContext context, String name, bool isDark, bool keyValid) {
+    final color = context.watch<ThemeProvider>().getTextColor(_colorFor(name, contributors));
+    final xid = _contributorXids[name];
+    final tappable = keyValid && xid != null;
+
+    final chip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.18 : 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: color,
+              decoration: tappable ? TextDecoration.underline : null,
+              decorationColor: color,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!tappable) return chip;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.read<WebViewProvider>().openBrowserPreference(
+        context: context,
+        url: 'https://www.torn.com/profiles.php?XID=$xid',
+        browserTapType: BrowserTapType.short,
+      ),
+      child: chip,
+    );
+  }
+}
+
+class _SlideGradient extends GradientTransform {
+  final double slide;
+
+  const _SlideGradient(this.slide);
+
+  @override
+  Matrix4 transform(Rect bounds, {TextDirection? textDirection}) =>
+      Matrix4.translationValues(bounds.width * slide, 0, 0);
+}
+
+// La rojigualda... :)
+class _AnimatedChangelogWordmark extends StatefulWidget {
+  const _AnimatedChangelogWordmark();
+
+  @override
+  State<_AnimatedChangelogWordmark> createState() => _AnimatedChangelogWordmarkState();
+}
+
+class _AnimatedChangelogWordmarkState extends State<_AnimatedChangelogWordmark> with SingleTickerProviderStateMixin {
+  static const _flagRed = Color(0xFFC60B1E);
+  static const _flagGold = Color(0xFFFFC400);
+  static const _style = TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Colors.white);
+
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.watch<ThemeProvider>();
+    if (theme.accesibilityNoTextColors) {
+      return Text('CHANGELOG', style: _style.copyWith(color: theme.mainText));
+    }
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final gradient = LinearGradient(
+          colors: const [_flagRed, _flagGold, _flagRed],
+          stops: const [0.0, 0.5, 1.0],
+          tileMode: TileMode.repeated,
+          transform: _SlideGradient(_controller.value),
+        );
+        return ShaderMask(shaderCallback: (bounds) => gradient.createShader(bounds), child: child);
+      },
+      child: const Text('CHANGELOG', style: _style),
     );
   }
 }
