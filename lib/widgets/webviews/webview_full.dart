@@ -4203,7 +4203,7 @@ class WebViewFullState extends State<WebViewFull>
   Future _assessBarsRedirect(dom.Document document) async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
-      webViewController?.evaluateJavascript(source: barsDoubleClickRedirect(isIOS: Platform.isIOS));
+      webViewController?.evaluateJavascript(source: barsDoubleClickRedirectJS());
     }
   }
 

@@ -29,6 +29,7 @@ class RemoteSnippets {
 
   static const String cityItemsHighlight = 'city_items_highlight';
   static const String travelRemovePlane = 'travel_remove_plane';
+  static const String barsDoubleClick = 'bars_double_click';
 
   static final Map<String, RemoteSnippet> _registry = {
     cityItemsHighlight: const RemoteSnippet(
@@ -40,6 +41,11 @@ class RemoteSnippets {
       id: travelRemovePlane,
       version: '1.0.0',
       buildBase: _travelRemovePlaneBaseJS,
+    ),
+    barsDoubleClick: const RemoteSnippet(
+      id: barsDoubleClick,
+      version: '1.0.0',
+      buildBase: _barsDoubleClickBaseJS,
     ),
   };
 
@@ -193,6 +199,86 @@ class RemoteSnippets {
       })();
     ''';
   }
+
+  // bars_double_click base
+  static String _barsDoubleClickBaseJS() {
+    return '''
+      (function() {
+        if (window.pdaBarsListenerAdded) {
+          return;
+        }
+
+        const ua = navigator.userAgent || '';
+        const isIOS = ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1 || ua.indexOf('iPod') > -1;
+
+        function onEnergyClick() {
+          window.location.href = 'https://www.torn.com/gym.php';
+        }
+
+        function onNerveClick() {
+          window.location.href = 'https://www.torn.com/crimes.php';
+        }
+
+        function addBarsListener() {
+          const barElements = Array.from(document.querySelectorAll('[class*="bar___"]'));
+          const energyBar = barElements.find((el) => el.className.includes('energy___'));
+          const nerveBar = barElements.find((el) => el.className.includes('nerve___'));
+
+          if (!energyBar || !nerveBar) {
+            return false;
+          }
+
+          if (isIOS) {
+            let energyClickCount = 0;
+            let nerveClickCount = 0;
+            const doubleClickInterval = 1500;
+
+            energyBar.addEventListener('click', () => {
+              energyClickCount++;
+              if (energyClickCount === 1) {
+                setTimeout(() => {
+                  if (energyClickCount >= 2) {
+                    onEnergyClick();
+                  }
+                  energyClickCount = 0;
+                }, doubleClickInterval);
+              }
+            });
+
+            nerveBar.addEventListener('click', () => {
+              nerveClickCount++;
+              if (nerveClickCount === 1) {
+                setTimeout(() => {
+                  if (nerveClickCount >= 2) {
+                    onNerveClick();
+                  }
+                  nerveClickCount = 0;
+                }, doubleClickInterval);
+              }
+            });
+          } else {
+            energyBar.addEventListener('dblclick', onEnergyClick);
+            nerveBar.addEventListener('dblclick', onNerveClick);
+          }
+
+          window.pdaBarsListenerAdded = true;
+          return true;
+        }
+
+        let pass = 0;
+        const waitForBarsAndRun = setInterval(() => {
+          if (addBarsListener()) {
+            return clearInterval(waitForBarsAndRun);
+          }
+
+          pass++;
+          if (pass > 20) {
+            clearInterval(waitForBarsAndRun);
+          }
+        }, 300);
+      })();
+    ''';
+  }
 }
 
 // city item highlighter (RC-overridable)
@@ -200,3 +286,6 @@ String highlightCityItemsJS() => RemoteSnippets.resolve(RemoteSnippets.cityItems
 
 // remove the plane animation while traveling (RC-overridable)
 String travelRemovePlaneJS() => RemoteSnippets.resolve(RemoteSnippets.travelRemovePlane);
+
+// double-click the energy/nerve bars to jump to gym/crimes (RC-overridable)
+String barsDoubleClickRedirectJS() => RemoteSnippets.resolve(RemoteSnippets.barsDoubleClick);
