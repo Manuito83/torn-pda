@@ -20,32 +20,26 @@ class AttacksList extends StatelessWidget {
     if (attacks.isEmpty) {
       return Column(
         children: <Widget>[
-          const Padding(
-            padding: EdgeInsets.only(top: 80.0, bottom: 20),
-            child: CircularProgressIndicator(),
-          ),
+          const Padding(padding: EdgeInsets.only(top: 80.0, bottom: 20), child: CircularProgressIndicator()),
           const Text('Getting last attacks...'),
           _apiErrorWarning(context),
         ],
       );
     } else {
-      return ListView(
-        shrinkWrap: true,
-        children: getChildrenTargets(context),
-      );
+      return ListView(shrinkWrap: true, children: getChildrenTargets(context));
     }
   }
 
-  List<Widget> getChildrenTargets(BuildContext _) {
+  List<Widget> getChildrenTargets(BuildContext ctx) {
     // We'll use attack provider to get all the attacks
-    final attacksProvider = Provider.of<AttacksProvider>(_, listen: false);
+    final attacksProvider = Provider.of<AttacksProvider>(ctx, listen: false);
     // Also filtering words and type (all attacks or only those not added)
     final wordFilter = attacksProvider.currentFilter;
     final typeFilter = attacksProvider.currentTypeFilter;
 
     // Target provider is use to compare with the actual targets added to the
     // targets page, in case we want to filter them out
-    final targetsProvider = Provider.of<TargetsProvider>(_, listen: false);
+    final targetsProvider = Provider.of<TargetsProvider>(ctx, listen: false);
     final targetList = targetsProvider.allTargets;
 
     // Final list we'll show
@@ -76,8 +70,8 @@ class AttacksList extends StatelessWidget {
     return filteredCards;
   }
 
-  Widget _apiErrorWarning(BuildContext _) {
-    final attacksProvider = Provider.of<AttacksProvider>(_, listen: false);
+  Widget _apiErrorWarning(BuildContext ctx) {
+    final attacksProvider = Provider.of<AttacksProvider>(ctx, listen: false);
     if (attacksProvider.getApiError) {
       return Padding(
         padding: const EdgeInsets.all(20.0),
@@ -89,17 +83,12 @@ class AttacksList extends StatelessWidget {
                 children: [
                   const Text(
                     'API ERROR',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     attacksProvider.getApiErrorMessage,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.red,
-                    ),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ],
               ),

@@ -99,6 +99,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts restocks';
     channelName = 'Alerts restocks';
     channelDescription = 'Automatic alerts for foreign restocks';
+  } else if (channel.contains("Alerts abroad stay")) {
+    notificationIcon = "notification_travel";
+    notificationColor = Colors.blue;
+    onTapPayload += 'abroadStay';
+    channelId = 'Alerts abroad stay';
+    channelName = 'Alerts abroad stay';
+    channelDescription = 'Automatic reminders while staying abroad';
   } else if (channel.contains("Alerts hospital")) {
     notificationIcon = "notification_hospital";
     notificationColor = Colors.orange[400];
@@ -427,6 +434,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Alerts restocks ${modifier.channelIdModifier}',
       'Alerts restocks ${modifier.channelIdModifier}',
       description: 'Automatic alerts for foreign restocks',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts abroad stay ${modifier.channelIdModifier}',
+      'Alerts abroad stay ${modifier.channelIdModifier}',
+      description: 'Automatic reminders while staying abroad',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

@@ -1,3 +1,27 @@
+/// Direction of a player's travel based on the status description
+enum TravelDirection { outbound, returning, none }
+
+/// Resolves the travel direction from the status description
+/// Handles both "Traveling to X" (old API) and "Traveling from X to Y" (new API)
+TravelDirection getTravelDirection({String? description}) {
+  if (description == null) return TravelDirection.none;
+  if (description.contains("Returning ")) return TravelDirection.returning;
+  if (description.contains("Traveling ")) return TravelDirection.outbound;
+  return TravelDirection.none;
+}
+
+/// Whether the description denotes the player being at a location (city or hospital)
+bool isAtLocation({String? description}) {
+  if (description == null) return false;
+  return description.contains("In ");
+}
+
+/// Whether the player is currently hospitalized in a foreign country
+bool isInForeignHospital({required String? state, required String? description}) {
+  if (state != "Hospital" || description == null) return false;
+  return countryCheck(state: state, description: description) != "Torn";
+}
+
 /// Takes a player status and returns the country
 /// Active travels are considered as being abroad in the destination country
 String countryCheck({required String? state, required String? description}) {
@@ -11,6 +35,11 @@ String countryCheck({required String? state, required String? description}) {
     if (state == "Traveling") {
       if (description!.contains("Returning to Torn")) {
         return "Torn";
+      }
+      // API may report either "Traveling to X" or "Traveling from X to Y": keep the destination
+      final toIndex = description.lastIndexOf(" to ");
+      if (toIndex != -1) {
+        return description.substring(toIndex + 4);
       }
       return description.split("Traveling to ")[1];
     }

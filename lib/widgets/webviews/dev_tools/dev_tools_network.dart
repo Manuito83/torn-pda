@@ -339,7 +339,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
               ? SvgPicture.network(urlString, placeholderBuilder: (_) => const Icon(Icons.image_outlined, size: 20))
               : Image.network(urlString,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (_, _, _) =>
                       Icon(Icons.broken_image_outlined, size: 20, color: Colors.grey.shade700)),
         );
       }
@@ -462,7 +462,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
                 : Image.network(
                     urlString,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Center(
+                    errorBuilder: (_, _, _) => const Center(
                       child: Icon(Icons.broken_image, size: 48),
                     ),
                   );

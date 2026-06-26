@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/models/chaining/ffscouter/ffscouter_stats_model.dart';
 
 /// Cached FFScouter battle score entry for a single player.
 /// Stored locally with a timestamp so we can enforce a 24h re-fetch window.
@@ -10,6 +11,12 @@ class FFScouterCacheEntry {
   int? lastUpdatedByFFScouter; // epoch seconds from FFScouter API
   int cachedAt; // epoch seconds when we stored this locally
 
+  // Premium fields (null/false on old entries)
+  int? bssPublic;
+  String? source;
+  bool premiumInsightsAvailable;
+  FFScouterDistribution? distribution;
+
   FFScouterCacheEntry({
     required this.playerId,
     this.bsEstimate,
@@ -17,25 +24,40 @@ class FFScouterCacheEntry {
     this.fairFight,
     this.lastUpdatedByFFScouter,
     required this.cachedAt,
+    this.bssPublic,
+    this.source,
+    this.premiumInsightsAvailable = false,
+    this.distribution,
   });
 
   factory FFScouterCacheEntry.fromJson(Map<String, dynamic> json) => FFScouterCacheEntry(
-        playerId: json["player_id"] ?? 0,
-        bsEstimate: json["bs_estimate"],
-        bsEstimateHuman: json["bs_estimate_human"],
-        fairFight: json["fair_fight"]?.toDouble(),
-        lastUpdatedByFFScouter: json["last_updated_by_ffscouter"],
-        cachedAt: json["cached_at"] ?? 0,
-      );
+    playerId: json["player_id"] ?? 0,
+    bsEstimate: json["bs_estimate"],
+    bsEstimateHuman: json["bs_estimate_human"],
+    fairFight: json["fair_fight"]?.toDouble(),
+    lastUpdatedByFFScouter: json["last_updated_by_ffscouter"],
+    cachedAt: json["cached_at"] ?? 0,
+    bssPublic: json["bss_public"],
+    source: json["source"],
+    premiumInsightsAvailable: json["premium_insights_available"] ?? false,
+    distribution: json["distribution"] != null ? FFScouterDistribution.fromJson(json["distribution"]) : null,
+  );
 
   Map<String, dynamic> toJson() => {
-        "player_id": playerId,
-        "bs_estimate": bsEstimate,
-        "bs_estimate_human": bsEstimateHuman,
-        "fair_fight": fairFight,
-        "last_updated_by_ffscouter": lastUpdatedByFFScouter,
-        "cached_at": cachedAt,
-      };
+    "player_id": playerId,
+    "bs_estimate": bsEstimate,
+    "bs_estimate_human": bsEstimateHuman,
+    "fair_fight": fairFight,
+    "last_updated_by_ffscouter": lastUpdatedByFFScouter,
+    "cached_at": cachedAt,
+    "bss_public": bssPublic,
+    "source": source,
+    "premium_insights_available": premiumInsightsAvailable,
+    "distribution": distribution?.toJson(),
+  };
+
+  /// Has cached premium distribution
+  bool get hasDistribution => distribution != null && distribution!.hasData;
 
   /// Whether this cache entry is still within the re-fetch window (24 hours).
   /// Used by [FFScouterCacheController.ensureFresh] to decide which IDs to

@@ -1,8 +1,4 @@
-String easyCrimesJS({
-  required String nerve,
-  required String? crime,
-  required String doCrime,
-}) {
+String easyCrimesJS({required String nerve, required String? crime, required String doCrime}) {
   return '''
     var first_load = true;
     
@@ -550,25 +546,251 @@ String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
   ''';
 }
 
-String travelRemovePlaneJS() {
+String cityShopsBuy100JS() {
   return '''
-    var style = document.createElement('style');
-    style.type = 'text/css';
-    style.innerHTML = `
-        .travel-agency-travelling .stage, 
-        .travel-agency-travelling .popup-info, 
-        [class^="airspaceScene___"][class*="outboundFlight___"], 
-        [class^="airspaceScene___"][class*="returnFlight___"], 
-        [class^="randomFact___"], 
-        [class^="randomFactWrapper___"],
-        [class^="delimiter-"] { 
-            display: none !important; 
+  (function() {
+    const BUY_CLASS = 'pda-buy-100-btn';
+    const SELL_CLASS = 'pda-sell-max-btn';
+    const STYLE_ID = 'pda-shop-max-style';
+    const BUY_LABEL = 'MAX';
+    const SELL_LABEL = 'MAX';
+
+    function parseNumber(text) {
+      if (!text) return 0;
+      const clean = String(text).replace(/[^0-9]/g, '');
+      return clean ? parseInt(clean, 10) : 0;
+    }
+
+    function parseMoney(text) {
+      if (!text) return 0;
+      let clean = String(text).replace(/\\\$/g, '').replace(/,/g, '').trim().toLowerCase();
+      let multiplier = 1;
+      if (/b\\b/.test(clean)) {
+        multiplier = 1000000000;
+        clean = clean.replace(/b\\b/g, '');
+      } else if (/m\\b/.test(clean)) {
+        multiplier = 1000000;
+        clean = clean.replace(/m\\b/g, '');
+      } else if (/k\\b/.test(clean)) {
+        multiplier = 1000;
+        clean = clean.replace(/k\\b/g, '');
+      }
+      const value = parseFloat(clean.replace(/[^0-9.]/g, ''));
+      return Number.isNaN(value) ? 0 : Math.floor(value * multiplier);
+    }
+
+    function findMoney() {
+      const moneyEl = document.querySelector('#user-money') ||
+        document.querySelector('[data-currency-money]') ||
+        document.querySelector('.user-information .money');
+      if (!moneyEl) return 0;
+      const attr = moneyEl.getAttribute('data-money') || moneyEl.getAttribute('data-currency-money');
+      if (attr) return parseNumber(attr);
+      return parseMoney(moneyEl.textContent);
+    }
+
+    function hasMoneyIndicator() {
+      return !!(document.querySelector('#user-money') ||
+        document.querySelector('[data-currency-money]') ||
+        document.querySelector('.user-information .money'));
+    }
+
+    function findPrice(card) {
+      const priceEl = card.querySelector(':scope > .desc > .price');
+      if (priceEl) return parseMoney(priceEl.textContent);
+      const text = card.innerText || card.textContent || '';
+      const match = text.match(/\\\$\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*([kmb]\\b)?/i);
+      if (!match) return 0;
+      return parseMoney('\$' + match[1] + (match[2] || ''));
+    }
+
+    function findStock(card) {
+      const stockEl = card.querySelector(':scope > .desc > .stock');
+      if (stockEl) {
+        const t = stockEl.textContent;
+        if (/out of stock/i.test(t)) return 0;
+        const m = t.match(/\\(\\s*([0-9,]+)\\s+in\\s+stock\\s*\\)/i);
+        if (m) return parseNumber(m[1]);
+      }
+      return -1;
+    }
+
+    function setNativeInputValue(input, value) {
+      const proto = window.HTMLInputElement && window.HTMLInputElement.prototype;
+      const descriptor = proto && Object.getOwnPropertyDescriptor(proto, 'value');
+      if (descriptor && descriptor.set) {
+        descriptor.set.call(input, String(value));
+      } else {
+        input.value = value;
+      }
+      const tracker = input._valueTracker;
+      if (tracker) tracker.setValue('');
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      if (window.jQuery) {
+        try { window.jQuery(input).val(value).trigger('change'); } catch (e) {}
+      }
+    }
+
+    function findBuyInput(card) {
+      const wrap = card.querySelector(':scope > .buy-act-wrap');
+      if (!wrap) return null;
+      return wrap.querySelector('input[name="buyAmount[]"]') ||
+        wrap.querySelector('input[name^="buyAmount"]') ||
+        wrap.querySelector('input.input-money') ||
+        wrap.querySelector('input[class*="buyAmountInput"]');
+    }
+
+    function findSellInput(card) {
+      return card.querySelector(':scope > li.amount input[id^="sell"]') ||
+        card.querySelector(':scope > li.amount input.input-money');
+    }
+
+    function getBuyTarget(card, input) {
+      const price = findPrice(card);
+      const money = findMoney();
+      const stock = findStock(card);
+      const maxFromInput = parseNumber(input.getAttribute('max'));
+
+      let quantity = 100;
+      if (price > 0 && money > 0) {
+        quantity = Math.min(quantity, Math.floor(money / price));
+      }
+      if (stock >= 0) {
+        quantity = Math.min(quantity, stock);
+      }
+      if (maxFromInput > 0) {
+        quantity = Math.min(quantity, maxFromInput);
+      }
+      if (!isFinite(quantity) || quantity < 0) return 0;
+      return quantity;
+    }
+
+    function getSellTarget(input) {
+      const dataMoney = parseNumber(input.getAttribute('data-money'));
+      const maxFromInput = parseNumber(input.getAttribute('max'));
+      if (dataMoney > 0 && maxFromInput > 0) return Math.min(dataMoney, maxFromInput);
+      if (dataMoney > 0) return dataMoney;
+      if (maxFromInput > 0) return maxFromInput;
+      return 0;
+    }
+
+    function injectStyle() {
+      if (document.getElementById(STYLE_ID)) return;
+
+      const style = document.createElement('style');
+      style.id = STYLE_ID;
+      style.textContent = `
+        // Small inline MAX button
+        .\${BUY_CLASS} {
+          display: inline-block !important;
+          margin: 0 0 0 4px !important;
+          padding: 0 4px !important;
+          height: 16px !important;
+          line-height: 14px !important;
+          font-size: 9px !important;
+          font-weight: bold !important;
+          letter-spacing: 0.3px !important;
+          background: #777 !important;
+          color: #fff !important;
+          border: 1px solid #555 !important;
+          border-radius: 3px !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          vertical-align: middle !important;
         }
-    `;
-    document.head.appendChild(style);
-            
-    // Return to avoid iOS WKErrorDomain
+        // Sell button
+        .\${SELL_CLASS} {
+          display: inline-block !important;
+          margin: 0 0 0 4px !important;
+          padding: 0 4px !important;
+          height: 16px !important;
+          line-height: 14px !important;
+          font-size: 9px !important;
+          font-weight: bold !important;
+          letter-spacing: 0.3px !important;
+          background: #777 !important;
+          color: #fff !important;
+          border: 1px solid #555 !important;
+          border-radius: 3px !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          vertical-align: middle !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    function injectButtons() {
+      if (!hasMoneyIndicator()) return;
+      injectStyle();
+
+      document.querySelectorAll('.item-desc').forEach((card) => {
+        const wrap = card.querySelector(':scope > .buy-act-wrap');
+        if (!wrap) return;
+        if (card.querySelector('.' + BUY_CLASS)) return;
+        if (!findBuyInput(card)) return;
+
+        const price = card.querySelector(':scope > .desc > .price');
+        const name = card.querySelector(':scope > .desc > .name');
+        const slot = price || name;
+        if (!slot) return;
+
+        const buyButton = document.createElement('button');
+        buyButton.type = 'button';
+        buyButton.className = BUY_CLASS;
+        buyButton.textContent = BUY_LABEL;
+        buyButton.title = 'Buy max affordable / in stock';
+        buyButton.dataset.pdaBuyMax = '1';
+
+        buyButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const liveCard = buyButton.closest('.item-desc');
+          if (!liveCard) return;
+          const liveInput = findBuyInput(liveCard);
+          if (liveInput) setNativeInputValue(liveInput, getBuyTarget(liveCard, liveInput));
+        });
+
+        slot.appendChild(buyButton);
+      });
+
+      document.querySelectorAll('ul.item').forEach((card) => {
+        if (card.querySelector('.' + SELL_CLASS)) return;
+        const input = findSellInput(card);
+        if (!input) return;
+        const desc = card.querySelector(':scope > li.desc');
+        if (!desc) return;
+
+        const sellButton = document.createElement('button');
+        sellButton.type = 'button';
+        sellButton.className = SELL_CLASS;
+        sellButton.textContent = SELL_LABEL;
+        sellButton.title = 'Sell all owned';
+        sellButton.dataset.pdaSellMax = '1';
+
+        sellButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const liveCard = sellButton.closest('ul.item');
+          if (!liveCard) return;
+          const liveInput = findSellInput(liveCard);
+          if (liveInput) setNativeInputValue(liveInput, getSellTarget(liveInput));
+        });
+
+        desc.appendChild(sellButton);
+      });
+    }
+
+    injectButtons();
+
+    if (!window.__pdaShopMaxObserver) {
+      window.__pdaShopMaxObserver = new MutationObserver(() => injectButtons());
+      window.__pdaShopMaxObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
     123;
+  })();
   ''';
 }
 
@@ -598,65 +820,16 @@ String travelReturnHomeJS() {
   ''';
 }
 
-String highlightCityItemsJS() {
+// show/hide the on-map overlay without touching the city option (no-op if highlight not run)
+String toggleCityItemsHighlightJS({required bool hidden}) {
+  final h = hidden ? 'true' : 'false';
   return '''
-    function addStyle(styleString) {
-        const style = document.createElement('style');
-        style.textContent = styleString;
-        document.head.append(style);
-    }
-      
-    addStyle(`
-      .pdaCityItem {
-        box-sizing: border-box;
-        box-shadow: rgb(195 20 20 / 0%) 0px 0px 20px 10px;
-        display: block !important;
-        width: 40px !important;
-        height: 40px !important;
-        left: -20px !important;
-        top: -20px !important;
-        z-index: 999 !important;
-        padding: 10px 0px;
-        border-width: medium;
-        border-style: dashed;
-        border-color: rgb(1 7 255);
-        border-image: initial;
-        border-radius: 100%;
-        background: rgb(206 202 184 / 77%);
-        transition: width 50ms cubic-bezier(0.65, 0.05, 0.36, 1), height 50ms cubic-bezier(0.65, 0.05, 0.36, 1), left 50ms cubic-bezier(0.65, 0.05, 0.36, 1), top 50ms cubic-bezier(0.65, 0.05, 0.36, 1), padding 50ms cubic-bezier(0.65, 0.05, 0.36, 1), background 50ms 0ms;
-        animation: svelte-1dz9z41-fade-in 500ms ease-out backwards;
-      }
-    `);
-      
-    function highlightItems() {
-      // Find items
-      for(let el of document.querySelectorAll("#map .leaflet-marker-pane *")){
-        let src = el.getAttribute("src");
-        if(src.indexOf("/images/items/") > -1){
-          el.classList.add("pdaCityItem");
-        }
-      }
-    }
-    
-    itemsLoaded().then(() => {
-      highlightItems();
-    });
-    
-    function itemsLoaded() {
-      return new Promise((resolve) => {
-        let checker = setInterval(() => {
-          if (document.querySelector("#map .leaflet-marker-pane *")) {
-          setInterval(() => {
-            resolve(true);
-          }, 300);
-          return clearInterval(checker);
-          }
-        });
-      });
-    } 
-    
-    // Return to avoid iOS WKErrorDomain
-    123;
+    (function() {
+      try {
+        if (window._pdaSetCityHighlightHidden) window._pdaSetCityHighlightHidden($h);
+      } catch (e) {}
+      return $h;
+    })();
   ''';
 }
 
@@ -898,9 +1071,10 @@ String addHeightForPullToRefresh() {
 
       // Check if the website content overflows the viewport
       if (document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
-        // If not, add 10px to the body height
-        //console.log("Adding extra height for pull-to-refresh");
-        document.body.style.height = `\${viewportHeight + 20}px`;
+        // If not, give the body a minimum height so pull-to-refresh has room
+        // NOTE (v3.14.0!): must be min-height to work with TORN's drawer 
+        // (otherwise it will pin the body and scroll to the top when the drawer opens)
+        document.body.style.minHeight = `\${viewportHeight + 20}px`;
       }
     })();
   ''';
@@ -1242,10 +1416,7 @@ String miniProfiles() {
   ''';
 }
 
-String bountiesJS({
-  required int? levelMax,
-  required bool? removeNotAvailable,
-}) {
+String bountiesJS({required int? levelMax, required bool? removeNotAvailable}) {
   return '''
     // Credit to TornTools for implementation logic
     var doc = window.document;
@@ -1448,88 +1619,6 @@ String ocNNB({required String members, required int playerID}) {
 		addStyles();
 		waitForOCs().then(handleOCRows).catch(console.trace);
 	})($members, $playerID);
-  ''';
-}
-
-/// As of iOS 18...
-/// iOS does not handle 'dblclick' events reliably, so we implement a custom double-click detection
-String barsDoubleClickRedirect({bool isIOS = false}) {
-  return '''
-    (function() {
-      if (window.pdaBarsListenerAdded) {
-        return;
-      }
-
-      function onEnergyClick() {
-        window.location.href = "https://www.torn.com/gym.php";
-      }
-
-      function onNerveClick() {
-        window.location.href = "https://www.torn.com/crimes.php";
-      }
-
-      function addBarsListener() {
-        const barElements = Array.from(document.querySelectorAll('[class^="bar___"]'));
-        const energyBar = barElements.find((el) =>
-          el.className.includes('energy___') && el.className.includes('bar-')
-        );
-        const nerveBar = barElements.find((el) =>
-          el.className.includes('nerve___') && el.className.includes('bar-')
-        );
-
-        if (!energyBar || !nerveBar) {
-          return false;
-        }
-
-        if ($isIOS) {
-          let energyClickCount = 0;
-          let nerveClickCount = 0;
-          const doubleClickInterval = 1500; // ms window for a double click
-
-          energyBar.addEventListener('click', () => {
-            energyClickCount++;
-            if (energyClickCount === 1) {
-              setTimeout(() => {
-                if (energyClickCount >= 2) {
-                  onEnergyClick();
-                }
-                energyClickCount = 0;
-              }, doubleClickInterval);
-            }
-          });
-
-          nerveBar.addEventListener('click', () => {
-            nerveClickCount++;
-            if (nerveClickCount === 1) {
-              setTimeout(() => {
-                if (nerveClickCount >= 2) {
-                  onNerveClick();
-                }
-                nerveClickCount = 0;
-              }, doubleClickInterval);
-            }
-          });
-        } else {
-          energyBar.addEventListener('dblclick', onEnergyClick);
-          nerveBar.addEventListener('dblclick', onNerveClick);
-        }
-
-        window.pdaBarsListenerAdded = true;
-        return true;
-      }
-
-      let pass = 0;
-      const waitForBarsAndRun = setInterval(() => {
-        if (addBarsListener()) {
-          return clearInterval(waitForBarsAndRun);
-        }
-
-        pass++;
-        if (pass > 20) {
-          clearInterval(waitForBarsAndRun);
-        }
-      }, 300);
-    })();
   ''';
 }
 

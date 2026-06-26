@@ -1,10 +1,8 @@
-// Dart imports:
 import 'dart:async';
 import "dart:collection";
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:math' as math;
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -212,8 +210,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   @override
   Widget build(BuildContext context) {
     return ShowCaseWidget(
-      builder: (_) {
-        _launchShowCases(_);
+      builder: (ctx) {
+        _launchShowCases(ctx);
         return Slidable(
           startActionPane: ActionPane(
             motion: const DrawerMotion(),
@@ -281,7 +279,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  Future<void> _launchShowCases(BuildContext _) async {
+  Future<void> _launchShowCases(BuildContext ctx) async {
     if (!widget.displayShowcase) return;
     await Future.delayed(const Duration(seconds: 1), () async {
       if (!mounted) return;
@@ -309,7 +307,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       }
 
       if (showCases.isNotEmpty) {
-        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
+        ShowCaseWidget.of(ctx).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
@@ -558,6 +556,17 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   ),
                   if (widget.showBarsCooldownAnalysis) _affectedBars(),
                   const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _chartRangeDescription(),
+                      style: TextStyle(
+                        color: _themeProvider.mainText.withAlpha(180),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   SizedBox(
                     height: 200,
                     width: 600,
@@ -1433,17 +1442,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  LineChartData _mainChartData() {
-    final spots = <FlSpot>[];
-    double count = 0;
-    double? maxY = 0;
-    final timestamps = <int>[];
-
-    // In order to avoid too many zigzags when restocks occur very frequently, we will restrict the data:
-    // - If there are <= 5 restocks, we will show all the data (around 24 hours)
-    // - If there are more than 5 restocks, we will show the last 12 hours of data
-
-    // Count the restocks
+  int _restockCount() {
     int restockCount = 0;
     int lastValue = 0;
     _periodicMap.forEach((timestamp, value) {
@@ -1452,30 +1451,83 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       }
       lastValue = value;
     });
+    return restockCount;
+  }
 
-    // Filter the map if there are more than 5 restocks
+  SplayTreeMap<dynamic, dynamic> _filteredChartMap() {
     SplayTreeMap<dynamic, dynamic> filteredMap = _periodicMap;
-    if (restockCount > 5) {
-      // Find the latest timestamp
-      int latestTimestamp = _periodicMap.keys.last * 1000;
-      // Calculate the timestamp 12 hours before the latest timestamp
-      DateTime cutoff = DateTime.fromMillisecondsSinceEpoch(latestTimestamp).subtract(const Duration(hours: 12));
-      int cutoffMillis = cutoff.millisecondsSinceEpoch;
+    if (_restockCount() > 5) {
+      final int latestTimestamp = (_periodicMap.keys.last as int) * 1000;
+      final cutoff = DateTime.fromMillisecondsSinceEpoch(latestTimestamp).subtract(
+        const Duration(hours: 12),
+      );
+      final cutoffMillis = cutoff.millisecondsSinceEpoch;
 
-      // Ensure that the filtering results in fewer entries than the original map
       filteredMap = SplayTreeMap.fromIterable(
-        _periodicMap.entries.where((entry) => entry.key * 1000 >= cutoffMillis),
+        _periodicMap.entries.where(
+          (entry) => (entry.key as int) * 1000 >= cutoffMillis,
+        ),
         key: (entry) => entry.key,
         value: (entry) => entry.value,
       );
     }
 
-    // Update the chart data
+    return filteredMap;
+  }
+
+  String _chartRangeDescription() {
+    final filteredMap = _filteredChartMap();
+    if (filteredMap.length < 2) return "Chart: recent stock history";
+
+    final first = DateTime.fromMillisecondsSinceEpoch(
+      (filteredMap.keys.first as int) * 1000,
+    );
+    final last = DateTime.fromMillisecondsSinceEpoch(
+      (filteredMap.keys.last as int) * 1000,
+    );
+    final range = last.difference(first);
+    final rangeText = range.inHours >= 1
+        ? "${range.inHours}h"
+        : "${range.inMinutes}m";
+
+    if (_restockCount() > 5) {
+      return "Chart: last $rangeText, using real time spacing";
+    }
+
+    return "Chart: $rangeText of recent history, using real time spacing";
+  }
+
+  LineChartData _mainChartData() {
+    final filteredMap = _filteredChartMap();
+    final spots = <FlSpot>[];
+    final restockMarkerLines = <VerticalLine>[];
+    double? maxY = 0;
+
+    if (filteredMap.isEmpty) {
+      return LineChartData();
+    }
+
+    final firstTimestamp = filteredMap.keys.first as int;
+    int lastValue = 0;
+    var hasPreviousValue = false;
+
     filteredMap.forEach((timestamp, value) {
-      spots.add(FlSpot(count, value.toDouble()));
-      timestamps.add(timestamp); // Assuming timestamps is a list of DateTime
+      final xValue = ((timestamp as int) - firstTimestamp) / 3600;
+      spots.add(FlSpot(xValue.toDouble(), value.toDouble()));
       if (value > maxY) maxY = value.toDouble();
-      count++;
+
+      if (hasPreviousValue && value > 0 && lastValue == 0) {
+        restockMarkerLines.add(
+          VerticalLine(
+            x: xValue.toDouble(),
+            color: _themeProvider.getTextColor(Colors.green).withAlpha(150),
+            strokeWidth: 1,
+            dashArray: [4, 4],
+          ),
+        );
+      }
+      lastValue = value;
+      hasPreviousValue = true;
     });
 
     double interval;
@@ -1489,6 +1541,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       interval = 2;
     }
 
+    final maxX = spots.isEmpty ? 0.0 : spots.last.x;
+    final bottomInterval = maxX > 0
+        ? (maxX / 4).clamp(1.0, 6.0).toDouble()
+        : 1.0;
+
     return LineChartData(
       lineTouchData: LineTouchData(
         touchTooltipData: LineTouchTooltipData(
@@ -1498,17 +1555,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           getTooltipItems: (value) {
             final tooltips = <LineTooltipItem>[];
             for (final spot in value) {
-              // Get time
-              var ts = 0;
-              final timesList = [];
-              for (final e in filteredMap.entries) {
-                timesList.add("${e.key}");
-              }
-              var x = spot.x.toInt();
-              if (x > timesList.length) {
-                x = timesList.length;
-              }
-              ts = int.parse(timesList[x]);
+              final ts = firstTimestamp + (spot.x * 3600).round();
               final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
 
               final LineTooltipItem thisItem = LineTooltipItem(
@@ -1531,7 +1578,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         drawVerticalLine: false,
         getDrawingHorizontalLine: (value) {
           return FlLine(
-            color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff37434d),
+            color: _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.blueGrey
+                : const Color(0xff37434d),
             strokeWidth: 0.4,
           );
         },
@@ -1551,19 +1600,13 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            interval: filteredMap.length > 12 ? filteredMap.length / 12 : null,
-            reservedSize: 20,
+            interval: bottomInterval,
+            reservedSize: 28,
             getTitlesWidget: (xValue, titleMeta) {
-              if (xValue.toInt() >= filteredMap.length) {
-                xValue = xValue - 1;
-              }
-              final date = DateTime.fromMillisecondsSinceEpoch(timestamps[xValue.toInt()] * 1000);
+              if (xValue < 0 || xValue > maxX) return const SizedBox.shrink();
 
-              // Style
-              TextStyle myStyle;
-              if (xValue.toInt() >= filteredMap.length) {
-                xValue = xValue - 1;
-              }
+              final ts = firstTimestamp + (xValue * 3600).round();
+              final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
               final difference = DateTime.now().difference(date).inHours;
 
               Color myColor = Colors.transparent;
@@ -1572,25 +1615,16 @@ class ForeignStockCardState extends State<ForeignStockCard> {
               } else {
                 myColor = _themeProvider.getTextColor(Colors.blue);
               }
-              myStyle = TextStyle(
+              final myStyle = TextStyle(
                 color: myColor,
                 fontSize: 10,
               );
 
-              const degrees = -70;
-              const radians = degrees * math.pi / 180;
-
-              return Transform.rotate(
-                angle: radians,
-                child: SizedBox(
-                  width: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ||
-                          _settingsProvider.currentTimeZone == TimeZoneSetting.tornTime
-                      ? 120
-                      : 80,
-                  child: Text(
-                    _timeFormatter(date)!,
-                    style: myStyle,
-                  ),
+              return SideTitleWidget(
+                meta: titleMeta,
+                child: Text(
+                  _timeFormatter(date)!,
+                  style: myStyle,
                 ),
               );
             },
@@ -1606,7 +1640,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 return Text(
                   "${(yValue / 1000).truncate().toStringAsFixed(0)}K",
                   style: TextStyle(
-                    color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
+                    color: _themeProvider.currentTheme == AppTheme.dark
+                        ? Colors.blueGrey
+                        : const Color(0xff67727d),
                     fontSize: 10,
                   ),
                 );
@@ -1614,7 +1650,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 return Text(
                   yValue.floor().toString(),
                   style: TextStyle(
-                    color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
+                    color: _themeProvider.currentTheme == AppTheme.dark
+                        ? Colors.blueGrey
+                        : const Color(0xff67727d),
                     fontSize: 10,
                   ),
                 );
@@ -1631,9 +1669,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         ),
       ),
       minX: 0,
-      maxX: filteredMap.length.toDouble(),
+      maxX: maxX == 0 ? 1 : maxX,
       minY: 0,
-      maxY: maxY! + maxY! * 0.1,
+      maxY: maxY == 0 ? 1.0 : maxY! + maxY! * 0.1,
+      extraLinesData: ExtraLinesData(
+        verticalLines: restockMarkerLines,
+      ),
       lineBarsData: [
         LineChartBarData(
           spots: spots,

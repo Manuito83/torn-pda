@@ -188,7 +188,7 @@ class TctClockState extends State<TctClock> {
       toastification.show(
         showIcon: false,
         borderSide: BorderSide(color: Colors.orange.shade800, width: 2),
-        closeButtonShowType: CloseButtonShowType.none,
+        closeButton: const ToastCloseButton(showType: CloseButtonShowType.none),
         closeOnClick: true,
         autoCloseDuration: Duration(seconds: durationSeconds),
         showProgressBar: false,

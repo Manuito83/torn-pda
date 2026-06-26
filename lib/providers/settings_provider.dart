@@ -23,26 +23,13 @@ import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
-enum BrowserSetting {
-  app,
-  external,
-}
+enum BrowserSetting { app, external }
 
-enum TimeFormatSetting {
-  h24,
-  h12,
-}
+enum TimeFormatSetting { h24, h12 }
 
-enum TimeZoneSetting {
-  localTime,
-  tornTime,
-}
+enum TimeZoneSetting { localTime, tornTime }
 
-enum BrowserRefreshSetting {
-  icon,
-  pull,
-  both,
-}
+enum BrowserRefreshSetting { icon, pull, both }
 
 class PdaUpdateDetails {
   final int latestVersionCode;
@@ -156,11 +143,11 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setAndroidBrowserScale(_androidBrowserScale);
   }
 
-  var _androidBrowserTextScale = 8;
-  int get androidBrowserTextScale => _androidBrowserTextScale;
-  set changeAndroidBrowserTextScale(int choice) {
-    _androidBrowserTextScale = choice;
-    Prefs().setAndroidBrowserTextScale(_androidBrowserTextScale);
+  var _androidBrowserTextZoom = 100;
+  int get androidBrowserTextZoom => _androidBrowserTextZoom;
+  set changeAndroidBrowserTextZoom(int choice) {
+    _androidBrowserTextZoom = choice;
+    Prefs().setAndroidBrowserTextZoom(_androidBrowserTextZoom);
     notifyListeners();
   }
 
@@ -213,6 +200,14 @@ class SettingsProvider extends ChangeNotifier {
   bool get browserCenterEditingTextFieldRemoteConfigAllowed => _browserCenterEditingTextFieldRemoteConfigAllowed;
   set browserCenterEditingTextFieldRemoteConfigAllowed(bool value) {
     _browserCenterEditingTextFieldRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
+  // #467 focus-restore kill-switch (RemoteConfig)
+  bool _browserRestoreWebViewFocusRemoteConfigAllowed = true;
+  bool get browserRestoreWebViewFocusRemoteConfigAllowed => _browserRestoreWebViewFocusRemoteConfigAllowed;
+  set browserRestoreWebViewFocusRemoteConfigAllowed(bool value) {
+    _browserRestoreWebViewFocusRemoteConfigAllowed = value;
     notifyListeners();
   }
 
@@ -649,6 +644,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _cityShopsBuyMaxEnabled = true;
+  bool get cityShopsBuyMaxEnabled => _cityShopsBuyMaxEnabled;
+  set cityShopsBuyMaxEnabled(bool value) {
+    _cityShopsBuyMaxEnabled = value;
+    Prefs().setCityShopsBuyMaxEnabled(_cityShopsBuyMaxEnabled);
+    notifyListeners();
+  }
+
+  var _foreignStocksBuyMaxEnabled = true;
+  bool get foreignStocksBuyMaxEnabled => _foreignStocksBuyMaxEnabled;
+  set foreignStocksBuyMaxEnabled(bool value) {
+    _foreignStocksBuyMaxEnabled = value;
+    Prefs().setForeignStocksBuyMaxEnabled(_foreignStocksBuyMaxEnabled);
+    notifyListeners();
+  }
+
   var _removeTravelQuickReturnButton = false;
   bool get removeTravelQuickReturnButton => _removeTravelQuickReturnButton;
   set removeTravelQuickReturnButton(bool value) {
@@ -909,9 +920,7 @@ class SettingsProvider extends ChangeNotifier {
         DeviceOrientation.landscapeRight,
       ]);
     } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     }
 
     Prefs().setAllowScreenRotation(_allowScreenRotation);
@@ -931,6 +940,14 @@ class SettingsProvider extends ChangeNotifier {
   set educationBarEnabled(bool value) {
     _educationBarEnabled = value;
     Prefs().setEducationBarEnabled(value);
+    notifyListeners();
+  }
+
+  bool _virusBarEnabled = true;
+  bool get virusBarEnabled => _virusBarEnabled;
+  set virusBarEnabled(bool value) {
+    _virusBarEnabled = value;
+    Prefs().setVirusBarEnabled(value);
     notifyListeners();
   }
 
@@ -1633,7 +1650,7 @@ class SettingsProvider extends ChangeNotifier {
     _disableUpdateDialog = await Prefs().getPdaUpdateDialogDisabled();
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
-    _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
+    _androidBrowserTextZoom = await Prefs().getAndroidBrowserTextZoom();
 
     _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
     _androidLiveActivitiesRacingEnabled = await Prefs().getAndroidLiveActivityRacingEnabled();
@@ -1707,6 +1724,8 @@ class SettingsProvider extends ChangeNotifier {
     _androidFastKeyboard = await Prefs().getAndroidFastKeyboard();
     _removeForeignItemsDetails = await Prefs().getRemoveForeignItemsDetails();
     _preventBasketKeyboard = await Prefs().getPreventBasketKeyboard();
+    _cityShopsBuyMaxEnabled = await Prefs().getCityShopsBuyMaxEnabled();
+    _foreignStocksBuyMaxEnabled = await Prefs().getForeignStocksBuyMaxEnabled();
     _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
@@ -1783,6 +1802,8 @@ class SettingsProvider extends ChangeNotifier {
     _lifeBarOption = await Prefs().getLifeBarOption();
 
     _educationBarEnabled = await Prefs().getEducationBarEnabled();
+
+    _virusBarEnabled = await Prefs().getVirusBarEnabled();
 
     _colorCodedStatusCard = await Prefs().getColorCodedStatusCard();
 

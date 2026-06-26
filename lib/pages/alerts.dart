@@ -99,10 +99,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
       backgroundColor: _themeProvider!.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
           : null,
       body: Container(
         color: _themeProvider!.canvas,
@@ -136,10 +133,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                       if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26))
                         const Padding(
                           padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-                          child: Text(
-                            "ALERTS",
-                            style: TextStyle(fontSize: 9),
-                          ),
+                          child: Text("ALERTS", style: TextStyle(fontSize: 9)),
                         ),
                       const Padding(
                         padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
@@ -192,115 +186,115 @@ class AlertsSettingsState extends State<AlertsSettings> {
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.energyNotification ?? false,
-                          title: const Text("Energy full"),
-                          subtitle: const Text(
-                            "Get notified once you reach full energy",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.energyNotification ?? false,
+                            title: const Text("Energy full"),
+                            subtitle: const Text(
+                              "Get notified once you reach full energy",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.energyNotification = value;
+                              });
+                              FirestoreHelper().subscribeToEnergyNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.energyNotification = value;
-                            });
-                            FirestoreHelper().subscribeToEnergyNotification(value);
-                          },
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.nerveNotification ?? false,
-                          title: const Text("Nerve full"),
-                          subtitle: const Text(
-                            "Get notified once you reach full nerve",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.nerveNotification ?? false,
+                            title: const Text("Nerve full"),
+                            subtitle: const Text(
+                              "Get notified once you reach full nerve",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.nerveNotification = value;
+                              });
+                              FirestoreHelper().subscribeToNerveNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.nerveNotification = value;
-                            });
-                            FirestoreHelper().subscribeToNerveNotification(value);
-                          },
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.lifeNotification ?? false,
-                          title: const Text("Life full"),
-                          subtitle: const Text(
-                            "Get notified once you reach full life",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.lifeNotification ?? false,
+                            title: const Text("Life full"),
+                            subtitle: const Text(
+                              "Get notified once you reach full life",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.lifeNotification = value;
+                              });
+                              FirestoreHelper().subscribeToLifeNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.lifeNotification = value;
-                            });
-                            FirestoreHelper().subscribeToLifeNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.lifeNotification!) _lifeTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.travelNotification ?? false,
-                          title: const Text("Travel"),
-                          subtitle: const Text(
-                            "Get notified just before you arrive",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.travelNotification ?? false,
+                            title: const Text("Travel"),
+                            subtitle: const Text(
+                              "Get notified just before you arrive",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.travelNotification = value;
+                              });
+                              FirestoreHelper().subscribeToTravelNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.travelNotification = value;
-                            });
-                            FirestoreHelper().subscribeToTravelNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.travelNotification!) _travelNotificationTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.foreignRestockNotification ?? false,
-                          title: const Text("Foreign stocks"),
-                          subtitle: const Text(
-                            "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
-                            "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.foreignRestockNotification ?? false,
+                            title: const Text("Foreign stocks"),
+                            subtitle: const Text(
+                              "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
+                              "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.foreignRestockNotification = value;
+                              });
+                              FirestoreHelper().subscribeToForeignRestockNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.foreignRestockNotification = value;
-                            });
-                            FirestoreHelper().subscribeToForeignRestockNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.foreignRestockNotification ?? false)
@@ -310,31 +304,28 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             children: [
                               const Icon(Icons.keyboard_arrow_right_outlined),
                               Flexible(
-                                child: CheckboxListTile(
-                                  checkColor: Colors.white,
-                                  activeColor: Colors.blueGrey,
-                                  value: _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry ?? false,
-                                  title: const Text(
-                                    "Limit to current country",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontStyle: FontStyle.italic,
+                                child: Material(
+                                  type: MaterialType.transparency,
+                                  child: CheckboxListTile(
+                                    checkColor: Colors.white,
+                                    activeColor: Colors.blueGrey,
+                                    value: _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry ?? false,
+                                    title: const Text(
+                                      "Limit to current country",
+                                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                                     ),
-                                  ),
-                                  subtitle: const Text(
-                                    "If enabled, limit foreign restock alerts to the items that get restocked in the "
-                                    "country you are currently flying to or staying in ",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
+                                    subtitle: const Text(
+                                      "If enabled, limit foreign restock alerts to the items that get restocked in the "
+                                      "country you are currently flying to or staying in ",
+                                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                                     ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _firebaseUserModel?.foreignRestockNotificationOnlyCurrentCountry = value;
+                                      });
+                                      FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(value);
+                                    },
                                   ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _firebaseUserModel?.foreignRestockNotificationOnlyCurrentCountry = value;
-                                    });
-                                    FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(value);
-                                  },
                                 ),
                               ),
                             ],
@@ -342,129 +333,152 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.hospitalNotification ?? false,
-                          title: const Text("Hospital admission and release"),
-                          subtitle: const Text(
-                            "If you are offline, you'll be notified if you are "
-                            "hospitalized, revived or out of hospital",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.abroadStayNotification ?? false,
+                            title: const Text("Abroad stay reminders"),
+                            subtitle: const Text(
+                              "Get reminded at the intervals you choose after landing in a foreign country, so you "
+                              "don't forget you are sitting abroad. Reminders restart on every new trip and stop "
+                              "automatically once you return to Torn",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.abroadStayNotification = value;
+                              });
+                              FirestoreHelper().subscribeToAbroadStayNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.hospitalNotification = value;
-                            });
-                            FirestoreHelper().subscribeToHospitalNotification(value);
-                          },
+                        ),
+                      ),
+                      if (_firebaseUserModel!.abroadStayNotification ?? false) _abroadStayOptions(),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.hospitalNotification ?? false,
+                            title: const Text("Hospital admission and release"),
+                            subtitle: const Text(
+                              "If you are offline, you'll be notified if you are "
+                              "hospitalized, revived or out of hospital",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.hospitalNotification = value;
+                              });
+                              FirestoreHelper().subscribeToHospitalNotification(value);
+                            },
+                          ),
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.drugsNotification ?? false,
-                          title: const Text("Drugs cooldown"),
-                          subtitle: const Text(
-                            "Get notified when your drugs cooldown "
-                            "has expired",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.drugsNotification ?? false,
+                            title: const Text("Drugs cooldown"),
+                            subtitle: const Text(
+                              "Get notified when your drugs cooldown "
+                              "has expired",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.drugsNotification = value;
+                              });
+                              FirestoreHelper().subscribeToDrugsNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.drugsNotification = value;
-                            });
-                            FirestoreHelper().subscribeToDrugsNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.drugsNotification!) _drugsTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.medicalNotification ?? false,
-                          title: const Text("Medical cooldown"),
-                          subtitle: const Text(
-                            "Get notified when your medical cooldown "
-                            "has expired",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.medicalNotification ?? false,
+                            title: const Text("Medical cooldown"),
+                            subtitle: const Text(
+                              "Get notified when your medical cooldown "
+                              "has expired",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.medicalNotification = value;
+                              });
+                              FirestoreHelper().subscribeToMedicalNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.medicalNotification = value;
-                            });
-                            FirestoreHelper().subscribeToMedicalNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.medicalNotification!) _medicalTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.boosterNotification ?? false,
-                          title: const Text("Booster cooldown"),
-                          subtitle: const Text(
-                            "Get notified when your booster cooldown "
-                            "has expired",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.boosterNotification ?? false,
+                            title: const Text("Booster cooldown"),
+                            subtitle: const Text(
+                              "Get notified when your booster cooldown "
+                              "has expired",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.boosterNotification = value;
+                              });
+                              FirestoreHelper().subscribeToBoosterNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.boosterNotification = value;
-                            });
-                            FirestoreHelper().subscribeToBoosterNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.boosterNotification!) _boosterTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.lootAlerts.isNotEmpty,
-                          title: const Text("Loot"),
-                          subtitle: const Text(
-                            "Get notified when an NPC is about to reach level 4 or 5 (between 5 and 6 "
-                            "minutes in advance)",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.lootAlerts.isNotEmpty,
+                            title: const Text("Loot"),
+                            subtitle: const Text(
+                              "Get notified when an NPC is about to reach level 4 or 5 (between 5 and 6 "
+                              "minutes in advance)",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) async {
+                              await showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                barrierDismissible: true,
+                                builder: (BuildContext context) {
+                                  return LootAlertsDialog(userModel: _firebaseUserModel);
+                                },
+                              );
+                              setState(() {
+                                // Refresh lootAlerts (check or uncheck box)
+                              });
+                            },
                           ),
-                          onChanged: (value) async {
-                            await showDialog(
-                              useRootNavigator: false,
-                              context: context,
-                              barrierDismissible: true,
-                              builder: (BuildContext context) {
-                                return LootAlertsDialog(
-                                  userModel: _firebaseUserModel,
-                                );
-                              },
-                            );
-                            setState(() {
-                              // Refresh lootAlerts (check or uncheck box)
-                            });
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.lootAlerts.isNotEmpty)
@@ -483,45 +497,42 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.lootRangersAlerts ?? false,
-                          title: Row(
-                            children: [
-                              const Text("Loot Rangers attack"),
-                              const SizedBox(width: 5),
-                              GestureDetector(
-                                onTap: () async {
-                                  await showDialog(
-                                    useRootNavigator: false,
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return LootRangersExplanationDialog(themeProvider: _themeProvider);
-                                    },
-                                  );
-                                },
-                                child: const Icon(
-                                  Icons.info_outline,
-                                  size: 20,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.lootRangersAlerts ?? false,
+                            title: Row(
+                              children: [
+                                const Text("Loot Rangers attack"),
+                                const SizedBox(width: 5),
+                                GestureDetector(
+                                  onTap: () async {
+                                    await showDialog(
+                                      useRootNavigator: false,
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return LootRangersExplanationDialog(themeProvider: _themeProvider);
+                                      },
+                                    );
+                                  },
+                                  child: const Icon(Icons.info_outline, size: 20),
                                 ),
-                              )
-                            ],
-                          ),
-                          subtitle: const Text(
-                            "Get notified shortly before a Loot Ranger attack is about to take place "
-                            ", including attack order",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                              ],
                             ),
+                            subtitle: const Text(
+                              "Get notified shortly before a Loot Ranger attack is about to take place "
+                              ", including attack order",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                            ),
+                            onChanged: (value) async {
+                              setState(() {
+                                _firebaseUserModel?.lootRangersAlerts = value;
+                              });
+                              FirestoreHelper().subscribeToLootRangersNotification(value);
+                            },
                           ),
-                          onChanged: (value) async {
-                            setState(() {
-                              _firebaseUserModel?.lootRangersAlerts = value;
-                            });
-                            FirestoreHelper().subscribeToLootRangersNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.lootRangersAlerts ?? false)
@@ -540,68 +551,68 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.racingNotification ?? false,
-                          title: const Text("Racing"),
-                          subtitle: const Text(
-                            "Get notified when you cross the finish line",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.racingNotification ?? false,
+                            title: const Text("Racing"),
+                            subtitle: const Text(
+                              "Get notified when you cross the finish line",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.racingNotification = value;
+                              });
+                              FirestoreHelper().subscribeToRacingNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.racingNotification = value;
-                            });
-                            FirestoreHelper().subscribeToRacingNotification(value);
-                          },
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.messagesNotification ?? false,
-                          title: const Text("Messages"),
-                          subtitle: const Text(
-                            "Get notified when you receive new messages",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.messagesNotification ?? false,
+                            title: const Text("Messages"),
+                            subtitle: const Text(
+                              "Get notified when you receive new messages",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.messagesNotification = value;
+                              });
+                              FirestoreHelper().subscribeToMessagesNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.messagesNotification = value;
-                            });
-                            FirestoreHelper().subscribeToMessagesNotification(value);
-                          },
                         ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.eventsNotification ?? false,
-                          title: const Text("Events"),
-                          subtitle: const Text(
-                            "Get notified when you receive new events",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.eventsNotification ?? false,
+                            title: const Text("Events"),
+                            subtitle: const Text(
+                              "Get notified when you receive new events",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.eventsNotification = value;
+                              });
+                              FirestoreHelper().subscribeToEventsNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.eventsNotification = value;
-                            });
-                            FirestoreHelper().subscribeToEventsNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.eventsNotification!)
@@ -614,10 +625,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 padding: EdgeInsets.only(left: 10),
                                 child: Text(
                                   "Filter out events",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                                  style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
                                 ),
                               ),
                               IconButton(
@@ -627,9 +635,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                     useRootNavigator: false,
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return EventsFilterDialog(
-                                        userModel: _firebaseUserModel,
-                                      );
+                                      return EventsFilterDialog(userModel: _firebaseUserModel);
                                     },
                                   );
                                 },
@@ -639,24 +645,24 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.refillsNotification ?? false,
-                          title: const Text("Refills"),
-                          subtitle: const Text(
-                            "Get notified if you still have unused refills",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.refillsNotification ?? false,
+                            title: const Text("Refills"),
+                            subtitle: const Text(
+                              "Get notified if you still have unused refills",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.refillsNotification = value;
+                              });
+                              FirestoreHelper().subscribeToRefillsNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.refillsNotification = value;
-                            });
-                            FirestoreHelper().subscribeToRefillsNotification(value);
-                          },
                         ),
                       ),
                       if (_firebaseUserModel!.refillsNotification!)
@@ -667,13 +673,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             children: <Widget>[
                               const Padding(
                                 padding: EdgeInsets.only(left: 10),
-                                child: Text(
-                                  "Time",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
+                                child: Text("Time", style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic)),
                               ),
                               DropdownButton<int>(
                                 value: _firebaseUserModel?.refillsTime,
@@ -685,9 +685,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "16:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -698,9 +696,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "17:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -711,9 +707,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "18:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -724,9 +718,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "19:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -737,9 +729,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "20:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -750,9 +740,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "21:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -763,9 +751,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "22:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -776,9 +762,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       child: Text(
                                         "23:00 TCT",
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                        style: TextStyle(fontSize: 14),
                                       ),
                                     ),
                                   ),
@@ -803,10 +787,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 padding: EdgeInsets.only(left: 10),
                                 child: Text(
                                   "Choose refills",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                                  style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
                                 ),
                               ),
                               IconButton(
@@ -816,9 +797,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                     useRootNavigator: false,
                                     context: context,
                                     builder: (BuildContext context) {
-                                      return RefillsRequestedDialog(
-                                        userModel: _firebaseUserModel,
-                                      );
+                                      return RefillsRequestedDialog(userModel: _firebaseUserModel);
                                     },
                                   );
                                 },
@@ -828,159 +807,153 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 15, 0),
-                        child: ListTile(
-                          title: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text("Stock market gain/loss"),
-                              GestureDetector(
-                                child: const Icon(Icons.keyboard_arrow_right_outlined),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) {
-                                        return StockMarketAlertsPage(
-                                          fbUser: _firebaseUserModel,
-                                          calledFromMenu: false,
-                                          stockMarketInMenuCallback: widget.stockMarketInMenuCallback,
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          subtitle: const Text(
-                            "Configure price gain/loss alerts for any traded company",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.factionAssistMessage ?? false,
-                          title: const Text("Faction assist messages"),
-                          subtitle: const Text(
-                            "Receive attack assist messages manually triggered by your faction mates",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.factionAssistMessage = value;
-                            });
-                            FirestoreHelper().toggleFactionAssistMessage(value);
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.retalsNotification ?? false,
-                          title: Row(
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(right: 5),
-                                child: Text(
-                                  "Retaliation",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: GestureDetector(
-                                  child: Icon(
-                                    Icons.info_outline_rounded,
-                                    color: _factionApiAccess ? Colors.green : Colors.orange,
-                                  ),
-                                  // Quick update
-                                  onTap: () async {
-                                    await showDialog(
-                                      useRootNavigator: false,
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return _retalsGeneralExplanation();
-                                      },
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: ListTile(
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text("Stock market gain/loss"),
+                                GestureDetector(
+                                  child: const Icon(Icons.keyboard_arrow_right_outlined),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) {
+                                          return StockMarketAlertsPage(
+                                            fbUser: _firebaseUserModel,
+                                            calledFromMenu: false,
+                                            stockMarketInMenuCallback: widget.stockMarketInMenuCallback,
+                                          );
+                                        },
+                                      ),
                                     );
                                   },
                                 ),
-                              ),
-                            ],
-                          ),
-                          subtitle: const Text(
-                            "Get notified whenever it is possible to initiate a retaliation attack.",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                              ],
+                            ),
+                            subtitle: const Text(
+                              "Configure price gain/loss alerts for any traded company",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
                           ),
-                          onChanged: (enabled) async {
-                            if (!enabled!) {
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.factionAssistMessage ?? false,
+                            title: const Text("Faction assist messages"),
+                            subtitle: const Text(
+                              "Receive attack assist messages manually triggered by your faction mates",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                            ),
+                            onChanged: (value) {
                               setState(() {
-                                _firebaseUserModel?.retalsNotification = enabled;
+                                _firebaseUserModel?.factionAssistMessage = value;
                               });
-                              FirestoreHelper().toggleRetaliationNotification(enabled);
-                              return;
-                            }
-
-                            if (_factionApiAccess) {
-                              setState(() {
-                                _firebaseUserModel?.retalsNotification = enabled;
-                              });
-                              FirestoreHelper().toggleRetaliationNotification(enabled);
-
-                              // Makes sure to scroll down so that the new 2 options are visible
-                              _scrollController.animateTo(
-                                _scrollController.offset + 100,
-                                duration: const Duration(milliseconds: 200),
-                                curve: Curves.easeIn,
-                              );
-                            } else {
-                              String message = "";
-                              int seconds = 0;
-
-                              if (!_factionApiAccessCheckError) {
+                              FirestoreHelper().toggleFactionAssistMessage(value);
+                            },
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.retalsNotification ?? false,
+                            title: Row(
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 5),
+                                  child: Text("Retaliation", style: TextStyle(fontSize: 15)),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: GestureDetector(
+                                    child: Icon(
+                                      Icons.info_outline_rounded,
+                                      color: _factionApiAccess ? Colors.green : Colors.orange,
+                                    ),
+                                    // Quick update
+                                    onTap: () async {
+                                      await showDialog(
+                                        useRootNavigator: false,
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return _retalsGeneralExplanation();
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            subtitle: const Text(
+                              "Get notified whenever it is possible to initiate a retaliation attack.",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                            ),
+                            onChanged: (enabled) async {
+                              if (!enabled!) {
                                 setState(() {
                                   _firebaseUserModel?.retalsNotification = enabled;
                                 });
-                                FirestoreHelper().toggleRetaliationNotification(enabled, host: false);
-                                message = "You have no faction API permissions (talk to your leadership about it).\n\n"
-                                    "This alert has been activated, but it won't work unless someone with proper "
-                                    "permissions in your faction activates it as well.";
-                                seconds = 10;
-                              } else {
-                                message = "It's not possible to activate this alert now (Torn PDA can't verify whether "
-                                    "you have proper Faction API permissions).\n\nPlease try again later!";
-                                seconds = 6;
+                                FirestoreHelper().toggleRetaliationNotification(enabled);
+                                return;
                               }
 
-                              BotToast.showText(
-                                clickClose: true,
-                                text: message,
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.orange[900]!,
-                                duration: Duration(seconds: seconds),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            }
-                          },
+                              if (_factionApiAccess) {
+                                setState(() {
+                                  _firebaseUserModel?.retalsNotification = enabled;
+                                });
+                                FirestoreHelper().toggleRetaliationNotification(enabled);
+
+                                // Makes sure to scroll down so that the new 2 options are visible
+                                _scrollController.animateTo(
+                                  _scrollController.offset + 100,
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeIn,
+                                );
+                              } else {
+                                String message = "";
+                                int seconds = 0;
+
+                                if (!_factionApiAccessCheckError) {
+                                  setState(() {
+                                    _firebaseUserModel?.retalsNotification = enabled;
+                                  });
+                                  FirestoreHelper().toggleRetaliationNotification(enabled, host: false);
+                                  message =
+                                      "You have no faction API permissions (talk to your leadership about it).\n\n"
+                                      "This alert has been activated, but it won't work unless someone with proper "
+                                      "permissions in your faction activates it as well.";
+                                  seconds = 10;
+                                } else {
+                                  message =
+                                      "It's not possible to activate this alert now (Torn PDA can't verify whether "
+                                      "you have proper Faction API permissions).\n\nPlease try again later!";
+                                  seconds = 6;
+                                }
+
+                                BotToast.showText(
+                                  clickClose: true,
+                                  text: message,
+                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                  contentColor: Colors.orange[900]!,
+                                  duration: Duration(seconds: seconds),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              }
+                            },
+                          ),
                         ),
                       ),
                       if (_firebaseUserModel!.retalsNotification! && _factionApiAccess)
@@ -997,10 +970,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                         padding: EdgeInsets.only(left: 10, right: 5),
                                         child: Text(
                                           "Single target opens browser",
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontStyle: FontStyle.italic,
-                                          ),
+                                          style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
                                         ),
                                       ),
                                     ),
@@ -1047,10 +1017,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                         padding: EdgeInsets.only(left: 10, right: 5),
                                         child: Text(
                                           "Only as API permission donor",
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontStyle: FontStyle.italic,
-                                          ),
+                                          style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
                                         ),
                                       ),
                                     ),
@@ -1077,13 +1044,11 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 onChanged: (enabled) {
                                   if (enabled) {
                                     BotToast.showText(
-                                      text: "Please make sure that you understand the consequences of this setting "
+                                      text:
+                                          "Please make sure that you understand the consequences of this setting "
                                           "by reading the information dialog.\n\n"
                                           "You will NOT receive relation alerts.",
-                                      textStyle: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
+                                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                       contentColor: Colors.blue,
                                       duration: const Duration(seconds: 6),
                                       contentPadding: const EdgeInsets.all(10),
@@ -1107,43 +1072,38 @@ class AlertsSettingsState extends State<AlertsSettings> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
-                                  child: ListTile(
-                                    title: const Text(
-                                      "Torn chat messages",
-                                      style: TextStyle(fontSize: 15),
-                                    ),
-                                    subtitle: const Text(
-                                      "Enable notifications for TORN chat messages",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
+                                  child: Material(
+                                    type: MaterialType.transparency,
+                                    child: ListTile(
+                                      title: const Text("Torn chat messages", style: TextStyle(fontSize: 15)),
+                                      subtitle: const Text(
+                                        "Enable notifications for TORN chat messages",
+                                        style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                                       ),
-                                    ),
-                                    trailing: _togglingSendbirdNotifications
-                                        ? const Padding(
-                                            padding: EdgeInsets.only(right: 14.0),
-                                            child: SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
+                                      trailing: _togglingSendbirdNotifications
+                                          ? const Padding(
+                                              padding: EdgeInsets.only(right: 14.0),
+                                              child: SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: CircularProgressIndicator(strokeWidth: 2),
                                               ),
+                                            )
+                                          : Checkbox(
+                                              value: sendbird.sendBirdNotificationsEnabled,
+                                              activeColor: Colors.blueGrey,
+                                              checkColor: Colors.white,
+                                              onChanged: (enabled) async {
+                                                setState(() {
+                                                  _togglingSendbirdNotifications = true;
+                                                });
+                                                await sendbird.sendBirdNotificationsToggle(enabled: enabled!);
+                                                setState(() {
+                                                  _togglingSendbirdNotifications = false;
+                                                });
+                                              },
                                             ),
-                                          )
-                                        : Checkbox(
-                                            value: sendbird.sendBirdNotificationsEnabled,
-                                            activeColor: Colors.blueGrey,
-                                            checkColor: Colors.white,
-                                            onChanged: (enabled) async {
-                                              setState(() {
-                                                _togglingSendbirdNotifications = true;
-                                              });
-                                              await sendbird.sendBirdNotificationsToggle(enabled: enabled!);
-                                              setState(() {
-                                                _togglingSendbirdNotifications = false;
-                                              });
-                                            },
-                                          ),
+                                    ),
                                   ),
                                 ),
                                 if (sendbird.sendBirdNotificationsEnabled)
@@ -1159,10 +1119,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                               padding: EdgeInsets.only(left: 17),
                                               child: Text(
                                                 "Do not disturb",
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontStyle: FontStyle.italic,
-                                                ),
+                                                style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
                                               ),
                                             ),
                                           ],
@@ -1177,7 +1134,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                               },
                                             );
                                           },
-                                        )
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -1192,46 +1149,44 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       children: [
                                         const Icon(Icons.keyboard_arrow_right_outlined),
                                         Flexible(
-                                          child: CheckboxListTile(
-                                            dense: true,
-                                            checkColor: Colors.white,
-                                            activeColor: Colors.red[900],
-                                            value: sendbird.excludeFactionMessages,
-                                            title: const Row(
-                                              children: [
-                                                Text(
-                                                  "Exclude faction messages",
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            subtitle: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  "Faction messages won't be shown",
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                                if (sendbird.excludeFactionMessages)
+                                          child: Material(
+                                            type: MaterialType.transparency,
+                                            child: CheckboxListTile(
+                                              dense: true,
+                                              checkColor: Colors.white,
+                                              activeColor: Colors.red[900],
+                                              value: sendbird.excludeFactionMessages,
+                                              title: const Row(
+                                                children: [
                                                   Text(
+                                                    "Exclude faction messages",
+                                                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                                                  ),
+                                                ],
+                                              ),
+                                              subtitle: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    "Faction messages won't be shown",
+                                                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                                                  ),
+                                                  if (sendbird.excludeFactionMessages)
+                                                    Text(
                                                       "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
                                                       "that you use with this player account",
                                                       style: TextStyle(
                                                         fontSize: 12,
                                                         fontStyle: FontStyle.italic,
                                                         color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                                      )),
-                                              ],
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                              onChanged: (enabled) async {
+                                                sendbird.excludeFactionMessages = enabled!;
+                                              },
                                             ),
-                                            onChanged: (enabled) async {
-                                              sendbird.excludeFactionMessages = enabled!;
-                                            },
                                           ),
                                         ),
                                       ],
@@ -1244,46 +1199,44 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       children: [
                                         const Icon(Icons.keyboard_arrow_right_outlined),
                                         Flexible(
-                                          child: CheckboxListTile(
-                                            dense: true,
-                                            checkColor: Colors.white,
-                                            activeColor: Colors.red[900],
-                                            value: sendbird.excludeCompanyMessages,
-                                            title: const Row(
-                                              children: [
-                                                Text(
-                                                  "Exclude company messages",
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            subtitle: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  "Company messages won't be shown",
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                                if (sendbird.excludeCompanyMessages)
+                                          child: Material(
+                                            type: MaterialType.transparency,
+                                            child: CheckboxListTile(
+                                              dense: true,
+                                              checkColor: Colors.white,
+                                              activeColor: Colors.red[900],
+                                              value: sendbird.excludeCompanyMessages,
+                                              title: const Row(
+                                                children: [
                                                   Text(
+                                                    "Exclude company messages",
+                                                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                                                  ),
+                                                ],
+                                              ),
+                                              subtitle: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    "Company messages won't be shown",
+                                                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                                                  ),
+                                                  if (sendbird.excludeCompanyMessages)
+                                                    Text(
                                                       "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
                                                       "that you use with this player account",
                                                       style: TextStyle(
                                                         fontSize: 12,
                                                         fontStyle: FontStyle.italic,
                                                         color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                                      )),
-                                              ],
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                              onChanged: (enabled) async {
+                                                sendbird.excludeCompanyMessages = enabled!;
+                                              },
                                             ),
-                                            onChanged: (enabled) async {
-                                              sendbird.excludeCompanyMessages = enabled!;
-                                            },
                                           ),
                                         ),
                                       ],
@@ -1296,46 +1249,44 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       children: [
                                         const Icon(Icons.keyboard_arrow_right_outlined),
                                         Flexible(
-                                          child: CheckboxListTile(
-                                            dense: true,
-                                            checkColor: Colors.white,
-                                            activeColor: Colors.red[900],
-                                            value: sendbird.excludeEliminationMessages,
-                                            title: const Row(
-                                              children: [
-                                                Text(
-                                                  "Exclude Elimination event messages",
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            subtitle: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  "Elimination event messages won't be shown",
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
-                                                if (sendbird.excludeEliminationMessages)
+                                          child: Material(
+                                            type: MaterialType.transparency,
+                                            child: CheckboxListTile(
+                                              dense: true,
+                                              checkColor: Colors.white,
+                                              activeColor: Colors.red[900],
+                                              value: sendbird.excludeEliminationMessages,
+                                              title: const Row(
+                                                children: [
                                                   Text(
+                                                    "Exclude Elimination event messages",
+                                                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                                                  ),
+                                                ],
+                                              ),
+                                              subtitle: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    "Elimination event messages won't be shown",
+                                                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                                                  ),
+                                                  if (sendbird.excludeEliminationMessages)
+                                                    Text(
                                                       "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
                                                       "that you use with this player account",
                                                       style: TextStyle(
                                                         fontSize: 12,
                                                         fontStyle: FontStyle.italic,
                                                         color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                                      )),
-                                              ],
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                              onChanged: (enabled) async {
+                                                sendbird.excludeEliminationMessages = enabled!;
+                                              },
                                             ),
-                                            onChanged: (enabled) async {
-                                              sendbird.excludeEliminationMessages = enabled!;
-                                            },
                                           ),
                                         ),
                                       ],
@@ -1349,24 +1300,25 @@ class AlertsSettingsState extends State<AlertsSettings> {
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
-                                  child: ListTile(
-                                    title: const Text(
-                                      "Torn chat messages",
-                                      style: TextStyle(fontSize: 15),
-                                    ),
-                                    subtitle: Text(
+                                  child: Material(
+                                    type: MaterialType.transparency,
+                                    child: ListTile(
+                                      title: const Text("Torn chat messages", style: TextStyle(fontSize: 15)),
+                                      subtitle: Text(
                                         "NOTE: notifications for Torn chat messages are temporarily disabled. "
                                         "You can find more information in the forums or Discord. Apologies for the inconvenience.",
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontStyle: FontStyle.italic,
                                           color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                        )),
-                                    trailing: const Checkbox(
-                                      value: false,
-                                      activeColor: Colors.blueGrey,
-                                      checkColor: Colors.white,
-                                      onChanged: null,
+                                        ),
+                                      ),
+                                      trailing: const Checkbox(
+                                        value: false,
+                                        activeColor: Colors.blueGrey,
+                                        checkColor: Colors.white,
+                                        onChanged: null,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1377,25 +1329,25 @@ class AlertsSettingsState extends State<AlertsSettings> {
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.forumsSubscription ?? false,
-                          title: const Text("Forums subscribed threads"),
-                          subtitle: const Text(
-                            "Get notifications for new posts in threads you are subscribed to. "
-                            "NOTE: checks will be performed every 15 minutes to avoid excessive API load",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.forumsSubscription ?? false,
+                            title: const Text("Forums subscribed threads"),
+                            subtitle: const Text(
+                              "Get notifications for new posts in threads you are subscribed to. "
+                              "NOTE: checks will be performed every 15 minutes to avoid excessive API load",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
+                            onChanged: (value) {
+                              setState(() {
+                                _firebaseUserModel?.forumsSubscription = value;
+                              });
+                              FirestoreHelper().subscribeToForumsSubcriptionsNotification(value);
+                            },
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.forumsSubscription = value;
-                            });
-                            FirestoreHelper().subscribeToForumsSubcriptionsNotification(value);
-                          },
                         ),
                       ),
                       const SizedBox(height: 60),
@@ -1427,52 +1379,28 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: "app",
           child: SizedBox(
             width: 110,
-            child: Text(
-              "App",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "itemsOwn",
           child: SizedBox(
             width: 110,
-            child: Text(
-              "Own items",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "itemsFaction",
           child: SizedBox(
             width: 110,
-            child: Text(
-              "Faction items",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
         DropdownMenuItem(
           value: "factionMain",
           child: SizedBox(
             width: 110,
-            child: Text(
-              "Faction page",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
+            child: Text("Faction page", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
       ],
@@ -1515,29 +1443,113 @@ class AlertsSettingsState extends State<AlertsSettings> {
       value: "browser",
       child: SizedBox(
         width: 110,
-        child: Text(
-          "Browser",
-          textAlign: TextAlign.right,
-          style: TextStyle(
-            fontSize: 14,
-          ),
-        ),
+        child: Text("Browser", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
       ),
     ),
     DropdownMenuItem(
       value: "foreignStocks",
       child: SizedBox(
         width: 110,
-        child: Text(
-          "Foreign Stocks",
-          textAlign: TextAlign.right,
-          style: TextStyle(
-            fontSize: 14,
-          ),
-        ),
+        child: Text("Foreign Stocks", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
       ),
     ),
   ];
+
+  // Selectable intervals (in minutes) for the abroad-stay reminder.
+  static const List<(int minutes, String label)> _abroadStayIntervalChoices = [
+    (5, '5 min'),
+    (15, '15 min'),
+    (30, '30 min'),
+    (60, '1 h'),
+    (360, '6 h'),
+    (720, '12 h'),
+    (1440, '24 h'),
+  ];
+
+  Widget _abroadStayOptions() {
+    final selected = _firebaseUserModel!.abroadStayIntervals.toSet();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  "Pick the intervals you want to be reminded at:",
+                  style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: _themeProvider!.mainText),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 28),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: -4,
+              children: _abroadStayIntervalChoices.map((choice) {
+                final isSelected = selected.contains(choice.$1);
+                return FilterChip(
+                  label: Text(choice.$2),
+                  selected: isSelected,
+                  onSelected: (value) {
+                    setState(() {
+                      if (value) {
+                        selected.add(choice.$1);
+                      } else {
+                        selected.remove(choice.$1);
+                      }
+                      // Keep the list deterministic (ascending order) before persisting.
+                      final ordered = selected.toList()..sort();
+                      _firebaseUserModel!.abroadStayIntervals = ordered;
+                    });
+                    final ordered = selected.toList()..sort();
+                    FirestoreHelper().setAbroadStayIntervals(ordered);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              Flexible(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: CheckboxListTile(
+                    checkColor: Colors.white,
+                    activeColor: Colors.blueGrey,
+                    value: _firebaseUserModel!.abroadStayIncludeHospital,
+                    title: const Text(
+                      "Include hospital stays",
+                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    ),
+                    subtitle: const Text(
+                      "If enabled, reminders keep firing while you are hospitalised abroad. If disabled, "
+                      "reminders pause during hospital stays and resume once you are out",
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                    onChanged: (value) {
+                      final include = value ?? false;
+                      setState(() {
+                        _firebaseUserModel!.abroadStayIncludeHospital = include;
+                      });
+                      FirestoreHelper().setAbroadStayIncludeHospital(include);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _notificationDestinationSelector({
     required String value,
@@ -1561,35 +1573,19 @@ class AlertsSettingsState extends State<AlertsSettings> {
                     Flexible(
                       child: Padding(
                         padding: const EdgeInsets.only(left: 10),
-                        child: Text(
-                          label,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
+                        child: Text(label, style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
                       ),
                     ),
                   ],
                 ),
               ),
-              DropdownButton<String>(
-                value: value,
-                items: items,
-                onChanged: onChanged,
-              ),
+              DropdownButton<String>(value: value, items: items, onChanged: onChanged),
             ],
           ),
           if (helperText != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(34, 0, 0, 8),
-              child: Text(
-                helperText,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              child: Text(helperText, style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic)),
             ),
         ],
       ),
@@ -1611,7 +1607,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
           "when it's in the background or completely closed.\n\n"
           "They'll show in the lock screen and dynamic island.";
     } else if (Platform.isAndroid) {
-      laHeader = "Live Updates will show a persistent notification with a countdown timer for your travel. "
+      laHeader =
+          "Live Updates will show a persistent notification with a countdown timer for your travel. "
           "They are triggered when Torn PDA is in the foreground while you are already traveling.\n\n"
           "If you have battery optimization enabled, the update might stop when the app is in the background.";
     }
@@ -1620,10 +1617,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
       children: [
         const Padding(
           padding: EdgeInsets.all(20),
-          child: Text(
-            "LIVE ACTIVITIES",
-            style: TextStyle(fontSize: 9),
-          ),
+          child: Text("LIVE ACTIVITIES", style: TextStyle(fontSize: 9)),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
@@ -1631,92 +1625,98 @@ class AlertsSettingsState extends State<AlertsSettings> {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-          child: CheckboxListTile(
-            checkColor: Colors.white,
-            activeColor: Colors.blueGrey,
-            value: Platform.isAndroid
-                ? _settingsProvider.androidLiveActivityTravelEnabled
-                : _settingsProvider.iosLiveActivityTravelEnabled,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Travel"),
-                Text(Platform.isAndroid ? "Live Update" : "Live Activity", style: const TextStyle(fontSize: 10)),
-              ],
-            ),
-            onChanged: (enabled) async {
-              if (enabled == null) return;
-
-              if (Platform.isAndroid) {
-                setState(() {
-                  _settingsProvider.androidLiveActivityTravelEnabled = enabled;
-                });
-              } else {
-                setState(() {
-                  // This setter will eventually also get or delete token from Firestore
-                  _settingsProvider.iosLiveActivityTravelEnabled = enabled;
-                });
-              }
-
-              final bool nowEnabled = Platform.isAndroid
-                  ? _settingsProvider.androidLiveActivityTravelEnabled
-                  : _settingsProvider.iosLiveActivityTravelEnabled;
-
-              if (nowEnabled) {
-                if (Platform.isAndroid) {
-                  _checkAndroidBatteryOptimization();
-                }
-
-                await Get.find<LiveActivityTravelController>().activate();
-                Get.find<LiveActivityBridgeController>().initializeHandler();
-              } else {
-                Get.find<LiveActivityTravelController>().deactivate();
-              }
-            },
-          ),
-        ),
-        _travelLiveActivityTapSelector(),
-        if (Platform.isIOS || Platform.isAndroid)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+          child: Material(
+            type: MaterialType.transparency,
             child: CheckboxListTile(
               checkColor: Colors.white,
               activeColor: Colors.blueGrey,
               value: Platform.isAndroid
-                  ? _settingsProvider.androidLiveActivityRacingEnabled
-                  : _settingsProvider.iosLiveActivityRacingEnabled,
+                  ? _settingsProvider.androidLiveActivityTravelEnabled
+                  : _settingsProvider.iosLiveActivityTravelEnabled,
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Racing"),
+                  const Text("Travel"),
                   Text(Platform.isAndroid ? "Live Update" : "Live Activity", style: const TextStyle(fontSize: 10)),
                 ],
               ),
               onChanged: (enabled) async {
                 if (enabled == null) return;
 
-                setState(() {
-                  if (Platform.isAndroid) {
-                    _settingsProvider.androidLiveActivityRacingEnabled = enabled;
-                  } else {
-                    _settingsProvider.iosLiveActivityRacingEnabled = enabled;
-                  }
-                });
+                if (Platform.isAndroid) {
+                  setState(() {
+                    _settingsProvider.androidLiveActivityTravelEnabled = enabled;
+                  });
+                } else {
+                  setState(() {
+                    // This setter will eventually also get or delete token from Firestore
+                    _settingsProvider.iosLiveActivityTravelEnabled = enabled;
+                  });
+                }
 
-                final bool racingEnabled = Platform.isAndroid
-                    ? _settingsProvider.androidLiveActivityRacingEnabled
-                    : _settingsProvider.iosLiveActivityRacingEnabled;
+                final bool nowEnabled = Platform.isAndroid
+                    ? _settingsProvider.androidLiveActivityTravelEnabled
+                    : _settingsProvider.iosLiveActivityTravelEnabled;
 
-                if (racingEnabled) {
+                if (nowEnabled) {
                   if (Platform.isAndroid) {
                     _checkAndroidBatteryOptimization();
                   }
-                  await Get.find<LiveActivityRacingController>().activate();
+
+                  await Get.find<LiveActivityTravelController>().activate();
                   Get.find<LiveActivityBridgeController>().initializeHandler();
                 } else {
-                  Get.find<LiveActivityRacingController>().deactivate();
+                  Get.find<LiveActivityTravelController>().deactivate();
                 }
               },
+            ),
+          ),
+        ),
+        _travelLiveActivityTapSelector(),
+        if (Platform.isIOS || Platform.isAndroid)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+            child: Material(
+              type: MaterialType.transparency,
+              child: CheckboxListTile(
+                checkColor: Colors.white,
+                activeColor: Colors.blueGrey,
+                value: Platform.isAndroid
+                    ? _settingsProvider.androidLiveActivityRacingEnabled
+                    : _settingsProvider.iosLiveActivityRacingEnabled,
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Racing"),
+                    Text(Platform.isAndroid ? "Live Update" : "Live Activity", style: const TextStyle(fontSize: 10)),
+                  ],
+                ),
+                onChanged: (enabled) async {
+                  if (enabled == null) return;
+
+                  setState(() {
+                    if (Platform.isAndroid) {
+                      _settingsProvider.androidLiveActivityRacingEnabled = enabled;
+                    } else {
+                      _settingsProvider.iosLiveActivityRacingEnabled = enabled;
+                    }
+                  });
+
+                  final bool racingEnabled = Platform.isAndroid
+                      ? _settingsProvider.androidLiveActivityRacingEnabled
+                      : _settingsProvider.iosLiveActivityRacingEnabled;
+
+                  if (racingEnabled) {
+                    if (Platform.isAndroid) {
+                      _checkAndroidBatteryOptimization();
+                    }
+                    await Get.find<LiveActivityRacingController>().activate();
+                    Get.find<LiveActivityBridgeController>().initializeHandler();
+                  } else {
+                    Get.find<LiveActivityRacingController>().deactivate();
+                  }
+                },
+              ),
             ),
           ),
         const Divider(),
@@ -1737,10 +1737,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
               "To ensure Live Updates work correctly in the background, please disable battery optimization for Torn PDA.",
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
@@ -1770,13 +1767,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 Flexible(
                   child: Padding(
                     padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      "Notification tap opens",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
+                    child: Text("Notification tap opens", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
                   ),
                 ),
               ],
@@ -1789,39 +1780,21 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 value: "app",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "App",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
               DropdownMenuItem(
                 value: "itemsOwn",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "Own items",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
               DropdownMenuItem(
                 value: "itemsFaction",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "Faction items",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
             ],
@@ -1849,13 +1822,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 Flexible(
                   child: Padding(
                     padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      "Notification tap opens",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
+                    child: Text("Notification tap opens", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
                   ),
                 ),
               ],
@@ -1868,39 +1835,21 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 value: "app",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "App",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
               DropdownMenuItem(
                 value: "itemsOwn",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "Own items",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
               DropdownMenuItem(
                 value: "itemsFaction",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "Faction items",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
             ],
@@ -1928,13 +1877,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 Flexible(
                   child: Padding(
                     padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      "Notification tap opens",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
+                    child: Text("Notification tap opens", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
                   ),
                 ),
               ],
@@ -1947,39 +1890,21 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 value: "app",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "App",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
               DropdownMenuItem(
                 value: "itemsOwn",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "Own items",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
               DropdownMenuItem(
                 value: "itemsFaction",
                 child: SizedBox(
                   width: 110,
-                  child: Text(
-                    "Faction items",
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
+                  child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
                 ),
               ),
             ],
@@ -2015,9 +1940,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
       ),
       actions: <Widget>[
         IconButton(
-          icon: const Icon(
-            Icons.handyman,
-          ),
+          icon: const Icon(Icons.handyman),
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(
@@ -2030,9 +1953,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           },
         ),
         IconButton(
-          icon: const Icon(
-            Icons.info_outline,
-          ),
+          icon: const Icon(Icons.info_outline),
           onPressed: () {
             showDialog(
               useRootNavigator: false,
@@ -2054,19 +1975,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            'There was an error contacting the server!',
-            style: TextStyle(
-              color: Colors.red,
-            ),
-          ),
+          Text('There was an error contacting the server!', style: TextStyle(color: Colors.red)),
           SizedBox(height: 20),
-          Text(
-            'Please try again later.',
-            style: TextStyle(
-              color: Colors.red,
-            ),
-          ),
+          Text('Please try again later.', style: TextStyle(color: Colors.red)),
           SizedBox(height: 20),
           Text(
             'If this problem reoccurs, please log out from Torn API (remove '
@@ -2080,12 +1991,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   Widget _alertsInfoDialog() {
     return AlertDialog(
-      title: const Text(
-        "Alerts",
-        style: TextStyle(
-          fontSize: 18,
-        ),
-      ),
+      title: const Text("Alerts", style: TextStyle(fontSize: 18)),
       content: const SingleChildScrollView(
         child: Column(
           children: [
@@ -2109,7 +2015,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-        )
+        ),
       ],
     );
   }
@@ -2290,14 +2196,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
     return DropdownButton<String>(
       value: _lootAheadSelection,
-      items: options
-          .map(
-            (opt) => DropdownMenuItem<String>(
-              value: opt["value"],
-              child: Text(opt["label"]!),
-            ),
-          )
-          .toList(),
+      items: options.map((opt) => DropdownMenuItem<String>(value: opt["value"], child: Text(opt["label"]!))).toList(),
       onChanged: (value) {
         if (value == null) return;
         final int? seconds = int.tryParse(value);
@@ -2320,14 +2219,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
     return DropdownButton<String>(
       value: _lootRangersAheadSelection,
-      items: options
-          .map(
-            (opt) => DropdownMenuItem<String>(
-              value: opt["value"],
-              child: Text(opt["label"]!),
-            ),
-          )
-          .toList(),
+      items: options.map((opt) => DropdownMenuItem<String>(value: opt["value"], child: Text(opt["label"]!))).toList(),
       onChanged: (value) {
         if (value == null) return;
         final int? seconds = int.tryParse(value);

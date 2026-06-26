@@ -64,6 +64,35 @@ class ApiCallsV2 {
     }
   }
 
+  /// Get the current virus coding information (item being programmed and `until` timestamp).
+  /// Returns the [UserVirus] object, `null` when no virus is being programmed, or an [ApiError]
+  static Future<dynamic> getUserVirus_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<UserVirusResponse>(
+      apiSelection_v2: ApiSelection_v2.userVirus,
+      apiCall: (client, apiKey) {
+        return client.userVirusGet();
+      },
+    );
+
+    if (apiResponse is ApiError) return apiResponse;
+    try {
+      if (apiResponse is UserVirusResponse) {
+        if (apiResponse.virus == null) return null;
+        return UserVirus.fromJson(apiResponse.virus as Map<String, dynamic>);
+      }
+      if (apiResponse is Map<String, dynamic>) {
+        final virus = apiResponse["virus"];
+        if (virus == null) return null;
+        return UserVirus.fromJson(virus as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e, trace) {
+      log("Error converting V2 UserVirus: $e, $trace");
+      return null;
+    }
+  }
+
   static Future<dynamic> getOtherUserProfile_v2({required Map<String, dynamic> payload}) async {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(

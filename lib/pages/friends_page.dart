@@ -70,10 +70,7 @@ class FriendsPageState extends State<FriendsPage> {
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
           : null,
       body: Container(
         color: _themeProvider.canvas,
@@ -82,9 +79,7 @@ class FriendsPageState extends State<FriendsPage> {
           onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
           child: MediaQuery.orientationOf(context) == Orientation.portrait
               ? _mainColumn()
-              : SingleChildScrollView(
-                  child: _mainColumn(),
-                ),
+              : SingleChildScrollView(child: _mainColumn()),
         ),
       ),
     );
@@ -109,11 +104,7 @@ class FriendsPageState extends State<FriendsPage> {
                     ),
                   ),
                 ),
-                child: Icon(
-                  Icons.add,
-                  size: 20,
-                  color: _themeProvider.mainText,
-                ),
+                child: Icon(Icons.add, size: 20, color: _themeProvider.mainText),
                 onPressed: () {
                   _showAddDialog(context);
                 },
@@ -132,37 +123,28 @@ class FriendsPageState extends State<FriendsPage> {
                     ),
                   ),
                 ),
-                child: Icon(
-                  Icons.refresh,
-                  size: 20,
-                  color: _themeProvider.mainText,
-                ),
+                child: Icon(Icons.refresh, size: 20, color: _themeProvider.mainText),
                 onPressed: () async {
                   final updateResult = await _friendsProvider.updateAllFriends();
                   if (updateResult.success) {
                     BotToast.showText(
                       text: updateResult.numberSuccessful > 0
                           ? 'Successfully updated '
-                              '${updateResult.numberSuccessful} '
-                              'friends!'
+                                '${updateResult.numberSuccessful} '
+                                'friends!'
                           : 'No friends to update!',
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
+                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                       contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
                       duration: const Duration(seconds: 3),
                       contentPadding: const EdgeInsets.all(10),
                     );
                   } else {
                     BotToast.showText(
-                      text: 'Update with errors: ${updateResult.numberErrors} errors '
+                      text:
+                          'Update with errors: ${updateResult.numberErrors} errors '
                           'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
                           'total friends!',
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
+                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                       contentColor: Colors.red,
                       duration: const Duration(seconds: 3),
                       contentPadding: const EdgeInsets.all(10),
@@ -218,10 +200,7 @@ class FriendsPageState extends State<FriendsPage> {
               }
 
               if (_searchIcon.icon == Icons.search) {
-                _searchIcon = Icon(
-                  Icons.cancel,
-                  color: myColor,
-                );
+                _searchIcon = Icon(Icons.cancel, color: myColor);
                 _appBarText = Form(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -239,13 +218,13 @@ class FriendsPageState extends State<FriendsPage> {
                                   decoration: InputDecoration(
                                     border: InputBorder.none,
                                     hintText: "search friends",
-                                    hintStyle:
-                                        TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
+                                    hintStyle: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.grey[300],
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
+                                  style: const TextStyle(color: Colors.white, fontSize: 16),
                                 ),
                               ),
                             ),
@@ -257,26 +236,18 @@ class FriendsPageState extends State<FriendsPage> {
                 );
                 _focusSearch.requestFocus();
               } else {
-                _searchIcon = Icon(
-                  Icons.search,
-                  color: myColor,
-                );
+                _searchIcon = Icon(Icons.search, color: myColor);
                 _appBarText = const Text("Friends");
               }
             });
           },
         ),
         PopupMenuButton<FriendSort>(
-          icon: const Icon(
-            Icons.sort,
-          ),
+          icon: const Icon(Icons.sort),
           onSelected: _selectSortPopup,
           itemBuilder: (BuildContext context) {
             return _popupChoices.map((FriendSort choice) {
-              return PopupMenuItem<FriendSort>(
-                value: choice,
-                child: Text(choice.description),
-              );
+              return PopupMenuItem<FriendSort>(value: choice, child: Text(choice.description));
             }).toList();
           },
         ),
@@ -289,14 +260,8 @@ class FriendsPageState extends State<FriendsPage> {
                 title: const Text('Wipe friends list'),
                 content: const Text('This will remove all friends. Are you sure?'),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(false),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(true),
-                    child: const Text('Wipe'),
-                  ),
+                  TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+                  TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Wipe')),
                 ],
               ),
             );
@@ -305,10 +270,7 @@ class FriendsPageState extends State<FriendsPage> {
               _friendsProvider.wipeAllFriends();
               BotToast.showText(
                 text: 'Friends list wiped',
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                 contentColor: Colors.orange.shade700,
                 duration: const Duration(seconds: 3),
                 contentPadding: const EdgeInsets.all(10),
@@ -319,12 +281,7 @@ class FriendsPageState extends State<FriendsPage> {
         IconButton(
           icon: const Icon(Icons.save),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FriendsBackupPage(),
-              ),
-            );
+            Navigator.push(context, MaterialPageRoute(builder: (context) => FriendsBackupPage()));
           },
         ),
       ],
@@ -339,7 +296,7 @@ class FriendsPageState extends State<FriendsPage> {
     super.dispose();
   }
 
-  Future<void> _showAddDialog(BuildContext _) {
+  Future<void> _showAddDialog(BuildContext ctx) {
     final friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
 
     final addFriendFormKey = GlobalKey<FormState>();
@@ -355,15 +312,13 @@ class FriendsPageState extends State<FriendsPage> {
     int importingTotal = 0;
 
     return showDialog<void>(
-      context: _,
+      context: ctx,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           builder: (sbContext, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 0.0,
               backgroundColor: Colors.transparent,
               content: SingleChildScrollView(
@@ -371,25 +326,14 @@ class FriendsPageState extends State<FriendsPage> {
                   children: <Widget>[
                     SingleChildScrollView(
                       child: Container(
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(dialogContext).size.height * 0.75,
-                        ),
-                        padding: const EdgeInsets.only(
-                          top: 45,
-                          bottom: 16,
-                          left: 16,
-                          right: 16,
-                        ),
+                        constraints: BoxConstraints(maxHeight: MediaQuery.of(dialogContext).size.height * 0.75),
+                        padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                         margin: const EdgeInsets.only(top: 30),
                         decoration: BoxDecoration(
                           color: _themeProvider.secondBackground,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 10.0,
-                              offset: Offset(0.0, 10.0),
-                            ),
+                            BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0)),
                           ],
                         ),
                         child: Column(
@@ -404,13 +348,7 @@ class FriendsPageState extends State<FriendsPage> {
                             if (!addingFactionActive) ...[
                               Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Individual',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
+                                child: Text('Individual', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
                               ),
                               const SizedBox(height: 8),
                               Form(
@@ -464,17 +402,14 @@ class FriendsPageState extends State<FriendsPage> {
 
                                                     final String inputId = _addIdController.text;
                                                     _addIdController.text = '';
-                                                    final AddFriendResult tryAddFriend =
-                                                        await friendsProvider.addFriend(inputId);
+                                                    final AddFriendResult tryAddFriend = await friendsProvider
+                                                        .addFriend(inputId);
 
                                                     if (tryAddFriend.success) {
                                                       BotToast.showText(
                                                         text:
                                                             'Added ${tryAddFriend.friendName} [${tryAddFriend.friendId}]',
-                                                        textStyle: const TextStyle(
-                                                          fontSize: 14,
-                                                          color: Colors.white,
-                                                        ),
+                                                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                                         contentColor: Colors.green,
                                                         duration: const Duration(seconds: 3),
                                                         contentPadding: const EdgeInsets.all(10),
@@ -483,10 +418,7 @@ class FriendsPageState extends State<FriendsPage> {
                                                       BotToast.showText(
                                                         text:
                                                             'Error adding $inputId. ${tryAddFriend.errorReason ?? ''}',
-                                                        textStyle: const TextStyle(
-                                                          fontSize: 14,
-                                                          color: Colors.white,
-                                                        ),
+                                                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                                         contentColor: Colors.red,
                                                         duration: const Duration(seconds: 3),
                                                         contentPadding: const EdgeInsets.all(10),
@@ -515,22 +447,12 @@ class FriendsPageState extends State<FriendsPage> {
                             if (!addingFactionActive) ...[
                               Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'From faction',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
+                                child: Text('From faction', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
                               ),
                               const SizedBox(height: 5),
                               Text(
                                 'Press the icon to the right to switch between faction ID or player ID input',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey[600],
-                                ),
+                                style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.grey[600]),
                               ),
                               const SizedBox(height: 10),
                             ],
@@ -657,7 +579,8 @@ class FriendsPageState extends State<FriendsPage> {
                                               // If cancelled, we might still have some success
                                               if (result.added > 0 || result.alreadyExisting > 0) {
                                                 messageColor = Colors.orange[700]!;
-                                                message = 'Import cancelled/finished with partial results.\n'
+                                                message =
+                                                    'Import cancelled/finished with partial results.\n'
                                                     'Added: ${result.added}\n'
                                                     'Existing: ${result.alreadyExisting}';
                                               } else {
@@ -669,11 +592,14 @@ class FriendsPageState extends State<FriendsPage> {
                                                 messageColor = Colors.orange[700]!;
                                               }
 
-                                              final namePart =
-                                                  (result.factionName ?? '').isNotEmpty ? '${result.factionName} ' : '';
-                                              final idPart =
-                                                  (result.factionId ?? '').isNotEmpty ? '[${result.factionId}]' : '';
-                                              message = 'Imported ${result.added} members into Friends\n'
+                                              final namePart = (result.factionName ?? '').isNotEmpty
+                                                  ? '${result.factionName} '
+                                                  : '';
+                                              final idPart = (result.factionId ?? '').isNotEmpty
+                                                  ? '[${result.factionId}]'
+                                                  : '';
+                                              message =
+                                                  'Imported ${result.added} members into Friends\n'
                                                   'Already existed: ${result.alreadyExisting}\n'
                                                   'Errors: ${result.errors}\n\n'
                                                   '$namePart$idPart';
@@ -682,10 +608,7 @@ class FriendsPageState extends State<FriendsPage> {
                                             BotToast.showText(
                                               clickClose: true,
                                               text: message,
-                                              textStyle: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.white,
-                                              ),
+                                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                               contentColor: messageColor,
                                               duration: const Duration(seconds: 5),
                                               contentPadding: const EdgeInsets.all(10),
@@ -728,11 +651,7 @@ class FriendsPageState extends State<FriendsPage> {
                         child: CircleAvatar(
                           backgroundColor: _themeProvider.mainText,
                           radius: 22,
-                          child: const SizedBox(
-                            height: 28,
-                            width: 28,
-                            child: Icon(Icons.people),
-                          ),
+                          child: const SizedBox(height: 28, width: 28, child: Icon(Icons.people)),
                         ),
                       ),
                     ),
@@ -754,27 +673,15 @@ class FriendsPageState extends State<FriendsPage> {
     setState(() {
       if (_searchController.text != '') {
         if (_searchIcon.icon == Icons.search) {
-          _searchIcon = Icon(
-            Icons.search,
-            color: Colors.orange[500],
-          );
+          _searchIcon = Icon(Icons.search, color: Colors.orange[500]);
         } else {
-          _searchIcon = Icon(
-            Icons.cancel,
-            color: Colors.orange[500],
-          );
+          _searchIcon = Icon(Icons.cancel, color: Colors.orange[500]);
         }
       } else {
         if (_searchIcon.icon == Icons.search) {
-          _searchIcon = const Icon(
-            Icons.search,
-            color: Colors.white,
-          );
+          _searchIcon = const Icon(Icons.search, color: Colors.white);
         } else {
-          _searchIcon = const Icon(
-            Icons.cancel,
-            color: Colors.white,
-          );
+          _searchIcon = const Icon(Icons.cancel, color: Colors.white);
         }
       }
     });

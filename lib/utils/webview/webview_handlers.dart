@@ -31,7 +31,7 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'PDA_getTabState',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
         return {
           'uid': tabUid,
           'isActiveTab': webViewProvider.isTabUidActive(tabUid),
@@ -46,7 +46,7 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'isTornPDA',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
         return {'isTornPDA': true};
       },
     );
@@ -57,7 +57,7 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'reloadPage',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
         webview.reload();
       },
     );
@@ -69,7 +69,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'copyToClipboard',
-      callback: (args) {
+      callback: (JavaScriptHandlerFunctionData data) {
+        final args = data.args;
         String copy = args.toString();
         if (copy.startsWith("[")) {
           copy = copy.replaceFirst("[", "");
@@ -91,7 +92,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'webThemeChange',
-      callback: (args) {
+      callback: (JavaScriptHandlerFunctionData data) {
+        final args = data.args;
         if (!settingsProvider.syncTornWebTheme) return;
         if (args.contains("dark")) {
           // Change to a dark theme only if currently in light mode.
@@ -131,7 +133,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'scheduleNotification',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (args.isEmpty) {
           final errorMsg = 'No arguments provided for scheduleNotification';
           log('[PDA Handler Error] $errorMsg');
@@ -200,7 +203,8 @@ class WebviewHandlers {
 
     webview.addJavaScriptHandler(
       handlerName: 'cancelNotification',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (args.isEmpty || args[0]['id'] == null) {
           final errorMsg = 'Missing required parameter "id"';
           log('[PDA Handler Error] $errorMsg');
@@ -233,7 +237,8 @@ class WebviewHandlers {
 
     webview.addJavaScriptHandler(
       handlerName: 'getNotification',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (args.isEmpty || args[0]['id'] == null) {
           final errorMsg = 'Missing required parameter "id"';
           log('[PDA Handler Error] $errorMsg');
@@ -281,7 +286,8 @@ class WebviewHandlers {
 
     webview.addJavaScriptHandler(
       handlerName: 'setAlarm',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (args.isEmpty || args[0]['timestamp'] == null) {
           const errorMsg = 'Missing required parameter: timestamp';
           log('[Alarm Handler] $errorMsg');
@@ -308,7 +314,8 @@ class WebviewHandlers {
 
     webview.addJavaScriptHandler(
       handlerName: 'setTimer',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (!Platform.isAndroid) {
           const errorMsg = 'Error: Timers are only supported on Android';
           log('[Timer Handler] $errorMsg');
@@ -338,7 +345,7 @@ class WebviewHandlers {
 
     webview.addJavaScriptHandler(
       handlerName: 'getPlatform',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
         String platform;
         if (Platform.isAndroid) {
           platform = 'Android';
@@ -363,7 +370,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'loadoutChangeHandler',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (args.isNotEmpty) {
           final String message = args[0];
           if (message.contains("equippedSet")) {
@@ -405,7 +413,8 @@ class WebviewHandlers {
     // HTTP GET Handler
     webview.addJavaScriptHandler(
       handlerName: 'PDA_httpGet',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         final http.Response resp = await http.get(
           WebUri(args[0]),
           headers: Map<String, String>.from(args[1]),
@@ -417,7 +426,8 @@ class WebviewHandlers {
     // HTTP POST Handler
     webview.addJavaScriptHandler(
       handlerName: 'PDA_httpPost',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         Object? body = args[2];
         if (body is Map<String, dynamic>) {
           body = Map<String, String>.from(body);
@@ -434,7 +444,8 @@ class WebviewHandlers {
     // HTTP PUT Handler
     webview.addJavaScriptHandler(
       handlerName: 'PDA_httpPut',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         Object? body = args[2];
         if (body is Map<String, dynamic>) {
           body = Map<String, String>.from(body);
@@ -451,7 +462,8 @@ class WebviewHandlers {
     // HTTP DELETE Handler
     webview.addJavaScriptHandler(
       handlerName: 'PDA_httpDelete',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         final http.Response resp = await http.delete(
           WebUri(args[0]),
           headers: Map<String, String>.from(args[1]),
@@ -463,7 +475,8 @@ class WebviewHandlers {
     // HTTP PATCH Handler
     webview.addJavaScriptHandler(
       handlerName: 'PDA_httpPatch',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         Object? body = args[2];
         if (body is Map<String, dynamic>) {
           body = Map<String, String>.from(body);
@@ -480,7 +493,8 @@ class WebviewHandlers {
     // Evaluate JavaScript Handler
     webview.addJavaScriptHandler(
       handlerName: 'PDA_evaluateJavascript',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         webview.evaluateJavascript(source: args[0]);
         return;
       },
@@ -503,7 +517,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'showToast',
-      callback: (args) {
+      callback: (JavaScriptHandlerFunctionData data) {
+        final args = data.args;
         final params = args.isNotEmpty && args[0] is Map ? args[0] as Map : {};
 
         final String? text = params['text'] as String?;
@@ -559,7 +574,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'launchIntent',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (args.isEmpty || args[0] is! String || (args[0] as String).isEmpty) {
           log('[launchIntent Handler] Error: No URL provided');
           return {'success': false, 'error': 'A non-empty URL string must be provided'};
@@ -618,7 +634,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'tornPDAExitFullScreen',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         try {
           if (args.isNotEmpty && args[0] == 'exit') {
             exitFullScreenCallback();
@@ -638,7 +655,8 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'shareFile',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         try {
           if (args.isEmpty || args[0] is! Map) {
             return {'status': 'error', 'message': 'Invalid arguments'};
@@ -690,20 +708,21 @@ class WebviewHandlers {
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'quickItemPicker',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         if (args.isEmpty || args[0] is! Map) {
           return {'status': 'error', 'message': 'Invalid arguments'};
         }
 
-        final Map data = args[0] as Map;
-        final int? itemNumber = int.tryParse('${data['item']}');
-        final String instanceId = data['instanceId']?.toString() ?? '';
+        final Map payload = args[0] as Map;
+        final int? itemNumber = int.tryParse('${payload['item']}');
+        final String instanceId = payload['instanceId']?.toString() ?? '';
 
         if (itemNumber == null) {
           return {'status': 'error', 'message': 'Missing item number'};
         }
 
-        final qtyRaw = data['qty'];
+        final qtyRaw = payload['qty'];
         final int? quantity = qtyRaw is int
             ? qtyRaw
             : qtyRaw is num
@@ -713,14 +732,14 @@ class WebviewHandlers {
         final equipData = QuickItemEquipScanData(
           instanceId: instanceId,
           quantity: quantity,
-          name: data['name'] as String?,
-          category: data['category'] as String?,
-          equipped: data['equipped'] as bool?,
-          damage: data['damage'] is num ? (data['damage'] as num).toDouble() : null,
-          accuracy: data['accuracy'] is num ? (data['accuracy'] as num).toDouble() : null,
-          defense: data['defense'] is num ? (data['defense'] as num).toDouble() : null,
-          armoryId: data['armoryId']?.toString(),
-          rowKey: data['rowKey']?.toString(),
+          name: payload['name'] as String?,
+          category: payload['category'] as String?,
+          equipped: payload['equipped'] as bool?,
+          damage: payload['damage'] is num ? (payload['damage'] as num).toDouble() : null,
+          accuracy: payload['accuracy'] is num ? (payload['accuracy'] as num).toDouble() : null,
+          defense: payload['defense'] is num ? (payload['defense'] as num).toDouble() : null,
+          armoryId: payload['armoryId']?.toString(),
+          rowKey: payload['rowKey']?.toString(),
         );
 
         final result = quickItemsProvider.addPickedItem(itemNumber: itemNumber, data: equipData);
@@ -771,17 +790,18 @@ class WebviewHandlers {
 
     webview.addJavaScriptHandler(
       handlerName: 'quickItemMassUpdate',
-      callback: (args) async {
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
         // Kill switch: ignore inventory updates when disabled via Remote Config or user toggle
         if (!settingsProvider.quickItemsInventoryCheckEnabled) return;
         if (quickItemsProvider.hideInventoryCount) return;
 
         if (args.isEmpty || args[0] is! Map) return;
-        final data = args[0] as Map;
-        final originalName = data['originalName'] as String?;
-        final foundName = data['foundName'] as String?;
-        final qty = data['qty'] is int ? data['qty'] as int : int.tryParse('${data['qty']}');
-        final rowKey = data['rowKey'] as String?;
+        final payload = args[0] as Map;
+        final originalName = payload['originalName'] as String?;
+        final foundName = payload['foundName'] as String?;
+        final qty = payload['qty'] is int ? payload['qty'] as int : int.tryParse('${payload['qty']}');
+        final rowKey = payload['rowKey'] as String?;
 
         // log('[QuickItemMassUpdate] DEBUG: Received $originalName -> found: $foundName, qty: $qty, rowKey: $rowKey');
 

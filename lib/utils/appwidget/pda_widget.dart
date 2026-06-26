@@ -512,8 +512,9 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
         String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-        if (statusDescription.contains("Traveling to")) {
-          statusDescription = statusDescription.replaceAll("Traveling to ", "");
+        if (getTravelDirection(description: statusDescription) == TravelDirection.outbound) {
+          // Destination is resolved via countryCheck (handles both old and new API formats)
+          statusDescription = country;
 
           // Shorten certain destinations so that we leave as much space as possible for the time
           statusDescription = statusDescription.replaceAll("Cayman Islands", "Cayman");
@@ -539,7 +540,7 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     } else {
       // Country is reported as Torn
 
-      if (statusDescription.contains("Returning to")) {
+      if (getTravelDirection(description: statusDescription) == TravelDirection.returning) {
         // Are we flying back?
         var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(user.travel!.timestamp! * 1000);
         var timeDifference = dateTimeArrival.difference(DateTime.now());

@@ -68,6 +68,8 @@ class EstimatedStatsPayload {
     required this.otherLastActionRelative,
     required this.themeProvider,
     this.estimatedStatsRange = '',
+    this.awardsCompare,
+    this.awardsColor,
   });
 
   final int xanaxCompare;
@@ -88,6 +90,8 @@ class EstimatedStatsPayload {
   final String otherLastActionRelative;
   final ThemeProvider themeProvider;
   final String estimatedStatsRange;
+  final int? awardsCompare;
+  final Color? awardsColor;
 }
 
 class FFScouterStatsPayload {

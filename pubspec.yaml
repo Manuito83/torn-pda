@@ -12,11 +12,11 @@ publish_to: none
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 3.13.4+650
+version: 3.14.0+657
 
 environment:
-  sdk: ">=3.0.0"
-  flutter: ">=3.3.0"
+  sdk: ">=3.10.0"
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
@@ -30,14 +30,14 @@ dependencies:
   audioplayers: 6.5.0
   auth_buttons: 3.0.3
   bot_toast: 4.1.3
-  cloud_firestore: 6.0.1
-  cloud_functions: 6.0.1
+  cloud_firestore: 6.6.0
+  cloud_functions: 6.3.3
   collection: 1.19.1
   connectivity_plus: 6.1.5
-  cookie_jar: 4.0.8
-  crypto: 3.0.6
+  cookie_jar: 4.0.9
+  crypto: 3.0.7
   csv: 6.0.0
-  cupertino_icons: 1.0.8
+  cupertino_icons: 1.0.9
   dart_ping: 9.0.1
   dart_ping_ios: 4.0.2
   dbcrypt: 2.0.0
@@ -49,34 +49,34 @@ dependencies:
   expandable: 5.0.1
   file_picker: 10.3.1
   file_saver: 0.3.1
-  firebase_analytics: 12.0.1
-  firebase_auth: 6.0.2
-  firebase_core: 4.5.0
-  firebase_crashlytics: 5.0.1
-  firebase_database: 12.0.1
-  firebase_messaging: 16.1.2
-  firebase_remote_config: 6.0.1
+  firebase_analytics: 12.4.3
+  firebase_auth: 6.5.4
+  firebase_core: 4.11.0
+  firebase_crashlytics: 5.2.4
+  firebase_database: 12.4.4
+  firebase_messaging: 16.4.1
+  firebase_remote_config: 6.5.3
   fl_chart: 1.0.0
   flex_color_picker: 3.7.1
   sembast: 3.8.6
-  flutter_font_icons: 2.2.7
-  flutter_inappwebview: 6.1.5
+  flutter_font_icons: 3.0.0
+  flutter_inappwebview: 6.2.0-beta.3
   flutter_local_notifications: 19.4.0
   flutter_secure_storage: ^10.0.0
-  flutter_slidable: 4.0.0
+  flutter_slidable: 4.0.3
   flutter_speed_dial: 7.0.0
-  flutter_svg: 2.2.0
+  flutter_svg: 2.2.4
   flutter_timezone: 4.1.1
   flutter_xlider: 3.5.0
-  font_awesome_flutter: 10.8.0
+  font_awesome_flutter: 11.0.0
   # Temporary as per https://github.com/jonataslaw/getx/issues/3100
-  get: 5.0.0-release-candidate-9.3.2
+  get: 5.0.0-release-candidate-9.3.3
   google_sign_in: 7.1.0
   home_widget:
     git:
       url: https://github.com/Manuito83/home_widget.git
-      ## branch pda-dev-0.8.0
-      ref: 85c37faa6cc62cd237264a82602eafd4eef937b1
+      ## branch pda-dev-0.9.2
+      ref: 0de8dc63df940cd70453b9d05465836a24a226ce
       path: packages/home_widget
   html: 0.15.6
   http: 1.5.0
@@ -84,12 +84,12 @@ dependencies:
   intl: 0.20.2
   json_annotation: 4.9.0 # Used by swagger_dart_code_generator
   lints: 6.0.0
-  flutter_material_design_icons: 1.1.7447
+  flutter_material_design_icons: 3.1.0+7447
   path_provider: 2.1.5
   ## Bug submitted for v4.2.5 (plane icon out of place)
   percent_indicator: 4.2.3
   flutter_refresh_rate_control: ^0.0.4+1
-  provider: 6.1.5
+  provider: 6.1.5+1
   pull_to_refresh: 2.0.0
   quick_actions: 1.1.0
   receive_intent:
@@ -97,10 +97,10 @@ dependencies:
       url: https://github.com/daadu/receive_intent
       ref: master
   rxdart: 0.28.0
-  synchronized: 3.4.0
+  synchronized: 3.4.0+1
   sendbird_chat_sdk: 4.7.0
   share_plus: 12.0.0
-  shared_preferences: 2.5.3
+  shared_preferences: 2.5.5
   showcaseview: 4.0.1
   sign_in_with_apple: 7.0.1
   timeline_tile: 2.0.0
@@ -108,35 +108,44 @@ dependencies:
   toastification: 3.0.3
   toggle_switch: 2.3.0
   uri_to_file: 1.0.0
-  url_launcher: 6.3.1
+  url_launcher: 6.3.2
   uuid: ^4.5.1
-  vibration: 3.1.4
+  vibration: 3.1.8
   wakelock_plus: 1.4.0
   webview_flutter: 4.13.0
   workmanager: 0.9.0+3
 
-#dependency_overrides:
-  #flutter_inappwebview: 6.1.5
-  #flutter_inappwebview:
-  #  git:
-  #    url: https://github.com/Manuito83/flutter_inappwebview.git
-  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
-  #    path: ./flutter_inappwebview
-  #flutter_inappwebview_platform_interface:
-  #  git:
-  #    url: https://github.com/Manuito83/flutter_inappwebview.git
-  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
-  #    path: ./flutter_inappwebview_platform_interface
-  #flutter_inappwebview_android:
-  #  git:
-  #    url: https://github.com/Manuito83/flutter_inappwebview.git
-  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
-  #    path: ./flutter_inappwebview_android
-  #flutter_inappwebview_ios:
-  #  git:
-  #    url: https://github.com/Manuito83/flutter_inappwebview.git
-  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
-  #    path: ./flutter_inappwebview_ios
+# Fork of flutter_inappwebview 6.2.0-beta.3 (branch torn-pda-dev, which merges
+# two independent fixes, each tracked in its own branch and upstream PR):
+#   1. Android: defer the JS bridge native registrations (addJavascriptInterface,
+#      addDocumentStartJavaScript) and the initial load IPC off the platform-view
+#      attach. Without this, onWebViewCreated fails to fire on 50% of release-build
+#      cold starts on Android, and on the launches where it does fire the bridge can
+#      race against the load IPC so @document-start userscripts see
+#      window.flutter_inappwebview undefined on cached or sleeping-tab pages.
+#   2. iOS: serialize console arguments so objects and Errors keep their data in the
+#      console bridge (previously coerced to [object Object] / message-less Errors).
+dependency_overrides:
+  flutter_inappwebview:
+    git:
+      url: https://github.com/Manuito83/flutter_inappwebview.git
+      ref: 1e1f84daec54a822980068d159acd36e43c61df2
+      path: ./flutter_inappwebview
+  flutter_inappwebview_platform_interface:
+    git:
+      url: https://github.com/Manuito83/flutter_inappwebview.git
+      ref: 1e1f84daec54a822980068d159acd36e43c61df2
+      path: ./flutter_inappwebview_platform_interface
+  flutter_inappwebview_android:
+    git:
+      url: https://github.com/Manuito83/flutter_inappwebview.git
+      ref: 1e1f84daec54a822980068d159acd36e43c61df2
+      path: ./flutter_inappwebview_android
+  flutter_inappwebview_ios:
+    git:
+      url: https://github.com/Manuito83/flutter_inappwebview.git
+      ref: 1e1f84daec54a822980068d159acd36e43c61df2
+      path: ./flutter_inappwebview_ios
 
 dev_dependencies:
   build_runner: ^2.7.1
@@ -167,6 +176,13 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Disable SwiftPM at the project level. Several Firebase plugins (cloud_firestore 6.0.1,
+  # firebase_messaging 16.1.2) currently pin incompatible flutterfire SPM versions, which
+  # breaks `flutter build ios` when SwiftPM is enabled by default in Flutter 3.44.
+  # Re-enable once Firebase plugins align their SPM constraints.
+  config:
+    enable-swift-package-manager: false
 
   # To add assets to your application, add an assets section, like this:
   assets:

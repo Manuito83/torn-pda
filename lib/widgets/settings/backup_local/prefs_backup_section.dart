@@ -95,7 +95,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
     final ctl = TextEditingController();
     return showDialog<String>(
       context: ctx,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,8 +147,8 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
         ),
         content: TextField(controller: ctl, autofocus: true, maxLength: 20),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(_, null), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(_, ctl.text), child: const Text('OK')),
+          TextButton(onPressed: () => Navigator.pop(dialogCtx, null), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogCtx, ctl.text), child: const Text('OK')),
         ],
       ),
     );
@@ -162,7 +162,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
     final choice = await showDialog<String>(
       context: ctx,
       barrierDismissible: false,
-      builder: (_) => StatefulBuilder(
+      builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setStateDialog) {
           return AlertDialog(
             title: const Text('Create local backup'),
@@ -218,11 +218,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
                     Text(
                       '\nWARNING: if configured, your API Key, alternative API keys for external providers, email address, etc.,'
                       ' will be included in the backup\n\nDO NOT SHARE IT WITH OTHERS!',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        color: warnColor,
-                      ),
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: warnColor),
                     ),
                     const SizedBox(height: 10),
                     TextField(
@@ -248,17 +244,14 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(_, null),
-                child: const Text('Cancel'),
-              ),
+              TextButton(onPressed: () => Navigator.pop(dialogCtx, null), child: const Text('Cancel')),
               ElevatedButton.icon(
-                onPressed: () => Navigator.pop(_, 'local'),
+                onPressed: () => Navigator.pop(dialogCtx, 'local'),
                 icon: const Icon(Icons.save),
                 label: const Text('Local Save'),
               ),
               ElevatedButton.icon(
-                onPressed: () => Navigator.pop(_, 'other'),
+                onPressed: () => Navigator.pop(dialogCtx, 'other'),
                 icon: const Icon(Icons.share),
                 label: const Text('Other Apps'),
               ),
@@ -284,22 +277,14 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
     }
   }
 
-  Future<void> _savePrefsToDisk(
-    BuildContext ctx, {
-    required String? key,
-    required BackupExportMode mode,
-  }) async {
+  Future<void> _savePrefsToDisk(BuildContext ctx, {required String? key, required BackupExportMode mode}) async {
     final result = await PrefsBackupWidget.createBackup(key: key, mode: mode);
     if (result != null) {
       _showToast('Backup saved', ToastificationType.success);
     }
   }
 
-  Future<void> _saveWithShareIntent(
-    BuildContext ctx, {
-    required String? key,
-    required BackupExportMode mode,
-  }) async {
+  Future<void> _saveWithShareIntent(BuildContext ctx, {required String? key, required BackupExportMode mode}) async {
     final data = await PrefsBackupService.exportPrefs(key: key, mode: mode);
 
     // Create timestamp similar to the static method
@@ -317,10 +302,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
         ? renderObject.localToGlobal(Offset.zero) & renderObject.size
         : const Rect.fromLTWH(0, 0, 1, 1);
 
-    final shareParams = ShareParams(
-      files: [XFile(file.path)],
-      sharePositionOrigin: shareOrigin,
-    );
+    final shareParams = ShareParams(files: [XFile(file.path)], sharePositionOrigin: shareOrigin);
     final res = await SharePlus.instance.share(shareParams);
 
     if (res.status == ShareResultStatus.success) {
@@ -363,13 +345,15 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
 
       final confirm = await showDialog<bool>(
         context: ctx,
-        builder: (_) => AlertDialog(
+        builder: (dialogCtx) => AlertDialog(
           title: const Text('Confirm restore'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Identified $backupKeys saved preferences in this file.'
-                  '\n\nRestore on next launch?'),
+              Text(
+                'Identified $backupKeys saved preferences in this file.'
+                '\n\nRestore on next launch?',
+              ),
               if (inspection.mode == BackupExportMode.shareable)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
@@ -393,8 +377,8 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(_, false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(_, true), child: const Text('OK')),
+            TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('OK')),
           ],
         ),
       );
@@ -454,10 +438,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Backup reminders'),
-                  Text(
-                    'Remind to create backups every 90 days',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                  Text('Remind to create backups every 90 days', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),
             ),

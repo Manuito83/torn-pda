@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_cache_model.dart';
+import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/external/ffscouter_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -122,16 +123,15 @@ class FFScouterCacheController extends GetxController {
       for (int i = 0; i < staleIds.length; i += 205) {
         final chunk = staleIds.sublist(i, (i + 205).clamp(0, staleIds.length));
 
-        final result = await FFScouterComm.getStats(
-          key: u.alternativeFFScouterKey,
-          targetIds: chunk,
-        );
+        final result = await FFScouterComm.getStats(key: u.alternativeFFScouterKey, targetIds: chunk);
 
         if (result.success && result.data != null) {
           keyNotRegistered = false;
           final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          bool premiumSeen = false;
           for (final stat in result.data!) {
             if (stat.playerId == null) continue;
+            if (stat.provesPremium) premiumSeen = true;
             _cache[stat.playerId!] = FFScouterCacheEntry(
               playerId: stat.playerId!,
               bsEstimate: stat.bsEstimate,
@@ -139,8 +139,16 @@ class FFScouterCacheController extends GetxController {
               fairFight: stat.fairFight,
               lastUpdatedByFFScouter: stat.lastUpdated,
               cachedAt: now,
+              bssPublic: stat.bssPublic,
+              source: stat.source,
+              premiumInsightsAvailable: stat.premiumInsightsAvailable,
+              distribution: stat.distribution,
             );
             totalFetched++;
+          }
+          // premium-only payload => premium
+          if (premiumSeen && Get.isRegistered<FFScouterPremiumController>()) {
+            Get.find<FFScouterPremiumController>().markPremiumDetected();
           }
         } else if (result.errorCode == 6) {
           // API key not registered — set the flag so UI can react

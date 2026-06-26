@@ -126,7 +126,7 @@ class UserScriptModel {
     }
     return UserScriptModel(
       name: name ?? metaMap["name"],
-      version: metaMap["version"] ?? 0,
+      version: metaMap["version"] ?? "0.0.0",
       source: source ?? metaMap["source"],
       matches: metaMap["matches"] ?? ["*"],
       url: url ?? metaMap["downloadURL"],

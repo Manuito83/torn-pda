@@ -83,6 +83,12 @@ class Prefs {
   final String _kFFScouterStatsCache = "pda_ffScouterStatsCache";
   final String _kPreferFFScouterOverEstimated = "pda_preferFFScouterOverEstimated";
   final String _kFfsOverrideSpyMonths = "pda_ffsOverrideSpyMonths";
+  final String _kFFScouterPremiumActive = "pda_ffScouterPremiumActive";
+  final String _kFFScouterPremiumPromoDismissed = "pda_ffScouterPremiumPromoDismissed";
+  final String _kFFScouterPremiumLastChecked = "pda_ffScouterPremiumLastChecked";
+  final String _kFFScouterPremiumDistribution = "pda_ffScouterPremiumDistribution";
+  final String _kFFScouterPremiumFlights = "pda_ffScouterPremiumFlights";
+  final String _kFFScouterPremiumActivity = "pda_ffScouterPremiumActivity";
   final String _kFactionAssistPrefs = "pda_factionAssistPrefs";
 
   // Other
@@ -138,7 +144,7 @@ class Prefs {
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
-  final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
+  final String _kAndroidBrowserTextZoom = "pda_androidBrowserTextZoom";
 
   // Webview FAB
   final String _kWebviewFabEnabled = "pda_webviewFabEnabled";
@@ -182,6 +188,8 @@ class Prefs {
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
   final String _kPreventBasketKeyboard = "pda_preventBasketKeyboard";
+  final String _kCityShopsBuyMaxEnabled = "pda_cityShopsBuyMaxEnabled";
+  final String _kForeignStocksBuyMaxEnabled = "pda_foreignStocksBuyMaxEnabled";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
@@ -202,6 +210,7 @@ class Prefs {
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
   final String _kBlacklistedForeignStockItems = "pda_blacklistedForeignStockItems";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
+  final String _kStockAutoFilterOnTravel = "pda_stockAutoFilterOnTravel";
   final String _kRestocksEnabled = "pda_restocksEnabled";
 
   // Profile notifications
@@ -217,6 +226,8 @@ class Prefs {
   final String _kMedicalNotificationType = "pda_medicalNotificationType";
   final String _kEducationNotificationType = "pda_educationNotificationType";
   final String _kEducationBarEnabled = "pda_educationBarEnabled";
+  final String _kVirusNotificationType = "pda_virusNotificationType";
+  final String _kVirusBarEnabled = "pda_virusBarEnabled";
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kHospitalNotificationType = "pda_hospitalNotificationType";
   final String _kHospitalNotificationAhead = "pda_hospitalNotificationAhead";
@@ -1370,12 +1381,12 @@ class Prefs {
     return await PrefsDatabase.setInt(_kAndroidBrowserScale, value);
   }
 
-  Future<int> getAndroidBrowserTextScale() async {
-    return await PrefsDatabase.getInt(_kAndroidBrowserTextScale, 8);
+  Future<int> getAndroidBrowserTextZoom() async {
+    return await PrefsDatabase.getInt(_kAndroidBrowserTextZoom, 100);
   }
 
-  Future setAndroidBrowserTextScale(int value) async {
-    return await PrefsDatabase.setInt(_kAndroidBrowserTextScale, value);
+  Future setAndroidBrowserTextZoom(int value) async {
+    return await PrefsDatabase.setInt(_kAndroidBrowserTextZoom, value);
   }
 
   // Settings - Browser FAB
@@ -1824,6 +1835,22 @@ class Prefs {
     return await PrefsDatabase.setBool(_kPreventBasketKeyboard, value);
   }
 
+  Future<bool> getCityShopsBuyMaxEnabled() async {
+    return await PrefsDatabase.getBool(_kCityShopsBuyMaxEnabled, true);
+  }
+
+  Future setCityShopsBuyMaxEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kCityShopsBuyMaxEnabled, value);
+  }
+
+  Future<bool> getForeignStocksBuyMaxEnabled() async {
+    return await PrefsDatabase.getBool(_kForeignStocksBuyMaxEnabled, true);
+  }
+
+  Future setForeignStocksBuyMaxEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kForeignStocksBuyMaxEnabled, value);
+  }
+
   Future<bool> getRemoveTravelQuickReturnButton() async {
     return await PrefsDatabase.getBool(_kRemoveTravelQuickReturnButton, false);
   }
@@ -2084,6 +2111,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kCountriesAlphabeticalFilter, value);
   }
 
+  Future<bool> getStockAutoFilterOnTravel() async {
+    return await PrefsDatabase.getBool(_kStockAutoFilterOnTravel, true);
+  }
+
+  Future setStockAutoFilterOnTravel(bool value) async {
+    return await PrefsDatabase.setBool(_kStockAutoFilterOnTravel, value);
+  }
+
   /// ----------------------------
   /// Methods for manual alarms (Android)
   /// ----------------------------
@@ -2211,6 +2246,22 @@ class Prefs {
 
   Future setEducationBarEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kEducationBarEnabled, value);
+  }
+
+  Future<String> getVirusNotificationType() async {
+    return await PrefsDatabase.getString(_kVirusNotificationType, '0');
+  }
+
+  Future setVirusNotificationType(String value) async {
+    return await PrefsDatabase.setString(_kVirusNotificationType, value);
+  }
+
+  Future<bool> getVirusBarEnabled() async {
+    return await PrefsDatabase.getBool(_kVirusBarEnabled, true);
+  }
+
+  Future setVirusBarEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kVirusBarEnabled, value);
   }
 
   Future<String> getHospitalNotificationType() async {
@@ -3344,6 +3395,54 @@ class Prefs {
 
   Future setPreferFFScouterOverEstimated(bool value) async {
     return await PrefsDatabase.setBool(_kPreferFFScouterOverEstimated, value);
+  }
+
+  Future<bool> getFFScouterPremiumActive() async {
+    return await PrefsDatabase.getBool(_kFFScouterPremiumActive, false);
+  }
+
+  Future setFFScouterPremiumActive(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPremiumActive, value);
+  }
+
+  Future<bool> getFFScouterPremiumPromoDismissed() async {
+    return await PrefsDatabase.getBool(_kFFScouterPremiumPromoDismissed, false);
+  }
+
+  Future setFFScouterPremiumPromoDismissed(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPremiumPromoDismissed, value);
+  }
+
+  Future<int> getFFScouterPremiumLastChecked() async {
+    return await PrefsDatabase.getInt(_kFFScouterPremiumLastChecked, 0);
+  }
+
+  Future setFFScouterPremiumLastChecked(int value) async {
+    return await PrefsDatabase.setInt(_kFFScouterPremiumLastChecked, value);
+  }
+
+  Future<bool> getFFScouterPremiumDistribution() async {
+    return await PrefsDatabase.getBool(_kFFScouterPremiumDistribution, true);
+  }
+
+  Future setFFScouterPremiumDistribution(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPremiumDistribution, value);
+  }
+
+  Future<bool> getFFScouterPremiumFlights() async {
+    return await PrefsDatabase.getBool(_kFFScouterPremiumFlights, true);
+  }
+
+  Future setFFScouterPremiumFlights(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPremiumFlights, value);
+  }
+
+  Future<bool> getFFScouterPremiumActivity() async {
+    return await PrefsDatabase.getBool(_kFFScouterPremiumActivity, true);
+  }
+
+  Future setFFScouterPremiumActivity(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPremiumActivity, value);
   }
 
   /// 0 = Off (FFS never overrides spied). 1-12 = months threshold.

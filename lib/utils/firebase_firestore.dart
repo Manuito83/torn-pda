@@ -138,6 +138,34 @@ class FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToAbroadStayNotification(bool? subscribe) async {
+    final Map<String, Object?> update = {
+      "abroadStayNotification": subscribe,
+    };
+    // When disabling, also clear the per-stay tracking so the next activation
+    // starts fresh instead of resuming from a stale landing timestamp
+    if (subscribe != true) {
+      update["abroadLandingTs"] = 0;
+      update["abroadIntervalsSent"] = <int>[];
+    }
+    await _firestore.collection("players").doc(_uid).update(update);
+  }
+
+  Future<void> setAbroadStayIntervals(List<int> intervalsMinutes) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "abroadStayIntervals": intervalsMinutes,
+      // A change to the interval list invalidates any previously-sent flags
+      // for the current stay so the user gets the new schedule from now on
+      "abroadIntervalsSent": <int>[],
+    });
+  }
+
+  Future<void> setAbroadStayIncludeHospital(bool include) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "abroadStayIncludeHospital": include,
+    });
+  }
+
   Future<DocumentSnapshot> getStockInformation(String codeName) async {
     return _firestore.collection("stocks-main").doc(codeName).get();
   }

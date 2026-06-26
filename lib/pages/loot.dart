@@ -57,6 +57,20 @@ class LootPageState extends State<LootPage> {
   static const List<String> _lootAlarmAheadAllowedAndroid = ["exact", "0", "1", "2", "3", "4", "5", "6"];
   static const List<String> _lootTimerAheadAllowed = ["exact", "0", "1", "2", "3", "4", "5", "6", "7"];
 
+  // Short cache
+  // Note: pull-to-refresh always bypasses this
+  static const Duration _cacheTTL = Duration(seconds: 10);
+  static DateTime? _cacheTimestamp;
+  static List<String>? _cachedNpcIds;
+  static Map<String, int>? _cachedDbLootInfo;
+  static bool? _cachedDbLootRangersEnabled;
+  static Map<String, LootModel>? _cachedMainLootInfo;
+  static int _cachedLrTime = 0;
+  static bool _cachedLrAttackOngoing = false;
+  static String _cachedLrClearReason = "";
+  static List<String> _cachedLrIdOrder = const [];
+  static List<String?> _cachedLrNameOrder = const [];
+
   var _npcIds = <String>[];
   var _filterOutIds = <String>[];
   final _images = <NpcImagesModel>[];
@@ -100,14 +114,55 @@ class LootPageState extends State<LootPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    // LR fetch is folded into _getLoot's first-load branch so the cache can skip it too.
     _getInitialLootInformation = _getLoot();
-    _getLootRangers();
     analytics?.logScreenView(screenName: 'loot');
 
     routeWithDrawer = true;
     routeName = "loot";
 
     _tickerUpdateTimes = Timer.periodic(const Duration(seconds: 1), (Timer t) => _getLoot());
+  }
+
+  bool _isCacheFresh() {
+    final ts = _cacheTimestamp;
+    if (ts == null) return false;
+    if (_cachedMainLootInfo == null || _cachedNpcIds == null) return false;
+    return DateTime.now().difference(ts) < _cacheTTL;
+  }
+
+  void _restoreFromCache() {
+    _npcIds = List<String>.from(_cachedNpcIds!);
+    _dbLootInfo
+      ..clear()
+      ..addAll(_cachedDbLootInfo ?? const {});
+    _dbLootRangersEnabled = _cachedDbLootRangersEnabled;
+    _mainLootInfo = lootModelFromJson(lootModelToJson(_cachedMainLootInfo!));
+
+    _lootRangersTime = _cachedLrTime;
+    _lootRangersAttackOngoing = _cachedLrAttackOngoing;
+    _lootRangersClearAtZeroReason = _cachedLrClearReason;
+    _lootRangersIdOrder
+      ..clear()
+      ..addAll(_cachedLrIdOrder);
+    _lootRangersNameOrder
+      ..clear()
+      ..addAll(_cachedLrNameOrder);
+  }
+
+  void _saveSnapshotToCache() {
+    _cachedNpcIds = List<String>.from(_npcIds);
+    _cachedDbLootInfo = Map<String, int>.from(_dbLootInfo);
+    _cachedDbLootRangersEnabled = _dbLootRangersEnabled;
+    _cachedMainLootInfo = lootModelFromJson(lootModelToJson(_mainLootInfo));
+
+    _cachedLrTime = _lootRangersTime;
+    _cachedLrAttackOngoing = _lootRangersAttackOngoing;
+    _cachedLrClearReason = _lootRangersClearAtZeroReason;
+    _cachedLrIdOrder = List<String>.from(_lootRangersIdOrder);
+    _cachedLrNameOrder = List<String?>.from(_lootRangersNameOrder);
+
+    _cacheTimestamp = DateTime.now();
   }
 
   @override
@@ -141,7 +196,7 @@ class LootPageState extends State<LootPage> {
               if (_apiSuccess) {
                 return RefreshIndicator(
                   onRefresh: () async {
-                    await _getLoot();
+                    await _getLoot(forcePullToRefreshFetch: true);
                     _getLootRangers();
                     await Future.delayed(const Duration(seconds: 1));
                   },
@@ -1102,26 +1157,30 @@ class LootPageState extends State<LootPage> {
     );
   }
 
-  Future _getLoot() async {
+  Future _getLoot({bool forcePullToRefreshFetch = false}) async {
     try {
       final tsNow = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
       if (_firstLoad) {
         _firstLoad = false;
-        // Load notifications preferences
+        // Local-only setup (no network)
         await _loadPreferences();
-        // See if there is any pending notification (to paint the icon in green)
         await _retrievePendingNotifications();
         await _refreshAlarmKitActiveIOS();
 
-        // Get real time database and Torn (which fills level info)
-        final dbSuccess = await _fetchDatabase();
-        final tornSuccess = await _updateWithTornApi(tsNow);
-
-        if (dbSuccess && tornSuccess) {
+        if (_isCacheFresh()) {
+          // Skip the full first-load
+          _restoreFromCache();
           _apiSuccess = true;
         } else {
-          _apiSuccess = false;
+          // Fire Loot Rangers in parallel with the Firebase + Torn
+          final lrFuture = _getLootRangers();
+          final dbSuccess = await _fetchDatabase();
+          final tornSuccess = await _updateWithTornApi(tsNow);
+          await lrFuture;
+
+          _apiSuccess = dbSuccess && tornSuccess;
+          if (_apiSuccess) _saveSnapshotToCache();
         }
 
         _mainLootInfo.forEach((key, value) {
@@ -1135,9 +1194,9 @@ class LootPageState extends State<LootPage> {
           );
         });
       } else {
-        // We update Torn every 30 seconds, in case there are some changes
-        _tornTicks++;
-        if (_tornTicks > 40) {
+        // Refresh Torn data every 60 seconds
+        // Except for [forcePullToRefreshFetch]...
+        if (forcePullToRefreshFetch || _tornTicks > 60) {
           await _cancelPassedNotifications();
           await _updateWithTornApi(tsNow);
           _tornTicks = 0;

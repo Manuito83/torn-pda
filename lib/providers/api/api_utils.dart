@@ -38,6 +38,7 @@ enum ApiSelection_v2 {
   marketItem,
   userMarketItems,
   userProfileMisc,
+  userVirus,
   otherUserProfile,
   tornCalendar,
   userCalendar,

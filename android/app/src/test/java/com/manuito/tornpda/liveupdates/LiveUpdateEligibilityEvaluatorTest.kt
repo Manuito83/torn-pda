@@ -3,6 +3,7 @@ package com.manuito.tornpda.liveupdates
 import android.content.ContextWrapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -57,7 +58,9 @@ class LiveUpdateEligibilityEvaluatorTest {
     }
 
     @Test
-    fun promotedNotificationsDisabledProducesPromotedDisabledReason() {
+    fun promotedNotificationsDisabledStaysEligibleButFlagsSnapshot() {
+        // Promoted chip off must NOT block the notification: we still degrade to a
+        // normal ongoing notification. The snapshot just records the flag.
         val evaluator = createEvaluator(
             apiLevel = 40,
             notificationsAllowed = true,
@@ -67,8 +70,8 @@ class LiveUpdateEligibilityEvaluatorTest {
 
         val result = evaluator.evaluate()
 
-        assertFalse(result.eligible)
-        assertEquals(LiveUpdateUnsupportedReason.PROMOTED_DISABLED, result.reason)
+        assertTrue(result.eligible)
+        assertNull(result.reason)
         assertFalse(result.snapshot.promotedNotificationsEnabled)
     }
 

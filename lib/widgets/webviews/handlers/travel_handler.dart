@@ -76,10 +76,13 @@ class ForeignStocksWebviewHandler {
   Future<void> _handleTravelUI() async {
     final shouldHideInfo = await Prefs().getRemoveForeignItemsDetails();
     final preventBasketKeyboard = await Prefs().getPreventBasketKeyboard();
+    final foreignStocksBuyMaxEnabled = await Prefs().getForeignStocksBuyMaxEnabled();
     if (shouldHideInfo) {
       await webViewController?.evaluateJavascript(source: hideItemInfoJS());
     }
-    await webViewController?.evaluateJavascript(source: buyMaxAbroadJS(preventBasketKeyboard: preventBasketKeyboard));
+    if (foreignStocksBuyMaxEnabled) {
+      await webViewController?.evaluateJavascript(source: buyMaxAbroadJS(preventBasketKeyboard: preventBasketKeyboard));
+    }
   }
 
   Future<void> _sendStockInformation(dom.Document document) async {

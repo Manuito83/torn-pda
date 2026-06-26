@@ -21,9 +21,7 @@ import 'package:torn_pda/widgets/stakeouts/stakeouts_info_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class StakeoutsPage extends StatefulWidget {
-  const StakeoutsPage({
-    super.key,
-  });
+  const StakeoutsPage({super.key});
 
   @override
   StakeoutsPageState createState() => StakeoutsPageState();
@@ -63,17 +61,14 @@ class StakeoutsPageState extends State<StakeoutsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return ShowCaseWidget(
-      builder: (_) {
-        _launchShowCases(_);
+      builder: (ctx) {
+        _launchShowCases(ctx);
         return Scaffold(
           backgroundColor: _themeProvider.canvas,
           drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-          appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
+          appBar: _settingsProvider.appBarTop ? buildAppBar(ctx) : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(_),
-                )
+              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar(ctx))
               : null,
           body: Container(
             color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
@@ -82,9 +77,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
               onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
               child: MediaQuery.orientationOf(context) == Orientation.portrait
                   ? _mainColumn()
-                  : SingleChildScrollView(
-                      child: _mainColumn(),
-                    ),
+                  : SingleChildScrollView(child: _mainColumn()),
             ),
           ),
         );
@@ -128,16 +121,8 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      children: [
-                        const Text("Alerts silenced until"),
-                        Text(sleepString!),
-                      ],
-                    ),
-                    ElevatedButton(
-                      onPressed: () => s.disableSleepStakeouts(),
-                      child: const Text("Deactivate"),
-                    ),
+                    Column(children: [const Text("Alerts silenced until"), Text(sleepString!)]),
+                    ElevatedButton(onPressed: () => s.disableSleepStakeouts(), child: const Text("Deactivate")),
                   ],
                 ),
               ),
@@ -146,22 +131,13 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                 padding: const EdgeInsets.fromLTRB(20, 100, 20, 0),
                 child: Column(
                   children: [
-                    const Text(
-                      "No stakeout targets!",
-                      textAlign: TextAlign.center,
-                    ),
+                    const Text("No stakeout targets!", textAlign: TextAlign.center),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Add your first one:",
-                          textAlign: TextAlign.center,
-                        ),
+                        const Text("Add your first one:", textAlign: TextAlign.center),
                         IconButton(
-                          icon: const Icon(
-                            MdiIcons.cameraPlusOutline,
-                            size: 30,
-                          ),
+                          icon: const Icon(MdiIcons.cameraPlusOutline, size: 30),
                           onPressed: () {
                             _showAddDialog();
                           },
@@ -214,10 +190,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
             if (_s.stakeouts.length >= 15) {
               BotToast.showText(
                 text: "You have reached a maximum of 15 stakeout targets!",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                 contentColor: Colors.grey[800]!,
                 duration: const Duration(seconds: 3),
                 contentPadding: const EdgeInsets.all(10),
@@ -280,9 +253,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -290,23 +261,12 @@ class StakeoutsPageState extends State<StakeoutsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
+                    padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                     margin: const EdgeInsets.only(top: 30),
                     decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                     ),
                     child: Form(
                       key: _addFormKey,
@@ -357,10 +317,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                                       text: tryAddStakeout.success
                                           ? 'Added ${tryAddStakeout.name} [${tryAddStakeout.id}]'
                                           : 'Error adding $inputId: ${tryAddStakeout.error}',
-                                      textStyle: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
+                                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                       contentColor: tryAddStakeout.success ? Colors.green : Colors.orange[700]!,
                                       duration: const Duration(seconds: 3),
                                       contentPadding: const EdgeInsets.all(10),
@@ -376,7 +333,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                                 },
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -391,14 +348,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                     child: CircleAvatar(
                       backgroundColor: Colors.black,
                       radius: 24,
-                      child: SizedBox(
-                        height: 28,
-                        width: 28,
-                        child: Icon(
-                          MdiIcons.cctv,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: SizedBox(height: 28, width: 28, child: Icon(MdiIcons.cctv, color: Colors.white)),
                     ),
                   ),
                 ),
@@ -412,25 +362,16 @@ class StakeoutsPageState extends State<StakeoutsPage> {
 }
 
 class StakeoutTargetsList extends StatelessWidget {
-  const StakeoutTargetsList({
-    required this.stakeoutsController,
-  });
+  const StakeoutTargetsList({required this.stakeoutsController});
 
   final StakeoutsController stakeoutsController;
 
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.orientationOf(context) == Orientation.portrait) {
-      return ListView(
-        shrinkWrap: true,
-        children: getCards(),
-      );
+      return ListView(shrinkWrap: true, children: getCards());
     } else {
-      return ListView(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        children: getCards(),
-      );
+      return ListView(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), children: getCards());
     }
   }
 
@@ -438,12 +379,7 @@ class StakeoutTargetsList extends StatelessWidget {
     List<StakeoutCard> stakeoutCards = <StakeoutCard>[];
 
     for (final stakeout in stakeoutsController.stakeouts) {
-      stakeoutCards.add(
-        StakeoutCard(
-          key: UniqueKey(),
-          stakeout: stakeout,
-        ),
-      );
+      stakeoutCards.add(StakeoutCard(key: UniqueKey(), stakeout: stakeout));
     }
 
     stakeoutsController.orderedCardsDetails.clear();

@@ -443,7 +443,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),

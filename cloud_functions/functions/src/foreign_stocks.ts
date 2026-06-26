@@ -12,6 +12,7 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
+import { FieldPath, FieldValue } from "firebase-admin/firestore";
 
 // API URLs
 const YATA_API_URL = "https://yata.yt/api/v1/travel/export/";
@@ -482,7 +483,7 @@ export const oneTimeClean = onSchedule({
 
   while (true) {
     let query = db.collection("stocks-main")
-      .orderBy(admin.firestore.FieldPath.documentId())
+      .orderBy(FieldPath.documentId())
       .limit(batchSize);
 
     if (lastDoc) {
@@ -539,8 +540,8 @@ export const oneTimeClean = onSchedule({
 export const deleteOldStocks = onSchedule({
   schedule: "0 4 * * 0",
   region: "us-east4",
-  memory: "256MiB",
-  timeoutSeconds: 300
+  memory: "512MiB",
+  timeoutSeconds: 540
 }, async () => {
   logger.info("🗑️ DELETEOLDSTOCKS STARTING");
 
@@ -619,6 +620,13 @@ export const deleteOldStocks = onSchedule({
 
     logger.info(`✅ Successfully deleted ${snapshot.size} old stocks (${totalStocksCount - snapshot.size} remaining)`);
 
+    const deletedCodeNames = snapshot.docs.map(doc => doc.id);
+    try {
+      await cleanupOrphanedUserAlerts(deletedCodeNames, IS_DRY_RUN);
+    } catch (cleanupError) {
+      logger.error(`❌ Error during user alert cleanup (stock deletion still succeeded): ${cleanupError}`);
+    }
+
   } catch (error) {
     logger.error(`❌ Error during deleteOldStocks: ${error}`);
     logger.error(`❌ Stack trace: ${error.stack}`);
@@ -627,6 +635,100 @@ export const deleteOldStocks = onSchedule({
 
   return null;
 });
+
+/**
+ * Removes orphaned codeNames from players `restockActiveAlerts` map field
+ * After `deleteOldStocks` removes a batch of stocks that have been
+ * forgotten for 90+ days, so users no longer hold subscriptions to items that
+ * no longer exist in the providers
+ */
+async function cleanupOrphanedUserAlerts(deletedCodeNames: string[], isDryRun: boolean) {
+  if (deletedCodeNames.length === 0) {
+    logger.info("No deleted stocks to propagate to user alerts, skipping");
+    return;
+  }
+
+  logger.info(`Starting user alert cleanup for ${deletedCodeNames.length} deleted stocks (dryRun=${isDryRun})`);
+  const startMs = Date.now();
+
+  const deletedSet = new Set(deletedCodeNames);
+  const db = admin.firestore();
+  const playersRef = db.collection("players");
+  const batchSize = 500;
+  const MAX_WRITES_PER_BATCH = 500;
+
+  let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+  let playersScanned = 0;
+  let playersUpdated = 0;
+  let keysRemoved = 0;
+
+  let currentBatch = db.batch();
+  let writeCount = 0;
+  const pendingCommits: Promise<any>[] = [];
+
+  while (true) {
+    let query: FirebaseFirestore.Query = playersRef
+      .select("restockActiveAlerts")
+      .orderBy(FieldPath.documentId())
+      .limit(batchSize);
+
+    if (lastDoc) {
+      query = query.startAfter(lastDoc);
+    }
+
+    const snapshot = await query.get();
+    if (snapshot.empty) break;
+
+    for (const doc of snapshot.docs) {
+      playersScanned++;
+      const alerts = doc.get("restockActiveAlerts");
+      if (!alerts || typeof alerts !== "object") continue;
+
+      const matched: string[] = [];
+      for (const key of Object.keys(alerts)) {
+        if (deletedSet.has(key)) matched.push(key);
+      }
+      if (matched.length === 0) continue;
+
+      playersUpdated++;
+      keysRemoved += matched.length;
+
+      if (isDryRun) {
+        logger.info(`Would remove ${matched.length} keys from player ${doc.id}: ${matched.join(", ")}`);
+        continue;
+      }
+
+      const updatePayload: { [path: string]: FirebaseFirestore.FieldValue } = {};
+      for (const key of matched) {
+        updatePayload[`restockActiveAlerts.${key}`] = FieldValue.delete();
+      }
+      currentBatch.update(doc.ref, updatePayload);
+      writeCount++;
+
+      if (writeCount === MAX_WRITES_PER_BATCH) {
+        pendingCommits.push(currentBatch.commit());
+        currentBatch = db.batch();
+        writeCount = 0;
+      }
+    }
+
+    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+  }
+
+  if (!isDryRun && writeCount > 0) {
+    pendingCommits.push(currentBatch.commit());
+  }
+
+  if (pendingCommits.length > 0) {
+    await Promise.all(pendingCommits);
+  }
+
+  const durationSec = ((Date.now() - startMs) / 1000).toFixed(1);
+  logger.info(
+    `✅ User alert cleanup completed in ${durationSec}s — scanned ${playersScanned} players, ` +
+    `${isDryRun ? "would update" : "updated"} ${playersUpdated} players, ${isDryRun ? "would remove" : "removed"} ${keysRemoved} keys`
+  );
+}
 
 // Scheduled function to clean up obsolete restock entries
 export const cleanupObsoleteRestocks = onSchedule("0 2 * * *", async () => {

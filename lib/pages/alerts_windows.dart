@@ -72,33 +72,36 @@ class AlertsSettingsWindowsState extends State<AlertsSettingsWindows> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: sendbird.sendBirdNotificationsEnabled,
-                          title: const Row(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.only(right: 5),
-                                child: Text(
-                                  "Torn chat messages",
-                                  style: TextStyle(
-                                    fontSize: 15,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: sendbird.sendBirdNotificationsEnabled,
+                            title: const Row(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(right: 5),
+                                  child: Text(
+                                    "Torn chat messages",
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          subtitle: const Text(
-                            "Enable notifications for TORN chat messages",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                              ],
                             ),
+                            subtitle: const Text(
+                              "Enable notifications for TORN chat messages",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                            onChanged: (enabled) async {
+                              sendbird.sendBirdNotificationsToggle(enabled: enabled!);
+                            },
                           ),
-                          onChanged: (enabled) async {
-                            sendbird.sendBirdNotificationsToggle(enabled: enabled!);
-                          },
                         ),
                       ),
                       if (sendbird.sendBirdNotificationsEnabled)

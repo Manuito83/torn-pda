@@ -1030,6 +1030,110 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
   return result;
 }
 
+function detectAbroadPresence(
+  userStats: any,
+  includeHospital: boolean
+): { abroad: boolean; country: string | null } {
+  const travel = userStats?.travel;
+  const state: string = userStats?.status?.state || "";
+
+  const inTransit = (travel?.time_left ?? 0) > 0;
+  const destination: string | null = travel?.destination || null;
+
+  // Destination is not Torn
+  if (inTransit || !destination || destination === "Torn") {
+    return { abroad: false, country: null };
+  }
+
+  // The user-controlled hospital opt-out
+  if (state === "Hospital" && !includeHospital) {
+    return { abroad: false, country: null };
+  }
+
+  return { abroad: true, country: destination };
+}
+
+function formatAbroadDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} minutes`;
+  if (minutes === 60) return `1 hour`;
+  if (minutes < 1440) return `${minutes / 60} hours`;
+  if (minutes === 1440) return `1 day`;
+  return `${minutes / 1440} days`;
+}
+
+export function sendAbroadStayNotification(userStats: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
+
+  try {
+    const intervals: number[] = Array.isArray(subscriber.abroadStayIntervals)
+      ? subscriber.abroadStayIntervals.filter((n: any) => typeof n === "number" && n > 0)
+      : [];
+
+    if (intervals.length === 0) {
+      if (subscriber.abroadLandingTs && subscriber.abroadLandingTs !== 0) {
+        result.firestoreUpdate = { abroadLandingTs: 0, abroadIntervalsSent: [] };
+      }
+      return result;
+    }
+
+    const includeHospital = subscriber.abroadStayIncludeHospital === true;
+    const { abroad, country } = detectAbroadPresence(userStats, includeHospital);
+
+    const landingTs: number = subscriber.abroadLandingTs || 0;
+    const sentRaw = subscriber.abroadIntervalsSent;
+    const sent: number[] = Array.isArray(sentRaw) ? sentRaw.filter((n: any) => typeof n === "number") : [];
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    // No longer abroad > reset
+    if (!abroad) {
+      if (landingTs !== 0 || sent.length > 0) {
+        result.firestoreUpdate = { abroadLandingTs: 0, abroadIntervalsSent: [] };
+      }
+      return result;
+    }
+
+    // Just arrived
+    if (landingTs === 0) {
+      result.firestoreUpdate = { abroadLandingTs: nowSec, abroadIntervalsSent: [] };
+      return result;
+    }
+
+    // Find which intervals have come due since landing and haven't been sent yet
+    const elapsedMinutes = (nowSec - landingTs) / 60;
+    const dueIntervals = intervals.filter((m) => elapsedMinutes >= m && !sent.includes(m));
+    if (dueIntervals.length === 0) {
+      return result;
+    }
+
+    // Fire a single notification for the largest due interval
+    const triggered = Math.max(...dueIntervals);
+    const updatedSent = [...sent, ...dueIntervals].filter((v, i, arr) => arr.indexOf(v) === i).sort((a, b) => a - b);
+
+    const where = country ? ` in ${country}` : "";
+    let title = `Still abroad${where}`;
+    let body = `You've been${where} for ${formatAbroadDuration(triggered)}. Don't forget to come back!`;
+    if (subscriber.discrete) {
+      title = `T`;
+      body = ` `;
+    }
+
+    result.notification = {
+      token: subscriber.token,
+      title: title,
+      body: body,
+      icon: "notification_travel",
+      color: "#2196F3",
+      channelId: "Alerts abroad stay",
+      vibration: subscriber.vibration,
+    };
+    result.firestoreUpdate = { abroadIntervalsSent: updatedSent };
+  } catch (error) {
+    logger.warn(`ERROR ABROAD STAY \n${subscriber.uid} \n${error}`);
+  }
+
+  return result;
+}
+
 export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
   const result: NotificationCheckResult = {};
 

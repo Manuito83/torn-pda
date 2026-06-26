@@ -1160,6 +1160,34 @@ Map<String, dynamic> _$UserCalendarResponseToJson(UserCalendarResponse instance)
       'calendar': instance.calendar.toJson(),
     };
 
+UserVirus$Item _$UserVirus$ItemFromJson(Map<String, dynamic> json) => UserVirus$Item(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+    );
+
+Map<String, dynamic> _$UserVirus$ItemToJson(UserVirus$Item instance) => <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+    };
+
+UserVirus _$UserVirusFromJson(Map<String, dynamic> json) => UserVirus(
+      item: UserVirus$Item.fromJson(json['item'] as Map<String, dynamic>),
+      until: (json['until'] as num).toInt(),
+    );
+
+Map<String, dynamic> _$UserVirusToJson(UserVirus instance) => <String, dynamic>{
+      'item': instance.item.toJson(),
+      'until': instance.until,
+    };
+
+UserVirusResponse _$UserVirusResponseFromJson(Map<String, dynamic> json) => UserVirusResponse(
+      virus: json['virus'],
+    );
+
+Map<String, dynamic> _$UserVirusResponseToJson(UserVirusResponse instance) => <String, dynamic>{
+      'virus': instance.virus,
+    };
+
 UserBountiesResponse _$UserBountiesResponseFromJson(Map<String, dynamic> json) => UserBountiesResponse(
       bounties:
           (json['bounties'] as List<dynamic>?)?.map((e) => Bounty.fromJson(e as Map<String, dynamic>)).toList() ?? [],

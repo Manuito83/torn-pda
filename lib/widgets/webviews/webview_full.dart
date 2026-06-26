@@ -65,6 +65,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
+import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -201,6 +202,11 @@ class WebViewFullState extends State<WebViewFull>
   late final String _tabUid;
 
   bool _heightExtendInjected = false;
+
+  // The handler bundle is constant for the life
+  // of the webview, so we register it once and never remove or re-add it
+  // to avoid collisions and ensure that they are active
+  bool _handlersInjected = false;
 
   bool _backButtonPopsContext = true;
 
@@ -461,8 +467,8 @@ class WebViewFullState extends State<WebViewFull>
       cacheEnabled: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
           ? _settingsProvider.webviewCacheEnabled
           : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
-              ? true
-              : false,
+          ? true
+          : false,
       transparentBackground: true,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
@@ -476,11 +482,11 @@ class WebViewFullState extends State<WebViewFull>
       mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
       cacheMode: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
           ? _settingsProvider.webviewCacheEnabled
-              ? CacheMode.LOAD_DEFAULT
-              : CacheMode.LOAD_NO_CACHE
+                ? CacheMode.LOAD_DEFAULT
+                : CacheMode.LOAD_NO_CACHE
           : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
-              ? CacheMode.LOAD_DEFAULT
-              : CacheMode.LOAD_NO_CACHE,
+          ? CacheMode.LOAD_DEFAULT
+          : CacheMode.LOAD_NO_CACHE,
       safeBrowsingEnabled: false,
       // [supportMultipleWindows]:
       // If enabled on iOS, it will trigger onCreateWindow but also browse
@@ -498,7 +504,11 @@ class WebViewFullState extends State<WebViewFull>
       allowsInlineMediaPlayback: true,
       //
       useOnDownloadStart: widget.allowDownloads,
-      minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
+      // Fixed accessibility (Android default). Proportional sizing is handled by textZoom.
+      minimumFontSize: Platform.isAndroid ? 8 : 0,
+      // Pin textZoom to 100 on Android so the webview ignores the system font scale
+      // From inappwebview 6.2.0-beta.3 textZoom defaults to null and the system scale leaks in
+      textZoom: Platform.isAndroid ? _settingsProvider.androidBrowserTextZoom : null,
     );
 
     _pullToRefreshController = Platform.isWindows
@@ -518,14 +528,12 @@ class WebViewFullState extends State<WebViewFull>
           );
 
     // Initialize progress animation controller
-    _progressController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
+    _progressController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
 
-    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
-    );
+    _progressAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _progressController, curve: Curves.easeInOut));
 
     _progressAnimation.addListener(_onProgressAnimationUpdate);
   }
@@ -563,12 +571,7 @@ class WebViewFullState extends State<WebViewFull>
     try {
       // Send details to provider in case we are rotating
       _webViewProvider.rotatedTabDetails.add(
-        RotatedDisposedTabDetails(
-          key: widget.key,
-          currentUrl: _currentUrl,
-          scrollY: _scrollY,
-          scrollX: _scrollX,
-        ),
+        RotatedDisposedTabDetails(key: widget.key, currentUrl: _currentUrl, scrollY: _scrollY, scrollX: _scrollX),
       );
 
       WidgetsBinding.instance.removeObserver(this);
@@ -620,9 +623,9 @@ class WebViewFullState extends State<WebViewFull>
     _settingsProvider = Provider.of<SettingsProvider>(context);
 
     return ShowCaseWidget(
-      builder: (_) {
+      builder: (ctx) {
         if (_webViewProvider.browserShowInForeground) {
-          launchShowCases(_);
+          launchShowCases(ctx);
         }
         return buildScaffold(context);
       },
@@ -631,7 +634,7 @@ class WebViewFullState extends State<WebViewFull>
 
   // ! Ensure that any showcases here are also taken into account in the showcases in [webview_stackview.dart],
   // ! as the ones here need to fire first. Then only the others are allowed to fire.
-  void launchShowCases(BuildContext _) {
+  void launchShowCases(BuildContext ctx) {
     if (!_webViewProvider.browserShowInForeground) return;
 
     Future.delayed(const Duration(seconds: 1), () async {
@@ -662,7 +665,7 @@ class WebViewFullState extends State<WebViewFull>
       }
 
       if (showCases.isNotEmpty) {
-        ShowCaseWidget.of(_).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
+        ShowCaseWidget.of(ctx).startShowCase(showCases as List<GlobalKey<State<StatefulWidget>>>);
       }
     });
   }
@@ -673,11 +676,11 @@ class WebViewFullState extends State<WebViewFull>
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : Colors.grey[900]
+                ? Colors.blueGrey
+                : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Colors.black,
+          ? Colors.grey[900]
+          : Colors.black,
       child: SafeArea(
         top: !dialog && !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
         bottom:
@@ -698,37 +701,30 @@ class WebViewFullState extends State<WebViewFull>
               resizeToAvoidBottomInset:
                   // Dialog displaces the webview up by default
                   _settingsProvider.androidFastKeyboard
-                      ? false
-                      : !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+                  ? false
+                  : !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
               backgroundColor: _themeProvider.canvas,
               appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
                   // Show appBar only if we are not showing the webView in a dialog style
                   ? null
                   : _settingsProvider.appBarTop
-                      ? buildCustomAppBar()
-                      : null,
+                  ? buildCustomAppBar()
+                  : null,
               bottomNavigationBar: _webViewProvider.bottomBarStyleEnabled
                   ? null
                   :
-                  // With appbar bottom, add appbar and some space for tabs
-                  !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
-                      ? Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              height: AppBar().preferredSize.height,
-                              child: buildCustomAppBar(),
-                            ),
-                            SizedBox(
-                              height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
-                            ),
-                          ],
-                        )
-                      :
-                      // With appbar top, still add some space below for tabs
-                      SizedBox(
-                          height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
-                        ),
+                    // With appbar bottom, add appbar and some space for tabs
+                    !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(height: AppBar().preferredSize.height, child: buildCustomAppBar()),
+                        SizedBox(height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40),
+                      ],
+                    )
+                  :
+                    // With appbar top, still add some space below for tabs
+                    SizedBox(height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40),
               body: Container(
                 // Background color for all browser widgets
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
@@ -743,8 +739,8 @@ class WebViewFullState extends State<WebViewFull>
                       height: !_webViewProvider.bottomBarStyleEnabled
                           ? 0
                           : _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser
-                              ? 0
-                              : 40,
+                          ? 0
+                          : 40,
                     ),
                     if (_webViewProvider.currentUiMode == UiMode.window &&
                         _webViewProvider.bottomBarStyleEnabled &&
@@ -796,7 +792,7 @@ class WebViewFullState extends State<WebViewFull>
                   _findInPageActive = false;
                 });
                 _findController.text = "";
-                _findInteractionController!.clearMatches();
+                _findInteractionController.clearMatches();
                 _findFirstSubmitted = false;
               },
             ),
@@ -821,15 +817,9 @@ class WebViewFullState extends State<WebViewFull>
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 hintText: "What are you looking for?",
-                                hintStyle: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 12,
-                                ),
+                                hintStyle: TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
                               ),
-                              style: TextStyle(
-                                color: _themeProvider.mainText,
-                                fontSize: 16,
-                              ),
+                              style: TextStyle(color: _themeProvider.mainText, fontSize: 16),
                             ),
                           ),
                         ],
@@ -867,9 +857,9 @@ class WebViewFullState extends State<WebViewFull>
                         },
                       ),
                     ],
-                  )
+                  ),
               ],
-            )
+            ),
           ],
         ),
       );
@@ -907,13 +897,7 @@ class WebViewFullState extends State<WebViewFull>
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       splashColor: Colors.blueGrey,
-                      child: const SizedBox(
-                        width: 35,
-                        child: Icon(
-                          Icons.arrow_back_ios_outlined,
-                          size: 20,
-                        ),
-                      ),
+                      child: const SizedBox(width: 35, child: Icon(Icons.arrow_back_ios_outlined, size: 20)),
                       onTap: () async {
                         _tryGoBack();
                       },
@@ -924,13 +908,7 @@ class WebViewFullState extends State<WebViewFull>
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       splashColor: Colors.blueGrey,
-                      child: const SizedBox(
-                        width: 35,
-                        child: Icon(
-                          Icons.arrow_forward_ios_outlined,
-                          size: 20,
-                        ),
-                      ),
+                      child: const SizedBox(width: 35, child: Icon(Icons.arrow_forward_ios_outlined, size: 20)),
                       onTap: () async {
                         _tryGoForward();
                       },
@@ -945,7 +923,8 @@ class WebViewFullState extends State<WebViewFull>
                 child: Showcase(
                   key: _showCaseCloseButton,
                   title: 'Options menu',
-                  description: '\nLong press the bottom bar of the quick browser to open a '
+                  description:
+                      '\nLong press the bottom bar of the quick browser to open a '
                       'menu with additional options, including faction attack assists calls!\n\n'
                       'Swipe down/up to hide or show your tab bar!',
                   targetPadding: const EdgeInsets.only(top: 8),
@@ -973,11 +952,7 @@ class WebViewFullState extends State<WebViewFull>
                                 ),
                                 SizedBox(
                                   width: 15,
-                                  child: Divider(
-                                    height: 3,
-                                    thickness: 1,
-                                    color: _themeProvider.mainText,
-                                  ),
+                                  child: Divider(height: 3, thickness: 1, color: _themeProvider.mainText),
                                 ),
                               ],
                             ),
@@ -1073,92 +1048,55 @@ class WebViewFullState extends State<WebViewFull>
               _profileAttackWidget,
               if (_isChainingBrowser)
                 ExpandablePanel(
-                  theme: const ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
+                  theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                   collapsed: const SizedBox.shrink(),
                   controller: _chainWidgetController,
                   header: const SizedBox.shrink(),
-                  expanded: ChainWidget(
-                    key: _chainWidgetKey,
-                    alwaysDarkBackground: true,
-                  ),
+                  expanded: ChainWidget(key: _chainWidgetKey, alwaysDarkBackground: true),
                 ),
               // Crimes widget. NOTE: this one will open at the bottom if
               // appBar is at the bottom, so it's duplicated below the actual
               // webView widget
               if (_settingsProvider.appBarTop)
                 ExpandablePanel(
-                  theme: const ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
+                  theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                   collapsed: const SizedBox.shrink(),
                   controller: _crimesController,
                   header: const SizedBox.shrink(),
-                  expanded: _crimesActive
-                      ? CrimesWidget(
-                          controller: webViewController,
-                        )
-                      : const SizedBox.shrink(),
+                  expanded: _crimesActive ? CrimesWidget(controller: webViewController) : const SizedBox.shrink(),
                 )
               else
                 const SizedBox.shrink(),
               ExpandablePanel(
-                theme: const ExpandableThemeData(
-                  hasIcon: false,
-                  tapBodyToCollapse: false,
-                  tapHeaderToExpand: false,
-                ),
+                theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                 collapsed: const SizedBox.shrink(),
                 controller: _ocNnbController,
                 header: const SizedBox.shrink(),
-                expanded: _ocNnbTriggered
-                    ? FactionCrimesWidget(
-                        source: _ocSource,
-                      )
-                    : const SizedBox.shrink(),
+                expanded: _ocNnbTriggered ? FactionCrimesWidget(source: _ocSource) : const SizedBox.shrink(),
               ),
               // Quick items widget. NOTE: this one will open at the bottom if
               // appBar is at the bottom, so it's duplicated below the actual
               // webView widget
               if (_settingsProvider.appBarTop)
                 ExpandablePanel(
-                  theme: const ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
+                  theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsController,
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsActive && _settingsProvider.quickItemsEnabled
-                      ? QuickItemsWidget(
-                          inAppWebViewController: webViewController,
-                          faction: false,
-                        )
+                      ? QuickItemsWidget(inAppWebViewController: webViewController, faction: false)
                       : const SizedBox.shrink(),
                 )
               else
                 const SizedBox.shrink(),
               if (_settingsProvider.appBarTop)
                 ExpandablePanel(
-                  theme: const ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
+                  theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsFactionController,
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsFactionActive && _settingsProvider.quickItemsFactionEnabled
-                      ? QuickItemsWidget(
-                          inAppWebViewController: webViewController,
-                          faction: true,
-                        )
+                      ? QuickItemsWidget(inAppWebViewController: webViewController, faction: true)
                       : const SizedBox.shrink(),
                 )
               else
@@ -1189,56 +1127,34 @@ class WebViewFullState extends State<WebViewFull>
             children: [
               if (!_settingsProvider.appBarTop)
                 ExpandablePanel(
-                  theme: const ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
+                  theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                   collapsed: const SizedBox.shrink(),
                   controller: _crimesController,
                   header: const SizedBox.shrink(),
-                  expanded: _crimesActive
-                      ? CrimesWidget(
-                          controller: webViewController,
-                        )
-                      : const SizedBox.shrink(),
+                  expanded: _crimesActive ? CrimesWidget(controller: webViewController) : const SizedBox.shrink(),
                 )
               else
                 const SizedBox.shrink(),
               if (!_settingsProvider.appBarTop)
                 ExpandablePanel(
-                  theme: const ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
+                  theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsController,
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsActive && _settingsProvider.quickItemsEnabled
-                      ? QuickItemsWidget(
-                          inAppWebViewController: webViewController,
-                          faction: false,
-                        )
+                      ? QuickItemsWidget(inAppWebViewController: webViewController, faction: false)
                       : const SizedBox.shrink(),
                 )
               else
                 const SizedBox.shrink(),
               if (!_settingsProvider.appBarTop)
                 ExpandablePanel(
-                  theme: const ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
+                  theme: const ExpandableThemeData(hasIcon: false, tapBodyToCollapse: false, tapHeaderToExpand: false),
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsFactionController,
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsFactionActive && _settingsProvider.quickItemsFactionEnabled
-                      ? QuickItemsWidget(
-                          inAppWebViewController: webViewController,
-                          faction: true,
-                        )
+                      ? QuickItemsWidget(inAppWebViewController: webViewController, faction: true)
                       : const SizedBox.shrink(),
                 )
               else
@@ -1289,28 +1205,26 @@ class WebViewFullState extends State<WebViewFull>
 
             // Userscripts initial load
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
-              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: UserHelper.apiKey,
-                tabUid: _tabUid,
-              );
-              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
+              await _ensureHandlersInjected();
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
-              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+              await _addUserScriptsAvoidDuplicates(scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
-                  widget.key,
-                  "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
-                  "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+                widget.key,
+                "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
+                "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.",
+              );
             } else if (Platform.isWindows && widget.windowId != null) {
               _terminalProvider.addInstruction(
-                  widget.key,
-                  "TORN PDA NOTE: Windows does not support user scripts injection in new windows (like this one), but only in "
-                  "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+                widget.key,
+                "TORN PDA NOTE: Windows does not support user scripts injection in new windows (like this one), but only in "
+                "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.",
+              );
             }
 
             // ### HANDLERS ###
@@ -1341,9 +1255,7 @@ class WebViewFullState extends State<WebViewFull>
               assessNotificationPermissions: _assessNotificationPermissions,
             );
 
-            WebviewHandlers.addLoadoutChangeHandler(
-              webview: webViewController!,
-            );
+            WebviewHandlers.addLoadoutChangeHandler(webview: webViewController!);
 
             WebviewHandlers.addScriptApiHandlers(webview: webViewController!);
 
@@ -1388,10 +1300,7 @@ class WebViewFullState extends State<WebViewFull>
 
                 BotToast.showText(
                   text: errorMessage,
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
+                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                   contentColor: Colors.orange,
                   duration: const Duration(seconds: 4),
                   contentPadding: const EdgeInsets.all(10),
@@ -1424,18 +1333,14 @@ class WebViewFullState extends State<WebViewFull>
 
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
-              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: UserHelper.apiKey,
-                tabUid: _tabUid,
-              );
-              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
+              await _ensureHandlersInjected();
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
-              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+              await _addUserScriptsAvoidDuplicates(scriptsToAdd);
 
               // DEBUG
               if (_debugScriptsInjection) {
@@ -1444,7 +1349,6 @@ class WebViewFullState extends State<WebViewFull>
                   addList.add(s.groupName);
                 }
                 log("Added normal scripts in shouldOverride: $addList");
-                log("Added handlers scripts in shouldOverride: $handlersScriptsToAdd");
               }
             }
 
@@ -1523,8 +1427,9 @@ class WebViewFullState extends State<WebViewFull>
             // FALLBACK: Always try to force update if reportTabLoadUrl wasn't called recently
             if (uri != null) {
               final now = DateTime.now();
-              final lastCallAgo =
-                  _lastReportTabLoadUrlTime != null ? now.difference(_lastReportTabLoadUrlTime!).inSeconds : 999;
+              final lastCallAgo = _lastReportTabLoadUrlTime != null
+                  ? now.difference(_lastReportTabLoadUrlTime!).inSeconds
+                  : 999;
 
               if (lastCallAgo > 0.5) {
                 // If reportTabLoadUrl wasn't called in the last 0.5 seconds
@@ -1673,9 +1578,7 @@ class WebViewFullState extends State<WebViewFull>
               }
 
               // Userscripts remove those no longer necessary
-              List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
-                url: uri.toString(),
-              );
+              List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(url: uri.toString());
               if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
                 for (final group in scriptsToRemove) {
                   await c.removeUserScriptsByGroupName(groupName: group!);
@@ -1693,6 +1596,18 @@ class WebViewFullState extends State<WebViewFull>
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.end,
               );
+              // Guarantee the handler bundle (GM API, PDA API...) is present in this
+              // document before the document-end scripts run
+              // On cold starts / cached tabs the document-start registration can miss the
+              // initial load, leaving GM_* undefined
+              // Injecting it here directly should work (it will return if it's already injected)
+              if (scriptsToAdd.isNotEmpty) {
+                final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
+                for (final h in handlers) {
+                  await webViewController!.evaluateJavascript(source: h.source);
+                }
+              }
+
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (final script in scriptsToAdd) {
                 await webViewController!.evaluateJavascript(source: script.source);
@@ -1743,13 +1658,11 @@ class WebViewFullState extends State<WebViewFull>
               // If we have a disposed rotation, we scroll to the last position
               if (_foundDisposedRotation) {
                 _foundDisposedRotation = false;
-                Future.delayed(const Duration(milliseconds: 500)).then(
-                  (_) {
-                    if (mounted) {
-                      webViewController!.scrollTo(x: _disposedScrollX, y: _disposedScrollY);
-                    }
-                  },
-                );
+                Future.delayed(const Duration(milliseconds: 500)).then((_) {
+                  if (mounted) {
+                    webViewController!.scrollTo(x: _disposedScrollX, y: _disposedScrollY);
+                  }
+                });
               }
 
               if (_settingsProvider.restoreSessionCookie) {
@@ -1787,6 +1700,9 @@ class WebViewFullState extends State<WebViewFull>
             }
 
             publishTabState();
+
+            // Re-grant focus after navigation / back-forward
+            await _restoreNativeWebViewFocus();
 
             //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
           },
@@ -1986,7 +1902,7 @@ class WebViewFullState extends State<WebViewFull>
             if (result.extra == null) return;
             await _assessLongPressOptions(result, controller);
           },
-          onDownloadStartRequest: (controller, request) async {
+          onDownloadStarting: (controller, request) async {
             if (request.mimeType != null && request.mimeType!.contains("image/")) {
               // We don't want to download images automatically
               final String u = request.url.toString().replaceAll("http:", "https:");
@@ -2006,15 +1922,21 @@ class WebViewFullState extends State<WebViewFull>
               return;
             } else if (request.url.toString().startsWith("blob:")) {
               final response = await webViewController?.callAsyncJavaScript(
-                  functionBody: "return fetch(url).then(r => r.text());", arguments: {"url": request.url.toString()});
+                functionBody: "return fetch(url).then(r => r.text());",
+                arguments: {"url": request.url.toString()},
+              );
               if (response == null || response.value == null) return;
               await _downloadData(response.value, fileName: request.suggestedFilename);
             } else {
               await _downloadRequest(autoRequest: request);
             }
+            return null;
           },
           // Reload webview after memory leak
           onWebContentProcessDidTerminate: (c) {
+            // The restart drops the registered document-start scripts,
+            // so allow the handler bundle to be re-injected on the next navigation
+            _handlersInjected = false;
             c.reload();
           },
           onReceivedHttpAuthRequest: (c, challenge) async {
@@ -2069,9 +1991,7 @@ class WebViewFullState extends State<WebViewFull>
               );
             }
 
-            return HttpAuthResponse(
-              action: HttpAuthResponseAction.CANCEL,
-            );
+            return HttpAuthResponse(action: HttpAuthResponseAction.CANCEL);
           },
         ),
       ],
@@ -2151,10 +2071,7 @@ class WebViewFullState extends State<WebViewFull>
                         ),
                         child: const Text(
                           "Override!",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                         ),
                       ),
                       onTap: () {
@@ -2174,10 +2091,7 @@ class WebViewFullState extends State<WebViewFull>
               backgroundColor: _themeProvider.canvas,
               closeButton: ToastCloseButton(
                 buttonBuilder: (context, onClose) {
-                  return Icon(
-                    Icons.close,
-                    color: _themeProvider.mainText,
-                  );
+                  return Icon(Icons.close, color: _themeProvider.mainText);
                 },
               ),
               showProgressBar: false,
@@ -2211,13 +2125,11 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  Future<void> loadImageWithBackground(
-    InAppWebViewController controller,
-    String imageUrl,
-  ) async {
+  Future<void> loadImageWithBackground(InAppWebViewController controller, String imageUrl) async {
     String backgroundColor = _themeProvider.currentTheme == AppTheme.light ? '#FFFFFF' : '#000000';
 
-    final String html = '''
+    final String html =
+        '''
 <!DOCTYPE html>
 <html>
   <head>
@@ -2243,19 +2155,16 @@ class WebViewFullState extends State<WebViewFull>
 </html>
 ''';
 
-    await controller.loadData(
-      data: html,
-      mimeType: 'text/html',
-      encoding: 'utf-8',
-      baseUrl: WebUri(imageUrl),
-    );
+    await controller.loadData(data: html, mimeType: 'text/html', encoding: 'utf-8', baseUrl: WebUri(imageUrl));
   }
 
   void evaluateGreasyForMockVM(WebUri? uri, InAppWebViewController c) {
     if (uri?.host == "greasyfork.org") {
       c.evaluateJavascript(
-          source: greasyForkMockVM(jsonEncode(
-              _userScriptsProvider.userScriptList.map((s) => ({"name": s.name, "version": s.version})).toList())));
+        source: greasyForkMockVM(
+          jsonEncode(_userScriptsProvider.userScriptList.map((s) => ({"name": s.name, "version": s.version})).toList()),
+        ),
+      );
     }
   }
 
@@ -2288,10 +2197,7 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   /// Analysis of hit elements to change navigation behavior
-  Future<bool> _hitShouldOpenNewTab(
-    InAppWebViewController c,
-    NavigationAction request,
-  ) async {
+  Future<bool> _hitShouldOpenNewTab(InAppWebViewController c, NavigationAction request) async {
     var hitResult = await c.getHitTestResult();
     if (hitResult?.extra == null) return false;
 
@@ -2334,6 +2240,31 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  /// Adds user scripts to the WebView, first removing any previously registered
+  /// entries that share the same groupName. Without this, navigations that
+  /// call addUserScripts (e.g. shouldOverrideUrlLoading firing for the initialUrlRequest
+  /// in a child tab) accumulate multiple copies of the same script in the store,
+  /// causing each to be injected several times on the next page load
+  Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) async {
+    if (webViewController == null) return;
+    for (final s in scripts) {
+      final group = s.groupName;
+      if (group != null) {
+        await webViewController!.removeUserScriptsByGroupName(groupName: group);
+      }
+    }
+    await webViewController!.addUserScripts(userScripts: scripts.toList());
+  }
+
+  /// Registers the handler bundle (GM API, PDA API,...)
+  /// These scripts never change, so unlike user scripts we must not remove them
+  Future<void> _ensureHandlersInjected() async {
+    if (webViewController == null || _handlersInjected) return;
+    final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
+    await webViewController!.addUserScripts(userScripts: handlers.toList());
+    _handlersInjected = true;
+  }
+
   Future assessErrorCases({dom.Document? document}) async {
     if (_nativeUser.playerLastLoginMethod == NativeLoginType.none) {
       return;
@@ -2350,12 +2281,10 @@ class WebViewFullState extends State<WebViewFull>
         document.body!.innerHtml.contains("multiple failures from your IP address")) {
       BotToast.showText(
         clickClose: true,
-        text: "Authentication error detected!\n\nIf you have inserted your username and password combination in Torn "
+        text:
+            "Authentication error detected!\n\nIf you have inserted your username and password combination in Torn "
             "PDA's settings section, please verify that they are correct!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.red,
         duration: const Duration(seconds: 6),
         contentPadding: const EdgeInsets.all(10),
@@ -2368,12 +2297,10 @@ class WebViewFullState extends State<WebViewFull>
       if (_loginErrorToastTimer == null || DateTime.now().difference(_loginErrorToastTimer!).inSeconds > 4) {
         if (_webViewProvider.browserShowInForeground) {
           BotToast.showText(
-            text: "Trying to log back into Torn\n\n"
+            text:
+                "Trying to log back into Torn\n\n"
                 "Please wait...!",
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.blue,
             duration: const Duration(seconds: 4),
             contentPadding: const EdgeInsets.all(10),
@@ -2398,10 +2325,7 @@ class WebViewFullState extends State<WebViewFull>
       if (_nativeUser.playerLastLoginMethod != NativeLoginType.none) {
         final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
           context: context,
-          loginData: GetInitDataModel(
-            playerId: UserHelper.playerId,
-            sToken: _nativeUser.playerSToken,
-          ),
+          loginData: GetInitDataModel(playerId: UserHelper.playerId, sToken: _nativeUser.playerSToken),
         );
 
         if (loginResponse.success) {
@@ -2412,10 +2336,7 @@ class WebViewFullState extends State<WebViewFull>
           if (loginResponse.transientError) {
             BotToast.showText(
               text: "Temporary authentication issue (timeout or server error). Please retry in a moment.",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
               contentColor: Colors.orange,
               duration: const Duration(seconds: 4),
               contentPadding: const EdgeInsets.all(10),
@@ -2423,12 +2344,10 @@ class WebViewFullState extends State<WebViewFull>
             return;
           }
           BotToast.showText(
-            text: "Browser error while authenticating: please log in again or verify your user / pass combination "
+            text:
+                "Browser error while authenticating: please log in again or verify your user / pass combination "
                 "in the Settings section!",
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.red,
             duration: const Duration(seconds: 4),
             contentPadding: const EdgeInsets.all(10),
@@ -2494,17 +2413,14 @@ class WebViewFullState extends State<WebViewFull>
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
-      webViewController!.evaluateJavascript(
-        source: chatHighlightJS(highlights: hlMap),
-      );
+      webViewController!.evaluateJavascript(source: chatHighlightJS(highlights: hlMap));
 
       if (!Platform.isWindows) {
-        webViewController!.injectCSSCode(
-          source: css,
-        );
+        webViewController!.injectCSSCode(source: css);
       } else {
         // Inject CSS using JavaScript
-        final String jsToInjectCSS = '''
+        final String jsToInjectCSS =
+            '''
           (function() {
             var style = document.createElement('style');
             style.type = 'text/css';
@@ -2513,9 +2429,7 @@ class WebViewFullState extends State<WebViewFull>
           })();
         ''';
 
-        webViewController!.evaluateJavascript(
-          source: jsToInjectCSS,
-        );
+        webViewController!.evaluateJavascript(source: jsToInjectCSS);
       }
     }
   }
@@ -2560,7 +2474,7 @@ class WebViewFullState extends State<WebViewFull>
               }
 
               _findController.text = "";
-              _findInteractionController!.clearMatches();
+              _findInteractionController.clearMatches();
               _findFirstSubmitted = false;
             },
           ),
@@ -2586,10 +2500,7 @@ class WebViewFullState extends State<WebViewFull>
                             hintText: "What are you looking for?",
                             hintStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
                           ),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                          style: const TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ),
                     ],
@@ -2627,13 +2538,14 @@ class WebViewFullState extends State<WebViewFull>
                           },
                         ),
                       ],
-                    )
+                    ),
                 ],
         ),
       );
     }
 
-    final bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+    final bool assistPossible =
+        (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/page.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
         UserHelper.factionId != 0;
@@ -2725,154 +2637,157 @@ class WebViewFullState extends State<WebViewFull>
               barrierDismissible: !Platform.isIOS,
               context: context,
               builder: (BuildContext context) {
-                return WebviewShortcutsDialog(
-                  inAppWebView: webViewController,
-                );
+                return WebviewShortcutsDialog(inAppWebView: webViewController);
               },
             );
           },
-          child: LayoutBuilder(builder: (context, constraints) {
-            // Layout builder to check the width of the app bar
-            // and assess whether to show back/forward navigation buttons
-            return Container(
-              width: constraints.maxWidth,
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  if (_showMemoryWidget)
-                    Expanded(
-                      child: DottedBorder(
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 2),
-                          child: MemoryWidgetBrowser(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Layout builder to check the width of the app bar
+              // and assess whether to show back/forward navigation buttons
+              return Container(
+                width: constraints.maxWidth,
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    if (_showMemoryWidget)
+                      Expanded(
+                        child: DottedBorder(
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 2),
+                            child: MemoryWidgetBrowser(),
+                          ),
+                          dashPattern: assistPossible ? const [1, 1] : const [1, 4],
+                          color: assistPossible ? Colors.orange : Colors.white70,
                         ),
-                        dashPattern: assistPossible ? const [1, 1] : const [1, 4],
-                        color: assistPossible ? Colors.orange : Colors.white70,
-                      ),
-                    )
-                  else
-                    Flexible(
-                      child: DottedBorder(
-                        padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
-                        dashPattern: assistPossible ? const [1, 1] : const [1, 4],
-                        color: assistPossible ? Colors.orange : Colors.white70,
-                        child: ClipRRect(
-                          child: Showcase(
-                            key: _showCaseTitleBar,
-                            title: 'Options menu',
-                            description: '\nTap the page title to open a menu with additional options, '
-                                'including faction attack assists calls!\n\n'
-                                'Swipe left/right to browse back/forward\n\n'
-                                'Swipe down/up to hide or show your tab bar!',
-                            targetPadding: const EdgeInsets.all(10),
-                            disableMovingAnimation: true,
-                            textColor: _themeProvider.mainText,
-                            tooltipBackgroundColor: _themeProvider.secondBackground,
-                            descTextStyle: const TextStyle(fontSize: 13),
-                            tooltipPadding: const EdgeInsets.all(20),
-                            child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
-                                    _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
-                                ? Row(
-                                    children: [
-                                      const Icon(
-                                        MdiIcons.text,
-                                        size: 14,
-                                        color: Colors.lime,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        _webViewProvider.tabList[_webViewProvider.currentTab].customName,
-                                        overflow: TextOverflow.fade,
-                                        style: const TextStyle(
-                                            fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
-                                      ),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      if (assistPossible)
-                                        Flexible(
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              const Text(
-                                                "ASSIST",
-                                                overflow: TextOverflow.fade,
-                                                style: TextStyle(fontSize: 9, color: Colors.orange),
-                                              ),
-                                              Text(
-                                                _pageTitle!,
-                                                overflow: TextOverflow.fade,
-                                                style: const TextStyle(fontSize: 14, color: Colors.white),
-                                              ),
-                                            ],
-                                          ),
-                                        )
-                                      else
-                                        Flexible(
-                                          child: Text(
-                                            _pageTitle!,
-                                            overflow: TextOverflow.fade,
-                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                      )
+                    else
+                      Flexible(
+                        child: DottedBorder(
+                          padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
+                          dashPattern: assistPossible ? const [1, 1] : const [1, 4],
+                          color: assistPossible ? Colors.orange : Colors.white70,
+                          child: ClipRRect(
+                            child: Showcase(
+                              key: _showCaseTitleBar,
+                              title: 'Options menu',
+                              description:
+                                  '\nTap the page title to open a menu with additional options, '
+                                  'including faction attack assists calls!\n\n'
+                                  'Swipe left/right to browse back/forward\n\n'
+                                  'Swipe down/up to hide or show your tab bar!',
+                              targetPadding: const EdgeInsets.all(10),
+                              disableMovingAnimation: true,
+                              textColor: _themeProvider.mainText,
+                              tooltipBackgroundColor: _themeProvider.secondBackground,
+                              descTextStyle: const TextStyle(fontSize: 13),
+                              tooltipPadding: const EdgeInsets.all(20),
+                              child:
+                                  _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
+                                      _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
+                                  ? Row(
+                                      children: [
+                                        const Icon(MdiIcons.text, size: 14, color: Colors.lime),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _webViewProvider.tabList[_webViewProvider.currentTab].customName,
+                                          overflow: TextOverflow.fade,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                            fontStyle: FontStyle.italic,
                                           ),
                                         ),
-                                    ],
-                                  ),
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        if (assistPossible)
+                                          Flexible(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                const Text(
+                                                  "ASSIST",
+                                                  overflow: TextOverflow.fade,
+                                                  style: TextStyle(fontSize: 9, color: Colors.orange),
+                                                ),
+                                                Text(
+                                                  _pageTitle!,
+                                                  overflow: TextOverflow.fade,
+                                                  style: const TextStyle(fontSize: 14, color: Colors.white),
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        else
+                                          Flexible(
+                                            child: Text(
+                                              _pageTitle!,
+                                              overflow: TextOverflow.fade,
+                                              style: const TextStyle(fontSize: 16, color: Colors.white),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  if ((_settingsProvider.browserShowNavArrowsAppbar == "narrow" && constraints.maxWidth > 200) ||
-                      (_settingsProvider.browserShowNavArrowsAppbar == "wide" && constraints.maxWidth > 400))
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: Row(
-                        children: [
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              splashColor: Colors.blueGrey,
-                              onTap: () async {
-                                await _tryGoBack();
-                              },
-                              child: SizedBox(
-                                width: 40,
-                                child: Icon(
-                                  Icons.arrow_back_ios_outlined,
-                                  color: _webViewProvider.returnBackPagesNumber() == 0 ? Colors.grey : Colors.white,
-                                  size: 20,
+                    if ((_settingsProvider.browserShowNavArrowsAppbar == "narrow" && constraints.maxWidth > 200) ||
+                        (_settingsProvider.browserShowNavArrowsAppbar == "wide" && constraints.maxWidth > 400))
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: Row(
+                          children: [
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                splashColor: Colors.blueGrey,
+                                onTap: () async {
+                                  await _tryGoBack();
+                                },
+                                child: SizedBox(
+                                  width: 40,
+                                  child: Icon(
+                                    Icons.arrow_back_ios_outlined,
+                                    color: _webViewProvider.returnBackPagesNumber() == 0 ? Colors.grey : Colors.white,
+                                    size: 20,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              splashColor: Colors.blueGrey,
-                              onTap: () async {
-                                await _tryGoForward();
-                              },
-                              child: SizedBox(
-                                width: 40,
-                                child: Icon(
-                                  Icons.arrow_forward_ios_outlined,
-                                  color: _webViewProvider.returnForwardPagesNumber() == 0 ? Colors.grey : Colors.white,
-                                  size: 20,
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                splashColor: Colors.blueGrey,
+                                onTap: () async {
+                                  await _tryGoForward();
+                                },
+                                child: SizedBox(
+                                  width: 40,
+                                  child: Icon(
+                                    Icons.arrow_forward_ios_outlined,
+                                    color: _webViewProvider.returnForwardPagesNumber() == 0
+                                        ? Colors.grey
+                                        : Colors.white,
+                                    size: 20,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    const SizedBox.shrink(),
-                ],
-              ),
-            );
-          }),
+                          ],
+                        ),
+                      )
+                    else
+                      const SizedBox.shrink(),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
         actions: _isChainingBrowser
             ? _chainingActionButtons()
@@ -2906,8 +2821,10 @@ class WebViewFullState extends State<WebViewFull>
               child: InkWell(
                 customBorder: const CircleBorder(),
                 splashColor: Colors.orange,
-                child: Icon(Icons.refresh,
-                    color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white),
+                child: Icon(
+                  Icons.refresh,
+                  color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+                ),
                 onTap: () async {
                   try {
                     // Check if the webview is active
@@ -2919,10 +2836,7 @@ class WebViewFullState extends State<WebViewFull>
                         chainingPayload: _chainingPayload,
                       );
 
-                      logToUser(
-                        "Found crashed browser, trying to rebuild!",
-                        duration: 5,
-                      );
+                      logToUser("Found crashed browser, trying to rebuild!", duration: 5);
                     }
                   }
 
@@ -2939,10 +2853,7 @@ class WebViewFullState extends State<WebViewFull>
 
                   BotToast.showText(
                     text: "Reloading...",
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
+                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                     contentColor: Colors.grey[600]!,
                     duration: const Duration(seconds: 1),
                     contentPadding: const EdgeInsets.all(10),
@@ -3002,9 +2913,7 @@ class WebViewFullState extends State<WebViewFull>
 
     _heightExtendInjected = true;
 
-    await controller.evaluateJavascript(
-      source: ensureMinDocumentHeightForKeyboardJS(minViewportMultiple: 1.5),
-    );
+    await controller.evaluateJavascript(source: ensureMinDocumentHeightForKeyboardJS(minViewportMultiple: 1.5));
   }
 
   /// Note: several other modules are called in onProgressChanged, since it's
@@ -3018,6 +2927,19 @@ class WebViewFullState extends State<WebViewFull>
     _assessProfileAgeToWords();
     _assessBugReportsWarning();
     _assessOldLoaderRedirect(document);
+    await _assessCityShopBuy100();
+  }
+
+  Future _assessCityShopBuy100() async {
+    if (!_currentUrl.contains('shops.php') && !_currentUrl.contains('bigalgunshop.php')) {
+      return;
+    }
+
+    if (!await Prefs().getCityShopsBuyMaxEnabled()) {
+      return;
+    }
+
+    await webViewController?.evaluateJavascript(source: cityShopsBuy100JS());
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -3244,10 +3166,7 @@ class WebViewFullState extends State<WebViewFull>
   /// to the URL if it doesn't find anything
   /// [showTitle] show ideally only be set to true in onLoadStop
   /// URLs might show up while loading the page in onProgressChange
-  Future<String?> _getPageTitle(
-    dom.Document document, {
-    bool showTitle = false,
-  }) async {
+  Future<String?> _getPageTitle(dom.Document document, {bool showTitle = false}) async {
     String? title = '';
 
     dom.Element? h4 = document.querySelector(".content-title > h4");
@@ -3364,11 +3283,7 @@ class WebViewFullState extends State<WebViewFull>
           return CrimesOptions();
         },
         closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
-          ),
-        ),
+        closedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(56 / 2))),
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
@@ -3566,10 +3481,7 @@ class WebViewFullState extends State<WebViewFull>
       if (mounted) {
         setState(() {
           _tradesFullActive = true;
-          _tradesExpandable = TradesWidget(
-            themeProv: _themeProvider,
-            webView: webViewController,
-          );
+          _tradesExpandable = TradesWidget(themeProv: _themeProvider, webView: webViewController);
         });
       }
     } else {
@@ -3594,11 +3506,7 @@ class WebViewFullState extends State<WebViewFull>
           return _popupOptionsChoices.map((VaultsOptions choice) {
             return PopupMenuItem<VaultsOptions>(
               value: choice,
-              child: Row(
-                children: [
-                  Text(choice.description!),
-                ],
-              ),
+              child: Row(children: [Text(choice.description!)]),
             );
           }).toList();
         },
@@ -3630,7 +3538,8 @@ class WebViewFullState extends State<WebViewFull>
       return Showcase(
         key: _showCaseTradeOptions,
         title: 'Trading options!',
-        description: '\nIf you are a trader, you can manage the different trading providers available in Torn PDA '
+        description:
+            '\nIf you are a trader, you can manage the different trading providers available in Torn PDA '
             'by tapping this icon (e.g.: Torn Exchange)!\n\nThere\'s also additional options available, '
             'such as detailed profit information.\n\nIf you prefer, you can also deactivate the whole Trade Calculator '
             'widget to gain some space.',
@@ -3644,17 +3553,10 @@ class WebViewFullState extends State<WebViewFull>
           transitionDuration: const Duration(milliseconds: 300),
           transitionType: ContainerTransitionType.fade,
           openBuilder: (BuildContext context, VoidCallback _) {
-            return TradesOptions(
-              playerId: UserHelper.playerId,
-              callback: _tradesPreferencesLoad,
-            );
+            return TradesOptions(playerId: UserHelper.playerId, callback: _tradesPreferencesLoad);
           },
           closedElevation: 0,
-          closedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(56 / 2),
-            ),
-          ),
+          closedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(56 / 2))),
           closedColor: Colors.transparent,
           openColor: _themeProvider.canvas,
           closedBuilder: (BuildContext context, VoidCallback openContainer) {
@@ -3767,11 +3669,7 @@ class WebViewFullState extends State<WebViewFull>
 
     // Activate the vault widget itself. UniqueKey so that we load a new widget when values change
     setState(() {
-      _vaultExpandable = VaultWidget(
-        key: UniqueKey(),
-        vaultHtml: allTransactions,
-        playerId: UserHelper.playerId,
-      );
+      _vaultExpandable = VaultWidget(key: UniqueKey(), vaultHtml: allTransactions, playerId: UserHelper.playerId);
     });
   }
 
@@ -3781,17 +3679,10 @@ class WebViewFullState extends State<WebViewFull>
         transitionDuration: const Duration(milliseconds: 300),
         transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
-          return VaultOptionsPage(
-            vaultDetected: _vaultDetected,
-            callback: _reassessVault,
-          );
+          return VaultOptionsPage(vaultDetected: _vaultDetected, callback: _reassessVault);
         },
         closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
-          ),
-        ),
+        closedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(56 / 2))),
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
@@ -3858,36 +3749,40 @@ class WebViewFullState extends State<WebViewFull>
       return;
     }
 
-    // Retry several times and allow the map to load. If the user lands in the city list, this will
+    // The new map renders items on a Leaflet canvas (no DOM element per item),
+    // so we read the item IDs from the live map instead of parsing the page HTML.
+    //
+    // We retry several times and allow the map to load. If the user lands in the city list, this will
     // also trigger and the user will have 30 seconds to load the map (after that, only reloading
     // or browsing out/in of city will force a reload)
-    late List<dom.Element> query;
+    final mapItemsList = <String>[];
+    var mapReady = false;
     for (var i = 0; i < 30; i++) {
       if (!mounted) break;
-      query = document.querySelectorAll("#map .leaflet-marker-pane *");
-      if (query.isNotEmpty) {
-        break;
-      } else {
+      final dynamic jsResult = await webViewController!.evaluateJavascript(source: highlightCityItemsJS());
+      final resultStr = jsResult?.toString() ?? "";
+      if (resultStr.isEmpty || resultStr == "NOT_READY") {
         await Future.delayed(const Duration(seconds: 1));
-        if (!mounted) break;
-        final updatedHtml = await webViewController!.getHtml();
-        document = parse(updatedHtml);
+        continue;
+      }
+      try {
+        final decoded = jsonDecode(resultStr);
+        if (decoded is List) {
+          for (final id in decoded) {
+            mapItemsList.add(id.toString());
+          }
+        }
+        mapReady = true;
+        break;
+      } catch (_) {
+        await Future.delayed(const Duration(seconds: 1));
       }
     }
 
-    if (query.isEmpty) {
+    if (!mapReady) {
       // Set false so that the page can be reloaded if city widget didn't load
       _cityTriggered = false;
       return;
-    }
-
-    final mapItemsList = <String>[];
-    for (final mapFind in query) {
-      mapFind.attributes.forEach((key, value) {
-        if (key == "src" && value.contains("/images/items/")) {
-          mapItemsList.add(value.split("items/")[1].split("/")[0]);
-        }
-      });
     }
 
     // Pass items to widget (if nothing found, widget's list will be empty)
@@ -3901,13 +3796,14 @@ class WebViewFullState extends State<WebViewFull>
         final tornItems = apiResponse.items!.values.toList();
         final itemsFound = <Item>[];
         for (final mapItem in mapItemsList) {
-          final Item itemMatch = tornItems.firstWhere((element) => element.id == mapItem);
-          itemsFound.add(itemMatch);
+          // Skip any map id missing from the items API instead of blanking the whole widget
+          final Item? itemMatch = tornItems.firstWhereOrNull((element) => element.id == mapItem);
+          if (itemMatch != null) itemsFound.add(itemMatch);
         }
         if (mounted) {
-          // This last check prevents city widget from loading if we are leaving the city
-          // before it had time to load (which could collude with other widgets)
-          if (!_cityTriggered) {
+          // Show only if still on city when data arrives, checking the URL not _cityTriggered
+          // (that flag gets transiently reset by URL churn on a fresh direct-open load)
+          if (!_currentUrl.contains('city.php')) {
             setState(() {
               _cityExpandable = const SizedBox.shrink();
             });
@@ -3923,7 +3819,6 @@ class WebViewFullState extends State<WebViewFull>
             });
           }
         }
-        webViewController!.evaluateJavascript(source: highlightCityItemsJS());
       } else {
         if (mounted) {
           setState(() {
@@ -3942,16 +3837,10 @@ class WebViewFullState extends State<WebViewFull>
         transitionDuration: const Duration(milliseconds: 300),
         transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
-          return CityOptions(
-            callback: _cityPreferencesLoad,
-          );
+          return CityOptions(callback: _cityPreferencesLoad);
         },
         closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
-          ),
-        ),
+        closedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(56 / 2))),
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
@@ -4005,10 +3894,7 @@ class WebViewFullState extends State<WebViewFull>
   Widget _bazaarFillIcon() {
     if (_bazaarActiveOwn) {
       return Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 8.0,
-          vertical: _webViewProvider.bottomBarStyleEnabled ? 0 : 20,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: _webViewProvider.bottomBarStyleEnabled ? 0 : 20),
         child: GestureDetector(
           onTap: () async {
             _bazaarFillActive
@@ -4027,8 +3913,8 @@ class WebViewFullState extends State<WebViewFull>
               color: _bazaarFillActive
                   ? Colors.yellow[600]
                   : _webViewProvider.bottomBarStyleEnabled
-                      ? _themeProvider.mainText
-                      : Colors.white,
+                  ? _themeProvider.mainText
+                  : Colors.white,
               fontSize: 12,
             ),
           ),
@@ -4105,16 +3991,10 @@ class WebViewFullState extends State<WebViewFull>
         transitionDuration: const Duration(milliseconds: 300),
         transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
-          return QuickItemsOptions(
-            isFaction: _quickItemsFactionActive,
-          );
+          return QuickItemsOptions(isFaction: _quickItemsFactionActive);
         },
         closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
-          ),
-        ),
+        closedShape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(56 / 2))),
         closedColor: Colors.transparent,
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
@@ -4156,35 +4036,43 @@ class WebViewFullState extends State<WebViewFull>
               controller: _scrollControllerBugsReport,
               child: Padding(
                 padding: const EdgeInsets.only(right: 12),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text("Torn PDA is a third-party application, and is not developed by Torn."),
-                  const SizedBox(height: 10),
-                  const Text("Please do not report PDA bugs here, as they will be closed by Torn staff. Any bugs "
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Torn PDA is a third-party application, and is not developed by Torn."),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "Please do not report PDA bugs here, as they will be closed by Torn staff. Any bugs "
                       "caused by the app should be reported to the developers via one of the buttons at"
-                      "the bottom."),
-                  const SizedBox(height: 10),
-                  Text("Make sure that you have tested in "
+                      "the bottom.",
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Make sure that you have tested in "
                       "${Platform.isIOS ? "Safari" : "your system browser"}"
-                      " first to see whether the issue persists. If you're not sure, reach out to us below."),
-                  const SizedBox(height: 30),
-                  Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                    TextButton(
-                      child: const Text("Forum Thread"),
-                      onPressed: () {
-                        _loadUrl("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503");
-                        Navigator.of(context).pop();
-                      },
+                      " first to see whether the issue persists. If you're not sure, reach out to us below.",
                     ),
-                    TextButton(
-                        child: const Text("Discord"),
-                        onPressed: () =>
-                            launchUrl(Uri.parse("https://discord.gg/vyP23kJ"), mode: LaunchMode.externalApplication)),
-                    TextButton(
-                      child: const Text("Close"),
-                      onPressed: () => Navigator.of(context).pop(),
+                    const SizedBox(height: 30),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          child: const Text("Forum Thread"),
+                          onPressed: () {
+                            _loadUrl("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503");
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: const Text("Discord"),
+                          onPressed: () =>
+                              launchUrl(Uri.parse("https://discord.gg/vyP23kJ"), mode: LaunchMode.externalApplication),
+                        ),
+                        TextButton(child: const Text("Close"), onPressed: () => Navigator.of(context).pop()),
+                      ],
                     ),
-                  ])
-                ]),
+                  ],
+                ),
               ),
             ),
           ),
@@ -4315,11 +4203,7 @@ class WebViewFullState extends State<WebViewFull>
   Future _assessBarsRedirect(dom.Document document) async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
-      webViewController?.evaluateJavascript(
-        source: barsDoubleClickRedirect(
-          isIOS: Platform.isIOS,
-        ),
-      );
+      webViewController?.evaluateJavascript(source: barsDoubleClickRedirectJS());
     }
   }
 
@@ -4328,11 +4212,7 @@ class WebViewFullState extends State<WebViewFull>
     final isFullScreen = _webViewProvider.currentUiMode == UiMode.fullScreen;
 
     if (inTorn && isFullScreen && _settingsProvider.fullScreenHeaderDoubleTap) {
-      webViewController?.evaluateJavascript(
-        source: exitFullScreenOnHeaderDoubleClick(
-          isIOS: Platform.isIOS,
-        ),
-      );
+      webViewController?.evaluateJavascript(source: exitFullScreenOnHeaderDoubleClick(isIOS: Platform.isIOS));
     }
   }
 
@@ -4365,10 +4245,7 @@ class WebViewFullState extends State<WebViewFull>
             BotToast.showText(
               crossPage: false,
               text: "Default chat hide enabled (new tabs)",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
               contentColor: Colors.blue,
               duration: const Duration(seconds: 2),
               contentPadding: const EdgeInsets.all(10),
@@ -4380,10 +4257,7 @@ class WebViewFullState extends State<WebViewFull>
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: GestureDetector(
-          child: Icon(
-            MdiIcons.chatRemoveOutline,
-            color: Colors.orange[500],
-          ),
+          child: Icon(MdiIcons.chatRemoveOutline, color: Colors.orange[500]),
           onTap: () async {
             webViewController!.evaluateJavascript(source: restoreChatJS());
             _webViewProvider.reportChatRemovalChange(false, false);
@@ -4403,10 +4277,7 @@ class WebViewFullState extends State<WebViewFull>
             BotToast.showText(
               crossPage: false,
               text: "Default chat hide disabled",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
               contentColor: Colors.grey[700]!,
               duration: const Duration(seconds: 2),
               contentPadding: const EdgeInsets.all(10),
@@ -4429,7 +4300,7 @@ class WebViewFullState extends State<WebViewFull>
         pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
-      await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+      await _addUserScriptsAvoidDuplicates(scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
@@ -4455,10 +4326,7 @@ class WebViewFullState extends State<WebViewFull>
 
     BotToast.showText(
       text: "Reloading...",
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.grey[600]!,
       duration: const Duration(seconds: 1),
       contentPadding: const EdgeInsets.all(10),
@@ -4536,13 +4404,13 @@ class WebViewFullState extends State<WebViewFull>
       setState(() {
         _findFirstSubmitted = true;
       });
-      _findInteractionController!.findAll(find: _findController.text);
+      _findInteractionController.findAll(find: _findController.text);
     }
   }
 
   void _findNext({required bool forward}) {
     if (_findInteractionController == null) return;
-    _findInteractionController!.findNext(forward: forward);
+    _findInteractionController.findNext(forward: forward);
     if (_findFocus.hasFocus) _findFocus.unfocus();
   }
 
@@ -4586,10 +4454,7 @@ class WebViewFullState extends State<WebViewFull>
               crossPage: false,
               text: message,
               align: Alignment.center,
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
               contentColor: Colors.blue,
               contentPadding: const EdgeInsets.all(10),
             );
@@ -4625,9 +4490,7 @@ class WebViewFullState extends State<WebViewFull>
           if (html == null) continue;
           final document = parse(html);
           final h4Elements = document.querySelectorAll('h4');
-          foundTravelAgency = h4Elements.any(
-            (e) => e.text.trim() == 'Travel Agency',
-          );
+          foundTravelAgency = h4Elements.any((e) => e.text.trim() == 'Travel Agency');
           if (foundTravelAgency) break;
         }
         if (!foundTravelAgency) return;
@@ -4682,7 +4545,7 @@ class WebViewFullState extends State<WebViewFull>
                       _loadUrl("https://www.torn.com/gym.php");
                       toastification.dismissAll();
                     },
-                  )
+                  ),
                 ],
               ),
             ),
@@ -4727,7 +4590,7 @@ class WebViewFullState extends State<WebViewFull>
                       _loadUrl("https://www.torn.com/page.php?sid=crimes");
                       toastification.dismissAll();
                     },
-                  )
+                  ),
                 ],
               ),
             ),
@@ -4783,10 +4646,11 @@ class WebViewFullState extends State<WebViewFull>
                               child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
                               onTap: () {
                                 _loadUrl(
-                                    "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical");
+                                  "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical",
+                                );
                                 toastification.dismissAll();
                               },
-                            )
+                            ),
                           ],
                         ),
                     ],
@@ -4822,11 +4686,7 @@ class WebViewFullState extends State<WebViewFull>
                       children: [
                         Image.asset('images/icons/cooldowns/drug5.png', width: 24, color: Colors.grey),
                         const SizedBox(width: 20),
-                        Flexible(
-                          child: Text(
-                            drugWarningText,
-                          ),
-                        ),
+                        Flexible(child: Text(drugWarningText)),
                       ],
                     ),
                   ),
@@ -4847,10 +4707,11 @@ class WebViewFullState extends State<WebViewFull>
                               child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
                               onTap: () {
                                 _loadUrl(
-                                    "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs");
+                                  "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs",
+                                );
                                 toastification.dismissAll();
                               },
-                            )
+                            ),
                           ],
                         ),
                     ],
@@ -4886,11 +4747,7 @@ class WebViewFullState extends State<WebViewFull>
                       children: [
                         Image.asset('images/icons/cooldowns/booster5.png', width: 24, color: Colors.grey),
                         const SizedBox(width: 20),
-                        Flexible(
-                          child: Text(
-                            warningText,
-                          ),
-                        ),
+                        Flexible(child: Text(warningText)),
                       ],
                     ),
                   ),
@@ -4913,7 +4770,7 @@ class WebViewFullState extends State<WebViewFull>
                                 _loadUrl("https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0");
                                 toastification.dismissAll();
                               },
-                            )
+                            ),
                           ],
                         ),
                     ],
@@ -4942,11 +4799,7 @@ class WebViewFullState extends State<WebViewFull>
                       children: [
                         const Icon(Icons.money, size: 24, color: Colors.green),
                         const SizedBox(width: 20),
-                        Flexible(
-                          child: Text(
-                            'Low on cash! (< $cash)',
-                          ),
-                        ),
+                        Flexible(child: Text('Low on cash! (< $cash)')),
                       ],
                     ),
                   ),
@@ -4978,10 +4831,7 @@ class WebViewFullState extends State<WebViewFull>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   color: _themeProvider.cardColor,
-                  border: Border.all(
-                    color: Colors.orange.shade800,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.orange.shade800, width: 2),
                 ),
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.all(8),
@@ -4994,20 +4844,14 @@ class WebViewFullState extends State<WebViewFull>
                           child: Text(
                             'This could be a waste!',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
                     ...warnRows,
-                    if (warnRows.isNotEmpty && cooldownRows.isNotEmpty)
-                      const SizedBox(
-                        width: 50,
-                        child: Divider(),
-                      ),
+                    if (warnRows.isNotEmpty && cooldownRows.isNotEmpty) const SizedBox(width: 50, child: Divider()),
                     ...cooldownRows,
                     const SizedBox(height: 20),
                     Row(
@@ -5022,10 +4866,7 @@ class WebViewFullState extends State<WebViewFull>
                                 onPressed: () {
                                   toastification.dismiss(holder);
                                 },
-                                child: Text(
-                                  "CLOSE",
-                                  style: TextStyle(color: _themeProvider.mainText, fontSize: 10),
-                                ),
+                                child: Text("CLOSE", style: TextStyle(color: _themeProvider.mainText, fontSize: 10)),
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                                   shape: RoundedRectangleBorder(
@@ -5044,10 +4885,7 @@ class WebViewFullState extends State<WebViewFull>
                                   _settingsProvider.travelBoosterCooldownWarning = false;
                                   _settingsProvider.travelWalletMoneyWarning = false;
                                 },
-                                child: Text(
-                                  "DISABLE",
-                                  style: TextStyle(color: _themeProvider.mainText, fontSize: 10),
-                                ),
+                                child: Text("DISABLE", style: TextStyle(color: _themeProvider.mainText, fontSize: 10)),
                                 style: TextButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                                   shape: RoundedRectangleBorder(
@@ -5136,10 +4974,7 @@ class WebViewFullState extends State<WebViewFull>
 
     _bountiesModel = bountiesModel;
     webViewController!.evaluateJavascript(
-      source: bountiesJS(
-        levelMax: _bountiesModel!.levelMax,
-        removeNotAvailable: _bountiesModel!.removeRed,
-      ),
+      source: bountiesJS(levelMax: _bountiesModel!.levelMax, removeNotAvailable: _bountiesModel!.removeRed),
     );
   }
 
@@ -5220,10 +5055,7 @@ class WebViewFullState extends State<WebViewFull>
             BotToast.showText(
               text: "Could not load NNB from TornStats: ${tsMembers.message}",
               clickClose: true,
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
               contentColor: Colors.red[900]!,
               duration: const Duration(seconds: 5),
               contentPadding: const EdgeInsets.all(10),
@@ -5246,15 +5078,14 @@ class WebViewFullState extends State<WebViewFull>
       // On iOS, when using the new menu icon for OC, the html doc does not respond for some reason
       // We just wait a second and then add the script (should not be noticeable)
       await Future.delayed(const Duration(milliseconds: 1000));
-      webViewController!.evaluateJavascript(source: ocNNB(members: membersString, playerID: _u.playerId));
+      webViewController!.evaluateJavascript(
+        source: ocNNB(members: membersString, playerID: _u.playerId),
+      );
     } catch (e) {
       BotToast.showText(
         text: "Could not load NNB from $_ocSource: $e",
         clickClose: true,
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.red[900]!,
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
@@ -5333,6 +5164,44 @@ class WebViewFullState extends State<WebViewFull>
     if (publish) {
       await publishTabState();
     }
+
+    // Restore native focus on tab show
+    await _restoreNativeWebViewFocus();
+  }
+
+  /// Restores native focus on tab show so hasFocus()/focus events fire without a tap (#467)
+  Future<void> _restoreNativeWebViewFocus() async {
+    if (Platform.isWindows) return;
+    if (!mounted || webViewController == null) return;
+    if (!_settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed) return;
+
+    bool eligible() {
+      if (!mounted || webViewController == null) return false;
+      if (!_webViewProvider.browserShowInForeground) return false;
+      if (_webViewProvider.webViewSplitActive) return false;
+      if (!_webViewProvider.isTabUidActive(_tabUid)) return false;
+      if (_findFocus.hasFocus) return false; // a Flutter field owns input
+      return true;
+    }
+
+    if (!eligible()) return;
+
+    Future<void> tryFocus() async {
+      if (!eligible()) return;
+      try {
+        await webViewController?.requestFocus();
+      } catch (_) {}
+    }
+
+    // After the frame, so the shown tab is on stage
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await tryFocus();
+      // iOS needs a retry; the view isn't ready on the first frame
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 250));
+        await tryFocus();
+      }
+    });
   }
 
   Future<void> publishTabState({bool? isActiveTab, bool? isWebViewVisible}) async {
@@ -5350,7 +5219,8 @@ class WebViewFullState extends State<WebViewFull>
 
     try {
       await webViewController!.evaluateJavascript(
-        source: '''
+        source:
+            '''
           (function() {
             const root = (window.__tornpda = window.__tornpda || {});
             root.tab = root.tab || {};
@@ -5381,28 +5251,20 @@ class WebViewFullState extends State<WebViewFull>
     if (existingScript != null) {
       message = "UserScript already exists, redirecting!";
       showDialog(
-          context: context,
-          builder: (_) => UserScriptsAddDialog(
-                editingExistingScript: true,
-                scriptBeingEdited: existingScript,
-                defaultPage: 1,
-              ));
+        context: context,
+        builder: (_) =>
+            UserScriptsAddDialog(editingExistingScript: true, scriptBeingEdited: existingScript, defaultPage: 1),
+      );
     } else {
       message = "UserScript detected, redirecting!";
       showDialog(
-          builder: (_) => UserScriptsAddDialog(
-                editingExistingScript: false,
-                defaultUrl: url,
-                defaultPage: 1,
-              ),
-          context: context);
+        builder: (_) => UserScriptsAddDialog(editingExistingScript: false, defaultUrl: url, defaultPage: 1),
+        context: context,
+      );
     }
     BotToast.showText(
       text: message,
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.blue,
       duration: const Duration(seconds: 3),
       contentPadding: const EdgeInsets.all(10),
@@ -5436,7 +5298,7 @@ class WebViewFullState extends State<WebViewFull>
         pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
-      await webViewController?.addUserScripts(userScripts: scriptsToAdd);
+      await _addUserScriptsAvoidDuplicates(scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
@@ -5486,9 +5348,9 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  Future<void> setBrowserTextScale(int value) async {
+  Future<void> setBrowserTextZoom(int value) async {
     final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
-    newSettings.minimumFontSize = value;
+    newSettings.textZoom = value;
     webViewController!.setSettings(settings: newSettings);
   }
 
@@ -5511,23 +5373,14 @@ class WebViewFullState extends State<WebViewFull>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
                       child: GestureDetector(
-                        child: const Text(
-                          "Copy link",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: const Text("Copy link", style: TextStyle(fontSize: 12, color: Colors.white)),
                         onTap: () {
                           final open = url?.toString() ?? src;
                           if (open == null) return;
                           Clipboard.setData(ClipboardData(text: open));
                           BotToast.showText(
                             text: "Link copied to the clipboard: $open",
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
+                            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                             contentColor: Colors.grey[700]!,
                             contentPadding: const EdgeInsets.all(10),
                           );
@@ -5543,10 +5396,7 @@ class WebViewFullState extends State<WebViewFull>
                             child: GestureDetector(
                               child: const Text(
                                 "Open image in new tab",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                ),
+                                style: TextStyle(fontSize: 12, color: Colors.white),
                               ),
                               onTap: () async {
                                 // If we are using tabs, add a tab
@@ -5566,13 +5416,7 @@ class WebViewFullState extends State<WebViewFull>
                           Padding(
                             padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
                             child: GestureDetector(
-                              child: const Text(
-                                "Download image",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              child: const Text("Download image", style: TextStyle(fontSize: 12, color: Colors.white)),
                               onTap: () async {
                                 await _downloadRequest(dialogCancel: textCancel, manualSource: src);
                               },
@@ -5589,10 +5433,7 @@ class WebViewFullState extends State<WebViewFull>
                             child: GestureDetector(
                               child: const Text(
                                 "Open link in new tab",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                ),
+                                style: TextStyle(fontSize: 12, color: Colors.white),
                               ),
                               onTap: () {
                                 // If we are using tabs, add a tab
@@ -5612,13 +5453,7 @@ class WebViewFullState extends State<WebViewFull>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
                       child: GestureDetector(
-                        child: const Text(
-                          "Add as shortcut",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: const Text("Add as shortcut", style: TextStyle(fontSize: 12, color: Colors.white)),
                         onTap: () async {
                           String? open = url?.toString() ?? src;
 
@@ -5636,20 +5471,13 @@ class WebViewFullState extends State<WebViewFull>
                               context: context,
                               barrierDismissible: false,
                               builder: (BuildContext context) {
-                                return CustomShortcutDialog(
-                                  themeProvider: _themeProvider,
-                                  title: "",
-                                  url: u,
-                                );
+                                return CustomShortcutDialog(themeProvider: _themeProvider, title: "", url: u);
                               },
                             );
                           } else {
                             BotToast.showText(
                               text: "URL error!",
-                              textStyle: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
+                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                               contentColor: Colors.orange[800]!,
                               contentPadding: const EdgeInsets.all(10),
                             );
@@ -5662,13 +5490,7 @@ class WebViewFullState extends State<WebViewFull>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 5, 0, 20),
                       child: GestureDetector(
-                        child: const Text(
-                          "External browser",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: const Text("External browser", style: TextStyle(fontSize: 12, color: Colors.white)),
                         onTap: () async {
                           String? open = url?.toString() ?? src;
                           if (open != null) {
@@ -5793,10 +5615,7 @@ class WebViewFullState extends State<WebViewFull>
         BotToast.showText(
           text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as $fileSavePath",
           clickClose: true,
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           duration: const Duration(seconds: 5),
           contentColor: Colors.blue[800]!,
           contentPadding: const EdgeInsets.all(10),
@@ -5805,10 +5624,7 @@ class WebViewFullState extends State<WebViewFull>
     } catch (e) {
       BotToast.showText(
         text: "Could not complete download: ${cancelToken.isCancelled ? "cancelled" : e}",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.orange[800]!,
         contentPadding: const EdgeInsets.all(10),
       );
@@ -5837,10 +5653,7 @@ class WebViewFullState extends State<WebViewFull>
         BotToast.showText(
           text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as $downloadPath",
           clickClose: true,
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           duration: const Duration(seconds: 5),
           contentColor: Colors.blue[800]!,
           contentPadding: const EdgeInsets.all(10),
@@ -5849,10 +5662,7 @@ class WebViewFullState extends State<WebViewFull>
     } catch (e) {
       BotToast.showText(
         text: "Could not complete download: $e",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.orange[800]!,
         contentPadding: const EdgeInsets.all(10),
       );
@@ -5899,7 +5709,8 @@ class WebViewFullState extends State<WebViewFull>
     return Showcase(
       key: _showCasePlayPauseChain,
       title: 'Chain Forward/Stop!',
-      description: '\nYou can now continue your chain even if you close the browser.\n\n'
+      description:
+          '\nYou can now continue your chain even if you close the browser.\n\n'
           'If you would like to stop your chain at some point, long-press this button '
           'to revert to a standard browser tab!',
       targetPadding: const EdgeInsets.all(10),
@@ -5941,10 +5752,7 @@ class WebViewFullState extends State<WebViewFull>
         onSelected: openHealingPage,
         itemBuilder: (BuildContext context) {
           return chainingAidPopupChoices.map((HealingPages choice) {
-            return PopupMenuItem<HealingPages>(
-              value: choice,
-              child: Text(choice.description!),
-            );
+            return PopupMenuItem<HealingPages>(value: choice, child: Text(choice.description!));
           }).toList();
         },
       ),
@@ -6025,12 +5833,10 @@ class WebViewFullState extends State<WebViewFull>
 
       if (targetsSkipped > 0 && !reachedEnd) {
         BotToast.showText(
-          text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+          text:
+              "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
               "country",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.grey[600]!,
           duration: const Duration(seconds: 5),
           contentPadding: const EdgeInsets.all(10),
@@ -6059,12 +5865,10 @@ class WebViewFullState extends State<WebViewFull>
 
       if (targetsSkipped > 0 && reachedEnd) {
         BotToast.showText(
-          text: "No more targets, all remaining are either in jail, hospital or in a different "
+          text:
+              "No more targets, all remaining are either in jail, hospital or in a different "
               "country (${skippedNames.join(", ")})\n\nPress and hold the play/pause button to stop the chaining mode",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.grey[600]!,
           duration: const Duration(seconds: 5),
           contentPadding: const EdgeInsets.all(10),
@@ -6162,12 +5966,10 @@ class WebViewFullState extends State<WebViewFull>
 
       if (targetsSkipped > 0 && !reachedEnd) {
         BotToast.showText(
-          text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+          text:
+              "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
               "country",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.grey[600]!,
           duration: const Duration(seconds: 5),
           contentPadding: const EdgeInsets.all(10),
@@ -6176,12 +5978,10 @@ class WebViewFullState extends State<WebViewFull>
 
       if (targetsSkipped > 0 && reachedEnd) {
         BotToast.showText(
-          text: "No more targets, all remaining are either in jail, hospital or in a different "
+          text:
+              "No more targets, all remaining are either in jail, hospital or in a different "
               "country (${skippedNames.join(", ")})\n\nPress and hold the play/pause button to stop the chaining mode",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.grey[600]!,
           duration: const Duration(seconds: 5),
           contentPadding: const EdgeInsets.all(10),
@@ -6300,11 +6100,7 @@ class WebViewFullState extends State<WebViewFull>
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          MdiIcons.notebookOutline,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+                        const Icon(MdiIcons.notebookOutline, color: Colors.white, size: 16),
                         const SizedBox(width: 5),
                         Text(
                           'Note for ${_chainingPayload!.attackNameList[_attackNumber]}',
@@ -6352,7 +6148,8 @@ class WebViewFullState extends State<WebViewFull>
 
   void _requestTornThemeChange({required bool dark}) {
     webViewController!.evaluateJavascript(
-      source: '''
+      source:
+          '''
         var event = new CustomEvent("onChangeTornMode", {
           detail: { checked: $dark }
         });
@@ -6417,10 +6214,7 @@ class WebViewFullState extends State<WebViewFull>
     if (message.isNotEmpty) {
       BotToast.showText(
         text: message,
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.grey[800]!,
         duration: Duration(seconds: split ? 1 : 4),
         contentPadding: const EdgeInsets.all(10),
@@ -6454,10 +6248,7 @@ class WebViewFullState extends State<WebViewFull>
     _progressAnimation = Tween<double>(
       begin: currentProgress,
       end: targetProgress,
-    ).animate(CurvedAnimation(
-      parent: _progressController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _progressController, curve: Curves.easeOut));
     _progressAnimation.addListener(_onProgressAnimationUpdate);
 
     _progressController.reset();
@@ -6529,10 +6320,7 @@ class DownloadProgressToastState extends State<DownloadProgressToast> {
       child: Container(
         width: screenWidth,
         padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.grey[700],
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Colors.grey[700]),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
@@ -6540,10 +6328,7 @@ class DownloadProgressToastState extends State<DownloadProgressToast> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 5),
-              Text(
-                widget.fileName,
-                style: const TextStyle(color: Colors.white),
-              ),
+              Text(widget.fileName, style: const TextStyle(color: Colors.white)),
               const SizedBox(height: 5),
               LinearProgressIndicator(
                 value: last / 100,

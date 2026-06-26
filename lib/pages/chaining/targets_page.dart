@@ -47,11 +47,7 @@ class TargetsPage extends StatefulWidget {
   final Function retaliationCallback;
   final Function targetFinderCallback;
 
-  const TargetsPage({
-    super.key,
-    required this.retaliationCallback,
-    required this.targetFinderCallback,
-  });
+  const TargetsPage({super.key, required this.retaliationCallback, required this.targetFinderCallback});
 
   @override
   TargetsPageState createState() => TargetsPageState();
@@ -116,10 +112,7 @@ class TargetsPageState extends State<TargetsPage> {
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
           : null,
       body: Container(
         color: _themeProvider.canvas,
@@ -128,9 +121,7 @@ class TargetsPageState extends State<TargetsPage> {
           onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
           child: MediaQuery.orientationOf(context) == Orientation.portrait
               ? _mainColumn()
-              : SingleChildScrollView(
-                  child: _mainColumn(),
-                ),
+              : SingleChildScrollView(child: _mainColumn()),
         ),
       ),
     );
@@ -154,11 +145,7 @@ class TargetsPageState extends State<TargetsPage> {
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
                   ),
                 ),
-                child: Icon(
-                  Icons.add,
-                  color: _themeProvider.mainText,
-                  size: 20,
-                ),
+                child: Icon(Icons.add, color: _themeProvider.mainText, size: 20),
                 onPressed: () {
                   _showAddDialog(context);
                 },
@@ -176,11 +163,7 @@ class TargetsPageState extends State<TargetsPage> {
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
                   ),
                 ),
-                child: Icon(
-                  Icons.refresh,
-                  color: _themeProvider.mainText,
-                  size: 20,
-                ),
+                child: Icon(Icons.refresh, color: _themeProvider.mainText, size: 20),
                 onPressed: () async {
                   final updateResult = await _targetsProvider.updateAllTargets();
                   if (mounted) {
@@ -189,25 +172,20 @@ class TargetsPageState extends State<TargetsPage> {
                       BotToast.showText(
                         text: updateResult.numberSuccessful > 0
                             ? 'Successfully updated and sorted '
-                                '${updateResult.numberSuccessful} targets!'
+                                  '${updateResult.numberSuccessful} targets!'
                             : 'No targets to update!',
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                         contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
                         duration: const Duration(seconds: 3),
                         contentPadding: const EdgeInsets.all(10),
                       );
                     } else {
                       BotToast.showText(
-                        text: 'Update with errors: ${updateResult.numberErrors} errors '
+                        text:
+                            'Update with errors: ${updateResult.numberErrors} errors '
                             'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
                             'total targets!',
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                         contentColor: Colors.red,
                         duration: const Duration(seconds: 3),
                         contentPadding: const EdgeInsets.all(10),
@@ -219,11 +197,7 @@ class TargetsPageState extends State<TargetsPage> {
             ),
           ],
         ),
-        ChainWidget(
-          key: _chainWidgetKey,
-          alwaysDarkBackground: false,
-          callBackOptions: _callBackChainOptions,
-        ),
+        ChainWidget(key: _chainWidgetKey, alwaysDarkBackground: false, callBackOptions: _callBackChainOptions),
         if (_targetsProvider.currentColorFilterOut.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
@@ -234,14 +208,8 @@ class TargetsPageState extends State<TargetsPage> {
           ),
         Consumer<TargetsProvider>(
           builder: (context, targetsModel, child) => MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Flexible(
-                  child: TargetsList(
-                    targets: targetsModel.allTargets,
-                  ),
-                )
-              : TargetsList(
-                  targets: targetsModel.allTargets,
-                ),
+              ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
+              : TargetsList(targets: targetsModel.allTargets),
         ),
       ],
     );
@@ -282,10 +250,7 @@ class TargetsPageState extends State<TargetsPage> {
                 myColor = Colors.orange[500];
               }
               if (_searchIcon.icon == Icons.search) {
-                _searchIcon = Icon(
-                  Icons.cancel,
-                  color: myColor,
-                );
+                _searchIcon = Icon(Icons.cancel, color: myColor);
                 _appBarText = Form(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -309,10 +274,7 @@ class TargetsPageState extends State<TargetsPage> {
                                       fontSize: 12,
                                     ),
                                   ),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
+                                  style: const TextStyle(color: Colors.white, fontSize: 16),
                                 ),
                               ),
                             ),
@@ -324,10 +286,7 @@ class TargetsPageState extends State<TargetsPage> {
                 );
                 _focusSearch.requestFocus();
               } else {
-                _searchIcon = Icon(
-                  Icons.search,
-                  color: myColor,
-                );
+                _searchIcon = Icon(Icons.search, color: myColor);
                 _appBarText = const Text("Targets");
               }
             });
@@ -353,13 +312,7 @@ class TargetsPageState extends State<TargetsPage> {
                     child: const SizedBox(
                       width: 45,
                       child: Center(
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            color: Colors.white70,
-                          ),
-                        ),
+                        child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white70)),
                       ),
                     ),
                   );
@@ -373,10 +326,7 @@ class TargetsPageState extends State<TargetsPage> {
           },
         ),
         IconButton(
-          icon: Icon(
-            Icons.sort,
-            shadows: _sortHighlight(),
-          ),
+          icon: Icon(Icons.sort, shadows: _sortHighlight()),
           onPressed: _openSortSheet,
         ),
         _optionsPopUp(),
@@ -391,16 +341,14 @@ class TargetsPageState extends State<TargetsPage> {
     super.dispose();
   }
 
-  Future<void> _showAddDialog(BuildContext _) {
+  Future<void> _showAddDialog(BuildContext ctx) {
     final targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     return showDialog<void>(
-      context: _,
+      context: ctx,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -408,23 +356,12 @@ class TargetsPageState extends State<TargetsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
+                    padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                     margin: const EdgeInsets.only(top: 30),
                     decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                     ),
                     child: Form(
                       key: _addFormKey,
@@ -481,10 +418,7 @@ class TargetsPageState extends State<TargetsPage> {
                                       text: tryAddTarget.success
                                           ? 'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'
                                           : 'Error adding $inputId. ${tryAddTarget.errorReason}',
-                                      textStyle: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
+                                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                       contentColor: tryAddTarget.success ? Colors.green : Colors.orange[700]!,
                                       duration: const Duration(seconds: 3),
                                       contentPadding: const EdgeInsets.all(10),
@@ -500,7 +434,7 @@ class TargetsPageState extends State<TargetsPage> {
                                 },
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -586,9 +520,7 @@ class TargetsPageState extends State<TargetsPage> {
       case "Options":
         final TargetsOptionsReturn newOptions = await (Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => TargetsOptionsPage(),
-          ),
+          MaterialPageRoute(builder: (context) => TargetsOptionsPage()),
         ));
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
@@ -604,12 +536,7 @@ class TargetsPageState extends State<TargetsPage> {
           },
         );
       case "Backup":
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TargetsBackupPage(),
-          ),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => TargetsBackupPage()));
       case "Wipe":
         _openWipeDialog();
     }
@@ -645,10 +572,7 @@ class TargetsPageState extends State<TargetsPage> {
       case TargetsSyncAction.tornImported:
         BotToast.showText(
           text: 'Targets imported from Torn.',
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 13, color: Colors.white),
           contentColor: Colors.green[800]!,
           duration: const Duration(seconds: 3),
           contentPadding: const EdgeInsets.all(10),
@@ -657,10 +581,7 @@ class TargetsPageState extends State<TargetsPage> {
       case TargetsSyncAction.tornFailed:
         BotToast.showText(
           text: 'Torn import failed.',
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 13, color: Colors.white),
           contentColor: Colors.red[800]!,
           duration: const Duration(seconds: 3),
           contentPadding: const EdgeInsets.all(10),
@@ -675,9 +596,7 @@ class TargetsPageState extends State<TargetsPage> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -685,32 +604,18 @@ class TargetsPageState extends State<TargetsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
+                    padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
                       color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         const Flexible(
-                          child: Text(
-                            "CAUTION",
-                            style: TextStyle(fontSize: 13, color: Colors.red),
-                          ),
+                          child: Text("CAUTION", style: TextStyle(fontSize: 13, color: Colors.red)),
                         ),
                         const SizedBox(height: 10),
                         Flexible(
@@ -722,10 +627,7 @@ class TargetsPageState extends State<TargetsPage> {
                         ),
                         const SizedBox(height: 10),
                         Flexible(
-                          child: Text(
-                            "Are you sure?",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                          ),
+                          child: Text("Are you sure?", style: TextStyle(fontSize: 12, color: _themeProvider.mainText)),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -745,7 +647,7 @@ class TargetsPageState extends State<TargetsPage> {
                               },
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -759,11 +661,7 @@ class TargetsPageState extends State<TargetsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Icon(Icons.delete_forever_outlined),
-                      ),
+                      child: const SizedBox(height: 34, width: 34, child: Icon(Icons.delete_forever_outlined)),
                     ),
                   ),
                 ),

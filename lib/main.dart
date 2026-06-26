@@ -57,7 +57,10 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/ffscouter_activity_controller.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
+import 'package:torn_pda/providers/ffscouter_flights_controller.dart';
+import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
@@ -76,9 +79,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.13.4';
-const String androidCompilation = '650';
-const String iosCompilation = '650';
+const String appVersion = '3.14.0';
+const String androidCompilation = '657';
+const String iosCompilation = '657';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -156,12 +159,7 @@ int kSdkAndroid = 0;
 bool _isFirebaseInitialized = false;
 
 class ReceivedNotification {
-  ReceivedNotification({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.payload,
-  });
+  ReceivedNotification({required this.id, required this.title, required this.body, required this.payload});
 
   final int id;
   final String title;
@@ -297,8 +295,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
       textButtonTheme: TextButtonThemeData(
         style: ButtonStyle(
-          foregroundColor:
-              _themeProvider.accesibilityNoTextColors ? WidgetStateProperty.all(_themeProvider.mainText) : null,
+          foregroundColor: _themeProvider.accesibilityNoTextColors
+              ? WidgetStateProperty.all(_themeProvider.mainText)
+              : null,
         ),
       ),
     );
@@ -308,9 +307,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final homeDrawer = Navigator(
       key: const ValueKey('main_drawer_navigator'),
       onGenerateRoute: (_) {
-        return MaterialPageRoute(
-          builder: (BuildContext _) => DrawerPage(),
-        );
+        return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
       },
     );
 
@@ -375,19 +372,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     index: wProvider.browserShowInForeground ? 1 : 0,
                     children: [
                       // Index 0: Drawer visible
-                      Stack(
-                        children: [
-                          homeDrawerWidget,
-                          const AppBorder(),
-                        ],
-                      ),
+                      Stack(children: [homeDrawerWidget, const AppBorder()]),
                       // Index 1: Browser mode - drawer hidden but maintains state
-                      Stack(
-                        children: [
-                          _mainBrowser,
-                          const AppBorder(),
-                        ],
-                      ),
+                      Stack(children: [_mainBrowser, const AppBorder()]),
                     ],
                   );
                 } else {
@@ -418,13 +405,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     );
                   } else {
                     // Fallback to normal stack if split screen conditions not met
-                    home = Stack(
-                      children: [
-                        homeDrawerWidget,
-                        _mainBrowser,
-                        const AppBorder(),
-                      ],
-                    );
+                    home = Stack(children: [homeDrawerWidget, _mainBrowser, const AppBorder()]);
                   }
                 }
 
@@ -529,9 +510,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (Platform.isWindows) {
       final localAppData = Platform.environment['APPDATA'];
       _webViewProvider.webViewEnvironment = await WebViewEnvironment.create(
-        settings: WebViewEnvironmentSettings(
-          userDataFolder: '$localAppData\\com.manuito\\torn_pda\\webview_windows',
-        ),
+        settings: WebViewEnvironmentSettings(userDataFolder: '$localAppData\\com.manuito\\torn_pda\\webview_windows'),
       );
     }
 
@@ -599,7 +578,10 @@ Future<void> _handleNotificationResponse(NotificationResponse notificationRespon
   } catch (e, stackTrace) {
     log("Error handling notification response: $e");
     logErrorToCrashlytics(
-        "Error handling notification response", "Notification response handler failed: $e", stackTrace);
+      "Error handling notification response",
+      "Notification response handler failed: $e",
+      stackTrace,
+    );
   }
 }
 
@@ -634,7 +616,10 @@ Future<void> _initializePlatformSpecifics() async {
   } catch (e, stackTrace) {
     log("Error initializing platform specifics: $e");
     logErrorToCrashlytics(
-        "Error initializing platform specifics", "Platform specifics initialization failed: $e", stackTrace);
+      "Error initializing platform specifics",
+      "Platform specifics initialization failed: $e",
+      stackTrace,
+    );
   }
 }
 
@@ -645,7 +630,10 @@ Future<void> _initializeBackupAndTheme(WidgetsBinding widgetsBinding) async {
   } catch (e, stackTrace) {
     log("Error initializing backup and theme: $e");
     logErrorToCrashlytics(
-        "Error initializing backup and theme", "Backup and theme initialization failed: $e", stackTrace);
+      "Error initializing backup and theme",
+      "Backup and theme initialization failed: $e",
+      stackTrace,
+    );
   }
 }
 
@@ -702,6 +690,9 @@ Future<void> _initializeGetXControllers() async {
     Get.put(ApiCallerController(), permanent: true);
     Get.put(WarController(), permanent: true);
     Get.put(FFScouterCacheController(), permanent: true);
+    Get.put(FFScouterPremiumController(), permanent: true);
+    Get.put(FFScouterFlightsController(), permanent: true);
+    Get.put(FFScouterActivityController(), permanent: true);
     Get.put(StakeoutsController(), permanent: true);
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);
@@ -720,7 +711,10 @@ Future<void> _initializeGetXControllers() async {
   } catch (e, stackTrace) {
     log("Error initializing GetX controllers: $e");
     logErrorToCrashlytics(
-        "Error initializing GetX controllers", "GetX controllers initialization failed: $e", stackTrace);
+      "Error initializing GetX controllers",
+      "GetX controllers initialization failed: $e",
+      stackTrace,
+    );
   }
 }
 
@@ -816,16 +810,17 @@ Future<void> _initializePlatformPlugins() async {
   } catch (e, stackTrace) {
     log("Error initializing platform plugins: $e");
     logErrorToCrashlytics(
-        "Error initializing platform plugins", "Platform plugins initialization failed: $e", stackTrace);
+      "Error initializing platform plugins",
+      "Platform plugins initialization failed: $e",
+      stackTrace,
+    );
   }
 }
 
 Future<void> _initializeAudioAndConnectivity() async {
   try {
     AudioPlayer.global.setAudioContext(
-      AudioContext(
-        android: const AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
-      ),
+      AudioContext(android: const AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck)),
     );
 
     if (await Prefs().getPdaConnectivityCheckRC()) {
@@ -837,7 +832,10 @@ Future<void> _initializeAudioAndConnectivity() async {
   } catch (e, stackTrace) {
     log("Error initializing audio and connectivity: $e");
     logErrorToCrashlytics(
-        "Error initializing audio and connectivity", "Audio and connectivity initialization failed: $e", stackTrace);
+      "Error initializing audio and connectivity",
+      "Audio and connectivity initialization failed: $e",
+      stackTrace,
+    );
   }
 }
 
@@ -870,13 +868,7 @@ Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
   }
 }
 
-void logToUser(
-  String? message, {
-  int duration = 3,
-  Color? textColor,
-  Color? backgroundcolor,
-  Color? borderColor,
-}) {
+void logToUser(String? message, {int duration = 3, Color? textColor, Color? backgroundcolor, Color? borderColor}) {
   log(message.toString());
   if (message == null) return;
   backgroundcolor ??= Colors.red.shade600;
@@ -889,22 +881,26 @@ void logToUser(
       builder: (BuildContext context, ToastificationItem holder) {
         return Center(
           child: GestureDetector(
-              onTap: () => toastification.dismiss(holder),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: backgroundcolor,
-                  border: Border.all(color: borderColor!, width: 2),
-                ),
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.all(2),
-                child: Column(
-                  children: [
-                    Text("Debug Message\n", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-                    Text(message.toString(), maxLines: 10, style: TextStyle(color: textColor)),
-                  ],
-                ),
-              )),
+            onTap: () => toastification.dismiss(holder),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: backgroundcolor,
+                border: Border.all(color: borderColor!, width: 2),
+              ),
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.all(2),
+              child: Column(
+                children: [
+                  Text(
+                    "Debug Message\n",
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                  ),
+                  Text(message.toString(), maxLines: 10, style: TextStyle(color: textColor)),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
@@ -932,23 +928,22 @@ class AppBorder extends StatefulWidget {
 class AppBorderState extends State<AppBorder> {
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<ChainStatusController>(builder: (chainP) {
-      return IgnorePointer(
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    width: chainP.watcherActive ? 3 : 0,
-                    color: chainP.borderColor,
+    return GetBuilder<ChainStatusController>(
+      builder: (chainP) {
+        return IgnorePointer(
+          child: Column(
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(width: chainP.watcherActive ? 3 : 0, color: chainP.borderColor),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      );
-    });
+            ],
+          ),
+        );
+      },
+    );
   }
 }

@@ -132,7 +132,8 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
               // For Arson Warehouse
               webView!.addJavaScriptHandler(
                 handlerName: 'copyToClipboard',
-                callback: (args) {
+                callback: (JavaScriptHandlerFunctionData data) {
+                  final args = data.args;
                   if (args.isNotEmpty) {
                     // Copy custom message or total
                     String toastMessage = "";

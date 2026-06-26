@@ -6,6 +6,31 @@ This document describes the GM (Greasemonkey) compatibility features added to To
 
 Torn PDA now supports standard userscript metadata headers and improved version matching, bringing it closer to compatibility with ViolentMonkey and TamperMonkey.
 
+## Supported GM APIs
+
+Torn PDA ships a built-in GM compatibility handler that exposes the most common Greasemonkey APIs in both dot notation (`GM.getValue`) and underscore notation (`GM_getValue`). Scripts can also load the advanced, self-updating [GMforPDA](https://github.com/Manuito83/torn-pda/blob/master/userscripts/GMforPDA.user.js) script, which overrides the built-in handler with the latest version.
+
+| API | `GM.*` | `GM_*` | Notes |
+| --- | :---: | :---: | --- |
+| `info` | ✅ | ✅ | Reports `scriptHandler` and handler version |
+| `getValue(key, default)` | ✅ | ✅ | Returns the default on missing or corrupt values |
+| `getValues(keys)` | ✅ | ✅ | Accepts an array of keys or a `{key: default}` map |
+| `setValue(key, value)` | ✅ | ✅ | |
+| `setValues(values)` | ✅ | ✅ | Accepts a `{key: value}` map |
+| `deleteValue(key)` | ✅ | ✅ | |
+| `deleteValues(keys)` | ❌ | ✅ | Only the `GM_deleteValues` form is exposed |
+| `listValues()` | ✅ | ✅ | |
+| `addStyle(css)` | ✅ | ✅ | Works even when called before `<head>` exists (e.g. at document-start) |
+| `notification(...)` | ✅ | ✅ | Rendered through a native confirm dialog |
+| `setClipboard(text)` | ✅ | ✅ | |
+| `xmlHttpRequest(details)` | ✅ | ✅ | Dot form is `GM.xmlHttpRequest`, underscore form is `GM_xmlhttpRequest`; routed through PDA's [HTTP handlers](../webview/http-handlers.md) |
+
+`unsafeWindow` is also exposed and points at the page `window`.
+
+The bulk value helpers (`getValues`, `setValues`, `deleteValues`) were added in GMforPDA 2.3.0.
+
+> Note: if `GM` is already present in the window, the handler skips re-declaring it (with a console warning) instead of overwriting it. This prevents errors when a page spawns extra tabs (e.g. via `window.open`).
+
 ## Supported Headers
 
 ### @grant
@@ -24,11 +49,11 @@ The `@grant` header specifies which GM_* and GM.* APIs the script needs access t
 **Currently supported:**
 - Header parsing and storage
 - Grant list is available in the UserScriptModel
+- Torn PDA includes a baseline GM compatibility handler for common `GM_*` and `GM.*` APIs
 
 **TODO:**
-- Implement actual GM_* API functionality
-- Add PDA_* API access
-- Implement ###PDA-APIKEY### replacement
+- Extend the [Supported GM APIs](#supported-gm-apis) matrix with ViolentMonkey/TamperMonkey parity gaps
+- Add any missing PDA-specific permission handling if Torn PDA starts enforcing grants
 
 ### @require
 
@@ -64,17 +89,17 @@ The `@match` header specifies which URLs the script should run on. Pattern match
 ```
 
 **Current implementation:**
-- Simple wildcard patterns (*)
-- Substring matching (e.g., `*torn.com*` matches `https://torn.com/`)
-- Case-insensitive matching
+- `*` as a universal match for backwards compatibility
+- Scheme wildcards such as `*://www.torn.com/*`
+- Domain wildcards such as `*://*.torn.com/*`
+- Path wildcards such as `*://www.torn.com/profiles.php*`
+- Legacy patterns without a protocol, such as `www.torn.com/*`
+- Fallback handling for non-standard legacy patterns
 
 **TODO:**
-- Implement full ViolentMonkey-style pattern matching
 - Add support for @exclude patterns
 - Add support for @include patterns
-- Add scheme wildcards (http://, https://, *)
-- Add domain wildcards (*.example.com)
-- Add path wildcards (/path/*)
+- Keep expanding edge-case coverage against the userscript manager specifications
 
 ## Version Matching
 
@@ -106,6 +131,7 @@ List<String> requires;    // List of @require headers
 - `toJson()` - Serializes grants and requires
 - `shouldInject()` - Improved pattern matching with URL normalization
 - `isNewerVersion()` - Uses VersionModel for better version comparison
+- `adaptSource()` in `UserScriptsProvider` replaces `###PDA-APIKEY###` at injection time
 
 ### ScriptHeaderModel
 
@@ -200,13 +226,11 @@ flutter test test/models/script_header_model_test.dart
 ## Future Work
 
 ### High Priority
-- Implement actual GM_* API functionality
 - Implement automatic loading of @require scripts
-- Add PDA_* API access
-- Implement ###PDA-APIKEY### replacement
+- Expand the GM API compatibility matrix with ViolentMonkey/TamperMonkey parity gaps and missing behavior
+- Add PDA-specific permission handling if grant enforcement is introduced
 
 ### Medium Priority
-- Full ViolentMonkey-style pattern matching
 - @exclude and @include pattern support
 - Script installation improvements
 - Update check improvements

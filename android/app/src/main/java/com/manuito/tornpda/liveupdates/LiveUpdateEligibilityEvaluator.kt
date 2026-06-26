@@ -63,10 +63,12 @@ class LiveUpdateEligibilityEvaluator(
     }
 
     private fun determineReason(snapshot: LiveUpdateCapabilitySnapshot): LiveUpdateUnsupportedReason? {
+        // promotedNotificationsEnabled is NOT a hard requirement: when the user/OEM
+        // has the Android 16 promoted-chip toggle off we still post a normal ongoing
+        // notification (the plane icon). Promotion is a best-effort enhancement only.
         return when {
             !snapshot.supportedApi -> LiveUpdateUnsupportedReason.API_TOO_OLD
             !snapshot.notificationsEnabled -> LiveUpdateUnsupportedReason.PERMISSION_DENIED
-            !snapshot.promotedNotificationsEnabled -> LiveUpdateUnsupportedReason.PROMOTED_DISABLED
             snapshot.batteryOptimized -> LiveUpdateUnsupportedReason.BATTERY_RESTRICTED
             else -> null
         }

@@ -66,73 +66,60 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
       child: Container(
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                    ? _themeProvider!.statusBar
-                    : _themeProvider!.canvas
+                  ? Colors.blueGrey
+                  : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
             : _themeProvider!.canvas,
         child: SafeArea(
-          child: GetBuilder<ChainStatusController>(builder: (chainP) {
-            return Scaffold(
-              backgroundColor: _themeProvider!.canvas,
-              appBar: _settingsProvider.appBarTop ? buildAppBar(chainP) : null,
-              bottomNavigationBar: !_settingsProvider.appBarTop
-                  ? SizedBox(
-                      height: AppBar().preferredSize.height,
-                      child: buildAppBar(chainP),
-                    )
-                  : null,
-              body: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Column(
-                      children: <Widget>[
-                        const SizedBox(height: 15),
-                        const Text("GENERAL SETTINGS", style: TextStyle(fontSize: 11)),
-                        _generalSettings(chainP),
-                        const Divider(),
-                        const SizedBox(height: 5),
-                        const Text("PANIC MODE", style: TextStyle(fontSize: 11)),
-                        _panicMode(chainP),
-                        const Divider(),
-                        const SizedBox(height: 5),
-                        const Text("API FAILURE", style: TextStyle(fontSize: 11)),
-                        _apiFailure(chainP),
-                        const Divider(),
-                        const SizedBox(height: 5),
-                        const Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
-                        _greenLevel2(chainP),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 100),
-                          child: Divider(),
-                        ),
-                        _orangeLevel1(chainP),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 100),
-                          child: Divider(),
-                        ),
-                        _orangeLevel2(chainP),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 100),
-                          child: Divider(),
-                        ),
-                        _redLevel1(chainP),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 100),
-                          child: Divider(),
-                        ),
-                        _redLevel2(chainP),
-                        const SizedBox(height: 50),
-                      ],
+          child: GetBuilder<ChainStatusController>(
+            builder: (chainP) {
+              return Scaffold(
+                backgroundColor: _themeProvider!.canvas,
+                appBar: _settingsProvider.appBarTop ? buildAppBar(chainP) : null,
+                bottomNavigationBar: !_settingsProvider.appBarTop
+                    ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar(chainP))
+                    : null,
+                body: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Column(
+                        children: <Widget>[
+                          const SizedBox(height: 15),
+                          const Text("GENERAL SETTINGS", style: TextStyle(fontSize: 11)),
+                          _generalSettings(chainP),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                          const Text("PANIC MODE", style: TextStyle(fontSize: 11)),
+                          _panicMode(chainP),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                          const Text("API FAILURE", style: TextStyle(fontSize: 11)),
+                          _apiFailure(chainP),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                          const Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
+                          _greenLevel2(chainP),
+                          const Padding(padding: EdgeInsets.symmetric(horizontal: 100), child: Divider()),
+                          _orangeLevel1(chainP),
+                          const Padding(padding: EdgeInsets.symmetric(horizontal: 100), child: Divider()),
+                          _orangeLevel2(chainP),
+                          const Padding(padding: EdgeInsets.symmetric(horizontal: 100), child: Divider()),
+                          _redLevel1(chainP),
+                          const Padding(padding: EdgeInsets.symmetric(horizontal: 100), child: Divider()),
+                          _redLevel2(chainP),
+                          const SizedBox(height: 50),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -241,17 +228,9 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             children: [
               Row(
                 children: <Widget>[
-                  const Icon(
-                    Icons.alarm,
-                    size: 18,
-                  ),
+                  const Icon(Icons.alarm, size: 18),
                   const SizedBox(width: 10),
-                  const Text(
-                    "00:00",
-                    style: TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
+                  const Text("00:00", style: TextStyle(fontSize: 12)),
                   Expanded(
                     child: Slider(
                       value: chainP.panicValue,
@@ -265,9 +244,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   ),
                   Text(
                     _printDuration(Duration(seconds: chainP.panicValue.toInt())),
-                    style: const TextStyle(
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
               ),
@@ -282,9 +259,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                         color: _themeProvider!.mainText,
                       ),
                       const SizedBox(width: 10),
-                      const Text(
-                        "Targets",
-                      ),
+                      const Text("Targets"),
                     ],
                   ),
                   IconButton(
@@ -293,9 +268,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                       showDialog<void>(
                         context: context,
                         builder: (BuildContext context) {
-                          return AddChainTargetDialog(
-                            themeProvider: _themeProvider,
-                          );
+                          return AddChainTargetDialog(themeProvider: _themeProvider);
                         },
                       );
                     },
@@ -310,11 +283,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                       child: Text(
                         "You can also add targets to this list by swiping a target's card left in the Targets or "
                         "War sections.",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                       ),
                     ),
                   ],
@@ -365,11 +334,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               Flexible(
                 child: Text(
                   "In case that Torn API fails and the watcher is active, an alert will trigger",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                 ),
               ),
             ],
@@ -399,11 +364,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     Flexible(
                       child: Text(
                         "If panic mode is active, dictates if an API failure should trigger an inmediate attack",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                       ),
                     ),
                   ],
@@ -421,12 +382,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text(
-              "Green pulse",
-              style: TextStyle(
-                color: chainP.green2Enabled ? _themeProvider!.mainText : Colors.grey,
-              ),
-            ),
+            Text("Green pulse", style: TextStyle(color: chainP.green2Enabled ? _themeProvider!.mainText : Colors.grey)),
             Switch(
               value: chainP.green2Enabled,
               onChanged: (value) {
@@ -448,17 +404,9 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                const Icon(
-                  Icons.alarm,
-                  size: 18,
-                ),
+                const Icon(Icons.alarm, size: 18),
                 const SizedBox(width: 10),
-                Text(
-                  _printDuration(Duration(seconds: chainP.green2Min.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
+                Text(_printDuration(Duration(seconds: chainP.green2Min.toInt())), style: const TextStyle(fontSize: 12)),
                 Expanded(
                   child: RangeSlider(
                     values: RangeValues(chainP.green2Min, chainP.green2Max),
@@ -475,12 +423,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     },
                   ),
                 ),
-                Text(
-                  _printDuration(Duration(seconds: chainP.green2Max.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
+                Text(_printDuration(Duration(seconds: chainP.green2Max.toInt())), style: const TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -501,9 +444,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   children: [
                     Text(
                       "Orange pulse + ",
-                      style: TextStyle(
-                        color: chainP.orange1Enabled ? _themeProvider!.mainText : Colors.grey,
-                      ),
+                      style: TextStyle(color: chainP.orange1Enabled ? _themeProvider!.mainText : Colors.grey),
                     ),
                     GestureDetector(
                       child: Icon(
@@ -519,9 +460,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     Text(
                       " + ",
-                      style: TextStyle(
-                        color: chainP.orange1Enabled ? _themeProvider!.mainText : Colors.grey,
-                      ),
+                      style: TextStyle(color: chainP.orange1Enabled ? _themeProvider!.mainText : Colors.grey),
                     ),
                     Text(
                       " caution ",
@@ -564,16 +503,11 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                const Icon(
-                  Icons.alarm,
-                  size: 18,
-                ),
+                const Icon(Icons.alarm, size: 18),
                 const SizedBox(width: 10),
                 Text(
                   _printDuration(Duration(seconds: chainP.orange1Min.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontSize: 12),
                 ),
                 Expanded(
                   child: RangeSlider(
@@ -593,9 +527,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 ),
                 Text(
                   _printDuration(Duration(seconds: chainP.orange1Max.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ],
             ),
@@ -614,27 +546,21 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               children: [
                 Text(
                   "Orange pulse + ",
-                  style: TextStyle(
-                    color: chainP.orange2Enabled ? _themeProvider!.mainText : Colors.grey,
-                  ),
+                  style: TextStyle(color: chainP.orange2Enabled ? _themeProvider!.mainText : Colors.grey),
                 ),
                 GestureDetector(
                   child: Icon(
                     Icons.chat_bubble_outline,
                     size: 18,
-                    color:
-                        chainP.orange2Enabled && chainP.notificationsEnabled ? _themeProvider!.mainText : Colors.grey,
+                    color: chainP.orange2Enabled && chainP.notificationsEnabled
+                        ? _themeProvider!.mainText
+                        : Colors.grey,
                   ),
                   onTap: () {
                     chainP.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
                   },
                 ),
-                Text(
-                  " + ",
-                  style: TextStyle(
-                    color: chainP.orange2Enabled ? _themeProvider!.mainText : Colors.grey,
-                  ),
-                ),
+                Text(" + ", style: TextStyle(color: chainP.orange2Enabled ? _themeProvider!.mainText : Colors.grey)),
                 Text(
                   " warning ",
                   style: TextStyle(
@@ -674,16 +600,11 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                const Icon(
-                  Icons.alarm,
-                  size: 18,
-                ),
+                const Icon(Icons.alarm, size: 18),
                 const SizedBox(width: 10),
                 Text(
                   _printDuration(Duration(seconds: chainP.orange2Min.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontSize: 12),
                 ),
                 Expanded(
                   child: RangeSlider(
@@ -703,9 +624,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 ),
                 Text(
                   _printDuration(Duration(seconds: chainP.orange2Max.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ],
             ),
@@ -724,9 +643,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               children: [
                 Text(
                   "Red pulse + ",
-                  style: TextStyle(
-                    color: chainP.red1Enabled ? _themeProvider!.mainText : Colors.grey,
-                  ),
+                  style: TextStyle(color: chainP.red1Enabled ? _themeProvider!.mainText : Colors.grey),
                 ),
                 GestureDetector(
                   child: Icon(
@@ -738,12 +655,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     chainP.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
                   },
                 ),
-                Text(
-                  " + ",
-                  style: TextStyle(
-                    color: chainP.red1Enabled ? _themeProvider!.mainText : Colors.grey,
-                  ),
-                ),
+                Text(" + ", style: TextStyle(color: chainP.red1Enabled ? _themeProvider!.mainText : Colors.grey)),
                 Text(
                   " caution ",
                   style: TextStyle(
@@ -783,17 +695,9 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                const Icon(
-                  Icons.alarm,
-                  size: 18,
-                ),
+                const Icon(Icons.alarm, size: 18),
                 const SizedBox(width: 10),
-                Text(
-                  _printDuration(Duration(seconds: chainP.red1Min.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
+                Text(_printDuration(Duration(seconds: chainP.red1Min.toInt())), style: const TextStyle(fontSize: 12)),
                 Expanded(
                   child: RangeSlider(
                     values: RangeValues(chainP.red1Min, chainP.red1Max),
@@ -810,12 +714,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     },
                   ),
                 ),
-                Text(
-                  _printDuration(Duration(seconds: chainP.red1Max.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
+                Text(_printDuration(Duration(seconds: chainP.red1Max.toInt())), style: const TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -833,9 +732,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               children: [
                 Text(
                   "Red pulse + ",
-                  style: TextStyle(
-                    color: chainP.red2Enabled ? _themeProvider!.mainText : Colors.grey,
-                  ),
+                  style: TextStyle(color: chainP.red2Enabled ? _themeProvider!.mainText : Colors.grey),
                 ),
                 GestureDetector(
                   child: Icon(
@@ -847,12 +744,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     chainP.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
                   },
                 ),
-                Text(
-                  " + ",
-                  style: TextStyle(
-                    color: chainP.red2Enabled ? _themeProvider!.mainText : Colors.grey,
-                  ),
-                ),
+                Text(" + ", style: TextStyle(color: chainP.red2Enabled ? _themeProvider!.mainText : Colors.grey)),
                 Text(
                   " warning ",
                   style: TextStyle(
@@ -892,17 +784,9 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             padding: const EdgeInsets.only(right: 10),
             child: Row(
               children: <Widget>[
-                const Icon(
-                  Icons.alarm,
-                  size: 18,
-                ),
+                const Icon(Icons.alarm, size: 18),
                 const SizedBox(width: 10),
-                Text(
-                  _printDuration(Duration(seconds: chainP.red2Min.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
+                Text(_printDuration(Duration(seconds: chainP.red2Min.toInt())), style: const TextStyle(fontSize: 12)),
                 Expanded(
                   child: RangeSlider(
                     values: RangeValues(chainP.red2Min, chainP.red2Max),
@@ -919,12 +803,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     },
                   ),
                 ),
-                Text(
-                  _printDuration(Duration(seconds: chainP.red2Max.toInt())),
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
+                Text(_printDuration(Duration(seconds: chainP.red2Max.toInt())), style: const TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -950,10 +829,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     chainP.resetAllDefcon();
     BotToast.showText(
       text: "Oops! Error encountered, all warning levels have been reset!",
-      textStyle: const TextStyle(
-        fontSize: 13,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 13, color: Colors.white),
       contentColor: Colors.red[800]!,
       duration: const Duration(seconds: 5),
       contentPadding: const EdgeInsets.all(10),
@@ -965,9 +841,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -975,32 +849,18 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
+                    padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
                       color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
-                          child: Text(
-                            "Reset",
-                            style: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
-                          ),
+                          child: Text("Reset", style: TextStyle(fontSize: 13, color: _themeProvider!.mainText)),
                         ),
                         const SizedBox(height: 8),
                         Flexible(
@@ -1027,7 +887,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                               },
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -1041,11 +901,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Icon(Icons.restore),
-                      ),
+                      child: const SizedBox(height: 34, width: 34, child: Icon(Icons.restore)),
                     ),
                   ),
                 ),
@@ -1062,9 +918,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -1072,32 +926,18 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
+                    padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
                       color: _themeProvider!.secondBackground,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
-                          child: Text(
-                            "Panic Mode",
-                            style: TextStyle(fontSize: 13, color: _themeProvider!.mainText),
-                          ),
+                          child: Text("Panic Mode", style: TextStyle(fontSize: 13, color: _themeProvider!.mainText)),
                         ),
                         const SizedBox(height: 8),
                         Flexible(
@@ -1126,7 +966,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                               },
                             ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -1140,11 +980,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Icon(MdiIcons.alphaPCircleOutline),
-                      ),
+                      child: const SizedBox(height: 34, width: 34, child: Icon(MdiIcons.alphaPCircleOutline)),
                     ),
                   ),
                 ),
@@ -1158,10 +994,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
 }
 
 class AddChainTargetDialog extends StatefulWidget {
-  const AddChainTargetDialog({
-    super.key,
-    required this.themeProvider,
-  });
+  const AddChainTargetDialog({super.key, required this.themeProvider});
 
   final ThemeProvider? themeProvider;
 
@@ -1182,146 +1015,129 @@ class AddChainTargetDialogState extends State<AddChainTargetDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 0.0,
       backgroundColor: Colors.transparent,
-      content: GetBuilder<ChainStatusController>(builder: (chainP) {
-        return Container(
-          width: double.maxFinite,
-          padding: const EdgeInsets.only(
-            top: 45,
-            bottom: 16,
-            left: 16,
-            right: 16,
-          ),
-          margin: const EdgeInsets.only(top: 30),
-          decoration: BoxDecoration(
-            color: widget.themeProvider!.secondBackground,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10.0,
-                offset: Offset(0.0, 10.0),
-              ),
-            ],
-          ),
-          child: Form(
-            key: _addFormKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // To make the card compact
-              children: <Widget>[
-                const Text(
-                  "Panic Mode Targets",
-                  style: TextStyle(fontSize: 15),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Flexible(
-                      child: TextFormField(
-                        style: const TextStyle(fontSize: 14),
-                        controller: _addIdController,
-                        maxLength: 10,
-                        minLines: 1,
-                        maxLines: 2,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          counterText: "",
-                          border: OutlineInputBorder(),
-                          labelText: 'Insert user ID',
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Cannot be empty!";
-                          }
-                          if (chainP.panicTargets.length >= 10) {
-                            return "Maximum 10 targets!";
-                          }
+      content: GetBuilder<ChainStatusController>(
+        builder: (chainP) {
+          return Container(
+            width: double.maxFinite,
+            padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
+            margin: const EdgeInsets.only(top: 30),
+            decoration: BoxDecoration(
+              color: widget.themeProvider!.secondBackground,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
+            ),
+            child: Form(
+              key: _addFormKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // To make the card compact
+                children: <Widget>[
+                  const Text("Panic Mode Targets", style: TextStyle(fontSize: 15)),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: TextFormField(
+                          style: const TextStyle(fontSize: 14),
+                          controller: _addIdController,
+                          maxLength: 10,
+                          minLines: 1,
+                          maxLines: 2,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            counterText: "",
+                            border: OutlineInputBorder(),
+                            labelText: 'Insert user ID',
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return "Cannot be empty!";
+                            }
+                            if (chainP.panicTargets.length >= 10) {
+                              return "Maximum 10 targets!";
+                            }
 
-                          final n = num.tryParse(value);
-                          if (chainP.panicTargets.where((t) => t.id.toString() == value).isNotEmpty) {
-                            return "Already in the list!";
+                            final n = num.tryParse(value);
+                            if (chainP.panicTargets.where((t) => t.id.toString() == value).isNotEmpty) {
+                              return "Already in the list!";
+                            }
+                            if (n == null) {
+                              return '$value is not a valid ID!';
+                            }
+                            _addIdController.text = value.trim();
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
+                  Expanded(child: panicCards(chainP)),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      TextButton(
+                        child: const Text("Add"),
+                        onPressed: () async {
+                          if (_addFormKey.currentState!.validate()) {
+                            final FocusScopeNode currentFocus = FocusScope.of(context);
+                            if (!currentFocus.hasPrimaryFocus) {
+                              currentFocus.unfocus();
+                            }
+                            // Copy controller's text ot local variable
+                            // early and delete the global, so that text
+                            // does not appear again in case of failure
+                            String inputId = _addIdController.text;
+                            _addIdController.text = '';
+
+                            final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
+                            String message = "";
+                            Color? messageColor = Colors.green[700];
+                            if (target is TargetModel) {
+                              inputId = target.faction!.factionId.toString();
+                              chainP.addPanicTarget(
+                                PanicTargetModel()
+                                  ..name = target.name
+                                  ..level = target.level
+                                  ..id = target.playerId
+                                  ..factionName = target.faction!.factionName,
+                              );
+                              message = "Added ${target.name}!";
+                            } else {
+                              message = "Can't locate the given target!";
+                              messageColor = Colors.orange[700];
+                            }
+
+                            BotToast.showText(
+                              text: message,
+                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                              contentColor: messageColor!,
+                              duration: const Duration(seconds: 3),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                            return;
                           }
-                          if (n == null) {
-                            return '$value is not a valid ID!';
-                          }
-                          _addIdController.text = value.trim();
-                          return null;
                         },
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Expanded(child: panicCards(chainP)),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
-                      child: const Text("Add"),
-                      onPressed: () async {
-                        if (_addFormKey.currentState!.validate()) {
-                          final FocusScopeNode currentFocus = FocusScope.of(context);
-                          if (!currentFocus.hasPrimaryFocus) {
-                            currentFocus.unfocus();
-                          }
-                          // Copy controller's text ot local variable
-                          // early and delete the global, so that text
-                          // does not appear again in case of failure
-                          String inputId = _addIdController.text;
+                      TextButton(
+                        child: const Text("Close"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
                           _addIdController.text = '';
-
-                          final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
-                          String message = "";
-                          Color? messageColor = Colors.green[700];
-                          if (target is TargetModel) {
-                            inputId = target.faction!.factionId.toString();
-                            chainP.addPanicTarget(
-                              PanicTargetModel()
-                                ..name = target.name
-                                ..level = target.level
-                                ..id = target.playerId
-                                ..factionName = target.faction!.factionName,
-                            );
-                            message = "Added ${target.name}!";
-                          } else {
-                            message = "Can't locate the given target!";
-                            messageColor = Colors.orange[700];
-                          }
-
-                          BotToast.showText(
-                            text: message,
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: messageColor!,
-                            duration: const Duration(seconds: 3),
-                            contentPadding: const EdgeInsets.all(10),
-                          );
-                          return;
-                        }
-                      },
-                    ),
-                    TextButton(
-                      child: const Text("Close"),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _addIdController.text = '';
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 
@@ -1333,12 +1149,7 @@ class AddChainTargetDialogState extends State<AddChainTargetDialog> {
           key: UniqueKey(),
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SizedBox(
-              width: 30,
-              child: Icon(
-                Icons.menu,
-              ),
-            ),
+            const SizedBox(width: 30, child: Icon(Icons.menu)),
             Flexible(
               child: Card(
                 color: widget.themeProvider!.cardColor,
@@ -1375,7 +1186,9 @@ class AddChainTargetDialogState extends State<AddChainTargetDialog> {
       );
     }
     return ReorderableListView(
-      onReorder: (int oldIndex, int newIndex) {
+      onReorderItem: (int oldIndex, int newIndex) {
+        // Preserve the original (un-shifted) newIndex that reorderPanicTarget expects
+        if (oldIndex < newIndex) newIndex += 1;
         chainP.reorderPanicTarget(oldIndex, newIndex);
       },
       children: panicCards,

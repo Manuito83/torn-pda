@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_stats_model.dart';
+import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/external/ffscouter_comm.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_premium_gate.dart';
 import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 
@@ -50,10 +52,7 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
               children: [
                 Padding(
                   padding: EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    "FFSCOUTER",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  child: Text("FFSCOUTER", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -211,10 +210,7 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
           ),
           Padding(
             padding: const EdgeInsets.only(left: 20, top: 10),
-            child: Text(
-              bsString,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
+            child: Text(bsString, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           ),
           const SizedBox(height: 20),
           if (stats.fairFight != null)
@@ -222,14 +218,8 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
               padding: const EdgeInsets.only(left: 20, top: 10),
               child: Row(
                 children: [
-                  const Text(
-                    "Fair Fight: ",
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  Text(
-                    ffString,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
+                  const Text("Fair Fight: ", style: TextStyle(fontSize: 15)),
+                  Text(ffString, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 ],
               ),
             ),
@@ -239,37 +229,119 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Last updated",
-                    style: TextStyle(fontSize: 15),
-                  ),
+                  const Text("Last updated", style: TextStyle(fontSize: 15)),
                   const SizedBox(height: 2),
-                  Builder(builder: (context) {
-                    final updatedDate = DateTime.fromMillisecondsSinceEpoch(stats.lastUpdated! * 1000);
-                    final daysAgo = DateTime.now().difference(updatedDate).inDays;
-                    final dateFormatted = "${updatedDate.day.toString().padLeft(2, '0')} "
-                        "${_monthName(updatedDate.month)} "
-                        "${updatedDate.year}";
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dateFormatted,
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey[600]),
-                        ),
-                        Text(
-                          "$daysAgo days ago",
-                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                        ),
-                      ],
-                    );
-                  }),
+                  Builder(
+                    builder: (context) {
+                      final updatedDate = DateTime.fromMillisecondsSinceEpoch(stats.lastUpdated! * 1000);
+                      final daysAgo = DateTime.now().difference(updatedDate).inDays;
+                      final dateFormatted =
+                          "${updatedDate.day.toString().padLeft(2, '0')} "
+                          "${_monthName(updatedDate.month)} "
+                          "${updatedDate.year}";
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            dateFormatted,
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey[600]),
+                          ),
+                          Text("$daysAgo days ago", style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
+          if (Get.find<FFScouterPremiumController>().distributionEnabled) ...[
+            const SizedBox(height: 20),
+            FFScouterPremiumGate(
+              featureName: "Stat distribution",
+              premiumDataExists: stats.premiumInsightsAvailable,
+              child: _distributionWidget(stats.distribution),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _distributionWidget(FFScouterDistribution? dist) {
+    if (dist == null || !dist.hasData) return const SizedBox.shrink();
+
+    final perc = dist.statsPercentage;
+    final sorted = perc == null
+        ? <MapEntry<String, int>>[]
+        : (perc.entries.toList()..sort((a, b) => b.value.compareTo(a.value)));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "STAT DISTRIBUTION",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink[700], fontSize: 16),
+        ),
+        if (dist.distributionHuman != null && dist.distributionHuman!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10),
+            child: Text(dist.distributionHuman!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          ),
+        if (sorted.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 12, right: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [for (final entry in sorted) _statBar(entry.key, entry.value)],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _statBar(String stat, int percent) {
+    final clamped = percent.clamp(0, 100) / 100.0;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(_statLabel(stat), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              Text("$percent%", style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+            ],
+          ),
+          const SizedBox(height: 3),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: clamped,
+              minHeight: 7,
+              backgroundColor: Colors.grey.withValues(alpha: 0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.pink[400]!),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _statLabel(String stat) {
+    switch (stat.toLowerCase()) {
+      case "strength":
+        return "Strength";
+      case "speed":
+        return "Speed";
+      case "defense":
+      case "defence":
+        return "Defense";
+      case "dexterity":
+        return "Dexterity";
+      default:
+        return stat.isEmpty ? stat : "${stat[0].toUpperCase()}${stat.substring(1)}";
+    }
   }
 
   Widget _preEnabledWidget() {
@@ -344,7 +416,12 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
     );
 
     if (result.success && result.data != null && result.data!.isNotEmpty) {
-      return result.data!.first;
+      final first = result.data!.first;
+      // premium-only payload => premium
+      if (first.provesPremium && Get.isRegistered<FFScouterPremiumController>()) {
+        Get.find<FFScouterPremiumController>().markPremiumDetected();
+      }
+      return first;
     } else {
       // Return a map with error details so the UI can distinguish error code 6
       return {
@@ -355,20 +432,7 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
   }
 
   String _monthName(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months[month - 1];
   }
 }

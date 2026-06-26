@@ -25,6 +25,8 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_activity_badge.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -310,8 +312,17 @@ class WarCardState extends State<WarCard> {
                       _statsWidget(),
                       Row(
                         children: [
+                          FFScouterFlightInfo(
+                            playerId: _member.memberId!,
+                            isTraveling: _member.status?.state == "Traveling",
+                          ),
                           _travelIcon(),
                           _lastOnlineWidget(),
+                          FFScouterActivityBadge(
+                            playerId: _member.memberId!,
+                            playerName: _member.name,
+                            isTopHitter: _w.getMemberTotalStatsWithFFS(_member) > UserHelper.totalStats,
+                          ),
                           const SizedBox(width: 5),
                           const Icon(Icons.refresh, size: 12),
                           const SizedBox(width: 2),
@@ -674,13 +685,13 @@ class WarCardState extends State<WarCard> {
                 Padding(
                   padding: const EdgeInsets.only(right: 3),
                   child: RotatedBox(
-                    quarterTurns: _member.status!.description!.contains('Traveling to ')
-                        ? 1 // If traveling to another country
-                        : _member.status!.description!.contains('Returning ')
-                            ? 3 // If returning to Torn
-                            : 0, // If staying abroad (blue but not moving)
+                    quarterTurns: switch (getTravelDirection(description: _member.status!.description)) {
+                      TravelDirection.outbound => 1, // If traveling to another country
+                      TravelDirection.returning => 3, // If returning to Torn
+                      TravelDirection.none => 0, // If staying abroad (blue but not moving)
+                    },
                     child: Icon(
-                      _member.status!.description!.contains('In ')
+                      isAtLocation(description: _member.status!.description)
                           ? Icons.location_city_outlined
                           : Icons.airplanemode_active,
                       color: Colors.blue,
