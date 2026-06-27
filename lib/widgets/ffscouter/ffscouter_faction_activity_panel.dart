@@ -22,7 +22,8 @@ class FFScouterFactionActivityPanel extends StatelessWidget {
       builder: (w) => GetBuilder<FFScouterPremiumController>(
         builder: (premium) {
           if (!premium.isPremium || !premium.activityEnabled) return const SizedBox.shrink();
-          final factions = w.factions;
+          // Respect the faction filter: only show factions not hidden in the main list
+          final factions = w.factions.where((f) => !(f.hidden ?? false)).toList();
           if (factions.isEmpty) return const SizedBox.shrink();
           return Material(
             type: MaterialType.transparency,
