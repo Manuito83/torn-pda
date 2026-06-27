@@ -83,7 +83,6 @@ List<_MVersion> _modernChangelog() => [
     version: 'v3.14.1',
     date: '30 Jun 2026',
     hotfixes: [
-      'v3.14.1 hotfixes:',
       'Fixed buy max buttons style',
       'Fixed userscripts occasionally not running on a cold start',
       'Fixed userscripts not properly detecting PDA API handlers',
