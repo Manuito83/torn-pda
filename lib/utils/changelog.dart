@@ -82,7 +82,12 @@ List<_MVersion> _modernChangelog() => [
   _MVersion(
     version: 'v3.14.1',
     date: '30 Jun 2026',
-    hotfixes: ['Fixed userscripts occasionally not running on a cold start'],
+    hotfixes: [
+      'v3.14.1 hotfixes:',
+      'Fixed buy max buttons style',
+      'Fixed userscripts occasionally not running on a cold start',
+      'Fixed userscripts not properly detecting PDA API handlers',
+    ],
     sections: [
       const _MSection(
         icon: Icons.auto_awesome,

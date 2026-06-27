@@ -28,7 +28,9 @@ class RemoteSnippets {
   RemoteSnippets._();
 
   static const String cityItemsHighlight = 'city_items_highlight';
+  static const String cityShopsMax = 'city_shops_max';
   static const String travelRemovePlane = 'travel_remove_plane';
+  static const String travelBuyMax = 'travel_buy_max';
   static const String barsDoubleClick = 'bars_double_click';
   static const String pdaApi = 'pda_api';
 
@@ -39,11 +41,13 @@ class RemoteSnippets {
       version: '1.0.0',
       buildBase: _cityItemsHighlightBaseJS,
     ),
+    cityShopsMax: const RemoteSnippet(id: cityShopsMax, version: '1.0.0', buildBase: _cityShopsMaxBaseJS),
     travelRemovePlane: const RemoteSnippet(
       id: travelRemovePlane,
       version: '1.0.0',
       buildBase: _travelRemovePlaneBaseJS,
     ),
+    travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.0', buildBase: _travelBuyMaxBaseJS),
     barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.0', buildBase: _barsDoubleClickBaseJS),
   };
 
@@ -252,6 +256,238 @@ class RemoteSnippets {
     ''';
   }
 
+  // city_shops_max base (MAX buy/sell buttons inside city shops)
+  // RC keys: snippet_city_shops_max_js + snippet_city_shops_max_version
+  static String _cityShopsMaxBaseJS() {
+    return '''
+    (function() {
+      const BUY_CLASS = 'pda-buy-100-btn';
+      const SELL_CLASS = 'pda-sell-max-btn';
+      const STYLE_ID = 'pda-shop-max-style';
+      const BUY_LABEL = 'MAX';
+      const SELL_LABEL = 'MAX';
+
+      function parseNumber(text) {
+        if (!text) return 0;
+        const clean = String(text).replace(/[^0-9]/g, '');
+        return clean ? parseInt(clean, 10) : 0;
+      }
+
+      function parseMoney(text) {
+        if (!text) return 0;
+        let clean = String(text).split('\$').join('').split(',').join('').trim().toLowerCase();
+        let multiplier = 1;
+        if (clean.endsWith('b')) {
+          multiplier = 1000000000;
+          clean = clean.slice(0, -1);
+        } else if (clean.endsWith('m')) {
+          multiplier = 1000000;
+          clean = clean.slice(0, -1);
+        } else if (clean.endsWith('k')) {
+          multiplier = 1000;
+          clean = clean.slice(0, -1);
+        }
+        const value = parseFloat(clean.replace(/[^0-9.]/g, ''));
+        return Number.isNaN(value) ? 0 : Math.floor(value * multiplier);
+      }
+
+      function findMoney() {
+        const moneyEl = document.querySelector('#user-money') ||
+          document.querySelector('[data-currency-money]') ||
+          document.querySelector('.user-information .money');
+        if (!moneyEl) return 0;
+        const attr = moneyEl.getAttribute('data-money') || moneyEl.getAttribute('data-currency-money');
+        if (attr) return parseNumber(attr);
+        return parseMoney(moneyEl.textContent);
+      }
+
+      function hasMoneyIndicator() {
+        return !!(document.querySelector('#user-money') ||
+          document.querySelector('[data-currency-money]') ||
+          document.querySelector('.user-information .money'));
+      }
+
+      function findPrice(card) {
+        const priceEl = card.querySelector(':scope > .desc > .price');
+        if (priceEl) return parseMoney(priceEl.textContent);
+        const text = card.innerText || card.textContent || '';
+        const match = text.match(new RegExp('[\$][ ]*([0-9][0-9,]*(?:[.][0-9]+)?)[ ]*([kmb])?', 'i'));
+        if (!match) return 0;
+        return parseMoney('\$' + match[1] + (match[2] || ''));
+      }
+
+      function findStock(card) {
+        const stockEl = card.querySelector(':scope > .desc > .stock');
+        if (stockEl) {
+          const t = stockEl.textContent;
+          if (/out of stock/i.test(t)) return 0;
+          const m = t.match(new RegExp('[(][ ]*([0-9,]+)[ ]+in[ ]+stock[ ]*[)]', 'i'));
+          if (m) return parseNumber(m[1]);
+        }
+        return -1;
+      }
+
+      function setNativeInputValue(input, value) {
+        const proto = window.HTMLInputElement && window.HTMLInputElement.prototype;
+        const descriptor = proto && Object.getOwnPropertyDescriptor(proto, 'value');
+        if (descriptor && descriptor.set) {
+          descriptor.set.call(input, String(value));
+        } else {
+          input.value = value;
+        }
+        const tracker = input._valueTracker;
+        if (tracker) tracker.setValue('');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (window.jQuery) {
+          try { window.jQuery(input).val(value).trigger('change'); } catch (e) {}
+        }
+      }
+
+      function findBuyInput(card) {
+        const wrap = card.querySelector(':scope > .buy-act-wrap');
+        if (!wrap) return null;
+        return wrap.querySelector('input[name="buyAmount[]"]') ||
+          wrap.querySelector('input[name^="buyAmount"]') ||
+          wrap.querySelector('input.input-money') ||
+          wrap.querySelector('input[class*="buyAmountInput"]');
+      }
+
+      function findSellInput(card) {
+        return card.querySelector(':scope > li.amount input[id^="sell"]') ||
+          card.querySelector(':scope > li.amount input.input-money');
+      }
+
+      function getBuyTarget(card, input) {
+        const price = findPrice(card);
+        const money = findMoney();
+        const stock = findStock(card);
+        const maxFromInput = parseNumber(input.getAttribute('max'));
+
+        let quantity = 100;
+        if (price > 0 && money > 0) {
+          quantity = Math.min(quantity, Math.floor(money / price));
+        }
+        if (stock >= 0) {
+          quantity = Math.min(quantity, stock);
+        }
+        if (maxFromInput > 0) {
+          quantity = Math.min(quantity, maxFromInput);
+        }
+        if (!isFinite(quantity) || quantity < 0) return 0;
+        return quantity;
+      }
+
+      function getSellTarget(input) {
+        const dataMoney = parseNumber(input.getAttribute('data-money'));
+        const maxFromInput = parseNumber(input.getAttribute('max'));
+        if (dataMoney > 0 && maxFromInput > 0) return Math.min(dataMoney, maxFromInput);
+        if (dataMoney > 0) return dataMoney;
+        if (maxFromInput > 0) return maxFromInput;
+        return 0;
+      }
+
+      function injectStyle() {
+        if (document.getElementById(STYLE_ID)) return;
+
+        // Shared style for the small inline MAX buttons (buy + sell).
+        // Explicit bg/color so they stay readable in dark mode.
+        const btnCss =
+          'display:inline-block !important;' +
+          'margin:0 0 0 4px !important;' +
+          'padding:0 4px !important;' +
+          'height:16px !important;' +
+          'line-height:14px !important;' +
+          'font-size:9px !important;' +
+          'font-weight:bold !important;' +
+          'letter-spacing:0.3px !important;' +
+          'background:#777 !important;' +
+          'color:#fff !important;' +
+          'border:1px solid #555 !important;' +
+          'border-radius:3px !important;' +
+          'cursor:pointer !important;' +
+          'white-space:nowrap !important;' +
+          'vertical-align:middle !important;';
+
+        const style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.textContent = '.' + BUY_CLASS + '{' + btnCss + '} .' + SELL_CLASS + '{' + btnCss + '}';
+        document.head.appendChild(style);
+      }
+
+      function injectButtons() {
+        if (!hasMoneyIndicator()) return;
+        injectStyle();
+
+        document.querySelectorAll('.item-desc').forEach((card) => {
+          const wrap = card.querySelector(':scope > .buy-act-wrap');
+          if (!wrap) return;
+          if (card.querySelector('.' + BUY_CLASS)) return;
+          if (!findBuyInput(card)) return;
+
+          const price = card.querySelector(':scope > .desc > .price');
+          const name = card.querySelector(':scope > .desc > .name');
+          const slot = price || name;
+          if (!slot) return;
+
+          const buyButton = document.createElement('button');
+          buyButton.type = 'button';
+          buyButton.className = BUY_CLASS;
+          buyButton.textContent = BUY_LABEL;
+          buyButton.title = 'Buy max affordable / in stock';
+          buyButton.dataset.pdaBuyMax = '1';
+
+          buyButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const liveCard = buyButton.closest('.item-desc');
+            if (!liveCard) return;
+            const liveInput = findBuyInput(liveCard);
+            if (liveInput) setNativeInputValue(liveInput, getBuyTarget(liveCard, liveInput));
+          });
+
+          slot.appendChild(buyButton);
+        });
+
+        document.querySelectorAll('ul.item').forEach((card) => {
+          if (card.querySelector('.' + SELL_CLASS)) return;
+          const input = findSellInput(card);
+          if (!input) return;
+          const desc = card.querySelector(':scope > li.desc');
+          if (!desc) return;
+
+          const sellButton = document.createElement('button');
+          sellButton.type = 'button';
+          sellButton.className = SELL_CLASS;
+          sellButton.textContent = SELL_LABEL;
+          sellButton.title = 'Sell all owned';
+          sellButton.dataset.pdaSellMax = '1';
+
+          sellButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const liveCard = sellButton.closest('ul.item');
+            if (!liveCard) return;
+            const liveInput = findSellInput(liveCard);
+            if (liveInput) setNativeInputValue(liveInput, getSellTarget(liveInput));
+          });
+
+          desc.appendChild(sellButton);
+        });
+      }
+
+      injectButtons();
+
+      if (!window.__pdaShopMaxObserver) {
+        window.__pdaShopMaxObserver = new MutationObserver(() => injectButtons());
+        window.__pdaShopMaxObserver.observe(document.body, { childList: true, subtree: true });
+      }
+
+      return 123;
+    })();
+    ''';
+  }
+
   // travel_remove_plane base
   // RC keys: snippet_travel_remove_plane_js + snippet_travel_remove_plane_version
   static String _travelRemovePlaneBaseJS() {
@@ -265,6 +501,354 @@ class RemoteSnippets {
         }
         return 123;
       })();
+    ''';
+  }
+
+  // travel_buy_max base (MAX/FILL buttons in foreign stock shops)
+  // RC keys: snippet_travel_buy_max_js + snippet_travel_buy_max_version
+  // preventBasketKeyboard is passed in via window.__pdaPreventBasketKeyboard (defaults true)
+  static String _travelBuyMaxBaseJS() {
+    return '''
+    (function() {
+      var preventBasketKeyboard = window.__pdaPreventBasketKeyboard !== false;
+
+      function parseMoney(text) {
+        var clean = text.split('\$').join('').trim().toLowerCase();
+        var multiplier = 1;
+        if (clean.endsWith('m')) {
+            multiplier = 1000000;
+            clean = clean.substring(0, clean.length - 1);
+        } else if (clean.endsWith('b')) {
+            multiplier = 1000000000;
+            clean = clean.substring(0, clean.length - 1);
+        } else if (clean.endsWith('k')) {
+            multiplier = 1000;
+            clean = clean.substring(0, clean.length - 1);
+        }
+
+        clean = clean.replace(/[^0-9.]/g, '');
+
+        var val = parseFloat(clean);
+        if (isNaN(val)) return 0;
+        return Math.floor(val * multiplier);
+      }
+
+      function addFillMaxButtons() {
+
+        // 0. SAFETY CHECK: Ensure we can detect user money
+        // If we can't find money, we might be elsewhere (e.g. Bank)
+        // or simply can't calculate the max amount
+        const moneyElCheck = document.querySelector('#user-money') || document.querySelector('[data-currency-money]') || document.querySelector('.user-information .money');
+        if (!moneyElCheck) {
+            return;
+        }
+
+        // Improved Mode Detection
+        const isHorizontalMode = () => {
+            // 1. Check for VISIBLE "Type" header
+            const headers = Array.from(document.querySelectorAll('[class*="itemsHeader___"] > div'));
+            const visibleTypeHeader = headers.find(h =>
+                h.textContent.trim().toUpperCase() === 'TYPE' && h.offsetParent !== null
+            );
+
+            if (visibleTypeHeader) {
+                 return true;
+            }
+
+            // 2. Check Button Text
+            const buyBtn = document.querySelector('button.torn-btn[type="submit"]');
+            if (buyBtn) {
+                const text = buyBtn.innerText.trim().toUpperCase();
+                if (text === 'BUY') {
+                    return true;
+                }
+            }
+
+            // 3. Fallback to width
+            return window.innerWidth > 700;
+        };
+
+        const isHorizontal = isHorizontalMode();
+
+        // 1. CSS INJECTION
+        let style = document.getElementById('pda-buy-max-style');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'pda-buy-max-style';
+            document.head.appendChild(style);
+        }
+
+        // VERTICAL CSS
+        const verticalCSS =
+            '[class*="row___"], [class*="stockHeader___"] { gap: 0 !important; }' +
+            '[class*="row___"] > div, [class*="stockHeader___"] > div { padding-left: 2px !important; padding-right: 2px !important; margin: 0 !important; }' +
+            '[class*="stockHeader___"] > div:nth-child(3), [class*="row___"] > div:nth-child(3) { display: none !important; }' +
+            '[class*="stockHeader___"] > div:nth-child(4), [class*="row___"] > div:nth-child(4), [class*="stockHeader___"] > div:nth-child(5), [class*="row___"] > div:nth-child(5) { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; max-width: none !important; }' +
+            '[class*="itemName___"] { flex: 1 1 auto !important; min-width: 40px !important; overflow: hidden !important; }' +
+            '[class*="itemName___"] button { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 100% !important; display: block !important; }' +
+            '[class*="buyCell___"] { flex: 0 0 auto !important; width: auto !important; max-width: none !important; }';
+
+        // HORIZONTAL CSS
+        const horizontalCSS =
+            '[class*="itemsHeader___"] > div:nth-child(3) { display: none !important; }' +
+            'li > div[class*="row___"] > div:nth-child(3) { display: none !important; }' +
+            '[class*="tabletColE___"] { min-width: 100px !important; overflow: visible !important; }';
+
+        const desiredMode = isHorizontal ? 'horizontal' : 'vertical';
+        if (style.getAttribute('data-mode') !== desiredMode) {
+            style.setAttribute('data-mode', desiredMode);
+            style.innerHTML = isHorizontal ? horizontalCSS : verticalCSS;
+        }
+
+        // 2. JS HIDING FOR HORIZONTAL MODE (Type Column)
+        if (isHorizontal) {
+            // Hide Header
+            const headers = document.querySelectorAll('[class*="itemsHeader___"] > div');
+            headers.forEach((h, index) => {
+                if (h.textContent.trim().toUpperCase() === 'TYPE') {
+                    h.style.display = 'none';
+                    // Also try to hide the corresponding column in rows if we found the index
+                    const rows = document.querySelectorAll('li > div[class*="row___"]');
+                    rows.forEach(row => {
+                        if (row.children.length > index) {
+                            row.children[index].style.display = 'none';
+                        }
+                    });
+                }
+            });
+        }
+
+        // 3. BUTTON INJECTION
+        const buttons = document.querySelectorAll('button.torn-btn[type="submit"]');
+
+        buttons.forEach(btn => {
+            if (btn.dataset.pdaMaxAdded) return;
+
+            // Ensure button is inside a list item (item row)
+            // in order to prevent injection on pages like Bank in Cayman
+            if (!btn.closest('li')) return;
+
+            btn.dataset.pdaMaxAdded = 'true';
+
+            const maxBtn = document.createElement('button');
+            maxBtn.innerText = 'MAX';
+            maxBtn.className = 'torn-btn pda-max-btn';
+            maxBtn.style.padding = '0 8px';
+            maxBtn.style.fontSize = '11px';
+            maxBtn.style.height = '30px';
+            maxBtn.style.lineHeight = '12px';
+            maxBtn.type = 'button';
+
+            if (btn.parentNode) {
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'inline-flex';
+                wrapper.style.flexDirection = 'row';
+                wrapper.style.alignItems = 'center';
+                wrapper.style.marginTop = '3px';
+
+                btn.parentNode.insertBefore(wrapper, btn);
+
+                wrapper.appendChild(btn);
+                wrapper.appendChild(maxBtn);
+
+                btn.style.flex = '0 0 auto';
+                btn.style.width = 'auto';
+                btn.style.margin = '0';
+                btn.style.marginBottom = '0';
+                btn.style.marginRight = '5px';
+
+                maxBtn.style.flex = '0 0 auto';
+                maxBtn.style.margin = '0';
+            }
+
+            // 4. CALCULATION LOGIC
+            maxBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const form = btn.form;
+                const li = btn.closest('li');
+                const currentIsHorizontal = isHorizontalMode();
+
+                let money = 0;
+                const moneyEl = document.querySelector('#user-money') || document.querySelector('[data-currency-money]');
+                if (moneyEl) {
+                  const txt = moneyEl.getAttribute('data-money') || moneyEl.textContent;
+                  money = parseInt(txt.replace(/[^0-9]/g, ''));
+                }
+
+                let cost = 0;
+                let stock = 0;
+                let capacityLeft = 1000;
+
+                let limitFromInput = 0;
+                if (form) {
+                    const input = form.querySelector('input.input-money');
+                    if (input && input.getAttribute('data-money')) {
+                        limitFromInput = parseInt(input.getAttribute('data-money'));
+                    }
+                }
+
+                if (currentIsHorizontal) {
+                    // ===== HORIZONTAL MODE =====
+
+                    if (li) {
+                        // 1. Cost Detection (Match Dart Logic: Scan spans)
+                        const spans = li.querySelectorAll('span');
+                        for (const span of spans) {
+                            const txt = span.textContent.trim();
+                            if (txt.includes('\$') && span.getAttribute('aria-hidden') !== 'true') {
+                                 cost = parseMoney(txt);
+                            }
+                        }
+
+                        // 2. Stock Detection
+                        // Try specific class
+                        let stockCell = li.querySelector('[class*="tabletColC___"]');
+                        if (stockCell) {
+                            const stockText = stockCell.textContent.trim();
+                            const match = stockText.match(new RegExp('([0-9,]+)'));
+                            if (match) {
+                                stock = parseInt(match[1].split(',').join(''));
+                            }
+                        } else {
+                            // Fallback: Look for "Stock" text
+                             const all = li.querySelectorAll('*');
+                            for (let el of all) {
+                                if (el.textContent.toLowerCase().includes('stock')) {
+                                    const match = el.textContent.match(new RegExp('([0-9,]+)'));
+                                    if (match) {
+                                        stock = parseInt(match[1].split(',').join(''));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Capacity
+                    const msgEl = document.querySelector('.messageContent___LhCmx');
+                    if (msgEl) {
+                        const match = msgEl.textContent.match(new RegExp('purchased[ ]*([0-9]+)[ ]*/[ ]*([0-9]+)'));
+                        if (match) {
+                            const current = parseInt(match[1]);
+                            const maxCap = parseInt(match[2]);
+                            capacityLeft = maxCap - current;
+                        }
+                    }
+
+                } else {
+                    // ===== VERTICAL MODE =====
+                    const buyPanel = btn.closest('div[class*="buyPanel___"]');
+                    if (buyPanel) {
+                        const question = buyPanel.querySelector('p[class*="question___"]');
+                        if (question) {
+                            const parts = question.textContent.split('\$');
+                            if (parts.length > 1) {
+                                cost = parseMoney(parts[parts.length - 1]);
+                            }
+                        }
+                    }
+
+                    if (cost === 0 && li) {
+                        const cells = li.querySelectorAll('div[class*="cell___"]');
+                        for (const cell of cells) {
+                            const txt = cell.textContent.toLowerCase();
+                            if (txt.includes('cost') && txt.includes('\$')) {
+                                const parts = cell.textContent.split('\$');
+                                if (parts.length > 1) {
+                                    cost = parseMoney(parts[parts.length - 1]);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                        if (li) {
+                        const inlineStock = li.querySelector('[class*="inlineStock___"]');
+                        if (inlineStock) {
+                            const match = inlineStock.textContent.match(new RegExp('x([0-9,]+)'));
+                            if (match) {
+                                stock = parseInt(match[1].split(',').join(''));
+                            }
+                        }
+
+                        if (stock === 0) {
+                            const cells = li.querySelectorAll('div[class*="cell___"]');
+                            for (const cell of cells) {
+                                const txt = cell.textContent.toLowerCase();
+                                if (txt.includes('stock')) {
+                                    const match = cell.textContent.match(new RegExp('stock[ ]*([0-9,]+)', 'i')) || cell.textContent.match(new RegExp('([0-9,]+)'));
+                                    if (match) {
+                                        stock = parseInt(match[1].split(',').join(''));
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    const itemsBar = document.querySelector('[class*="items-"]');
+                    if (itemsBar) {
+                        const capMatch = itemsBar.textContent.match(new RegExp('([0-9]+)[ ]*/[ ]*([0-9]+)'));
+                        if (capMatch) {
+                            capacityLeft = parseInt(capMatch[2]) - parseInt(capMatch[1]);
+                        }
+                    }
+                }
+
+                let max = 0;
+                let maxAffordable = 999999;
+                if (cost > 0) {
+                    maxAffordable = Math.floor(money / cost);
+                }
+
+                const effectiveStock = stock > 0 ? stock : 999999;
+                const effectiveCapacity = capacityLeft >= 0 ? capacityLeft : 999999;
+
+                max = Math.min(effectiveStock, effectiveCapacity, maxAffordable);
+
+                if (limitFromInput > 0) {
+                    max = Math.min(limitFromInput, maxAffordable);
+                }
+
+                if (form) {
+                    const input = form.querySelector('input.input-money');
+                    if (input) {
+                        input.value = max;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            };
+        });
+
+        // 5. PREVENT KEYBOARD ON BASKET CLICK (Vertical Mode)
+        if (preventBasketKeyboard) {
+          const basketButtons = document.querySelectorAll('button[class*="buyIconButton___"]');
+          basketButtons.forEach(btn => {
+              if (btn.dataset.pdaBlurAdded) return;
+              btn.dataset.pdaBlurAdded = 'true';
+
+              btn.addEventListener('click', (e) => {
+                  [50, 150, 300, 500].forEach(delay => {
+                      setTimeout(() => {
+                          if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                              document.activeElement.blur();
+                          }
+                      }, delay);
+                  });
+              });
+          });
+        }
+      }
+
+      addFillMaxButtons();
+      if (!window.__pdaBuyMaxObserver) {
+        window.__pdaBuyMaxObserver = new MutationObserver((mutations) => {
+          addFillMaxButtons();
+        });
+        window.__pdaBuyMaxObserver.observe(document.body, { childList: true, subtree: true });
+      }
+    })();
     ''';
   }
 
@@ -352,6 +936,18 @@ class RemoteSnippets {
 
 // city item highlighter (RC-overridable)
 String highlightCityItemsJS() => RemoteSnippets.resolve(RemoteSnippets.cityItemsHighlight);
+
+// MAX buy/sell buttons inside city shops (RC-overridable)
+String cityShopsBuy100JS() => RemoteSnippets.resolve(RemoteSnippets.cityShopsMax);
+
+// MAX buy buttons in foreign stock shops (RC-overridable)
+String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
+  // The base reads window.__pdaPreventBasketKeyboard (defaults to true)
+  return '''
+    window.__pdaPreventBasketKeyboard = $preventBasketKeyboard;
+    ${RemoteSnippets.resolve(RemoteSnippets.travelBuyMax)}
+  ''';
+}
 
 // remove the plane animation while traveling (RC-overridable)
 String travelRemovePlaneJS() => RemoteSnippets.resolve(RemoteSnippets.travelRemovePlane);
