@@ -41,7 +41,7 @@ class RemoteSnippets {
       version: '1.0.0',
       buildBase: _cityItemsHighlightBaseJS,
     ),
-    cityShopsMax: const RemoteSnippet(id: cityShopsMax, version: '1.0.0', buildBase: _cityShopsMaxBaseJS),
+    cityShopsMax: const RemoteSnippet(id: cityShopsMax, version: '1.0.1', buildBase: _cityShopsMaxBaseJS),
     travelRemovePlane: const RemoteSnippet(
       id: travelRemovePlane,
       version: '1.0.0',
@@ -339,8 +339,14 @@ class RemoteSnippets {
         if (tracker) tracker.setValue('');
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
+        // Shop sell form only enables the SELL button on keyup,
+        // so a synthetic set needs key events too or the button stays off
+        try {
+          input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: '0', keyCode: 48 }));
+          input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: '0', keyCode: 48 }));
+        } catch (e) {}
         if (window.jQuery) {
-          try { window.jQuery(input).val(value).trigger('change'); } catch (e) {}
+          try { window.jQuery(input).val(value).trigger('change').trigger('keyup'); } catch (e) {}
         }
       }
 
@@ -409,9 +415,20 @@ class RemoteSnippets {
           'white-space:nowrap !important;' +
           'vertical-align:middle !important;';
 
+        // Buy keeps btnCss inline 
+        // Sell adds drops onto its own line
+        const sellExtraCss =
+          'display:block !important;' +
+          'width:-webkit-fit-content !important;' +
+          'width:fit-content !important;' +
+          'margin:6px 0 0 auto !important;';
+
+        const buyRule = '.' + BUY_CLASS + '{' + btnCss + '}';
+        const sellRule = '.' + SELL_CLASS + '{' + btnCss + sellExtraCss + '}';
+
         const style = document.createElement('style');
         style.id = STYLE_ID;
-        style.textContent = '.' + BUY_CLASS + '{' + btnCss + '} .' + SELL_CLASS + '{' + btnCss + '}';
+        style.textContent = buyRule + ' ' + sellRule;
         document.head.appendChild(style);
       }
 
@@ -453,8 +470,8 @@ class RemoteSnippets {
           if (card.querySelector('.' + SELL_CLASS)) return;
           const input = findSellInput(card);
           if (!input) return;
-          const desc = card.querySelector(':scope > li.desc');
-          if (!desc) return;
+          const slot = input.closest('li.amount') || card.querySelector(':scope > li.amount');
+          if (!slot) return;
 
           const sellButton = document.createElement('button');
           sellButton.type = 'button';
@@ -472,7 +489,7 @@ class RemoteSnippets {
             if (liveInput) setNativeInputValue(liveInput, getSellTarget(liveInput));
           });
 
-          desc.appendChild(sellButton);
+          slot.appendChild(sellButton);
         });
       }
 
@@ -821,23 +838,47 @@ class RemoteSnippets {
             };
         });
 
-        // 5. PREVENT KEYBOARD ON BASKET CLICK (Vertical Mode)
+        // 5. PREVENT KEYBOARD ON BASKET (when enabled)
+        // The old version blurred the focused input on a timer... on iOS that left a
+        // stale keyboard contentInset behind, so the page bounced near the bottom
+        // and could not be scrolled all the way down 
+        // Instead, make the money inputs read-only so iOS never opens the
+        // keyboard on the basket auto-focus (and does not reserve the inset either)
+        // NOTE: a tap on the field still unlocks it so you can type the amount by hand
         if (preventBasketKeyboard) {
-          const basketButtons = document.querySelectorAll('button[class*="buyIconButton___"]');
-          basketButtons.forEach(btn => {
-              if (btn.dataset.pdaBlurAdded) return;
-              btn.dataset.pdaBlurAdded = 'true';
+          const lockInput = (input) => {
+              if (!input || input.dataset.pdaNoKeyboard) return;
+              input.dataset.pdaNoKeyboard = 'true';
+              input.readOnly = true;
+              input.setAttribute('inputmode', 'none');
 
-              btn.addEventListener('click', (e) => {
-                  [50, 150, 300, 500].forEach(delay => {
-                      setTimeout(() => {
-                          if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-                              document.activeElement.blur();
-                          }
-                      }, delay);
-                  });
+              // A tap unlocks the field so you can still type;
+              // re-lock on blur so the next basket auto-focus stays keyboard-free
+              input.addEventListener('pointerdown', () => {
+                  input.readOnly = false;
+                  input.removeAttribute('inputmode');
               });
-          });
+              input.addEventListener('blur', () => {
+                  input.readOnly = true;
+                  input.setAttribute('inputmode', 'none');
+              });
+          };
+
+          // Lock inputs already in the DOM
+          document.querySelectorAll('input.input-money, [class*="buyPanel___"] input').forEach(lockInput);
+
+          // Just in case... catch inputs focused before a mutation pass locks them,
+          // in the capture phase so it runs before the keyboard would show
+          if (!window.__pdaBasketKeyboardGuard) {
+              window.__pdaBasketKeyboardGuard = true;
+              document.addEventListener('focusin', (e) => {
+                  if (window.__pdaPreventBasketKeyboard === false) return;
+                  const t = e.target;
+                  if (t && t.tagName === 'INPUT' && (t.matches('input.input-money') || t.closest('[class*="buyPanel___"]'))) {
+                      lockInput(t);
+                  }
+              }, true);
+          }
         }
       }
 

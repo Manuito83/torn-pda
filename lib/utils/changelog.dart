@@ -79,14 +79,35 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
-  _MVersion(
+  const _MVersion(
     version: 'v3.14.1',
     date: '30 Jun 2026',
-    hotfixes: [
-      'Fixed buy max buttons style',
-      'Fixed userscripts occasionally not running on a cold start',
-      'Fixed userscripts not properly detecting PDA API handlers',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [_MItem('FFScouter: the enemy activity panel now respects the War faction filter')],
+      ),
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Fixed shops buy-max buttons style and behaviour'),
+          _MItem('Fixed issues preventing scrolling to the bottom of some pages'),
+          _MItem('Fixed userscripts occasionally not running on a cold start'),
+          _MItem('Fixed userscripts not properly detecting PDA API handlers'),
+        ],
+      ),
     ],
+  ),
+
+  _MVersion(
+    version: 'v3.14.0',
+    date: '28 Jun 2026',
+    hotfixes: [],
     sections: [
       const _MSection(
         icon: Icons.auto_awesome,
