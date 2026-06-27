@@ -208,6 +208,10 @@ class WebViewFullState extends State<WebViewFull>
   // to avoid collisions and ensure that they are active
   bool _handlersInjected = false;
 
+  // Scripts registered at webview construction (before the first load), computed once
+  UnmodifiableListView<UserScript>? _initialUserScriptsCache;
+  bool _initialUserScriptsComputed = false;
+
   bool _backButtonPopsContext = true;
 
   var _travelAbroad = false;
@@ -1178,6 +1182,9 @@ class WebViewFullState extends State<WebViewFull>
         InAppWebView(
           windowId: widget.windowId,
           initialUrlRequest: _initialUrl,
+          // Android cold-start: register handlers + initial-URL document-start scripts before the
+          // first load, so the native registration race can't drop them (null elsewhere)
+          initialUserScripts: _initialUserScripts,
           pullToRefreshController: _pullToRefreshController,
           findInteractionController: _findInteractionController,
           webViewEnvironment: _webViewProvider.webViewEnvironment, // Only assigned in Windows
@@ -1201,6 +1208,12 @@ class WebViewFullState extends State<WebViewFull>
             // Clear cache (except for cookies) for each new session
             if (!_settingsProvider.webviewCacheEnabled && !Platform.isWindows) {
               await InAppWebViewController.clearAllCache();
+            }
+
+            // On Android the handler bundle was already registered race-free via initialUserScripts
+            // (before the first load), so mark it done and let _ensureHandlersInjected no-op here
+            if (Platform.isAndroid && widget.windowId == null && (_initialUserScripts?.isNotEmpty ?? false)) {
+              _handlersInjected = true;
             }
 
             // Userscripts initial load
@@ -1596,12 +1609,11 @@ class WebViewFullState extends State<WebViewFull>
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.end,
               );
-              // Guarantee the handler bundle (GM API, PDA API...) is present in this
-              // document before the document-end scripts run
-              // On cold starts / cached tabs the document-start registration can miss the
-              // initial load, leaving GM_* undefined
-              // Injecting it here directly should work (it will return if it's already injected)
-              if (scriptsToAdd.isNotEmpty) {
+              // Guarantee the handler bundle (GM/PDA API...) is present whenever the page runs ANY
+              // userscript (start or end)
+              final hasActiveScripts =
+                  scriptsToAdd.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(uri.toString()).isNotEmpty;
+              if (hasActiveScripts) {
                 final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
                 for (final h in handlers) {
                   await webViewController!.evaluateJavascript(source: h.source);
@@ -2263,6 +2275,27 @@ class WebViewFullState extends State<WebViewFull>
     final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
     await webViewController!.addUserScripts(userScripts: handlers.toList());
     _handlersInjected = true;
+  }
+
+  /// Handler bundle + the initial URL's document-start userscripts, registered natively at
+  /// construction, so the Android cold-start race can't drop them
+  /// Android main webview only
+  UnmodifiableListView<UserScript>? get _initialUserScripts {
+    if (_initialUserScriptsComputed) return _initialUserScriptsCache;
+    _initialUserScriptsComputed = true;
+    if (!(Platform.isAndroid && widget.windowId == null)) {
+      return _initialUserScriptsCache = null;
+    }
+    final scripts = <UserScript>[
+      ..._userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid),
+      if (_initialUrl?.url != null)
+        ..._userScriptsProvider.getCondSources(
+          url: _initialUrl!.url.toString(),
+          pdaApiKey: UserHelper.apiKey,
+          time: UserScriptTime.start,
+        ),
+    ];
+    return _initialUserScriptsCache = UnmodifiableListView(scripts);
   }
 
   Future assessErrorCases({dom.Document? document}) async {

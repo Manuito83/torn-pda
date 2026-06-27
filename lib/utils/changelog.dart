@@ -80,9 +80,9 @@ class _MVersion {
 
 List<_MVersion> _modernChangelog() => [
   _MVersion(
-    version: 'v3.14.0',
-    date: '28 Jun 2026',
-    hotfixes: [],
+    version: 'v3.14.1',
+    date: '30 Jun 2026',
+    hotfixes: ['Fixed userscripts occasionally not running on a cold start'],
     sections: [
       const _MSection(
         icon: Icons.auto_awesome,

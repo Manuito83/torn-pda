@@ -30,8 +30,10 @@ class RemoteSnippets {
   static const String cityItemsHighlight = 'city_items_highlight';
   static const String travelRemovePlane = 'travel_remove_plane';
   static const String barsDoubleClick = 'bars_double_click';
+  static const String pdaApi = 'pda_api';
 
   static final Map<String, RemoteSnippet> _registry = {
+    pdaApi: const RemoteSnippet(id: pdaApi, version: '1.0.0', buildBase: _pdaApiBaseJS),
     cityItemsHighlight: const RemoteSnippet(
       id: cityItemsHighlight,
       version: '1.0.0',
@@ -42,11 +44,7 @@ class RemoteSnippets {
       version: '1.0.0',
       buildBase: _travelRemovePlaneBaseJS,
     ),
-    barsDoubleClick: const RemoteSnippet(
-      id: barsDoubleClick,
-      version: '1.0.0',
-      buildBase: _barsDoubleClickBaseJS,
-    ),
+    barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.0', buildBase: _barsDoubleClickBaseJS),
   };
 
   static final Map<String, _Override> _overrides = {};
@@ -79,7 +77,76 @@ class RemoteSnippets {
     return over != null && over.js.isNotEmpty && UserScriptModel.isNewerVersion(over.version, base.version);
   }
 
+  // pda_api base
+  // RC keys: snippet_pda_api_js + snippet_pda_api_version
+  static String _pdaApiBaseJS() {
+    return '''
+      (function() {
+        if (typeof window.__PDA_platformReadyPromise === 'undefined') {
+          window.__PDA_platformReadyPromise = new Promise(function(resolve) {
+            if (window.flutter_inappwebview && window.flutter_inappwebview._platformReady) return resolve();
+            window.addEventListener('flutterInAppWebViewPlatformReady', resolve);
+          });
+        }
+
+        // Each helper de-duplicates identical calls fired within 2s
+
+        window.loadedPdaApiGetUrls = window.loadedPdaApiGetUrls || {};
+        window.PDA_httpGet = async function(url, headers) {
+          headers = headers || {};
+          var now = Date.now();
+          if (window.loadedPdaApiGetUrls[url] && (now - window.loadedPdaApiGetUrls[url] < 2000)) return;
+          window.loadedPdaApiGetUrls[url] = now;
+          await window.__PDA_platformReadyPromise;
+          return window.flutter_inappwebview.callHandler('PDA_httpGet', url, headers);
+        };
+
+        window.loadedPdaApiPostUrls = window.loadedPdaApiPostUrls || {};
+        window.PDA_httpPost = async function(url, headers, body) {
+          var key = url + '+' + JSON.stringify(headers) + '+' + body;
+          var now = Date.now();
+          if (window.loadedPdaApiPostUrls[key] && (now - window.loadedPdaApiPostUrls[key] < 2000)) return;
+          window.loadedPdaApiPostUrls[key] = now;
+          await window.__PDA_platformReadyPromise;
+          return window.flutter_inappwebview.callHandler('PDA_httpPost', url, headers, body);
+        };
+
+        window.loadedPdaApiPutUrls = window.loadedPdaApiPutUrls || {};
+        window.PDA_httpPut = async function(url, headers, body) {
+          var key = url + '+' + JSON.stringify(headers) + '+' + body;
+          var now = Date.now();
+          if (window.loadedPdaApiPutUrls[key] && (now - window.loadedPdaApiPutUrls[key] < 2000)) return;
+          window.loadedPdaApiPutUrls[key] = now;
+          await window.__PDA_platformReadyPromise;
+          return window.flutter_inappwebview.callHandler('PDA_httpPut', url, headers, body);
+        };
+
+        window.loadedPdaApiDeleteUrls = window.loadedPdaApiDeleteUrls || {};
+        window.PDA_httpDelete = async function(url, headers) {
+          headers = headers || {};
+          var key = url + '+' + JSON.stringify(headers);
+          var now = Date.now();
+          if (window.loadedPdaApiDeleteUrls[key] && (now - window.loadedPdaApiDeleteUrls[key] < 2000)) return;
+          window.loadedPdaApiDeleteUrls[key] = now;
+          await window.__PDA_platformReadyPromise;
+          return window.flutter_inappwebview.callHandler('PDA_httpDelete', url, headers);
+        };
+
+        window.loadedPdaApiPatchUrls = window.loadedPdaApiPatchUrls || {};
+        window.PDA_httpPatch = async function(url, headers, body) {
+          var key = url + '+' + JSON.stringify(headers) + '+' + body;
+          var now = Date.now();
+          if (window.loadedPdaApiPatchUrls[key] && (now - window.loadedPdaApiPatchUrls[key] < 2000)) return;
+          window.loadedPdaApiPatchUrls[key] = now;
+          await window.__PDA_platformReadyPromise;
+          return window.flutter_inappwebview.callHandler('PDA_httpPatch', url, headers, body);
+        };
+      })();
+    ''';
+  }
+
   // city_items_highlight base
+  // RC keys: snippet_city_items_highlight_js + snippet_city_items_highlight_version
   static String _cityItemsHighlightBaseJS() {
     return '''
       (function() {
@@ -186,6 +253,7 @@ class RemoteSnippets {
   }
 
   // travel_remove_plane base
+  // RC keys: snippet_travel_remove_plane_js + snippet_travel_remove_plane_version
   static String _travelRemovePlaneBaseJS() {
     return '''
       (function() {
@@ -201,6 +269,7 @@ class RemoteSnippets {
   }
 
   // bars_double_click base
+  // RC keys: snippet_bars_double_click_js + snippet_bars_double_click_version
   static String _barsDoubleClickBaseJS() {
     return '''
       (function() {
