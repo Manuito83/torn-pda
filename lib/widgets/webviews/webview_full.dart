@@ -1895,6 +1895,10 @@ class WebViewFullState extends State<WebViewFull>
           },
           onConsoleMessage: (controller, consoleMessage) async {
             if (consoleMessage.message != "") {
+              if (consoleMessage.message.contains("GM already defined")) {
+                log("GM already present, skipping re-injection");
+                return;
+              }
               if (!consoleMessage.message.contains("Refused to connect to ") &&
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("has been blocked by CORS policy") &&

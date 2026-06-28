@@ -63,25 +63,27 @@ String handler_evaluateJS() {
     //     console.error('Error while fetching JavaScript code: ', error);
     // });
 
-    window.loadedPdaApiEvalScripts = window.loadedPdaApiEvalScripts || {};
+    (function() {
+      window.loadedPdaApiEvalScripts = window.loadedPdaApiEvalScripts || {};
 
-    window.PDA_evaluateJavascript = async function(source) {
-        let now = Date.now();
-        
-        // If this source was evaluated less than a second ago, return immediately
-        if (loadedPdaApiEvalScripts[source] && (now - loadedPdaApiEvalScripts[source] < 2000)) {
-            // Skip request
-            return;
-        }
-        
-        // Update the timestamp for this source
-        loadedPdaApiEvalScripts[source] = now;
-        
-        console.log("Handler: pdaHandler_evaluateJavascript");
-        await __PDA_platformReadyPromise;
-        
-        return flutter_inappwebview.callHandler("PDA_evaluateJavascript", source);
-    }
+      window.PDA_evaluateJavascript = async function(source) {
+          let now = Date.now();
+          
+          // If this source was evaluated less than a second ago, return immediately
+          if (loadedPdaApiEvalScripts[source] && (now - loadedPdaApiEvalScripts[source] < 2000)) {
+              // Skip request
+              return;
+          }
+          
+          // Update the timestamp for this source
+          loadedPdaApiEvalScripts[source] = now;
+          
+          console.log("Handler: pdaHandler_evaluateJavascript");
+          await __PDA_platformReadyPromise;
+          
+          return flutter_inappwebview.callHandler("PDA_evaluateJavascript", source);
+      }
+    })();
   ''';
 }
 
