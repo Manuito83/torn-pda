@@ -79,9 +79,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.14.0';
-const String androidCompilation = '657';
-const String iosCompilation = '657';
+const String appVersion = '3.14.1';
+const String androidCompilation = '659';
+const String iosCompilation = '659';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration

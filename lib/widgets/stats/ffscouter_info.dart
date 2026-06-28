@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -37,6 +38,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
   // Key setup state
   bool _isCheckingKey = false;
   bool _isRegistering = false;
+  bool _isFinishing = false;
   bool _keyChecked = false;
   bool _keyIsRegistered = false;
   bool _keyRegisteredJustNow = false;
@@ -115,10 +117,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("FFScouter"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
       ),
       body: Column(
         children: [
@@ -277,11 +276,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
                       child: RichText(
                         text: TextSpan(
                           text: "Visit ffscouter.com for full details",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: linkColor,
-                            decoration: TextDecoration.underline,
-                          ),
+                          style: TextStyle(fontSize: 14, color: linkColor, decoration: TextDecoration.underline),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () async {
                               await openSimpleWebViewDialog(
@@ -307,16 +302,17 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: widget.themeProvider.secondBackground,
-                border: Border(
-                  top: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
-                ),
+                border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.3))),
               ),
               child: ElevatedButton(
-                onPressed: () {
-                  widget.settingsProvider.ffScouterEnabledStatus = 1;
-                  Navigator.of(context).pop();
-                },
-                child: const Text("Accept & Enable FFScouter"),
+                onPressed: _isFinishing ? null : _onAcceptAndEnable,
+                child: _isFinishing
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text("Accept & Enable FFScouter"),
               ),
             ),
         ],
@@ -364,16 +360,13 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
                   Center(
                     child: OutlinedButton.icon(
                       onPressed: () async {
-                        const url = 'https://www.torn.com/preferences.php#tab=api?step=addNewKey'
+                        const url =
+                            'https://www.torn.com/preferences.php#tab=api?step=addNewKey'
                             '&title=FFScouterv3.2'
                             '&user=hof,faction,basic,profile,cooldowns,refills,attacks,battlestats,personalstats'
                             '&faction=members,rankedwarreport,warfare,wars,rankedwars'
                             '&torn=rankedwarreport,rankedwars';
-                        await openSimpleWebViewDialog(
-                          context: context,
-                          url: url,
-                          title: 'Create API Key',
-                        );
+                        await openSimpleWebViewDialog(context: context, url: url, title: 'Create API Key');
                       },
                       icon: const Icon(Icons.open_in_new, size: 16),
                       label: const Text("Create FFScouter Key on Torn", style: TextStyle(fontSize: 12)),
@@ -488,11 +481,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
                     const SizedBox(height: 8),
                     Center(
                       child: _isCheckingKey
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
                           : OutlinedButton.icon(
                               onPressed: _checkKey,
                               icon: const Icon(Icons.search, size: 16),
@@ -574,10 +563,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
                                   const TextSpan(text: "I have read and agree to the "),
                                   TextSpan(
                                     text: "FFScouter Data Policy and Terms",
-                                    style: TextStyle(
-                                      color: linkColor,
-                                      decoration: TextDecoration.underline,
-                                    ),
+                                    style: TextStyle(color: linkColor, decoration: TextDecoration.underline),
                                     recognizer: TapGestureRecognizer()
                                       ..onTap = () async {
                                         await openSimpleWebViewDialog(
@@ -598,11 +584,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
 
                     Center(
                       child: _isRegistering
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
                           : ElevatedButton.icon(
                               onPressed: _agreedToPolicy ? _registerKey : null,
                               icon: const Icon(Icons.app_registration, size: 16),
@@ -697,11 +679,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
               style: TextStyle(fontSize: 12, color: Colors.red[700]),
             ),
           ),
-          Icon(
-            _keySetupExpanded ? Icons.expand_less : Icons.expand_more,
-            color: Colors.red[700],
-            size: 22,
-          ),
+          Icon(_keySetupExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.red[700], size: 22),
         ],
       );
     } else if (_hasDedicatedAltKey) {
@@ -718,11 +696,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
               style: TextStyle(fontSize: 12, color: Colors.green[700]),
             ),
           ),
-          Icon(
-            _keySetupExpanded ? Icons.expand_less : Icons.expand_more,
-            color: Colors.green[700],
-            size: 22,
-          ),
+          Icon(_keySetupExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.green[700], size: 22),
         ],
       );
     } else {
@@ -737,11 +711,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
               style: TextStyle(fontSize: 12, color: textColor),
             ),
           ),
-          Icon(
-            _keySetupExpanded ? Icons.expand_less : Icons.expand_more,
-            color: Colors.grey[600],
-            size: 22,
-          ),
+          Icon(_keySetupExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey[600], size: 22),
         ],
       );
     }
@@ -749,10 +719,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
     return InkWell(
       onTap: () => setState(() => _keySetupExpanded = !_keySetupExpanded),
       borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: banner,
-      ),
+      child: Padding(padding: const EdgeInsets.all(12), child: banner),
     );
   }
 
@@ -785,6 +752,8 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
       if (result.success && result.data != null) {
         _keyChecked = true;
         _keyIsRegistered = result.data!.isRegistered;
+        // Registered + dedicated: store it now so the app actually uses it
+        if (_keyIsRegistered && !_isSameAsMainKey) _persistAlternativeKey(auto: true);
       } else {
         _checkError = result.errorMessage ?? "Could not check key status";
       }
@@ -807,11 +776,13 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
         _keyIsRegistered = true;
         _keyRegisteredJustNow = true;
         _registerSuccess = result.data?.message ?? "Key registered successfully!";
+        if (!_isSameAsMainKey) _persistAlternativeKey(auto: true);
       } else {
         if (result.errorCode == 8) {
           // Already registered
           _keyIsRegistered = true;
           _registerSuccess = "Key was already registered.";
+          if (!_isSameAsMainKey) _persistAlternativeKey(auto: true);
         } else if (result.errorCode == 7) {
           _registerError = "Too many attempts. Please wait and try again.";
         } else if (result.errorCode == 6) {
@@ -823,16 +794,75 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
     });
   }
 
-  void _saveAsAlternativeKey() {
+  // Bottom "Accept & Enable" button. If a valid dedicated key was pasted but never
+  // run through step 2, verify it here so it actually gets saved
+  Future<void> _onAcceptAndEnable() async {
+    final needsCheck = _keyLooksValid && !_isSameAsMainKey && !_keySavedAsAlternative;
+
+    if (needsCheck) {
+      setState(() => _isFinishing = true);
+      final result = await FFScouterComm.checkKey(key: _keyController.text.trim());
+      if (!mounted) return;
+
+      if (!result.success || result.data == null) {
+        // Couldn't verify: enable anyway (key issue is independent), but warn
+        setState(() => _isFinishing = false);
+        _toast(
+          result.errorMessage ?? "Couldn't verify your FFScouter key. You can register it later.",
+          color: Colors.red[700]!,
+        );
+      } else if (!result.data!.isRegistered) {
+        // Not registered yet: keep the user here to finish step 2 instead of closing
+        setState(() {
+          _isFinishing = false;
+          _keyChecked = true;
+          _keyIsRegistered = false;
+          _keySetupExpanded = true;
+        });
+        _toast(
+          "Your FFScouter key isn't registered yet. Complete step 2 below to register it first.",
+          color: Colors.orange[800]!,
+        );
+        return; // don't enable/close
+      } else {
+        // Registered: save it (shows its own green toast) and continue
+        setState(() {
+          _isFinishing = false;
+          _keyChecked = true;
+          _keyIsRegistered = true;
+          _persistAlternativeKey(auto: true);
+        });
+      }
+    }
+
+    widget.settingsProvider.ffScouterEnabledStatus = 1;
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  void _saveAsAlternativeKey() => setState(_persistAlternativeKey);
+
+  void _persistAlternativeKey({bool auto = false}) {
     final key = _keyController.text.trim();
     _u.alternativeFFScouterKeyEnabled = true;
     _u.alternativeFFScouterKey = key;
     Prefs().setAlternativeFFScouterKeyEnabled(true);
     Prefs().setAlternativeFFScouterKey(key);
     _u.update();
-    setState(() {
-      _keySavedAsAlternative = true;
-    });
+    _keySavedAsAlternative = true;
+    if (auto) {
+      _toast("FFScouter key saved. Torn PDA will use it instead of your main key.", color: Colors.green[800]!);
+    }
+  }
+
+  // App-styled toast (white text on a colored pill, readable duration)
+  void _toast(String text, {required Color color}) {
+    BotToast.showText(
+      text: text,
+      textStyle: const TextStyle(fontSize: 13, color: Colors.white),
+      contentColor: color,
+      duration: const Duration(seconds: 4),
+      contentPadding: const EdgeInsets.all(12),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -845,10 +875,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
         Container(
           width: 22,
           height: 22,
-          decoration: BoxDecoration(
-            color: Colors.blueGrey,
-            borderRadius: BorderRadius.circular(11),
-          ),
+          decoration: BoxDecoration(color: Colors.blueGrey, borderRadius: BorderRadius.circular(11)),
           child: Center(
             child: Text(
               number,
@@ -870,12 +897,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
   Widget _sectionHeader(String title) {
     return Text(
       title,
-      style: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey[600],
-        letterSpacing: 0.5,
-      ),
+      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.5),
     );
   }
 
@@ -890,17 +912,11 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
             child: Container(
               width: 5,
               height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey[500],
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: Colors.grey[500], shape: BoxShape.circle),
             ),
           ),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(fontSize: 12, color: color),
-            ),
+            child: Text(text, style: TextStyle(fontSize: 12, color: color)),
           ),
         ],
       ),
@@ -921,10 +937,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
             ),
           ),
           Expanded(
-            child: Text(
-              details,
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-            ),
+            child: Text(details, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
           ),
         ],
       ),
