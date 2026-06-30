@@ -1210,9 +1210,11 @@ class WebViewFullState extends State<WebViewFull>
               await InAppWebViewController.clearAllCache();
             }
 
-            // On Android the handler bundle was already registered race-free via initialUserScripts
+            // On Android/iOS the handler bundle was already registered race-free via initialUserScripts
             // (before the first load), so mark it done and let _ensureHandlersInjected no-op here
-            if (Platform.isAndroid && widget.windowId == null && (_initialUserScripts?.isNotEmpty ?? false)) {
+            if ((Platform.isAndroid || Platform.isIOS) &&
+                widget.windowId == null &&
+                (_initialUserScripts?.isNotEmpty ?? false)) {
               _handlersInjected = true;
             }
 
@@ -2250,6 +2252,9 @@ class WebViewFullState extends State<WebViewFull>
     if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
       try {
         await webViewController?.removeAllUserScripts();
+        // This wipes the GM/PDA API too, so we need to allow it to be re-registered
+        // Otherwise scripts run without GM_*/PDA_* after the browser is backgrounded
+        _handlersInjected = false;
       } catch (e) {
         log("Webview controller is null at userscripts removal");
       }
@@ -2282,12 +2287,11 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   /// Handler bundle + the initial URL's document-start userscripts, registered natively at
-  /// construction, so the Android cold-start race can't drop them
-  /// Android main webview only
+  /// construction, so the cold-start race can't drop them
   UnmodifiableListView<UserScript>? get _initialUserScripts {
     if (_initialUserScriptsComputed) return _initialUserScriptsCache;
     _initialUserScriptsComputed = true;
-    if (!(Platform.isAndroid && widget.windowId == null)) {
+    if (!((Platform.isAndroid || Platform.isIOS) && widget.windowId == null)) {
       return _initialUserScriptsCache = null;
     }
     final scripts = <UserScript>[

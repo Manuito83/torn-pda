@@ -89,8 +89,9 @@ List<_MVersion> _modernChangelog() => [
         title: 'Fixed',
         color: Color(0xFF2E7D32),
         items: [
-          _MItem('Fixed userscripts occasionally not running when opening a new tab'),
           _MItem('Fixed incorrect plane icon showing in travel live updates'),
+          _MItem('Fixed userscripts occasionally not running when opening a new tab'),
+          _MItem('Fixed userscripts losing access to GM/PDA helpers after closing the browser'),
         ],
       ),
     ],
