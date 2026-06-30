@@ -7,6 +7,8 @@ object TravelLiveUpdateAssets {
     fun flagIconFor(displayName: String?): Int {
         return when (displayName?.trim()?.lowercase()) {
             "torn" -> R.drawable.action_torn
+            "abroad" -> R.drawable.action_travel
+            "hospital" -> R.drawable.hospital
             "argentina" -> R.drawable.flag_argentina
             "canada" -> R.drawable.flag_canada
             "cayman islands", "cayman", "cayman island" -> R.drawable.flag_cayman
