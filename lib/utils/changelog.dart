@@ -80,8 +80,26 @@ class _MVersion {
 
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
+    version: 'v3.14.2',
+    date: '05 July 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Fixed incorrect plane icon showing in travel live updates'),
+          _MItem('Fixed userscripts occasionally not running when opening a new tab'),
+          _MItem('Fixed userscripts losing access to GM/PDA helpers after closing the browser'),
+        ],
+      ),
+    ],
+  ),
+
+  const _MVersion(
     version: 'v3.14.1',
-    date: '30 Jun 2026',
+    date: '30 June 2026',
     hotfixes: [],
     sections: [
       _MSection(
@@ -106,7 +124,7 @@ List<_MVersion> _modernChangelog() => [
 
   _MVersion(
     version: 'v3.14.0',
-    date: '28 Jun 2026',
+    date: '28 June 2026',
     hotfixes: [],
     sections: [
       const _MSection(

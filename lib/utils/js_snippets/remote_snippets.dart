@@ -47,7 +47,7 @@ class RemoteSnippets {
       version: '1.0.0',
       buildBase: _travelRemovePlaneBaseJS,
     ),
-    travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.0', buildBase: _travelBuyMaxBaseJS),
+    travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.1', buildBase: _travelBuyMaxBaseJS),
     barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.0', buildBase: _barsDoubleClickBaseJS),
   };
 
@@ -839,43 +839,50 @@ class RemoteSnippets {
         });
 
         // 5. PREVENT KEYBOARD ON BASKET (when enabled)
-        // The old version blurred the focused input on a timer... on iOS that left a
-        // stale keyboard contentInset behind, so the page bounced near the bottom
-        // and could not be scrolled all the way down 
-        // Instead, make the money inputs read-only so iOS never opens the
-        // keyboard on the basket auto-focus (and does not reserve the inset either)
-        // NOTE: a tap on the field still unlocks it so you can type the amount by hand
+        // We watch who's actually tapping 
+        // If the user really tapped the input (pointerdown), we let the keyboard show 
+        //.If something else focused it (like Torn auto-focusing when the basket opens), 
+        // we blur() right away so iOS never opens it
         if (preventBasketKeyboard) {
-          const lockInput = (input) => {
+          const pdaLockInput = (input) => {
               if (!input || input.dataset.pdaNoKeyboard) return;
+              const itype = (input.getAttribute('type') || 'text').toLowerCase();
+              if (itype === 'button' || itype === 'submit' || itype === 'hidden' || itype === 'reset') return;
               input.dataset.pdaNoKeyboard = 'true';
-              input.readOnly = true;
               input.setAttribute('inputmode', 'none');
-
-              // A tap unlocks the field so you can still type;
-              // re-lock on blur so the next basket auto-focus stays keyboard-free
-              input.addEventListener('pointerdown', () => {
-                  input.readOnly = false;
-                  input.removeAttribute('inputmode');
-              });
               input.addEventListener('blur', () => {
-                  input.readOnly = true;
                   input.setAttribute('inputmode', 'none');
               });
           };
 
-          // Lock inputs already in the DOM
-          document.querySelectorAll('input.input-money, [class*="buyPanel___"] input').forEach(lockInput);
+          document.querySelectorAll('input.input-money, [class*="buyPanel___"] input').forEach(pdaLockInput);
 
-          // Just in case... catch inputs focused before a mutation pass locks them,
-          // in the capture phase so it runs before the keyboard would show
           if (!window.__pdaBasketKeyboardGuard) {
               window.__pdaBasketKeyboardGuard = true;
+              const pdaUserTapped = new WeakSet();
+
+              // Capture pointerdown on money inputs so focusin can tell user tap from auto-focus
+              document.addEventListener('pointerdown', (e) => {
+                  if (window.__pdaPreventBasketKeyboard === false) return;
+                  const t = e.target;
+                  if (t && t.tagName === 'INPUT' && (t.matches('input.input-money') || t.closest('[class*="buyPanel___"]'))) {
+                      pdaUserTapped.add(t);
+                  }
+              }, true);
+
               document.addEventListener('focusin', (e) => {
                   if (window.__pdaPreventBasketKeyboard === false) return;
                   const t = e.target;
                   if (t && t.tagName === 'INPUT' && (t.matches('input.input-money') || t.closest('[class*="buyPanel___"]'))) {
-                      lockInput(t);
+                      pdaLockInput(t);
+                      if (pdaUserTapped.has(t)) {
+                          // Real user tap — allow keyboard
+                          pdaUserTapped.delete(t);
+                          t.removeAttribute('inputmode');
+                      } else {
+                          // Programmatic auto-focus — kill it before iOS shows keyboard
+                          t.blur();
+                      }
                   }
               }, true);
           }

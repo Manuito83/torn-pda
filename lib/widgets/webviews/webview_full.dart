@@ -183,6 +183,10 @@ class WebViewFullState extends State<WebViewFull>
   ForeignStocksWebviewHandler? _travelHandler;
   var _initialWebViewSettings = InAppWebViewSettings();
 
+  // #2843 telemetry
+  Timer? _webViewCreatedWatchdog;
+  bool _webViewCreatedFired = false;
+
   //int _loadTimeMill = 0;
 
   CookieManager cm = CookieManager.instance();
@@ -398,6 +402,8 @@ class WebViewFullState extends State<WebViewFull>
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
+    _startWebViewCreatedWatchdog();
+
     // Check rotation! Webview will dispose itself
     // If we find a matching disposed tab, sharing the SAME KEY, it means that it was disposed (most probably due to rotation)
     // so we need to restore its state manually here (we'll also scroll in onLoadStop)
@@ -476,6 +482,9 @@ class WebViewFullState extends State<WebViewFull>
       transparentBackground: true,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
+      // Android: handle renderer-process death (onRenderProcessGone) so an OOM'd/crashed WebView
+      // doesn't kill the whole app. Without this the native client returns "unhandled" and Android crashes.
+      useOnRenderProcessGone: true,
       javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
 
@@ -573,6 +582,8 @@ class WebViewFullState extends State<WebViewFull>
   @override
   void dispose() async {
     try {
+      _webViewCreatedWatchdog?.cancel();
+
       // Send details to provider in case we are rotating
       _webViewProvider.rotatedTabDetails.add(
         RotatedDisposedTabDetails(key: widget.key, currentUrl: _currentUrl, scrollY: _scrollY, scrollX: _scrollX),
@@ -1193,6 +1204,10 @@ class WebViewFullState extends State<WebViewFull>
           onWebViewCreated: (c) async {
             webViewController = c;
 
+            // #2843 watchdog: creation succeeded
+            _webViewCreatedFired = true;
+            _webViewCreatedWatchdog?.cancel();
+
             _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
               onTravelStatusChanged: (isAbroad) {
@@ -1210,9 +1225,11 @@ class WebViewFullState extends State<WebViewFull>
               await InAppWebViewController.clearAllCache();
             }
 
-            // On Android the handler bundle was already registered race-free via initialUserScripts
+            // On Android/iOS the handler bundle was already registered race-free via initialUserScripts
             // (before the first load), so mark it done and let _ensureHandlersInjected no-op here
-            if (Platform.isAndroid && widget.windowId == null && (_initialUserScripts?.isNotEmpty ?? false)) {
+            if ((Platform.isAndroid || Platform.isIOS) &&
+                widget.windowId == null &&
+                (_initialUserScripts?.isNotEmpty ?? false)) {
               _handlersInjected = true;
             }
 
@@ -1955,6 +1972,29 @@ class WebViewFullState extends State<WebViewFull>
             _handlersInjected = false;
             c.reload();
           },
+          onRenderProcessGone: (c, detail) {
+            // Android renderer process died (crash or OS-killed under memory)
+            // Tells Android we dealt with it, so it does not kill the whole app
+            try {
+              if (!Platform.isWindows) {
+                FirebaseCrashlytics.instance.recordError(
+                  "WebViewRenderProcessGone didCrash=${detail.didCrash} tabs=${_webViewProvider.tabList.length}",
+                  null,
+                  reason: "Android WebView renderer gone (recovered, app not killed)",
+                  fatal: false,
+                );
+              }
+            } catch (_) {}
+
+            _handlersInjected = false;
+
+            if (_webViewProvider.isTabUidActive(_tabUid)) {
+              _webViewProvider.rebuildUnresponsiveWebView(
+                isChainingBrowser: _isChainingBrowser,
+                chainingPayload: _chainingPayload,
+              );
+            }
+          },
           onReceivedHttpAuthRequest: (c, challenge) async {
             TextEditingController usernameController = TextEditingController();
             TextEditingController passwordController = TextEditingController();
@@ -2250,6 +2290,9 @@ class WebViewFullState extends State<WebViewFull>
     if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
       try {
         await webViewController?.removeAllUserScripts();
+        // This wipes the GM/PDA API too, so we need to allow it to be re-registered
+        // Otherwise scripts run without GM_*/PDA_* after the browser is backgrounded
+        _handlersInjected = false;
       } catch (e) {
         log("Webview controller is null at userscripts removal");
       }
@@ -2282,12 +2325,11 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   /// Handler bundle + the initial URL's document-start userscripts, registered natively at
-  /// construction, so the Android cold-start race can't drop them
-  /// Android main webview only
+  /// construction, so the cold-start race can't drop them
   UnmodifiableListView<UserScript>? get _initialUserScripts {
     if (_initialUserScriptsComputed) return _initialUserScriptsCache;
     _initialUserScriptsComputed = true;
-    if (!(Platform.isAndroid && widget.windowId == null)) {
+    if (!((Platform.isAndroid || Platform.isIOS) && widget.windowId == null)) {
       return _initialUserScriptsCache = null;
     }
     final scripts = <UserScript>[
@@ -5365,6 +5407,39 @@ class WebViewFullState extends State<WebViewFull>
 
   String? reportCurrentTitle() {
     return _pageTitle;
+  }
+
+  /// #2843 watchdog
+  void _startWebViewCreatedWatchdog() {
+    if (!Platform.isAndroid) return;
+
+    _webViewCreatedWatchdog = Timer(const Duration(seconds: 4), () async {
+      if (!mounted || _webViewCreatedFired || webViewController != null) return;
+
+      String webViewPackage = "unknown";
+      try {
+        final pkg = await InAppWebViewController.getCurrentWebViewPackage();
+        if (pkg != null) webViewPackage = "${pkg.packageName} ${pkg.versionName}";
+      } catch (_) {}
+
+      // Re-check after the async gap
+      if (!mounted || _webViewCreatedFired || webViewController != null) return;
+
+      try {
+        final crashlytics = FirebaseCrashlytics.instance;
+        crashlytics.setCustomKey("wv_webview_package", webViewPackage);
+        crashlytics.setCustomKey("wv_restored_tabs", _webViewProvider.tabList.length);
+        crashlytics.setCustomKey("wv_tab_uid", _tabUid);
+        crashlytics.setCustomKey("wv_is_window", widget.windowId != null);
+        crashlytics.recordError(
+          "WebViewNeverCreated: onWebViewCreated did not fire within 4s (controller still null): "
+          "webview=$webViewPackage tabs=${_webViewProvider.tabList.length}",
+          null,
+          reason: "flutter_inappwebview #2843 Android release cold-start webview drop",
+          fatal: false,
+        );
+      } catch (_) {}
+    });
   }
 
   Future<void> _revertTransparentBackground() async {
