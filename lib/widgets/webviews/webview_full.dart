@@ -183,6 +183,10 @@ class WebViewFullState extends State<WebViewFull>
   ForeignStocksWebviewHandler? _travelHandler;
   var _initialWebViewSettings = InAppWebViewSettings();
 
+  // #2843 telemetry
+  Timer? _webViewCreatedWatchdog;
+  bool _webViewCreatedFired = false;
+
   //int _loadTimeMill = 0;
 
   CookieManager cm = CookieManager.instance();
@@ -398,6 +402,8 @@ class WebViewFullState extends State<WebViewFull>
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
+    _startWebViewCreatedWatchdog();
+
     // Check rotation! Webview will dispose itself
     // If we find a matching disposed tab, sharing the SAME KEY, it means that it was disposed (most probably due to rotation)
     // so we need to restore its state manually here (we'll also scroll in onLoadStop)
@@ -573,6 +579,8 @@ class WebViewFullState extends State<WebViewFull>
   @override
   void dispose() async {
     try {
+      _webViewCreatedWatchdog?.cancel();
+
       // Send details to provider in case we are rotating
       _webViewProvider.rotatedTabDetails.add(
         RotatedDisposedTabDetails(key: widget.key, currentUrl: _currentUrl, scrollY: _scrollY, scrollX: _scrollX),
@@ -1192,6 +1200,10 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
+
+            // #2843 watchdog: creation succeeded
+            _webViewCreatedFired = true;
+            _webViewCreatedWatchdog?.cancel();
 
             _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
@@ -5369,6 +5381,39 @@ class WebViewFullState extends State<WebViewFull>
 
   String? reportCurrentTitle() {
     return _pageTitle;
+  }
+
+  /// #2843 watchdog
+  void _startWebViewCreatedWatchdog() {
+    if (!Platform.isAndroid) return;
+
+    _webViewCreatedWatchdog = Timer(const Duration(seconds: 4), () async {
+      if (!mounted || _webViewCreatedFired || webViewController != null) return;
+
+      String webViewPackage = "unknown";
+      try {
+        final pkg = await InAppWebViewController.getCurrentWebViewPackage();
+        if (pkg != null) webViewPackage = "${pkg.packageName} ${pkg.versionName}";
+      } catch (_) {}
+
+      // Re-check after the async gap
+      if (!mounted || _webViewCreatedFired || webViewController != null) return;
+
+      try {
+        final crashlytics = FirebaseCrashlytics.instance;
+        crashlytics.setCustomKey("wv_webview_package", webViewPackage);
+        crashlytics.setCustomKey("wv_restored_tabs", _webViewProvider.tabList.length);
+        crashlytics.setCustomKey("wv_tab_uid", _tabUid);
+        crashlytics.setCustomKey("wv_is_window", widget.windowId != null);
+        crashlytics.recordError(
+          "WebViewNeverCreated: onWebViewCreated did not fire within 4s (controller still null): "
+          "webview=$webViewPackage tabs=${_webViewProvider.tabList.length}",
+          null,
+          reason: "flutter_inappwebview #2843 Android release cold-start webview drop",
+          fatal: false,
+        );
+      } catch (_) {}
+    });
   }
 
   Future<void> _revertTransparentBackground() async {
