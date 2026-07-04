@@ -482,6 +482,9 @@ class WebViewFullState extends State<WebViewFull>
       transparentBackground: true,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
+      // Android: handle renderer-process death (onRenderProcessGone) so an OOM'd/crashed WebView
+      // doesn't kill the whole app. Without this the native client returns "unhandled" and Android crashes.
+      useOnRenderProcessGone: true,
       javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
 
@@ -1968,6 +1971,29 @@ class WebViewFullState extends State<WebViewFull>
             // so allow the handler bundle to be re-injected on the next navigation
             _handlersInjected = false;
             c.reload();
+          },
+          onRenderProcessGone: (c, detail) {
+            // Android renderer process died (crash or OS-killed under memory)
+            // Tells Android we dealt with it, so it does not kill the whole app
+            try {
+              if (!Platform.isWindows) {
+                FirebaseCrashlytics.instance.recordError(
+                  "WebViewRenderProcessGone didCrash=${detail.didCrash} tabs=${_webViewProvider.tabList.length}",
+                  null,
+                  reason: "Android WebView renderer gone (recovered, app not killed)",
+                  fatal: false,
+                );
+              }
+            } catch (_) {}
+
+            _handlersInjected = false;
+
+            if (_webViewProvider.isTabUidActive(_tabUid)) {
+              _webViewProvider.rebuildUnresponsiveWebView(
+                isChainingBrowser: _isChainingBrowser,
+                chainingPayload: _chainingPayload,
+              );
+            }
           },
           onReceivedHttpAuthRequest: (c, challenge) async {
             TextEditingController usernameController = TextEditingController();
