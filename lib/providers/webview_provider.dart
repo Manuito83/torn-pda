@@ -81,6 +81,8 @@ class TabDetails {
   String customName = "";
   bool customNameInTitle = false;
   bool customNameInTab = true;
+  // #2843 auto-recovery: times we rebuilt this tab because onWebViewCreated never fired
+  int webviewCreationRetries = 0;
 }
 
 class SleepingWebView {
@@ -1941,6 +1943,13 @@ class WebViewProvider extends ChangeNotifier {
   bool isTabUidActive(String tabUid) {
     if (_tabList.isEmpty) return false;
     return _tabList[currentTab].id == tabUid;
+  }
+
+  TabDetails? getTabByUid(String tabUid) {
+    for (final tab in _tabList) {
+      if (tab.id == tabUid) return tab;
+    }
+    return null;
   }
 
   Future<void> broadcastTabState() async {

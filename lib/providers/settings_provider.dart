@@ -211,6 +211,31 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // #2843 engine-prewarm kill-switch (RemoteConfig): warms the Android WebView engine on cold start
+  bool _browserEnginePrewarmRemoteConfigAllowed = true;
+  bool get browserEnginePrewarmRemoteConfigAllowed => _browserEnginePrewarmRemoteConfigAllowed;
+  set browserEnginePrewarmRemoteConfigAllowed(bool value) {
+    _browserEnginePrewarmRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
+  // #2843 watchdog auto-recovery kill-switch (RemoteConfig): rebuilds a webview whose onWebViewCreated never fired
+  bool _browserWebViewRecoveryRemoteConfigAllowed = true;
+  bool get browserWebViewRecoveryRemoteConfigAllowed => _browserWebViewRecoveryRemoteConfigAllowed;
+  set browserWebViewRecoveryRemoteConfigAllowed(bool value) {
+    _browserWebViewRecoveryRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
+  // Android renderer-gone handling kill-switch (RemoteConfig): when off, useOnRenderProcessGone is not set,
+  // so an OOM / crashed webview might kills the whole app
+  bool _browserRenderProcessGoneRemoteConfigAllowed = true;
+  bool get browserRenderProcessGoneRemoteConfigAllowed => _browserRenderProcessGoneRemoteConfigAllowed;
+  set browserRenderProcessGoneRemoteConfigAllowed(bool value) {
+    _browserRenderProcessGoneRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {

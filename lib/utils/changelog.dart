@@ -80,9 +80,9 @@ class _MVersion {
 
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
-    version: 'v3.14.2',
+    version: 'v3.14.3',
     date: '05 July 2026',
-    hotfixes: [],
+    hotfixes: ["Hotfix for browser not initializing correctly on some devices"],
     sections: [
       _MSection(
         icon: Icons.handyman,
