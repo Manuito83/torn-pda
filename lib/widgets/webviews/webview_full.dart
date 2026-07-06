@@ -1997,16 +1997,23 @@ class WebViewFullState extends State<WebViewFull>
 
             _handlersInjected = false;
 
-            final bool rgActive = _webViewProvider.isTabUidActive(_tabUid);
+            final bool renderGoneActive = _webViewProvider.isTabUidActive(_tabUid);
+            final bool rebuildNow = renderGoneActive || detail.didCrash != false;
+
             logToUser(
-              "💥 Android renderer gone (didCrash=${detail.didCrash}) — ${rgActive ? 'rebuilding this tab' : 'app kept alive, tab idle'}",
+              "💥 Android renderer gone (didCrash=${detail.didCrash}): "
+              "${rebuildNow ? 'rebuilding this tab' : 'marked, will reload on focus'}",
               duration: 6,
             );
-            if (rgActive) {
+
+            if (rebuildNow) {
               _webViewProvider.rebuildUnresponsiveWebView(
+                tabUid: _tabUid,
                 isChainingBrowser: _isChainingBrowser,
                 chainingPayload: _chainingPayload,
               );
+            } else {
+              _webViewProvider.getTabByUid(_tabUid)?.needsReloadAfterRendererGone = true;
             }
           },
           onReceivedHttpAuthRequest: (c, challenge) async {
