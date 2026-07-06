@@ -75,12 +75,13 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
+import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.14.2';
-const String androidCompilation = '662';
+const String appVersion = '3.14.3';
+const String androidCompilation = '663';
 const String iosCompilation = '661'; // TODO: differs!
 
 /// All Firestore fields related to alerts configuration
@@ -320,27 +321,29 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         builder: (context, child) {
           final botToastWrappedChild = BotToastInit()(context, child);
 
-          if (enableAccessibilityTools && kDebugMode) {
-            return AccessibilityTools(
-              // Set to null to disable tap area checking
-              minimumTapAreas: null,
-              // Check for semantic labels
-              checkSemanticLabels: true,
-              // Check for flex overflows
-              checkFontOverflows: false,
-              // Check for image labels
-              checkImageLabels: false,
-              // Set how much info about issues is printed
-              logLevel: LogLevel.verbose,
-              // Set where the buttons are placed
-              buttonsAlignment: ButtonsAlignment.bottomRight,
-              // Enable or disable draging the buttons around
-              enableButtonsDrag: true,
-              child: botToastWrappedChild,
-            );
-          } else {
-            return botToastWrappedChild;
-          }
+          final Widget content = (enableAccessibilityTools && kDebugMode)
+              ? AccessibilityTools(
+                  // Set to null to disable tap area checking
+                  minimumTapAreas: null,
+                  // Check for semantic labels
+                  checkSemanticLabels: true,
+                  // Check for flex overflows
+                  checkFontOverflows: false,
+                  // Check for image labels
+                  checkImageLabels: false,
+                  // Set how much info about issues is printed
+                  logLevel: LogLevel.verbose,
+                  // Set where the buttons are placed
+                  buttonsAlignment: ButtonsAlignment.bottomRight,
+                  // Enable or disable draging the buttons around
+                  enableButtonsDrag: true,
+                  child: botToastWrappedChild,
+                )
+              : botToastWrappedChild;
+
+          // Warm the Android WebView engine offstage (1x1, behind content, non-blocking) to avoid the
+          // #2843 cold-start onWebViewCreated drop. Can be changed via RC
+          return Stack(alignment: Alignment.topLeft, children: [const BrowserEnginePrewarm(), content]);
         },
         navigatorObservers: [BotToastNavigatorObserver()],
         scrollBehavior: !Platform.isWindows

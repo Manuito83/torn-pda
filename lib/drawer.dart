@@ -704,6 +704,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "dynamic_appIcon_enabled": "false",
         "browser_center_editing_text_field_allowed": true,
         "browser_restore_webview_focus_allowed": true,
+        "browser_engine_prewarm_allowed": true,
+        "browser_webview_recovery_allowed": true,
+        "browser_render_process_gone_allowed": true,
         "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
@@ -782,6 +785,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       );
       _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed = remoteConfig.getBool(
         "browser_restore_webview_focus_allowed",
+      );
+      _settingsProvider.browserEnginePrewarmRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_engine_prewarm_allowed",
+      );
+      _settingsProvider.browserWebViewRecoveryRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_webview_recovery_allowed",
+      );
+      _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_render_process_gone_allowed",
       );
 
       // Auth recovery (also persist to SharedPrefs for next app launch)

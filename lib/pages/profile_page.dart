@@ -2268,7 +2268,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHourWithDaysElapsed();
-          return Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]);
+          return Padding(
+            padding: const EdgeInsets.only(top: 2, left: 12),
+            child: Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]),
+          );
         }
       case "nerve":
         if (_user!.nerve!.fulltime == 0 || _user!.nerve!.current! > _user!.nerve!.maximum!) {
@@ -2280,7 +2283,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHourWithDaysElapsed();
-          return Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]);
+          return Padding(
+            padding: const EdgeInsets.only(top: 2, left: 12),
+            child: Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]),
+          );
         }
       case "happy":
         if (_user!.happy!.fulltime == 0 || _user!.happy!.current! > _user!.happy!.maximum!) {
@@ -2292,7 +2298,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHourWithDaysElapsed();
-          return Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]);
+          return Padding(
+            padding: const EdgeInsets.only(top: 2, left: 12),
+            child: Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]),
+          );
         }
       case "life":
         if (_user!.life!.fulltime == 0 || _user!.life!.current! > _user!.life!.maximum!) {
@@ -2304,7 +2313,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone,
           ).formatHourWithDaysElapsed();
-          return Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]);
+          return Padding(
+            padding: const EdgeInsets.only(top: 2, left: 12),
+            child: Row(children: <Widget>[const SizedBox(width: 65), Text('Full at $timeFormatted')]),
+          );
         }
       default:
         return const SizedBox.shrink();

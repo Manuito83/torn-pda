@@ -482,9 +482,8 @@ class WebViewFullState extends State<WebViewFull>
       transparentBackground: true,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
-      // Android: handle renderer-process death (onRenderProcessGone) so an OOM'd/crashed WebView
-      // doesn't kill the whole app. Without this the native client returns "unhandled" and Android crashes.
-      useOnRenderProcessGone: true,
+      // Android: handle renderer-process death when OOM / crashed WebView
+      useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
       javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
 
@@ -1207,6 +1206,16 @@ class WebViewFullState extends State<WebViewFull>
             // #2843 watchdog: creation succeeded
             _webViewCreatedFired = true;
             _webViewCreatedWatchdog?.cancel();
+            final createdTab = _webViewProvider.getTabByUid(_tabUid);
+            if ((createdTab?.webviewCreationRetries ?? 0) > 0) {
+              logToUser(
+                "✅ Webview recovered after ${createdTab!.webviewCreationRetries} rebuilds (ref: #2843)",
+                duration: 6,
+                backgroundcolor: Colors.green.shade700,
+                borderColor: Colors.green.shade900,
+              );
+            }
+            createdTab?.webviewCreationRetries = 0;
 
             _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
@@ -1988,7 +1997,12 @@ class WebViewFullState extends State<WebViewFull>
 
             _handlersInjected = false;
 
-            if (_webViewProvider.isTabUidActive(_tabUid)) {
+            final bool rgActive = _webViewProvider.isTabUidActive(_tabUid);
+            logToUser(
+              "💥 Android renderer gone (didCrash=${detail.didCrash}) — ${rgActive ? 'rebuilding this tab' : 'app kept alive, tab idle'}",
+              duration: 6,
+            );
+            if (rgActive) {
               _webViewProvider.rebuildUnresponsiveWebView(
                 isChainingBrowser: _isChainingBrowser,
                 chainingPayload: _chainingPayload,
@@ -5413,7 +5427,7 @@ class WebViewFullState extends State<WebViewFull>
   void _startWebViewCreatedWatchdog() {
     if (!Platform.isAndroid) return;
 
-    _webViewCreatedWatchdog = Timer(const Duration(seconds: 4), () async {
+    _webViewCreatedWatchdog = Timer(const Duration(milliseconds: 2500), () async {
       if (!mounted || _webViewCreatedFired || webViewController != null) return;
 
       String webViewPackage = "unknown";
@@ -5425,20 +5439,45 @@ class WebViewFullState extends State<WebViewFull>
       // Re-check after the async gap
       if (!mounted || _webViewCreatedFired || webViewController != null) return;
 
+      final tab = _webViewProvider.getTabByUid(_tabUid);
+      final int retries = tab?.webviewCreationRetries ?? 0;
+
       try {
         final crashlytics = FirebaseCrashlytics.instance;
         crashlytics.setCustomKey("wv_webview_package", webViewPackage);
         crashlytics.setCustomKey("wv_restored_tabs", _webViewProvider.tabList.length);
         crashlytics.setCustomKey("wv_tab_uid", _tabUid);
         crashlytics.setCustomKey("wv_is_window", widget.windowId != null);
+        crashlytics.setCustomKey("wv_recovery_retries", retries);
         crashlytics.recordError(
-          "WebViewNeverCreated: onWebViewCreated did not fire within 4s (controller still null): "
-          "webview=$webViewPackage tabs=${_webViewProvider.tabList.length}",
+          "WebViewNeverCreated: onWebViewCreated did not fire within 2.5s (controller still null): "
+          "webview=$webViewPackage tabs=${_webViewProvider.tabList.length} retries=$retries",
           null,
           reason: "flutter_inappwebview #2843 Android release cold-start webview drop",
           fatal: false,
         );
       } catch (_) {}
+
+      final bool canRebuild =
+          _settingsProvider.browserWebViewRecoveryRemoteConfigAllowed &&
+          tab != null &&
+          _webViewProvider.isTabUidActive(_tabUid) &&
+          retries < 2;
+
+      logToUser(
+        canRebuild
+            ? "⚠️ Webview not created in 2.5s — rebuilding (try ${retries + 1}/2)\n$webViewPackage (ref #2843)"
+            : "⚠️ Webview not created in 2.5s — NOT rebuilding (retries=$retries)\n$webViewPackage (ref #2843)",
+        duration: 6,
+      );
+
+      if (canRebuild) {
+        tab.webviewCreationRetries = retries + 1;
+        _webViewProvider.rebuildUnresponsiveWebView(
+          isChainingBrowser: _isChainingBrowser,
+          chainingPayload: _chainingPayload,
+        );
+      }
     });
   }
 
@@ -5447,6 +5486,11 @@ class WebViewFullState extends State<WebViewFull>
       final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
       newSettings.transparentBackground = false;
       webViewController!.setSettings(settings: newSettings);
+      if (Platform.isAndroid) {
+        try {
+          await webViewController!.setBackgroundColor(color: _themeProvider.canvas.toARGB32());
+        } catch (_) {}
+      }
       _firstLoadRevertBackground = false;
     }
   }
