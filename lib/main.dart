@@ -81,7 +81,7 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.14.3';
-const String androidCompilation = '663';
+const String androidCompilation = '665';
 const String iosCompilation = '661'; // TODO: differs!
 
 /// All Firestore fields related to alerts configuration

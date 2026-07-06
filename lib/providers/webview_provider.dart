@@ -38,16 +38,9 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
-enum UiMode {
-  window,
-  fullScreen,
-}
+enum UiMode { window, fullScreen }
 
-enum WebViewSplitPosition {
-  right,
-  left,
-  off,
-}
+enum WebViewSplitPosition { right, left, off }
 
 class RotatedDisposedTabDetails {
   GlobalKey<WebViewFullState>? key;
@@ -83,6 +76,8 @@ class TabDetails {
   bool customNameInTab = true;
   // #2843 auto-recovery: times we rebuilt this tab because onWebViewCreated never fired
   int webviewCreationRetries = 0;
+  // Set when this tab renderer died, so we defer rebuilding until the tab is focused
+  bool needsReloadAfterRendererGone = false;
 }
 
 class SleepingWebView {
@@ -129,9 +124,7 @@ class WebViewProvider extends ChangeNotifier {
 
   /// URLs that can generate multiple back/forward history entries without actual navigation changes
   /// (e.g.: personal stats will trigger a new URL load for every change in the page, as URL params change)
-  List<String> urlsWithStuckHistory = [
-    "https://www.torn.com/personalstats.php?",
-  ];
+  List<String> urlsWithStuckHistory = ["https://www.torn.com/personalstats.php?"];
 
   // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
   DateTime? _devToolsReopenTime;
@@ -183,9 +176,7 @@ class WebViewProvider extends ChangeNotifier {
 
     if (bringToForeground) {
       if (stackView is Container) {
-        stackView = const WebViewStackView(
-          recallLastSession: true,
-        );
+        stackView = const WebViewStackView(recallLastSession: true);
       }
 
       // Change browser visibility early to avoid issues if device returns an error
@@ -220,9 +211,7 @@ class WebViewProvider extends ChangeNotifier {
   /// Use to transition to split screen, ensuring that browser is also resumed
   void browserForegroundWithSplitTransition() {
     if (stackView is Container) {
-      stackView = const WebViewStackView(
-        recallLastSession: true,
-      );
+      stackView = const WebViewStackView(recallLastSession: true);
     }
 
     // Change browser visibility early to avoid issues if device returns an error
@@ -232,11 +221,7 @@ class WebViewProvider extends ChangeNotifier {
     broadcastTabState();
   }
 
-  void pdaIconActivation({
-    required bool shortTap,
-    required BuildContext context,
-    required bool automaticLogin,
-  }) {
+  void pdaIconActivation({required bool shortTap, required BuildContext context, required bool automaticLogin}) {
     browserShowInForeground = true;
 
     if (automaticLogin && context.read<NativeUserProvider>().playerLastLoginMethod != NativeLoginType.none) {
@@ -847,10 +832,7 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void wipeTabs({
-    required bool includeLockedTabs,
-    required TabsWipeTimeRange timeRange,
-  }) {
+  void wipeTabs({required bool includeLockedTabs, required TabsWipeTimeRange timeRange}) {
     DateTime now = DateTime.now();
     Duration thresholdDuration = timeRange.duration;
     DateTime thresholdTime = now.subtract(thresholdDuration);
@@ -906,10 +888,7 @@ class WebViewProvider extends ChangeNotifier {
     final deactivated = _tabList[previousIndex];
     deactivated.webViewKey?.currentState?.pauseThisWebview();
     // Notify the tab being deactivated
-    deactivated.webViewKey?.currentState?.publishTabState(
-          isActiveTab: false,
-          isWebViewVisible: _isBrowserForeground,
-        ) ??
+    deactivated.webViewKey?.currentState?.publishTabState(isActiveTab: false, isWebViewVisible: _isBrowserForeground) ??
         Future.value();
 
     currentTab = newActiveTab;
@@ -922,15 +901,18 @@ class WebViewProvider extends ChangeNotifier {
     if (activated.sleepTab) {
       activated.sleepTab = false;
       activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView!);
+    } else if (activated.needsReloadAfterRendererGone) {
+      rebuildUnresponsiveWebView(
+        tabUid: activated.id,
+        isChainingBrowser: activated.isChainingBrowser,
+        chainingPayload: null,
+      );
     }
 
     activated.webViewKey?.currentState?.resumeThisWebview(publish: false);
 
     // Notify the tab being activated
-    activated.webViewKey?.currentState?.publishTabState(
-          isActiveTab: true,
-          isWebViewVisible: _isBrowserForeground,
-        ) ??
+    activated.webViewKey?.currentState?.publishTabState(isActiveTab: true, isWebViewVisible: _isBrowserForeground) ??
         Future.value();
 
     _callAssessMethods();
@@ -990,8 +972,10 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
-  void rebuildUnresponsiveWebView({required bool isChainingBrowser, required dynamic chainingPayload}) {
-    final crashedTab = _tabList[currentTab];
+  void rebuildUnresponsiveWebView({String? tabUid, required bool isChainingBrowser, required dynamic chainingPayload}) {
+    final int index = tabUid == null ? currentTab : _tabList.indexWhere((t) => t.id == tabUid);
+    if (index < 0 || index >= _tabList.length) return;
+    final crashedTab = _tabList[index];
 
     // Reconnect the controller and widgets with a new key
     final newKey = GlobalKey<WebViewFullState>();
@@ -1007,8 +991,9 @@ class WebViewProvider extends ChangeNotifier {
       allowDownloads: true,
     );
 
-    _tabList[currentTab].webView = crashedTab.webView;
-    _tabList[currentTab].webViewKey = newKey;
+    _tabList[index].webView = crashedTab.webView;
+    _tabList[index].webViewKey = newKey;
+    crashedTab.needsReloadAfterRendererGone = false;
 
     _callAssessMethods();
     notifyListeners();
@@ -1082,18 +1067,13 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     if (!webviewDialogRecoveryEnabledIOS) return;
 
-    log(
-      name: "Dialog Restoration iOS",
-      "💬 Notifying dialog closed to webview for interaction restoration!",
-    );
+    log(name: "Dialog Restoration iOS", "💬 Notifying dialog closed to webview for interaction restoration!");
 
     final state = _tabList[currentTab].webViewKey?.currentState;
     final controller = state?.webViewController;
     if (controller != null) {
       try {
-        await controller.evaluateJavascript(
-          source: WebviewInteractionRecoveryScripts.installClickRestoreShim,
-        );
+        await controller.evaluateJavascript(source: WebviewInteractionRecoveryScripts.installClickRestoreShim);
       } catch (e) {
         debugPrint('WebView provider: dialog closed JS eval error: $e');
       }
@@ -1227,10 +1207,7 @@ class WebViewProvider extends ChangeNotifier {
     BotToast.showText(
       crossPage: false,
       text: message,
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: messageColor,
       duration: const Duration(seconds: 1),
       contentPadding: const EdgeInsets.all(10),
@@ -1356,10 +1333,7 @@ class WebViewProvider extends ChangeNotifier {
     if (tab.historyBack.isEmpty) {
       BotToast.showText(
         text: "Can't go back!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.grey[600]!,
         duration: const Duration(seconds: 1),
         contentPadding: const EdgeInsets.all(10),
@@ -1381,10 +1355,7 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
     BotToast.showText(
       text: "Back",
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.grey[600]!,
       duration: const Duration(seconds: 1),
       contentPadding: const EdgeInsets.all(10),
@@ -1398,10 +1369,7 @@ class WebViewProvider extends ChangeNotifier {
     if (tab.historyForward.isEmpty) {
       BotToast.showText(
         text: "Can't go forward!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.grey[600]!,
         duration: const Duration(seconds: 1),
         contentPadding: const EdgeInsets.all(10),
@@ -1424,10 +1392,7 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
     BotToast.showText(
       text: "Forward",
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.grey[600]!,
       duration: const Duration(seconds: 1),
       contentPadding: const EdgeInsets.all(10),
@@ -1614,10 +1579,7 @@ class WebViewProvider extends ChangeNotifier {
             crossPage: false,
             text: message,
             align: const Alignment(0, 0),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.blue,
             contentPadding: const EdgeInsets.all(10),
           );
@@ -1799,10 +1761,7 @@ class WebViewProvider extends ChangeNotifier {
         try {
           loginResponse = await nativeAuth.requestTornRecurrentInitData(
             context: context,
-            loginData: GetInitDataModel(
-              playerId: UserHelper.playerId,
-              sToken: nativeUser.playerSToken,
-            ),
+            loginData: GetInitDataModel(playerId: UserHelper.playerId, sToken: nativeUser.playerSToken),
           );
 
           if (loginResponse.success) {
@@ -1836,7 +1795,8 @@ class WebViewProvider extends ChangeNotifier {
           String errorMessage = "Authentication error, please check your username and password in Settings!";
           if (nativeAuth.authErrorsInSession >= 3) {
             nativeAuth.authErrorsInSession = 0;
-            errorMessage = "Too many authentication errors, your username and password have been erased in "
+            errorMessage =
+                "Too many authentication errors, your username and password have been erased in "
                 "Torn PDA settings as a precaution!";
             nativeUser.eraseUserPreferences();
           } else {
@@ -1845,10 +1805,7 @@ class WebViewProvider extends ChangeNotifier {
 
           BotToast.showText(
             text: errorMessage,
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.red,
             duration: const Duration(seconds: 4),
             contentPadding: const EdgeInsets.all(10),
@@ -1960,10 +1917,7 @@ class WebViewProvider extends ChangeNotifier {
     if (state == null) return;
 
     try {
-      await state.publishTabState(
-        isActiveTab: true,
-        isWebViewVisible: isVisible,
-      );
+      await state.publishTabState(isActiveTab: true, isWebViewVisible: isVisible);
     } catch (e) {
       debugPrint('WebView provider: broadcast tab state error: $e');
     }
@@ -2153,11 +2107,7 @@ class WebViewProvider extends ChangeNotifier {
 
         switch (iconData['type']) {
           case 'icon':
-            return Icon(
-              iconData['icon'],
-              color: iconColor,
-              size: iconData['size'],
-            );
+            return Icon(iconData['icon'], color: iconColor, size: iconData['size']);
           case 'asset':
             return Image.asset(iconData['path'], color: iconColor);
           case 'imageicon':
@@ -2200,10 +2150,7 @@ class WebViewProvider extends ChangeNotifier {
 
     for (final short in shortProvider.allShortcuts) {
       if (url.contains(short.url!)) {
-        final shortcutIcon = ImageIcon(
-          AssetImage(short.iconUrl!),
-          color: iconColor,
-        );
+        final shortcutIcon = ImageIcon(AssetImage(short.iconUrl!), color: iconColor);
         // Return if the coincidence is not with the default shortcut
         if (short.name != "Home") {
           return shortcutIcon;
@@ -2276,10 +2223,7 @@ class WebViewProvider extends ChangeNotifier {
     if (enable) {
       pc.registerTask(
         "removeUnusedTabs",
-        () => wipeTabs(
-          includeLockedTabs: removeUnusedTabsIncludesLocked,
-          timeRange: removeUnusedTabsRangeDays,
-        ),
+        () => wipeTabs(includeLockedTabs: removeUnusedTabsIncludesLocked, timeRange: removeUnusedTabsRangeDays),
         intervalInHours: 24,
         executeImmediately: true,
         overwrite: true,
@@ -2296,10 +2240,7 @@ class WebViewProvider extends ChangeNotifier {
 
     pc.registerTask(
       "removeUnusedTabs",
-      () => wipeTabs(
-        includeLockedTabs: removeUnusedTabsIncludesLocked,
-        timeRange: removeUnusedTabsRangeDays,
-      ),
+      () => wipeTabs(includeLockedTabs: removeUnusedTabsIncludesLocked, timeRange: removeUnusedTabsRangeDays),
       intervalInHours: 24,
       executeImmediately: true,
     );

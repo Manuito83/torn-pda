@@ -79,10 +79,26 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  // NOTE! Android only
+  if (Platform.isAndroid)
+    const _MVersion(
+      version: 'v3.14.3',
+      date: '06 July 2026',
+      hotfixes: ["Android hotfix"],
+      sections: [
+        _MSection(
+          icon: Icons.handyman,
+          title: 'Fixed',
+          color: Color(0xFF2E7D32),
+          items: [_MItem('Fix for browser not initializing correctly on some devices')],
+        ),
+      ],
+    ),
+
   const _MVersion(
-    version: 'v3.14.3',
+    version: 'v3.14.2',
     date: '05 July 2026',
-    hotfixes: ["Hotfix for browser not initializing correctly on some devices"],
+    hotfixes: [],
     sections: [
       _MSection(
         icon: Icons.handyman,

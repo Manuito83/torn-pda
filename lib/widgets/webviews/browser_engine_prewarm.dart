@@ -14,12 +14,18 @@ class BrowserEnginePrewarm extends StatelessWidget {
     if (!Platform.isAndroid) return const SizedBox.shrink();
     final allowed = context.select<SettingsProvider, bool>((s) => s.browserEnginePrewarmRemoteConfigAllowed);
     if (!allowed) return const SizedBox.shrink();
-    return const _PrewarmWebView();
+    // Keep the prewarm for cold-start, also with RC
+    final renderGoneAllowed = context.select<SettingsProvider, bool>(
+      (s) => s.browserRenderProcessGoneRemoteConfigAllowed,
+    );
+    return _PrewarmWebView(useOnRenderProcessGone: renderGoneAllowed);
   }
 }
 
 class _PrewarmWebView extends StatefulWidget {
-  const _PrewarmWebView();
+  const _PrewarmWebView({required this.useOnRenderProcessGone});
+
+  final bool useOnRenderProcessGone;
 
   @override
   State<_PrewarmWebView> createState() => _PrewarmWebViewState();
@@ -33,7 +39,11 @@ class _PrewarmWebViewState extends State<_PrewarmWebView> {
       height: 1,
       child: InAppWebView(
         initialUrlRequest: URLRequest(url: WebUri("about:blank")),
-        initialSettings: InAppWebViewSettings(javaScriptBridgeEnabled: false, transparentBackground: true),
+        initialSettings: InAppWebViewSettings(
+          javaScriptBridgeEnabled: false,
+          transparentBackground: true,
+          useOnRenderProcessGone: widget.useOnRenderProcessGone,
+        ),
       ),
     );
   }
