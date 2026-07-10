@@ -79,6 +79,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   bool _authRecoveryInProgress = false;
   Future<void>? _finalRecoveryFuture;
   bool _drawerUserChecked = false;
+  bool _finalizationStarted = false;
   String _userUid = '';
 
   // Detailed logging state
@@ -135,10 +136,10 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
 
   Future<void> _startAuthRecovery() async {
     _totalRecoveryStopwatch.start();
-    _logStep('START', details: {
-      'appUpdated': widget.appHasBeenUpdated,
-      'platform': Platform.isIOS ? 'iOS' : 'Android',
-    });
+    _logStep(
+      'START',
+      details: {'appUpdated': widget.appHasBeenUpdated, 'platform': Platform.isIOS ? 'iOS' : 'Android'},
+    );
 
     // Capture API key state early
     _apiKeyStateAtRecovery = UserHelper.isApiKeyValid ? 'valid' : 'empty';
@@ -149,11 +150,18 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     if (!widget.preferencesCompleter.isCompleted) {
       _logStep('WAITING_PREFS');
       try {
-        await widget.preferencesCompleter.future.timeout(const Duration(seconds: 10));
+        await widget.preferencesCompleter.future.timeout(const Duration(seconds: 20));
         _logStep('PREFS_LOADED');
       } catch (_) {
         _logStep('PREFS_TIMEOUT');
-        _flushLogToCrashlytics(outcome: 'prefs_timeout');
+        // Slow prefs (low-end devices, offline starts) are not an app error: analytics only
+        FirebaseAnalytics.instance.logEvent(
+          name: 'auth_recovery_prefs_timeout',
+          parameters: {
+            'platform': Platform.isIOS ? 'iOS' : 'Android',
+            'app_updated': widget.appHasBeenUpdated.toString(),
+          },
+        );
         widget.onAuthCompleted?.call();
         return;
       }
@@ -218,6 +226,16 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     User? user;
     try {
       user = FirebaseAuth.instance.currentUser;
+      if (user == null && !_debugForceSignOut) {
+        // A null here can just mean Firebase hasn't restored the persisted session yet...
+        // authStateChanges() only emits once persistence is loaded
+        _logStep('INITIAL_AUTH_STREAM_WAIT');
+        user = await FirebaseAuth.instance.authStateChanges().first.timeout(
+          const Duration(seconds: 4),
+          onTimeout: () => null,
+        );
+        _authStateChangesCount++;
+      }
       _initialCurrentUserState = user == null ? 'null' : 'present';
     } catch (e) {
       _initialCurrentUserState = 'error';
@@ -342,20 +360,19 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         _logStep('RETRY_CHECKING_AUTH_STREAM');
         try {
           user = await FirebaseAuth.instance.authStateChanges().first.timeout(
-                const Duration(seconds: 2),
-                onTimeout: () => null,
-              );
+            const Duration(seconds: 2),
+            onTimeout: () => null,
+          );
           _authStateChangesCount++;
         } catch (e) {
           _logStep('RETRY_AUTH_STREAM_ERROR', details: {'error': e.toString()});
         }
       }
 
-      _logStep('RETRY_USER_CHECK', details: {
-        'attempt': attempt,
-        'userState': user == null ? 'null' : 'present',
-        'uid': user?.uid ?? 'none',
-      });
+      _logStep(
+        'RETRY_USER_CHECK',
+        details: {'attempt': attempt, 'userState': user == null ? 'null' : 'present', 'uid': user?.uid ?? 'none'},
+      );
 
       // Original user recovered - alerts are already linked to this UID
       if (user != null && !_debugForceSignOut) {
@@ -409,6 +426,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         retries: retryDelays.length,
         timedOut: true,
         failure: Exception('auth_recovery_final_timeout'),
+        reportToCrashlytics: true,
       );
 
       await _awaitAuthTimeoutAck();
@@ -465,11 +483,14 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         _logStep('ANON_CURRENT_USER_ERROR', details: {'error': e.toString()});
       }
 
-      _logStep('ANON_PRE_CREATE_CHECK', details: {
-        'userState': user == null ? 'null' : 'present',
-        'uid': user?.uid ?? 'none',
-        'apiKeyValid': UserHelper.isApiKeyValid,
-      });
+      _logStep(
+        'ANON_PRE_CREATE_CHECK',
+        details: {
+          'userState': user == null ? 'null' : 'present',
+          'uid': user?.uid ?? 'none',
+          'apiKeyValid': UserHelper.isApiKeyValid,
+        },
+      );
 
       // [Debug] Block anonymous user creation to force timeout UI
       if (_debugBlockAnonCreation) {
@@ -488,11 +509,10 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
           maxRetries: widget.appHasBeenUpdated ? 5 : 3,
         );
         retriesUsed = widget.appHasBeenUpdated ? 5 : 3;
-        _logStep('ANON_SIGN_IN_RESULT', details: {
-          'success': user != null,
-          'uid': user?.uid ?? 'none',
-          'retries': retriesUsed,
-        });
+        _logStep(
+          'ANON_SIGN_IN_RESULT',
+          details: {'success': user != null, 'uid': user?.uid ?? 'none', 'retries': retriesUsed},
+        );
       } else {
         // User appeared! This is actually the original user recovered late
         _isOriginalUserRecovered = true;
@@ -527,6 +547,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         timedOut: _authenticationTimedOut,
         failure: failure,
         stack: s,
+        reportToCrashlytics: true,
       );
     } finally {
       _drawerUserChecked = true;
@@ -562,23 +583,25 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
 
     // Second: try Firestore clone (6s timeout)
     final apiKey = UserHelper.apiKey;
-    _logStep('ALERTS_TRYING_FIRESTORE_CLONE', details: {
-      'hasApiKey': apiKey.isNotEmpty,
-      'hasUid': currentUid.isNotEmpty,
-    });
+    _logStep(
+      'ALERTS_TRYING_FIRESTORE_CLONE',
+      details: {'hasApiKey': apiKey.isNotEmpty, 'hasUid': currentUid.isNotEmpty},
+    );
 
     if (apiKey.isNotEmpty && currentUid.isNotEmpty) {
       try {
-        final recovery = await _cloneFromApiKey(apiKey: apiKey, currentUid: currentUid)
-            .timeout(const Duration(seconds: 6), onTimeout: () {
-          _logStep('ALERTS_CLONE_TIMEOUT');
-          return {'hasClonedData': false};
-        });
+        final recovery = await _cloneFromApiKey(apiKey: apiKey, currentUid: currentUid).timeout(
+          const Duration(seconds: 6),
+          onTimeout: () {
+            _logStep('ALERTS_CLONE_TIMEOUT');
+            return {'hasClonedData': false};
+          },
+        );
 
-        _logStep('ALERTS_CLONE_RESULT', details: {
-          'hasClonedData': recovery['hasClonedData'],
-          'sourceUid': recovery['sourceUid'] ?? 'none',
-        });
+        _logStep(
+          'ALERTS_CLONE_RESULT',
+          details: {'hasClonedData': recovery['hasClonedData'], 'sourceUid': recovery['sourceUid'] ?? 'none'},
+        );
 
         if (recovery['hasClonedData'] == true) {
           sourceUid = recovery['sourceUid'];
@@ -589,9 +612,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         _logStep('ALERTS_CLONE_ERROR', details: {'error': e.toString()});
       }
     } else {
-      _logStep('ALERTS_CLONE_SKIPPED', details: {
-        'reason': apiKey.isEmpty ? 'no_api_key' : 'no_uid',
-      });
+      _logStep('ALERTS_CLONE_SKIPPED', details: {'reason': apiKey.isEmpty ? 'no_api_key' : 'no_uid'});
     }
 
     return _AlertsRecoveryOutcome(
@@ -605,14 +626,12 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   void _showAlertsNotRecoveredWarning() {
     if (!mounted) return;
     BotToast.showText(
-      text: "There was an issues recovering your user preferences from the server.\n\n"
+      text:
+          "There was an issues recovering your user preferences from the server.\n\n"
           "This might happen if your device lost or tried to restore data from a backup.\n\n"
           "Torn PDA managed to recover your user, but Alerts (automatic notifications) "
           "could not be restored.\n\nPlease reconfigure them in the Alerts section.",
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       clickClose: false,
       contentColor: Colors.orange[700]!,
       duration: const Duration(seconds: 10),
@@ -620,10 +639,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     );
   }
 
-  Future<Map<String, dynamic>> _cloneFromApiKey({
-    required String apiKey,
-    required String currentUid,
-  }) async {
+  Future<Map<String, dynamic>> _cloneFromApiKey({required String apiKey, required String currentUid}) async {
     if (apiKey.isEmpty || currentUid.isEmpty) {
       return {'hasClonedData': false};
     }
@@ -632,14 +648,14 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       final devicePlatform = Platform.isAndroid
           ? 'android'
           : Platform.isIOS
-              ? 'ios'
-              : 'windows';
+          ? 'ios'
+          : 'windows';
 
       try {
-        await FirebaseFirestore.instance.collection('players').doc(currentUid).set(
-          {'apiKey': apiKey, 'platform': devicePlatform},
-          SetOptions(merge: true),
-        );
+        await FirebaseFirestore.instance.collection('players').doc(currentUid).set({
+          'apiKey': apiKey,
+          'platform': devicePlatform,
+        }, SetOptions(merge: true));
       } catch (e) {
         debugPrint('Auth recovery: Firestore player set error: $e');
       }
@@ -692,6 +708,13 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   // ---------------------------------------------------------------------------
 
   Future<void> _finalizeOriginalUser(String uid) async {
+    // The retry loop and the final recovery window can race here; only one wins
+    if (_finalizationStarted) {
+      _logStep('FINALIZE_SKIPPED_DUPLICATE', details: {'uid': uid});
+      return;
+    }
+    _finalizationStarted = true;
+
     _logStep('FINALIZE_ORIGINAL_USER', details: {'uid': uid});
     _isOriginalUserRecovered = true;
 
@@ -706,7 +729,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     _logStep('ORIGINAL_USER_FINALIZED', details: {'totalTimeMs': _totalRecoveryStopwatch.elapsedMilliseconds});
 
     // Log success to Crashlytics
-    _flushLogToCrashlytics(outcome: 'original_user_recovered', recoverySource: 'original');
+    _sendLogToCrashlytics(outcome: 'original_user_recovered', recoverySource: 'original');
 
     _drawerUserChecked = true;
     widget.onAuthCompleted?.call();
@@ -725,6 +748,12 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   // ---------------------------------------------------------------------------
 
   Future<void> _finalizeNewUserAndRecoverAlerts(String uid, {required int retriesUsed}) async {
+    if (_finalizationStarted) {
+      _logStep('FINALIZE_SKIPPED_DUPLICATE', details: {'uid': uid});
+      return;
+    }
+    _finalizationStarted = true;
+
     if (mounted) {
       setState(() => _userUid = uid);
     }
@@ -750,6 +779,8 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       retries: retriesUsed,
       timedOut: _authenticationTimedOut,
       failure: alertsRecovered ? null : Exception('alerts_not_recovered'),
+      // The user was recovered fine; missing alerts already warn the user and go to analytics
+      reportToCrashlytics: false,
     );
 
     _drawerUserChecked = true;
@@ -770,10 +801,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       return false;
     }
 
-    final restored = await FirestoreHelper().applyAlertsFromPayload(
-      snapshot.toMap(),
-      resetRestockTimestamps: true,
-    );
+    final restored = await FirestoreHelper().applyAlertsFromPayload(snapshot.toMap(), resetRestockTimestamps: true);
     log("AUTH_DEBUG: Local snapshot restore: $restored", name: "AUTH_DEBUG");
     return restored;
   }
@@ -809,6 +837,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     required bool platformMatch,
     required int retries,
     required bool timedOut,
+    required bool reportToCrashlytics,
     String? sourceUid,
     Exception? failure,
     StackTrace? stack,
@@ -819,25 +848,29 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     final recoverySource = clonedAlerts
         ? 'Firestore'
         : snapshotRestored
-            ? 'Local'
-            : 'None';
+        ? 'Local'
+        : 'None';
 
     final success = restoredUser && (clonedAlerts || snapshotRestored);
 
-    _logStep('FINAL_RESULT', details: {
-      'success': success,
-      'recoverySource': recoverySource,
-      'isOriginalUser': _isOriginalUserRecovered,
-      'totalTimeMs': _totalRecoveryStopwatch.elapsedMilliseconds,
-    });
+    _logStep(
+      'FINAL_RESULT',
+      details: {
+        'success': success,
+        'recoverySource': recoverySource,
+        'isOriginalUser': _isOriginalUserRecovered,
+        'totalTimeMs': _totalRecoveryStopwatch.elapsedMilliseconds,
+      },
+    );
 
     // Always flush detailed log to Crashlytics for debugging
-    _flushLogToCrashlytics(
+    _sendLogToCrashlytics(
       outcome: success ? 'success' : (failure?.toString() ?? 'failed'),
       recoverySource: recoverySource,
     );
 
-    final summary = "AuthRecovery outcome | success=$success source=$recoverySource"
+    final summary =
+        "AuthRecovery outcome | success=$success source=$recoverySource"
         " clonedAlerts=$clonedAlerts snapshot=$snapshotRestored "
         "sourceUid=${sourceUid ?? 'none'} retries=$retries timedOut=$timedOut"
         " isOriginalUser=$_isOriginalUserRecovered totalMs=${_totalRecoveryStopwatch.elapsedMilliseconds}";
@@ -862,28 +895,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       },
     );
 
-    if (success) {
-      FirebaseCrashlytics.instance.recordError(
-        Exception('auth_recovery_fallback_success'),
-        stack ?? StackTrace.current,
-        reason: 'Auth recovery success via $recoverySource',
-        information: [
-          'recoverySource: $recoverySource',
-          'restoredUser: $restoredUser',
-          'clonedAlerts: $clonedAlerts',
-          'snapshotRestored: $snapshotRestored',
-          'retries: $retries',
-          'timedOut: $timedOut',
-          'sourceUid: ${sourceUid ?? 'none'}',
-          'isOriginalUser: $_isOriginalUserRecovered',
-          'totalTimeMs: ${_totalRecoveryStopwatch.elapsedMilliseconds}',
-          'initialUserState: ${_initialCurrentUserState ?? 'unknown'}',
-          'apiKeyState: ${_apiKeyStateAtRecovery ?? 'unknown'}',
-        ],
-        fatal: false,
-      );
-      return;
-    }
+    if (success || !reportToCrashlytics) return;
 
     FirebaseCrashlytics.instance.recordError(
       failure ?? Exception('auth_recovery_failed'),
@@ -906,37 +918,26 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     );
   }
 
-  /// Sends the detailed recovery log to Crashlytics for debugging
-  void _flushLogToCrashlytics({required String outcome, String? recoverySource}) {
+  /// Sends the detailed recovery log to Crashlytics
+  void _sendLogToCrashlytics({required String outcome, String? recoverySource}) {
     if (_recoveryLog.isEmpty) return;
 
     // Combine log entries (limit to last 50 to avoid huge payloads)
     final logEntries = _recoveryLog.length > 50 ? _recoveryLog.sublist(_recoveryLog.length - 50) : _recoveryLog;
 
-    FirebaseCrashlytics.instance.log('AUTH_RECOVERY_TRACE: outcome=$outcome');
+    FirebaseCrashlytics.instance.log(
+      'AUTH_RECOVERY_TRACE: outcome=$outcome, '
+      'source=${recoverySource ?? 'unknown'}, '
+      'appUpdated=${widget.appHasBeenUpdated}, '
+      'initialUserState=${_initialCurrentUserState ?? 'unknown'}, '
+      'apiKeyState=${_apiKeyStateAtRecovery ?? 'unknown'}, '
+      'isOriginalUser=$_isOriginalUserRecovered, '
+      'authStateChanges=$_authStateChangesCount'
+      '${Platform.isIOS ? ', iosProtectedData=${_iosProtectedDataAvailable ?? 'unknown'}' : ''}',
+    );
     for (final entry in logEntries) {
       FirebaseCrashlytics.instance.log(entry);
     }
-
-    FirebaseCrashlytics.instance.recordError(
-      Exception('auth_recovery_trace_$outcome'),
-      StackTrace.current,
-      reason: 'Auth recovery trace',
-      information: [
-        'outcome: $outcome',
-        'recoverySource: ${recoverySource ?? 'unknown'}',
-        'platform: ${Platform.isIOS ? 'iOS' : 'Android'}',
-        'appUpdated: ${widget.appHasBeenUpdated}',
-        'totalSteps: ${_recoveryLog.length}',
-        'totalTimeMs: ${_totalRecoveryStopwatch.elapsedMilliseconds}',
-        'initialUserState: ${_initialCurrentUserState ?? 'unknown'}',
-        'apiKeyState: ${_apiKeyStateAtRecovery ?? 'unknown'}',
-        'isOriginalUser: $_isOriginalUserRecovered',
-        'authStateChangesCount: $_authStateChangesCount',
-        if (Platform.isIOS) 'iosProtectedDataAvailable: ${_iosProtectedDataAvailable ?? 'unknown'}',
-      ],
-      fatal: false,
-    );
   }
 
   Future<void> _awaitAuthTimeoutAck() async {
@@ -983,8 +984,8 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     return Container(
       color: themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : themeProvider.canvas
+                ? Colors.blueGrey
+                : themeProvider.canvas
           : themeProvider.canvas,
       child: SafeArea(
         child: Scaffold(

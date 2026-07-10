@@ -2,11 +2,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -76,10 +74,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     if (!_autoFilterOnTravel) return null;
     if (_profile?.status == null) return null;
 
-    final resolved = countryCheck(
-      state: _profile!.status!.state,
-      description: _profile!.status!.description,
-    );
+    final resolved = countryCheck(state: _profile!.status!.state, description: _profile!.status!.description);
 
     if (resolved.isEmpty || resolved == "Torn" || resolved == "error") return null;
     return resolved;
@@ -181,28 +176,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     'UAE',
     'UK',
   ];
-  final List<String> _countryCodesTime = [
-    'MEX',
-    'CAY',
-    'CAN',
-    'HAW',
-    'UK',
-    'ARG',
-    'SWI',
-    'JPN',
-    'CHN',
-    'UAE',
-    'AFR',
-  ];
+  final List<String> _countryCodesTime = ['MEX', 'CAY', 'CAN', 'HAW', 'UK', 'ARG', 'SWI', 'JPN', 'CHN', 'UAE', 'AFR'];
 
   String _typesFilteredText = '';
-  final List<String> _typeCodes = [
-    'Flowers',
-    'Plushies',
-    'Drugs',
-    'Others',
-    'OC Items',
-  ];
+  final List<String> _typeCodes = ['Flowers', 'Plushies', 'Drugs', 'Others', 'OC Items'];
 
   StockSort? _currentSort;
   final _popupChoices = <StockSort>[
@@ -252,24 +229,23 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     return Container(
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider!.statusBar
-                  : _themeProvider!.canvas
+                ? Colors.blueGrey
+                : isStatusBarShown
+                ? _themeProvider!.statusBar
+                : _themeProvider!.canvas
           : _themeProvider!.canvas,
       child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
+        right:
+            context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
+        left:
+            context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider!.canvas,
           appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
+              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
               : null,
           body: Container(
             color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
@@ -328,10 +304,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       Center(
                         child: Column(
                           children: [
-                            Image.asset(
-                              'images/icons/airplane.png',
-                              height: 100,
-                            ),
+                            Image.asset('images/icons/airplane.png', height: 100),
                             const SizedBox(height: 15),
                             const Text(
                               'OOPS!',
@@ -356,10 +329,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                         children: [
                           SizedBox(
                             height: MediaQuery.sizeOf(context).height / 2,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: errorTiles,
-                            ),
+                            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: errorTiles),
                           ),
                         ],
                       ),
@@ -370,11 +340,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                   return const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Text('Fetching data...'),
-                        SizedBox(height: 30),
-                        CircularProgressIndicator(),
-                      ],
+                      children: <Widget>[Text('Fetching data...'), SizedBox(height: 30), CircularProgressIndicator()],
                     ),
                   );
                 }
@@ -390,10 +356,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     routeWithDrawer = _previousRouteWithDrawer;
     routeName = _previousRouteName;
     // Returning 'false' to indicate we did not press a flag
-    Navigator.pop(
-      context,
-      ReturnFlagPressed(flagPressed: flag, shortTap: shortTap),
-    );
+    Navigator.pop(context, ReturnFlagPressed(flagPressed: flag, shortTap: shortTap));
   }
 
   AppBar buildAppBar() {
@@ -417,9 +380,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       ),
       actions: <Widget>[
         PopupMenuButton<StockSort>(
-          icon: const Icon(
-            Icons.sort,
-          ),
+          icon: const Icon(Icons.sort),
           onSelected: _sortStocks,
           itemBuilder: (BuildContext context) {
             return _popupChoices.map((StockSort choice) {
@@ -477,16 +438,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       child: Container(
         decoration: BoxDecoration(
           color: _themeProvider!.secondBackground,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24.0),
-            topRight: Radius.circular(24.0),
-          ),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 2.0,
-              color: Colors.orange[800]!,
-            ),
-          ],
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(24.0), topRight: Radius.circular(24.0)),
+          boxShadow: [BoxShadow(blurRadius: 2.0, color: Colors.orange[800]!)],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -534,7 +487,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       },
                     ),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 20.0),
@@ -630,36 +583,42 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       scrollDirection: Axis.horizontal,
       mainAxisSpacing: 2.0,
       crossAxisSpacing: 2.0,
-      children: [
-        Image.asset('images/icons/ic_flower_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
-        Image.asset('images/icons/ic_dog_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
-        Image.asset('images/icons/ic_pill_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
-        Icon(MdiIcons.fingerprint, color: _themeProvider!.mainText),
-        Icon(MdiIcons.packageVariantClosed, color: _themeProvider!.mainText),
-      ].asMap().entries.map((widget) {
-        int dataIndex = widget.key;
-        if (widget.key == 3) dataIndex = 4;
-        if (widget.key == 4) dataIndex = 3;
+      children:
+          [
+            Image.asset(
+              'images/icons/ic_flower_black_48dp.png',
+              width: 25,
+              height: 25,
+              color: _themeProvider!.mainText,
+            ),
+            Image.asset('images/icons/ic_dog_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
+            Image.asset('images/icons/ic_pill_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
+            Icon(MdiIcons.fingerprint, color: _themeProvider!.mainText),
+            Icon(MdiIcons.packageVariantClosed, color: _themeProvider!.mainText),
+          ].asMap().entries.map((widget) {
+            int dataIndex = widget.key;
+            if (widget.key == 3) dataIndex = 4;
+            if (widget.key == 4) dataIndex = 3;
 
-        return ToggleButtons(
-          constraints: const BoxConstraints(minWidth: 30.0),
-          highlightColor: Colors.orange,
-          selectedBorderColor: Colors.green,
-          isSelected: [_filteredTypes[dataIndex]],
-          onPressed: (_) {
-            setState(() {
-              _filteredTypes[dataIndex] = !_filteredTypes[dataIndex];
-            });
-            final saveList = <String>[];
-            for (final b in _filteredTypes) {
-              b ? saveList.add('1') : saveList.add('0');
-            }
-            Prefs().setStockTypeFilter(saveList);
-            _filterAndSortTopLists();
-          },
-          children: [widget.value],
-        );
-      }).toList(),
+            return ToggleButtons(
+              constraints: const BoxConstraints(minWidth: 30.0),
+              highlightColor: Colors.orange,
+              selectedBorderColor: Colors.green,
+              isSelected: [_filteredTypes[dataIndex]],
+              onPressed: (_) {
+                setState(() {
+                  _filteredTypes[dataIndex] = !_filteredTypes[dataIndex];
+                });
+                final saveList = <String>[];
+                for (final b in _filteredTypes) {
+                  b ? saveList.add('1') : saveList.add('0');
+                }
+                Prefs().setStockTypeFilter(saveList);
+                _filterAndSortTopLists();
+              },
+              children: [widget.value],
+            );
+          }).toList(),
     );
   }
 
@@ -768,16 +727,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           Flexible(
             child: Row(
               children: [
-                const Text(
-                  'Last server update: ',
-                  style: TextStyle(fontSize: 11),
-                ),
+                const Text('Last server update: ', style: TextStyle(fontSize: 11)),
                 const SizedBox(width: 2),
                 Flexible(
-                  child: Text(
-                    _timeStampToString(_stocksModel.timestamp!),
-                    style: const TextStyle(fontSize: 11),
-                  ),
+                  child: Text(_timeStampToString(_stocksModel.timestamp!), style: const TextStyle(fontSize: 11)),
                 ),
               ],
             ),
@@ -809,17 +762,9 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
       child: Row(
         children: <Widget>[
-          const Text(
-            'Items: ',
-            style: TextStyle(fontSize: 11),
-          ),
+          const Text('Items: ', style: TextStyle(fontSize: 11)),
           const SizedBox(width: 2),
-          Flexible(
-            child: Text(
-              _typesFilteredText,
-              style: const TextStyle(fontSize: 11),
-            ),
-          ),
+          Flexible(child: Text(_typesFilteredText, style: const TextStyle(fontSize: 11))),
           if (_hasItemFiltersApplied)
             GestureDetector(
               onTap: _showAllItemFilters,
@@ -833,11 +778,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                   ),
                   child: Text(
                     'SHOW ALL',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.orange[800],
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 10, color: Colors.orange[800], fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -858,12 +799,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       hiddenDetails = Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
         child: Row(
-          children: <Widget>[
-            Text(
-              parts.join(', '),
-              style: TextStyle(fontSize: 11, color: Colors.orange[800]),
-            ),
-          ],
+          children: <Widget>[Text(parts.join(', '), style: TextStyle(fontSize: 11, color: Colors.orange[800]))],
         ),
       );
     }
@@ -881,10 +817,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         onTap: () {
           BotToast.showText(
             text: "Data provided by YATA",
-            textStyle: const TextStyle(
-              fontSize: 13,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 13, color: Colors.white),
             contentColor: Colors.blue,
             clickClose: true,
             duration: const Duration(seconds: 4),
@@ -902,15 +835,9 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.grey[800]!,
-                  width: 2,
-                ),
+                border: Border.all(color: Colors.grey[800]!, width: 2),
                 shape: BoxShape.circle,
-                image: const DecorationImage(
-                  fit: BoxFit.fill,
-                  image: AssetImage('images/icons/prometheus_logo.png'),
-                ),
+                image: const DecorationImage(fit: BoxFit.fill, image: AssetImage('images/icons/prometheus_logo.png')),
               ),
             ),
           ],
@@ -918,10 +845,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         onTap: () {
           BotToast.showText(
             text: "Data provided by Prometheus",
-            textStyle: const TextStyle(
-              fontSize: 13,
-              color: Colors.white,
-            ),
+            textStyle: const TextStyle(fontSize: 13, color: Colors.white),
             contentColor: Colors.blue,
             clickClose: true,
             duration: const Duration(seconds: 4),
@@ -934,19 +858,9 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     return Row(
       children: [
         Flexible(
-          child: Column(
-            children: [
-              lastUpdateDetails,
-              countriesFilterDetails,
-              typesFilterDetails,
-              hiddenDetails,
-            ],
-          ),
+          child: Column(children: [lastUpdateDetails, countriesFilterDetails, typesFilterDetails, hiddenDetails]),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 8, 15, 8),
-          child: providerIcon,
-        ),
+        Padding(padding: const EdgeInsets.fromLTRB(0, 8, 15, 8), child: providerIcon),
       ],
     );
   }
@@ -973,8 +887,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       providerName: _yataSuccess
           ? "YATA"
           : _prometheusSuccess
-              ? "Prometheus"
-              : null,
+          ? "Prometheus"
+          : null,
       key: ValueKey('${stock.id}-${stock.countryCode}'),
     );
   }
@@ -1043,10 +957,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           const Icon(Icons.flight_land, color: Colors.orange, size: 18),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              bannerText,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
+            child: Text(bannerText, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
           ),
           const SizedBox(width: 4),
           Tooltip(
@@ -1099,11 +1010,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         );
       }
 
-      await Future.wait<void>([
-        tornItems(),
-        inventory(),
-        profileMisc(),
-      ]);
+      await Future.wait<void>([tornItems(), inventory(), profileMisc()]);
 
       if (_isDataFromCache && !_apiSuccess) {
         // Allow rendering with cached data
@@ -1143,14 +1050,15 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           stock.countryFullName = CountryHelper.getFullName(stock.country);
 
           // Other fields contained in Yata and in Torn
-          stock.profit = (stock.value /
-                  (TravelTimes.travelTimeMinutesOneWay(
-                        ticket: _settingsProvider!.travelTicket,
-                        countryCode: stock.country,
-                      ) *
-                      2 /
-                      60))
-              .round();
+          stock.profit =
+              (stock.value /
+                      (TravelTimes.travelTimeMinutesOneWay(
+                            ticket: _settingsProvider!.travelTicket,
+                            countryCode: stock.country,
+                          ) *
+                          2 /
+                          60))
+                  .round();
 
           // For live data: use country timestamp; for cached data: preserve individual timestamps
           if (!_isDataFromCache) {
@@ -1203,24 +1111,32 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       return (apiSuccess: false, apiMessage: "DEBUG: Forced timeout for testing fallback");
     }
 
-    try {
-      String url = "https://yata.yt/api/v1/travel/export/";
-      if (provider == "prometheus") url = "https://api.prombot.co.uk/api/travel";
+    String url = "https://yata.yt/api/v1/travel/export/";
+    if (provider == "prometheus") url = "https://api.prombot.co.uk/api/travel";
 
-      final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
-      if (responseDB.statusCode == 200) {
-        _stocksModel = foreignStockInModelFromJson(responseDB.body);
-        if (provider == "yata") _yataSuccess = true;
-        if (provider == "prometheus") _prometheusSuccess = true;
-        return (apiSuccess: true, apiMessage: "");
+    String lastError = "";
+    for (int attempt = 0; attempt < 2; attempt++) {
+      try {
+        final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 6));
+        if (responseDB.statusCode == 200) {
+          _stocksModel = foreignStockInModelFromJson(responseDB.body);
+          if (provider == "yata") _yataSuccess = true;
+          if (provider == "prometheus") _prometheusSuccess = true;
+          return (apiSuccess: true, apiMessage: "");
+        }
+        lastError = "Status code ${responseDB.statusCode}";
+      } on TimeoutException {
+        // Already waited long enough: move on to the next provider
+        lastError = "Timed out";
+        break;
+      } catch (e) {
+        lastError = e.toString();
       }
-    } catch (e, trace) {
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Issue fetching Foreign Stocks");
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("Provider: $provider, Error: $e", trace);
-      logToUser("Provider: $provider, Error: $e, Trace: $trace");
-      return (apiSuccess: false, apiMessage: e.toString());
+      if (attempt == 0) await Future.delayed(const Duration(seconds: 2));
     }
-    return (apiSuccess: false, apiMessage: "");
+
+    logToUser("Provider: $provider, Error: $lastError");
+    return (apiSuccess: false, apiMessage: lastError);
   }
 
   /// Get data from Torn PDA Database (Firebase fallback)
@@ -1276,18 +1192,9 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                 const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.warning_amber_outlined,
-                      size: 24,
-                    ),
+                    Icon(Icons.warning_amber_outlined, size: 24),
                     SizedBox(width: 10),
-                    Text(
-                      'SHOWING CACHED DATA',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text('SHOWING CACHED DATA', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 15),
@@ -1297,18 +1204,14 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                   '⚠️ Restock information (charts, flight suggestions) may be incorrect\n\n'
                   'Please refresh to get live data when APIs are available again.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 15),
                 ElevatedButton.icon(
                   onPressed: () => BotToast.cleanAll(),
                   icon: const Icon(Icons.close, size: 18, color: Colors.black),
                   label: const Text('Got it', style: TextStyle(color: Colors.black)),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.orange.shade600,
-                  ),
+                  style: ElevatedButton.styleFrom(foregroundColor: Colors.orange.shade600),
                 ),
               ],
             ),
@@ -1340,36 +1243,23 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                 const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 24,
-                    ),
+                    Icon(Icons.error_outline, size: 24),
                     SizedBox(width: 10),
-                    Text(
-                      'ALL SOURCES UNAVAILABLE',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text('ALL SOURCES UNAVAILABLE', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 15),
                 const Text(
                   'All data sources (YATA, Prometheus, and Torn PDA Database) are currently unavailable.\n\nPlease try again later.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 15),
                 ElevatedButton.icon(
                   onPressed: () => BotToast.cleanAll(),
                   icon: const Icon(Icons.close, size: 18, color: Colors.black),
                   label: const Text('Got it', style: TextStyle(color: Colors.black)),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.orange.shade600,
-                  ),
+                  style: ElevatedButton.styleFrom(foregroundColor: Colors.orange.shade600),
                 ),
               ],
             ),
@@ -1409,6 +1299,13 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     // All three sources failed
+    final String failures =
+        "$primary[${primaryResult.apiMessage}] $backup[${backupResult.apiMessage}] db[${tornPDAResult.apiMessage}]";
+    analytics?.logEvent(
+      name: 'foreign_stocks_sources_failed',
+      parameters: {'error': failures.length > 99 ? failures.substring(0, 99) : failures},
+    );
+
     _showAllSourcesFailedDialog();
     return (
       providersSuccess: false,
@@ -1462,13 +1359,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           // Use centralized helper for country code conversion
           final countryCode = CountryHelper.getCodeFromName(country) ?? country.toLowerCase().replaceAll(' ', '');
 
-          final stock = ForeignStock(
-            id: id,
-            name: name,
-            quantity: quantity,
-            cost: cost,
-            countryCode: countryCode,
-          );
+          final stock = ForeignStock(id: id, name: name, quantity: quantity, cost: cost, countryCode: countryCode);
 
           // Use real timestamp from Firebase cache
           stock.timestamp = lastUpdated;
@@ -1498,10 +1389,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       countries = {};
     }
 
-    return ForeignStockInModel(
-      countries: countries,
-      timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-    );
+    return ForeignStockInModel(countries: countries, timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000);
   }
 
   Future tornItems() async {
@@ -1515,10 +1403,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       log("Recalling API due to items error: ${e.errorReason}");
       BotToast.showText(
         text: "Torn API replied with error, retrying after a few seconds, please wait...",
-        textStyle: const TextStyle(
-          fontSize: 13,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 13, color: Colors.white),
         contentColor: Colors.orange[800]!,
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
@@ -1532,10 +1417,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       if (itemsResponse.errorReason.isNotEmpty) {
         BotToast.showText(
           text: "Torn API response with error: $error",
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 13, color: Colors.white),
           contentColor: Colors.red[800]!,
           duration: const Duration(seconds: 4),
           contentPadding: const EdgeInsets.all(10),
@@ -1606,10 +1488,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       log("Recalling API due to profile error: ${e.errorReason}");
       BotToast.showText(
         text: "Torn API replied with error, retrying after a few seconds, please wait...",
-        textStyle: const TextStyle(
-          fontSize: 13,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 13, color: Colors.white),
         contentColor: Colors.orange[800]!,
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
@@ -1623,10 +1502,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       if (profileResponse.errorReason.isNotEmpty) {
         BotToast.showText(
           text: "Torn API response with error: $error",
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 13, color: Colors.white),
           contentColor: Colors.red[800]!,
           duration: const Duration(seconds: 4),
           contentPadding: const EdgeInsets.all(10),
@@ -1920,9 +1796,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
@@ -1955,14 +1829,15 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           double cost = (stock.cost ?? 1).toDouble();
           stock.value = (sellPrice - fee - cost).round();
 
-          stock.profit = (stock.value /
-                  (TravelTimes.travelTimeMinutesOneWay(
-                        ticket: _settingsProvider!.travelTicket,
-                        countryCode: stock.country,
-                      ) *
-                      2 /
-                      60))
-              .round();
+          stock.profit =
+              (stock.value /
+                      (TravelTimes.travelTimeMinutesOneWay(
+                            ticket: _settingsProvider!.travelTicket,
+                            countryCode: stock.country,
+                          ) *
+                          2 /
+                          60))
+                  .round();
         }
       }
     });
@@ -2072,9 +1947,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   void _saveBlacklistedItems() {
-    Prefs().setBlacklistedForeignStockItems(
-      _blacklistedItemIds.map((id) => id.toString()).toList(),
-    );
+    Prefs().setBlacklistedForeignStockItems(_blacklistedItemIds.map((id) => id.toString()).toList());
   }
 }
 
@@ -2107,9 +1980,7 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
     List<Widget> blacklistCards = _buildBlacklistCards(context);
     return AlertDialog(
       backgroundColor: widget.themeProvider!.secondBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       actions: [
         TextButton(
           child: const Text("Close"),
@@ -2125,39 +1996,20 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (hiddenCards.isNotEmpty) ...[
-              const Text(
-                "Hidden stocks",
-                style: TextStyle(fontSize: 14),
-              ),
+              const Text("Hidden stocks", style: TextStyle(fontSize: 14)),
               const SizedBox(height: 10),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: hiddenCards,
-                ),
-              ),
+              Flexible(child: ListView(shrinkWrap: true, children: hiddenCards)),
             ],
             if (hiddenCards.isNotEmpty && blacklistCards.isNotEmpty) const SizedBox(height: 15),
             if (blacklistCards.isNotEmpty) ...[
               const Column(
                 children: [
-                  Text(
-                    "Blacklisted items",
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  Text(
-                    "(ALL COUNTRIES)",
-                    style: TextStyle(fontSize: 9),
-                  ),
+                  Text("Blacklisted items", style: TextStyle(fontSize: 14)),
+                  Text("(ALL COUNTRIES)", style: TextStyle(fontSize: 9)),
                 ],
               ),
               const SizedBox(height: 10),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: blacklistCards,
-                ),
-              ),
+              Flexible(child: ListView(shrinkWrap: true, children: blacklistCards)),
             ],
           ],
         ),
@@ -2194,14 +2046,8 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            s.name!,
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          CountryCodeAndFlag(
-                            stock: s,
-                            dense: true,
-                          ),
+                          Text(s.name!, style: const TextStyle(fontSize: 13)),
+                          CountryCodeAndFlag(stock: s, dense: true),
                         ],
                       ),
                     ],
@@ -2240,10 +2086,7 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
                 color: widget.themeProvider!.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
-                  child: Text(
-                    '$itemName (all countries)',
-                    style: const TextStyle(fontSize: 13),
-                  ),
+                  child: Text('$itemName (all countries)', style: const TextStyle(fontSize: 13)),
                 ),
               ),
             ),
