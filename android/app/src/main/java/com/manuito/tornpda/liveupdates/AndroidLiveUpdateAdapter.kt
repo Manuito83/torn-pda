@@ -108,10 +108,15 @@ class AndroidTravelLiveUpdateAdapter(
     }
 
     private fun clearState(sessionId: String) {
+        // Alarms outlive this adapter: they are keyed by a sessionId persisted in
+        // SharedPreferences, while activeSessionId is process memory and is null after the
+        // engine is recreated mid-trip. Guarding the cancellation on it stranded the
+        // ARRIVED/REFRESH alarms of the previous session, which then posted a second,
+        // independent notification under the old id once a new session had started.
+        TravelLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
+        TravelLiveUpdateRefreshScheduler.cancelArrived(context, sessionId)
         if (sessionId == activeSessionId) {
             updateJob?.cancel()
-            TravelLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
-            TravelLiveUpdateRefreshScheduler.cancelArrived(context, sessionId)
             cachedPayload = null
             activeSessionId = null
         }

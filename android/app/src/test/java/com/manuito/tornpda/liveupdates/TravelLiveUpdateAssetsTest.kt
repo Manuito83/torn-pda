@@ -29,13 +29,30 @@ class TravelLiveUpdateAssetsTest {
         val unknown = TravelLiveUpdateAssets.flagIconFor("Atlantis")
         val mexico = TravelLiveUpdateAssets.flagIconFor("Mexico")
         assertNotEquals(mexico, unknown)
+        assertNotEquals("unknown endpoints must not render as a plane", TravelLiveUpdateAssets.trackerIconFor(), unknown)
     }
 
     @Test
-    fun trackerIconFlipsForHomewardTrip() {
+    fun contextualOriginsDoNotRenderAsTrackerPlane() {
         assertNotEquals(
-            TravelLiveUpdateAssets.trackerIconFor("Mexico"),
-            TravelLiveUpdateAssets.trackerIconFor("Torn"),
+            TravelLiveUpdateAssets.trackerIconFor(),
+            TravelLiveUpdateAssets.flagIconFor("Abroad"),
+        )
+        assertNotEquals(
+            TravelLiveUpdateAssets.trackerIconFor(),
+            TravelLiveUpdateAssets.flagIconFor("Hospital"),
+        )
+        assertNotEquals(
+            TravelLiveUpdateAssets.trackerIconFor(),
+            TravelLiveUpdateAssets.flagIconFor("Torn"),
+        )
+    }
+
+    @Test
+    fun notificationIconDoesNotRenderAsTrackerPlane() {
+        assertNotEquals(
+            TravelLiveUpdateAssets.trackerIconFor(),
+            TravelLiveUpdateAssets.notificationIcon(),
         )
     }
 }
