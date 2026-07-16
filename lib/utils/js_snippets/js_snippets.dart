@@ -527,7 +527,7 @@ String chatHighlightJS({required String highlights}) {
 		new MutationObserver((muts) => {
 			for (const mut of muts) {
 				for (const node of mut.addedNodes) {
-					if (node instanceof HTMLElement && !node.className && node.parentElement?.className.includes("chat-box-body__")) {
+					if (node instanceof HTMLElement && !node.className && (node.parentElement?.getAttribute("class") || "").includes("chat-box-body__")) {
 						applyHighlights(node);
 					}
 				}

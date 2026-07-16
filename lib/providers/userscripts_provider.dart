@@ -106,6 +106,7 @@ class UserScriptsProvider extends ChangeNotifier {
   UnmodifiableListView<UserScript> getHandlerSources({
     required String apiKey,
     required String tabUid,
+    bool activeTabFocusEnabled = false,
   }) {
     final scriptList = <UserScript>[];
     if (_userScriptsEnabled) {
@@ -116,6 +117,17 @@ class UserScriptsProvider extends ChangeNotifier {
           source: handler_tabContext(tabUid),
         ),
       );
+
+      // Android: report document.hasFocus()=true when PDA knows this tab is active+visible (RC-gated)
+      if (activeTabFocusEnabled) {
+        scriptList.add(
+          UserScript(
+            groupName: "__TornPDA_ActiveTabFocus__",
+            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+            source: handler_activeTabFocus(),
+          ),
+        );
+      }
 
       // Add the main event to let other handlers that the platform is ready
       scriptList.add(

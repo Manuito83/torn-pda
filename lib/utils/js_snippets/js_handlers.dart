@@ -38,6 +38,25 @@ String handler_tabContext(String tabUid) {
 	''';
 }
 
+String handler_activeTabFocus() {
+  // Android WebView often reports document.hasFocus()=false even when visible
+  // When PDA knows this tab is the active, visible one, report focus so scripts (isPageActive) work
+  return '''
+		(function() {
+			if (window.__pdaActiveTabFocus) return;
+			window.__pdaActiveTabFocus = true;
+			const real = document.hasFocus ? document.hasFocus.bind(document) : function() { return true; };
+			document.hasFocus = function() {
+				try {
+					const s = window.__tornpda && window.__tornpda.tab && window.__tornpda.tab.state;
+					if (s && s.isActiveTab && s.isWebViewVisible) return true;
+				} catch (_) {}
+				return real();
+			};
+		})();
+	''';
+}
+
 String handler_pdaAPI() {
   // PDA HTTP helpers (PDA_httpGet/Post/Put/Delete/Patch)
   return RemoteSnippets.resolve(RemoteSnippets.pdaApi);

@@ -54,7 +54,9 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
     _initialUrl = URLRequest(url: WebUri(widget.customUrl));
     _pageTitle = widget.customTitle;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    _initialWebViewSettings = InAppWebViewSettings();
+    _initialWebViewSettings = InAppWebViewSettings(
+      useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
+    );
   }
 
   @override
@@ -78,24 +80,23 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : Colors.grey[900]
+                ? Colors.blueGrey
+                : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Colors.black,
+          ? Colors.grey[900]
+          : Colors.black,
       child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
+        right:
+            context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
+        left:
+            context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildCustomAppBar(),
-                )
+              ? SizedBox(height: AppBar().preferredSize.height, child: buildCustomAppBar())
               : null,
           body: Container(
             // Background color for all browser widgets
@@ -153,10 +154,7 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
 
                     BotToast.showText(
                       text: toastMessage,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
+                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                       contentColor: Colors.green[800]!,
                       contentPadding: const EdgeInsets.all(10),
                     );

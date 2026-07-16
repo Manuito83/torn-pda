@@ -207,10 +207,15 @@ class WebViewFullState extends State<WebViewFull>
 
   bool _heightExtendInjected = false;
 
+  // Serializes concurrent _addUserScriptsAvoidDuplicates calls so remove+add cant' cause issues
+  Future<void> _scriptLock = Future.value();
+
   // The handler bundle is constant for the life
   // of the webview, so we register it once and never remove or re-add it
   // to avoid collisions and ensure that they are active
   bool _handlersInjected = false;
+  // Shared across tabs: one renderer death hits every webview, record ONE Crashlytics event per death
+  static DateTime? _lastRendererGoneRecorded;
 
   // Scripts registered at webview construction (before the first load), computed once
   UnmodifiableListView<UserScript>? _initialUserScriptsCache;
@@ -447,6 +452,17 @@ class WebViewFullState extends State<WebViewFull>
     _nativeAuth = context.read<NativeAuthProvider>();
 
     _isChainingBrowser = widget.isChainingBrowser;
+    if (_isChainingBrowser && widget.chainingPayload == null) {
+      // Defensive: a chaining tab rebuilt without its payload would crash below; degrade to a normal tab
+      _isChainingBrowser = false;
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.recordError(
+          "Chaining tab rebuilt without payload (degraded to normal tab)",
+          null,
+          fatal: false,
+        );
+      }
+    }
     if (_isChainingBrowser) {
       _chainingPayload = widget.chainingPayload;
       _w = Get.find<WarController>();
@@ -1570,6 +1586,7 @@ class WebViewFullState extends State<WebViewFull>
                 _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed) {
               c.evaluateJavascript(
                 source: '''
+                    if (!window.__pdaFocusinAdded) { window.__pdaFocusinAdded = true;
                     window.addEventListener('focusin', (event) => {
                       const target = event.target;
 
@@ -1577,7 +1594,8 @@ class WebViewFullState extends State<WebViewFull>
                       const isInput = target.tagName === 'INPUT';
 
                       // Avoid checkboxes (e.g.: when selecting messages)
-                      const isCheckbox = target.className.includes('checkbox');
+                      // getAttribute('class') is SVG-safe (className is SVGAnimatedString on SVG)
+                      const isCheckbox = (target.getAttribute('class') || '').includes('checkbox');
 
                       const shouldScroll = isInput && !isCheckbox;
 
@@ -1587,6 +1605,7 @@ class WebViewFullState extends State<WebViewFull>
                         }, 300);
                       }
                     });
+                    }
                   ''',
               );
             }
@@ -1640,15 +1659,20 @@ class WebViewFullState extends State<WebViewFull>
               final hasActiveScripts =
                   scriptsToAdd.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(uri.toString()).isNotEmpty;
               if (hasActiveScripts) {
-                final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
+                final handlers = _userScriptsProvider.getHandlerSources(
+                  apiKey: UserHelper.apiKey,
+                  tabUid: _tabUid,
+                  activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+                );
                 for (final h in handlers) {
                   await webViewController!.evaluateJavascript(source: h.source);
                 }
               }
 
               // We need to inject directly, otherwise these scripts will only load in the next page visit
+              // Guard once-per-document so hash navigation (which re-fire onLoadStop) don't re-run END scripts
               for (final script in scriptsToAdd) {
-                await webViewController!.evaluateJavascript(source: script.source);
+                await webViewController!.evaluateJavascript(source: _oncePerDocument(script.groupName, script.source));
               }
 
               // DEBUG
@@ -1984,24 +2008,35 @@ class WebViewFullState extends State<WebViewFull>
           onRenderProcessGone: (c, detail) {
             // Android renderer process died (crash or OS-killed under memory)
             // Tells Android we dealt with it, so it does not kill the whole app
+            _handlersInjected = false;
+
+            // Renderer deaths occur mostly on background (OOM kills)
+            // Rebuild now only if the app is foreground AND this is the active tab
+            // ... otherwise, we will rebuild when the user focuses this tab again
+            final bool appResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+            final bool renderGoneActive = _webViewProvider.isTabUidActive(_tabUid);
+            final bool rebuildNow = appResumed && renderGoneActive;
+
+            // One death fires this on every webview of the shared renderer; record ONE event per death
             try {
               if (!Platform.isWindows) {
-                FirebaseCrashlytics.instance.recordError(
-                  "WebViewRenderProcessGone didCrash=${detail.didCrash} tabs=${_webViewProvider.tabList.length}",
-                  null,
-                  reason: "Android WebView renderer gone (recovered, app not killed)",
-                  fatal: false,
-                );
+                final DateTime now = DateTime.now();
+                if (_lastRendererGoneRecorded == null || now.difference(_lastRendererGoneRecorded!).inSeconds >= 2) {
+                  _lastRendererGoneRecorded = now;
+                  FirebaseCrashlytics.instance.recordError(
+                    "WebViewRenderProcessGone didCrash=${detail.didCrash} "
+                    "priority=${detail.rendererPriorityAtExit} resumed=$appResumed "
+                    "tabs=${_webViewProvider.tabList.length}",
+                    null,
+                    reason: "Android WebView renderer gone (recovered, app not killed)",
+                    fatal: false,
+                  );
+                }
               }
             } catch (_) {}
 
-            _handlersInjected = false;
-
-            final bool renderGoneActive = _webViewProvider.isTabUidActive(_tabUid);
-            final bool rebuildNow = renderGoneActive || detail.didCrash != false;
-
             logToUser(
-              "💥 Android renderer gone (didCrash=${detail.didCrash}): "
+              "💥 Android renderer gone (didCrash=${detail.didCrash}, resumed=$appResumed): "
               "${rebuildNow ? 'rebuilding this tab' : 'marked, will reload on focus'}",
               duration: 6,
             );
@@ -2325,22 +2360,38 @@ class WebViewFullState extends State<WebViewFull>
   /// call addUserScripts (e.g. shouldOverrideUrlLoading firing for the initialUrlRequest
   /// in a child tab) accumulate multiple copies of the same script in the store,
   /// causing each to be injected several times on the next page load
-  Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) async {
-    if (webViewController == null) return;
-    for (final s in scripts) {
-      final group = s.groupName;
-      if (group != null) {
-        await webViewController!.removeUserScriptsByGroupName(groupName: group);
+  Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) {
+    final result = _scriptLock.then((_) async {
+      if (webViewController == null) return;
+      for (final s in scripts) {
+        final group = s.groupName;
+        if (group != null) {
+          await webViewController!.removeUserScriptsByGroupName(groupName: group);
+        }
       }
-    }
-    await webViewController!.addUserScripts(userScripts: scripts.toList());
+      await webViewController!.addUserScripts(userScripts: scripts.toList());
+    });
+    // Next caller waits for this one; swallow errors so a single failure doesn't break the chain
+    _scriptLock = result.catchError((_) {});
+    return result;
+  }
+
+  // Wraps injected JS so it runs once per document (window lifetime): a real navigation/reload gets a
+  // fresh window and a same-document hash nav keeps it
+  String _oncePerDocument(String? key, String source) {
+    final String k = jsonEncode(key ?? 'anon');
+    return "if(!(window.__pdaOnce=window.__pdaOnce||{})[$k]){window.__pdaOnce[$k]=1;\n$source\n}";
   }
 
   /// Registers the handler bundle (GM API, PDA API,...)
   /// These scripts never change, so unlike user scripts we must not remove them
   Future<void> _ensureHandlersInjected() async {
     if (webViewController == null || _handlersInjected) return;
-    final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
+    final handlers = _userScriptsProvider.getHandlerSources(
+      apiKey: UserHelper.apiKey,
+      tabUid: _tabUid,
+      activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+    );
     await webViewController!.addUserScripts(userScripts: handlers.toList());
     _handlersInjected = true;
   }
@@ -2354,7 +2405,11 @@ class WebViewFullState extends State<WebViewFull>
       return _initialUserScriptsCache = null;
     }
     final scripts = <UserScript>[
-      ..._userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid),
+      ..._userScriptsProvider.getHandlerSources(
+        apiKey: UserHelper.apiKey,
+        tabUid: _tabUid,
+        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+      ),
       if (_initialUrl?.url != null)
         ..._userScriptsProvider.getCondSources(
           url: _initialUrl!.url.toString(),
@@ -5317,6 +5372,14 @@ class WebViewFullState extends State<WebViewFull>
     final payloadJson = jsonEncode(payload);
     final uidJson = jsonEncode(_tabUid);
 
+    // When this tab becomes active+visible, nudge scripts that listen for focus (RC-gated, pairs
+    // with the activeTabFocus handler) so e.g. OpenMarket re-runs without needing a physical tap
+    final bool focusReady =
+        _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed &&
+        ((payload['isActiveTab'] as bool?) ?? false) &&
+        ((payload['isWebViewVisible'] as bool?) ?? false);
+    final String focusDispatch = focusReady ? "try { window.dispatchEvent(new Event('focus')); } catch (_) {}" : "";
+
     try {
       await webViewController!.evaluateJavascript(
         source:
@@ -5335,6 +5398,7 @@ class WebViewFullState extends State<WebViewFull>
             try {
               window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: $payloadJson }));
             } catch (_) {}
+            $focusDispatch
           })();
         ''',
       );

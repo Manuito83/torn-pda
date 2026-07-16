@@ -8,11 +8,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 /// Opens a very simple webview dialog with just a CLOSE button.
 /// No tabs, no navigation — just view a URL and close.
 /// Used for quick URL viewing (e.g. Torn API key creation page, policy pages).
-Future<void> openSimpleWebViewDialog({
-  required BuildContext context,
-  required String url,
-  String title = '',
-}) async {
+Future<void> openSimpleWebViewDialog({required BuildContext context, required String url, String title = ''}) async {
   final double width = MediaQuery.of(context).size.width;
   double hPad = 15;
   double frame = 6;
@@ -73,6 +69,7 @@ class _SimpleWebViewContentState extends State<_SimpleWebViewContent> {
       allowsLinkPreview: settingsProvider.iosAllowLinkPreview,
       disableLongPressContextMenuOnLinks: true,
       ignoresViewportScaleLimits: settingsProvider.iosBrowserPinch,
+      useOnRenderProcessGone: settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
     );
   }
 
@@ -95,8 +92,8 @@ class _SimpleWebViewContentState extends State<_SimpleWebViewContent> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? Colors.blueGrey
             : _themeProvider.currentTheme == AppTheme.dark
-                ? Colors.grey[900]
-                : Colors.black,
+            ? Colors.grey[900]
+            : Colors.black,
         child: SafeArea(
           top: false,
           child: Scaffold(
@@ -110,18 +107,12 @@ class _SimpleWebViewContentState extends State<_SimpleWebViewContent> {
                     color: _themeProvider.secondBackground,
                     child: Text(
                       widget.title,
-                      style: TextStyle(
-                        color: _themeProvider.mainText,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: _themeProvider.mainText, fontWeight: FontWeight.bold, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                Expanded(
-                  child: _requestClose ? const SizedBox.shrink() : _buildWebView(),
-                ),
+                Expanded(child: _requestClose ? const SizedBox.shrink() : _buildWebView()),
                 _bottomBar(),
               ],
             ),
@@ -132,10 +123,7 @@ class _SimpleWebViewContentState extends State<_SimpleWebViewContent> {
   }
 
   Widget _buildWebView() {
-    return InAppWebView(
-      initialUrlRequest: _initialUrl,
-      initialSettings: _settings,
-    );
+    return InAppWebView(initialUrlRequest: _initialUrl, initialSettings: _settings);
   }
 
   Widget _bottomBar() {
@@ -156,11 +144,7 @@ class _SimpleWebViewContentState extends State<_SimpleWebViewContent> {
             child: Center(
               child: Text(
                 "CLOSE",
-                style: TextStyle(
-                  color: _themeProvider.mainText,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: _themeProvider.mainText, fontWeight: FontWeight.bold, fontSize: 10),
               ),
             ),
           ),

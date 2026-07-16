@@ -80,9 +80,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.14.3';
-const String androidCompilation = '665';
-const String iosCompilation = '661'; // TODO: differs!
+const String appVersion = '3.14.4';
+const String androidCompilation = '666';
+const String iosCompilation = '666';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -263,6 +263,15 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _setSplitScreenPosition();
 
     isStatusBarShown = MediaQuery.of(context).padding.top > 0;
+  }
+
+  @override
+  void didHaveMemoryPressure() {
+    // Free background tabs' native WebViews under memory pressure so Android is less likely to kill
+    // the shared renderer (which is seen as a spontaneous tab reload)
+    try {
+      _webViewProvider.hibernateInactiveTabs();
+    } catch (_) {}
   }
 
   @override

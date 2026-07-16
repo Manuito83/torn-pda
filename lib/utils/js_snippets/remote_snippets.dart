@@ -48,7 +48,7 @@ class RemoteSnippets {
       buildBase: _travelRemovePlaneBaseJS,
     ),
     travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.1', buildBase: _travelBuyMaxBaseJS),
-    barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.0', buildBase: _barsDoubleClickBaseJS),
+    barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.1', buildBase: _barsDoubleClickBaseJS),
   };
 
   static final Map<String, _Override> _overrides = {};
@@ -922,8 +922,8 @@ class RemoteSnippets {
 
         function addBarsListener() {
           const barElements = Array.from(document.querySelectorAll('[class*="bar___"]'));
-          const energyBar = barElements.find((el) => el.className.includes('energy___'));
-          const nerveBar = barElements.find((el) => el.className.includes('nerve___'));
+          const energyBar = barElements.find((el) => (el.getAttribute('class') || '').includes('energy___'));
+          const nerveBar = barElements.find((el) => (el.getAttribute('class') || '').includes('nerve___'));
 
           if (!energyBar || !nerveBar) {
             return false;

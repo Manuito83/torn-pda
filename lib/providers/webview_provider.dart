@@ -18,6 +18,7 @@ import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
@@ -78,6 +79,8 @@ class TabDetails {
   int webviewCreationRetries = 0;
   // Set when this tab renderer died, so we defer rebuilding until the tab is focused
   bool needsReloadAfterRendererGone = false;
+  // Kept so a deferred rebuild (on focus) can restore a chaining tab's payload
+  ChainingPayload? chainingPayload;
 }
 
 class SleepingWebView {
@@ -125,6 +128,9 @@ class WebViewProvider extends ChangeNotifier {
   /// URLs that can generate multiple back/forward history entries without actual navigation changes
   /// (e.g.: personal stats will trigger a new URL load for every change in the page, as URL params change)
   List<String> urlsWithStuckHistory = ["https://www.torn.com/personalstats.php?"];
+
+  // Time backstop for hibernating idle background tabs. Memory pressure hibernates immediately (below).
+  static const Duration _tabSleepThreshold = Duration(hours: 12);
 
   // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
   DateTime? _devToolsReopenTime;
@@ -524,6 +530,13 @@ class WebViewProvider extends ChangeNotifier {
     ChainingPayload? chainingPayload,
     bool restoreSessionCookie = false,
   }) async {
+    // Warm the engine before the first webview below: the first bridge-enabled webview of a cold
+    // process can race Chromium's startup and die with "Must be started before we block!" (#2843)
+    if (Platform.isAndroid &&
+        Provider.of<SettingsProvider>(context, listen: false).browserEnginePrewarmRemoteConfigAllowed) {
+      await BrowserEnginePrewarmController.instance.ensureWarm();
+    }
+
     // Restore session cookie if requested
     if (restoreSessionCookie) {
       try {
@@ -744,6 +757,7 @@ class WebViewProvider extends ChangeNotifier {
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[]
         ..isChainingBrowser = isChainingBrowser
+        ..chainingPayload = chainingPayload
         ..isLocked = isLocked
         ..isLockFull = isLockFull
         ..customName = customName
@@ -905,7 +919,7 @@ class WebViewProvider extends ChangeNotifier {
       rebuildUnresponsiveWebView(
         tabUid: activated.id,
         isChainingBrowser: activated.isChainingBrowser,
-        chainingPayload: null,
+        chainingPayload: activated.chainingPayload,
       );
     }
 
@@ -920,38 +934,40 @@ class WebViewProvider extends ChangeNotifier {
     _saveCurrentActiveTabPosition();
   }
 
-  /// Transform tabs that have not been used for a few hours in sleeping tabs to save resources
-  Future<void> _sleepOldTabs() async {
-    final bool sleepTabsByDefault = await Prefs().getOnlyLoadTabsWhenUsed();
-    if (!sleepTabsByDefault) return;
+  /// Turns idle background tabs into sleeping tabs (frees their native WebView) to save resources
+  /// [force] ignores the time threshold; used under memory pressure
+  /// A slept tab reloads fresh when the user next opens it
+  Future<void> _sleepOldTabs({bool force = false}) async {
+    if (!await Prefs().getOnlyLoadTabsWhenUsed()) return;
     if (_tabList.isEmpty) return;
 
     final DateTime now = DateTime.now();
+    bool sleptAny = false;
     for (var i = 0; i < _tabList.length; i++) {
-      if (i == 0) continue;
-
-      // Might happen when users upgrade to v3.1.0
-      if (_tabList[i].lastUsedTimeDT == null) return;
-
-      // Only sleep if 24 hours have elapsed
-      final Duration timeDifference = now.difference(_tabList[i].lastUsedTimeDT!);
-      if (timeDifference.inHours < 24) return;
-
-      if (_tabList[i].webView != null && !_tabList[i].isChainingBrowser && _tabList[i] != _tabList[currentTab]) {
-        final newSleeper = _tabList[i];
-        newSleeper.sleepTab = true;
-        newSleeper.webView = null;
-        newSleeper.sleepingWebView = SleepingWebView(
-          tabUid: _tabList[i].id,
-          customUrl: _tabList[i].currentUrl,
-          key: _tabList[i].webViewKey,
-          useTabs: true,
-          chatRemovalActive: _tabList[i].chatRemovalActiveTab,
-        );
-        log("Slept tab with ${timeDifference.inHours} hours!");
+      if (i == 0) continue; // never sleep the main tab
+      final tab = _tabList[i];
+      // continue (not return): keep evaluating the rest of the list
+      if (tab.webView == null || tab.sleepTab || tab.isChainingBrowser || i == currentTab) continue;
+      if (!force) {
+        if (tab.lastUsedTimeDT == null) continue;
+        if (now.difference(tab.lastUsedTimeDT!) < _tabSleepThreshold) continue;
       }
+      tab.sleepTab = true;
+      tab.webView = null;
+      tab.sleepingWebView = SleepingWebView(
+        tabUid: tab.id,
+        customUrl: tab.currentUrl,
+        key: tab.webViewKey,
+        useTabs: true,
+        chatRemovalActive: tab.chatRemovalActiveTab,
+      );
+      sleptAny = true;
+      log("Slept tab $i (force=$force)");
     }
+    if (sleptAny) notifyListeners();
   }
+
+  Future<void> hibernateInactiveTabs() => _sleepOldTabs(force: true);
 
   void updateLastTabUse() {
     final tab = _tabList[currentTab];
@@ -1442,6 +1458,7 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     final tab = _tabList[0];
     tab.isChainingBrowser = true;
+    tab.chainingPayload = chainingPayload;
     tab.webViewKey?.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload!);
     if (currentTab != 0) {
       activateTab(0);
