@@ -1387,7 +1387,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       browserUrl = "https://www.torn.com/travelagency.php";
     } else if (abroadStay) {
       launchBrowserWithUrl = true;
-      browserUrl = "https://www.torn.com/travelagency.php";
+      browserUrl = "https://www.torn.com";
     } else if (racing) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/page.php?sid=racing";
@@ -1681,6 +1681,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload == 'restocks') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
+      } else if (payload == 'abroadStay') {
+        launchBrowserWithUrl = true;
+        browserUrl = 'https://www.torn.com';
       } else if (payload.contains('energy')) {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/gym.php';

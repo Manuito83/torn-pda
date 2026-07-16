@@ -110,6 +110,7 @@ List<_MVersion> _modernChangelog() => [
             androidOnly: true,
           ),
           _MItem('Fixed a possible error in injected scripts when reading element classes'),
+          _MItem('Fixed abroad stay reminders opening an invalid page when tapped'),
         ],
       ),
     ],
