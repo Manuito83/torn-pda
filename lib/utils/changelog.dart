@@ -41,6 +41,8 @@ class _MItem {
 
   const _MItem(this.text, {this.detail, this.androidOnly = false});
 
+  bool get visibleOnThisPlatform => !androidOnly || Platform.isAndroid;
+
   // Credits are tagged inline as "[Name]", same as the legacy changelog
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
   String get description => text.replaceAll(_creditTag, '').trim();
@@ -63,11 +65,12 @@ class _MVersion {
 
   const _MVersion({required this.version, required this.date, required this.sections, required this.hotfixes});
 
-  // Contributors ordered by items
+  // Contributors ordered by items (only those visible on this platform)
   List<String> get contributors {
     final counts = <String, int>{};
     for (final section in sections) {
       for (final item in section.items) {
+        if (!item.visibleOnThisPlatform) continue;
         counts.update(item.author, (n) => n + 1, ifAbsent: () => 1);
       }
     }
@@ -102,6 +105,10 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Fixed the browser occasionally loading blank on some Android devices', androidOnly: true),
           _MItem('The app no longer closes if the system kills the browser page renderer', androidOnly: true),
           _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
+          _MItem(
+            'Travel live updates: fixed plane direction and duplicate arrival notifications [bombel]',
+            androidOnly: true,
+          ),
           _MItem('Fixed a possible error in injected scripts when reading element classes'),
         ],
       ),
@@ -266,7 +273,12 @@ List<_MVersion> _modernChangelog() => [
 const _defaultAuthor = 'Manuito';
 final _creditTag = RegExp(r'\s*\[([^\]]+)\]');
 
-const _contributorXids = <String, String>{'Manuito': '2225097', 'Kwack': '2190604', 'DarXide': '4059250'};
+const _contributorXids = <String, String>{
+  'Manuito': '2225097',
+  'Kwack': '2190604',
+  'DarXide': '4059250',
+  'bombel': '2362436',
+};
 
 const _contributorColors = <Color>[
   Color(0xFF42A5F5),
@@ -3547,7 +3559,7 @@ class _ModernSectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visibleItems = section.items.where((i) => !i.androidOnly || Platform.isAndroid).toList();
+    final visibleItems = section.items.where((i) => i.visibleOnThisPlatform).toList();
     if (visibleItems.isEmpty) return const SizedBox.shrink();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -3718,6 +3730,7 @@ class _ContributorsFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (contributors.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final labelColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final keyValid = Get.isRegistered<UserController>() && Get.find<UserController>().isApiKeyValid;
