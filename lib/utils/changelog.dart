@@ -95,6 +95,7 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem('Faster and more reliable browser startup on Android', androidOnly: true),
           _MItem('Idle browser tabs now release memory to keep the app light', androidOnly: true),
+          _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
         ],
       ),
       _MSection(
@@ -104,12 +105,12 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem('Fixed the browser occasionally loading blank on some Android devices', androidOnly: true),
           _MItem('The app no longer closes if the system kills the browser page renderer', androidOnly: true),
-          _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
           _MItem(
             'Travel live updates: fixed plane direction and duplicate arrival notifications [bombel]',
             androidOnly: true,
           ),
           _MItem('Fixed a possible error in injected scripts when reading element classes'),
+          _MItem('Fixed travel max buy buttons not working for certain screen widths'),
           _MItem('Fixed abroad stay reminders opening an invalid page when tapped'),
         ],
       ),

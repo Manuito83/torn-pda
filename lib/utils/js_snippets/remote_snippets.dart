@@ -47,7 +47,7 @@ class RemoteSnippets {
       version: '1.0.0',
       buildBase: _travelRemovePlaneBaseJS,
     ),
-    travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.1', buildBase: _travelBuyMaxBaseJS),
+    travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.2', buildBase: _travelBuyMaxBaseJS),
     barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.1', buildBase: _barsDoubleClickBaseJS),
   };
 
@@ -562,6 +562,11 @@ class RemoteSnippets {
 
         // Improved Mode Detection
         const isHorizontalMode = () => {
+            // Baskets (buyCell) only exist in the narrow layout
+            if (document.querySelector('[class*="buyCell___"]')) {
+                return false;
+            }
+
             // 1. Check for VISIBLE "Type" header
             const headers = Array.from(document.querySelectorAll('[class*="itemsHeader___"] > div'));
             const visibleTypeHeader = headers.find(h =>
