@@ -177,7 +177,12 @@ Future<void> main() async {
   await drainFcmInbox();
 
   // Sync background-safe preferences
-  await Prefs().syncBackgroundPrefs();
+  try {
+    await Prefs().syncBackgroundPrefs();
+  } catch (e, stackTrace) {
+    log("Error syncing background prefs: $e");
+    logErrorToCrashlytics("Error syncing background prefs", "Background prefs sync failed: $e", stackTrace);
+  }
 
   // Core initialization
   await _initializeAppCompilation();
@@ -532,19 +537,24 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 /// Initialize app compilation and detect updates
 Future<void> _initializeAppCompilation() async {
-  final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
-  String lastSavedAppCompilation = await Prefs().getAppCompilation();
+  try {
+    final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+    String lastSavedAppCompilation = await Prefs().getAppCompilation();
 
-  if (lastSavedAppCompilation.isNotEmpty && lastSavedAppCompilation != currentCompilation) {
-    // App has been updated
-    appHasBeenUpdated = true;
-    log("📜 App updated: $lastSavedAppCompilation → $currentCompilation");
-    await Prefs().setAppCompilation(currentCompilation);
-  } else if (lastSavedAppCompilation.isEmpty) {
-    // First app run
-    appIsFirstRun = true;
-    await Prefs().setAppCompilation(currentCompilation);
-    log("📜 First app run, saved compilation: $currentCompilation");
+    if (lastSavedAppCompilation.isNotEmpty && lastSavedAppCompilation != currentCompilation) {
+      // App has been updated
+      appHasBeenUpdated = true;
+      log("📜 App updated: $lastSavedAppCompilation → $currentCompilation");
+      await Prefs().setAppCompilation(currentCompilation);
+    } else if (lastSavedAppCompilation.isEmpty) {
+      // First app run
+      appIsFirstRun = true;
+      await Prefs().setAppCompilation(currentCompilation);
+      log("📜 First app run, saved compilation: $currentCompilation");
+    }
+  } catch (e, stackTrace) {
+    log("Error initializing app compilation: $e");
+    logErrorToCrashlytics("Error initializing app compilation", "App compilation initialization failed: $e", stackTrace);
   }
 }
 
@@ -798,6 +808,9 @@ Future<void> _initializeFirebase() async {
 
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     }
+
+    // Report any errors stashed before Crashlytics was available
+    _flushPreFirebaseErrors();
   } catch (e) {
     log("Error initializing Firebase: $e");
     _isFirebaseInitialized = false;
@@ -910,14 +923,30 @@ void logToUser(String? message, {int duration = 3, Color? textColor, Color? back
   }
 }
 
+/// Errors caught before Crashlytics is available are stashed here and reported
+/// as soon as Firebase initializes, so early-init failures remain visible
+final List<(String, dynamic, StackTrace?)> _preFirebaseErrors = [];
+
 void logErrorToCrashlytics(String message, dynamic error, StackTrace? stackTrace) {
-  if (!Platform.isWindows && _isFirebaseInitialized) {
+  if (Platform.isWindows) return;
+  if (_isFirebaseInitialized) {
     try {
       FirebaseCrashlytics.instance.log(message);
       FirebaseCrashlytics.instance.recordError(error, stackTrace);
     } catch (e) {
       log("Failed to log to Crashlytics: $e");
     }
+  } else if (_preFirebaseErrors.length < 20) {
+    _preFirebaseErrors.add((message, error, stackTrace));
+  }
+}
+
+void _flushPreFirebaseErrors() {
+  if (_preFirebaseErrors.isEmpty) return;
+  final pending = List.of(_preFirebaseErrors);
+  _preFirebaseErrors.clear();
+  for (final (message, error, stackTrace) in pending) {
+    logErrorToCrashlytics(message, error, stackTrace);
   }
 }
 
