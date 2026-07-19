@@ -18,10 +18,12 @@ class QuickItemsProvider extends ChangeNotifier {
   bool _firstLoad = true;
   bool _itemSuccess = false;
   bool _hideInventoryCount = false;
+  bool _hideLoadouts = false;
   bool _longPressToAdd = false;
   bool _isInitialized = false;
 
   bool get hideInventoryCount => _hideInventoryCount;
+  bool get hideLoadouts => _hideLoadouts;
   bool get longPressToAdd => _longPressToAdd;
   bool get isInitialized => _isInitialized;
 
@@ -89,6 +91,7 @@ class QuickItemsProvider extends ChangeNotifier {
 
     _numberOfLoadoutsToShow = await Prefs().getNumberOfLoadouts();
     _hideInventoryCount = await Prefs().getQuickItemsHideInventoryCount();
+    _hideLoadouts = await Prefs().getQuickItemsHideLoadouts();
     _longPressToAdd = await Prefs().getQuickItemsLongPressToAdd();
   }
 
@@ -167,6 +170,12 @@ class QuickItemsProvider extends ChangeNotifier {
   Future<void> setHideInventoryCount(bool value) async {
     _hideInventoryCount = value;
     await Prefs().setQuickItemsHideInventoryCount(value);
+    notifyListeners();
+  }
+
+  Future<void> setHideLoadouts(bool value) async {
+    _hideLoadouts = value;
+    await Prefs().setQuickItemsHideLoadouts(value);
     notifyListeners();
   }
 

@@ -89,6 +89,20 @@ List<_MVersion> _modernChangelog() => [
     hotfixes: [],
     sections: [
       _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Quick items: added an option to hide loadouts',
+            detail:
+                'Hide the loadout chips from the quick items bar without removing them, so you can keep '
+                'them out of the way when not at war and bring them back with their names and order intact.\n\n'
+                'You will find the toggle in the quick items options menu.',
+          ),
+        ],
+      ),
+      _MSection(
         icon: Icons.trending_up,
         title: 'Improved',
         color: Color(0xFFE65100),
