@@ -641,6 +641,10 @@ class WebViewFullState extends State<WebViewFull>
         webViewController?.pauseTimers();
       } else {
         webViewController?.resumeTimers();
+        // A renderer killed while we were in background
+        if (state == AppLifecycleState.resumed) {
+          _webViewProvider.reloadActiveTabIfRendererGone();
+        }
       }
     }
   }

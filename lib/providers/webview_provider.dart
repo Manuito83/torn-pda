@@ -191,6 +191,7 @@ class WebViewProvider extends ChangeNotifier {
 
       resumeAllWebviews();
       broadcastTabState();
+      reloadActiveTabIfRendererGone();
     } else {
       // Dismiss keyboard before hiding the browser
       if (_dismissKeyboardOnBrowserClose) {
@@ -985,6 +986,22 @@ class WebViewProvider extends ChangeNotifier {
       isChainingBrowser: sleeping.isChainingBrowser,
       chainingPayload: sleeping.chainingPayload,
       allowDownloads: sleeping.allowDownloads,
+    );
+  }
+
+  /// Renderer deaths happen mostly in background, where [onRenderProcessGone] only flags the tab.
+  /// Non-active tabs recover via [activateTab], but the active one has no such trigger
+  /// (it early-returns when the tab does not change), so it needs recovering on becoming visible
+  void reloadActiveTabIfRendererGone() {
+    if (_tabList.isEmpty || !_isBrowserForeground) return;
+
+    final active = _tabList[currentTab];
+    if (!active.needsReloadAfterRendererGone) return;
+
+    rebuildUnresponsiveWebView(
+      tabUid: active.id,
+      isChainingBrowser: active.isChainingBrowser,
+      chainingPayload: active.chainingPayload,
     );
   }
 

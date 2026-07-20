@@ -85,7 +85,7 @@ List<_MVersion> _modernChangelog() => [
   // TODO (App release): confirm the release date before publishing
   const _MVersion(
     version: 'v3.14.4',
-    date: '11 July 2026',
+    date: '25 July 2026',
     hotfixes: [],
     sections: [
       _MSection(
