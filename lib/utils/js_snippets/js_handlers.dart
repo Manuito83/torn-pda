@@ -115,12 +115,13 @@ String handler_GM() {
       function a(e, t) {
         if (!e) throw new TypeError("No key supplied to GM_getValue");
         try {
-          const r = i.getItem(e);
-          return "string" != typeof r
-            ? t
-            : r.startsWith("GMV2_")
-              ? (JSON.parse(r.slice(5)) ?? t)
-              : (r ?? t);
+          const r = i ? i.getItem(e) : null;
+          if ("string" != typeof r) return t;
+          if (!r.startsWith("GMV2_")) return r ?? t;
+          const json = r.slice(5);
+          // Guard against "GMV2_undefined" written by a buggy GM_setValue call
+          if (json === "undefined") return t;
+          return (JSON.parse(json) ?? t);
         } catch (e) {
           return (console.error(e), t);
         }
@@ -138,17 +139,23 @@ String handler_GM() {
       }
       function u(e, t) {
         if (!e) throw new TypeError("No key supplied to GM_setValue");
-        i.setItem(e, "GMV2_" + JSON.stringify(t));
+        if (!i) return;
+        // JSON.stringify(undefined) returns the JS value undefined (not the string),
+        // which string-concatenates to "GMV2_undefined" — unreadable by JSON.parse.
+        // Treat that the same as deleting the key.
+        const serialized = JSON.stringify(t);
+        if (serialized === undefined) { i.removeItem(e); return; }
+        i.setItem(e, "GMV2_" + serialized);
       }
       function l(e) {
         for (const [r, o] of t.entries(e)) u(r, o);
       }
       function d(e) {
         if (!e) throw new TypeError("No key supplied to GM_deleteValue");
-        i.removeItem(e);
+        i?.removeItem(e);
       }
       function f() {
-        return t.keys(i);
+        return i ? t.keys(i) : [];
       }
       function p(e) {
         if (!e || "string" != typeof e) return;
@@ -314,6 +321,11 @@ String handler_GM() {
           configurable: !1,
         });
       });
-    })(window, Object, DOMException, AbortController, Promise, localStorage);
+    })(window, Object, DOMException, AbortController, Promise,
+       // Safe-capture localStorage: accessing it throws SecurityError in some
+       // contexts (restrictive iframes, private-mode storage blocked, etc.).
+       // Passing null lets the GM functions degrade gracefully instead of
+       // aborting the entire IIFE and leaving GM/GM_getValue/... undefined.
+       (() => { try { return localStorage; } catch (_) { return null; } })());
   ''';
 }
