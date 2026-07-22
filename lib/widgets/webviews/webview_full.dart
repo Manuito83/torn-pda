@@ -1543,6 +1543,35 @@ class WebViewFullState extends State<WebViewFull>
               _revertTransparentBackground();
             }
 
+            // Fallback: re-register scripts when they were wiped (browser close,
+            // renderer crash) and the reload doesn't trigger shouldOverrideUrlLoading.
+            // _handlersInjected is false in both removeAllUserScripts() and
+            // onRenderProcessGone/onWebContentProcessDidTerminate, so this catches all cases.
+            if (!_handlersInjected &&
+                uri != null &&
+                (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null))) {
+              try {
+                await _ensureHandlersInjected();
+                final fallbackScripts = _userScriptsProvider.getCondSources(
+                  url: uri.toString(),
+                  pdaApiKey: UserHelper.apiKey,
+                  time: UserScriptTime.start,
+                );
+                await _addUserScriptsAvoidDuplicates(fallbackScripts);
+                // Evaluate inline for the current page since AT_DOCUMENT_START
+                // injection may already have been scheduled before the scripts
+                // were re-registered above.
+                for (final h in _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid)) {
+                  await c.evaluateJavascript(source: h.source);
+                }
+                for (final s in fallbackScripts) {
+                  await c.evaluateJavascript(source: s.source);
+                }
+              } catch (e) {
+                log("⚠️ onLoadStart script fallback error: $e", name: "WEBVIEW FULL");
+              }
+            }
+
             try {
               _currentUrl = uri.toString();
 
