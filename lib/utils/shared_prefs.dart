@@ -421,6 +421,13 @@ class Prefs {
   final String _kRemoveUnusedTabsRangeDays = "pda_removeUnusedTabsRangeDays";
 
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
+  // Browser memory settings: RC provides the default, the user can override it ("default"/"on"/"off",
+  // and 0 = follow default for the sleep period). RC values are persisted to be known at cold start
+  final String _kTabSleepMinutesOverride = "pda_tabSleepMinutesOverride";
+  final String _kTabSleepMinutesDefaultRC = "pda_tabSleepMinutesDefaultRC";
+  final String _kParkBackgroundTabsOverride = "pda_parkBackgroundTabsOverride";
+  final String _kParkBackgroundTabsDefaultRC = "pda_parkBackgroundTabsDefaultRC";
+  final String _kParkBackgroundTabsAllowedRC = "pda_parkBackgroundTabsAllowedRC";
   final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
@@ -3849,6 +3856,51 @@ class Prefs {
 
   Future setOnlyLoadTabsWhenUsed(bool value) async {
     return await PrefsDatabase.setBool(_kOnlyLoadTabsWhenUsed, value);
+  }
+
+  /// 0 means "follow the Remote Config default"
+  Future<int> getTabSleepMinutesOverride() async {
+    return await PrefsDatabase.getInt(_kTabSleepMinutesOverride, 0);
+  }
+
+  Future setTabSleepMinutesOverride(int value) async {
+    return await PrefsDatabase.setInt(_kTabSleepMinutesOverride, value);
+  }
+
+  /// Last known Remote Config value, so it is available before the fetch on next launch
+  Future<int> getTabSleepMinutesDefaultRC() async {
+    return await PrefsDatabase.getInt(_kTabSleepMinutesDefaultRC, 720);
+  }
+
+  Future setTabSleepMinutesDefaultRC(int value) async {
+    return await PrefsDatabase.setInt(_kTabSleepMinutesDefaultRC, value);
+  }
+
+  /// "default" (follow Remote Config), "on" or "off"
+  Future<String> getParkBackgroundTabsOverride() async {
+    return await PrefsDatabase.getString(_kParkBackgroundTabsOverride, "default");
+  }
+
+  Future setParkBackgroundTabsOverride(String value) async {
+    return await PrefsDatabase.setString(_kParkBackgroundTabsOverride, value);
+  }
+
+  /// Last known Remote Config value, so it is available before the fetch on next launch
+  Future<bool> getParkBackgroundTabsDefaultRC() async {
+    return await PrefsDatabase.getBool(_kParkBackgroundTabsDefaultRC, false);
+  }
+
+  Future setParkBackgroundTabsDefaultRC(bool value) async {
+    return await PrefsDatabase.setBool(_kParkBackgroundTabsDefaultRC, value);
+  }
+
+  /// Kill-switch, also persisted so that it applies before the Remote Config fetch
+  Future<bool> getParkBackgroundTabsAllowedRC() async {
+    return await PrefsDatabase.getBool(_kParkBackgroundTabsAllowedRC, true);
+  }
+
+  Future setParkBackgroundTabsAllowedRC(bool value) async {
+    return await PrefsDatabase.setBool(_kParkBackgroundTabsAllowedRC, value);
   }
 
   Future<bool> getAutomaticChangeToNewTabFromURL() async {

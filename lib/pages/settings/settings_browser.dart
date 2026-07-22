@@ -98,6 +98,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       if (Platform.isIOS) _linkPreview(),
       _gestures(),
       _maintenance(),
+      _memory(),
     ];
 
     // Filter out empty sections
@@ -690,7 +691,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ],
                 ),
                 Text(
-                  'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, they will retrieve the web content when first used (tapped). This could add a small delay when the tab is pressed the first time, but should improve overall browser performance. Also, tabs that have not been used for 24 hours will be deactivated to reduce memory consumption, and will be reactivated when you switch back to them.',
+                  'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, they will retrieve the web content when first used (tapped). This could add a small delay when the tab is pressed the first time, but should improve overall browser performance. Also, tabs that have not been used for a while will be deactivated to reduce memory consumption, and will be reactivated when you switch back to them (you can change how long in the Memory section, at the bottom of this page).',
                   style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                 ),
               ],
@@ -3235,6 +3236,176 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       ),
     ];
     return buildSectionWithRows(title: 'MAINTENANCE', rows: rows, searchText: _searchText);
+  }
+
+  Widget _memory() {
+    final bool parkingAllowed = _webViewProvider.parkBackgroundTabsRemoteConfigAllowed;
+
+    List<SearchableRow> rows = [
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Rest tabs while you are away",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Rest tabs while you are away")),
+                    _parkBackgroundTabsDropdown(enabled: parkingAllowed),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: parkingAllowed
+                      ? Text(
+                          "When you leave Torn PDA, the tabs you are not using let go of their content "
+                          "(chat included) so that the browser stays light while you are away. Tap one and "
+                          "it comes straight back to the same page. This helps to avoid finding every tab "
+                          "reloading itself when you return",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        )
+                      : Text(
+                          "This option is temporarily disabled from Torn PDA and can't be changed right now",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (_settingsProvider.useTabsFullBrowser)
+        SearchableRow(
+          label: "Sleep unused tabs after",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Sleep unused tabs after")),
+                    _tabSleepMinutesDropdown(),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "Tabs you have not opened for this long are put to sleep in the background, and load "
+                    "again next time you tap them. Needs \"Only load tabs when used\" to be enabled",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+    ];
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return buildSectionWithRows(title: 'MEMORY', rows: rows, searchText: _searchText);
+  }
+
+  /// "Default" follows whatever Torn PDA recommends at any given moment
+  Widget _parkBackgroundTabsDropdown({required bool enabled}) {
+    const List<String> options = WebViewProvider.parkOverrideOptions;
+    final String current = options.contains(_webViewProvider.parkBackgroundTabsOverride)
+        ? _webViewProvider.parkBackgroundTabsOverride
+        : "default";
+    final String defaultLabel = _webViewProvider.parkBackgroundTabsDefaultRC ? "Default (on)" : "Default (off)";
+
+    return DropdownButton<String>(
+      value: current,
+      items: [
+        DropdownMenuItem(
+          value: "default",
+          child: SizedBox(
+            width: 90,
+            child: Text(defaultLabel, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12)),
+          ),
+        ),
+        const DropdownMenuItem(
+          value: "on",
+          child: SizedBox(
+            width: 90,
+            child: Text("On", textAlign: TextAlign.right, style: TextStyle(fontSize: 12)),
+          ),
+        ),
+        const DropdownMenuItem(
+          value: "off",
+          child: SizedBox(
+            width: 90,
+            child: Text("Off", textAlign: TextAlign.right, style: TextStyle(fontSize: 12)),
+          ),
+        ),
+      ],
+      onChanged: !enabled
+          ? null
+          : (value) {
+              if (value == null) return;
+              setState(() {
+                _webViewProvider.parkBackgroundTabsOverride = value;
+              });
+            },
+    );
+  }
+
+  /// 0 follows whatever Torn PDA recommends at any given moment
+  Widget _tabSleepMinutesDropdown() {
+    const List<int> options = WebViewProvider.tabSleepMinutesOptions;
+    final int current = options.contains(_webViewProvider.tabSleepMinutesOverride)
+        ? _webViewProvider.tabSleepMinutesOverride
+        : 0;
+
+    // The default can be any value coming from Remote Config
+    String label(int minutes) {
+      if (minutes < 60) return minutes == 1 ? "1 minute" : "$minutes minutes";
+      final int hours = minutes ~/ 60;
+      final int rest = minutes % 60;
+      final String hoursLabel = hours == 1 ? "1 hour" : "$hours hours";
+      return rest == 0 ? hoursLabel : "$hoursLabel $rest min";
+    }
+
+    return DropdownButton<int>(
+      value: current,
+      items: [
+        DropdownMenuItem(
+          value: 0,
+          child: SizedBox(
+            width: 130,
+            child: Text(
+              "Default (${label(_webViewProvider.tabSleepMinutesDefaultRC)})",
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
+        for (final minutes in options.skip(1))
+          DropdownMenuItem(
+            value: minutes,
+            child: SizedBox(
+              width: 130,
+              child: Text(
+                label(minutes),
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _webViewProvider.tabSleepMinutesOverride = value;
+        });
+      },
+    );
   }
 
   Widget _gestures() {

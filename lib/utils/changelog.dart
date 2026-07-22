@@ -100,6 +100,25 @@ List<_MVersion> _modernChangelog() => [
                 'them out of the way when not at war and bring them back with their names and order intact.\n\n'
                 'You will find the toggle in the quick items options menu.',
           ),
+          _MItem(
+            'Browser: you can now choose when unused tabs go to sleep',
+            detail:
+                'Tabs you have not opened for a while are put to sleep to keep Torn PDA light, and they '
+                'load again next time you tap them.\n\n'
+                'You can now pick how long that takes, or leave it on the recommended setting, in the new '
+                'Memory section at the bottom of the advanced browser settings.',
+          ),
+          _MItem(
+            'Browser: tabs can now rest while you are away',
+            androidOnly: true,
+            detail:
+                'When you leave Torn PDA, the tabs you are not using can let go of their content '
+                'so that the browser stays light while you are away. Tap one and it comes '
+                'straight back to the same page.\n\n'
+                'This helps to reduce crashes or unexpected reloads, which happens '
+                'more often on phones with less memory. You can turn it on in the new Memory section at '
+                'the bottom of the advanced browser settings.',
+          ),
         ],
       ),
       _MSection(
@@ -110,6 +129,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Faster and more reliable browser startup on Android', androidOnly: true),
           _MItem('Idle browser tabs now release memory to keep the app light', androidOnly: true),
           _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
+          _MItem('Tabs now return to the same spot after the browser recovers a page', androidOnly: true),
         ],
       ),
       _MSection(

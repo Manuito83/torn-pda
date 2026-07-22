@@ -719,6 +719,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_engine_prewarm_allowed": true,
         "browser_webview_recovery_allowed": true,
         "browser_render_process_gone_allowed": true,
+        "browser_park_background_tabs_allowed": true,
+        // Default for the browser memory settings (can be overriden)
+        "browser_park_background_tabs_default": false,
+        "browser_tab_sleep_minutes_default": 720,
         "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
@@ -807,6 +811,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed = remoteConfig.getBool(
         "browser_render_process_gone_allowed",
       );
+      _webViewProvider.parkBackgroundTabsRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_park_background_tabs_allowed",
+      );
+
+      // Browser memory defaults (also persisted, so they are known before the fetch on next launch)
+      _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");
+      final int tabSleepMinutesRC = remoteConfig.getInt("browser_tab_sleep_minutes_default");
+      if (tabSleepMinutesRC > 0) {
+        _webViewProvider.tabSleepMinutesDefaultRC = tabSleepMinutesRC;
+      }
 
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
@@ -906,6 +920,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
 
     if (state == AppLifecycleState.paused) {
+      // Park background tabs while we are still allowed to run (Android)
+      _webViewProvider.onAppBackgrounded();
+
       // Stop stakeouts
       _s.stopTimer();
       log("Stakeouts stopped");

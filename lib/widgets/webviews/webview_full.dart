@@ -154,6 +154,10 @@ class WebViewFull extends StatefulWidget {
   final bool isChainingBrowser;
   final ChainingPayload? chainingPayload;
 
+  // Scroll to restore after the first load (used when rebuilding a tab whose renderer died)
+  final int? restoreScrollX;
+  final int? restoreScrollY;
+
   const WebViewFull({
     required this.tabUid,
     this.windowId,
@@ -164,6 +168,8 @@ class WebViewFull extends StatefulWidget {
     this.chatRemovalActive = false,
     this.allowDownloads = true,
     this.key,
+    this.restoreScrollX,
+    this.restoreScrollY,
 
     // Chaining
     this.isChainingBrowser = false,
@@ -329,6 +335,16 @@ class WebViewFullState extends State<WebViewFull>
   int? _scrollY = 0;
   int? _scrollX = 0;
 
+  // Parked: background tab sent to about:blank while the app is minimized (Android)
+  static const String _blankUrl = "about:blank";
+  bool _isParked = false;
+  bool _wakingFromPark = false;
+  String? _parkedUrl;
+  bool get isParked => _isParked;
+
+  /// The blank page must never reach the tab state (URL, title, history, scroll)
+  bool _isParkingBlank(Uri? uri) => _parkedUrl != null && uri?.toString() == _blankUrl;
+
   bool _foundDisposedRotation = false;
   int _disposedScrollX = 0;
   int _disposedScrollY = 0;
@@ -437,6 +453,13 @@ class WebViewFullState extends State<WebViewFull>
 
       // We keep the list of rotated tabs tidy (not strictly necessary)
       _webViewProvider.rotatedTabDetails.clear();
+    }
+
+    // Rebuilt after a renderer death (a rotation restores its own position, just above)
+    if (!_foundDisposedRotation && (widget.restoreScrollX != null || widget.restoreScrollY != null)) {
+      _scrollX = widget.restoreScrollX ?? 0;
+      _scrollY = widget.restoreScrollY ?? 0;
+      _scrollAfterLoad = true;
     }
 
     // We will later changed this for a listenable one in build()
@@ -579,6 +602,9 @@ class WebViewFullState extends State<WebViewFull>
     // Update the scrolls with the latest width available
     // (in case we need to regenerate the webview after rotating the screen)
     // If null, it's probably because the webview is not yet initialized (so we don't log)
+    // Parked (blank) pages and pending restores would report a position we must not save
+    if (_isParked || _scrollAfterLoad) return;
+
     try {
       final scrollX = await webViewController?.getScrollX();
       if (scrollX != null) {
@@ -1481,6 +1507,10 @@ class WebViewFullState extends State<WebViewFull>
           onLoadStart: (c, uri) async {
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
 
+            // Ignore the parking placeholder; a real page taking over unparks the tab
+            if (_isParkingBlank(uri)) return;
+            if (_isParked && uri != null) _isParked = false;
+
             _heightExtendInjected = false;
 
             // FALLBACK: Always try to force update if reportTabLoadUrl wasn't called recently
@@ -1537,12 +1567,13 @@ class WebViewFullState extends State<WebViewFull>
           },
           onProgressChanged: (c, progress) async {
             if (!mounted) return;
+            if (_isParked) return;
 
             // Check for URL changes during progress
             if (progress > 10) {
               // Wait for some progress to avoid initial load noise
               final currentUri = await c.getUrl();
-              if (currentUri != null && _lastReportedUrl != currentUri.toString()) {
+              if (currentUri != null && !_isParkingBlank(currentUri) && _lastReportedUrl != currentUri.toString()) {
                 log(
                   "🔄 onProgressChanged URL change detected: $_lastReportedUrl -> ${currentUri.toString()}",
                   name: "WEBVIEW FULL",
@@ -1580,9 +1611,26 @@ class WebViewFullState extends State<WebViewFull>
               // the checks performed in this method
             }
           },
+          onScrollChanged: (c, x, y) {
+            // Android only: iOS reports these divided by contentScaleFactor, while getScrollX/Y
+            // and scrollTo use raw points
+            if (!Platform.isAndroid) return;
+            if (_isParked) return;
+            // A pending restore means this is the load resetting to 0; keep the saved target
+            if (_scrollAfterLoad) return;
+            _scrollX = x;
+            _scrollY = y;
+          },
           onLoadStop: (c, uri) async {
             log("🏁 onLoadStop: $uri", name: 'WEBVIEW FULL');
             if (!mounted) return;
+            if (_isParkingBlank(uri)) return;
+            if (_isParked && uri != null) _isParked = false;
+
+            // Consumed here: clearing it further down (past several awaits that throw) could
+            // leave it armed forever, and that now also freezes scroll tracking
+            final bool restoreScrollNow = _scrollAfterLoad;
+            _scrollAfterLoad = false;
 
             if (_settingsProvider.browserCenterEditingTextField &&
                 // We also need to allow this from the Firebase Remote Config just
@@ -1716,9 +1764,8 @@ class WebViewFullState extends State<WebViewFull>
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
-              if (_scrollAfterLoad && _settingsProvider.restoreScrollAfterReload) {
-                webViewController!.scrollTo(x: _scrollX!, y: _scrollY!);
-                _scrollAfterLoad = false;
+              if (restoreScrollNow && _settingsProvider.restoreScrollAfterReload) {
+                webViewController!.scrollTo(x: _scrollX ?? 0, y: _scrollY ?? 0);
               }
 
               // If we have a disposed rotation, we scroll to the last position
@@ -1774,6 +1821,8 @@ class WebViewFullState extends State<WebViewFull>
           },
           onUpdateVisitedHistory: (c, uri, androidReload) async {
             if (!mounted) return;
+            if (_isParkingBlank(uri)) return;
+            if (_isParked && uri != null) _isParked = false;
 
             final sameUrl = uri?.toString() == _currentUrl;
             if (!sameUrl) {
@@ -2020,6 +2069,11 @@ class WebViewFullState extends State<WebViewFull>
             final bool appResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
             final bool renderGoneActive = _webViewProvider.isTabUidActive(_tabUid);
             final bool rebuildNow = appResumed && renderGoneActive;
+
+            // Preserve the last known scroll so the rebuilt tab can restore the position
+            final goneTab = _webViewProvider.getTabByUid(_tabUid);
+            goneTab?.rendererGoneScrollX = _scrollX;
+            goneTab?.rendererGoneScrollY = _scrollY;
 
             // One death fires this on every webview of the shared renderer; record ONE event per death
             try {
@@ -2521,6 +2575,11 @@ class WebViewFullState extends State<WebViewFull>
       return;
     }
 
+    // Never report the parking placeholder as a real visit
+    if (_isParkingBlank(uri)) {
+      return;
+    }
+
     // This avoids reporting url such as "https://www.torn.com/imarket.php#/0.5912994041327981", which are generated
     // when returning from a bazaar and go straight to the market, not allowing to return to the item search
     if (uri.toString().contains("imarket.php#/")) {
@@ -3002,13 +3061,11 @@ class WebViewFullState extends State<WebViewFull>
                   if (!Platform.isWindows) {
                     _scrollX = await webViewController!.getScrollX();
                     _scrollY = await webViewController!.getScrollY();
+                    // Armed before reloading, so the load's own scroll reset can't overwrite the target
+                    _scrollAfterLoad = true;
                   }
 
                   await _reload();
-
-                  if (!Platform.isWindows) {
-                    _scrollAfterLoad = true;
-                  }
 
                   BotToast.showText(
                     text: "Reloading...",
@@ -4480,8 +4537,9 @@ class WebViewFullState extends State<WebViewFull>
   Future reloadFromOutside() async {
     _scrollX = await webViewController!.getScrollX();
     _scrollY = await webViewController!.getScrollY();
-    await _reload();
+    // Armed before reloading, so the load's own scroll reset can't overwrite the target
     _scrollAfterLoad = true;
+    await _reload();
 
     BotToast.showText(
       text: "Reloading...",
@@ -5302,6 +5360,78 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  /// Frees this tab's page while the app is minimized
+  Future<bool> parkWebview() async {
+    if (!Platform.isAndroid || _isParked) return false;
+    final InAppWebViewController? controller = webViewController;
+    if (controller == null || _currentUrl.isEmpty || _currentUrl == _blankUrl) return false;
+
+    _parkedUrl = _currentUrl;
+    _isParked = true;
+
+    try {
+      controller.resume();
+      await controller.loadUrl(urlRequest: URLRequest(url: WebUri(_blankUrl)));
+      await Future.delayed(const Duration(milliseconds: 700));
+    } catch (_) {
+      //
+    }
+
+    // The user might have come back and opened this very tab while the blank page was loading
+    if (!mounted || _webViewProvider.isTabUidActive(_tabUid)) {
+      await wakeFromPark();
+      return false;
+    }
+
+    _pauseQuietly(controller);
+    return true;
+  }
+
+  void _pauseQuietly(InAppWebViewController controller) {
+    try {
+      controller.pause();
+    } catch (_) {}
+  }
+
+  /// Returns a parked tab to its page
+  Future<void> wakeFromPark() async {
+    if (!_isParked || _wakingFromPark) return;
+    final InAppWebViewController? controller = webViewController;
+    if (controller == null) return;
+    final String? target = _parkedUrl;
+
+    _wakingFromPark = true;
+    try {
+      controller.resume();
+
+      // Before navigating: going back does not trigger shouldOverrideUrlLoading on Android
+      await _ensureHandlersInjected();
+      if (target != null && target.isNotEmpty) {
+        await _addUserScriptsAvoidDuplicates(
+          _userScriptsProvider.getCondSources(url: target, pdaApiKey: UserHelper.apiKey, time: UserScriptTime.start),
+        );
+      }
+
+      final Uri? current = await controller.getUrl();
+      if (!_isParked) return;
+
+      _scrollAfterLoad = true;
+      _isParked = false;
+
+      // A fresh document needs the city widgets injected again (as [_reload] does)
+      if (_cityTriggered) _cityTriggered = false;
+
+      if (current?.toString() == _blankUrl && await controller.canGoBack()) {
+        await controller.goBack();
+      } else if (target != null && target.isNotEmpty) {
+        await controller.loadUrl(urlRequest: URLRequest(url: WebUri(target)));
+      }
+    } catch (_) {
+    } finally {
+      _wakingFromPark = false;
+    }
+  }
+
   Future<void> resumeThisWebview({bool publish = true}) async {
     if (Platform.isAndroid) {
       webViewController?.resume();
@@ -5444,6 +5574,15 @@ class WebViewFullState extends State<WebViewFull>
   Future _loadUrl(String? inputUrl) async {
     if (webViewController == null) {
       return;
+    }
+
+    // Something wants this parked tab to load a URL (a notification, the URL dialog...), so the
+    // parking is cancelled: a wake in progress must not undo this load, and clearing the last
+    // reported URL stops the "same URL" shortcut below from reloading the blank page instead
+    if (_isParked) {
+      _isParked = false;
+      _lastReportedUrl = '';
+      webViewController!.resume();
     }
 
     // If the input URL is invalid, we will see if there was one saved as _currentUrl

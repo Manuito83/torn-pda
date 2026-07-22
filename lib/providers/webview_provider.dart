@@ -79,6 +79,9 @@ class TabDetails {
   int webviewCreationRetries = 0;
   // Set when this tab renderer died, so we defer rebuilding until the tab is focused
   bool needsReloadAfterRendererGone = false;
+  // Last known scroll at renderer death, restored by the rebuilt webview
+  int? rendererGoneScrollX;
+  int? rendererGoneScrollY;
   // Kept so a deferred rebuild (on focus) can restore a chaining tab's payload
   ChainingPayload? chainingPayload;
 }
@@ -129,8 +132,65 @@ class WebViewProvider extends ChangeNotifier {
   /// (e.g.: personal stats will trigger a new URL load for every change in the page, as URL params change)
   List<String> urlsWithStuckHistory = ["https://www.torn.com/personalstats.php?"];
 
-  // Time backstop for hibernating idle background tabs. Memory pressure hibernates immediately (below).
-  static const Duration _tabSleepThreshold = Duration(hours: 12);
+  // Valid user choices for the two browser memory settings (0 and "default" follow Remote Config)
+  static const List<int> tabSleepMinutesOptions = [0, 30, 60, 360, 720];
+  static const List<String> parkOverrideOptions = ["default", "on", "off"];
+
+  // Time for hibernating idle background tabs. Memory pressure hibernates immediately (below)
+  // Remote Config sets the default; the user can override it
+  int _tabSleepMinutesDefaultRC = 720;
+  int get tabSleepMinutesDefaultRC => _tabSleepMinutesDefaultRC;
+  set tabSleepMinutesDefaultRC(int value) {
+    _tabSleepMinutesDefaultRC = value;
+    Prefs().setTabSleepMinutesDefaultRC(value);
+    notifyListeners();
+  }
+
+  // 0 means "follow the Remote Config default"
+  int _tabSleepMinutesOverride = 0;
+  int get tabSleepMinutesOverride => _tabSleepMinutesOverride;
+  set tabSleepMinutesOverride(int value) {
+    _tabSleepMinutesOverride = value;
+    Prefs().setTabSleepMinutesOverride(value);
+    notifyListeners();
+  }
+
+  int get tabSleepMinutesActive => _tabSleepMinutesOverride > 0 ? _tabSleepMinutesOverride : _tabSleepMinutesDefaultRC;
+
+  // Park background tabs (about:blank) after the app spends a few minutes minimized, so the
+  // shared renderer shrinks and Android does not kill it; the user can override it
+  bool _parkBackgroundTabsDefaultRC = false;
+  bool get parkBackgroundTabsDefaultRC => _parkBackgroundTabsDefaultRC;
+  set parkBackgroundTabsDefaultRC(bool value) {
+    _parkBackgroundTabsDefaultRC = value;
+    Prefs().setParkBackgroundTabsDefaultRC(value);
+    notifyListeners();
+  }
+
+  // "default" (follow Remote Config), "on" or "off"
+  String _parkBackgroundTabsOverride = "default";
+  String get parkBackgroundTabsOverride => _parkBackgroundTabsOverride;
+  set parkBackgroundTabsOverride(String value) {
+    _parkBackgroundTabsOverride = value;
+    Prefs().setParkBackgroundTabsOverride(value);
+    notifyListeners();
+  }
+
+  // Remote Config kill-switch for parking, set at RC fetch (persisted too)
+  bool _parkBackgroundTabsRemoteConfigAllowed = true;
+  bool get parkBackgroundTabsRemoteConfigAllowed => _parkBackgroundTabsRemoteConfigAllowed;
+  set parkBackgroundTabsRemoteConfigAllowed(bool value) {
+    _parkBackgroundTabsRemoteConfigAllowed = value;
+    Prefs().setParkBackgroundTabsAllowedRC(value);
+    notifyListeners();
+  }
+
+  bool get parkBackgroundTabsActive {
+    if (!_parkBackgroundTabsRemoteConfigAllowed) return false;
+    if (_parkBackgroundTabsOverride == "on") return true;
+    if (_parkBackgroundTabsOverride == "off") return false;
+    return _parkBackgroundTabsDefaultRC;
+  }
 
   // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
   DateTime? _devToolsReopenTime;
@@ -822,15 +882,19 @@ class WebViewProvider extends ChangeNotifier {
       if (activated.sleepTab) {
         activated.sleepTab = false;
         activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView!);
+      } else {
+        _wakeTabIfParked(activated);
       }
 
       _tabList[currentTab].webViewKey?.currentState?.resumeThisWebview();
     } else if (currentTab == _tabList.length - 1) {
       // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
       currentTab = _tabList.length - 2;
+      _wakeTabIfParked(_tabList[currentTab]);
     }
 
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
+    // No need to wake it here: if wasLast is true, one of the two branches above ran and did it
     if (wasLast) {
       _tabList[currentTab].webViewKey?.currentState?.resumeThisWebview();
       // Notify listeners first so that the tab changes
@@ -887,6 +951,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Default to tab 0 to avoid issues
     currentTab = 0;
+    _wakeTabIfParked(_tabList[0]);
     _tabList[0].webViewKey?.currentState?.resumeThisWebview();
 
     notifyListeners();
@@ -922,6 +987,8 @@ class WebViewProvider extends ChangeNotifier {
         isChainingBrowser: activated.isChainingBrowser,
         chainingPayload: activated.chainingPayload,
       );
+    } else {
+      _wakeTabIfParked(activated);
     }
 
     activated.webViewKey?.currentState?.resumeThisWebview(publish: false);
@@ -951,8 +1018,13 @@ class WebViewProvider extends ChangeNotifier {
       if (tab.webView == null || tab.sleepTab || tab.isChainingBrowser || i == currentTab) continue;
       if (!force) {
         if (tab.lastUsedTimeDT == null) continue;
-        if (now.difference(tab.lastUsedTimeDT!) < _tabSleepThreshold) continue;
+        if (now.difference(tab.lastUsedTimeDT!) < Duration(minutes: tabSleepMinutesActive)) continue;
       }
+      // A slept tab reloads from scratch anyway, so a pending crash rebuild is no longer needed
+      // (if kept, it would destroy and reload the page again after the user opens the tab)
+      tab.needsReloadAfterRendererGone = false;
+      tab.rendererGoneScrollX = null;
+      tab.rendererGoneScrollY = null;
       tab.sleepTab = true;
       tab.webView = null;
       tab.sleepingWebView = SleepingWebView(
@@ -969,6 +1041,39 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   Future<void> hibernateInactiveTabs() => _sleepOldTabs(force: true);
+
+  /// Parks background tabs the moment the app is minimized. It has to happen here: Android
+  /// freezes the process shortly after, and a delayed timer would simply never run
+  Future<void> onAppBackgrounded() async {
+    // Only if the user picked a period, as this is otherwise evaluated when the browser closes
+    if (_tabSleepMinutesOverride > 0) _sleepOldTabs();
+
+    if (!Platform.isAndroid) return;
+    if (!parkBackgroundTabsActive) return;
+    if (browserDoNotPauseWebview) return;
+    if (_tabList.isEmpty) return;
+
+    final List<WebViewFullState> targets = [];
+    for (var i = 0; i < _tabList.length; i++) {
+      if (i == currentTab) continue;
+      final tab = _tabList[i];
+      if (tab.webView == null || tab.sleepTab || tab.isChainingBrowser) continue;
+      if (tab.needsReloadAfterRendererGone) continue;
+      final WebViewFullState? state = tab.webViewKey?.currentState;
+      if (state != null) targets.add(state);
+    }
+    if (targets.isEmpty) return;
+
+    // All at once, as we don't know how long the system will let us run
+    final List<bool> results = await Future.wait(targets.map((state) => state.parkWebview()));
+    log("Parked ${results.where((didPark) => didPark).length} background tabs");
+  }
+
+  void _wakeTabIfParked(TabDetails? tab) {
+    final state = tab?.webViewKey?.currentState;
+    if (state == null || !state.isParked) return;
+    state.wakeFromPark();
+  }
 
   void updateLastTabUse() {
     final tab = _tabList[currentTab];
@@ -1022,11 +1127,15 @@ class WebViewProvider extends ChangeNotifier {
       isChainingBrowser: isChainingBrowser,
       chainingPayload: chainingPayload,
       allowDownloads: true,
+      restoreScrollX: crashedTab.rendererGoneScrollX,
+      restoreScrollY: crashedTab.rendererGoneScrollY,
     );
 
     _tabList[index].webView = crashedTab.webView;
     _tabList[index].webViewKey = newKey;
     crashedTab.needsReloadAfterRendererGone = false;
+    crashedTab.rendererGoneScrollX = null;
+    crashedTab.rendererGoneScrollY = null;
 
     _callAssessMethods();
     notifyListeners();
@@ -1128,6 +1237,7 @@ class WebViewProvider extends ChangeNotifier {
     Prefs().setWebViewSessionCookie('');
 
     // Awake remaining tab if necessary
+    _wakeTabIfParked(_tabList[0]);
     if (_tabList[0].sleepTab) {
       _tabList[currentTab].sleepTab = false;
       _tabList[currentTab].webView = _buildRealWebViewFromSleeping(_tabList[currentTab].sleepingWebView!);
@@ -1564,6 +1674,8 @@ class WebViewProvider extends ChangeNotifier {
     // Ensure tab number is correct before saving active session
     if (currentTab >= _tabList.length) {
       _tabList.length == 1 ? currentTab = 0 : currentTab = _tabList.length - 1;
+      // This tab becomes visible without going through activateTab
+      if (currentTab < _tabList.length) _wakeTabIfParked(_tabList[currentTab]);
     }
     Prefs().setWebViewLastActiveTab(currentTab);
   }
@@ -2220,6 +2332,16 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
+
+    // Values are normalised on load: a restored backup could carry anything
+    final int sleepOverride = await Prefs().getTabSleepMinutesOverride();
+    _tabSleepMinutesOverride = tabSleepMinutesOptions.contains(sleepOverride) ? sleepOverride : 0;
+    final int sleepDefaultRC = await Prefs().getTabSleepMinutesDefaultRC();
+    _tabSleepMinutesDefaultRC = sleepDefaultRC > 0 ? sleepDefaultRC : 720;
+    final String parkOverride = await Prefs().getParkBackgroundTabsOverride();
+    _parkBackgroundTabsOverride = parkOverrideOptions.contains(parkOverride) ? parkOverride : "default";
+    _parkBackgroundTabsDefaultRC = await Prefs().getParkBackgroundTabsDefaultRC();
+    _parkBackgroundTabsRemoteConfigAllowed = await Prefs().getParkBackgroundTabsAllowedRC();
     _automaticChangeToNewTabFromURL = await Prefs().getAutomaticChangeToNewTabFromURL();
 
     _fabEnabled = await Prefs().getWebviewFabEnabled();
