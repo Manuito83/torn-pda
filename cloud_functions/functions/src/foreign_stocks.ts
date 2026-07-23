@@ -470,8 +470,8 @@ export const fillRestocks = onSchedule({
 export const oneTimeClean = onSchedule({
   schedule: "0 3 * * *", // At 03:00 every day
   region: "us-east4",
-  memory: "256MiB",
-  timeoutSeconds: 300
+  memory: "512MiB",
+  timeoutSeconds: 540
 }, async () => {
   logger.info("🧹 ONETIMECLEAN STARTING");
 

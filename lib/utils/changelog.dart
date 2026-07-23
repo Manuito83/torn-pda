@@ -169,6 +169,9 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Fixed a repeating error logged by the chat highlight feature [xentac]'),
           _MItem('Fixed travel max buy buttons not working for certain screen widths'),
           _MItem('Fixed abroad stay reminders opening an invalid page when tapped'),
+          _MItem(
+            'Fixed browser DevTools Storage list refreshing when tapping input fields and crashing on large stored values',
+          ),
         ],
       ),
     ],
