@@ -48,7 +48,7 @@ class RemoteSnippets {
       buildBase: _travelRemovePlaneBaseJS,
     ),
     travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.2', buildBase: _travelBuyMaxBaseJS),
-    barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.1', buildBase: _barsDoubleClickBaseJS),
+    barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.2', buildBase: _barsDoubleClickBaseJS),
   };
 
   static final Map<String, _Override> _overrides = {};
@@ -973,12 +973,17 @@ class RemoteSnippets {
 
         let pass = 0;
         const waitForBarsAndRun = setInterval(() => {
-          if (addBarsListener()) {
-            return clearInterval(waitForBarsAndRun);
+          pass++;
+
+          let done = false;
+          try {
+            done = addBarsListener();
+          } catch (e) {
+            console.warn('PDA bars snippet aborted: ' + e);
+            done = true;
           }
 
-          pass++;
-          if (pass > 20) {
+          if (done || pass > 20) {
             clearInterval(waitForBarsAndRun);
           }
         }, 300);

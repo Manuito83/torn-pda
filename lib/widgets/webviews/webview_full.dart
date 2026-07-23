@@ -1558,14 +1558,30 @@ class WebViewFullState extends State<WebViewFull>
                   time: UserScriptTime.start,
                 );
                 await _addUserScriptsAvoidDuplicates(fallbackScripts);
+                if (!mounted) return;
+
                 // Evaluate inline for the current page since AT_DOCUMENT_START
                 // injection may already have been scheduled before the scripts
                 // were re-registered above.
-                for (final h in _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid)) {
-                  await c.evaluateJavascript(source: h.source);
-                }
-                for (final s in fallbackScripts) {
-                  await c.evaluateJavascript(source: s.source);
+                //
+                // Ask the document first, or the user's scripts run twice (once natively, once here) and
+                // duplicate whatever UI they build. GM is the bundle's marker:
+                //  - present: document-start already ran here, nothing to do
+                //  - absent, but we are still on the previous document: the registration above covers the new one
+                final probe = await c.evaluateJavascript(source: "typeof window.GM !== 'undefined'");
+                final bool bundleAlreadyRan = probe == true || probe.toString() == "true";
+
+                if (!bundleAlreadyRan) {
+                  for (final h in _userScriptsProvider.getHandlerSources(
+                    apiKey: UserHelper.apiKey,
+                    tabUid: _tabUid,
+                    activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+                  )) {
+                    await c.evaluateJavascript(source: h.source);
+                  }
+                  for (final s in fallbackScripts) {
+                    await c.evaluateJavascript(source: s.source);
+                  }
                 }
               } catch (e) {
                 log("⚠️ onLoadStart script fallback error: $e", name: "WEBVIEW FULL");

@@ -326,6 +326,14 @@ String handler_GM() {
        // contexts (restrictive iframes, private-mode storage blocked, etc.).
        // Passing null lets the GM functions degrade gracefully instead of
        // aborting the entire IIFE and leaving GM/GM_getValue/... undefined.
-       (() => { try { return localStorage; } catch (_) { return null; } })());
+       // Warn once, or a storage-less page silently drops every userscript with nothing in the log.
+       // about: pages are ours (parking, prewarm) and always land here, so they stay quiet
+       (() => { try { return localStorage; } catch (_) {
+          if (!window.__pdaGMStoreWarned && location.protocol !== "about:") {
+            window.__pdaGMStoreWarned = true;
+            console.warn("PDA-GM: localStorage denied at " + location.href + ", GM values are unavailable here");
+          }
+          return null;
+       } })());
   ''';
 }

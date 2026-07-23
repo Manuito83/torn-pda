@@ -456,6 +456,10 @@ class AboutPageState extends State<AboutPage> {
                 _profileLink('OneMind', '3608257'),
                 const TextSpan(text: ': config templates & build docs'),
               ]),
+              _contributorLine('  • ', [
+                _profileLink('xentac', '3354782'),
+                const TextSpan(text: ': userscript storage & recovery'),
+              ]),
               const Align(
                 alignment: Alignment.bottomLeft,
                 child: Padding(

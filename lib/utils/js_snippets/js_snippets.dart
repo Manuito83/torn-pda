@@ -511,7 +511,7 @@ String chatHighlightJS({required String highlights}) {
 	}
 	function applyHighlights(el) {
 		// Spread content, in case the msg content has a : in it.
-		const [sender, ...contentArr] = el.firstElementChild.tagName === "DIV" ? el.lastChild.textContent.split(":") : el.textContent.split(":");
+		const [sender, ...contentArr] = el.firstElementChild?.tagName === "DIV" ? el.lastChild.textContent.split(":") : el.textContent.split(":");
 		const content = contentArr.join(":");
 		// Make it easy to silent the errors, so if (when...) something breaks it doesn't spam the console.
 		if (!sender && !window.pda?.silenceChatErrors) console.error("Missing sender in message element.")
@@ -522,9 +522,11 @@ String chatHighlightJS({required String highlights}) {
 
 	waitForChat().then((chat) => {
 		removeHighlights();
-	
+
 		[...chat.querySelectorAll("[class*='chat-box-body__'] [class*='chat-box-message__box__']")].forEach(applyHighlights);
-		new MutationObserver((muts) => {
+		// Re-injections would otherwise stack a new observer on top of the previous ones
+		window.pdaChatObserver?.disconnect();
+		window.pdaChatObserver = new MutationObserver((muts) => {
 			for (const mut of muts) {
 				for (const node of mut.addedNodes) {
 					if (node instanceof HTMLElement && !node.className && (node.parentElement?.getAttribute("class") || "").includes("chat-box-body__")) {
@@ -532,8 +534,10 @@ String chatHighlightJS({required String highlights}) {
 					}
 				}
 			}
-		}).observe(chat, { childList: true, subtree: true })
-	});
+		});
+		window.pdaChatObserver.observe(chat, { childList: true, subtree: true })
+	// No chat on this page: waitForChat rejects and the promise must not go unhandled
+	}).catch(() => {});
 })();
   ''';
 }

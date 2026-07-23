@@ -126,7 +126,7 @@ List<_MVersion> _modernChangelog() => [
         title: 'Improved',
         color: Color(0xFFE65100),
         items: [
-          _MItem('Faster and more reliable browser startup on Android', androidOnly: true),
+          _MItem('Faster and more reliable browser startup', androidOnly: true),
           _MItem('Idle browser tabs now release memory to keep the app light', androidOnly: true),
           _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
           _MItem('Tabs now return to the same spot after the browser recovers a page', androidOnly: true),
@@ -137,13 +137,36 @@ List<_MVersion> _modernChangelog() => [
         title: 'Fixed',
         color: Color(0xFF2E7D32),
         items: [
-          _MItem('Fixed the browser occasionally loading blank on some Android devices', androidOnly: true),
-          _MItem('The app no longer closes if the system kills the browser page renderer', androidOnly: true),
+          _MItem('Fixed the browser occasionally loading blank on some devices', androidOnly: true),
+          _MItem(
+            'The app no longer closes if the system kills the browser page, including tabs in the background',
+            androidOnly: true,
+          ),
           _MItem(
             'Travel live updates: fixed plane direction and duplicate arrival notifications [bombel]',
             androidOnly: true,
           ),
-          _MItem('Fixed a possible error in injected scripts when reading element classes'),
+          _MItem(
+            'Fixed a possible error in injected scripts when reading element classes',
+            detail:
+                'Certain page elements report their classes in a format the scripts did not expect. '
+                'Besides reading them correctly now, a script that hits an unexpected error while '
+                'waiting for the page gives up instead of retrying forever.',
+          ),
+          _MItem(
+            'Fixed userscripts losing access to GM helpers on pages where storage is not available [xentac]',
+            detail:
+                'On pages where the browser blocks storage, the GM helpers were not created at all, so every '
+                'userscript on that page failed. They now keep working, and only the saved values are unavailable.',
+          ),
+          _MItem(
+            'Fixed GM_setValue saving values that could not be read back [xentac]',
+            detail:
+                'Saving an empty value wrote something the scripts could not read again, and it stayed there '
+                'taking up script storage space. Those values are now removed instead.',
+          ),
+          _MItem('Fixed userscripts not running again after the browser recovered a page [xentac]'),
+          _MItem('Fixed a repeating error logged by the chat highlight feature [xentac]'),
           _MItem('Fixed travel max buy buttons not working for certain screen widths'),
           _MItem('Fixed abroad stay reminders opening an invalid page when tapped'),
         ],
