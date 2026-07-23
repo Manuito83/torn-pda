@@ -119,6 +119,14 @@ List<_MVersion> _modernChangelog() => [
                 'more often on phones with less memory. You can turn it on in the new Memory section at '
                 'the bottom of the advanced browser settings.',
           ),
+          _MItem(
+            'Userscripts: share and install scripts as .user.js files',
+            detail:
+                'You can now export your scripts as standard .user.js files and import a .user.js file back, '
+                'so it is easy to move scripts between Torn PDA and a desktop userscript manager such as '
+                'Tampermonkey or Violentmonkey.\n\n'
+                'Use the export and import options in the top menu of the User scripts page.',
+          ),
         ],
       ),
       _MSection(
