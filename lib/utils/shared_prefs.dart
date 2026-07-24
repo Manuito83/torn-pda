@@ -554,6 +554,8 @@ class Prefs {
 
   // FCM token
   final String _kFCMToken = "pda_fcmToken";
+  // Last FCM token we confirmed written to Firestore
+  final String _kFCMTokenSynced = "pda_fcmTokenSynced";
 
   // Sendbird notifications
   final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
@@ -1468,14 +1470,11 @@ class Prefs {
     return await PrefsDatabase.getInt(_kFabButtonCount, 4); // Default to 4 buttons
   }
 
-// --
+  // --
 
   Future setFabButtonActions(List<WebviewFabAction> actions) async {
     final actionIndices = actions.map((action) => action.index).toList();
-    return await PrefsDatabase.setStringList(
-      _kFabButtonActions,
-      actionIndices.map((e) => e.toString()).toList(),
-    );
+    return await PrefsDatabase.setStringList(_kFabButtonActions, actionIndices.map((e) => e.toString()).toList());
   }
 
   Future<List<WebviewFabAction>> getFabButtonActions() async {
@@ -1500,7 +1499,7 @@ class Prefs {
     ];
   }
 
-// --
+  // --
 
   Future setFabDoubleTapAction(WebviewFabAction action) async {
     return await PrefsDatabase.setInt(_kFabDoubleTapAction, action.index);
@@ -1513,7 +1512,7 @@ class Prefs {
         : WebviewFabAction.openTabsMenu; // Default to Open Tabs Menu
   }
 
-// --
+  // --
 
   Future setFabTripleTapAction(WebviewFabAction action) async {
     return await PrefsDatabase.setInt(_kFabTripleTapAction, action.index);
@@ -4477,6 +4476,14 @@ class Prefs {
     return await PrefsDatabase.setString(_kFCMToken, value);
   }
 
+  Future<String> getFCMTokenSynced() async {
+    return await PrefsDatabase.getString(_kFCMTokenSynced, "");
+  }
+
+  Future setFCMTokenSynced(String value) async {
+    return await PrefsDatabase.setString(_kFCMTokenSynced, value);
+  }
+
   /// ----------------------------
   /// Methods for Sendbird notifications
   /// ----------------------------
@@ -4667,10 +4674,7 @@ class Prefs {
     }
   }
 
-  Future<void> setLaPushToken({
-    required LiveActivityType activityType,
-    required String? token,
-  }) async {
+  Future<void> setLaPushToken({required LiveActivityType activityType, required String? token}) async {
     final key = _getLaPushTokenKey(activityType);
     if (token == null) {
       await PrefsDatabase.remove(key);
@@ -4679,9 +4683,7 @@ class Prefs {
     }
   }
 
-  Future<String?> getLaPushToken({
-    required LiveActivityType activityType,
-  }) async {
+  Future<String?> getLaPushToken({required LiveActivityType activityType}) async {
     final key = _getLaPushTokenKey(activityType);
     final value = await PrefsDatabase.getString(key, "");
     return value.isEmpty ? null : value;

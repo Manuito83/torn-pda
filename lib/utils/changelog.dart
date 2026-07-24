@@ -180,6 +180,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem(
             'Fixed browser DevTools Storage list refreshing when tapping input fields and crashing on large stored values',
           ),
+          _MItem('Fixed notifications that could stop arriving after the device notification token changed'),
         ],
       ),
     ],

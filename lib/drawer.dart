@@ -398,6 +398,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             return;
           }
         });
+
+        // Heal tokens that rotated before we listened
+        if (appHasBeenUpdated) {
+          FirestoreHelper().reconcileMessagingToken();
+        }
+        _messaging.onTokenRefresh.listen((newToken) {
+          FirestoreHelper().onMessagingTokenRefreshed(newToken);
+        });
       }
     } catch (e, stackTrace) {
       log("Error initializing Firebase messaging: $e");

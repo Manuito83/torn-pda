@@ -42,27 +42,28 @@ class FirestoreHelper {
   }
 
   // Settings, when user initialized after API key validated
-  Future<FirebaseUserModel?> uploadUsersProfileDetail(
-    OwnProfileBasic profile, {
-    bool userTriggered = false,
-  }) async {
+  Future<FirebaseUserModel?> uploadUsersProfileDetail(OwnProfileBasic profile, {bool userTriggered = false}) async {
     if (_alreadyUploaded && !userTriggered) return null;
     _alreadyUploaded = true;
 
     final platform = Platform.isAndroid
         ? "android"
         : Platform.isIOS
-            ? "ios"
-            : "windows";
+        ? "ios"
+        : "windows";
 
     // Generate or replace token if it already exists
     String token = "";
     if (!Platform.isWindows) {
       token = await _getMessagingToken();
+      // A failed fetch returns "error"; fall back to the last known good token
+      if (token == "error") token = await Prefs().getFCMToken();
     } else {
       token = "windows";
     }
     log("FCM token: $token");
+
+    final bool validToken = token.isNotEmpty && token != "error";
 
     // Fetch existing Firebase profile or return a default empty model
     _firebaseUserModel = await getUserProfile(force: true);
@@ -86,13 +87,22 @@ class FirestoreHelper {
       // Ensure all users have a refill time set
       "refillsTime": _firebaseUserModel!.refillsTime, // Defaults to 22 if null (new user)
       "factionAssistMessage": _firebaseUserModel!.factionAssistMessage, // Defaults to true
-
-      // This is a unique identifier to identify this user and target notification
-      "token": token,
-      "tokenErrors": 0,
     };
 
+    // This is a unique identifier to identify this user and target notification.
+    // Only write it when we have a real one, so a failed fetch doesn't overwrite
+    // a valid token already stored in Firestore
+    if (validToken) {
+      payload["token"] = token;
+      payload["tokenErrors"] = 0;
+    }
+
     await _firestore.collection("players").doc(_uid).set(payload, SetOptions(merge: true));
+
+    // Mark synced only after a successful write (windows uses a placeholder token)
+    if (validToken && !Platform.isWindows) {
+      Prefs().setFCMTokenSynced(token);
+    }
 
     return _firebaseUserModel;
   }
@@ -104,15 +114,11 @@ class FirestoreHelper {
   }
 
   Future<void> subscribeToTravelNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "travelNotification": subscribe,
-    });
+    await _firestore.collection("players").doc(_uid).update({"travelNotification": subscribe});
   }
 
   Future<void> subscribeToEnergyNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "energyNotification": subscribe,
-    });
+    await _firestore.collection("players").doc(_uid).update({"energyNotification": subscribe});
   }
 
   Future<void> subscribeToForeignRestockNotification(bool? subscribe) async {
@@ -124,24 +130,21 @@ class FirestoreHelper {
       previous[key] = now;
     });
 
-    _firestore.collection("players").doc(_uid).update({
-      "foreignRestockNotification": subscribe,
-      "restockActiveAlerts": previous,
-    }).then((value) {
-      Prefs().setRestocksNotificationEnabled(subscribe!);
-    });
+    _firestore
+        .collection("players")
+        .doc(_uid)
+        .update({"foreignRestockNotification": subscribe, "restockActiveAlerts": previous})
+        .then((value) {
+          Prefs().setRestocksNotificationEnabled(subscribe!);
+        });
   }
 
   Future<void> changeForeignRestockNotificationOnlyCurrentCountry(bool? enabled) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "foreignRestockNotificationOnlyCurrentCountry": enabled,
-    });
+    await _firestore.collection("players").doc(_uid).update({"foreignRestockNotificationOnlyCurrentCountry": enabled});
   }
 
   Future<void> subscribeToAbroadStayNotification(bool? subscribe) async {
-    final Map<String, Object?> update = {
-      "abroadStayNotification": subscribe,
-    };
+    final Map<String, Object?> update = {"abroadStayNotification": subscribe};
     // When disabling, also clear the per-stay tracking so the next activation
     // starts fresh instead of resuming from a stale landing timestamp
     if (subscribe != true) {
@@ -161,9 +164,7 @@ class FirestoreHelper {
   }
 
   Future<void> setAbroadStayIncludeHospital(bool include) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "abroadStayIncludeHospital": include,
-    });
+    await _firestore.collection("players").doc(_uid).update({"abroadStayIncludeHospital": include});
   }
 
   Future<DocumentSnapshot> getStockInformation(String codeName) async {
@@ -171,13 +172,16 @@ class FirestoreHelper {
   }
 
   Future<bool> updateActiveRestockAlerts(Map restockMap) async {
-    return _firestore.collection("players").doc(_uid).update({
-      "restockActiveAlerts": restockMap,
-    }).then((value) {
-      return true;
-    }).catchError((e) {
-      return false;
-    });
+    return _firestore
+        .collection("players")
+        .doc(_uid)
+        .update({"restockActiveAlerts": restockMap})
+        .then((value) {
+          return true;
+        })
+        .catchError((e) {
+          return false;
+        });
   }
 
   Future<void> subscribeToNerveNotification(bool? subscribe) async {
@@ -229,32 +233,24 @@ class FirestoreHelper {
   }
 
   Future<void> subscribeToMessagesNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "messagesNotification": subscribe,
-    });
+    await _firestore.collection("players").doc(_uid).update({"messagesNotification": subscribe});
   }
 
   Future<void> subscribeToEventsNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "eventsNotification": subscribe,
-    });
+    await _firestore.collection("players").doc(_uid).update({"eventsNotification": subscribe});
   }
 
   Future<void> addToEventsFilter(String filter) async {
     final List currentFilter = _firebaseUserModel!.eventsFilter;
     currentFilter.add(filter);
-    await _firestore.collection("players").doc(_uid).update({
-      "eventsFilter": currentFilter,
-    });
+    await _firestore.collection("players").doc(_uid).update({"eventsFilter": currentFilter});
   }
 
   Future<void> removeFromEventsFilter(String filter) async {
     final List currentFilter = _firebaseUserModel!.eventsFilter;
     // Avoid duplicities by removing more than one item if they exist
     currentFilter.removeWhere((element) => element == filter);
-    await _firestore.collection("players").doc(_uid).update({
-      "eventsFilter": currentFilter,
-    });
+    await _firestore.collection("players").doc(_uid).update({"eventsFilter": currentFilter});
   }
 
   Future<void> subscribeToRefillsNotification(bool? subscribe) async {
@@ -266,9 +262,7 @@ class FirestoreHelper {
   }
 
   Future<void> setRefillTime(int? time) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "refillsTime": time,
-    });
+    await _firestore.collection("players").doc(_uid).update({"refillsTime": time});
   }
 
   Future<void> addToRefillsRequested(String request) async {
@@ -276,34 +270,25 @@ class FirestoreHelper {
     if (!currentRequests.contains(request)) {
       currentRequests.add(request);
     }
-    await _firestore.collection("players").doc(_uid).update({
-      "refillsRequested": currentRequests,
-    });
+    await _firestore.collection("players").doc(_uid).update({"refillsRequested": currentRequests});
   }
 
   Future<void> removeFromRefillsRequested(String request) async {
     final List currentRequests = _firebaseUserModel!.refillsRequested;
     // Avoid duplicities by removing more than one item if they exist
     currentRequests.removeWhere((element) => element == request);
-    await _firestore.collection("players").doc(_uid).update({
-      "refillsRequested": currentRequests,
-    });
+    await _firestore.collection("players").doc(_uid).update({"refillsRequested": currentRequests});
   }
 
   Future<void> subscribeToHospitalNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "hospitalNotification": subscribe,
-    });
+    await _firestore.collection("players").doc(_uid).update({"hospitalNotification": subscribe});
   }
 
   Future<bool> uploadLastActiveTimeAndTokensToFirebase(int timeStamp) async {
     if (_uid == null) return false;
 
     try {
-      final Map<String, dynamic> updatePayload = {
-        "lastActive": timeStamp,
-        "active": true,
-      };
+      final Map<String, dynamic> updatePayload = {"lastActive": timeStamp, "active": true};
 
       final apiKey = UserHelper.apiKey;
       if (apiKey.isNotEmpty) {
@@ -317,8 +302,9 @@ class FirestoreHelper {
           final bridgeController = Get.find<LiveActivityBridgeController>();
 
           if (laTravelEnabled) {
-            final String? tokenToUpdate =
-                await bridgeController.getPushToStartTokenOnly(activityType: LiveActivityType.travel);
+            final String? tokenToUpdate = await bridgeController.getPushToStartTokenOnly(
+              activityType: LiveActivityType.travel,
+            );
 
             if (tokenToUpdate != null) {
               updatePayload['la_travel_push_token'] = tokenToUpdate;
@@ -327,8 +313,9 @@ class FirestoreHelper {
           }
 
           if (laRacingEnabled) {
-            final String? tokenToUpdate =
-                await bridgeController.getPushToStartTokenOnly(activityType: LiveActivityType.racing);
+            final String? tokenToUpdate = await bridgeController.getPushToStartTokenOnly(
+              activityType: LiveActivityType.racing,
+            );
 
             if (tokenToUpdate != null) {
               updatePayload['la_racing_push_token'] = tokenToUpdate;
@@ -437,9 +424,7 @@ class FirestoreHelper {
   }
 
   Future<void> setVibrationPattern(String? pattern) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "vibration": pattern,
-    });
+    await _firestore.collection("players").doc(_uid).update({"vibration": pattern});
   }
 
   // --- Local Snapshot Logic ---
@@ -469,9 +454,7 @@ class FirestoreHelper {
   // ----------------------------
 
   Future<void> subscribeToStockMarketNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "stockMarketNotification": subscribe,
-    });
+    await _firestore.collection("players").doc(_uid).update({"stockMarketNotification": subscribe});
   }
 
   Future<bool> addStockMarketShare(String? ticker, String action) async {
@@ -484,19 +467,20 @@ class FirestoreHelper {
       currentStocks.add(action);
     }
 
-    return _firestore.collection("players").doc(_uid).update({
-      "stockMarketShares": currentStocks,
-    }).then((value) {
-      return true;
-    }).catchError((error) {
-      return false;
-    });
+    return _firestore
+        .collection("players")
+        .doc(_uid)
+        .update({"stockMarketShares": currentStocks})
+        .then((value) {
+          return true;
+        })
+        .catchError((error) {
+          return false;
+        });
   }
 
   Future<void> toggleFactionAssistMessage(bool? active) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "factionAssistMessage": active,
-    });
+    await _firestore.collection("players").doc(_uid).update({"factionAssistMessage": active});
   }
 
   /// [host] stands for someone that does not have proper Faction API permissions
@@ -512,47 +496,31 @@ class FirestoreHelper {
 
   /// [host] stands for someone that does not have proper Faction API permissions
   Future<void> toggleRetaliationDonor(bool donor) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "retalsNotificationDonor": donor,
-    });
+    await _firestore.collection("players").doc(_uid).update({"retalsNotificationDonor": donor});
   }
 
-  Future<void> toggleNpcAlert({
-    required String id,
-    required int level,
-    required bool active,
-  }) async {
+  Future<void> toggleNpcAlert({required String id, required int level, required bool active}) async {
     if (active) {
       if (!_firebaseUserModel!.lootAlerts.contains("$id:$level")) {
         _firebaseUserModel!.lootAlerts.add("$id:$level");
-        await _firestore.collection("players").doc(_uid).update({
-          "lootAlerts": _firebaseUserModel!.lootAlerts,
-        });
+        await _firestore.collection("players").doc(_uid).update({"lootAlerts": _firebaseUserModel!.lootAlerts});
       }
     } else {
       _firebaseUserModel!.lootAlerts.remove("$id:$level");
-      await _firestore.collection("players").doc(_uid).update({
-        "lootAlerts": _firebaseUserModel!.lootAlerts,
-      });
+      await _firestore.collection("players").doc(_uid).update({"lootAlerts": _firebaseUserModel!.lootAlerts});
     }
   }
 
   Future<void> subscribeToLootRangersNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "lootRangersNotification": subscribe,
-    });
+    await _firestore.collection("players").doc(_uid).update({"lootRangersNotification": subscribe});
   }
 
   Future<void> setLootAlertAheadSeconds(int seconds) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "lootAlertAheadSeconds": seconds,
-    });
+    await _firestore.collection("players").doc(_uid).update({"lootAlertAheadSeconds": seconds});
   }
 
   Future<void> setLootRangersAheadSeconds(int seconds) async {
-    await _firestore.collection("players").doc(_uid).update({
-      "lootRangersAheadSeconds": seconds,
-    });
+    await _firestore.collection("players").doc(_uid).update({"lootRangersAheadSeconds": seconds});
   }
 
   Future<void> subscribeToForumsSubcriptionsNotification(bool? subscribe) async {
@@ -578,6 +546,51 @@ class FirestoreHelper {
       return currentToken;
     }
     return "error";
+  }
+
+  // FCM only fires onTokenRefresh when the token rotates, so tokens that rotated
+  // before we had a listener stay stale in Firestore (server sees NotRegistered)
+  Future<void> reconcileMessagingToken() async {
+    if (Platform.isWindows) return;
+    try {
+      await uidCompleter.future;
+      if (_uid == null) return;
+
+      final token = await _getMessagingToken();
+      if (token == "error") return;
+      if (token == await Prefs().getFCMTokenSynced()) return;
+
+      await _writeMessagingToken(token);
+    } catch (e, s) {
+      log("Failed to reconcile FCM token: $e");
+      logErrorToCrashlytics("Failed to reconcile FCM token", e, s);
+    }
+  }
+
+  // Called from the onTokenRefresh stream when FCM rotates the token
+  Future<void> onMessagingTokenRefreshed(String newToken) async {
+    if (Platform.isWindows || newToken.isEmpty) return;
+    try {
+      await uidCompleter.future;
+      if (_uid == null) return;
+
+      Prefs().setFCMToken(newToken);
+      await _writeMessagingToken(newToken);
+    } catch (e, s) {
+      log("Failed to handle FCM token refresh: $e");
+      logErrorToCrashlytics("Failed to handle FCM token refresh", e, s);
+    }
+  }
+
+  // Writes the token and marks it synced only on success
+  Future<void> _writeMessagingToken(String token) async {
+    try {
+      await _firestore.collection("players").doc(_uid).set({"token": token, "tokenErrors": 0}, SetOptions(merge: true));
+      Prefs().setFCMTokenSynced(token);
+    } catch (e, s) {
+      log("Failed to sync FCM token: $e");
+      logErrorToCrashlytics("Failed to sync FCM token", e, s);
+    }
   }
 
   Future<void> disableLiveActivityTravel() async {
