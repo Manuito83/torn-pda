@@ -145,6 +145,34 @@ class RemoteSnippets {
           await window.__PDA_platformReadyPromise;
           return window.flutter_inappwebview.callHandler('PDA_httpPatch', url, headers, body);
         };
+
+        // Per-script native storage
+        window.__pdaStorageFactory = window.__pdaStorageFactory || function(sid) {
+          var call = async function(method, payload, fallback) {
+            await window.__PDA_platformReadyPromise;
+            // The bridge is absent in some frames (cross-origin subframes)
+            if (!window.flutter_inappwebview || typeof window.flutter_inappwebview.callHandler !== 'function') {
+              return fallback;
+            }
+            var r = await window.flutter_inappwebview.callHandler('PDA_storage', sid, method, payload || {});
+            if (r && r.ok === false) {
+              var e = new Error(r.error || 'PDA_storage error');
+              e.code = r.error; e.used = r.used; e.quota = r.quota;
+              throw e;
+            }
+            return r ? r.value : undefined;
+          };
+          return {
+            get: function(key, def) { return call('get', { key: key, def: def }, def); },
+            set: function(key, value) { return call('set', { key: key, value: value }); },
+            delete: function(key) { return call('delete', { key: key }); },
+            list: function() { return call('list', {}, []); },
+            loadAll: function() { return call('loadAll', {}, {}); },
+            getMany: function(keys) { return call('getMany', { keys: keys }, {}); },
+            setMany: function(obj) { return call('setMany', { obj: obj }); },
+            usage: function() { return call('usage', {}, { used: 0, quota: 0 }); }
+          };
+        };
       })();
     ''';
   }

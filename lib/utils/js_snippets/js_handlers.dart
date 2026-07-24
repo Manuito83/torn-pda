@@ -145,7 +145,22 @@ String handler_GM() {
         // Treat that the same as deleting the key.
         const serialized = JSON.stringify(t);
         if (serialized === undefined) { i.removeItem(e); return; }
-        i.setItem(e, "GMV2_" + serialized);
+        try {
+          i.setItem(e, "GMV2_" + serialized);
+        } catch (err) {
+          console.warn("PDA-GM: localStorage full, GM_setValue('" + e + "') dropped", err);
+          try {
+            const now = Date.now();
+            if (!window.__pdaGMQuotaToastAt || now - window.__pdaGMQuotaToastAt > 60000) {
+              window.__pdaGMQuotaToastAt = now;
+              window.flutter_inappwebview && window.flutter_inappwebview.callHandler("showToast", {
+                text: "A userscript ran out of browser storage. Some data was not saved.",
+                seconds: 5,
+                bgColor: { a: 255, r: 230, g: 145, b: 0 }
+              });
+            }
+          } catch (_) {}
+        }
       }
       function l(e) {
         for (const [r, o] of t.entries(e)) u(r, o);

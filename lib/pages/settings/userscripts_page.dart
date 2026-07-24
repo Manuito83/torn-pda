@@ -265,6 +265,22 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
+  Widget _storageSupportBadge(UserScriptModel script) {
+    return GestureDetector(
+      child: const Icon(Icons.sd_storage, color: Colors.green, size: 20),
+      onTap: () => BotToast.showText(
+        text:
+            "This script uses Torn PDA's native storage. Its data does not compete for the browser's space "
+            "and is more stable. Edit the script to see its usage and raise its limit.",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.grey[800]!,
+        contentPadding: const EdgeInsets.all(10),
+        clickClose: true,
+        duration: const Duration(seconds: 8),
+      ),
+    );
+  }
+
   ListView scriptsCards() {
     final scriptList = <Widget>[];
     for (final script in _userScriptsProvider.userScriptList) {
@@ -446,6 +462,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           );
                         },
                       ),
+                    if (script.storageSupport == ScriptStorageSupport.pdaNative) ...[
+                      const SizedBox(width: 12),
+                      _storageSupportBadge(script),
+                    ],
                     const SizedBox(width: 12),
                     GestureDetector(
                       child: const Icon(Icons.edit, size: 20),

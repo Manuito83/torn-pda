@@ -5,6 +5,7 @@
 // Dart imports:
 import 'dart:convert';
 import "package:http/http.dart" as http;
+import 'package:uuid/uuid.dart';
 import 'userscripts/script_header_model.dart';
 
 UserScriptModel userScriptModelFromJson(String str) => UserScriptModel.fromJson(json.decode(str));
@@ -13,14 +14,10 @@ String userScriptModelToJson(UserScriptModel data) => json.encode(data.toJson())
 
 enum UserScriptTime { start, end }
 
-enum UserScriptUpdateStatus {
-  upToDate,
-  updateAvailable,
-  localModified,
-  noRemote,
-  error,
-  updating,
-}
+// Whether a script uses no storage, legacy localStorage/GM only, or the native PDA_storage API
+enum ScriptStorageSupport { none, legacyOnly, pdaNative }
+
+enum UserScriptUpdateStatus { upToDate, updateAvailable, localModified, noRemote, error, updating }
 
 class UserScriptModel {
   UserScriptModel({
@@ -38,7 +35,8 @@ class UserScriptModel {
     this.customApiKeyCandidate = false,
     this.grants = const [],
     this.requires = const [],
-  });
+    String? storageId,
+  }) : storageId = (storageId != null && storageId.isNotEmpty) ? storageId : const Uuid().v4();
 
   bool enabled;
   List<String> matches;
@@ -55,6 +53,19 @@ class UserScriptModel {
   List<String> grants;
   List<String> requires;
 
+  // Immutable namespace for PDA_storage; survives rename/update, wiped on delete. Quota lives in ScriptStorage.
+  final String storageId;
+
+  // Scan for the storage-support badge
+  ScriptStorageSupport get storageSupport {
+    if (RegExp(r'\bPDA_storage\b').hasMatch(source)) return ScriptStorageSupport.pdaNative;
+    final legacy =
+        RegExp(r'\blocalStorage\b').hasMatch(source) ||
+        RegExp(r'\bGM[_.](set|get|delete|list)Value').hasMatch(source) ||
+        grants.any((g) => g.contains('Value'));
+    return legacy ? ScriptStorageSupport.legacyOnly : ScriptStorageSupport.none;
+  }
+
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     // First check if is old model
     if (json["exampleCode"] is int) {
@@ -69,8 +80,9 @@ class UserScriptModel {
       final url = json["url"] is String
           ? json["url"]
           : tryGetUrl(json["source"]) ?? (isExample ? exampleScriptURLs[json["exampleCode"] - 1] : null);
-      final updateStatus =
-          UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? (url is String ? "upToDate" : "noRemote"));
+      final updateStatus = UserScriptUpdateStatus.values.byName(
+        json["updateStatus"] ?? (url is String ? "upToDate" : "noRemote"),
+      );
       return UserScriptModel(
         enabled: enabled,
         matches: matches,
@@ -84,6 +96,7 @@ class UserScriptModel {
         isExample: isExample,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
+        storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     } else {
       return UserScriptModel(
@@ -101,6 +114,7 @@ class UserScriptModel {
         customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
+        storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     }
   }
@@ -158,18 +172,10 @@ class UserScriptModel {
           ),
         );
       } else {
-        return (
-          success: false,
-          message: "Server responded with error code: ${response.statusCode}",
-          model: null,
-        );
+        return (success: false, message: "Server responded with error code: ${response.statusCode}", model: null);
       }
     } catch (e) {
-      return (
-        success: false,
-        message: "Error: $e",
-        model: null,
-      );
+      return (success: false, message: "Error: $e", model: null);
     }
   }
 
@@ -197,35 +203,33 @@ class UserScriptModel {
   }
 
   Map<String, dynamic> toJson() => {
-        "enabled": enabled,
-        "matches": matches,
-        "name": name,
-        "version": version,
-        "edited": manuallyEdited,
-        "source": source,
-        "url": url,
-        "updateStatus": updateStatus.name,
-        "isExample": isExample,
-        "time": time == UserScriptTime.start ? "start" : "end",
-        "customApiKey": customApiKey,
-        "customApiKeyCandidate": customApiKeyCandidate,
-        "grants": grants,
-        "requires": requires,
-      };
+    "enabled": enabled,
+    "matches": matches,
+    "name": name,
+    "version": version,
+    "edited": manuallyEdited,
+    "source": source,
+    "url": url,
+    "updateStatus": updateStatus.name,
+    "isExample": isExample,
+    "time": time == UserScriptTime.start ? "start" : "end",
+    "customApiKey": customApiKey,
+    "customApiKeyCandidate": customApiKeyCandidate,
+    "grants": grants,
+    "requires": requires,
+    "storageId": storageId,
+  };
 
   static Map<String, dynamic> parseHeader(String source) {
     // Thanks to [ViolentMonkey](https://github.com/violentmonkey/violentmonkey) for the following two regexes
-    String? meta =
-        RegExp(r"((?:^|\n)\s*\/\/\x20==UserScript==)([\s\S]*?\n)\s*\/\/\x20==\/UserScript==|$").stringMatch(source);
+    String? meta = RegExp(
+      r"((?:^|\n)\s*\/\/\x20==UserScript==)([\s\S]*?\n)\s*\/\/\x20==\/UserScript==|$",
+    ).stringMatch(source);
     if (meta == null || meta.isEmpty) {
       throw Exception("No header found in userscript.");
     }
     Iterable<RegExpMatch> metaMatches = RegExp(r"^(?:^|\n)\s*\/\/\x20(@\S+)(.*)$", multiLine: true).allMatches(meta);
-    Map<String, dynamic> metaMap = {
-      "@match": <String>[],
-      "@grant": <String>[],
-      "@require": <String>[],
-    };
+    Map<String, dynamic> metaMap = {"@match": <String>[], "@grant": <String>[], "@require": <String>[]};
     for (final match in metaMatches) {
       if (match.groupCount < 2) {
         continue;
@@ -235,7 +239,7 @@ class UserScriptModel {
       }
       final key = match.group(1)!.trim().toLowerCase();
       final value = match.group(2)!.trim();
-      
+
       if (key == "@match") {
         metaMap["@match"].add(value);
       } else if (key == "@grant") {
@@ -261,9 +265,7 @@ class UserScriptModel {
   }
 
   bool shouldInject(String url, [UserScriptTime? time]) =>
-      enabled &&
-      (this.time == time || time == null) &&
-      matches.any((match) => _matchPattern(match, url));
+      enabled && (this.time == time || time == null) && matches.any((match) => _matchPattern(match, url));
 
   /// Converts a Tampermonkey-style @match pattern to a [RegExp].
   ///
@@ -420,10 +422,7 @@ class UserScriptModel {
         if (metaMap["version"] == null) {
           return UserScriptUpdateStatus.upToDate;
         }
-        return UserScriptModel.isNewerVersion(
-          metaMap["version"],
-          version,
-        )
+        return UserScriptModel.isNewerVersion(metaMap["version"], version)
             ? UserScriptUpdateStatus.updateAvailable
             : UserScriptUpdateStatus.upToDate;
       }

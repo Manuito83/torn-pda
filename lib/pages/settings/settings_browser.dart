@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
@@ -3126,6 +3127,60 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Userscript storage",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Userscript storage"),
+                  ElevatedButton(
+                    child: const Text("Clear"),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text("Clear userscript storage?"),
+                          content: const Text(
+                            "This deletes all data your userscripts saved through Torn PDA's native storage. "
+                            "Scripts will rebuild it as needed. It does not touch the scripts themselves.",
+                          ),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text("Cancel")),
+                            TextButton(onPressed: () => Navigator.of(c).pop(true), child: const Text("Clear")),
+                          ],
+                        ),
+                      );
+                      if (confirm != true) return;
+                      await ScriptStorage.deleteAll();
+                      BotToast.showText(
+                        text: "Userscript storage cleared",
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                        contentColor: Colors.grey[600]!,
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  "Deletes data that userscripts saved with Torn PDA's native storage. This is kept separate from the "
+                  "browser cache on purpose, so clearing the cache does not remove it. Scripts rebuild it automatically.",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
           ),
         ),
       ),

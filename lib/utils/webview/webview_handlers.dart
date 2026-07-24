@@ -18,7 +18,11 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
 import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -41,9 +45,7 @@ class WebviewHandlers {
     );
   }
 
-  static void addTornPDACheckHandler({
-    required InAppWebViewController webview,
-  }) {
+  static void addTornPDACheckHandler({required InAppWebViewController webview}) {
     webview.addJavaScriptHandler(
       handlerName: 'isTornPDA',
       callback: (JavaScriptHandlerFunctionData data) async {
@@ -52,9 +54,7 @@ class WebviewHandlers {
     );
   }
 
-  static void addPageReloadHandler({
-    required InAppWebViewController webview,
-  }) {
+  static void addPageReloadHandler({required InAppWebViewController webview}) {
     webview.addJavaScriptHandler(
       handlerName: 'reloadPage',
       callback: (JavaScriptHandlerFunctionData data) async {
@@ -64,9 +64,7 @@ class WebviewHandlers {
   }
 
   /// Registers the Copy to Clipboard handler
-  static void addCopyToClipboardHandler({
-    required InAppWebViewController webview,
-  }) {
+  static void addCopyToClipboardHandler({required InAppWebViewController webview}) {
     webview.addJavaScriptHandler(
       handlerName: 'copyToClipboard',
       callback: (JavaScriptHandlerFunctionData data) {
@@ -255,9 +253,7 @@ class WebviewHandlers {
         final int finalId = int.parse('$webviewNotificationIdPrefix$id');
         final pendingNotifications = await notificationsPlugin.pendingNotificationRequests();
 
-        final notif = pendingNotifications.firstWhereOrNull(
-          (notif) => notif.id == finalId,
-        );
+        final notif = pendingNotifications.firstWhereOrNull((notif) => notif.id == finalId);
 
         if (notif == null) {
           final errorMsg = 'Notification with ID $id does not exist';
@@ -274,12 +270,7 @@ class WebviewHandlers {
         return {
           'status': 'success',
           'message': successMsg,
-          'data': {
-            'id': id,
-            'timestamp': timestampMillis,
-            'title': notif.title,
-            'body': notif.body,
-          },
+          'data': {'id': id, 'timestamp': timestampMillis, 'title': notif.title, 'body': notif.body},
         };
       },
     );
@@ -365,9 +356,7 @@ class WebviewHandlers {
   /// Registers the Loadout Change handler
   ///
   /// [reloadCallback]: Callback to trigger reload action in web
-  static void addLoadoutChangeHandler({
-    required InAppWebViewController webview,
-  }) {
+  static void addLoadoutChangeHandler({required InAppWebViewController webview}) {
     webview.addJavaScriptHandler(
       handlerName: 'loadoutChangeHandler',
       callback: (JavaScriptHandlerFunctionData data) async {
@@ -381,10 +370,7 @@ class WebviewHandlers {
               final loadout = match.group(1);
               BotToast.showText(
                 text: "Loadout $loadout activated!",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                 contentColor: Colors.blue[600]!,
                 duration: const Duration(seconds: 1),
                 contentPadding: const EdgeInsets.all(10),
@@ -395,10 +381,7 @@ class WebviewHandlers {
         }
         BotToast.showText(
           text: "There was a problem activating the loadout, are you already using it?",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.red[600]!,
           contentPadding: const EdgeInsets.all(10),
         );
@@ -407,18 +390,13 @@ class WebviewHandlers {
   }
 
   /// Registers the Script API handlers for HTTP GET, POST, PUT, DELETE, PATCH and JavaScript evaluation
-  static void addScriptApiHandlers({
-    required InAppWebViewController webview,
-  }) {
+  static void addScriptApiHandlers({required InAppWebViewController webview}) {
     // HTTP GET Handler
     webview.addJavaScriptHandler(
       handlerName: 'PDA_httpGet',
       callback: (JavaScriptHandlerFunctionData data) async {
         final args = data.args;
-        final http.Response resp = await http.get(
-          WebUri(args[0]),
-          headers: Map<String, String>.from(args[1]),
-        );
+        final http.Response resp = await http.get(WebUri(args[0]), headers: Map<String, String>.from(args[1]));
         return _makeScriptApiResponse(resp);
       },
     );
@@ -464,10 +442,7 @@ class WebviewHandlers {
       handlerName: 'PDA_httpDelete',
       callback: (JavaScriptHandlerFunctionData data) async {
         final args = data.args;
-        final http.Response resp = await http.delete(
-          WebUri(args[0]),
-          headers: Map<String, String>.from(args[1]),
-        );
+        final http.Response resp = await http.delete(WebUri(args[0]), headers: Map<String, String>.from(args[1]));
         return _makeScriptApiResponse(resp);
       },
     );
@@ -499,6 +474,55 @@ class WebviewHandlers {
         return;
       },
     );
+
+    // Native per-script storage (PDA_storage)
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_storage',
+      callback: (JavaScriptHandlerFunctionData data) async {
+        final args = data.args;
+        final sid = args[0] as String;
+        final method = args[1] as String;
+        final payload = args.length > 2 && args[2] is Map
+            ? Map<String, dynamic>.from(args[2] as Map)
+            : <String, dynamic>{};
+        final result = await ScriptStorage.handle(sid, method, payload);
+        final error = result['error'];
+        if (result['ok'] == false && (error == 'QuotaExceeded' || error == 'GlobalQuotaExceeded')) {
+          _showStorageQuotaToast(sid, isGlobal: error == 'GlobalQuotaExceeded');
+        }
+        return result;
+      },
+    );
+  }
+
+  static DateTime? _lastQuotaToast;
+
+  static void _showStorageQuotaToast(String sid, {required bool isGlobal}) {
+    // Throttle
+    final now = DateTime.now();
+    if (_lastQuotaToast != null && now.difference(_lastQuotaToast!) < const Duration(seconds: 60)) return;
+    _lastQuotaToast = now;
+
+    String? name;
+    final ctx = navigatorKey.currentContext;
+    if (ctx != null) {
+      try {
+        name = ctx.read<UserScriptsProvider>().userScriptList.firstWhereOrNull((s) => s.storageId == sid)?.name;
+      } catch (_) {}
+    }
+    final who = (name != null && name.isNotEmpty) ? '"$name"' : "A userscript";
+    final text = isGlobal
+        ? "$who hit the global storage limit. Some data was not saved."
+        : "$who reached its storage limit. Raise it in the script's settings.";
+    BotToast.showText(
+      text: text,
+      align: const Alignment(0, 0.85),
+      contentColor: Colors.orange.shade900,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentPadding: const EdgeInsets.all(12),
+      duration: const Duration(seconds: 5),
+      clickClose: true,
+    );
   }
 
   /// Helper method to create a Script API response similar to GM_xmlHttpRequest()
@@ -507,14 +531,12 @@ class WebviewHandlers {
       'status': resp.statusCode,
       'statusText': resp.reasonPhrase,
       'responseText': resp.body,
-      'responseHeaders': resp.headers.keys.map((key) => '$key: ${resp.headers[key]}').join("\r\n")
+      'responseHeaders': resp.headers.keys.map((key) => '$key: ${resp.headers[key]}').join("\r\n"),
     };
   }
 
   /// Registers a Toast Handler that shows a toast message using BotToast
-  static void addToastHandler({
-    required InAppWebViewController webview,
-  }) {
+  static void addToastHandler({required InAppWebViewController webview}) {
     webview.addJavaScriptHandler(
       handlerName: 'showToast',
       callback: (JavaScriptHandlerFunctionData data) {
@@ -534,12 +556,7 @@ class WebviewHandlers {
         final textColorMap = params['textColor'] is Map ? params['textColor'] as Map : null;
 
         final bgColor = bgColorMap != null
-            ? Color.fromARGB(
-                bgColorMap['a'] ?? 255,
-                bgColorMap['r'] ?? 0,
-                bgColorMap['g'] ?? 0,
-                bgColorMap['b'] ?? 255,
-              )
+            ? Color.fromARGB(bgColorMap['a'] ?? 255, bgColorMap['r'] ?? 0, bgColorMap['g'] ?? 0, bgColorMap['b'] ?? 255)
             : Colors.blue;
 
         final textColor = textColorMap != null
@@ -554,10 +571,7 @@ class WebviewHandlers {
         BotToast.showText(
           clickClose: clickClose,
           text: text,
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: textColor,
-          ),
+          textStyle: TextStyle(fontSize: 14, color: textColor),
           contentColor: bgColor,
           duration: Duration(seconds: seconds),
           contentPadding: const EdgeInsets.all(10),
@@ -569,9 +583,7 @@ class WebviewHandlers {
   }
 
   /// Registers a handler to launch external applications via a URL
-  static void addLaunchIntentHandler({
-    required InAppWebViewController webview,
-  }) {
+  static void addLaunchIntentHandler({required InAppWebViewController webview}) {
     webview.addJavaScriptHandler(
       handlerName: 'launchIntent',
       callback: (JavaScriptHandlerFunctionData data) async {
@@ -590,10 +602,7 @@ class WebviewHandlers {
         }
 
         try {
-          final bool success = await launchUrl(
-            uri,
-            mode: LaunchMode.platformDefault,
-          );
+          final bool success = await launchUrl(uri, mode: LaunchMode.platformDefault);
 
           if (!success) {
             toastification.show(
@@ -601,10 +610,7 @@ class WebviewHandlers {
               type: ToastificationType.error,
               alignment: Alignment.bottomCenter,
               autoCloseDuration: const Duration(seconds: 10),
-              title: const Text(
-                "There was an error launching native application!",
-                maxLines: 10,
-              ),
+              title: const Text("There was an error launching native application!", maxLines: 10),
             );
             return {'success': false, 'error': 'The application could not be launched'};
           }
@@ -617,10 +623,7 @@ class WebviewHandlers {
             type: ToastificationType.error,
             alignment: Alignment.bottomCenter,
             autoCloseDuration: const Duration(seconds: 10),
-            title: const Text(
-              "There was an error launching native application!",
-              maxLines: 10,
-            ),
+            title: const Text("There was an error launching native application!", maxLines: 10),
           );
           return {'success': false, 'error': e.toString()};
         }
@@ -649,10 +652,7 @@ class WebviewHandlers {
     );
   }
 
-  static void addShareFileHandler({
-    required InAppWebViewController webview,
-    required BuildContext context,
-  }) {
+  static void addShareFileHandler({required InAppWebViewController webview, required BuildContext context}) {
     webview.addJavaScriptHandler(
       handlerName: 'shareFile',
       callback: (JavaScriptHandlerFunctionData data) async {
@@ -682,13 +682,14 @@ class WebviewHandlers {
 
           await SharePlus.instance.share(
             ShareParams(
-                files: [XFile(file.path)],
-                sharePositionOrigin: Rect.fromLTWH(
-                  0,
-                  0,
-                  MediaQuery.of(context).size.width,
-                  MediaQuery.of(context).size.height / 2,
-                )),
+              files: [XFile(file.path)],
+              sharePositionOrigin: Rect.fromLTWH(
+                0,
+                0,
+                MediaQuery.of(context).size.width,
+                MediaQuery.of(context).size.height / 2,
+              ),
+            ),
           );
 
           return {'status': 'success', 'message': 'File shared successfully'};
@@ -726,8 +727,8 @@ class WebviewHandlers {
         final int? quantity = qtyRaw is int
             ? qtyRaw
             : qtyRaw is num
-                ? qtyRaw.toInt()
-                : null;
+            ? qtyRaw.toInt()
+            : null;
 
         final equipData = QuickItemEquipScanData(
           instanceId: instanceId,

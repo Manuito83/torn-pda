@@ -38,8 +38,9 @@ class _MItem {
   final String text;
   final String? detail;
   final bool androidOnly;
+  final String? docUrl;
 
-  const _MItem(this.text, {this.detail, this.androidOnly = false});
+  const _MItem(this.text, {this.detail, this.androidOnly = false, this.docUrl});
 
   bool get visibleOnThisPlatform => !androidOnly || Platform.isAndroid;
 
@@ -127,6 +128,20 @@ List<_MVersion> _modernChangelog() => [
                 'Tampermonkey or Violentmonkey.\n\n'
                 'Use the export and import options in the top menu of the User scripts page.',
           ),
+          _MItem(
+            'Userscripts: new native storage for script developers',
+            detail:
+                'Some scripts save a lot of data, and until now they had to squeeze it into the small space the '
+                'browser shares between Torn and every script, so heavy ones would run out of room and start '
+                'misbehaving.\n\n'
+                'Scripts can now store their data with Torn PDA instead: much more space, its own room per script, '
+                'and it survives clearing the browser cache. A green storage icon on the user scripts page marks the '
+                'scripts that use it, and you can tap it to see how much they store and give them more room if they '
+                'need it.\n\n'
+                'This is opt-in for script developers, so if a script you love keeps hitting its limits, let its '
+                'author know the option is there. The developer guide is linked below.',
+            docUrl: 'https://github.com/Manuito83/torn-pda/blob/master/userscripts/TornPDA_Storage.md',
+          ),
         ],
       ),
       _MSection(
@@ -138,6 +153,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Idle browser tabs now release memory to keep the app light', androidOnly: true),
           _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
           _MItem('Tabs now return to the same spot after the browser recovers a page', androidOnly: true),
+          _MItem('Reinforced push notifications token persistence'),
         ],
       ),
       _MSection(
@@ -3761,7 +3777,41 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: Text(widget.item.detail!, style: const TextStyle(fontSize: 14, height: 1.4))),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.item.detail!, style: const TextStyle(fontSize: 14, height: 1.4)),
+                  if (widget.item.docUrl != null) ...[
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => context.read<WebViewProvider>().openBrowserPreference(
+                        context: context,
+                        url: widget.item.docUrl!,
+                        browserTapType: BrowserTapType.short,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.menu_book_outlined, size: 16, color: widget.accent),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Read the documentation",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: widget.accent,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
             const SizedBox(width: 8),
             Icon(Icons.close, size: 18, color: widget.accent),
           ],

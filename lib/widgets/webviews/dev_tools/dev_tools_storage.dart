@@ -6,7 +6,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 
 class DevToolsStorageTab extends StatefulWidget {
   final InAppWebViewController? webViewController;
@@ -66,6 +70,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   Future<List<Cookie>>? _cookiesFuture;
   Future<Map<String, dynamic>>? _localFuture;
   Future<Map<String, dynamic>>? _sessionFuture;
+  Future<List<Map<String, dynamic>>>? _scriptStorageFuture;
 
   @override
   void initState() {
@@ -526,9 +531,11 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     _cookiesFuture ??= _loadCookies();
     _localFuture ??= _getStorageData(widget.webViewController!.webStorage.localStorage);
     _sessionFuture ??= _getStorageData(widget.webViewController!.webStorage.sessionStorage);
+    _scriptStorageFuture ??= ScriptStorage.namespaces();
 
     var entryItems = <Widget>[
       _buildCookiesExpansionTile(),
+      _buildScriptStorageExpansionTile(),
       _buildWebLocalStorageExpansionTile(),
       _buildWebSessionStorageExpansionTile(),
       if (!Platform.isWindows) _buildHttpAuthCredentialDatabaseExpansionTile(),
@@ -537,6 +544,108 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     ];
 
     return ListView.builder(itemCount: entryItems.length, itemBuilder: (context, index) => entryItems[index]);
+  }
+
+  void _refreshScriptStorage() => setState(() => _scriptStorageFuture = ScriptStorage.namespaces());
+
+  Widget _buildScriptStorageExpansionTile() {
+    final names = {
+      for (final s in Provider.of<UserScriptsProvider>(context, listen: false).userScriptList) s.storageId: s.name
+    };
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _scriptStorageFuture,
+      builder: (context, snapshot) {
+        final rows = snapshot.data ?? [];
+        final total = rows.fold<int>(0, (a, r) => a + (r['used'] as int));
+        return ExpansionTile(
+          key: const ValueKey('script_storage'),
+          title: const Text("Torn PDA Script Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+          subtitle: Text(
+            "Native per-script storage - ${_formatBytes(total)} / ${_formatBytes(ScriptStorage.globalCapBytes)}",
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          children: [
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+            else if (rows.isEmpty)
+              const Padding(padding: EdgeInsets.all(16.0), child: Text("No script is using native storage yet."))
+            else
+              for (final r in rows) _buildScriptStorageRow(r, names[r['sid']]),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildScriptStorageRow(Map<String, dynamic> row, String? name) {
+    final sid = row['sid'] as String;
+    final used = row['used'] as int;
+    final count = row['count'] as int;
+    final override = row['quota'] as int;
+    final quota = override > 0 ? override : ScriptStorage.defaultQuotaBytes;
+    return ExpansionTile(
+      key: ValueKey('ns_$sid'),
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
+      title: Text(name ?? "Unknown script", maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text("${_formatBytes(used)} / ${_formatBytes(quota)} · $count keys",
+          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              icon: const Icon(Icons.tune, size: 18),
+              label: const Text("Set limit"),
+              onPressed: () => _editScriptQuota(sid),
+            ),
+            TextButton.icon(
+              icon: Icon(Icons.delete_outline, size: 18, color: Colors.red.shade700),
+              label: Text("Clear", style: TextStyle(color: Colors.red.shade700)),
+              onPressed: () async {
+                await ScriptStorage.deleteNamespace(sid);
+                _refreshScriptStorage();
+              },
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        const Divider(height: 1),
+        FutureBuilder<List<Map<String, dynamic>>>(
+          future: ScriptStorage.entries(sid),
+          builder: (context, snapshot) {
+            final entries = snapshot.data ?? [];
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(padding: EdgeInsets.all(12.0), child: LinearProgressIndicator());
+            }
+            if (entries.isEmpty) {
+              return const Padding(padding: EdgeInsets.all(12.0), child: Text("Empty."));
+            }
+            return Column(
+              children: [
+                for (final e in entries)
+                  _buildStorageItemRow(
+                    keyText: e['key'] as String,
+                    valueText: e['value'] as String,
+                    sizeText: _formatBytes(e['bytes'] as int),
+                    onCellTap: () => _showFullTextDialog(e['key'] as String, e['value'] as String),
+                    deleteWidget: IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      onPressed: () async {
+                        await ScriptStorage.deleteKey(sid, e['key'] as String);
+                        _refreshScriptStorage();
+                      },
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _editScriptQuota(String sid) async {
+    if (await showScriptStorageQuotaDialog(context, sid)) _refreshScriptStorage();
   }
 
   Widget _buildCookiesExpansionTile() {
