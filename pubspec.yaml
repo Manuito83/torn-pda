@@ -12,7 +12,7 @@ publish_to: none
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 3.14.4+668
+version: 3.14.4+669
 
 environment:
   sdk: ">=3.10.0"
@@ -59,6 +59,8 @@ dependencies:
   fl_chart: 1.0.0
   flex_color_picker: 3.7.1
   sembast: 3.8.6
+  sqflite: 2.4.1
+  sqflite_common_ffi: ^2.4.2
   flutter_font_icons: 3.0.0
   flutter_inappwebview: 6.2.0-beta.3
   flutter_local_notifications: 19.4.0
@@ -97,7 +99,7 @@ dependencies:
       url: https://github.com/daadu/receive_intent
       ref: master
   rxdart: 0.28.0
-  synchronized: 3.4.0+1
+  synchronized: 3.4.1+1
   sendbird_chat_sdk: 4.7.0
   share_plus: 12.0.0
   shared_preferences: 2.5.5
