@@ -85,8 +85,8 @@ class _MVersion {
 List<_MVersion> _modernChangelog() => [
   // TODO (App release): confirm the release date before publishing
   const _MVersion(
-    version: 'v3.14.4',
-    date: '25 July 2026',
+    version: 'v3.15.0',
+    date: '05 August 2026',
     hotfixes: [],
     sections: [
       _MSection(
@@ -197,6 +197,7 @@ List<_MVersion> _modernChangelog() => [
             'Fixed browser DevTools Storage list refreshing when tapping input fields and crashing on large stored values',
           ),
           _MItem('Fixed notifications that could stop arriving after the device notification token changed'),
+          _MItem('Fixed the war targets list turning grey when sorting by hospital time'),
         ],
       ),
     ],

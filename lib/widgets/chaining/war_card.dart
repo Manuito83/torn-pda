@@ -51,10 +51,7 @@ class WarCard extends StatefulWidget {
   final Member memberModel;
 
   // Key is needed to update at least the hospital counter individually
-  const WarCard({
-    required this.memberModel,
-    super.key,
-  });
+  const WarCard({required this.memberModel, super.key});
 
   @override
   WarCardState createState() => WarCardState();
@@ -94,11 +91,7 @@ class _WarMemberNoteSection extends StatelessWidget {
               child: IconButton(
                 padding: EdgeInsets.zero,
                 iconSize: 20,
-                icon: Icon(
-                  MdiIcons.notebookEditOutline,
-                  color: effectiveColor,
-                  size: 18,
-                ),
+                icon: Icon(MdiIcons.notebookEditOutline, color: effectiveColor, size: 18),
                 onPressed: () {
                   onOpenDialog();
                 },
@@ -109,10 +102,7 @@ class _WarMemberNoteSection extends StatelessWidget {
             Flexible(
               child: Text(
                 hasColorOnly ? '' : text,
-                style: TextStyle(
-                  color: effectiveColor,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: effectiveColor, fontSize: 12),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -168,18 +158,11 @@ class WarCardState extends State<WarCard> {
         ),
         elevation: 2,
         child: ClipPath(
-          clipper: ShapeBorderClipper(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
+          clipper: ShapeBorderClipper(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
           child: Container(
             decoration: BoxDecoration(
               border: Border(
-                left: BorderSide(
-                  color: widget.memberModel.pinned ? Colors.green[800]! : Colors.transparent,
-                  width: 3,
-                ),
+                left: BorderSide(color: widget.memberModel.pinned ? Colors.green[800]! : Colors.transparent, width: 3),
                 bottom: BorderSide(
                   color: widget.memberModel.pinned ? Colors.green[800]! : Colors.transparent,
                   width: 3,
@@ -207,17 +190,13 @@ class WarCardState extends State<WarCard> {
                             child: Row(
                               children: [
                                 _attackIcon(),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5),
-                                ),
+                                const Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
                                 SizedBox(
                                   width: 95,
                                   child: Text(
                                     '${_member.name}',
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -245,41 +224,22 @@ class WarCardState extends State<WarCard> {
                               },
                               closedElevation: 0,
                               closedShape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(56 / 2),
-                                ),
+                                borderRadius: BorderRadius.all(Radius.circular(56 / 2)),
                               ),
                               openColor: _themeProvider.canvas,
                               closedColor: Colors.transparent,
                               closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                                return const SizedBox(
-                                  height: 22,
-                                  width: 30,
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    size: 20,
-                                  ),
-                                );
+                                return const SizedBox(height: 22, width: 30, child: Icon(Icons.info_outline, size: 20));
                               },
                             ),
                             const SizedBox(width: 3),
-                            Text(
-                              'L${_member.level}',
-                            ),
+                            Text('L${_member.level}'),
                             const SizedBox(width: 3),
                             Row(
                               children: [
-                                SizedBox(
-                                  height: 22,
-                                  width: 35,
-                                  child: _addAsTargetButton(),
-                                ),
+                                SizedBox(height: 22, width: 35, child: _addAsTargetButton()),
                                 const SizedBox(width: 3),
-                                SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: _refreshIcon(),
-                                ),
+                                SizedBox(height: 22, width: 22, child: _refreshIcon()),
                               ],
                             ),
                           ],
@@ -295,11 +255,7 @@ class WarCardState extends State<WarCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       _returnRespectFF(_member.respectGain, _w.getEffectiveFairFight(_member)),
-                      CombinedHealthBars(
-                        member: _member,
-                        warController: _w,
-                        themeProvider: _themeProvider,
-                      ),
+                      CombinedHealthBars(member: _member, warController: _w, themeProvider: _themeProvider),
                     ],
                   ),
                 ),
@@ -372,10 +328,7 @@ class WarCardState extends State<WarCard> {
                             BotToast.showText(
                               clickClose: true,
                               text: _member.bounty!,
-                              textStyle: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
+                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                               contentColor: Colors.blue,
                               duration: const Duration(seconds: 3),
                               contentPadding: const EdgeInsets.all(10),
@@ -399,10 +352,7 @@ class WarCardState extends State<WarCard> {
                               builder: (_) => ShareAttackDialog(member: _member),
                             );
                           },
-                          child: const Icon(
-                            Icons.share,
-                            size: 18,
-                          ),
+                          child: const Icon(Icons.share, size: 18),
                         ),
                       ),
                       Padding(
@@ -410,10 +360,7 @@ class WarCardState extends State<WarCard> {
                         child: Text(
                           '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member.memberId) + 1}'
                           '/${_w.orderedCardsDetails.length}',
-                          style: TextStyle(
-                            color: Colors.brown[400],
-                            fontSize: 11,
-                          ),
+                          style: TextStyle(color: Colors.brown[400], fontSize: 11),
                         ),
                       ),
                     ],
@@ -432,20 +379,13 @@ class WarCardState extends State<WarCard> {
     return SizedBox(
       height: 20,
       width: 20,
-      child: Image.asset(
-        'images/icons/ic_target_account_black_48dp.png',
-        color: Colors.red,
-        width: 20,
-      ),
+      child: Image.asset('images/icons/ic_target_account_black_48dp.png', color: Colors.red, width: 20),
     );
   }
 
   Widget _refreshIcon() {
     if (_member.isUpdating!) {
-      return const Padding(
-        padding: EdgeInsets.all(4.0),
-        child: CircularProgressIndicator(),
-      );
+      return const Padding(padding: EdgeInsets.all(4.0), child: CircularProgressIndicator());
     } else {
       return IconButton(
         padding: const EdgeInsets.all(0.0),
@@ -481,13 +421,12 @@ class WarCardState extends State<WarCard> {
     void showFactionToast() {
       BotToast.showText(
         clickClose: true,
-        text: HtmlParser.fix("${_member.name} belongs to faction "
-            "${_member.factionName} as "
-            "${_member.position}"),
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
+        text: HtmlParser.fix(
+          "${_member.name} belongs to faction "
+          "${_member.factionName} as "
+          "${_member.position}",
         ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.grey[600]!,
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
@@ -500,10 +439,7 @@ class WarCardState extends State<WarCard> {
         child: DottedBorder(
           dashPattern: dashPattern,
           color: borderColor!,
-          child: Text(
-            HtmlParser.fix(_member.factionName),
-            overflow: TextOverflow.ellipsis,
-          ),
+          child: Text(HtmlParser.fix(_member.factionName), overflow: TextOverflow.ellipsis),
         ),
       ),
     );
@@ -527,48 +463,31 @@ class WarCardState extends State<WarCard> {
     if (respect == -1) {
       respectResult = TextSpan(
         text: 'unk',
-        style: TextStyle(
-          color: _themeProvider.mainText,
-          fontSize: 12,
-        ),
+        style: TextStyle(color: _themeProvider.mainText, fontSize: 12),
       );
     } else if (respect == 0) {
       if (_member.userWonOrDefended!) {
         respectResult = TextSpan(
           text: '0 (def)',
-          style: TextStyle(
-            color: _themeProvider.mainText,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: _themeProvider.mainText, fontSize: 12),
         );
       } else {
         respectResult = const TextSpan(
           text: 'Lost',
-          style: TextStyle(
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
         );
       }
     } else {
       respectResult = TextSpan(
         text: respect!.toStringAsFixed(2),
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: _themeProvider.mainText,
-          fontSize: 12,
-        ),
+        style: TextStyle(fontWeight: FontWeight.bold, color: _themeProvider.mainText, fontSize: 12),
       );
     }
 
     if (fairFight == -1) {
       fairFightResult = TextSpan(
         text: 'unk',
-        style: TextStyle(
-          color: _themeProvider.mainText,
-          fontSize: 12,
-        ),
+        style: TextStyle(color: _themeProvider.mainText, fontSize: 12),
       );
     } else {
       var ffColor = Colors.red;
@@ -580,11 +499,7 @@ class WarCardState extends State<WarCard> {
 
       fairFightResult = TextSpan(
         text: fairFight.toStringAsFixed(2),
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: ffColor,
-          fontSize: 12,
-        ),
+        style: TextStyle(fontWeight: FontWeight.bold, color: ffColor, fontSize: 12),
       );
     }
 
@@ -597,10 +512,7 @@ class WarCardState extends State<WarCard> {
                 children: <TextSpan>[
                   TextSpan(
                     text: 'R: ',
-                    style: TextStyle(
-                      color: _themeProvider.mainText,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: _themeProvider.mainText, fontSize: 12),
                   ),
                   respectResult,
                 ],
@@ -616,10 +528,7 @@ class WarCardState extends State<WarCard> {
                   children: <TextSpan>[
                     TextSpan(
                       text: ' / FF: ',
-                      style: TextStyle(
-                        color: _themeProvider.mainText,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: _themeProvider.mainText, fontSize: 12),
                     ),
                     fairFightResult,
                   ],
@@ -671,10 +580,7 @@ class WarCardState extends State<WarCard> {
               BotToast.showText(
                 clickClose: true,
                 text: _member.status!.description!,
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                 contentColor: Colors.blue,
                 duration: const Duration(seconds: 5),
                 contentPadding: const EdgeInsets.all(10),
@@ -699,13 +605,7 @@ class WarCardState extends State<WarCard> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 5),
-                  child: Image.asset(
-                    flag,
-                    width: 16,
-                  ),
-                ),
+                Padding(padding: const EdgeInsets.only(right: 5), child: Image.asset(flag, width: 16)),
               ],
             ),
           ),
@@ -746,22 +646,12 @@ class WarCardState extends State<WarCard> {
         final ffsColor = ffsEntry.ffsColor(UserHelper.totalStats);
         return Row(
           children: [
-            Text(
-              "(FFS)",
-              style: TextStyle(fontSize: 11, color: ffsColor),
-            ),
+            Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
             const SizedBox(width: 5),
-            Text(
-              "~${ffsEntry.displayText}",
-              style: TextStyle(fontSize: 11, color: ffsColor),
-            ),
+            Text("~${ffsEntry.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
             const SizedBox(width: 5),
             GestureDetector(
-              child: Icon(
-                Icons.info_outline,
-                color: ffsColor,
-                size: 16,
-              ),
+              child: Icon(Icons.info_outline, color: ffsColor, size: 16),
               onTap: () {
                 showDialog<void>(
                   context: context,
@@ -791,8 +681,9 @@ class WarCardState extends State<WarCard> {
                         themeProvider: _themeProvider,
                         estimatedStatsRange: _member.statsEstimated ?? '',
                       ),
-                      ffScouterStatsPayload:
-                          _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
+                      ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
+                          ? ffScouterStatsPayload
+                          : null,
                       yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                     );
                   },
@@ -804,13 +695,7 @@ class WarCardState extends State<WarCard> {
       }
       return Row(
         children: [
-          const Text(
-            "unk stats",
-            style: TextStyle(
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
+          const Text("unk stats", style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
           // If stats are not available, show a refresh button to get the user profile and be able to perform the
           // stats comparison and then give option to open the stats dialog
           const SizedBox(width: 8),
@@ -848,10 +733,7 @@ class WarCardState extends State<WarCard> {
     } else if (xanaxComparison > 10) {
       xanaxColor = Colors.red;
     }
-    final Text xanaxText = Text(
-      "X",
-      style: TextStyle(color: xanaxColor, fontSize: 11),
-    );
+    final Text xanaxText = Text("X", style: TextStyle(color: xanaxColor, fontSize: 11));
 
     // REFILLS
     final int otherRefill = _member.memberRefill ?? 0;
@@ -863,10 +745,7 @@ class WarCardState extends State<WarCard> {
     } else if (refillComparison > 10) {
       refillColor = Colors.red;
     }
-    final Text refillText = Text(
-      "R",
-      style: TextStyle(color: refillColor, fontSize: 11),
-    );
+    final Text refillText = Text("R", style: TextStyle(color: refillColor, fontSize: 11));
 
     // ENHANCER
     final int otherEnhancement = _member.memberEnhancement ?? 0;
@@ -877,10 +756,7 @@ class WarCardState extends State<WarCard> {
     } else if (enhancementComparison > 0) {
       enhancementColor = Colors.red;
     }
-    final Text enhancementText = Text(
-      "E",
-      style: TextStyle(color: enhancementColor, fontSize: 11),
-    );
+    final Text enhancementText = Text("E", style: TextStyle(color: enhancementColor, fontSize: 11));
 
     // CANS
     final int otherCans = _member.memberCans ?? 0;
@@ -891,10 +767,7 @@ class WarCardState extends State<WarCard> {
     } else if (cansComparison > 0) {
       cansColor = Colors.red;
     }
-    final Text cansText = Text(
-      "C",
-      style: TextStyle(color: cansColor, fontSize: 11),
-    );
+    final Text cansText = Text("C", style: TextStyle(color: cansColor, fontSize: 11));
 
     /// SSL
     /// If (xan + esc) > 150, SSL is blank;
@@ -913,13 +786,7 @@ class WarCardState extends State<WarCard> {
       } else if (lsd > 100) {
         sslColor = Colors.red;
       }
-      sslWidget = Text(
-        "[SSL]",
-        style: TextStyle(
-          color: sslColor,
-          fontSize: 11,
-        ),
-      );
+      sslWidget = Text("[SSL]", style: TextStyle(color: sslColor, fontSize: 11));
     }
 
     additional.add(xanaxText);
@@ -947,15 +814,9 @@ class WarCardState extends State<WarCard> {
               final ffsColor = ffsCheck.ffsColor(UserHelper.totalStats);
               return Row(
                 children: [
-                  Text(
-                    "(FFS)",
-                    style: TextStyle(fontSize: 11, color: ffsColor),
-                  ),
+                  Text("(FFS)", style: TextStyle(fontSize: 11, color: ffsColor)),
                   const SizedBox(width: 5),
-                  Text(
-                    "~${ffsCheck.displayText}",
-                    style: TextStyle(fontSize: 11, color: ffsColor),
-                  ),
+                  Text("~${ffsCheck.displayText}", style: TextStyle(fontSize: 11, color: ffsColor)),
                   const SizedBox(width: 3),
                   Tooltip(
                     message: "Spy is $ageMonths month${ageMonths == 1 ? '' : 's'} old",
@@ -1011,8 +872,9 @@ class WarCardState extends State<WarCard> {
                               themeProvider: _themeProvider,
                               estimatedStatsRange: _member.statsEstimated ?? '',
                             ),
-                            ffScouterStatsPayload:
-                                _settingsProvider.ffScouterEnabledStatus != 0 ? ffScouterStatsPayload : null,
+                            ffScouterStatsPayload: _settingsProvider.ffScouterEnabledStatus != 0
+                                ? ffScouterStatsPayload
+                                : null,
                             yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                           );
                         },
@@ -1050,31 +912,15 @@ class WarCardState extends State<WarCard> {
 
       return Row(
         children: [
-          Text(
-            formatBigNumbers(totalToShow!),
-            style: TextStyle(
-              fontSize: 12,
-              color: exactColor,
-            ),
-          ),
+          Text(formatBigNumbers(totalToShow!), style: TextStyle(fontSize: 12, color: exactColor)),
           if (someStatUnknown)
             Padding(
               padding: const EdgeInsets.only(left: 2),
-              child: Text(
-                "?",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: exactColor,
-                ),
-              ),
+              child: Text("?", style: TextStyle(fontSize: 12, color: exactColor)),
             ),
           const SizedBox(width: 3),
           GestureDetector(
-            child: Icon(
-              Icons.info_outline,
-              color: exactColor,
-              size: 16,
-            ),
+            child: Icon(Icons.info_outline, color: exactColor, size: 16),
             onTap: () {
               showDialog<void>(
                 context: context,
@@ -1146,30 +992,13 @@ class WarCardState extends State<WarCard> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            statsLabel,
-            style: TextStyle(
-              fontSize: 11,
-              color: ffsColor,
-            ),
-          ),
+          Text(statsLabel, style: TextStyle(fontSize: 11, color: ffsColor)),
           const SizedBox(width: 5),
-          Text(
-            statsValue,
-            style: TextStyle(
-              fontSize: 11,
-              color: ffsColor,
-            ),
-          ),
+          Text(statsValue, style: TextStyle(fontSize: 11, color: ffsColor)),
           const SizedBox(width: 5),
-          Row(
-            children: additional,
-          ),
+          Row(children: additional),
           GestureDetector(
-            child: const Icon(
-              Icons.info_outline,
-              size: 16,
-            ),
+            child: const Icon(Icons.info_outline, size: 16),
             onTap: () {
               showDialog<void>(
                 context: context,
@@ -1264,13 +1093,7 @@ class WarCardState extends State<WarCard> {
           ],
         );
       }
-      return const Text(
-        "unk stats",
-        style: TextStyle(
-          fontSize: 12,
-          fontStyle: FontStyle.italic,
-        ),
-      );
+      return const Text("unk stats", style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic));
     }
   }
 
@@ -1294,10 +1117,7 @@ class WarCardState extends State<WarCard> {
     BotToast.showText(
       clickClose: true,
       text: message,
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: color!,
       duration: const Duration(seconds: 3),
       contentPadding: const EdgeInsets.all(10),
@@ -1380,10 +1200,7 @@ class WarCardState extends State<WarCard> {
                   .replaceAll("hours ago", "h")
                   .replaceAll("day ago", "d")
                   .replaceAll("days ago", "d"),
-              style: TextStyle(
-                fontSize: 11,
-                color: _member.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
-              ),
+              style: TextStyle(fontSize: 11, color: _member.lastAction!.status == "Idle" ? Colors.orange : Colors.grey),
             ),
           ),
       ],
@@ -1396,11 +1213,7 @@ class CombinedHealthBars extends StatefulWidget {
   final WarController warController;
   final ThemeProvider themeProvider;
 
-  CombinedHealthBars({
-    required this.member,
-    required this.warController,
-    required this.themeProvider,
-  });
+  CombinedHealthBars({required this.member, required this.warController, required this.themeProvider});
 
   @override
   CombinedHealthBarsState createState() => CombinedHealthBarsState();
@@ -1425,35 +1238,27 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
     double? lifePercentage;
     Color lifeBarColor = Colors.green.shade300;
     Widget hospitalJailWarning = const SizedBox.shrink();
-    String lifeText = _member.lifeCurrent == -1 ? "?" : _member.lifeCurrent.toString();
+    String lifeText = (_member.lifeCurrent == null || _member.lifeCurrent == -1) ? "?" : _member.lifeCurrent.toString();
 
     if (_member.status!.state == "Hospital") {
       // Handle if target is still in hospital
       final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-      if (_member.status!.until! > now) {
+      if ((_member.status!.until ?? 0) > now) {
         final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(_member.status!.until! * 1000);
         _redStatusTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         _refreshLifeClock(endTimeStamp);
         lifeText = _currentLifeString;
         lifeBarColor = Colors.red.shade300;
-        hospitalJailWarning = const Icon(
-          Icons.local_hospital,
-          size: 20,
-          color: Colors.red,
-        );
+        hospitalJailWarning = const Icon(Icons.local_hospital, size: 20, color: Colors.red);
       } else {
         _redStatusTicker?.cancel();
         lifeText = "OUT";
-        hospitalJailWarning = const Icon(
-          MdiIcons.bandage,
-          size: 20,
-          color: Colors.green,
-        );
+        hospitalJailWarning = const Icon(MdiIcons.bandage, size: 20, color: Colors.green);
       }
     } else if (_member.status!.state == "Jail") {
       // Handle if target is still in jail
       final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-      if (_member.status!.until! > now) {
+      if ((_member.status!.until ?? 0) > now) {
         final endTimeStamp = DateTime.fromMillisecondsSinceEpoch(_member.status!.until! * 1000);
         _redStatusTicker ??= Timer.periodic(const Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         _refreshLifeClock(endTimeStamp);
@@ -1471,11 +1276,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       } else {
         _redStatusTicker?.cancel();
         lifeText = "OUT";
-        hospitalJailWarning = const Icon(
-          Icons.exit_to_app,
-          size: 20,
-          color: Colors.green,
-        );
+        hospitalJailWarning = const Icon(Icons.exit_to_app, size: 20, color: Colors.green);
       }
     } else {
       _redStatusTicker?.cancel();
@@ -1499,14 +1300,11 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
 
       // Found players in federal jail with a higher life than their maximum. Correct it if it's the
       // case to avoid issues with percentage bar
-      if (_member.lifeCurrent != -1) {
-        if (_member.lifeCurrent! / _member.lifeMaximum! > 1) {
-          lifePercentage = 1;
-        } else if (_member.lifeCurrent! / _member.lifeMaximum! > 1) {
-          lifePercentage = 0;
-        } else {
-          lifePercentage = _member.lifeCurrent! / _member.lifeMaximum!;
-        }
+      // The API returns no life for some players, so both values can be null here
+      final int? lifeCurrent = _member.lifeCurrent;
+      final int? lifeMaximum = _member.lifeMaximum;
+      if (lifeCurrent != null && lifeCurrent != -1 && lifeMaximum != null && lifeMaximum > 0) {
+        lifePercentage = (lifeCurrent / lifeMaximum).clamp(0.0, 1.0);
       }
     }
 
@@ -1542,10 +1340,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
                 widget.warController.pendingNotifications = List<PendingNotificationRequest>.from(currentPending);
                 BotToast.showText(
                   text: "Notification cancelled",
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
+                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                   contentColor: Colors.blue,
                   duration: const Duration(seconds: 1),
                   contentPadding: const EdgeInsets.all(10),
@@ -1560,7 +1355,8 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
                 timeFormatSetting: context.read<SettingsProvider>().currentTimeFormat,
                 timeZoneSetting: context.read<SettingsProvider>().currentTimeZone,
               ).formatHourWithDaysElapsed();
-              String message = "Notification for ${_member.status!.state!.toLowerCase()} release set at $formattedTime"
+              String message =
+                  "Notification for ${_member.status!.state!.toLowerCase()} release set at $formattedTime"
                   " (15 seconds ahead)";
 
               // Schedule notification (and update pending ones)
@@ -1569,10 +1365,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
               // Alert user
               BotToast.showText(
                 text: message,
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                 contentColor: Colors.blue,
                 duration: const Duration(seconds: 5),
                 contentPadding: const EdgeInsets.all(10),
@@ -1594,10 +1387,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
             width: 100,
             lineHeight: 14,
             progressColor: lifeBarColor,
-            center: Text(
-              lifeText,
-              style: const TextStyle(color: Colors.black, fontSize: 12),
-            ),
+            center: Text(lifeText, style: const TextStyle(color: Colors.black, fontSize: 12)),
             percent: !_member.overrideEasyLife! ? 1 : lifePercentage ?? 0,
           ),
         ),
@@ -1743,14 +1533,17 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       platformChannelSpecifics,
       payload: notificationPayload,
       androidScheduleMode: exactAlarmsPermissionAndroid
-          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          ? AndroidScheduleMode
+                .exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
     );
 
     // DEBUG
     if (kDebugMode) {
-      debugPrint('Notification $notificationTitle @ '
-          '${tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification))}');
+      debugPrint(
+        'Notification $notificationTitle @ '
+        '${tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification))}',
+      );
     }
 
     widget.warController.assessPendingNotifications();

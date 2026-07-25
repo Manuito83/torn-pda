@@ -246,12 +246,7 @@ class WarController extends GetxController {
       _assignSpiedStats(member);
 
       if (allAttacksSuccess is AttackModel) {
-        _getRespectFF(
-          allAttacksSuccess,
-          member,
-          oldRespect: member.respectGain,
-          oldFF: member.fairFight,
-        );
+        _getRespectFF(allAttacksSuccess, member, oldRespect: member.respectGain, oldFF: member.fairFight);
       }
     });
 
@@ -325,11 +320,7 @@ class WarController extends GetxController {
 
       while (!requestCompleted && retries < maxRetries) {
         await _waitForApiSlot();
-        updatedTarget = await ApiCallsV2.getOtherUserProfile_v2(
-          payload: {
-            "id": memberKey,
-          },
-        );
+        updatedTarget = await ApiCallsV2.getOtherUserProfile_v2(payload: {"id": memberKey});
 
         if (_isRateLimitError(updatedTarget)) {
           hitRateLimit = true;
@@ -663,10 +654,7 @@ class WarController extends GetxController {
       return -1;
     }
     final profile = apiPlayer as OwnProfileBasic;
-    playerLocation = countryCheck(
-      state: profile.status!.state,
-      description: profile.status!.description,
-    );
+    playerLocation = countryCheck(state: profile.status!.state, description: profile.status!.description);
 
     // Refresh FFScouter cache for all members (fire-and-forget to avoid blocking quick update)
     _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
@@ -766,11 +754,7 @@ class WarController extends GetxController {
         }
 
         if (f.members!.containsKey(id)) {
-          await updateSingleMemberFull(
-            f.members![id]!,
-            allAttacks: allAttacksSuccess,
-            ownStats: ownStatsSuccess,
-          );
+          await updateSingleMemberFull(f.members![id]!, allAttacks: allAttacksSuccess, ownStats: ownStatsSuccess);
 
           if (lastAttackedCopy.length > 60) {
             await Future.delayed(const Duration(seconds: 1));
@@ -831,12 +815,7 @@ class WarController extends GetxController {
     return -1.0;
   }
 
-  void _getRespectFF(
-    AttackModel attackModel,
-    Member? member, {
-    double? oldRespect = -1,
-    double? oldFF = -1,
-  }) {
+  void _getRespectFF(AttackModel attackModel, Member? member, {double? oldRespect = -1, double? oldFF = -1}) {
     double respect = -1;
     double? fairFight = -1; // Unknown
     List<bool> userWonOrDefended = <bool>[];
@@ -1072,6 +1051,14 @@ class WarController extends GetxController {
 
     warSettings = await Prefs().getWarSettings();
 
+    // Hospital is no longer a valid secondary sort, it does not make sense to sort
+    // by hospital time when the primary sort is already by hospital time
+    if (warSettings.secondarySortForOkay == WarSortType.hospitalDes ||
+        warSettings.secondarySortForOkay == WarSortType.hospitalAsc) {
+      warSettings.secondarySortForOkay = WarSortType.levelDes;
+      await Prefs().setWarSettings(warSettings);
+    }
+
     // Get sorting
     final String targetSort = await Prefs().getWarMembersSort();
     switch (targetSort) {
@@ -1290,9 +1277,9 @@ class WarController extends GetxController {
         final FactionModel apiImport = apiResult as FactionModel;
 
         // Remove members that no longer belong to the faction
-        faction.members = Map.fromEntries(faction.members!.entries.where(
-          (entry) => apiImport.members!.containsKey(entry.key),
-        ));
+        faction.members = Map.fromEntries(
+          faction.members!.entries.where((entry) => apiImport.members!.containsKey(entry.key)),
+        );
 
         // Add new members without overwriting
         apiImport.members!.forEach((key, value) {
@@ -1747,7 +1734,7 @@ class WarController extends GetxController {
     "200k - 2.5M",
     "2M - 25M",
     "20M - 250M",
-    "> 200M"
+    "> 200M",
   ];
 
   double getMemberEstimatedStats(Member member) {
@@ -1876,13 +1863,19 @@ class WarController extends GetxController {
     statsContribution = calcContribution(statsScore, warSettings.weightStats);
     score += statsContribution;
 
-    strContribution =
-        calcContribution(calcLogScore(member.statsStr?.toDouble() ?? 0, 'Str'), warSettings.weightStrength);
-    defContribution =
-        calcContribution(calcLogScore(member.statsDef?.toDouble() ?? 0, 'Def'), warSettings.weightDefense);
+    strContribution = calcContribution(
+      calcLogScore(member.statsStr?.toDouble() ?? 0, 'Str'),
+      warSettings.weightStrength,
+    );
+    defContribution = calcContribution(
+      calcLogScore(member.statsDef?.toDouble() ?? 0, 'Def'),
+      warSettings.weightDefense,
+    );
     spdContribution = calcContribution(calcLogScore(member.statsSpd?.toDouble() ?? 0, 'Spd'), warSettings.weightSpeed);
-    dexContribution =
-        calcContribution(calcLogScore(member.statsDex?.toDouble() ?? 0, 'Dex'), warSettings.weightDexterity);
+    dexContribution = calcContribution(
+      calcLogScore(member.statsDex?.toDouble() ?? 0, 'Dex'),
+      warSettings.weightDexterity,
+    );
 
     score += strContribution + defContribution + spdContribution + dexContribution;
 
@@ -1926,6 +1919,15 @@ class WarController extends GetxController {
     };
   }
 
+  // Hospital sorts delegate into the secondary one, so hospital can't be the secondary
+  WarSortType get _secondarySortForOkaySafe {
+    final secondary = warSettings.secondarySortForOkay;
+    if (secondary == WarSortType.hospitalDes || secondary == WarSortType.hospitalAsc) {
+      return WarSortType.levelDes;
+    }
+    return secondary;
+  }
+
   // Sorting function for MemberModel lists to be used in shareStats
   int compareMembers(Member a, Member b, WarSortType sortType) {
     // Get the notes controller once for all note/color related operations
@@ -1963,7 +1965,7 @@ class WarController extends GetxController {
           if (!aIsOkay && bIsOkay) return 1;
 
           if (aIsOkay && bIsOkay) {
-            return compareMembers(a, b, warSettings.secondarySortForOkay);
+            return compareMembers(a, b, _secondarySortForOkaySafe);
           }
         }
         return b.hospitalSort!.compareTo(a.hospitalSort!);
@@ -1980,7 +1982,7 @@ class WarController extends GetxController {
         }
 
         if (aIsOkay && bIsOkay) {
-          return compareMembers(a, b, warSettings.secondarySortForOkay);
+          return compareMembers(a, b, _secondarySortForOkaySafe);
         }
 
         // If both are hospitalized, sort by time
@@ -2101,10 +2103,7 @@ class WarController extends GetxController {
     return true;
   }
 
-  FFScouterCacheEntry? _getFFScouterShareEntry(
-    Member member, {
-    required bool ffScouterEnabled,
-  }) {
+  FFScouterCacheEntry? _getFFScouterShareEntry(Member member, {required bool ffScouterEnabled}) {
     if (!ffScouterEnabled || member.memberId == null) {
       return null;
     }
@@ -2131,11 +2130,7 @@ class WarController extends GetxController {
     return spyController.statsOld(entry.lastUpdatedByFFScouter!);
   }
 
-  void _appendFFScouterShareText(
-    StringBuffer statsBuffer,
-    FFScouterCacheEntry entry,
-    SpiesController spyController,
-  ) {
+  void _appendFFScouterShareText(StringBuffer statsBuffer, FFScouterCacheEntry entry, SpiesController spyController) {
     final updatedText = _ffScouterUpdatedText(entry, spyController);
     if (entry.bsEstimate != null && entry.bsEstimate! > 0) {
       statsBuffer.writeln(
@@ -2185,7 +2180,8 @@ class WarController extends GetxController {
         final hasFFScouterStats = ffsEntry != null;
 
         // Determine if the member has any stats (spied or estimated)
-        bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
+        bool hasExactStats =
+            (member.statsStr != null && member.statsStr != -1) ||
             (member.statsSpd != null && member.statsSpd != -1) ||
             (member.statsDef != null && member.statsDef != -1) ||
             (member.statsDex != null && member.statsDex != -1) ||
@@ -2212,19 +2208,25 @@ class WarController extends GetxController {
         if (hasExactStats) {
           if (statsShareShowOnlyTotals) {
             statsBuffer.writeln(
-                "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+              "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}",
+            );
           } else {
             statsBuffer.writeln("* Spied stats *");
             statsBuffer.writeln(
-                "Strength: ${member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '?'}${member.statsStrUpdated != null && member.statsStrUpdated != -1 ? " (${spyController.statsOld(member.statsStrUpdated!)})" : ""}");
+              "Strength: ${member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '?'}${member.statsStrUpdated != null && member.statsStrUpdated != -1 ? " (${spyController.statsOld(member.statsStrUpdated!)})" : ""}",
+            );
             statsBuffer.writeln(
-                "Speed: ${member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '?'}${member.statsSpdUpdated != null && member.statsSpdUpdated != -1 ? " (${spyController.statsOld(member.statsSpdUpdated!)})" : ""}");
+              "Speed: ${member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '?'}${member.statsSpdUpdated != null && member.statsSpdUpdated != -1 ? " (${spyController.statsOld(member.statsSpdUpdated!)})" : ""}",
+            );
             statsBuffer.writeln(
-                "Defense: ${member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '?'}${member.statsDefUpdated != null && member.statsDefUpdated != -1 ? " (${spyController.statsOld(member.statsDefUpdated!)})" : ""}");
+              "Defense: ${member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '?'}${member.statsDefUpdated != null && member.statsDefUpdated != -1 ? " (${spyController.statsOld(member.statsDefUpdated!)})" : ""}",
+            );
             statsBuffer.writeln(
-                "Dexterity: ${member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '?'}${member.statsDexUpdated != null && member.statsDexUpdated != -1 ? " (${spyController.statsOld(member.statsDexUpdated!)})" : ""}");
+              "Dexterity: ${member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '?'}${member.statsDexUpdated != null && member.statsDexUpdated != -1 ? " (${spyController.statsOld(member.statsDexUpdated!)})" : ""}",
+            );
             statsBuffer.writeln(
-                "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+              "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}",
+            );
           }
         } else if (usedEstimatedStats) {
           if (statsShareShowOnlyTotals) {
@@ -2349,7 +2351,8 @@ class WarController extends GetxController {
       for (final member in sortedMembers) {
         final ffsEntry = _getFFScouterShareEntry(member, ffScouterEnabled: ffScouterEnabled);
         final hasFFScouterStats = ffsEntry != null;
-        bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
+        bool hasExactStats =
+            (member.statsStr != null && member.statsStr != -1) ||
             (member.statsSpd != null && member.statsSpd != -1) ||
             (member.statsDef != null && member.statsDef != -1) ||
             (member.statsDex != null && member.statsDex != -1) ||
@@ -2371,8 +2374,8 @@ class WarController extends GetxController {
         final ffScouterUpdated = hasFFScouterStats ? _ffScouterUpdatedText(ffsEntry, spyController) : '';
         final ffScouterFairFight =
             statsShareIncludeFFScouterFairFight && hasFFScouterStats && ffsEntry.fairFight != null
-                ? ffsEntry.fairFight!.toStringAsFixed(2)
-                : '';
+            ? ffsEntry.fairFight!.toStringAsFixed(2)
+            : '';
 
         final String typeOfStats;
         if (hasExactStats) {
@@ -2387,14 +2390,15 @@ class WarController extends GetxController {
 
         final String totalValue = hasExactStats
             ? member.statsExactTotal != null && member.statsExactTotal != -1
-                ? formatBigNumbers(member.statsExactTotal!)
-                : '?'
+                  ? formatBigNumbers(member.statsExactTotal!)
+                  : '?'
             : usedEstimatedStats
-                ? member.statsEstimated!
-                : hasFFScouterStats && !usedPrimaryNonFFSStats
-                    ? ''
-                    : '?';
-        final String totalUpdated = hasExactStats &&
+            ? member.statsEstimated!
+            : hasFFScouterStats && !usedPrimaryNonFFSStats
+            ? ''
+            : '?';
+        final String totalUpdated =
+            hasExactStats &&
                 member.statsExactUpdated != null &&
                 member.statsExactUpdated != -1 &&
                 member.statsExactUpdated! > 0
@@ -2474,10 +2478,7 @@ class WarController extends GetxController {
       // Create an XFile from the file path and share it
       final XFile xFile = XFile(path);
 
-      final shareParams = ShareParams(
-        text: 'War targets stats',
-        files: [xFile],
-      );
+      final shareParams = ShareParams(text: 'War targets stats', files: [xFile]);
       await SharePlus.instance.share(shareParams);
 
       // Clean the temporary file
