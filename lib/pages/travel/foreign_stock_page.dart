@@ -676,12 +676,51 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     Prefs().setStockCountryFilter(saveList);
   }
 
+  bool _countryFlagEnabled(ForeignStock stock) {
+    if (stock.country == null) return false;
+
+    int? flagIndex;
+    switch (stock.country!) {
+      case CountryName.ARGENTINA:
+        flagIndex = _alphabeticalFilter ? 0 : 5;
+      case CountryName.CANADA:
+        flagIndex = _alphabeticalFilter ? 1 : 2;
+      case CountryName.CAYMAN_ISLANDS:
+        flagIndex = _alphabeticalFilter ? 2 : 1;
+      case CountryName.CHINA:
+        flagIndex = _alphabeticalFilter ? 3 : 8;
+      case CountryName.HAWAII:
+        flagIndex = _alphabeticalFilter ? 4 : 3;
+      case CountryName.JAPAN:
+        flagIndex = _alphabeticalFilter ? 5 : 7;
+      case CountryName.MEXICO:
+        flagIndex = _alphabeticalFilter ? 6 : 0;
+      case CountryName.SOUTH_AFRICA:
+        flagIndex = _alphabeticalFilter ? 7 : 10;
+      case CountryName.SWITZERLAND:
+        flagIndex = _alphabeticalFilter ? 8 : 6;
+      case CountryName.UAE:
+        flagIndex = 9;
+      case CountryName.UNITED_KINGDOM:
+        flagIndex = _alphabeticalFilter ? 10 : 4;
+      case CountryName.TORN:
+        break;
+    }
+
+    if (flagIndex == null) return false;
+    return _filteredFlags[flagIndex];
+  }
+
   List<ForeignStock> get _visibleStocks {
     Iterable<ForeignStock> visibleStocks = _filteredStocksCards;
 
+    // The destination filter replaces the saved country filter, it does not add to it,
+    // otherwise a narrow country selection would hide the place we are traveling to
     final temporaryCountry = _temporaryDestinationCountryName;
     if (temporaryCountry != null) {
       visibleStocks = visibleStocks.where((stock) => stock.country == temporaryCountry);
+    } else {
+      visibleStocks = visibleStocks.where(_countryFlagEnabled);
     }
 
     if (_hiddenStocks.isEmpty && _blacklistedItemIds.isEmpty) {
@@ -1570,68 +1609,13 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       final stockList = CountryDetails()..stocks = <ForeignStock>[];
       stockList.update = countryDetails.update;
 
+      // Countries are filtered later on (see _visibleStocks), as the travel destination
+      // filter takes precedence over the saved country selection
       for (final stock in countryDetails.stocks!) {
-        final argentinaPosition = _alphabeticalFilter ? 0 : 5;
-        final canadaPosition = _alphabeticalFilter ? 1 : 2;
-        final caymanPosition = _alphabeticalFilter ? 2 : 1;
-        final chinaPosition = _alphabeticalFilter ? 3 : 8;
-        final hawaiiPosition = _alphabeticalFilter ? 4 : 3;
-        final japanPosition = _alphabeticalFilter ? 5 : 7;
-        final mexicoPosition = _alphabeticalFilter ? 6 : 0;
-        final africaPosition = _alphabeticalFilter ? 7 : 10;
-        final switzerlandPosition = _alphabeticalFilter ? 8 : 6;
-        final uaePosition = _alphabeticalFilter ? 9 : 9;
-        final ukPosition = _alphabeticalFilter ? 10 : 4;
+        if (stock.country == null || stock.country == CountryName.TORN) continue;
 
-        if (stock.country == null) continue;
-
-        switch (stock.country!) {
-          case CountryName.ARGENTINA:
-            if (_filteredFlags[argentinaPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.CANADA:
-            if (_filteredFlags[canadaPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.CAYMAN_ISLANDS:
-            if (_filteredFlags[caymanPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.CHINA:
-            if (_filteredFlags[chinaPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.HAWAII:
-            if (_filteredFlags[hawaiiPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.JAPAN:
-            if (_filteredFlags[japanPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.MEXICO:
-            if (_filteredFlags[mexicoPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.SOUTH_AFRICA:
-            if (_filteredFlags[africaPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.SWITZERLAND:
-            if (_filteredFlags[switzerlandPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.UAE:
-            if (_filteredFlags[uaePosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.UNITED_KINGDOM:
-            if (_filteredFlags[ukPosition] && filterDrug(stock)) {
-              stockList.stocks!.add(stock);
-            }
-          case CountryName.TORN:
-            break;
+        if (filterDrug(stock)) {
+          stockList.stocks!.add(stock);
         }
       }
 

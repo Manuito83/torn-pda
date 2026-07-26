@@ -198,6 +198,7 @@ List<_MVersion> _modernChangelog() => [
           ),
           _MItem('Fixed notifications that could stop arriving after the device notification token changed'),
           _MItem('Fixed the war targets list turning grey when sorting by hospital time'),
+          _MItem('Fixed foreign stocks destination filter clashing with the saved country one'),
         ],
       ),
     ],
