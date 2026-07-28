@@ -8,14 +8,11 @@ import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-enum LiveActivityType {
-  travel,
-  racing,
-}
+enum LiveActivityType { travel, racing }
 
 class LiveActivityBridgeController extends GetxController {
   LiveActivityBridgeController({MethodChannel? channel})
-      : _channel = channel ?? const MethodChannel('com.tornpda.liveactivity');
+    : _channel = channel ?? const MethodChannel('com.tornpda.liveactivity');
 
   final MethodChannel _channel;
 
@@ -53,10 +50,7 @@ class LiveActivityBridgeController extends GetxController {
         final LiveActivityType? activityType = _activityTypeFromWireValue(activityTypeRaw);
         if (activityType != null) {
           _currentActivityPushTokens[activityType] = token;
-          await firebaseFunctions.registerLiveActivityActivityToken(
-            token: token,
-            activityType: activityType.name,
-          );
+          await firebaseFunctions.registerLiveActivityActivityToken(token: token, activityType: activityType.name);
         }
       }
     } else if (call.method == "liveUpdateStatusChanged") {
@@ -74,9 +68,7 @@ class LiveActivityBridgeController extends GetxController {
     }
   }
 
-  Future<LiveUpdateStartResult> startActivity({
-    required Map<String, dynamic> arguments,
-  }) async {
+  Future<LiveUpdateStartResult> startActivity({required Map<String, dynamic> arguments}) async {
     if (!_isInitialized) {
       log("LiveActivityBridgeService: Handler not initialized. Initializing now...");
       initializeHandler();
@@ -90,19 +82,14 @@ class LiveActivityBridgeController extends GetxController {
       return result;
     } on PlatformException catch (e) {
       log("LiveActivityBridgeService: PlatformException during start/update: ${e.message} - Details: ${e.details}");
-      return LiveUpdateStartResult(
-        status: LiveUpdateRequestStatus.error,
-        errorMessage: e.message,
-      );
+      return LiveUpdateStartResult(status: LiveUpdateRequestStatus.error, errorMessage: e.message);
     } catch (e) {
       log("LiveActivityBridgeService: Generic error during start/update: $e");
       return const LiveUpdateStartResult(status: LiveUpdateRequestStatus.error);
     }
   }
 
-  Future<LiveUpdateStartResult> startRacingActivity({
-    required Map<String, dynamic> arguments,
-  }) async {
+  Future<LiveUpdateStartResult> startRacingActivity({required Map<String, dynamic> arguments}) async {
     if (!_isInitialized) {
       initializeHandler();
     }
@@ -114,11 +101,10 @@ class LiveActivityBridgeController extends GetxController {
       }
       return result;
     } on PlatformException catch (e) {
-      log("LiveActivityBridgeService: PlatformException during racing start/update: ${e.message} - Details: ${e.details}");
-      return LiveUpdateStartResult(
-        status: LiveUpdateRequestStatus.error,
-        errorMessage: e.message,
+      log(
+        "LiveActivityBridgeService: PlatformException during racing start/update: ${e.message} - Details: ${e.details}",
       );
+      return LiveUpdateStartResult(status: LiveUpdateRequestStatus.error, errorMessage: e.message);
     } catch (e) {
       log("LiveActivityBridgeService: Generic error during racing start/update: $e");
       return const LiveUpdateStartResult(status: LiveUpdateRequestStatus.error);
@@ -143,7 +129,7 @@ class LiveActivityBridgeController extends GetxController {
     }
   }
 
-  /// Android only. Arms the abroad poll without posting anything.
+  /// Android only: arms the abroad poll without posting anything
   Future<bool> armTravelAbroadWatch({required Map<String, dynamic> arguments}) async {
     if (!Platform.isAndroid) return false;
     if (!_isInitialized) initializeHandler();
@@ -224,10 +210,7 @@ class LiveActivityBridgeController extends GetxController {
     required LiveActivityType activityType,
     required bool force,
   }) async {
-    final String? tokenToUpdate = await _getUpdatedLiveActivityTokenIfNeeded(
-      activityType: activityType,
-      force: force,
-    );
+    final String? tokenToUpdate = await _getUpdatedLiveActivityTokenIfNeeded(activityType: activityType, force: force);
 
     if (tokenToUpdate != null) {
       log("Token for '${activityType.name}' needs update. Sending to server...");
@@ -242,13 +225,8 @@ class LiveActivityBridgeController extends GetxController {
     }
   }
 
-  Future<String?> getPushToStartTokenOnly({
-    required LiveActivityType activityType,
-  }) async {
-    return await _getUpdatedLiveActivityTokenIfNeeded(
-      activityType: activityType,
-      force: false,
-    );
+  Future<String?> getPushToStartTokenOnly({required LiveActivityType activityType}) async {
+    return await _getUpdatedLiveActivityTokenIfNeeded(activityType: activityType, force: false);
   }
 
   String? currentActivityPushTokenFor(LiveActivityType activityType) {
@@ -262,10 +240,7 @@ class LiveActivityBridgeController extends GetxController {
     if (!_isInitialized) initializeHandler();
 
     try {
-      final String? newToken = await _channel.invokeMethod(
-        'getPushToStartToken',
-        {'activityType': activityType.name},
-      );
+      final String? newToken = await _channel.invokeMethod('getPushToStartToken', {'activityType': activityType.name});
 
       if (newToken == null || newToken.isEmpty) {
         log("LiveActivityBridge: Swift returned null for '${activityType.name}'");

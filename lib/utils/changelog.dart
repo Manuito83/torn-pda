@@ -170,10 +170,7 @@ List<_MVersion> _modernChangelog() => [
             'Travel live updates: fixed plane direction and duplicate arrival notifications [bombel]',
             androidOnly: true,
           ),
-          _MItem(
-            'Travel live updates now pick up your flight back while the app is closed [xentac]',
-            androidOnly: true,
-          ),
+          _MItem('Fixed travel live updates return flight recognition', androidOnly: true),
           _MItem(
             'Fixed a possible error in injected scripts when reading element classes',
             detail:
