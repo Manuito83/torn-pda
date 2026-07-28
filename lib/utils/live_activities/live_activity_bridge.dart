@@ -143,6 +143,19 @@ class LiveActivityBridgeController extends GetxController {
     }
   }
 
+  /// Android only. Arms the abroad poll without posting anything.
+  Future<bool> armTravelAbroadWatch({required Map<String, dynamic> arguments}) async {
+    if (!Platform.isAndroid) return false;
+    if (!_isInitialized) initializeHandler();
+    try {
+      final bool armed = await _channel.invokeMethod('armTravelAbroadWatch', arguments) ?? false;
+      return armed;
+    } catch (e) {
+      log("LiveActivityBridgeService: Error arming abroad watch: $e");
+      return false;
+    }
+  }
+
   Future<bool> isAnyActivityActive() async {
     if (!_isInitialized) initializeHandler();
     try {

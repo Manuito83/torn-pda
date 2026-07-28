@@ -65,6 +65,11 @@ class LiveUpdateChannelBridge(
                     result.success(null)
                 }
 
+                ARM_TRAVEL_ABROAD_WATCH -> {
+                    val payload = (call.arguments as? Map<*, *>)?.mapKeys { it.key.toString() }.orEmpty()
+                    result.success(armTravelAbroadWatch(payload))
+                }
+
                 OPEN_PROMOTED_NOTIFICATIONS_SETTINGS -> {
                     result.success(openPromotedNotificationsSettings())
                 }
@@ -87,6 +92,41 @@ class LiveUpdateChannelBridge(
     fun dispose() {
         travelManager.removeListener(this)
         racingManager.removeListener(this)
+    }
+
+    /**
+     * Arms the abroad poll without posting or touching any card. Flutter calls it
+     * whenever it sees the player abroad, since the paths that get there push no
+     * payload of their own: cold start on a stale arrival, or alarms wiped by a
+     * reboot or an app update.
+     */
+    private fun armTravelAbroadWatch(arguments: Map<String, Any?>): Boolean {
+        val ctx = context ?: return false
+        val payload = LiveUpdatePayload.fromMap(LiveUpdateActivityType.TRAVEL, arguments)
+
+        val registry = LiveUpdateSessionRegistry(ctx, LiveUpdateActivityType.TRAVEL)
+        val existing = registry.current()
+        val sessionId = existing?.sessionId ?: java.util.UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+
+        // Watch-only: marking it active would make isAnyActive() lie and Flutter
+        // would tear the watch down as if it were a live card
+        if (existing == null) {
+            registry.markActive(
+                LiveUpdateSessionState(
+                    sessionId = sessionId,
+                    activityType = LiveUpdateActivityType.TRAVEL,
+                    contentIdentifier = payload.travelIdentifier,
+                    startedAtMs = now,
+                    lastUpdatedAtMs = now,
+                    lastHasArrived = true,
+                    watchOnly = true,
+                ),
+            )
+        }
+
+        TravelLiveUpdateRefreshScheduler.scheduleAbroadPoll(ctx, sessionId, payload)
+        return true
     }
 
     private fun openPromotedNotificationsSettings(): Boolean {
@@ -118,5 +158,6 @@ class LiveUpdateChannelBridge(
         private const val GET_PUSH_TO_START_TOKEN = "getPushToStartToken"
         private const val GET_LIVE_UPDATE_CAPABILITIES = "getLiveUpdateCapabilities"
         private const val OPEN_PROMOTED_NOTIFICATIONS_SETTINGS = "openPromotedNotificationsSettings"
+        private const val ARM_TRAVEL_ABROAD_WATCH = "armTravelAbroadWatch"
     }
 }

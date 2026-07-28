@@ -12,6 +12,7 @@ import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:workmanager/workmanager.dart';
 
 class LiveActivityTravelController extends GetxController {
@@ -326,6 +327,17 @@ class LiveActivityTravelController extends GetxController {
           }
         }
       }
+
+      // Abroad: keep the native poll armed, as several paths above push no payload
+      // (stale arrival on cold start, alarms wiped by a reboot or an update)
+      if (Platform.isAndroid &&
+          (traveling || repatriating) &&
+          hasPlayerArrived &&
+          apiData['destination'] != "Torn") {
+        await _bridgeController.armTravelAbroadWatch(
+          arguments: _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true),
+        );
+      }
     } finally {
       _isProcessing = false;
     }
@@ -443,6 +455,8 @@ class LiveActivityTravelController extends GetxController {
       'hasArrived': hasArrived,
       'destinationEmoji': destinationEmoji,
       'travelIdentifier': travelId,
+      // Used by the Android abroad poll
+      if (Platform.isAndroid && UserHelper.isApiKeyValid) 'apiKey': UserHelper.apiKey,
     };
   }
 

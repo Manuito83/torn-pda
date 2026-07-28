@@ -49,6 +49,8 @@ class AndroidTravelLiveUpdateAdapter(
         }
         TravelLiveUpdateRefreshScheduler.scheduleNextRefresh(context, sessionId, payload)
         TravelLiveUpdateRefreshScheduler.scheduleArrived(context, sessionId, payload)
+        // Self-cancels unless this is an arrival abroad
+        TravelLiveUpdateRefreshScheduler.scheduleAbroadPoll(context, sessionId, payload)
 
         startUpdateLoop(sessionId, tapIntent, dismissIntent)
 
@@ -115,6 +117,7 @@ class AndroidTravelLiveUpdateAdapter(
         // independent notification under the old id once a new session had started.
         TravelLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
         TravelLiveUpdateRefreshScheduler.cancelArrived(context, sessionId)
+        TravelLiveUpdateRefreshScheduler.cancelAbroadPoll(context, sessionId)
         if (sessionId == activeSessionId) {
             updateJob?.cancel()
             cachedPayload = null

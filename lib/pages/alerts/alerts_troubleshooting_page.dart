@@ -981,6 +981,15 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
       args['earliestReturnTimestamp'] = earliestReturnTimestamp;
     }
 
+    // Needed for the abroad poll to arm, same as in a real trip
+    if (Platform.isAndroid && UserHelper.isApiKeyValid) {
+      args['apiKey'] = UserHelper.apiKey;
+    }
+
+    // Without an identifier the native dedup treats every mock as the same trip
+    args['travelIdentifier'] =
+        "mock-$currentDestinationDisplayName-$arrivalTimestamp-$departureTimestamp";
+
     return args;
   }
 

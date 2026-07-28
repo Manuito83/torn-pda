@@ -171,6 +171,10 @@ List<_MVersion> _modernChangelog() => [
             androidOnly: true,
           ),
           _MItem(
+            'Travel live updates now pick up your flight back while the app is closed [xentac]',
+            androidOnly: true,
+          ),
+          _MItem(
             'Fixed a possible error in injected scripts when reading element classes',
             detail:
                 'Certain page elements report their classes in a format the scripts did not expect. '
@@ -199,6 +203,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Fixed notifications that could stop arriving after the device notification token changed'),
           _MItem('Fixed the war targets list turning grey when sorting by hospital time'),
           _MItem('Fixed foreign stocks destination filter clashing with the saved country one'),
+          _MItem('Fixed incoherent bazaar prices causing the Profile section to crash'),
         ],
       ),
     ],

@@ -46,7 +46,9 @@ class DefaultLiveUpdateManager(
         val sessionId = existingSession?.sessionId ?: sessionIdProvider()
 
         // Dedup avoids re-popping the heads-up and re-arming WorkManager on every poll.
+        // A watch-only session has no card on screen, so it must never dedup.
         if (existingSession != null
+            && !existingSession.watchOnly
             && existingSession.contentIdentifier == parsedPayload.contentIdentifier
             && existingSession.lastHasArrived == parsedPayload.hasArrived
         ) {

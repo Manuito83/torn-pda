@@ -57,6 +57,38 @@ class DefaultLiveUpdateManagerTest {
     }
 
     @Test
+    fun watchOnlySessionDoesNotReadAsActiveButLendsItsId() {
+        val eligibility = FakeEligibilityProvider(successResult())
+        val adapter = RecordingAdapter()
+        val sessionStore = RecordingSessionStore()
+        sessionStore.markActive(watchOnlySession("session-watch"))
+        val manager = DefaultLiveUpdateManager(LiveUpdateActivityType.TRAVEL, adapter, eligibility, sessionStore) { "session-new" }
+
+        assertFalse(sessionStore.isActive())
+
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
+        val result = manager.startOrUpdate(payload())
+
+        assertEquals("session-watch", result.sessionId)
+        assertTrue(sessionStore.isActive())
+    }
+
+    @Test
+    fun watchOnlySessionNeverDedups() {
+        val eligibility = FakeEligibilityProvider(successResult())
+        val adapter = RecordingAdapter()
+        val sessionStore = RecordingSessionStore()
+        // Same content and hasArrived: without the guard this would dedup
+        sessionStore.markActive(watchOnlySession("session-watch", hasArrived = false))
+        val manager = DefaultLiveUpdateManager(LiveUpdateActivityType.TRAVEL, adapter, eligibility, sessionStore) { "unused" }
+
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
+        manager.startOrUpdate(payload())
+
+        assertEquals("a watch-only session has no card, so the adapter must post one", 1, adapter.startCalls)
+    }
+
+    @Test
     fun endClearsSessionAndEmitsEvent() {
         val eligibility = FakeEligibilityProvider(successResult())
         val adapter = RecordingAdapter()
@@ -145,6 +177,20 @@ class DefaultLiveUpdateManagerTest {
         assertEquals(2, adapter.startCalls)
     }
 
+    private fun watchOnlySession(
+        sessionId: String,
+        hasArrived: Boolean = true,
+        travelIdentifier: String = "torn-1700",
+    ) = LiveUpdateSessionState(
+        sessionId = sessionId,
+        activityType = LiveUpdateActivityType.TRAVEL,
+        contentIdentifier = travelIdentifier,
+        startedAtMs = 1L,
+        lastUpdatedAtMs = 1L,
+        lastHasArrived = hasArrived,
+        watchOnly = true,
+    )
+
     private fun payload(
         hasArrived: Boolean = false,
         travelIdentifier: String = "torn-1700",
@@ -221,7 +267,8 @@ class DefaultLiveUpdateManagerTest {
 
         override fun current(): LiveUpdateSessionState? = state
 
-        override fun isActive(): Boolean = state != null
+        // Same rule as LiveUpdateSessionRegistry: a watch-only session has no card
+        override fun isActive(): Boolean = state?.watchOnly == false
     }
 
     private class RecordingListener : LiveUpdateManagerListener {
