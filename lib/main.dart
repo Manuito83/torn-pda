@@ -269,6 +269,11 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didHaveMemoryPressure() {
     // Free background tabs' native WebViews under memory pressure so Android is less likely to kill
     // the shared renderer (which is seen as a spontaneous tab reload)
+    //
+    // Only while the app is in use: Android delivers TRIM_MEMORY_UI_HIDDEN every single time the
+    // app is minimised and Flutter forwards it here with no level attached
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+
     try {
       _webViewProvider.hibernateInactiveTabs();
     } catch (_) {}

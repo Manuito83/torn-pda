@@ -1543,48 +1543,27 @@ class WebViewFullState extends State<WebViewFull>
               _revertTransparentBackground();
             }
 
-            // Fallback: re-register scripts when they were wiped (browser close,
-            // renderer crash) and the reload doesn't trigger shouldOverrideUrlLoading.
-            // _handlersInjected is false in both removeAllUserScripts() and
-            // onRenderProcessGone/onWebContentProcessDidTerminate, so this catches all cases.
+            // Re-register scripts when they were wiped (browser close, renderer crash) and the
+            // reload doesn't trigger shouldOverrideUrlLoading
+            //
+            // We also inject whatever is missing right now. Whatever this one misses
+            // is caught again in onLoadStop
             if (!_handlersInjected &&
                 uri != null &&
                 (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null))) {
               try {
                 await _ensureHandlersInjected();
-                final fallbackScripts = _userScriptsProvider.getCondSources(
-                  url: uri.toString(),
-                  pdaApiKey: UserHelper.apiKey,
-                  time: UserScriptTime.start,
+                await _addUserScriptsAvoidDuplicates(
+                  _userScriptsProvider.getCondSources(
+                    url: uri.toString(),
+                    pdaApiKey: UserHelper.apiKey,
+                    time: UserScriptTime.start,
+                  ),
                 );
-                await _addUserScriptsAvoidDuplicates(fallbackScripts);
                 if (!mounted) return;
-
-                // Evaluate inline for the current page since AT_DOCUMENT_START
-                // injection may already have been scheduled before the scripts
-                // were re-registered above.
-                //
-                // Ask the document first, or the user's scripts run twice (once natively, once here) and
-                // duplicate whatever UI they build. GM is the bundle's marker:
-                //  - present: document-start already ran here, nothing to do
-                //  - absent, but we are still on the previous document: the registration above covers the new one
-                final probe = await c.evaluateJavascript(source: "typeof window.GM !== 'undefined'");
-                final bool bundleAlreadyRan = probe == true || probe.toString() == "true";
-
-                if (!bundleAlreadyRan) {
-                  for (final h in _userScriptsProvider.getHandlerSources(
-                    apiKey: UserHelper.apiKey,
-                    tabUid: _tabUid,
-                    activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
-                  )) {
-                    await c.evaluateJavascript(source: h.source);
-                  }
-                  for (final s in fallbackScripts) {
-                    await c.evaluateJavascript(source: s.source);
-                  }
-                }
+                await _injectMissingDocumentStartScripts(c, uri.toString(), at: "loadStart");
               } catch (e) {
-                log("⚠️ onLoadStart script fallback error: $e", name: "WEBVIEW FULL");
+                log("⚠️ onLoadStart script registration error: $e", name: "WEBVIEW FULL");
               }
             }
 
@@ -1751,20 +1730,10 @@ class WebViewFullState extends State<WebViewFull>
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.end,
               );
-              // Guarantee the handler bundle (GM/PDA API...) is present whenever the page runs ANY
-              // userscript (start or end)
-              final hasActiveScripts =
-                  scriptsToAdd.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(uri.toString()).isNotEmpty;
-              if (hasActiveScripts) {
-                final handlers = _userScriptsProvider.getHandlerSources(
-                  apiKey: UserHelper.apiKey,
-                  tabUid: _tabUid,
-                  activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
-                );
-                for (final h in handlers) {
-                  await webViewController!.evaluateJavascript(source: h.source);
-                }
-              }
+
+              // Guarantee the handler bundle and this page's document-start scripts
+              // are present whenever the page runs any userscript (start or end)
+              await _injectMissingDocumentStartScripts(c, uri.toString());
 
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               // Guard once-per-document so hash navigation (which re-fire onLoadStop) don't re-run END scripts
@@ -2464,15 +2433,16 @@ class WebViewFullState extends State<WebViewFull>
   /// in a child tab) accumulate multiple copies of the same script in the store,
   /// causing each to be injected several times on the next page load
   Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) {
+    final List<UserScript> guarded = scripts.map(_guardedOnce).toList();
     final result = _scriptLock.then((_) async {
       if (webViewController == null) return;
-      for (final s in scripts) {
+      for (final s in guarded) {
         final group = s.groupName;
         if (group != null) {
           await webViewController!.removeUserScriptsByGroupName(groupName: group);
         }
       }
-      await webViewController!.addUserScripts(userScripts: scripts.toList());
+      await webViewController!.addUserScripts(userScripts: guarded);
     });
     // Next caller waits for this one; swallow errors so a single failure doesn't break the chain
     _scriptLock = result.catchError((_) {});
@@ -2486,6 +2456,20 @@ class WebViewFullState extends State<WebViewFull>
     return "if(!(window.__pdaOnce=window.__pdaOnce||{})[$k]){window.__pdaOnce[$k]=1;\n$source\n}";
   }
 
+  /// Every document-start script is registered with the once-per-document wrapper, so a copy
+  /// evaluated later (see [_injectMissingDocumentStartScripts]) or a second registration of the
+  /// same script can never run it twice in the same page
+  UserScript _guardedOnce(UserScript script) {
+    return UserScript(
+      groupName: script.groupName,
+      injectionTime: script.injectionTime,
+      source: _oncePerDocument(script.groupName, script.source),
+      forMainFrameOnly: script.forMainFrameOnly,
+      allowedOriginRules: script.allowedOriginRules,
+      contentWorld: script.contentWorld,
+    );
+  }
+
   /// Registers the handler bundle (GM API, PDA API,...)
   /// These scripts never change, so unlike user scripts we must not remove them
   Future<void> _ensureHandlersInjected() async {
@@ -2495,8 +2479,69 @@ class WebViewFullState extends State<WebViewFull>
       tabUid: _tabUid,
       activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
     );
-    await webViewController!.addUserScripts(userScripts: handlers.toList());
+    await webViewController!.addUserScripts(userScripts: handlers.map(_guardedOnce).toList());
     _handlersInjected = true;
+  }
+
+  /// Handler bundle + document-start userscripts that did not run in the current document
+  /// This asks the page which ones are missing and only evaluates those
+  Future<void> _injectMissingDocumentStartScripts(
+    InAppWebViewController c,
+    String url, {
+    String at = "loadStop",
+  }) async {
+    if (!(Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null))) return;
+
+    final UnmodifiableListView<UserScript> startScripts = _userScriptsProvider.getCondSources(
+      url: url,
+      pdaApiKey: UserHelper.apiKey,
+      time: UserScriptTime.start,
+    );
+
+    // The bundle is only needed if the page is going to run something that uses it
+    final bool needsHandlers = startScripts.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(url).isNotEmpty;
+    if (!needsHandlers) return;
+
+    final List<UserScript> expected = <UserScript>[
+      ..._userScriptsProvider.getHandlerSources(
+        apiKey: UserHelper.apiKey,
+        tabUid: _tabUid,
+        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+      ),
+      ...startScripts,
+    ];
+    if (expected.isEmpty) return;
+
+    final List<String> keys = expected.map((s) => s.groupName ?? "anon").toList();
+    final probe = await c.evaluateJavascript(
+      source:
+          "(function(){var o=window.__pdaOnce||{};var k=${jsonEncode(keys)};var m=[];"
+          "for(var i=0;i<k.length;i++){if(!o[k[i]])m.push(k[i]);}return JSON.stringify(m);})()",
+    );
+
+    final Set<String> missing = _decodeMissingKeys(probe);
+    if (missing.isEmpty) return;
+
+    for (final s in expected) {
+      if (!missing.contains(s.groupName ?? "anon")) continue;
+      await c.evaluateJavascript(source: _oncePerDocument(s.groupName, s.source));
+    }
+
+    if (_debugScriptsInjection) {
+      log("Recovered missing document-start scripts in $at: $missing");
+    }
+  }
+
+  /// A failed probe returns nothing: never inject blindly, as that is what duplicates scripts
+  Set<String> _decodeMissingKeys(dynamic probe) {
+    if (probe == null) return const <String>{};
+    try {
+      final dynamic decoded = probe is String ? jsonDecode(probe) : probe;
+      if (decoded is List) return decoded.map((e) => e.toString()).toSet();
+    } catch (_) {
+      //
+    }
+    return const <String>{};
   }
 
   /// Handler bundle + the initial URL's document-start userscripts, registered natively at
@@ -2520,7 +2565,7 @@ class WebViewFullState extends State<WebViewFull>
           time: UserScriptTime.start,
         ),
     ];
-    return _initialUserScriptsCache = UnmodifiableListView(scripts);
+    return _initialUserScriptsCache = UnmodifiableListView(scripts.map(_guardedOnce).toList());
   }
 
   Future assessErrorCases({dom.Document? document}) async {
@@ -4556,8 +4601,9 @@ class WebViewFullState extends State<WebViewFull>
     if (_cityTriggered) _cityTriggered = false;
 
     if (Platform.isAndroid || Platform.isWindows) {
+      final Uri? reloadUri = await webViewController!.getUrl();
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-        url: webViewController!.getUrl().toString(),
+        url: reloadUri?.toString() ?? _currentUrl,
         pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
@@ -5540,6 +5586,25 @@ class WebViewFullState extends State<WebViewFull>
 
   Future<void> publishTabState({bool? isActiveTab, bool? isWebViewVisible}) async {
     if (!mounted) return;
+
+    // Recover a black or blank tab when it becomes visible without a tab switch, which is the only
+    // case activateTab misses (foreground, split screen, rotation)
+    final bool showingThisTab =
+        (isActiveTab ?? _webViewProvider.isTabUidActive(_tabUid)) &&
+        (isWebViewVisible ?? (_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive));
+    if (showingThisTab) {
+      final TabDetails? shownTab = _webViewProvider.getTabByUid(_tabUid);
+      if (shownTab != null && shownTab.needsReloadAfterRendererGone) {
+        _webViewProvider.rebuildUnresponsiveWebView(
+          tabUid: _tabUid,
+          isChainingBrowser: _isChainingBrowser,
+          chainingPayload: _chainingPayload,
+        );
+        return;
+      }
+      if (_isParked) wakeFromPark();
+    }
+
     if (webViewController == null) return;
 
     final payload = {
