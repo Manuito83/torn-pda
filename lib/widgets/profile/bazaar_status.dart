@@ -19,12 +19,11 @@ class BazaarStatusCard extends StatelessWidget {
     int totalMoney = 0;
 
     for (final element in bazaarModel!) {
-      if (element.price is double) {
-        element.price = element.price!.round();
-      }
+      final quantity = element.quantity ?? 0;
+      final price = element.price ?? 0;
 
-      totalItems += element.quantity!;
-      totalMoney += element.quantity! * element.price!.round();
+      totalItems += quantity;
+      totalMoney += quantity * price;
     }
 
     var bazaarNumber = "";

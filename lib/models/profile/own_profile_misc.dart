@@ -8,11 +8,18 @@ import 'dart:developer';
 import 'package:torn_pda/models/profile/user_v2_selections/education_v2_model.dart';
 import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
 
-OwnProfileMisc ownProfileMiscFromJson(String rawJson) => OwnProfileMisc.fromJson(
-      json.decode(rawJson) as Map<String, dynamic>,
-    );
+OwnProfileMisc ownProfileMiscFromJson(String rawJson) =>
+    OwnProfileMisc.fromJson(json.decode(rawJson) as Map<String, dynamic>);
 
 String ownProfileMiscToJson(OwnProfileMisc data) => json.encode(data.toJson());
+
+// Torn sends bazaar prices as double every now and then
+int? _asInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.round();
+  return num.tryParse(value.toString())?.round();
+}
 
 class OwnProfileMisc {
   // V2 API selections transitioned
@@ -95,23 +102,23 @@ class OwnProfileMisc {
   }
 
   Map<String, dynamic> toJson() => {
-        "education": education.toJson(),
-        "properties": List<dynamic>.from(properties.map((x) => x.toJson())),
-        "workstats": workStats?.toJson(),
-        "battlestats": battleStats?.toJson(),
-        "jobpoints": jobpoints?.toJson(),
-        "money": money?.toJson(),
-        "skills": skills?.skillList?.map((x) => x.toJson()).toList() ?? [],
-        "player_id": playerId,
-        "city_bank": cityBank?.toJson(),
-        "strength_info": strengthInfo == null ? [] : List<dynamic>.from(strengthInfo!.map((x) => x)),
-        "defense_info": defenseInfo == null ? [] : List<dynamic>.from(defenseInfo!.map((x) => x)),
-        "speed_info": speedInfo == null ? [] : List<dynamic>.from(speedInfo!.map((x) => x)),
-        "dexterity_info": dexterityInfo == null ? [] : List<dynamic>.from(dexterityInfo!.map((x) => x)),
-        "bazaar": bazaar == null ? [] : List<dynamic>.from(bazaar!.map((x) => x.toJson())),
-        "itemmarket": itemmarket == null ? [] : List<dynamic>.from(itemmarket!.map((x) => x.toJson())),
-        "_metadata": metadata?.toJson(),
-      };
+    "education": education.toJson(),
+    "properties": List<dynamic>.from(properties.map((x) => x.toJson())),
+    "workstats": workStats?.toJson(),
+    "battlestats": battleStats?.toJson(),
+    "jobpoints": jobpoints?.toJson(),
+    "money": money?.toJson(),
+    "skills": skills?.skillList?.map((x) => x.toJson()).toList() ?? [],
+    "player_id": playerId,
+    "city_bank": cityBank?.toJson(),
+    "strength_info": strengthInfo == null ? [] : List<dynamic>.from(strengthInfo!.map((x) => x)),
+    "defense_info": defenseInfo == null ? [] : List<dynamic>.from(defenseInfo!.map((x) => x)),
+    "speed_info": speedInfo == null ? [] : List<dynamic>.from(speedInfo!.map((x) => x)),
+    "dexterity_info": dexterityInfo == null ? [] : List<dynamic>.from(dexterityInfo!.map((x) => x)),
+    "bazaar": bazaar == null ? [] : List<dynamic>.from(bazaar!.map((x) => x.toJson())),
+    "itemmarket": itemmarket == null ? [] : List<dynamic>.from(itemmarket!.map((x) => x.toJson())),
+    "_metadata": metadata?.toJson(),
+  };
 }
 
 class Bazaar {
@@ -123,26 +130,18 @@ class Bazaar {
   int? marketPrice;
   int? uid;
 
-  Bazaar({
-    this.id,
-    this.name,
-    this.type,
-    this.quantity,
-    this.price,
-    this.marketPrice,
-    this.uid,
-  });
+  Bazaar({this.id, this.name, this.type, this.quantity, this.price, this.marketPrice, this.uid});
 
   factory Bazaar.fromJson(Map<String, dynamic> json) {
     try {
       return Bazaar(
-        id: json["ID"],
+        id: _asInt(json["ID"]),
         name: json["name"],
         type: json["type"],
-        quantity: json["quantity"],
-        price: json["price"],
-        marketPrice: json["market_price"],
-        uid: json["UID"],
+        quantity: _asInt(json["quantity"]),
+        price: _asInt(json["price"]),
+        marketPrice: _asInt(json["market_price"]),
+        uid: _asInt(json["UID"]),
       );
     } catch (e) {
       log('Error parsing Bazaar: $e');
@@ -151,41 +150,32 @@ class Bazaar {
   }
 
   Map<String, dynamic> toJson() => {
-        "ID": id,
-        "name": name,
-        "type": type,
-        "quantity": quantity,
-        "price": price,
-        "market_price": marketPrice,
-        "UID": uid,
-      };
+    "ID": id,
+    "name": name,
+    "type": type,
+    "quantity": quantity,
+    "price": price,
+    "market_price": marketPrice,
+    "UID": uid,
+  };
 }
 
 class CityBank {
   int? amount;
   int? timeLeft;
 
-  CityBank({
-    this.amount,
-    this.timeLeft,
-  });
+  CityBank({this.amount, this.timeLeft});
 
   factory CityBank.fromJson(Map<String, dynamic> json) {
     try {
-      return CityBank(
-        amount: json["amount"],
-        timeLeft: json["time_left"],
-      );
+      return CityBank(amount: json["amount"], timeLeft: json["time_left"]);
     } catch (e) {
       log('Error parsing CityBank: $e');
       return CityBank();
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        "amount": amount,
-        "time_left": timeLeft,
-      };
+  Map<String, dynamic> toJson() => {"amount": amount, "time_left": timeLeft};
 }
 
 class Itemmarket {
@@ -197,15 +187,7 @@ class Itemmarket {
   int? available;
   Item? item;
 
-  Itemmarket({
-    this.id,
-    this.price,
-    this.averagePrice,
-    this.amount,
-    this.isAnonymous,
-    this.available,
-    this.item,
-  });
+  Itemmarket({this.id, this.price, this.averagePrice, this.amount, this.isAnonymous, this.available, this.item});
 
   factory Itemmarket.fromJson(Map<String, dynamic> json) {
     try {
@@ -225,14 +207,14 @@ class Itemmarket {
   }
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "price": price,
-        "average_price": averagePrice,
-        "amount": amount,
-        "is_anonymous": isAnonymous,
-        "available": available,
-        "item": item?.toJson(),
-      };
+    "id": id,
+    "price": price,
+    "average_price": averagePrice,
+    "amount": amount,
+    "is_anonymous": isAnonymous,
+    "available": available,
+    "item": item?.toJson(),
+  };
 }
 
 class Item {
@@ -244,15 +226,7 @@ class Item {
   dynamic rarity;
   List<dynamic> bonuses;
 
-  Item({
-    this.id,
-    this.name,
-    this.type,
-    this.uid,
-    this.stats,
-    this.rarity,
-    required this.bonuses,
-  });
+  Item({this.id, this.name, this.type, this.uid, this.stats, this.rarity, required this.bonuses});
 
   factory Item.fromJson(Map<String, dynamic> json) {
     try {
@@ -272,24 +246,21 @@ class Item {
   }
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "name": name,
-        "type": type,
-        "uid": uid,
-        "stats": stats,
-        "rarity": rarity,
-        "bonuses": bonuses,
-      };
+    "id": id,
+    "name": name,
+    "type": type,
+    "uid": uid,
+    "stats": stats,
+    "rarity": rarity,
+    "bonuses": bonuses,
+  };
 }
 
 class Jobpoints {
   Jobs? jobs;
   List<CompanyJobpoints>? companies;
 
-  Jobpoints({
-    this.jobs,
-    this.companies,
-  });
+  Jobpoints({this.jobs, this.companies});
 
   factory Jobpoints.fromJson(Map<String, dynamic> json) {
     try {
@@ -341,72 +312,51 @@ class Jobpoints {
   }
 
   Map<String, dynamic> toJson() => {
-        "jobs": jobs?.toJson(),
-        "companies": companies?.map((x) => x.toJson()).toList() ?? [],
-      };
+    "jobs": jobs?.toJson(),
+    "companies": companies?.map((x) => x.toJson()).toList() ?? [],
+  };
 }
 
 class CompanyJobpoints {
   CompanyInfo company;
   int points;
 
-  CompanyJobpoints({
-    required this.company,
-    required this.points,
-  });
+  CompanyJobpoints({required this.company, required this.points});
 
   factory CompanyJobpoints.fromJson(Map<String, dynamic> json) {
     try {
-      return CompanyJobpoints(
-        company: CompanyInfo.fromJson(json['company']),
-        points: json['points'] ?? 0,
-      );
+      return CompanyJobpoints(company: CompanyInfo.fromJson(json['company']), points: json['points'] ?? 0);
     } catch (e) {
       log('Error parsing CompanyJobpoints: $e');
-      return CompanyJobpoints(
-        company: CompanyInfo(id: 0, name: ''),
-        points: 0,
-      );
+      return CompanyJobpoints(company: CompanyInfo(id: 0, name: ''), points: 0);
     }
   }
 
   // TODO: Remove when legacy API is discontinued
   factory CompanyJobpoints.legacy(int id, String name, int jobpoints) => CompanyJobpoints(
-        company: CompanyInfo(id: id, name: name),
-        points: jobpoints,
-      );
+    company: CompanyInfo(id: id, name: name),
+    points: jobpoints,
+  );
 
-  Map<String, dynamic> toJson() => {
-        "company": company.toJson(),
-        "points": points,
-      };
+  Map<String, dynamic> toJson() => {"company": company.toJson(), "points": points};
 }
 
 class CompanyInfo {
   int id;
   String name;
 
-  CompanyInfo({
-    required this.id,
-    required this.name,
-  });
+  CompanyInfo({required this.id, required this.name});
 
   factory CompanyInfo.fromJson(Map<String, dynamic> json) {
     try {
-      return CompanyInfo(
-        id: json['id'],
-        name: json['name'],
-      );
+      return CompanyInfo(id: json['id'], name: json['name']);
     } catch (e) {
       log('Error parsing CompanyInfo: $e');
       return CompanyInfo(id: 0, name: '');
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "name": name,
-      };
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
 }
 
 // Legacy class - TODO: Remove when legacy API is discontinued
@@ -414,27 +364,18 @@ class Company {
   String? name;
   int? jobpoints;
 
-  Company({
-    this.name,
-    this.jobpoints,
-  });
+  Company({this.name, this.jobpoints});
 
   factory Company.fromJson(Map<String, dynamic> json) {
     try {
-      return Company(
-        name: json["name"],
-        jobpoints: json["jobpoints"],
-      );
+      return Company(name: json["name"], jobpoints: json["jobpoints"]);
     } catch (e) {
       log('Error parsing Company: $e');
       return Company();
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        "name": name,
-        "jobpoints": jobpoints,
-      };
+  Map<String, dynamic> toJson() => {"name": name, "jobpoints": jobpoints};
 }
 
 class Jobs {
@@ -445,14 +386,7 @@ class Jobs {
   int? law;
   int? grocer;
 
-  Jobs({
-    this.army,
-    this.medical,
-    this.casino,
-    this.education,
-    this.law,
-    this.grocer,
-  });
+  Jobs({this.army, this.medical, this.casino, this.education, this.law, this.grocer});
 
   factory Jobs.fromJson(Map<String, dynamic> json) {
     try {
@@ -471,13 +405,13 @@ class Jobs {
   }
 
   Map<String, dynamic> toJson() => {
-        "army": army,
-        "medical": medical,
-        "casino": casino,
-        "education": education,
-        "law": law,
-        "grocer": grocer,
-      };
+    "army": army,
+    "medical": medical,
+    "casino": casino,
+    "education": education,
+    "law": law,
+    "grocer": grocer,
+  };
 }
 
 class Metadata {
@@ -500,27 +434,18 @@ class Links {
   dynamic prev;
   dynamic next;
 
-  Links({
-    this.prev,
-    this.next,
-  });
+  Links({this.prev, this.next});
 
   factory Links.fromJson(Map<String, dynamic> json) {
     try {
-      return Links(
-        prev: json["prev"],
-        next: json["next"],
-      );
+      return Links(prev: json["prev"], next: json["next"]);
     } catch (e) {
       log('Error parsing Links: $e');
       return Links();
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        "prev": prev,
-        "next": next,
-      };
+  Map<String, dynamic> toJson() => {"prev": prev, "next": next};
 }
 
 class WorkStats {
@@ -530,11 +455,7 @@ class WorkStats {
 
   int get total => (manualLabor ?? 0) + (intelligence ?? 0) + (endurance ?? 0);
 
-  WorkStats({
-    this.manualLabor,
-    this.intelligence,
-    this.endurance,
-  });
+  WorkStats({this.manualLabor, this.intelligence, this.endurance});
 
   factory WorkStats.fromJson(Map<String, dynamic> json) {
     try {
@@ -553,7 +474,8 @@ class WorkStats {
 
       // Handle both legacy and new API structures
       final workstatsData = (json.containsKey('workstats') && json['workstats'] != null)
-          ? json['workstats'] as Map<String, dynamic> // New API
+          ? json['workstats']
+                as Map<String, dynamic> // New API
           : json; // Legacy API
 
       return WorkStats(
@@ -568,11 +490,7 @@ class WorkStats {
     return WorkStats();
   }
 
-  Map<String, dynamic> toJson() => {
-        "manual_labor": manualLabor,
-        "intelligence": intelligence,
-        "endurance": endurance,
-      };
+  Map<String, dynamic> toJson() => {"manual_labor": manualLabor, "intelligence": intelligence, "endurance": endurance};
 }
 
 class BattleStats {
@@ -582,13 +500,7 @@ class BattleStats {
   final BattleStat? dexterity;
   final int? total;
 
-  BattleStats({
-    this.strength,
-    this.defense,
-    this.speed,
-    this.dexterity,
-    this.total,
-  });
+  BattleStats({this.strength, this.defense, this.speed, this.dexterity, this.total});
 
   /// Valores efectivos calculados (con modificadores aplicados)
   double get effectiveStrength => strength?.effectiveValue ?? 0.0;
@@ -646,8 +558,9 @@ class BattleStats {
           defense: json['defense'] != null
               ? BattleStat.legacy(json['defense'], json['defense_modifier'] ?? 0, defenseInfo)
               : null,
-          speed:
-              json['speed'] != null ? BattleStat.legacy(json['speed'], json['speed_modifier'] ?? 0, speedInfo) : null,
+          speed: json['speed'] != null
+              ? BattleStat.legacy(json['speed'], json['speed_modifier'] ?? 0, speedInfo)
+              : null,
           dexterity: json['dexterity'] != null
               ? BattleStat.legacy(json['dexterity'], json['dexterity_modifier'] ?? 0, dexterityInfo)
               : null,
@@ -662,12 +575,12 @@ class BattleStats {
   }
 
   Map<String, dynamic> toJson() => {
-        "strength": strength?.toJson(),
-        "defense": defense?.toJson(),
-        "speed": speed?.toJson(),
-        "dexterity": dexterity?.toJson(),
-        "total": total,
-      };
+    "strength": strength?.toJson(),
+    "defense": defense?.toJson(),
+    "speed": speed?.toJson(),
+    "dexterity": dexterity?.toJson(),
+    "total": total,
+  };
 }
 
 class BattleStat {
@@ -675,11 +588,7 @@ class BattleStat {
   final int modifier;
   final List<BattleStatModifier>? modifiers;
 
-  BattleStat({
-    required this.value,
-    required this.modifier,
-    this.modifiers,
-  });
+  BattleStat({required this.value, required this.modifier, this.modifiers});
 
   double get effectiveValue {
     if (modifiers == null || modifiers!.isEmpty) {
@@ -759,26 +668,18 @@ class BattleStat {
         final percentValue = int.tryParse(match.group(2) ?? '0') ?? 0;
         final effect = '$sign$percentValue%';
 
-        parsedModifiers.add(BattleStatModifier(
-          effect: effect,
-          value: percentValue.toDouble(),
-          type: 'legacy',
-        ));
+        parsedModifiers.add(BattleStatModifier(effect: effect, value: percentValue.toDouble(), type: 'legacy'));
       }
     }
 
-    return BattleStat(
-      value: value,
-      modifier: modifier,
-      modifiers: parsedModifiers.isEmpty ? null : parsedModifiers,
-    );
+    return BattleStat(value: value, modifier: modifier, modifiers: parsedModifiers.isEmpty ? null : parsedModifiers);
   }
 
   Map<String, dynamic> toJson() => {
-        "value": value,
-        "modifier": modifier,
-        "modifiers": modifiers?.map((x) => x.toJson()).toList(),
-      };
+    "value": value,
+    "modifier": modifier,
+    "modifiers": modifiers?.map((x) => x.toJson()).toList(),
+  };
 }
 
 class BattleStatModifier {
@@ -786,11 +687,7 @@ class BattleStatModifier {
   final double value;
   final String type;
 
-  BattleStatModifier({
-    required this.effect,
-    required this.value,
-    required this.type,
-  });
+  BattleStatModifier({required this.effect, required this.value, required this.type});
 
   factory BattleStatModifier.fromJson(Map<String, dynamic> json) {
     try {
@@ -805,11 +702,7 @@ class BattleStatModifier {
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        "effect": effect,
-        "value": value,
-        "type": type,
-      };
+  Map<String, dynamic> toJson() => {"effect": effect, "value": value, "type": type};
 }
 
 class Money {
@@ -891,32 +784,26 @@ class Money {
   }
 
   Map<String, dynamic> toJson() => {
-        "points": points,
-        "wallet": wallet,
-        "company": company,
-        "vault": vault,
-        "cayman_bank": caymanBank,
-        "city_bank": cityBank?.toJson(),
-        "faction": faction?.toJson(),
-        "daily_networth": dailyNetworth,
-      };
+    "points": points,
+    "wallet": wallet,
+    "company": company,
+    "vault": vault,
+    "cayman_bank": caymanBank,
+    "city_bank": cityBank?.toJson(),
+    "faction": faction?.toJson(),
+    "daily_networth": dailyNetworth,
+  };
 }
 
 class CityBankV2 {
   final int amount;
   final int until;
 
-  CityBankV2({
-    this.amount = 0,
-    this.until = 0,
-  });
+  CityBankV2({this.amount = 0, this.until = 0});
 
   factory CityBankV2.fromJson(Map<String, dynamic> json) {
     try {
-      return CityBankV2(
-        amount: json['amount'] ?? 0,
-        until: json['until'] ?? 0,
-      );
+      return CityBankV2(amount: json['amount'] ?? 0, until: json['until'] ?? 0);
     } catch (e) {
       log('Error parsing CityBankV2: $e');
       return CityBankV2();
@@ -924,42 +811,28 @@ class CityBankV2 {
   }
 
   // TODO: Remove when legacy API is discontinued
-  factory CityBankV2.legacy(Map<String, dynamic> json) => CityBankV2(
-        amount: json['amount'] ?? 0,
-        until: json['time_left'] ?? 0,
-      );
+  factory CityBankV2.legacy(Map<String, dynamic> json) =>
+      CityBankV2(amount: json['amount'] ?? 0, until: json['time_left'] ?? 0);
 
-  Map<String, dynamic> toJson() => {
-        "amount": amount,
-        "until": until,
-      };
+  Map<String, dynamic> toJson() => {"amount": amount, "until": until};
 }
 
 class FactionMoney {
   final int money;
   final int points;
 
-  FactionMoney({
-    required this.money,
-    required this.points,
-  });
+  FactionMoney({required this.money, required this.points});
 
   factory FactionMoney.fromJson(Map<String, dynamic> json) {
     try {
-      return FactionMoney(
-        money: json['money'] ?? 0,
-        points: json['points'] ?? 0,
-      );
+      return FactionMoney(money: json['money'] ?? 0, points: json['points'] ?? 0);
     } catch (e) {
       log('Error parsing FactionMoney: $e');
       return FactionMoney(money: 0, points: 0);
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        "money": money,
-        "points": points,
-      };
+  Map<String, dynamic> toJson() => {"money": money, "points": points};
 }
 
 class Skills {
@@ -982,9 +855,7 @@ class Skills {
       // Handle both legacy and new API structures
       if (json.containsKey('skills') && json['skills'] != null && json['skills'] is List) {
         // New API: skills is a List of Skill objects
-        return Skills(
-          skillList: List<Skill>.from(json['skills'].map((x) => Skill.fromJson(x))),
-        );
+        return Skills(skillList: List<Skill>.from(json['skills'].map((x) => Skill.fromJson(x))));
       } else {
         // Legacy API: skills are individual fields at root level
         final List<Skill> skills = [];
@@ -1025,9 +896,7 @@ class Skills {
     return Skills();
   }
 
-  Map<String, dynamic> toJson() => {
-        "skills": skillList == null ? [] : skillList!.map((x) => x.toJson()).toList(),
-      };
+  Map<String, dynamic> toJson() => {"skills": skillList == null ? [] : skillList!.map((x) => x.toJson()).toList()};
 }
 
 class Skill {
@@ -1035,28 +904,16 @@ class Skill {
   final String name;
   final double level;
 
-  Skill({
-    required this.slug,
-    required this.name,
-    required this.level,
-  });
+  Skill({required this.slug, required this.name, required this.level});
 
   factory Skill.fromJson(Map<String, dynamic> json) {
     try {
-      return Skill(
-        slug: json['slug'] ?? '',
-        name: json['name'] ?? '',
-        level: (json['level'] ?? 0).toDouble(),
-      );
+      return Skill(slug: json['slug'] ?? '', name: json['name'] ?? '', level: (json['level'] ?? 0).toDouble());
     } catch (e) {
       log('Error parsing Skill: $e');
       return Skill(slug: '', name: '', level: 0.0);
     }
   }
 
-  Map<String, dynamic> toJson() => {
-        "slug": slug,
-        "name": name,
-        "level": level,
-      };
+  Map<String, dynamic> toJson() => {"slug": slug, "name": name, "level": level};
 }

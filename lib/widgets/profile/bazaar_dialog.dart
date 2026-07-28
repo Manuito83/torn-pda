@@ -118,7 +118,9 @@ class BazaarDialog extends StatelessWidget {
     final costCurrency = NumberFormat("#,##0", "en_US");
 
     for (final element in bazaarModel!) {
-      final marketDiff = element.marketPrice! - element.price!;
+      final quantity = element.quantity ?? 0;
+      final price = element.price ?? 0;
+      final marketDiff = (element.marketPrice ?? 0) - price;
       Color? marketColor = Colors.green;
       var marketString = "";
       if (marketDiff.isNegative) {
@@ -144,7 +146,7 @@ class BazaarDialog extends StatelessWidget {
                       },
                     ),
                     Text(
-                      "${element.name} x${element.quantity}",
+                      "${element.name} x$quantity",
                       style: const TextStyle(
                         fontSize: 13,
                       ),
@@ -158,8 +160,8 @@ class BazaarDialog extends StatelessWidget {
                     children: [
                       const SizedBox(height: 5),
                       Text(
-                        "@ \$${costCurrency.format(element.price)}"
-                        "${element.quantity! > 1 ? " ea. (\$${costCurrency.format(element.price! * element.quantity!)})" : ""}",
+                        "@ \$${costCurrency.format(price)}"
+                        "${quantity > 1 ? " ea. (\$${costCurrency.format(price * quantity)})" : ""}",
                         style: const TextStyle(
                           fontSize: 13,
                         ),
