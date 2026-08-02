@@ -5,21 +5,29 @@ import { sendNotificationToUser } from "./notification";
 
 const aDayInMilliseconds = 24 * 60 * 60 * 1000;
 
+// Ceiling per run, so a big backlog drains over several nights instead of in one burst
+const staleMaxPerRun = 10000;
+// Parallel FCM sends to avoid ECONNRESET
+const staleNotifyConcurrency = 50;
+
 export const deactivateStale = onSchedule(
   {
     schedule: "0 0 * * *",
     region: "us-east4",
     memory: "512MiB",
-    timeoutSeconds: 120,
+    timeoutSeconds: 540,
   },
   async () => {
     const currentDateInMillis = Date.now();
     const batchSize = 500;
     let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
     let totalProcessed = 0;
+    let notifySent = 0;
+    let notifySkipped = 0;
+    let notifyFailed = 0;
 
     // This pull the users who haven't open the app for 10 days
-    while (true) {
+    while (totalProcessed < staleMaxPerRun) {
       let query = admin
         .firestore()
         .collection("players")
@@ -38,32 +46,48 @@ export const deactivateStale = onSchedule(
       }
 
       const batch = admin.firestore().batch();
-      const notificationPromises: Promise<any>[] = [];
-
       snapshot.docs.forEach((doc) => {
         const user = doc.data();
-        notificationPromises.push(
-          sendNotificationToUser({
-            token: user.token,
-            title: "Automatic alerts have been deactivated!",
-            body: "Your alerts have been turned off due to inactivity, please use Torn PDA again to reactivate! If you think this is an error, contact us!",
-            icon: "notification_icon",
-            color: "#FFFFFF",
-            channelId: "Alerts stale user",
-            vibration: "medium",
-          })
-        );
         batch.update(doc.ref, { active: false });
-        logger.warn(`Staled: ${user.playerId.toString()} with UID ${user.uid}`);
+        logger.warn(`Staled: ${user.playerId} with UID ${user.uid}`);
       });
-
-      await Promise.all([batch.commit(), ...notificationPromises]);
+      await batch.commit();
 
       totalProcessed += snapshot.size;
       lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      // Best effort notification, throttled and never fatal
+      const toNotify = snapshot.docs
+        .map((doc) => doc.data())
+        .filter((user) => user.token);
+
+      for (let i = 0; i < toNotify.length; i += staleNotifyConcurrency) {
+        const results = await Promise.allSettled(
+          toNotify.slice(i, i + staleNotifyConcurrency).map((user) =>
+            sendNotificationToUser({
+              token: user.token,
+              title: "Automatic alerts have been deactivated!",
+              body: "Your alerts have been turned off due to inactivity, please use Torn PDA again to reactivate! If you think this is an error, contact us!",
+              icon: "notification_icon",
+              color: "#FFFFFF",
+              channelId: "Alerts stale user",
+              vibration: "medium",
+            })
+          )
+        );
+        // A fulfilled null means the token was dead
+        notifySent += results.filter((r) => r.status === "fulfilled" && r.value !== null).length;
+        notifySkipped += results.filter((r) => r.status === "fulfilled" && r.value === null).length;
+        notifyFailed += results.filter((r) => r.status === "rejected").length;
+      }
     }
 
-    logger.info(`Deactivate stale users completed: ${totalProcessed}`);
+    const capped = totalProcessed >= staleMaxPerRun;
+    logger.info(
+      `Deactivate stale users completed: ${totalProcessed} ` +
+      `(sent ${notifySent}, dead token ${notifySkipped}, failed ${notifyFailed}` +
+      `${capped ? `, hit the ${staleMaxPerRun} cap, rest continues tomorrow` : ""})`
+    );
   }
 );
 
@@ -72,7 +96,7 @@ export const deleteStale = onSchedule(
     schedule: "0 0 15 * *",
     region: "us-east4",
     memory: "512MiB",
-    timeoutSeconds: 120,
+    timeoutSeconds: 540,
   },
   async () => {
     const currentDateInMillis = Date.now();
