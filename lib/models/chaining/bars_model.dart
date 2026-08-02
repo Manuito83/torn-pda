@@ -471,18 +471,21 @@ class Status {
 class Travel {
   Travel({
     this.destination,
+    this.method,
     this.timestamp,
     this.departed,
     this.timeLeft,
   });
 
   String? destination;
+  String? method;
   int? timestamp;
   int? departed;
   int? timeLeft;
 
   factory Travel.fromJson(Map<String, dynamic> json) => Travel(
         destination: json["destination"],
+        method: json["method"],
         timestamp: json["timestamp"],
         departed: json["departed"],
         timeLeft: json["time_left"],
@@ -490,6 +493,7 @@ class Travel {
 
   Map<String, dynamic> toJson() => {
         "destination": destination,
+        "method": method,
         "timestamp": timestamp,
         "departed": departed,
         "time_left": timeLeft,

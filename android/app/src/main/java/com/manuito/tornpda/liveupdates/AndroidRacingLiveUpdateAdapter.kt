@@ -23,6 +23,7 @@ class AndroidRacingLiveUpdateAdapter(
 
     override fun startOrUpdate(sessionId: String, payload: LiveUpdatePayload): LiveUpdateAdapterResult {
         LiveUpdateNotificationChannel.ensureCreated(context, LiveUpdateActivityType.RACING)
+        LiveUpdateNotificationChannel.sweepForeignIds(context, LiveUpdateActivityType.RACING)
         val isExistingSession = activeSessionId == sessionId && cachedPayload != null
         // Skip re-posting when content is unchanged to avoid a visual flash
         // on IMPORTANCE_HIGH channels when the app resumes
@@ -36,7 +37,7 @@ class AndroidRacingLiveUpdateAdapter(
         if (contentChanged) {
             val tapIntent = tapIntentFactory.buildRacingTapIntent(sessionId, payload.stateIdentifier)
             val dismissIntent = LiveUpdateNotificationReceiver.createDismissIntent(context, sessionId)
-            notifySurface(sessionId.hashCode(), notificationFactory.build(payload, tapIntent, dismissIntent))
+            notifySurface(LiveUpdateNotificationChannel.RACING_NOTIFICATION_ID, notificationFactory.build(payload, tapIntent, dismissIntent))
 
             // Schedule the demotion alarm so the chip converts to a normal
             // notification even if the app is backgrounded or killed
@@ -74,7 +75,7 @@ class AndroidRacingLiveUpdateAdapter(
                 // alarm demote it from chip to normal tray entry
                 Log.d("RacingLU", "Adapter: end() skipping cancel — finished notification stays for demotion.")
             } else {
-                notificationManager.cancel(it.hashCode())
+                notificationManager.cancel(LiveUpdateNotificationChannel.RACING_NOTIFICATION_ID)
             }
             RacingLiveUpdateRefreshScheduler.cancelRefresh(context, it)
             clearState(it)

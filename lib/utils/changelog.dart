@@ -171,6 +171,7 @@ List<_MVersion> _modernChangelog() => [
             androidOnly: true,
           ),
           _MItem('Fixed travel live updates return flight recognition', androidOnly: true),
+          _MItem('Fixed duplicated travel and racing live update cards', androidOnly: true),
           _MItem(
             'Fixed a possible error in injected scripts when reading element classes',
             detail:

@@ -110,4 +110,29 @@ class TravelLiveUpdateParserTest {
         val args = TravelLiveUpdateParser.buildEnRouteArguments(state(), now, apiKey = "  ")
         assertFalse(args.containsKey(LiveUpdateNotificationReceiver.EXTRA_API_KEY))
     }
+
+    // ── route country ────────────────────────────────────────────────────
+
+    @Test
+    fun outboundRouteCountryIsTheDestination() {
+        val args = TravelLiveUpdateParser.buildEnRouteArguments(state(), now, null)
+        assertEquals("Switzerland", args["routeCountry"])
+    }
+
+    @Test
+    fun legHomeCarriesTheCountryItLeft() {
+        val args = TravelLiveUpdateParser.buildEnRouteArguments(
+            state(destination = "Torn"),
+            now,
+            apiKey = null,
+            originCountry = "Switzerland",
+        )
+        assertEquals("Switzerland", args["routeCountry"])
+    }
+
+    @Test
+    fun legHomeFromNowhereKnownCarriesNoCountry() {
+        val args = TravelLiveUpdateParser.buildEnRouteArguments(state(destination = "Torn"), now, null)
+        assertFalse(args.containsKey("routeCountry"))
+    }
 }

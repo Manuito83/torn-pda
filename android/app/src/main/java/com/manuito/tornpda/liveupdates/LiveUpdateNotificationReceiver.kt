@@ -23,6 +23,10 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 TravelLiveUpdateRefreshScheduler.cancelAbroadPoll(it, sessionId)
                 RacingLiveUpdateRefreshScheduler.cancelRefresh(it, sessionId)
                 cancelFinishedCleanup(it, sessionId)
+                // The adapter listener only exists while the app runs; clear here too
+                // or a swipe with the app dead leaves the session deduping forever
+                LiveUpdateSessionRegistry(it, LiveUpdateActivityType.TRAVEL).clear(sessionId)
+                LiveUpdateSessionRegistry(it, LiveUpdateActivityType.RACING).clear(sessionId)
             }
             listeners.forEach { it.onNotificationDismissed(sessionId) }
         } else if (intent?.action == ACTION_REFRESH) {
@@ -33,6 +37,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 arguments = intent.extras.toPayloadArguments(),
             )
             if (!payload.isValidFor(LiveUpdateActivityType.TRAVEL)) return
+            if (isStaleTravelChain(contextNonNull, sessionId)) return
 
             LiveUpdateNotificationChannel.ensureCreated(contextNonNull, LiveUpdateActivityType.TRAVEL)
             val tapIntent = LiveUpdateTapIntentFactory(contextNonNull).buildTravelTapIntent(sessionId, payload.travelIdentifier)
@@ -43,7 +48,8 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 tapIntent = tapIntent,
                 dismissIntent = dismissIntent,
             )
-            NotificationManagerCompat.from(contextNonNull).notify(sessionId.hashCode(), notification)
+            NotificationManagerCompat.from(contextNonNull)
+                .notify(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID, notification)
             TravelLiveUpdateRefreshScheduler.scheduleNextRefresh(contextNonNull, sessionId, payload)
             TravelLiveUpdateRefreshScheduler.scheduleArrived(contextNonNull, sessionId, payload)
             armAbroadWatchIfArrivedAbroad(contextNonNull, sessionId, payload)
@@ -59,6 +65,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 Log.w(TAG, "Racing refresh: invalid payload, aborting. stateId=${payload.stateIdentifier}, title=${payload.titleText}")
                 return
             }
+            if (isStaleRacingChain(contextNonNull, sessionId)) return
 
             val pendingResult = goAsync()
             Thread {
@@ -95,7 +102,8 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                             val dismissIntent = createDismissIntent(contextNonNull, sessionId)
                             val notification = RacingLiveUpdateNotificationFactory(contextNonNull)
                                 .build(updatedPayload, tapIntent, dismissIntent)
-                            NotificationManagerCompat.from(contextNonNull).notify(sessionId.hashCode(), notification)
+                            NotificationManagerCompat.from(contextNonNull)
+                                .notify(LiveUpdateNotificationChannel.RACING_NOTIFICATION_ID, notification)
                             RacingLiveUpdateRefreshScheduler.scheduleNextRefresh(contextNonNull, sessionId, updatedPayload)
 
                             // Finished: schedule a demotion alarm to convert
@@ -108,7 +116,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                         is RacingFetchResult.Inactive -> {
                             Log.d(TAG, "Racing refresh: API returned Inactive. Cancelling notification and chain.")
                             // User is no longer racing — cancel notification and refresh chain
-                            NotificationManagerCompat.from(contextNonNull).cancel(sessionId.hashCode())
+                            NotificationManagerCompat.from(contextNonNull).cancel(LiveUpdateNotificationChannel.RACING_NOTIFICATION_ID)
                             RacingLiveUpdateRefreshScheduler.cancelRefresh(contextNonNull, sessionId)
                         }
 
@@ -120,7 +128,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                             val target = payload.targetTimeTimestamp
                             val now = System.currentTimeMillis() / 1000
                             if (target != null && target > 0 && now > target + DETERMINISTIC_EXPIRY_SECONDS) {
-                                NotificationManagerCompat.from(contextNonNull).cancel(sessionId.hashCode())
+                                NotificationManagerCompat.from(contextNonNull).cancel(LiveUpdateNotificationChannel.RACING_NOTIFICATION_ID)
                                 RacingLiveUpdateRefreshScheduler.cancelRefresh(contextNonNull, sessionId)
                             } else {
                                 RacingLiveUpdateRefreshScheduler.scheduleNextRefresh(contextNonNull, sessionId, payload)
@@ -138,15 +146,13 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 activityType = LiveUpdateActivityType.TRAVEL,
                 arguments = intent.extras.toPayloadArguments(),
             )
+            if (isStaleTravelChain(contextNonNull, sessionId)) return
 
             TravelLiveUpdateRefreshScheduler.cancelRefresh(contextNonNull, sessionId)
             showArrivedNotification(contextNonNull, sessionId, payload)
 
             val destination = payload.currentDestinationDisplayName
             if (destination.isNullOrBlank() || destination.equals(TORN, ignoreCase = true)) {
-                // Back home. The session stays: the card we just posted uses its id,
-                // and a new one would strand it next to the following trip. Flutter
-                // clears both together on its next run
                 TravelLiveUpdateRefreshScheduler.cancelAbroadPoll(contextNonNull, sessionId)
             } else {
                 armAbroadWatchIfArrivedAbroad(contextNonNull, sessionId, payload)
@@ -158,6 +164,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 activityType = LiveUpdateActivityType.TRAVEL,
                 arguments = intent.extras.toPayloadArguments(),
             )
+            if (isStaleTravelChain(contextNonNull, sessionId)) return
             val apiKey = payload.extras[EXTRA_API_KEY] as? String
             if (apiKey.isNullOrBlank()) {
                 Log.w(TAG_TRAVEL, "Abroad poll: no API key in payload, cancelling chain.")
@@ -176,6 +183,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         } else if (intent?.action == ACTION_RACING_FINISHED_CLEANUP) {
             val contextNonNull = context ?: return
             val sessionId = intent.getStringExtra(EXTRA_SESSION_ID) ?: return
+            if (isStaleRacingChain(contextNonNull, sessionId)) return
             Log.d(TAG, "Racing finished cleanup: demoting chip to normal notification. session=$sessionId")
 
             // Rebuild with ongoing=true but non-promoted so the chip
@@ -186,7 +194,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             )
             if (!payload.isValidFor(LiveUpdateActivityType.RACING)) {
                 // Payload lost — cancel the notification entirely
-                NotificationManagerCompat.from(contextNonNull).cancel(sessionId.hashCode())
+                NotificationManagerCompat.from(contextNonNull).cancel(LiveUpdateNotificationChannel.RACING_NOTIFICATION_ID)
                 return
             }
 
@@ -196,7 +204,8 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             val dismissIntent = createDismissIntent(contextNonNull, sessionId)
             val notification = RacingLiveUpdateNotificationFactory(contextNonNull)
                 .build(payload, tapIntent, dismissIntent, ongoing = true, promoted = false)
-            NotificationManagerCompat.from(contextNonNull).notify(sessionId.hashCode(), notification)
+            NotificationManagerCompat.from(contextNonNull)
+                .notify(LiveUpdateNotificationChannel.RACING_NOTIFICATION_ID, notification)
 
             // Clear persisted session so this finished race is not
             // re-adopted when the app is next opened
@@ -205,9 +214,8 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
     }
 
     /**
-     * The last refresh alarm and the arrival alarm land on the same instant and
-     * whichever runs first cancels the other, so both have to arm the poll.
-     * No-ops unless this is an arrival abroad.
+     * Arms the poll on an arrival abroad, and no-ops otherwise. Called from both the
+     * refresh and the arrival alarm, which share an instant and cancel each other.
      */
     private fun armAbroadWatchIfArrivedAbroad(
         context: Context,
@@ -229,9 +237,29 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Runs off the main thread. Decides what the abroad poll found and re-arms
-     * (or tears down) the alarm chain accordingly.
+     * With a fixed notification id, an alarm chain left behind by an older session
+     * would repaint over the live card. Cancel the orphan instead of letting it fire.
      */
+    private fun isStaleTravelChain(context: Context, sessionId: String): Boolean {
+        val current = LiveUpdateSessionRegistry(context, LiveUpdateActivityType.TRAVEL).current() ?: return false
+        if (current.sessionId == sessionId) return false
+        Log.d(TAG_TRAVEL, "Alarm from stale session $sessionId ignored, current is ${current.sessionId}.")
+        TravelLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
+        TravelLiveUpdateRefreshScheduler.cancelArrived(context, sessionId)
+        TravelLiveUpdateRefreshScheduler.cancelAbroadPoll(context, sessionId)
+        return true
+    }
+
+    private fun isStaleRacingChain(context: Context, sessionId: String): Boolean {
+        val current = LiveUpdateSessionRegistry(context, LiveUpdateActivityType.RACING).current() ?: return false
+        if (current.sessionId == sessionId) return false
+        Log.d(TAG, "Racing: alarm from stale session $sessionId ignored, current is ${current.sessionId}.")
+        RacingLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
+        cancelFinishedCleanup(context, sessionId)
+        return true
+    }
+
+    /** Runs off the main thread. */
     private fun handleAbroadPoll(
         context: Context,
         sessionId: String,
@@ -246,6 +274,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                         state = result.state,
                         nowSeconds = System.currentTimeMillis() / 1000,
                         apiKey = apiKey,
+                        originCountry = payload.routeCountry ?: payload.currentDestinationDisplayName,
                     ),
                 )
                 if (!enRoute.isValidFor(LiveUpdateActivityType.TRAVEL)) {
@@ -256,6 +285,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
 
                 Log.d(TAG_TRAVEL, "Abroad poll: flight detected to ${enRoute.currentDestinationDisplayName}.")
                 LiveUpdateNotificationChannel.ensureCreated(context, LiveUpdateActivityType.TRAVEL)
+                LiveUpdateNotificationChannel.sweepForeignIds(context, LiveUpdateActivityType.TRAVEL)
                 val tapIntent = LiveUpdateTapIntentFactory(context).buildTravelTapIntent(sessionId, enRoute.travelIdentifier)
                 val dismissIntent = createDismissIntent(context, sessionId)
                 val notification = TravelLiveUpdateNotificationFactory(context).build(
@@ -264,14 +294,14 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                     tapIntent = tapIntent,
                     dismissIntent = dismissIntent,
                 )
-                NotificationManagerCompat.from(context).notify(sessionId.hashCode(), notification)
+                NotificationManagerCompat.from(context)
+                    .notify(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID, notification)
 
                 TravelLiveUpdateRefreshScheduler.cancelAbroadPoll(context, sessionId)
                 TravelLiveUpdateRefreshScheduler.scheduleNextRefresh(context, sessionId, enRoute)
                 TravelLiveUpdateRefreshScheduler.scheduleArrived(context, sessionId, enRoute)
 
-                // There is a card on screen now, so Flutter must reuse this id when
-                // it wakes up or it would post a second one
+                // Promote the session so Flutter reuses this id
                 val registry = LiveUpdateSessionRegistry(context, LiveUpdateActivityType.TRAVEL)
                 val nowMs = System.currentTimeMillis()
                 registry.markActive(
@@ -288,13 +318,12 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             }
 
             is TravelFetchResult.Abroad -> {
-                // Original payload, so the backoff keeps counting from the real arrival
                 TravelLiveUpdateRefreshScheduler.scheduleAbroadPoll(context, sessionId, payload)
             }
 
             TravelFetchResult.Home -> {
                 Log.d(TAG_TRAVEL, "Abroad poll: user is in Torn, tearing the session down.")
-                NotificationManagerCompat.from(context).cancel(sessionId.hashCode())
+                NotificationManagerCompat.from(context).cancel(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID)
                 TravelLiveUpdateRefreshScheduler.cancelAbroadPoll(context, sessionId)
                 TravelLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
                 TravelLiveUpdateRefreshScheduler.cancelArrived(context, sessionId)
@@ -329,7 +358,6 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         val notificationIcon = TravelLiveUpdateAssets.notificationIcon()
         val timeFormat = android.text.format.DateFormat.getTimeFormat(context)
 
-        // The scheduled arrival, not when the alarm fired, which Doze can delay
         val arrivedAtMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
         val arrivedAt = if (arrivedAtMillis > 0L) java.util.Date(arrivedAtMillis) else java.util.Date()
         val arrivedFormatted = timeFormat.format(arrivedAt)
@@ -369,7 +397,8 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
 
         route?.let { builder.setSubText(it) }
 
-        androidx.core.app.NotificationManagerCompat.from(context).notify(sessionId.hashCode(), builder.build())
+        androidx.core.app.NotificationManagerCompat.from(context)
+            .notify(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID, builder.build())
     }
 
     companion object {

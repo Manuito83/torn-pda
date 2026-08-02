@@ -94,12 +94,7 @@ class LiveUpdateChannelBridge(
         racingManager.removeListener(this)
     }
 
-    /**
-     * Arms the abroad poll without posting or touching any card. Flutter calls it
-     * whenever it sees the player abroad, since the paths that get there push no
-     * payload of their own: cold start on a stale arrival, or alarms wiped by a
-     * reboot or an app update.
-     */
+    /** Arms the abroad poll without posting or touching any card */
     private fun armTravelAbroadWatch(arguments: Map<String, Any?>): Boolean {
         val ctx = context ?: return false
         val payload = LiveUpdatePayload.fromMap(LiveUpdateActivityType.TRAVEL, arguments)
@@ -109,8 +104,6 @@ class LiveUpdateChannelBridge(
         val sessionId = existing?.sessionId ?: java.util.UUID.randomUUID().toString()
         val now = System.currentTimeMillis()
 
-        // Watch-only: marking it active would make isAnyActive() lie and Flutter
-        // would tear the watch down as if it were a live card
         if (existing == null) {
             registry.markActive(
                 LiveUpdateSessionState(

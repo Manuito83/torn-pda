@@ -1,14 +1,54 @@
 // Project imports:
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 
-enum TravelTicket {
-  standard,
-  private,
-  wlt,
-  business,
-}
+enum TravelTicket { standard, private, wlt, business }
 
 class TravelTimes {
+  static const Map<CountryName, String> _apiNames = {
+    CountryName.ARGENTINA: 'Argentina',
+    CountryName.CANADA: 'Canada',
+    CountryName.CAYMAN_ISLANDS: 'Cayman Islands',
+    CountryName.CHINA: 'China',
+    CountryName.HAWAII: 'Hawaii',
+    CountryName.JAPAN: 'Japan',
+    CountryName.MEXICO: 'Mexico',
+    CountryName.SOUTH_AFRICA: 'South Africa',
+    CountryName.SWITZERLAND: 'Switzerland',
+    CountryName.UAE: 'UAE',
+    CountryName.UNITED_KINGDOM: 'United Kingdom',
+  };
+
+  static TravelTicket? ticketFromApiMethod(String? method) {
+    switch (method?.toLowerCase()) {
+      case 'standard':
+        return TravelTicket.standard;
+      case 'airstrip':
+        return TravelTicket.private;
+      case 'private':
+        return TravelTicket.wlt;
+      case 'business':
+        return TravelTicket.business;
+    }
+    return null;
+  }
+
+  static String? inferOriginCountry({required int durationSeconds, required String? apiMethod}) {
+    final ticket = ticketFromApiMethod(apiMethod);
+    if (ticket == null || durationSeconds <= 0) return null;
+
+    String? match;
+    for (final entry in _apiNames.entries) {
+      final expected = travelTimeMinutesOneWay(countryCode: entry.key, ticket: ticket) * 60;
+      if (expected <= 0) continue;
+      final band = expected * 0.03 + 60;
+      if ((durationSeconds - expected).abs() <= band) {
+        if (match != null) return null;
+        match = entry.value;
+      }
+    }
+    return match;
+  }
+
   /// Converts a plain country name to CountryName enum.
   /// Delegates to CountryHelper for centralized mapping.
   static CountryName getCountry({required String plainName}) {
@@ -41,54 +81,55 @@ class TravelTimes {
     int tripUAE = 0;
     int tripCanada = 0;
 
+    // Times from the Torn wiki, last checked after patch #438
     switch (travelTicket!) {
       case TravelTicket.standard:
-        tripJapan = 225;
-        tripHawaii = 134;
-        tripChina = 242;
-        tripArgentina = 167;
-        tripUK = 159;
-        tripCayman = 35;
-        tripSouthAfrica = 297;
-        tripSwitzerland = 175;
-        tripMexico = 26;
-        tripUAE = 271;
-        tripCanada = 41;
+        tripJapan = 213;
+        tripHawaii = 127;
+        tripChina = 229;
+        tripArgentina = 158;
+        tripUK = 151;
+        tripCayman = 33;
+        tripSouthAfrica = 282;
+        tripSwitzerland = 166;
+        tripMexico = 24;
+        tripUAE = 257;
+        tripCanada = 39;
       case TravelTicket.private:
-        tripJapan = 158;
-        tripHawaii = 94;
-        tripChina = 169;
-        tripArgentina = 117;
-        tripUK = 111;
-        tripCayman = 25;
-        tripSouthAfrica = 208;
-        tripSwitzerland = 123;
-        tripMexico = 18;
-        tripUAE = 190;
-        tripCanada = 29;
+        tripJapan = 149;
+        tripHawaii = 89;
+        tripChina = 160;
+        tripArgentina = 111;
+        tripUK = 106;
+        tripCayman = 23;
+        tripSouthAfrica = 197;
+        tripSwitzerland = 116;
+        tripMexico = 17;
+        tripUAE = 180;
+        tripCanada = 27;
       case TravelTicket.wlt:
-        tripJapan = 113;
-        tripHawaii = 67;
-        tripChina = 121;
-        tripArgentina = 83;
-        tripUK = 80;
-        tripCayman = 18;
-        tripSouthAfrica = 149;
-        tripSwitzerland = 88;
-        tripMexico = 13;
-        tripUAE = 135;
-        tripCanada = 20;
+        tripJapan = 107;
+        tripHawaii = 63;
+        tripChina = 114;
+        tripArgentina = 79;
+        tripUK = 75;
+        tripCayman = 17;
+        tripSouthAfrica = 141;
+        tripSwitzerland = 83;
+        tripMexico = 12;
+        tripUAE = 128;
+        tripCanada = 19;
       case TravelTicket.business:
-        tripJapan = 68;
-        tripHawaii = 40;
-        tripChina = 72;
-        tripArgentina = 50;
-        tripUK = 48;
-        tripCayman = 11;
-        tripSouthAfrica = 89;
-        tripSwitzerland = 53;
-        tripMexico = 8;
-        tripUAE = 81;
+        tripJapan = 64;
+        tripHawaii = 38;
+        tripChina = 69;
+        tripArgentina = 47;
+        tripUK = 45;
+        tripCayman = 10;
+        tripSouthAfrica = 85;
+        tripSwitzerland = 50;
+        tripMexico = 7;
+        tripUAE = 77;
         tripCanada = 12;
     }
 

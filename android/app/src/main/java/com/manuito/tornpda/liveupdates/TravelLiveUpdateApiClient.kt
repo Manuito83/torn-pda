@@ -63,7 +63,6 @@ object TravelLiveUpdateApiClient {
         }
     }
 
-    /** Kept free of Android calls so it can be unit tested. Callers log. */
     fun parseResponse(
         json: JSONObject,
         nowSeconds: Long = System.currentTimeMillis() / 1000,

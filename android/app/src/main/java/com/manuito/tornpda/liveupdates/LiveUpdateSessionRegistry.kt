@@ -10,11 +10,7 @@ data class LiveUpdateSessionState(
     val startedAtMs: Long,
     val lastUpdatedAtMs: Long,
     val lastHasArrived: Boolean = false,
-    /**
-     * Session that only keeps the abroad poll armed, with no card on screen. It
-     * holds the id so the poll and Flutter agree on one notification, but it must
-     * not read as an active Live Update.
-     */
+    /** Only keeps the abroad poll armed: holds the id, but there is no card on screen. */
     val watchOnly: Boolean = false,
 )
 

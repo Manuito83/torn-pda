@@ -1272,7 +1272,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
           for (final not in activeNotifications) {
             if (not.id == null) continue;
-            if (not.channelId == 'travel_live_updates') continue;
+            if (not.channelId == 'live_updates_travel' || not.channelId == 'live_updates_racing') continue;
             // Platform channel to cancel direct Firebase notifications (we can call
             // "cancelAll()" there without affecting scheduled notifications, which is
             // a problem with the local plugin)

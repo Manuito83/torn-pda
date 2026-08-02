@@ -74,6 +74,31 @@ class DefaultLiveUpdateManagerTest {
     }
 
     @Test
+    fun persistedSessionInAFreshProcessDoesNotDedup() {
+        val eligibility = FakeEligibilityProvider(successResult())
+        val adapter = RecordingAdapter()
+        val sessionStore = RecordingSessionStore()
+        // Session survives in prefs, but this adapter never posted anything
+        sessionStore.markActive(
+            LiveUpdateSessionState(
+                sessionId = "session-old",
+                activityType = LiveUpdateActivityType.TRAVEL,
+                contentIdentifier = "torn-1700",
+                startedAtMs = 1L,
+                lastUpdatedAtMs = 1L,
+                lastHasArrived = false,
+            ),
+        )
+        val manager = DefaultLiveUpdateManager(LiveUpdateActivityType.TRAVEL, adapter, eligibility, sessionStore) { "unused" }
+
+        adapter.nextResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
+        val result = manager.startOrUpdate(payload())
+
+        assertEquals("session-old", result.sessionId)
+        assertEquals(1, adapter.startCalls)
+    }
+
+    @Test
     fun watchOnlySessionNeverDedups() {
         val eligibility = FakeEligibilityProvider(successResult())
         val adapter = RecordingAdapter()

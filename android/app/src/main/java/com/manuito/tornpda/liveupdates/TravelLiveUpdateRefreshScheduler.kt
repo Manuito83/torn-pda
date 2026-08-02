@@ -68,10 +68,7 @@ object TravelLiveUpdateRefreshScheduler {
         alarmManager.cancel(LiveUpdateNotificationReceiver.createArrivedIntent(context, sessionId, emptyMap()))
     }
 
-    /**
-     * Arms the poll that watches for the flight home while the app is not running.
-     * Cancels instead unless this is an arrival abroad and we have a key.
-     */
+    /** Arms the poll that watches for the flight home. Cancels unless abroad with a key. */
     fun scheduleAbroadPoll(context: Context, sessionId: String, payload: LiveUpdatePayload) {
         val arrival = payload.arrivalTimeTimestamp
         val destination = payload.currentDestinationDisplayName

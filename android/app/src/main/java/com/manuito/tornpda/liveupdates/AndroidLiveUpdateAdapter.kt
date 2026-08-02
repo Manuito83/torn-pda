@@ -31,6 +31,7 @@ class AndroidTravelLiveUpdateAdapter(
 
     override fun startOrUpdate(sessionId: String, payload: LiveUpdatePayload): LiveUpdateAdapterResult {
         LiveUpdateNotificationChannel.ensureCreated(context, LiveUpdateActivityType.TRAVEL)
+        LiveUpdateNotificationChannel.sweepForeignIds(context, LiveUpdateActivityType.TRAVEL)
         val isExistingSession = activeSessionId == sessionId && cachedPayload != null
         // Skip re-posting when content is unchanged to avoid a visual flash
         // on IMPORTANCE_HIGH channels when the app resumes
@@ -45,7 +46,7 @@ class AndroidTravelLiveUpdateAdapter(
         val dismissIntent = LiveUpdateNotificationReceiver.createDismissIntent(context, sessionId)
         if (contentChanged) {
             val notification = notificationFactory.build(sessionId, payload, tapIntent, dismissIntent)
-            notifySurface(sessionId.hashCode(), notification)
+            notifySurface(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID, notification)
         }
         TravelLiveUpdateRefreshScheduler.scheduleNextRefresh(context, sessionId, payload)
         TravelLiveUpdateRefreshScheduler.scheduleArrived(context, sessionId, payload)
@@ -80,7 +81,7 @@ class AndroidTravelLiveUpdateAdapter(
     override fun end(sessionId: String?): LiveUpdateAdapterResult {
         val resolvedId = sessionId ?: activeSessionId
         resolvedId?.let {
-            notificationManager.cancel(it.hashCode())
+            notificationManager.cancel(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID)
             clearState(it)
         }
         return LiveUpdateAdapterResult(status = LiveUpdateRequestStatus.UPDATED)
@@ -144,7 +145,7 @@ class AndroidTravelLiveUpdateAdapter(
                 if (current.hasArrived) break
 
                 val notification = notificationFactory.build(sessionId, current, tapIntent, dismissIntent)
-                notifySurface(sessionId.hashCode(), notification)
+                notifySurface(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID, notification)
             }
         }
     }

@@ -31,6 +31,10 @@ data class LiveUpdatePayload(
     val extras: Map<String, Any?>,
 ) {
 
+    /** Country this trip belongs to. A leg home only reports "Torn" as its destination. */
+    val routeCountry: String?
+        get() = extras["routeCountry"] as? String
+
     val contentIdentifier: String?
         get() = when (activityType) {
             LiveUpdateActivityType.TRAVEL -> travelIdentifier

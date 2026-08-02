@@ -51,21 +51,21 @@ void main() {
           countryName: 'Mexico',
           ticket: TravelTicket.standard,
         ),
-        26,
+        24,
       );
       expect(
         TravelTimes.travelTimeMinutesOneWay(
           countryName: 'Japan',
           ticket: TravelTicket.standard,
         ),
-        225,
+        213,
       );
       expect(
         TravelTimes.travelTimeMinutesOneWay(
           countryName: 'South Africa',
           ticket: TravelTicket.standard,
         ),
-        297,
+        282,
       );
     });
 
@@ -75,14 +75,14 @@ void main() {
           countryName: 'Japan',
           ticket: TravelTicket.business,
         ),
-        68,
+        64,
       );
       expect(
         TravelTimes.travelTimeMinutesOneWay(
           countryName: 'Mexico',
           ticket: TravelTicket.business,
         ),
-        8,
+        7,
       );
     });
 
@@ -107,7 +107,7 @@ void main() {
           countryCode: CountryName.TORN,
           ticket: TravelTicket.standard,
         ),
-        225,
+        213,
       );
     });
 
@@ -127,6 +127,80 @@ void main() {
 
       expect(wlt, lessThan(prv));
       expect(prv, lessThan(std));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // ticketFromApiMethod
+  // -------------------------------------------------------------------------
+  group('ticketFromApiMethod', () {
+    test('maps the API names, where Airstrip and Private are the traps', () {
+      expect(TravelTimes.ticketFromApiMethod('Standard'), TravelTicket.standard);
+      expect(TravelTimes.ticketFromApiMethod('Airstrip'), TravelTicket.private);
+      expect(TravelTimes.ticketFromApiMethod('Private'), TravelTicket.wlt);
+      expect(TravelTimes.ticketFromApiMethod('Business'), TravelTicket.business);
+    });
+
+    test('unknown or missing method maps to nothing', () {
+      expect(TravelTimes.ticketFromApiMethod('Broomstick'), isNull);
+      expect(TravelTimes.ticketFromApiMethod(null), isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // inferOriginCountry
+  // -------------------------------------------------------------------------
+  group('inferOriginCountry', () {
+    int minutes(int m) => m * 60;
+
+    test('an unambiguous duration names its country', () {
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: minutes(213), apiMethod: 'Standard'),
+        'Japan',
+      );
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: minutes(106), apiMethod: 'Airstrip'),
+        'United Kingdom',
+      );
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: minutes(257), apiMethod: 'Standard'),
+        'UAE',
+      );
+    });
+
+    test('the 3% variance is tolerated', () {
+      final varied = (minutes(213) * 1.025).round();
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: varied, apiMethod: 'Standard'),
+        'Japan',
+      );
+    });
+
+    test('the UK-Argentina overlap window stays anonymous', () {
+      // 155.5 min sits inside both standard bands
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: 9330, apiMethod: 'Standard'),
+        isNull,
+      );
+    });
+
+    test('a book-shortened flight matches nothing', () {
+      // UK standard with the -25% book: 113.25 min
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: 6795, apiMethod: 'Standard'),
+        isNull,
+      );
+    });
+
+    test('unknown method or bad duration stays anonymous', () {
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: minutes(213), apiMethod: null),
+        isNull,
+      );
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: 0, apiMethod: 'Standard'),
+        isNull,
+      );
     });
   });
 }

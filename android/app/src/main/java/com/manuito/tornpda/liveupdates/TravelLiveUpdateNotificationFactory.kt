@@ -66,7 +66,6 @@ class TravelLiveUpdateNotificationFactory(
     ): Notification {
         val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
         val notificationIcon = TravelLiveUpdateAssets.notificationIcon()
-        val remainingText = formatRemaining(payload)
         val earliestReturnText = formatEarliestReturn(payload)
         val arrivalClockTime = formatArrivalClockTime(payload)
 
@@ -104,19 +103,18 @@ class TravelLiveUpdateNotificationFactory(
             builder.setUsesChronometer(false)
             builder.setWhen(System.currentTimeMillis())
         } else {
-            val contentTextParts = buildList {
-                add(etaText)
-                remainingText?.let { add(it) }
-            }
+            // ProgressStyle only renders subText, title and text: ETA in the header,
+            // cabin announcement in the body
+            val body = announcement(payload) ?: secondary
 
             builder.setContentTitle("$title $destination")
-            builder.setContentText(contentTextParts.joinToString(" • "))
-            builder.setSubText(secondary)
+            builder.setContentText(body)
+            builder.setSubText(etaText)
             builder.setStyle(
                 NotificationCompat.BigTextStyle().bigText(
                     buildList {
                         add(secondary)
-                        add(contentTextParts.joinToString(" • "))
+                        add(body)
                         earliestReturnText?.let { add(it) }
                     }.joinToString("\n"),
                 ),
@@ -153,7 +151,6 @@ class TravelLiveUpdateNotificationFactory(
     ): Notification {
         val hasActuallyArrived = contentBuilder.hasActuallyArrived(payload)
         val notificationIcon = TravelLiveUpdateAssets.notificationIcon()
-        val remainingText = formatRemaining(payload)
         val earliestReturnText = formatEarliestReturn(payload)
         val arrivalClockTime = formatArrivalClockTime(payload)
 
@@ -191,14 +188,11 @@ class TravelLiveUpdateNotificationFactory(
             builder.setUsesChronometer(false)
             builder.setWhen(System.currentTimeMillis())
         } else {
-            val contentTextParts = buildList {
-                add(etaText)
-                remainingText?.let { add(it) }
-            }
+            val body = announcement(payload) ?: secondary
 
             builder.setContentTitle("$title $destination")
-            builder.setContentText(contentTextParts.joinToString(" • "))
-            builder.setSubText(secondary)
+            builder.setContentText(body)
+            builder.setSubText(etaText)
 
             val progressInfo = contentBuilder.computeProgress(payload)
             val styleApplied = applyProgressStyleIfAvailable(builder, payload, progressInfo)
@@ -207,7 +201,7 @@ class TravelLiveUpdateNotificationFactory(
                     Notification.BigTextStyle().bigText(
                         buildList {
                             add(secondary)
-                            add(contentTextParts.joinToString(" • "))
+                            add(body)
                             earliestReturnText?.let { add(it) }
                         }.joinToString("\n"),
                     ),
@@ -245,15 +239,16 @@ class TravelLiveUpdateNotificationFactory(
         }
     }
 
-    private fun formatRemaining(payload: LiveUpdatePayload): String? {
-        val remainingSeconds = contentBuilder.computeRemainingSeconds(payload) ?: return null
-        if (remainingSeconds <= 0) return null
-        if (remainingSeconds < 180) {
-            val lessThanMinutes = ((remainingSeconds + 59) / 60).coerceAtLeast(1)
-            return context.getString(R.string.live_update_remaining_less_than_pattern, "${lessThanMinutes}m")
-        }
-        val remaining = contentBuilder.computeRemainingTime(payload) ?: return null
-        return context.getString(R.string.live_update_remaining_pattern, remaining.toCompact())
+    private fun announcement(payload: LiveUpdatePayload): String? {
+        return TravelLiveUpdateAnnouncements.announcementFor(
+            destination = payload.currentDestinationDisplayName,
+            origin = payload.originDisplayName,
+            routeCountry = payload.routeCountry,
+            departureTimestamp = payload.departureTimeTimestamp,
+            arrivalTimestamp = payload.arrivalTimeTimestamp,
+            travelIdentifier = payload.travelIdentifier,
+            nowSeconds = System.currentTimeMillis() / 1000,
+        )
     }
 
     private fun formatEarliestReturn(payload: LiveUpdatePayload): String? {
@@ -286,19 +281,16 @@ class TravelLiveUpdateNotificationFactory(
     }
 
     private fun enablePromotedOngoing(builder: NotificationCompat.Builder) {
-        try {
-            val method = builder.javaClass.getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
-            method.invoke(builder, true)
-        } catch (_: Exception) {
-        }
+        builder.setRequestPromotedOngoing(true)
     }
 
+    /** Notification.Builder has no setter for this, only the extra */
     private fun invokeFrameworkPromotedOngoing(builder: Notification.Builder) {
-        try {
-            val method = builder.javaClass.getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
-            method.invoke(builder, true)
-        } catch (_: Exception) {
-        }
+        builder.addExtras(
+            android.os.Bundle().apply {
+                putBoolean(NotificationCompat.EXTRA_REQUEST_PROMOTED_ONGOING, true)
+            },
+        )
     }
 
     // Reflective because compileSdk may be below 36 (ProgressStyle is Android 16+).

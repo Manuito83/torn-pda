@@ -10,10 +10,9 @@ data class TravelLiveUpdateState(
 )
 
 /**
- * Builds the payload for a flight found by the abroad poll, when Flutter is not
- * around to build it. Keep in sync with `_buildArgs` in
- * live_activity_travel_controller.dart. Fields Android never reads
- * (vehicleAssetName, destinationEmoji, flag assets) are left out.
+ * Builds the payload for a flight found by the abroad poll. Keep in sync with
+ * `_buildArgs` in live_activity_travel_controller.dart. Fields Android never
+ * reads (vehicleAssetName, destinationEmoji, flag assets) are left out.
  */
 object TravelLiveUpdateParser {
 
@@ -21,6 +20,7 @@ object TravelLiveUpdateParser {
         state: TravelLiveUpdateState,
         nowSeconds: Long,
         apiKey: String?,
+        originCountry: String? = null,
     ): Map<String, Any?> {
         val duration = (state.arrivalTimestamp - state.departureTimestamp).coerceAtLeast(0L)
 
@@ -65,6 +65,11 @@ object TravelLiveUpdateParser {
         )
         earliestReturn?.let { arguments["earliestReturnTimestamp"] = it }
         if (!apiKey.isNullOrBlank()) arguments[LiveUpdateNotificationReceiver.EXTRA_API_KEY] = apiKey
+
+        val routeCountry = if (destinationName == TORN) originCountry else state.destination
+        if (!routeCountry.isNullOrBlank() && !routeCountry.equals(TORN, ignoreCase = true)) {
+            arguments["routeCountry"] = routeCountry
+        }
         return arguments
     }
 
