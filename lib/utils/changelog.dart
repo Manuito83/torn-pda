@@ -86,7 +86,7 @@ List<_MVersion> _modernChangelog() => [
   // TODO (App release): confirm the release date before publishing
   const _MVersion(
     version: 'v3.15.0',
-    date: '05 August 2026',
+    date: '08 August 2026',
     hotfixes: [],
     sections: [
       _MSection(
@@ -141,6 +141,13 @@ List<_MVersion> _modernChangelog() => [
                 'This is opt-in for script developers, so if a script you love keeps hitting its limits, let its '
                 'author know the option is there. The developer guide is linked below.',
             docUrl: 'https://github.com/Manuito83/torn-pda/blob/master/userscripts/TornPDA_Storage.md',
+          ),
+          _MItem(
+            'Added Asclepius as a new revive provider',
+            detail:
+                'Asclepius is an independent revive faction offering affordable revives, paid directly to the '
+                'reviver.\n\n'
+                'You can enable it (and any other provider) in the reviving services section of the settings.',
           ),
         ],
       ),

@@ -1541,6 +1541,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _reviveAsclepiusPrice = "\$1M";
+  String get reviveAsclepiusPrice => _reviveAsclepiusPrice;
+  set reviveAsclepiusPrice(String value) {
+    _reviveAsclepiusPrice = value;
+    notifyListeners();
+  }
+
   bool _tctClockHighlightsEvents = true;
   bool get tctClockHighlightsEvents => _tctClockHighlightsEvents;
   set tctClockHighlightsEvents(bool value) {

@@ -740,6 +740,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "revive_uhc": "1.8 million or 2 Xanax",
         "revive_wtf": "1.8 million or 2 Xanax",
         "revive_combat_ready": "1.5 million or 2 Xanax",
+        "revive_asclepius": "\$1M",
         // Torn API
         "apiV2LegacyRequests": "",
         // PDA Update Details
@@ -848,6 +849,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
       _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
       _settingsProvider.reviveCombatReadyPrice = remoteConfig.getString("revive_combat_ready");
+      _settingsProvider.reviveAsclepiusPrice = remoteConfig.getString("revive_asclepius");
 
       // Sendbird
       final sb = Get.find<SendbirdController>();

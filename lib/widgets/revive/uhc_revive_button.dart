@@ -1,15 +1,14 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/revive_services/revive_provider.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/uhc_revive.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/widgets/revive/revive_provider_info_text.dart';
 
 class UhcReviveButton extends StatefulWidget {
   final ThemeProvider? themeProvider;
@@ -102,74 +101,7 @@ Future<void> openUhcReviveDialog(BuildContext c, ThemeProvider themeProvider, Ow
                           ],
                         ),
                       ),
-                      Flexible(
-                        child: RichText(
-                          text: TextSpan(
-                            text: "Universal Health Care (UHC for short) is a revive alliance consisting "
-                                "of several factions. You can find more information in the ",
-                            style: TextStyle(
-                              color: context.read<ThemeProvider>().mainText,
-                              fontSize: 13,
-                            ),
-                            children: <InlineSpan>[
-                              WidgetSpan(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).pop();
-                                    context.read<WebViewProvider>().openBrowserPreference(
-                                          context: context,
-                                          url: 'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0',
-                                          browserTapType: BrowserTapType.short,
-                                        );
-                                  },
-                                  onLongPress: () {
-                                    Navigator.of(context).pop();
-                                    context.read<WebViewProvider>().openBrowserPreference(
-                                          context: context,
-                                          url: 'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0',
-                                          browserTapType: BrowserTapType.long,
-                                        );
-                                  },
-                                  child: const Text(
-                                    'forum thread',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const TextSpan(text: ' or in the UHC '),
-                              TextSpan(
-                                text: 'Discord server',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                  fontSize: 13,
-                                ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    const url = 'https://discord.gg/JJprTpb';
-                                    if (await canLaunchUrl(Uri.parse(url))) {
-                                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                                    }
-                                  },
-                              ),
-                              TextSpan(
-                                text: "\n\nEach revive must be paid directly to the reviver and costs "
-                                    "$revivePrice. "
-                                    "There are special prices for faction contracts "
-                                    "(more information in the forums).",
-                              ),
-                              const TextSpan(
-                                text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
-                                    "you risk getting blocked from UHC!",
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      Flexible(child: ReviveProviderInfoText(provider: ReviveProviders.uhc)),
                       const SizedBox(height: 15),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,

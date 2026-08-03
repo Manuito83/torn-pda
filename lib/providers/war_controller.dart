@@ -137,6 +137,13 @@ class WarController extends GetxController {
     _combatReadyReviveActive = value;
   }
 
+  bool _asclepiusReviveActive = false;
+  bool get asclepiusReviveActive => _asclepiusReviveActive;
+  set asclepiusReviveActive(bool value) {
+    Prefs().setUseAsclepiusRevive(value);
+    _asclepiusReviveActive = value;
+  }
+
   bool _statsShareIncludeHiddenTargets = true;
   bool get statsShareIncludeHiddenTargets => _statsShareIncludeHiddenTargets;
   set statsShareIncludeHiddenTargets(bool value) {
@@ -1038,6 +1045,7 @@ class WarController extends GetxController {
     midnightXReviveActive = await Prefs().getUseMidnightXRevive();
     wolverinesReviveActive = await Prefs().getUseWolverinesRevive();
     combatReadyReviveActive = await Prefs().getUseCombatReadyRevive();
+    asclepiusReviveActive = await Prefs().getUseAsclepiusRevive();
 
     _statsShareIncludeHiddenTargets = await Prefs().getStatsShareIncludeHiddenTargets();
     _statsShareShowOnlyTotals = await Prefs().getStatsShareShowOnlyTotals();

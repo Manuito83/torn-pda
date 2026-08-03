@@ -1,21 +1,22 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/revive_services/revive_provider.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/external/combat_ready_revive.dart';
+import 'package:torn_pda/utils/external/asclepius_revive.dart';
 import 'package:torn_pda/widgets/revive/revive_provider_info_text.dart';
 
-class CombatReadyReviveButton extends StatefulWidget {
+class AsclepiusReviveButton extends StatefulWidget {
   final ThemeProvider? themeProvider;
   final OwnProfileExtended? user;
   final SettingsProvider? settingsProvider;
   final WebViewProvider? webViewProvider;
 
-  const CombatReadyReviveButton({
+  const AsclepiusReviveButton({
     required this.themeProvider,
     required this.settingsProvider,
     required this.webViewProvider,
@@ -24,39 +25,37 @@ class CombatReadyReviveButton extends StatefulWidget {
   });
 
   @override
-  CombatReadyReviveButtonState createState() => CombatReadyReviveButtonState();
+  AsclepiusReviveButtonState createState() => AsclepiusReviveButtonState();
 }
 
-class CombatReadyReviveButtonState extends State<CombatReadyReviveButton> {
+class AsclepiusReviveButtonState extends State<AsclepiusReviveButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        openCombatReadyReviveDialog(context, widget.themeProvider!, widget.user);
+        openAsclepiusReviveDialog(context, widget.themeProvider!, widget.user);
       },
       child: Row(
         children: [
           Padding(
             padding: const EdgeInsets.only(right: 13),
-            child: Image.asset('images/icons/combat_ready_revive.png', width: 24),
+            child: Image.asset('images/icons/asclepius_revive.png', width: 24),
           ),
           const SizedBox(width: 10),
-          const Flexible(child: Text("Request a revive (Combat Ready)")),
+          const Flexible(child: Text("Request a revive (Asclepius)")),
         ],
       ),
     );
   }
 }
 
-Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themeProvider, OwnProfileExtended? user) {
+Future<void> openAsclepiusReviveDialog(BuildContext ctx, ThemeProvider themeProvider, OwnProfileExtended? user) {
   return showDialog<void>(
     context: ctx,
-    barrierDismissible: false,
+    barrierDismissible: false, // user must tap button!
     builder: (BuildContext context) {
       return AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 0.0,
         backgroundColor: Colors.transparent,
         content: SingleChildScrollView(
@@ -64,26 +63,15 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
             children: <Widget>[
               SingleChildScrollView(
                 child: Container(
-                  padding: const EdgeInsets.only(
-                    top: 45,
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                  ),
+                  padding: const EdgeInsets.only(top: 45, bottom: 16, left: 16, right: 16),
                   margin: const EdgeInsets.only(top: 15),
                   decoration: BoxDecoration(
                     color: themeProvider.secondBackground,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10.0,
-                        offset: Offset(0.0, 10.0),
-                      ),
-                    ],
+                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10.0, offset: Offset(0.0, 10.0))],
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize: MainAxisSize.min, // To make the card compact
                     children: <Widget>[
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
@@ -92,14 +80,14 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
                           children: [
                             Flexible(
                               child: Text(
-                                "REQUEST A REVIVE FROM COMBAT READY",
+                                "REQUEST A REVIVE FROM ASCLEPIUS",
                                 style: TextStyle(fontSize: 11, color: themeProvider.mainText),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Flexible(child: ReviveProviderInfoText(provider: ReviveProviders.combatReady)),
+                      Flexible(child: ReviveProviderInfoText(provider: ReviveProviders.asclepius)),
                       const SizedBox(height: 15),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -107,6 +95,7 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
                           TextButton(
                             child: const Text("Medic!"),
                             onPressed: () async {
+                              // User can be null if we are not accessing from the Profile page
                               if (user == null) {
                                 final apiResponse = await ApiCallsV1.getOwnProfileExtended(limit: 3);
                                 if (apiResponse is OwnProfileExtended) {
@@ -116,12 +105,10 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
 
                               if (user == null) {
                                 BotToast.showText(
-                                  text: 'There was an error contacting Torn API to get your current status, '
+                                  text:
+                                      'There was an error contacting Torn API to get your current status, '
                                       'please try again after a while!',
-                                  textStyle: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                                   contentColor: Colors.red[800]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -132,12 +119,10 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
 
                               if (user!.status!.color != 'red' && user!.status!.state != "Hospital") {
                                 BotToast.showText(
-                                  text: 'According to Torn you are not currently hospitalized, please wait a '
+                                  text:
+                                      'According to Torn you are not currently hospitalized, please wait a '
                                       'few seconds and try again!',
-                                  textStyle: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                  ),
+                                  textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                                   contentColor: Colors.red[800]!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -146,30 +131,22 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
                                 return;
                               }
 
-                              final combatReady = CombatReadyRevive(
+                              final asclepius = AsclepiusRevive(
                                 tornId: user!.playerId,
                                 username: user!.name,
-                                faction: user!.faction!.factionName,
-                                country: user!.travel!.destination,
+                                price: context.read<SettingsProvider>().reviveAsclepiusPrice,
                               );
 
-                              combatReady.callMedic().then((args) {
+                              asclepius.callMedic().then((value) {
                                 var resultColor = Colors.green[800];
-                                final String message = args[1]!;
 
-                                int? code = int.tryParse(args[0]!);
-                                if (code == null) {
-                                  resultColor = Colors.red[800];
-                                } else if (code != 200) {
+                                if (value.contains("Error")) {
                                   resultColor = Colors.red[800];
                                 }
 
                                 BotToast.showText(
-                                  text: message,
-                                  textStyle: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                  ),
+                                  text: value,
+                                  textStyle: const TextStyle(fontSize: 13, color: Colors.white),
                                   contentColor: resultColor!,
                                   duration: const Duration(seconds: 5),
                                   contentPadding: const EdgeInsets.all(10),
@@ -186,7 +163,7 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
                             },
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -200,13 +177,7 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
                   child: CircleAvatar(
                     backgroundColor: themeProvider.secondBackground,
                     radius: 22,
-                    child: SizedBox(
-                      height: 34,
-                      width: 34,
-                      child: Image.asset(
-                        'images/icons/combat_ready_revive.png',
-                      ),
-                    ),
+                    child: SizedBox(height: 34, width: 34, child: Image.asset('images/icons/asclepius_revive.png')),
                   ),
                 ),
               ),
