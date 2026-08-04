@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/revive_services/revive_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -77,12 +76,6 @@ class ReviveProviderInfoText extends StatelessWidget {
   void _openForum(BuildContext context, BrowserTapType tapType) {
     final webViewProvider = context.read<WebViewProvider>();
     Navigator.of(context).pop();
-
-    // openBrowserPreference uses the context after awaiting, and this dialog's one is gone by then
-    webViewProvider.openBrowserPreference(
-      context: navigatorKey.currentContext!,
-      url: provider.forumUrl!,
-      browserTapType: tapType,
-    );
+    webViewProvider.openBrowserPreference(context: context, url: provider.forumUrl!, browserTapType: tapType);
   }
 }

@@ -591,10 +591,14 @@ class WebViewProvider extends ChangeNotifier {
     ChainingPayload? chainingPayload,
     bool restoreSessionCookie = false,
   }) async {
+    // Capture all providers before any awaits, as the incoming context might not survive them
+    final SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+    final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+
     // Warm the engine before the first webview below: the first bridge-enabled webview of a cold
     // process can race Chromium's startup and die with "Must be started before we block!" (#2843)
-    if (Platform.isAndroid &&
-        Provider.of<SettingsProvider>(context, listen: false).browserEnginePrewarmRemoteConfigAllowed) {
+    if (Platform.isAndroid && settingsProvider.browserEnginePrewarmRemoteConfigAllowed) {
       await BrowserEnginePrewarmController.instance.ensureWarm();
     }
 
@@ -639,7 +643,7 @@ class WebViewProvider extends ChangeNotifier {
     _hideTabs = await Prefs().getHideTabs();
 
     // Clear temporary downloads if sharing is enabled
-    await _clearTemporaryDownloadedFiles(context);
+    await _clearTemporaryDownloadedFiles(settingsProvider);
 
     // Add the main opener tab, restoring last session if requested
     String? url = initUrl;
@@ -648,7 +652,7 @@ class WebViewProvider extends ChangeNotifier {
       final TabSaveModel savedMain = tabSaveModelFromJson(savedJson);
       if (savedMain.tabsSave!.isNotEmpty) {
         String? saveMain = savedMain.tabsSave![0].url;
-        String? authUrl = await _assessNativeAuth(inputUrl: saveMain, context: context);
+        String? authUrl = await _assessNativeAuth(inputUrl: saveMain, nativeUser: nativeUser, nativeAuth: nativeAuth);
         addTab(
           url: authUrl,
           pageTitle: savedMain.tabsSave![0].pageTitle,
@@ -658,11 +662,15 @@ class WebViewProvider extends ChangeNotifier {
           tabUid: savedMain.tabsSave![0].tabUid,
         );
       } else {
-        String? authUrl = await _assessNativeAuth(inputUrl: "https://www.torn.com", context: context);
+        String? authUrl = await _assessNativeAuth(
+          inputUrl: "https://www.torn.com",
+          nativeUser: nativeUser,
+          nativeAuth: nativeAuth,
+        );
         await addTab(url: authUrl, chatRemovalActive: chatRemovalActiveGlobal);
       }
     } else {
-      String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
+      String? authUrl = await _assessNativeAuth(inputUrl: url, nativeUser: nativeUser, nativeAuth: nativeAuth);
       await addTab(
         url: authUrl,
         chatRemovalActive: chatRemovalActiveGlobal,
@@ -674,9 +682,9 @@ class WebViewProvider extends ChangeNotifier {
     currentTab = 0;
   }
 
-  Future<void> _clearTemporaryDownloadedFiles(BuildContext context) async {
+  Future<void> _clearTemporaryDownloadedFiles(SettingsProvider settingsProvider) async {
     try {
-      if (context.read<SettingsProvider>().downloadActionShare) {
+      if (settingsProvider.downloadActionShare) {
         // Both platforms should have used this folder to store downloads if [downloadActionShare] was enabled
         // Other files (in the standard downloads folder, if [downloadActionShare] was disabled) won't be deleted
         // (which might create an increase in cache size in Android if the user can't acces the folder)
@@ -1770,7 +1778,12 @@ class WebViewProvider extends ChangeNotifier {
     }
     _lastBrowserOpenedTime = DateTime.now();
 
+    // Capture all providers before any awaits, as the incoming context might belong to a dialog
+    // that pops (and deactivates) while we are working
     final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+    final SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+    final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
 
     final UiMode uiMode = _decideBrowserScreenMode(tapType: browserTapType, context: context);
     setCurrentUiMode(uiMode, context);
@@ -1779,7 +1792,7 @@ class WebViewProvider extends ChangeNotifier {
     if (browserType == 'app') {
       analytics?.logScreenView(screenName: 'browser_full');
 
-      String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
+      String? authUrl = await _assessNativeAuth(inputUrl: url, nativeUser: nativeUser, nativeAuth: nativeAuth);
 
       w.stackView = WebViewStackView(
         initUrl: authUrl,
@@ -1788,7 +1801,6 @@ class WebViewProvider extends ChangeNotifier {
         chainingPayload: chainingPayload,
       );
 
-      final SettingsProvider settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
       if (browserTapType == BrowserTapType.deeplink && settingsProvider.newTabByDeepLinkTap) {
         await addTab(url: authUrl);
         activateTab(_tabList.length - 1);
@@ -1802,8 +1814,7 @@ class WebViewProvider extends ChangeNotifier {
 
       w.browserShowInForeground = true;
 
-      if (currentUiMode == UiMode.fullScreen &&
-          Provider.of<SettingsProvider>(context, listen: false).fullScreenRemovesChat) {
+      if (currentUiMode == UiMode.fullScreen && settingsProvider.fullScreenRemovesChat) {
         removeAllChatsFullScreen();
       }
     } else {
@@ -1878,9 +1889,13 @@ class WebViewProvider extends ChangeNotifier {
   /// At least used in the following cases:
   /// 1.- On main tab init: in case the user only uses the browser, it will fire after an app's launch when browser rebuilds
   /// 2.- Whenever the user launches the browser from a tap (other than the PDA icon, which does not load any URL itself)
-  Future<String?> _assessNativeAuth({required String? inputUrl, required BuildContext context}) async {
-    final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
-    final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+  // Takes the providers directly (instead of a context) as it's called after awaits, when the caller's
+  // context might be gone (e.g.: originating from a dialog that has been popped)
+  Future<String?> _assessNativeAuth({
+    required String? inputUrl,
+    required NativeUserProvider nativeUser,
+    required NativeAuthProvider nativeAuth,
+  }) async {
     TornLoginResponseContainer? loginResponse;
 
     if (nativeUser.playerLastLoginMethod == NativeLoginType.none) {
@@ -1906,7 +1921,7 @@ class WebViewProvider extends ChangeNotifier {
         log("Getting auth URL!");
         try {
           loginResponse = await nativeAuth.requestTornRecurrentInitData(
-            context: context,
+            userProvider: nativeUser,
             loginData: GetInitDataModel(playerId: UserHelper.playerId, sToken: nativeUser.playerSToken),
           );
 

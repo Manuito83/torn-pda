@@ -2627,7 +2627,7 @@ class WebViewFullState extends State<WebViewFull>
       // (it does not matter what login method was used to obtain the sToken)
       if (_nativeUser.playerLastLoginMethod != NativeLoginType.none) {
         final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
-          context: context,
+          userProvider: _nativeUser,
           loginData: GetInitDataModel(playerId: UserHelper.playerId, sToken: _nativeUser.playerSToken),
         );
 
