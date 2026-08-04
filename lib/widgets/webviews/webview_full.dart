@@ -5507,8 +5507,8 @@ class WebViewFullState extends State<WebViewFull>
       controller.resume();
       await controller.loadUrl(urlRequest: URLRequest(url: WebUri(_blankUrl)));
       await Future.delayed(const Duration(milliseconds: 700));
-    } catch (_) {
-      //
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.recordError(e, trace, reason: "PDA: parked tab park failed");
     }
 
     // The user might have come back and opened this very tab while the blank page was loading
@@ -5517,6 +5517,7 @@ class WebViewFullState extends State<WebViewFull>
       return false;
     }
 
+    FirebaseCrashlytics.instance.log("Parked tab $_tabUid");
     _pauseQuietly(controller);
     return true;
   }
@@ -5535,6 +5536,9 @@ class WebViewFullState extends State<WebViewFull>
     final String? target = _parkedUrl;
 
     _wakingFromPark = true;
+    // False = _isParked is still true and a retry can rescue the tab; true = it was
+    // already cleared, so a failure below leaves the tab on the blank page
+    var parkCleared = false;
     try {
       controller.resume();
 
@@ -5551,6 +5555,7 @@ class WebViewFullState extends State<WebViewFull>
 
       _scrollAfterLoad = true;
       _isParked = false;
+      parkCleared = true;
 
       // A fresh document needs the city widgets injected again (as [_reload] does)
       if (_cityTriggered) _cityTriggered = false;
@@ -5560,7 +5565,14 @@ class WebViewFullState extends State<WebViewFull>
       } else if (target != null && target.isNotEmpty) {
         await controller.loadUrl(urlRequest: URLRequest(url: WebUri(target)));
       }
-    } catch (_) {
+
+      FirebaseCrashlytics.instance.log("Woke tab $_tabUid from park");
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        trace,
+        reason: "PDA: parked tab wake failed (parkCleared: $parkCleared, hadTarget: ${target?.isNotEmpty == true})",
+      );
     } finally {
       _wakingFromPark = false;
     }
