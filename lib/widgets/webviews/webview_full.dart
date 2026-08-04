@@ -334,7 +334,7 @@ class WebViewFullState extends State<WebViewFull>
 
   bool _scrollAfterLoad = false;
   bool _reloadInProgress = false;
-  bool _reloadRequestInFlight = false;
+  bool _reloadRequestActive = false;
   Timer? _reloadWatchdog;
   static const Duration _reloadProbeTimeout = Duration(seconds: 3);
   int? _scrollY = 0;
@@ -3159,8 +3159,8 @@ class WebViewFullState extends State<WebViewFull>
   /// issues a fresh reload, which is what gets a stuck WebView moving again. Only the
   /// short async prologue (probe + scroll reads) is guarded against re-entry.
   Future<void> _reloadWithFeedback({bool showToast = false}) async {
-    if (_reloadRequestInFlight) return;
-    _reloadRequestInFlight = true;
+    if (_reloadRequestActive) return;
+    _reloadRequestActive = true;
     _setReloadInProgress(true);
 
     if (showToast) {
@@ -3210,6 +3210,8 @@ class WebViewFullState extends State<WebViewFull>
       // Armed before reloading, so the load's own scroll reset can't overwrite the target
       if (scrollCaptured) _scrollAfterLoad = true;
 
+      _reloadRequestActive = false;
+
       try {
         await _reload();
       } catch (e, stackTrace) {
@@ -3218,7 +3220,7 @@ class WebViewFullState extends State<WebViewFull>
         _setReloadInProgress(false);
       }
     } finally {
-      _reloadRequestInFlight = false;
+      _reloadRequestActive = false;
     }
   }
 
@@ -4652,7 +4654,8 @@ class WebViewFullState extends State<WebViewFull>
     if (_cityTriggered) _cityTriggered = false;
 
     if (Platform.isAndroid || Platform.isWindows) {
-      final Uri? reloadUri = await webViewController!.getUrl();
+      // Times out instead of hanging on a dead renderer; falls back to _currentUrl below
+      final Uri? reloadUri = await webViewController!.getUrl().timeout(_reloadProbeTimeout, onTimeout: () => null);
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: reloadUri?.toString() ?? _currentUrl,
         pdaApiKey: UserHelper.apiKey,
@@ -4671,8 +4674,8 @@ class WebViewFullState extends State<WebViewFull>
 
       webViewController!.reload();
     } else if (Platform.isIOS) {
-      final currentURI = await webViewController!.getUrl();
-      _loadUrl(currentURI.toString());
+      final currentURI = await webViewController!.getUrl().timeout(_reloadProbeTimeout, onTimeout: () => null);
+      _loadUrl(currentURI?.toString() ?? _currentUrl);
     }
   }
 

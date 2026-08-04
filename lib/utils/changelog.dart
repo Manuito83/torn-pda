@@ -160,6 +160,13 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Idle browser tabs now release memory to keep the app light', androidOnly: true),
           _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
           _MItem('Tabs now return to the same spot after the browser recovers a page', androidOnly: true),
+          _MItem(
+            'Browser: the reload button is easier to tap and shows its progress right away [bombel]',
+            detail:
+                'The reload icon now reacts the moment you tap it, turning into a spinner while the page '
+                'loads, and it got a bigger touch area. Tapping it again still forces a fresh reload if a '
+                'page gets stuck.',
+          ),
           _MItem('Reinforced push notifications token persistence'),
         ],
       ),
