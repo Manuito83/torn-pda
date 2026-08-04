@@ -86,6 +86,7 @@ import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import "package:torn_pda/widgets/settings/userscripts_add_dialog.dart";
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
+import 'package:torn_pda/widgets/webviews/browser_reload_button.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
@@ -332,6 +333,10 @@ class WebViewFullState extends State<WebViewFull>
   ];
 
   bool _scrollAfterLoad = false;
+  bool _reloadInProgress = false;
+  bool _reloadRequestInFlight = false;
+  Timer? _reloadWatchdog;
+  static const Duration _reloadProbeTimeout = Duration(seconds: 3);
   int? _scrollY = 0;
   int? _scrollX = 0;
 
@@ -624,6 +629,7 @@ class WebViewFullState extends State<WebViewFull>
   void dispose() async {
     try {
       _webViewCreatedWatchdog?.cancel();
+      _reloadWatchdog?.cancel();
 
       // Send details to provider in case we are rotating
       _webViewProvider.rotatedTabDetails.add(
@@ -1648,6 +1654,7 @@ class WebViewFullState extends State<WebViewFull>
           onLoadStop: (c, uri) async {
             log("🏁 onLoadStop: $uri", name: 'WEBVIEW FULL');
             if (!mounted) return;
+            _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
             if (_isParked && uri != null) _isParked = false;
 
@@ -3122,53 +3129,97 @@ class WebViewFullState extends State<WebViewFull>
 
   Widget _reloadIcon() {
     return _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
-        ? Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                splashColor: Colors.orange,
-                child: Icon(
-                  Icons.refresh,
-                  color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
-                ),
-                onTap: () async {
-                  try {
-                    // Check if the webview is active
-                    await webViewController!.getUrl();
-                  } on FlutterError catch (e) {
-                    if (e.message.contains("was used after being disposed")) {
-                      _webViewProvider.rebuildUnresponsiveWebView(
-                        isChainingBrowser: _isChainingBrowser,
-                        chainingPayload: _chainingPayload,
-                      );
-
-                      logToUser("Found crashed browser, trying to rebuild!", duration: 5);
-                    }
-                  }
-
-                  if (!Platform.isWindows) {
-                    _scrollX = await webViewController!.getScrollX();
-                    _scrollY = await webViewController!.getScrollY();
-                    // Armed before reloading, so the load's own scroll reset can't overwrite the target
-                    _scrollAfterLoad = true;
-                  }
-
-                  await _reload();
-
-                  BotToast.showText(
-                    text: "Reloading...",
-                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                    contentColor: Colors.grey[600]!,
-                    duration: const Duration(seconds: 1),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                },
-              ),
-            ),
+        ? BrowserReloadButton(
+            isReloading: _reloadInProgress,
+            color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+            onPressed: _reloadWithFeedback,
           )
         : const SizedBox.shrink();
+  }
+
+  /// Armed as soon as the spinner shows, so a platform channel that never answers
+  /// (dead renderer) can't leave the spinner running forever
+  void _setReloadInProgress(bool value) {
+    _reloadWatchdog?.cancel();
+    _reloadWatchdog = null;
+
+    if (!mounted) return;
+
+    if (value) {
+      _reloadWatchdog = Timer(const Duration(seconds: 15), () => _setReloadInProgress(false));
+    }
+
+    if (_reloadInProgress == value) return;
+    setState(() {
+      _reloadInProgress = value;
+    });
+  }
+
+  /// The spinner is feedback, not a lock: a second tap while the page is still loading
+  /// issues a fresh reload, which is what gets a stuck WebView moving again. Only the
+  /// short async prologue (probe + scroll reads) is guarded against re-entry.
+  Future<void> _reloadWithFeedback({bool showToast = false}) async {
+    if (_reloadRequestInFlight) return;
+    _reloadRequestInFlight = true;
+    _setReloadInProgress(true);
+
+    if (showToast) {
+      BotToast.showText(
+        text: "Reloading...",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.grey[600]!,
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+
+    try {
+      var scrollCaptured = false;
+
+      try {
+        final controller = webViewController;
+        if (controller == null) {
+          throw StateError('WebView controller is not available');
+        }
+
+        // Check if the webview is active. A disposed controller throws; a hung one
+        // times out instead of blocking the reload attempt below
+        await controller.getUrl().timeout(_reloadProbeTimeout);
+
+        if (!Platform.isWindows) {
+          _scrollX = await controller.getScrollX().timeout(_reloadProbeTimeout);
+          _scrollY = await controller.getScrollY().timeout(_reloadProbeTimeout);
+          scrollCaptured = true;
+        }
+      } on FlutterError catch (e) {
+        if (e.message.contains("was used after being disposed")) {
+          _webViewProvider.rebuildUnresponsiveWebView(
+            isChainingBrowser: _isChainingBrowser,
+            chainingPayload: _chainingPayload,
+          );
+          logToUser("Found crashed browser, trying to rebuild!", duration: 5);
+          _setReloadInProgress(false);
+          return;
+        }
+        // Any other platform error: still worth trying to reload, just without scroll restoration
+        log('Reload probe failed: $e');
+      } catch (e) {
+        log('Reload probe failed: $e');
+      }
+
+      // Armed before reloading, so the load's own scroll reset can't overwrite the target
+      if (scrollCaptured) _scrollAfterLoad = true;
+
+      try {
+        await _reload();
+      } catch (e, stackTrace) {
+        log('Failed to reload browser: $e', error: e, stackTrace: stackTrace);
+        logToUser("Couldn't reload this page. Try again.", duration: 4);
+        _setReloadInProgress(false);
+      }
+    } finally {
+      _reloadRequestInFlight = false;
+    }
   }
 
   Future<void> _goBackOrForward(DragEndDetails details) async {
@@ -4625,21 +4676,10 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  Future reloadFromOutside() async {
-    _scrollX = await webViewController!.getScrollX();
-    _scrollY = await webViewController!.getScrollY();
-    // Armed before reloading, so the load's own scroll reset can't overwrite the target
-    _scrollAfterLoad = true;
-    await _reload();
-
-    BotToast.showText(
-      text: "Reloading...",
-      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-      contentColor: Colors.grey[600]!,
-      duration: const Duration(seconds: 1),
-      contentPadding: const EdgeInsets.all(10),
-    );
-  }
+  // Keeps the toast: the FAB and the tab menu can fire this while the reload icon
+  // is off screen or disabled altogether (pull-to-refresh mode), so the spinner alone
+  // would leave those paths without feedback
+  Future reloadFromOutside() => _reloadWithFeedback(showToast: true);
 
   Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
