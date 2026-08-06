@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 
 class NativeAuthProvider extends ChangeNotifier {
   bool get tryAutomaticLogins => false;
@@ -10,7 +11,7 @@ class NativeAuthProvider extends ChangeNotifier {
   Future<void> loadPreferences() async {}
 
   Future<TornLoginResponseContainer> requestTornRecurrentInitData({
-    required BuildContext context,
+    required NativeUserProvider userProvider,
     required GetInitDataModel loginData,
   }) async {
     return TornLoginResponseContainer(
