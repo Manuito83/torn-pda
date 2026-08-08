@@ -34,6 +34,14 @@ MAIN INDEX
   However, you can refer to this [script](https://github.com/Manuito83/torn-pda/blob/master/userscripts/GMforPDA.user.js) which incorporates handlers to make life easier when converting scripts, supporting dot notation (e.g.: 'GM.addStyle') and underscore notation (e.g.: 'GM\_addStyle'). Please note that, while this script and functionality are still under development, it is an advanced version of some [pre-existing handlers ](https://github.com/Manuito83/torn-pda/blob/a3e58b591317cf41b557072745a7ee20033e4908/lib/utils/js_handlers.dart#L178)which were incorporated natively to the app long ago; adding the newest version (via script) on top of the basic handlers that come with Torn PDA should be no problem, as the former will overwrite the latter.
 
   Whilst these handlers supply vanilla JS counterparts to the GM_ functions, they cannot prepare your script to run on mobile devices: viewports are different, the page looks different, some selectors change, etcetera. So even if using these handlers, be prepared to adapt your script as necessary.
+
+  EDIT (APR 2026): new GM features were implemented, focusing on the foundation work for third-party script developers. See the [GM compatibility guide](./userscripts/gm-compatibility.md).
+<br></br>
+- ## Native script storage for userscripts
+
+  Scripts that need to save a lot of data can store it with the app instead of the browser's `localStorage`, which is small (around 5 MB), shared between Torn and every script, and can be evicted at any time. `PDA_storage` is an async key/value store backed by SQLite, with a namespace per script, 10 MB by default (the user can raise it to 50 MB) and data that survives clearing the browser cache. Available since v3.15.0.
+
+  [Native storage guide](../userscripts/TornPDA_Storage.md)
 <br></br>
 - ## Building from Source
 
