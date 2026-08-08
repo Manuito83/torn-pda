@@ -38,8 +38,11 @@ class _MItem {
   final String text;
   final String? detail;
   final bool androidOnly;
+  final String? docUrl;
 
-  const _MItem(this.text, {this.detail, this.androidOnly = false});
+  const _MItem(this.text, {this.detail, this.androidOnly = false, this.docUrl});
+
+  bool get visibleOnThisPlatform => !androidOnly || Platform.isAndroid;
 
   // Credits are tagged inline as "[Name]", same as the legacy changelog
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
@@ -63,11 +66,12 @@ class _MVersion {
 
   const _MVersion({required this.version, required this.date, required this.sections, required this.hotfixes});
 
-  // Contributors ordered by items
+  // Contributors ordered by items (only those visible on this platform)
   List<String> get contributors {
     final counts = <String, int>{};
     for (final section in sections) {
       for (final item in section.items) {
+        if (!item.visibleOnThisPlatform) continue;
         counts.update(item.author, (n) => n + 1, ifAbsent: () => 1);
       }
     }
@@ -79,6 +83,144 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  // TODO (App release): confirm the release date before publishing
+  const _MVersion(
+    version: 'v3.15.0',
+    date: '08 August 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Quick items: added an option to hide loadouts',
+            detail:
+                'Hide the loadout chips from the quick items bar without removing them, so you can keep '
+                'them out of the way when not at war and bring them back with their names and order intact.\n\n'
+                'You will find the toggle in the quick items options menu.',
+          ),
+          _MItem(
+            'Browser: you can now choose when unused tabs go to sleep',
+            detail:
+                'Tabs you have not opened for a while are put to sleep to keep Torn PDA light, and they '
+                'load again next time you tap them.\n\n'
+                'You can now pick how long that takes, or leave it on the recommended setting, in the new '
+                'Memory section at the bottom of the advanced browser settings.',
+          ),
+          _MItem(
+            'Browser: tabs can now rest while you are away',
+            androidOnly: true,
+            detail:
+                'When you leave Torn PDA, the tabs you are not using can let go of their content '
+                'so that the browser stays light while you are away. Tap one and it comes '
+                'straight back to the same page.\n\n'
+                'This helps to reduce crashes or unexpected reloads, which happens '
+                'more often on phones with less memory. You can turn it on in the new Memory section at '
+                'the bottom of the advanced browser settings.',
+          ),
+          _MItem(
+            'Userscripts: share and install scripts as .user.js files',
+            detail:
+                'You can now export your scripts as standard .user.js files and import a .user.js file back, '
+                'so it is easy to move scripts between Torn PDA and a desktop userscript manager such as '
+                'Tampermonkey or Violentmonkey.\n\n'
+                'Use the export and import options in the top menu of the User scripts page.',
+          ),
+          _MItem(
+            'Userscripts: new native storage for script developers',
+            detail:
+                'Some scripts save a lot of data, and until now they had to squeeze it into the small space the '
+                'browser shares between Torn and every script, so heavy ones would run out of room and start '
+                'misbehaving.\n\n'
+                'Scripts can now store their data with Torn PDA instead: much more space, its own room per script, '
+                'and it survives clearing the browser cache. A green storage icon on the user scripts page marks the '
+                'scripts that use it, and you can tap it to see how much they store and give them more room if they '
+                'need it.\n\n'
+                'This is opt-in for script developers, so if a script you love keeps hitting its limits, let its '
+                'author know the option is there. The developer guide is linked below.',
+            docUrl: 'https://github.com/Manuito83/torn-pda/blob/master/userscripts/TornPDA_Storage.md',
+          ),
+          _MItem(
+            'Added Asclepius as a new revive provider',
+            detail:
+                'Asclepius is an independent revive faction offering affordable revives, paid directly to the '
+                'reviver.\n\n'
+                'You can enable it (and any other provider) in the reviving services section of the settings.',
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [
+          _MItem('Faster and more reliable browser startup', androidOnly: true),
+          _MItem('Idle browser tabs now release memory to keep the app light', androidOnly: true),
+          _MItem('The browser now auto-recovers if a tab fails to load on startup', androidOnly: true),
+          _MItem('Tabs now return to the same spot after the browser recovers a page', androidOnly: true),
+          _MItem(
+            'Browser: the reload button is easier to tap and shows its progress right away [bombel]',
+            detail:
+                'The reload icon now reacts the moment you tap it, turning into a spinner while the page '
+                'loads, and it got a bigger touch area. Tapping it again still forces a fresh reload if a '
+                'page gets stuck.',
+          ),
+          _MItem('Reinforced push notifications token persistence'),
+        ],
+      ),
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Fixed the browser occasionally loading blank on some devices', androidOnly: true),
+          _MItem(
+            'The app no longer closes if the system kills the browser page, including tabs in the background',
+            androidOnly: true,
+          ),
+          _MItem(
+            'Travel live updates: fixed plane direction and duplicate arrival notifications [bombel]',
+            androidOnly: true,
+          ),
+          _MItem('Fixed travel live updates return flight recognition', androidOnly: true),
+          _MItem('Fixed duplicated travel and racing live update cards', androidOnly: true),
+          _MItem(
+            'Fixed a possible error in injected scripts when reading element classes',
+            detail:
+                'Certain page elements report their classes in a format the scripts did not expect. '
+                'Besides reading them correctly now, a script that hits an unexpected error while '
+                'waiting for the page gives up instead of retrying forever.',
+          ),
+          _MItem(
+            'Fixed userscripts losing access to GM helpers on pages where storage is not available [xentac]',
+            detail:
+                'On pages where the browser blocks storage, the GM helpers were not created at all, so every '
+                'userscript on that page failed. They now keep working, and only the saved values are unavailable.',
+          ),
+          _MItem(
+            'Fixed GM_setValue saving values that could not be read back [xentac]',
+            detail:
+                'Saving an empty value wrote something the scripts could not read again, and it stayed there '
+                'taking up script storage space. Those values are now removed instead.',
+          ),
+          _MItem('Fixed userscripts not running again after the browser recovered a page [xentac]'),
+          _MItem('Fixed a repeating error logged by the chat highlight feature [xentac]'),
+          _MItem('Fixed travel max buy buttons not working for certain screen widths'),
+          _MItem('Fixed abroad stay reminders opening an invalid page when tapped'),
+          _MItem(
+            'Fixed browser DevTools Storage list refreshing when tapping input fields and crashing on large stored values',
+          ),
+          _MItem('Fixed notifications that could stop arriving after the device notification token changed'),
+          _MItem('Fixed the war targets list turning grey when sorting by hospital time'),
+          _MItem('Fixed foreign stocks destination filter clashing with the saved country one'),
+          _MItem('Fixed incoherent bazaar prices causing the Profile section to crash'),
+        ],
+      ),
+    ],
+  ),
+
   // NOTE! Android only
   if (Platform.isAndroid)
     const _MVersion(
@@ -237,7 +379,12 @@ List<_MVersion> _modernChangelog() => [
 const _defaultAuthor = 'Manuito';
 final _creditTag = RegExp(r'\s*\[([^\]]+)\]');
 
-const _contributorXids = <String, String>{'Manuito': '2225097', 'Kwack': '2190604', 'DarXide': '4059250'};
+const _contributorXids = <String, String>{
+  'Manuito': '2225097',
+  'Kwack': '2190604',
+  'DarXide': '4059250',
+  'bombel': '2362436',
+};
 
 const _contributorColors = <Color>[
   Color(0xFF42A5F5),
@@ -3518,7 +3665,7 @@ class _ModernSectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visibleItems = section.items.where((i) => !i.androidOnly || Platform.isAndroid).toList();
+    final visibleItems = section.items.where((i) => i.visibleOnThisPlatform).toList();
     if (visibleItems.isEmpty) return const SizedBox.shrink();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -3649,7 +3796,41 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: Text(widget.item.detail!, style: const TextStyle(fontSize: 14, height: 1.4))),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.item.detail!, style: const TextStyle(fontSize: 14, height: 1.4)),
+                  if (widget.item.docUrl != null) ...[
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => context.read<WebViewProvider>().openBrowserPreference(
+                        context: context,
+                        url: widget.item.docUrl!,
+                        browserTapType: BrowserTapType.short,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.menu_book_outlined, size: 16, color: widget.accent),
+                          const SizedBox(width: 6),
+                          Text(
+                            "Read the documentation",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: widget.accent,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
             const SizedBox(width: 8),
             Icon(Icons.close, size: 18, color: widget.accent),
           ],
@@ -3689,6 +3870,7 @@ class _ContributorsFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (contributors.isEmpty) return const SizedBox.shrink();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final labelColor = isDark ? Colors.grey[400] : Colors.grey[600];
     final keyValid = Get.isRegistered<UserController>() && Get.find<UserController>().isApiKeyValid;

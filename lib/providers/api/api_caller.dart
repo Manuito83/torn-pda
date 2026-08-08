@@ -145,10 +145,7 @@ class ApiCallerController extends GetxController {
         if (apiCall == null) {
           throw ArgumentError("For API V2, 'apiCall' must be provided.");
         }
-        dynamic apiV2Response = await _launchApiCall_v2(
-          apiSelection_v2: apiSelection_v2,
-          apiCall: apiCall,
-        );
+        dynamic apiV2Response = await _launchApiCall_v2(apiSelection_v2: apiSelection_v2, apiCall: apiCall);
         return apiV2Response;
       } else if (apiSelection != null) {
         // API V1
@@ -232,12 +229,20 @@ class ApiCallerController extends GetxController {
         );
       }
 
-      responseFuture.then((response) {
-        // Complete the request with the response
-        apiCallRequest.completer.complete(response);
-        _callCount.value--;
-        _logCallCount();
-      });
+      responseFuture
+          .then(
+            (response) {
+              // Complete the request with the response
+              apiCallRequest.completer.complete(response);
+            },
+            onError: (Object error, StackTrace trace) {
+              apiCallRequest.completer.complete(ApiError(pdaErrorDetails: "API CALL ERROR\n[$error]"));
+            },
+          )
+          .whenComplete(() {
+            _callCount.value--;
+            _logCallCount();
+          });
     }
 
     // If the queue is empty, update the queue stats stream
@@ -268,10 +273,7 @@ class ApiCallerController extends GetxController {
         BotToast.showText(
           clickClose: true,
           text: "API rate ($countInLast60Seconds calls)!",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
           contentColor: Colors.orange[700]!,
           contentPadding: const EdgeInsets.all(10),
         );
@@ -392,10 +394,9 @@ class ApiCallerController extends GetxController {
     // if (kDebugMode) return ApiError(errorId: 0);
 
     try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {"source-app": "torn-pda"},
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(Uri.parse(url), headers: {"source-app": "torn-pda"})
+          .timeout(const Duration(seconds: 15));
 
       // ERROR HANDLING 1: verify whether API reply has a correct JSON structure
       dynamic jsonResponse;
@@ -408,14 +409,13 @@ class ApiCallerController extends GetxController {
         final String versionError = "$appVersion$platform $e";
         analytics?.logEvent(
           name: 'api_reply_error',
-          parameters: {
-            'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
-          },
+          parameters: {'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError},
         );
         // We limit to a bit more here (it will be shown to the user)
         String error = response.body;
         if (error.isEmpty) {
-          error = "Torn API is returning empty information, please try again in a while. You can check "
+          error =
+              "Torn API is returning empty information, please try again in a while. You can check "
               "if there are issues with the API directly in Torn, by visiting https://api.torn.com and trying "
               "a request with your API key";
         }
@@ -444,8 +444,9 @@ class ApiCallerController extends GetxController {
           name: 'api_status_error',
           parameters: {
             'status_code': response.statusCode,
-            'response_body':
-                jsonResponse.length > 99 ? jsonResponse.substring(0, 99).toString() : jsonResponse.toString(),
+            'response_body': jsonResponse.length > 99
+                ? jsonResponse.substring(0, 99).toString()
+                : jsonResponse.toString(),
           },
         );
 
@@ -474,9 +475,7 @@ class ApiCallerController extends GetxController {
       final String versionError = "$appVersion$platform: $e";
       analytics?.logEvent(
         name: 'api_call_error',
-        parameters: {
-          'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
-        },
+        parameters: {'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError},
       );
 
       final String error = e.toString();
@@ -523,14 +522,7 @@ class ApiCallerController extends GetxController {
         final errorCode = error['code'];
         final errorMessage = error['error'];
 
-        throw _handleError_v2(
-          ApiError(
-            errorId: errorCode,
-            tornErrorDetails: errorMessage,
-          ),
-          statusCode,
-          null,
-        );
+        return _handleError_v2(ApiError(errorId: errorCode, tornErrorDetails: errorMessage), statusCode, null);
       }
 
       return response.body;
@@ -540,7 +532,7 @@ class ApiCallerController extends GetxController {
   }
 
   // TODO: Probably needs to be completed with more use cases as in API V1
-  ApiError _handleError_v2(dynamic e, int? statusCode, StackTrace? trace) {
+  ApiError _handleError_v2(Object e, int? statusCode, StackTrace? trace) {
     if (e is TimeoutException) {
       log("TORN API v2 TIMED OUT: $e, trace: $trace");
 
@@ -550,14 +542,14 @@ class ApiCallerController extends GetxController {
       log("TORN API v2 ERROR: [${e.tornErrorDetails}], trace: $trace");
       analytics?.logEvent(
         name: 'api_status_error',
-        parameters: {
-          'status_code': statusCode ?? -1,
-          'response_body': e.tornErrorDetails,
-        },
+        parameters: {'status_code': statusCode ?? -1, 'response_body': e.tornErrorDetails},
       );
 
-      recordApiError("Torn Api Error: ${e.errorId}",
-          e.toString().length > 300 ? e.toString().substring(0, 300) : e.toString(), "V2");
+      recordApiError(
+        "Torn Api Error: ${e.errorId}",
+        e.toString().length > 300 ? e.toString().substring(0, 300) : e.toString(),
+        "V2",
+      );
       return ApiError(
         errorId: e.errorId,
         pdaErrorDetails: "TORN API ERROR\n[${e.toString().length > 300 ? e.toString().substring(0, 300) : e}]",
@@ -569,15 +561,18 @@ class ApiCallerController extends GetxController {
       final String versionError = "$appVersion$platform: $e";
       analytics?.logEvent(
         name: 'api_v2_call_error',
-        parameters: {
-          'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
-        },
+        parameters: {'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError},
       );
 
       final String error = e.toString();
 
+      // Connection-level failures (DNS, resets...)
+      final bool isNetwork = e is SocketException || e is http.ClientException;
       recordApiError(
-          "HTTP Connection Crash: ${e.errorId}", error.length > 300 ? error.substring(0, 300) : error.toString(), "V2");
+        isNetwork ? "Connection error: ${e.runtimeType}" : "HTTP Connection Crash: ${e.runtimeType}",
+        error.length > 300 ? error.substring(0, 300) : error,
+        "V2",
+      );
       return ApiError(
         // We limit to a bit more here (it might get shown to the user)
         pdaErrorDetails: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : error}]",

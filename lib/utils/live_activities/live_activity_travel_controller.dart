@@ -12,6 +12,8 @@ import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:workmanager/workmanager.dart';
 
 class LiveActivityTravelController extends GetxController {
@@ -154,6 +156,7 @@ class LiveActivityTravelController extends GetxController {
       if (travel != null && travel.destination != null && travel.timestamp != null && travel.departed != null) {
         return {
           'destination': travel.destination!,
+          'method': travel.method,
           'arrivalTimestamp': travel.timestamp!,
           'departureTimestamp': travel.departed!,
           'timeLeft': travel.timeLeft,
@@ -259,7 +262,9 @@ class LiveActivityTravelController extends GetxController {
         else if (hasPlayerArrived &&
             !_hasArrivedNotified &&
             (!Platform.isAndroid || travelId != _lastArrivalNotifiedTravelId || _isLALogicallyActive)) {
-          log("TravelLiveActivityHandler: CASE 1 - Arrival detected for ${apiData['destination']}. Preparing 'Arrived' LA.");
+          log(
+            "TravelLiveActivityHandler: CASE 1 - Arrival detected for ${apiData['destination']}. Preparing 'Arrived' LA.",
+          );
           laArgs = _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true);
           shouldStartOrUpdateLA = true;
           _hasArrivedNotified = true;
@@ -285,11 +290,15 @@ class LiveActivityTravelController extends GetxController {
           if (_hasArrivedNotified && _currentLAArrivalTimestamp > 0) {
             int elapsedTimeSinceArrival = nowSeconds - _currentLAArrivalTimestamp;
             if (elapsedTimeSinceArrival >= (_arrivedLAAutoEndMinutes * 60)) {
-              log("TravelLiveActivityHandler: CASE 3.1 - No longer traveling. 'Arrived' LA was active & 10+ min passed since its arrival. Ending LA.");
+              log(
+                "TravelLiveActivityHandler: CASE 3.1 - No longer traveling. 'Arrived' LA was active & 10+ min passed since its arrival. Ending LA.",
+              );
               _resetLAState();
             }
           } else {
-            log("TravelLiveActivityHandler: CASE 3.2 - No longer traveling. LA was 'En Route' or unknown type. Ending LA immediately.");
+            log(
+              "TravelLiveActivityHandler: CASE 3.2 - No longer traveling. LA was 'En Route' or unknown type. Ending LA immediately.",
+            );
             _resetLAState();
           }
         }
@@ -325,6 +334,13 @@ class LiveActivityTravelController extends GetxController {
             _scheduleBackupTask(arrivalTimestamp);
           }
         }
+      }
+
+      // Abroad: keep the native poll armed, since a reboot or an update wipes its alarm
+      if (Platform.isAndroid && (traveling || repatriating) && hasPlayerArrived && apiData['destination'] != "Torn") {
+        await _bridgeController.armTravelAbroadWatch(
+          arguments: _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true),
+        );
       }
     } finally {
       _isProcessing = false;
@@ -368,6 +384,7 @@ class LiveActivityTravelController extends GetxController {
     String activityStateTitle;
     String destinationEmoji;
     int? earliestReturnTimestamp;
+    String? routeCountry;
     bool showProgressBar = !hasArrived;
 
     bool isChristmasTimeValue = _isChristmas();
@@ -384,6 +401,10 @@ class LiveActivityTravelController extends GetxController {
     } else {
       final String destination = apiTravelData['destination']!;
       if (destination == "Torn") {
+        routeCountry = TravelTimes.inferOriginCountry(
+          durationSeconds: travelDuration,
+          apiMethod: apiTravelData['method'],
+        );
         currentDestinationDisplayName = "Torn";
         currentDestinationFlagAsset = "ball_torn";
         originDisplayName = "Abroad";
@@ -392,6 +413,7 @@ class LiveActivityTravelController extends GetxController {
         activityStateTitle = hasArrived ? "Returned to" : "Returning to";
         destinationEmoji = "\u{1F3E0}"; // Home emoji for Torn
       } else {
+        routeCountry = destination;
         currentDestinationDisplayName = destination;
         currentDestinationFlagAsset = "ball_${_normalizeCountryNameForAsset(destination)}";
         originDisplayName = "Torn";
@@ -443,6 +465,10 @@ class LiveActivityTravelController extends GetxController {
       'hasArrived': hasArrived,
       'destinationEmoji': destinationEmoji,
       'travelIdentifier': travelId,
+      // Used by the Android abroad poll
+      if (Platform.isAndroid && UserHelper.isApiKeyValid) 'apiKey': UserHelper.apiKey,
+      // A leg home only reports "Torn" as its destination
+      if (routeCountry != null) 'routeCountry': routeCountry,
     };
   }
 
@@ -460,6 +486,7 @@ class LiveActivityTravelController extends GetxController {
       'Mexico': '\u{1F1F2}\u{1F1FD}', // 🇲🇽
       'South Africa': '\u{1F1FF}\u{1F1E6}', // 🇿🇦
       'Switzerland': '\u{1F1E8}\u{1F1ED}', // 🇨🇭
+      'UAE': '\u{1F1E6}\u{1F1EA}', // 🇦🇪
       'United Arab Emirates': '\u{1F1E6}\u{1F1EA}', // 🇦🇪
     };
     return countryEmojis[countryName] ?? '\u{1F30D}'; // Default to globe emoji
@@ -487,10 +514,7 @@ class LiveActivityTravelController extends GetxController {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      FirebaseRtdbHelper().liveActivityTravelTimestampSync(
-        uid: user.uid,
-        arrivalTimestamp: arrivalTimestamp,
-      );
+      FirebaseRtdbHelper().liveActivityTravelTimestampSync(uid: user.uid, arrivalTimestamp: arrivalTimestamp);
     }
   }
 

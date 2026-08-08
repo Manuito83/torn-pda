@@ -10,6 +10,8 @@ data class LiveUpdateSessionState(
     val startedAtMs: Long,
     val lastUpdatedAtMs: Long,
     val lastHasArrived: Boolean = false,
+    /** Only keeps the abroad poll armed: holds the id, but there is no card on screen. */
+    val watchOnly: Boolean = false,
 )
 
 interface LiveUpdateSessionStore {
@@ -39,6 +41,7 @@ class LiveUpdateSessionRegistry(
             .putLong(KEY_STARTED_AT, state.startedAtMs)
             .putLong(KEY_LAST_UPDATED_AT, state.lastUpdatedAtMs)
             .putBoolean(KEY_LAST_HAS_ARRIVED, state.lastHasArrived)
+            .putBoolean(KEY_WATCH_ONLY, state.watchOnly)
             .apply()
     }
 
@@ -50,7 +53,7 @@ class LiveUpdateSessionRegistry(
 
     override fun current(): LiveUpdateSessionState? = cachedState
 
-    override fun isActive(): Boolean = cachedState != null
+    override fun isActive(): Boolean = cachedState?.watchOnly == false
 
     private fun readFromPrefs(): LiveUpdateSessionState? {
         val sessionId = prefs.getString(KEY_SESSION_ID, null) ?: return null
@@ -60,6 +63,7 @@ class LiveUpdateSessionRegistry(
         val contentIdentifier = prefs.getString(KEY_CONTENT_IDENTIFIER, null)
             ?: if (storedType == LiveUpdateActivityType.TRAVEL) prefs.getString(KEY_LEGACY_TRAVEL_IDENTIFIER, null) else null
         val lastHasArrived = prefs.getBoolean(KEY_LAST_HAS_ARRIVED, false)
+        val watchOnly = prefs.getBoolean(KEY_WATCH_ONLY, false)
         return LiveUpdateSessionState(
             sessionId = sessionId,
             activityType = storedType,
@@ -67,6 +71,7 @@ class LiveUpdateSessionRegistry(
             startedAtMs = startedAt,
             lastUpdatedAtMs = lastUpdated,
             lastHasArrived = lastHasArrived,
+            watchOnly = watchOnly,
         )
     }
 
@@ -79,5 +84,6 @@ class LiveUpdateSessionRegistry(
         private const val KEY_STARTED_AT = "started_at"
         private const val KEY_LAST_UPDATED_AT = "last_updated_at"
         private const val KEY_LAST_HAS_ARRIVED = "last_has_arrived"
+        private const val KEY_WATCH_ONLY = "watch_only"
     }
 }

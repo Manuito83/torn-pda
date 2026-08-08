@@ -12,6 +12,9 @@ To access the API key, define a string constant(s), "_###PDA-APIKEY###_" in the 
 
 Additionally, functions PDA_httpGet() and PDA_httpPost() are provided. For more information on those, see [TornPDA_API.js](TornPDA_API.js)
 
+## Native storage (`PDA_storage`)
+For scripts that store a lot of data, Torn PDA offers `PDA_storage`, a durable per-script key/value store backed by the app instead of the browser's localStorage. It has far more room, is not wiped when the browser cache is cleared, and each script gets its own namespace with a limit the user can raise. The API is asynchronous. See [TornPDA_Storage.md](TornPDA_Storage.md).
+
 ## GreaseMonkey Functions (`GM_`)
 Torn PDA support some GM functions as well. These can be found in [GMforPDA.user.js](GMforPDA.user.js) and will aide in porting existing scripts to Torn PDA. Due to platform restrictions, they will not behave the same as they do in TamperMonkey or GreaseMonkey. If any errors arise from these functions, please let us know!
 

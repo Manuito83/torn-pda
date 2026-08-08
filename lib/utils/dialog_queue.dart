@@ -24,6 +24,11 @@ class DialogQueue {
   /// the user is reading the "Understood" timeout screen, dialogs may appear over it
   static Completer<void>? _authGate;
 
+  /// Auth recovery can finish before the gate is even registered (e.g. no API key,
+  /// where it returns without awaiting anything). Remember it, or the gate below
+  /// would be registered already dead and dialogs would wait out the 15s timeout
+  static bool _authAlreadyCompleted = false;
+
   static void setOnQueueEmptyCallback(VoidCallback? callback) {
     _onQueueEmptyCallback = callback;
   }
@@ -32,10 +37,15 @@ class DialogQueue {
   /// Call [completeAuthGate] when auth recovery is complete
   static void setAuthGate(Completer<void> gate) {
     _authGate = gate;
+    if (_authAlreadyCompleted && !gate.isCompleted) {
+      log("DialogQueue: Auth gate opened on registration (auth had already completed)");
+      gate.complete();
+    }
   }
 
   /// Complete the auth gate, allowing queued dialogs to start showing
   static void completeAuthGate() {
+    _authAlreadyCompleted = true;
     if (_authGate != null && !_authGate!.isCompleted) {
       log("DialogQueue: Auth gate completed");
       _authGate!.complete();

@@ -65,6 +65,11 @@ class LiveUpdateChannelBridge(
                     result.success(null)
                 }
 
+                ARM_TRAVEL_ABROAD_WATCH -> {
+                    val payload = (call.arguments as? Map<*, *>)?.mapKeys { it.key.toString() }.orEmpty()
+                    result.success(armTravelAbroadWatch(payload))
+                }
+
                 OPEN_PROMOTED_NOTIFICATIONS_SETTINGS -> {
                     result.success(openPromotedNotificationsSettings())
                 }
@@ -87,6 +92,34 @@ class LiveUpdateChannelBridge(
     fun dispose() {
         travelManager.removeListener(this)
         racingManager.removeListener(this)
+    }
+
+    /** Arms the abroad poll without posting or touching any card */
+    private fun armTravelAbroadWatch(arguments: Map<String, Any?>): Boolean {
+        val ctx = context ?: return false
+        val payload = LiveUpdatePayload.fromMap(LiveUpdateActivityType.TRAVEL, arguments)
+
+        val registry = LiveUpdateSessionRegistry(ctx, LiveUpdateActivityType.TRAVEL)
+        val existing = registry.current()
+        val sessionId = existing?.sessionId ?: java.util.UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+
+        if (existing == null) {
+            registry.markActive(
+                LiveUpdateSessionState(
+                    sessionId = sessionId,
+                    activityType = LiveUpdateActivityType.TRAVEL,
+                    contentIdentifier = payload.travelIdentifier,
+                    startedAtMs = now,
+                    lastUpdatedAtMs = now,
+                    lastHasArrived = true,
+                    watchOnly = true,
+                ),
+            )
+        }
+
+        TravelLiveUpdateRefreshScheduler.scheduleAbroadPoll(ctx, sessionId, payload)
+        return true
     }
 
     private fun openPromotedNotificationsSettings(): Boolean {
@@ -118,5 +151,6 @@ class LiveUpdateChannelBridge(
         private const val GET_PUSH_TO_START_TOKEN = "getPushToStartToken"
         private const val GET_LIVE_UPDATE_CAPABILITIES = "getLiveUpdateCapabilities"
         private const val OPEN_PROMOTED_NOTIFICATIONS_SETTINGS = "openPromotedNotificationsSettings"
+        private const val ARM_TRAVEL_ABROAD_WATCH = "armTravelAbroadWatch"
     }
 }

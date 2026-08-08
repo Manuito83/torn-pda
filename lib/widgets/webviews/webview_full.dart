@@ -86,6 +86,7 @@ import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import "package:torn_pda/widgets/settings/userscripts_add_dialog.dart";
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
+import 'package:torn_pda/widgets/webviews/browser_reload_button.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
@@ -154,6 +155,10 @@ class WebViewFull extends StatefulWidget {
   final bool isChainingBrowser;
   final ChainingPayload? chainingPayload;
 
+  // Scroll to restore after the first load (used when rebuilding a tab whose renderer died)
+  final int? restoreScrollX;
+  final int? restoreScrollY;
+
   const WebViewFull({
     required this.tabUid,
     this.windowId,
@@ -164,6 +169,8 @@ class WebViewFull extends StatefulWidget {
     this.chatRemovalActive = false,
     this.allowDownloads = true,
     this.key,
+    this.restoreScrollX,
+    this.restoreScrollY,
 
     // Chaining
     this.isChainingBrowser = false,
@@ -207,10 +214,15 @@ class WebViewFullState extends State<WebViewFull>
 
   bool _heightExtendInjected = false;
 
+  // Serializes concurrent _addUserScriptsAvoidDuplicates calls so remove+add cant' cause issues
+  Future<void> _scriptLock = Future.value();
+
   // The handler bundle is constant for the life
   // of the webview, so we register it once and never remove or re-add it
   // to avoid collisions and ensure that they are active
   bool _handlersInjected = false;
+  // Shared across tabs: one renderer death hits every webview, record ONE Crashlytics event per death
+  static DateTime? _lastRendererGoneRecorded;
 
   // Scripts registered at webview construction (before the first load), computed once
   UnmodifiableListView<UserScript>? _initialUserScriptsCache;
@@ -321,8 +333,22 @@ class WebViewFullState extends State<WebViewFull>
   ];
 
   bool _scrollAfterLoad = false;
+  bool _reloadInProgress = false;
+  bool _reloadRequestActive = false;
+  Timer? _reloadWatchdog;
+  static const Duration _reloadProbeTimeout = Duration(seconds: 3);
   int? _scrollY = 0;
   int? _scrollX = 0;
+
+  // Parked: background tab sent to about:blank while the app is minimized (Android)
+  static const String _blankUrl = "about:blank";
+  bool _isParked = false;
+  bool _wakingFromPark = false;
+  String? _parkedUrl;
+  bool get isParked => _isParked;
+
+  /// The blank page must never reach the tab state (URL, title, history, scroll)
+  bool _isParkingBlank(Uri? uri) => _parkedUrl != null && uri?.toString() == _blankUrl;
 
   bool _foundDisposedRotation = false;
   int _disposedScrollX = 0;
@@ -434,6 +460,13 @@ class WebViewFullState extends State<WebViewFull>
       _webViewProvider.rotatedTabDetails.clear();
     }
 
+    // Rebuilt after a renderer death (a rotation restores its own position, just above)
+    if (!_foundDisposedRotation && (widget.restoreScrollX != null || widget.restoreScrollY != null)) {
+      _scrollX = widget.restoreScrollX ?? 0;
+      _scrollY = widget.restoreScrollY ?? 0;
+      _scrollAfterLoad = true;
+    }
+
     // We will later changed this for a listenable one in build()
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
@@ -447,6 +480,17 @@ class WebViewFullState extends State<WebViewFull>
     _nativeAuth = context.read<NativeAuthProvider>();
 
     _isChainingBrowser = widget.isChainingBrowser;
+    if (_isChainingBrowser && widget.chainingPayload == null) {
+      // Defensive: a chaining tab rebuilt without its payload would crash below; degrade to a normal tab
+      _isChainingBrowser = false;
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.recordError(
+          "Chaining tab rebuilt without payload (degraded to normal tab)",
+          null,
+          fatal: false,
+        );
+      }
+    }
     if (_isChainingBrowser) {
       _chainingPayload = widget.chainingPayload;
       _w = Get.find<WarController>();
@@ -563,6 +607,9 @@ class WebViewFullState extends State<WebViewFull>
     // Update the scrolls with the latest width available
     // (in case we need to regenerate the webview after rotating the screen)
     // If null, it's probably because the webview is not yet initialized (so we don't log)
+    // Parked (blank) pages and pending restores would report a position we must not save
+    if (_isParked || _scrollAfterLoad) return;
+
     try {
       final scrollX = await webViewController?.getScrollX();
       if (scrollX != null) {
@@ -582,6 +629,7 @@ class WebViewFullState extends State<WebViewFull>
   void dispose() async {
     try {
       _webViewCreatedWatchdog?.cancel();
+      _reloadWatchdog?.cancel();
 
       // Send details to provider in case we are rotating
       _webViewProvider.rotatedTabDetails.add(
@@ -625,6 +673,10 @@ class WebViewFullState extends State<WebViewFull>
         webViewController?.pauseTimers();
       } else {
         webViewController?.resumeTimers();
+        // A renderer killed while we were in background
+        if (state == AppLifecycleState.resumed) {
+          _webViewProvider.reloadActiveTabIfRendererGone();
+        }
       }
     }
   }
@@ -1461,6 +1513,10 @@ class WebViewFullState extends State<WebViewFull>
           onLoadStart: (c, uri) async {
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
 
+            // Ignore the parking placeholder; a real page taking over unparks the tab
+            if (_isParkingBlank(uri)) return;
+            if (_isParked && uri != null) _isParked = false;
+
             _heightExtendInjected = false;
 
             // FALLBACK: Always try to force update if reportTabLoadUrl wasn't called recently
@@ -1493,6 +1549,30 @@ class WebViewFullState extends State<WebViewFull>
               _revertTransparentBackground();
             }
 
+            // Re-register scripts when they were wiped (browser close, renderer crash) and the
+            // reload doesn't trigger shouldOverrideUrlLoading
+            //
+            // We also inject whatever is missing right now. Whatever this one misses
+            // is caught again in onLoadStop
+            if (!_handlersInjected &&
+                uri != null &&
+                (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null))) {
+              try {
+                await _ensureHandlersInjected();
+                await _addUserScriptsAvoidDuplicates(
+                  _userScriptsProvider.getCondSources(
+                    url: uri.toString(),
+                    pdaApiKey: UserHelper.apiKey,
+                    time: UserScriptTime.start,
+                  ),
+                );
+                if (!mounted) return;
+                await _injectMissingDocumentStartScripts(c, uri.toString(), at: "loadStart");
+              } catch (e) {
+                log("⚠️ onLoadStart script registration error: $e", name: "WEBVIEW FULL");
+              }
+            }
+
             try {
               _currentUrl = uri.toString();
 
@@ -1517,12 +1597,13 @@ class WebViewFullState extends State<WebViewFull>
           },
           onProgressChanged: (c, progress) async {
             if (!mounted) return;
+            if (_isParked) return;
 
             // Check for URL changes during progress
             if (progress > 10) {
               // Wait for some progress to avoid initial load noise
               final currentUri = await c.getUrl();
-              if (currentUri != null && _lastReportedUrl != currentUri.toString()) {
+              if (currentUri != null && !_isParkingBlank(currentUri) && _lastReportedUrl != currentUri.toString()) {
                 log(
                   "🔄 onProgressChanged URL change detected: $_lastReportedUrl -> ${currentUri.toString()}",
                   name: "WEBVIEW FULL",
@@ -1560,9 +1641,27 @@ class WebViewFullState extends State<WebViewFull>
               // the checks performed in this method
             }
           },
+          onScrollChanged: (c, x, y) {
+            // Android only: iOS reports these divided by contentScaleFactor, while getScrollX/Y
+            // and scrollTo use raw points
+            if (!Platform.isAndroid) return;
+            if (_isParked) return;
+            // A pending restore means this is the load resetting to 0; keep the saved target
+            if (_scrollAfterLoad) return;
+            _scrollX = x;
+            _scrollY = y;
+          },
           onLoadStop: (c, uri) async {
             log("🏁 onLoadStop: $uri", name: 'WEBVIEW FULL');
             if (!mounted) return;
+            _setReloadInProgress(false);
+            if (_isParkingBlank(uri)) return;
+            if (_isParked && uri != null) _isParked = false;
+
+            // Consumed here: clearing it further down (past several awaits that throw) could
+            // leave it armed forever, and that now also freezes scroll tracking
+            final bool restoreScrollNow = _scrollAfterLoad;
+            _scrollAfterLoad = false;
 
             if (_settingsProvider.browserCenterEditingTextField &&
                 // We also need to allow this from the Firebase Remote Config just
@@ -1570,6 +1669,7 @@ class WebViewFullState extends State<WebViewFull>
                 _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed) {
               c.evaluateJavascript(
                 source: '''
+                    if (!window.__pdaFocusinAdded) { window.__pdaFocusinAdded = true;
                     window.addEventListener('focusin', (event) => {
                       const target = event.target;
 
@@ -1577,7 +1677,8 @@ class WebViewFullState extends State<WebViewFull>
                       const isInput = target.tagName === 'INPUT';
 
                       // Avoid checkboxes (e.g.: when selecting messages)
-                      const isCheckbox = target.className.includes('checkbox');
+                      // getAttribute('class') is SVG-safe (className is SVGAnimatedString on SVG)
+                      const isCheckbox = (target.getAttribute('class') || '').includes('checkbox');
 
                       const shouldScroll = isInput && !isCheckbox;
 
@@ -1587,6 +1688,7 @@ class WebViewFullState extends State<WebViewFull>
                         }, 300);
                       }
                     });
+                    }
                   ''',
               );
             }
@@ -1635,20 +1737,15 @@ class WebViewFullState extends State<WebViewFull>
                 pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.end,
               );
-              // Guarantee the handler bundle (GM/PDA API...) is present whenever the page runs ANY
-              // userscript (start or end)
-              final hasActiveScripts =
-                  scriptsToAdd.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(uri.toString()).isNotEmpty;
-              if (hasActiveScripts) {
-                final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
-                for (final h in handlers) {
-                  await webViewController!.evaluateJavascript(source: h.source);
-                }
-              }
+
+              // Guarantee the handler bundle and this page's document-start scripts
+              // are present whenever the page runs any userscript (start or end)
+              await _injectMissingDocumentStartScripts(c, uri.toString());
 
               // We need to inject directly, otherwise these scripts will only load in the next page visit
+              // Guard once-per-document so hash navigation (which re-fire onLoadStop) don't re-run END scripts
               for (final script in scriptsToAdd) {
-                await webViewController!.evaluateJavascript(source: script.source);
+                await webViewController!.evaluateJavascript(source: _oncePerDocument(script.groupName, script.source));
               }
 
               // DEBUG
@@ -1688,9 +1785,8 @@ class WebViewFullState extends State<WebViewFull>
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
-              if (_scrollAfterLoad && _settingsProvider.restoreScrollAfterReload) {
-                webViewController!.scrollTo(x: _scrollX!, y: _scrollY!);
-                _scrollAfterLoad = false;
+              if (restoreScrollNow && _settingsProvider.restoreScrollAfterReload) {
+                webViewController!.scrollTo(x: _scrollX ?? 0, y: _scrollY ?? 0);
               }
 
               // If we have a disposed rotation, we scroll to the last position
@@ -1746,6 +1842,8 @@ class WebViewFullState extends State<WebViewFull>
           },
           onUpdateVisitedHistory: (c, uri, androidReload) async {
             if (!mounted) return;
+            if (_isParkingBlank(uri)) return;
+            if (_isParked && uri != null) _isParked = false;
 
             final sameUrl = uri?.toString() == _currentUrl;
             if (!sameUrl) {
@@ -1984,24 +2082,40 @@ class WebViewFullState extends State<WebViewFull>
           onRenderProcessGone: (c, detail) {
             // Android renderer process died (crash or OS-killed under memory)
             // Tells Android we dealt with it, so it does not kill the whole app
+            _handlersInjected = false;
+
+            // Renderer deaths occur mostly on background (OOM kills)
+            // Rebuild now only if the app is foreground AND this is the active tab
+            // ... otherwise, we will rebuild when the user focuses this tab again
+            final bool appResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+            final bool renderGoneActive = _webViewProvider.isTabUidActive(_tabUid);
+            final bool rebuildNow = appResumed && renderGoneActive;
+
+            // Preserve the last known scroll so the rebuilt tab can restore the position
+            final goneTab = _webViewProvider.getTabByUid(_tabUid);
+            goneTab?.rendererGoneScrollX = _scrollX;
+            goneTab?.rendererGoneScrollY = _scrollY;
+
+            // One death fires this on every webview of the shared renderer; record ONE event per death
             try {
               if (!Platform.isWindows) {
-                FirebaseCrashlytics.instance.recordError(
-                  "WebViewRenderProcessGone didCrash=${detail.didCrash} tabs=${_webViewProvider.tabList.length}",
-                  null,
-                  reason: "Android WebView renderer gone (recovered, app not killed)",
-                  fatal: false,
-                );
+                final DateTime now = DateTime.now();
+                if (_lastRendererGoneRecorded == null || now.difference(_lastRendererGoneRecorded!).inSeconds >= 2) {
+                  _lastRendererGoneRecorded = now;
+                  FirebaseCrashlytics.instance.recordError(
+                    "WebViewRenderProcessGone didCrash=${detail.didCrash} "
+                    "priority=${detail.rendererPriorityAtExit} resumed=$appResumed "
+                    "tabs=${_webViewProvider.tabList.length}",
+                    null,
+                    reason: "Android WebView renderer gone (recovered, app not killed)",
+                    fatal: false,
+                  );
+                }
               }
             } catch (_) {}
 
-            _handlersInjected = false;
-
-            final bool renderGoneActive = _webViewProvider.isTabUidActive(_tabUid);
-            final bool rebuildNow = renderGoneActive || detail.didCrash != false;
-
             logToUser(
-              "💥 Android renderer gone (didCrash=${detail.didCrash}): "
+              "💥 Android renderer gone (didCrash=${detail.didCrash}, resumed=$appResumed): "
               "${rebuildNow ? 'rebuilding this tab' : 'marked, will reload on focus'}",
               duration: 6,
             );
@@ -2325,24 +2439,116 @@ class WebViewFullState extends State<WebViewFull>
   /// call addUserScripts (e.g. shouldOverrideUrlLoading firing for the initialUrlRequest
   /// in a child tab) accumulate multiple copies of the same script in the store,
   /// causing each to be injected several times on the next page load
-  Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) async {
-    if (webViewController == null) return;
-    for (final s in scripts) {
-      final group = s.groupName;
-      if (group != null) {
-        await webViewController!.removeUserScriptsByGroupName(groupName: group);
+  Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) {
+    final List<UserScript> guarded = scripts.map(_guardedOnce).toList();
+    final result = _scriptLock.then((_) async {
+      if (webViewController == null) return;
+      for (final s in guarded) {
+        final group = s.groupName;
+        if (group != null) {
+          await webViewController!.removeUserScriptsByGroupName(groupName: group);
+        }
       }
-    }
-    await webViewController!.addUserScripts(userScripts: scripts.toList());
+      await webViewController!.addUserScripts(userScripts: guarded);
+    });
+    // Next caller waits for this one; swallow errors so a single failure doesn't break the chain
+    _scriptLock = result.catchError((_) {});
+    return result;
+  }
+
+  // Wraps injected JS so it runs once per document (window lifetime): a real navigation/reload gets a
+  // fresh window and a same-document hash nav keeps it
+  String _oncePerDocument(String? key, String source) {
+    final String k = jsonEncode(key ?? 'anon');
+    return "if(!(window.__pdaOnce=window.__pdaOnce||{})[$k]){window.__pdaOnce[$k]=1;\n$source\n}";
+  }
+
+  /// Every document-start script is registered with the once-per-document wrapper, so a copy
+  /// evaluated later (see [_injectMissingDocumentStartScripts]) or a second registration of the
+  /// same script can never run it twice in the same page
+  UserScript _guardedOnce(UserScript script) {
+    return UserScript(
+      groupName: script.groupName,
+      injectionTime: script.injectionTime,
+      source: _oncePerDocument(script.groupName, script.source),
+      forMainFrameOnly: script.forMainFrameOnly,
+      allowedOriginRules: script.allowedOriginRules,
+      contentWorld: script.contentWorld,
+    );
   }
 
   /// Registers the handler bundle (GM API, PDA API,...)
   /// These scripts never change, so unlike user scripts we must not remove them
   Future<void> _ensureHandlersInjected() async {
     if (webViewController == null || _handlersInjected) return;
-    final handlers = _userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid);
-    await webViewController!.addUserScripts(userScripts: handlers.toList());
+    final handlers = _userScriptsProvider.getHandlerSources(
+      apiKey: UserHelper.apiKey,
+      tabUid: _tabUid,
+      activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+    );
+    await webViewController!.addUserScripts(userScripts: handlers.map(_guardedOnce).toList());
     _handlersInjected = true;
+  }
+
+  /// Handler bundle + document-start userscripts that did not run in the current document
+  /// This asks the page which ones are missing and only evaluates those
+  Future<void> _injectMissingDocumentStartScripts(
+    InAppWebViewController c,
+    String url, {
+    String at = "loadStop",
+  }) async {
+    if (!(Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null))) return;
+
+    final UnmodifiableListView<UserScript> startScripts = _userScriptsProvider.getCondSources(
+      url: url,
+      pdaApiKey: UserHelper.apiKey,
+      time: UserScriptTime.start,
+    );
+
+    // The bundle is only needed if the page is going to run something that uses it
+    final bool needsHandlers = startScripts.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(url).isNotEmpty;
+    if (!needsHandlers) return;
+
+    final List<UserScript> expected = <UserScript>[
+      ..._userScriptsProvider.getHandlerSources(
+        apiKey: UserHelper.apiKey,
+        tabUid: _tabUid,
+        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+      ),
+      ...startScripts,
+    ];
+    if (expected.isEmpty) return;
+
+    final List<String> keys = expected.map((s) => s.groupName ?? "anon").toList();
+    final probe = await c.evaluateJavascript(
+      source:
+          "(function(){var o=window.__pdaOnce||{};var k=${jsonEncode(keys)};var m=[];"
+          "for(var i=0;i<k.length;i++){if(!o[k[i]])m.push(k[i]);}return JSON.stringify(m);})()",
+    );
+
+    final Set<String> missing = _decodeMissingKeys(probe);
+    if (missing.isEmpty) return;
+
+    for (final s in expected) {
+      if (!missing.contains(s.groupName ?? "anon")) continue;
+      await c.evaluateJavascript(source: _oncePerDocument(s.groupName, s.source));
+    }
+
+    if (_debugScriptsInjection) {
+      log("Recovered missing document-start scripts in $at: $missing");
+    }
+  }
+
+  /// A failed probe returns nothing: never inject blindly, as that is what duplicates scripts
+  Set<String> _decodeMissingKeys(dynamic probe) {
+    if (probe == null) return const <String>{};
+    try {
+      final dynamic decoded = probe is String ? jsonDecode(probe) : probe;
+      if (decoded is List) return decoded.map((e) => e.toString()).toSet();
+    } catch (_) {
+      //
+    }
+    return const <String>{};
   }
 
   /// Handler bundle + the initial URL's document-start userscripts, registered natively at
@@ -2354,7 +2560,11 @@ class WebViewFullState extends State<WebViewFull>
       return _initialUserScriptsCache = null;
     }
     final scripts = <UserScript>[
-      ..._userScriptsProvider.getHandlerSources(apiKey: UserHelper.apiKey, tabUid: _tabUid),
+      ..._userScriptsProvider.getHandlerSources(
+        apiKey: UserHelper.apiKey,
+        tabUid: _tabUid,
+        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+      ),
       if (_initialUrl?.url != null)
         ..._userScriptsProvider.getCondSources(
           url: _initialUrl!.url.toString(),
@@ -2362,7 +2572,7 @@ class WebViewFullState extends State<WebViewFull>
           time: UserScriptTime.start,
         ),
     ];
-    return _initialUserScriptsCache = UnmodifiableListView(scripts);
+    return _initialUserScriptsCache = UnmodifiableListView(scripts.map(_guardedOnce).toList());
   }
 
   Future assessErrorCases({dom.Document? document}) async {
@@ -2424,7 +2634,7 @@ class WebViewFullState extends State<WebViewFull>
       // (it does not matter what login method was used to obtain the sToken)
       if (_nativeUser.playerLastLoginMethod != NativeLoginType.none) {
         final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
-          context: context,
+          userProvider: _nativeUser,
           loginData: GetInitDataModel(playerId: UserHelper.playerId, sToken: _nativeUser.playerSToken),
         );
 
@@ -2459,6 +2669,11 @@ class WebViewFullState extends State<WebViewFull>
 
   void _reportUrlVisit(Uri? uri, {bool bypassThrottle = false}) {
     if (uri == null) {
+      return;
+    }
+
+    // Never report the parking placeholder as a real visit
+    if (_isParkingBlank(uri)) {
       return;
     }
 
@@ -2914,55 +3129,99 @@ class WebViewFullState extends State<WebViewFull>
 
   Widget _reloadIcon() {
     return _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
-        ? Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                splashColor: Colors.orange,
-                child: Icon(
-                  Icons.refresh,
-                  color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
-                ),
-                onTap: () async {
-                  try {
-                    // Check if the webview is active
-                    await webViewController!.getUrl();
-                  } on FlutterError catch (e) {
-                    if (e.message.contains("was used after being disposed")) {
-                      _webViewProvider.rebuildUnresponsiveWebView(
-                        isChainingBrowser: _isChainingBrowser,
-                        chainingPayload: _chainingPayload,
-                      );
-
-                      logToUser("Found crashed browser, trying to rebuild!", duration: 5);
-                    }
-                  }
-
-                  if (!Platform.isWindows) {
-                    _scrollX = await webViewController!.getScrollX();
-                    _scrollY = await webViewController!.getScrollY();
-                  }
-
-                  await _reload();
-
-                  if (!Platform.isWindows) {
-                    _scrollAfterLoad = true;
-                  }
-
-                  BotToast.showText(
-                    text: "Reloading...",
-                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                    contentColor: Colors.grey[600]!,
-                    duration: const Duration(seconds: 1),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                },
-              ),
-            ),
+        ? BrowserReloadButton(
+            isReloading: _reloadInProgress,
+            color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+            onPressed: _reloadWithFeedback,
           )
         : const SizedBox.shrink();
+  }
+
+  /// Armed as soon as the spinner shows, so a platform channel that never answers
+  /// (dead renderer) can't leave the spinner running forever
+  void _setReloadInProgress(bool value) {
+    _reloadWatchdog?.cancel();
+    _reloadWatchdog = null;
+
+    if (!mounted) return;
+
+    if (value) {
+      _reloadWatchdog = Timer(const Duration(seconds: 15), () => _setReloadInProgress(false));
+    }
+
+    if (_reloadInProgress == value) return;
+    setState(() {
+      _reloadInProgress = value;
+    });
+  }
+
+  /// The spinner is feedback, not a lock: a second tap while the page is still loading
+  /// issues a fresh reload, which is what gets a stuck WebView moving again. Only the
+  /// short async prologue (probe + scroll reads) is guarded against re-entry.
+  Future<void> _reloadWithFeedback({bool showToast = false}) async {
+    if (_reloadRequestActive) return;
+    _reloadRequestActive = true;
+    _setReloadInProgress(true);
+
+    if (showToast) {
+      BotToast.showText(
+        text: "Reloading...",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.grey[600]!,
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+
+    try {
+      var scrollCaptured = false;
+
+      try {
+        final controller = webViewController;
+        if (controller == null) {
+          throw StateError('WebView controller is not available');
+        }
+
+        // Check if the webview is active. A disposed controller throws; a hung one
+        // times out instead of blocking the reload attempt below
+        await controller.getUrl().timeout(_reloadProbeTimeout);
+
+        if (!Platform.isWindows) {
+          _scrollX = await controller.getScrollX().timeout(_reloadProbeTimeout);
+          _scrollY = await controller.getScrollY().timeout(_reloadProbeTimeout);
+          scrollCaptured = true;
+        }
+      } on FlutterError catch (e) {
+        if (e.message.contains("was used after being disposed")) {
+          _webViewProvider.rebuildUnresponsiveWebView(
+            isChainingBrowser: _isChainingBrowser,
+            chainingPayload: _chainingPayload,
+          );
+          logToUser("Found crashed browser, trying to rebuild!", duration: 5);
+          _setReloadInProgress(false);
+          return;
+        }
+        // Any other platform error: still worth trying to reload, just without scroll restoration
+        log('Reload probe failed: $e');
+      } catch (e) {
+        log('Reload probe failed: $e');
+      }
+
+      // Armed before reloading, so the load's own scroll reset can't overwrite the target
+      if (scrollCaptured) _scrollAfterLoad = true;
+
+      _reloadRequestActive = false;
+
+      try {
+        await _reload();
+      } catch (e, stackTrace) {
+        log('Failed to reload browser: $e', error: e, stackTrace: stackTrace);
+        logToUser("Couldn't reload this page. Try again.", duration: 4);
+        _setReloadInProgress(false);
+      }
+    } finally {
+      _reloadRequestActive = false;
+    }
   }
 
   Future<void> _goBackOrForward(DragEndDetails details) async {
@@ -4395,8 +4654,10 @@ class WebViewFullState extends State<WebViewFull>
     if (_cityTriggered) _cityTriggered = false;
 
     if (Platform.isAndroid || Platform.isWindows) {
+      // Times out instead of hanging on a dead renderer; falls back to _currentUrl below
+      final Uri? reloadUri = await webViewController!.getUrl().timeout(_reloadProbeTimeout, onTimeout: () => null);
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-        url: webViewController!.getUrl().toString(),
+        url: reloadUri?.toString() ?? _currentUrl,
         pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
@@ -4413,25 +4674,15 @@ class WebViewFullState extends State<WebViewFull>
 
       webViewController!.reload();
     } else if (Platform.isIOS) {
-      final currentURI = await webViewController!.getUrl();
-      _loadUrl(currentURI.toString());
+      final currentURI = await webViewController!.getUrl().timeout(_reloadProbeTimeout, onTimeout: () => null);
+      _loadUrl(currentURI?.toString() ?? _currentUrl);
     }
   }
 
-  Future reloadFromOutside() async {
-    _scrollX = await webViewController!.getScrollX();
-    _scrollY = await webViewController!.getScrollY();
-    await _reload();
-    _scrollAfterLoad = true;
-
-    BotToast.showText(
-      text: "Reloading...",
-      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-      contentColor: Colors.grey[600]!,
-      duration: const Duration(seconds: 1),
-      contentPadding: const EdgeInsets.all(10),
-    );
-  }
+  // Keeps the toast: the FAB and the tab menu can fire this while the reload icon
+  // is off screen or disabled altogether (pull-to-refresh mode), so the spinner alone
+  // would leave those paths without feedback
+  Future reloadFromOutside() => _reloadWithFeedback(showToast: true);
 
   Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
@@ -5243,6 +5494,90 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  /// Frees this tab's page while the app is minimized
+  Future<bool> parkWebview() async {
+    if (!Platform.isAndroid || _isParked) return false;
+    final InAppWebViewController? controller = webViewController;
+    if (controller == null || _currentUrl.isEmpty || _currentUrl == _blankUrl) return false;
+
+    _parkedUrl = _currentUrl;
+    _isParked = true;
+
+    try {
+      controller.resume();
+      await controller.loadUrl(urlRequest: URLRequest(url: WebUri(_blankUrl)));
+      await Future.delayed(const Duration(milliseconds: 700));
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.recordError(e, trace, reason: "PDA: parked tab park failed");
+    }
+
+    // The user might have come back and opened this very tab while the blank page was loading
+    if (!mounted || _webViewProvider.isTabUidActive(_tabUid)) {
+      await wakeFromPark();
+      return false;
+    }
+
+    FirebaseCrashlytics.instance.log("Parked tab $_tabUid");
+    _pauseQuietly(controller);
+    return true;
+  }
+
+  void _pauseQuietly(InAppWebViewController controller) {
+    try {
+      controller.pause();
+    } catch (_) {}
+  }
+
+  /// Returns a parked tab to its page
+  Future<void> wakeFromPark() async {
+    if (!_isParked || _wakingFromPark) return;
+    final InAppWebViewController? controller = webViewController;
+    if (controller == null) return;
+    final String? target = _parkedUrl;
+
+    _wakingFromPark = true;
+    // False = _isParked is still true and a retry can rescue the tab; true = it was
+    // already cleared, so a failure below leaves the tab on the blank page
+    var parkCleared = false;
+    try {
+      controller.resume();
+
+      // Before navigating: going back does not trigger shouldOverrideUrlLoading on Android
+      await _ensureHandlersInjected();
+      if (target != null && target.isNotEmpty) {
+        await _addUserScriptsAvoidDuplicates(
+          _userScriptsProvider.getCondSources(url: target, pdaApiKey: UserHelper.apiKey, time: UserScriptTime.start),
+        );
+      }
+
+      final Uri? current = await controller.getUrl();
+      if (!_isParked) return;
+
+      _scrollAfterLoad = true;
+      _isParked = false;
+      parkCleared = true;
+
+      // A fresh document needs the city widgets injected again (as [_reload] does)
+      if (_cityTriggered) _cityTriggered = false;
+
+      if (current?.toString() == _blankUrl && await controller.canGoBack()) {
+        await controller.goBack();
+      } else if (target != null && target.isNotEmpty) {
+        await controller.loadUrl(urlRequest: URLRequest(url: WebUri(target)));
+      }
+
+      FirebaseCrashlytics.instance.log("Woke tab $_tabUid from park");
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        trace,
+        reason: "PDA: parked tab wake failed (parkCleared: $parkCleared, hadTarget: ${target?.isNotEmpty == true})",
+      );
+    } finally {
+      _wakingFromPark = false;
+    }
+  }
+
   Future<void> resumeThisWebview({bool publish = true}) async {
     if (Platform.isAndroid) {
       webViewController?.resume();
@@ -5306,6 +5641,25 @@ class WebViewFullState extends State<WebViewFull>
 
   Future<void> publishTabState({bool? isActiveTab, bool? isWebViewVisible}) async {
     if (!mounted) return;
+
+    // Recover a black or blank tab when it becomes visible without a tab switch, which is the only
+    // case activateTab misses (foreground, split screen, rotation)
+    final bool showingThisTab =
+        (isActiveTab ?? _webViewProvider.isTabUidActive(_tabUid)) &&
+        (isWebViewVisible ?? (_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive));
+    if (showingThisTab) {
+      final TabDetails? shownTab = _webViewProvider.getTabByUid(_tabUid);
+      if (shownTab != null && shownTab.needsReloadAfterRendererGone) {
+        _webViewProvider.rebuildUnresponsiveWebView(
+          tabUid: _tabUid,
+          isChainingBrowser: _isChainingBrowser,
+          chainingPayload: _chainingPayload,
+        );
+        return;
+      }
+      if (_isParked) wakeFromPark();
+    }
+
     if (webViewController == null) return;
 
     final payload = {
@@ -5316,6 +5670,14 @@ class WebViewFullState extends State<WebViewFull>
 
     final payloadJson = jsonEncode(payload);
     final uidJson = jsonEncode(_tabUid);
+
+    // When this tab becomes active+visible, nudge scripts that listen for focus (RC-gated, pairs
+    // with the activeTabFocus handler) so e.g. OpenMarket re-runs without needing a physical tap
+    final bool focusReady =
+        _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed &&
+        ((payload['isActiveTab'] as bool?) ?? false) &&
+        ((payload['isWebViewVisible'] as bool?) ?? false);
+    final String focusDispatch = focusReady ? "try { window.dispatchEvent(new Event('focus')); } catch (_) {}" : "";
 
     try {
       await webViewController!.evaluateJavascript(
@@ -5335,6 +5697,7 @@ class WebViewFullState extends State<WebViewFull>
             try {
               window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: $payloadJson }));
             } catch (_) {}
+            $focusDispatch
           })();
         ''',
       );
@@ -5376,6 +5739,15 @@ class WebViewFullState extends State<WebViewFull>
   Future _loadUrl(String? inputUrl) async {
     if (webViewController == null) {
       return;
+    }
+
+    // Something wants this parked tab to load a URL (a notification, the URL dialog...), so the
+    // parking is cancelled: a wake in progress must not undo this load, and clearing the last
+    // reported URL stops the "same URL" shortcut below from reloading the blank page instead
+    if (_isParked) {
+      _isParked = false;
+      _lastReportedUrl = '';
+      webViewController!.resume();
     }
 
     // If the input URL is invalid, we will see if there was one saved as _currentUrl

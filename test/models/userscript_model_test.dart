@@ -321,6 +321,7 @@ void main() {
       final adapted = provider.adaptSource(
         source: 'const key = "###PDA-APIKEY###";',
         scriptFinalApiKey: 'abc123',
+        storageId: 'test-sid',
       );
 
       expect(adapted, contains('const key = "abc123";'));
@@ -334,6 +335,7 @@ void main() {
       final adapted = provider.adaptSource(
         source: 'const text = “value”; const other = ‘x’;',
         scriptFinalApiKey: 'unused',
+        storageId: 'test-sid',
       );
 
       expect(adapted, contains('const text = "value";'));

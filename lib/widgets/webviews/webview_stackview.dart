@@ -191,7 +191,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
               body: snapshot.connectionState == ConnectionState.done
                   ? Stack(children: [buildMainContent(), shouldShowFab ? const WebviewFab() : const SizedBox.shrink()])
                   : Container(
-                      color: Colors.blueGrey[800],
+                      color: _themeProvider.canvas,
                       child: const Center(child: CircularProgressIndicator(color: Colors.white)),
                     ),
             );

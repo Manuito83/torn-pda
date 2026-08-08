@@ -14,6 +14,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_simple_dialog.dart';
 
 class UserScriptsAddDialog extends StatefulWidget {
@@ -22,8 +23,12 @@ class UserScriptsAddDialog extends StatefulWidget {
   final int defaultPage;
   final String? defaultUrl;
 
-  const UserScriptsAddDialog(
-      {required this.editingExistingScript, this.scriptBeingEdited, this.defaultPage = 0, this.defaultUrl});
+  const UserScriptsAddDialog({
+    required this.editingExistingScript,
+    this.scriptBeingEdited,
+    this.defaultPage = 0,
+    this.defaultUrl,
+  });
 
   @override
   UserScriptsAddDialogState createState() => UserScriptsAddDialogState();
@@ -140,18 +145,45 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
       elevation: 2,
       child: DefaultTabController(
         length: 2,
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            _mainAddTab(),
-            _remoteLoadTab(),
-          ],
+        child: TabBarView(controller: _tabController, children: [_mainAddTab(), _remoteLoadTab()]),
+      ),
+    );
+  }
+
+  Widget _storageSupportBanner() {
+    final script = widget.scriptBeingEdited;
+    if (script == null || script.storageSupport != ScriptStorageSupport.pdaNative) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Material(
+          color: Colors.green.withAlpha(30),
+          borderRadius: BorderRadius.circular(20),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => showScriptStorageQuotaDialog(context, script.storageId),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.sd_storage, color: Colors.green, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    "Native storage: set limit",
+                    style: TextStyle(fontSize: 11, color: Colors.green.shade700, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.tune, size: 14, color: Colors.green.shade700),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -213,18 +245,13 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               ),
             ),
           ),
+          _storageSupportBanner(),
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 10, 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
-                  children: [
-                    Icon(MdiIcons.earth, size: 14),
-                    SizedBox(width: 4),
-                    Text("Remote load/update"),
-                  ],
-                ),
+                const Row(children: [Icon(MdiIcons.earth, size: 14), SizedBox(width: 4), Text("Remote load/update")]),
                 ElevatedButton(
                   child: const Text("Configure"),
                   onPressed: () {
@@ -240,11 +267,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Row(
-                  children: [
-                    Icon(MdiIcons.lightningBoltOutline, size: 16),
-                    SizedBox(width: 4),
-                    Text("Injection time"),
-                  ],
+                  children: [Icon(MdiIcons.lightningBoltOutline, size: 16), SizedBox(width: 4), Text("Injection time")],
                 ),
                 ToggleSwitch(
                   minHeight: 28,
@@ -254,14 +277,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                   activeBgColor: _themeProvider.currentTheme == AppTheme.light
                       ? [Colors.blueGrey[400]!]
                       : _themeProvider.currentTheme == AppTheme.dark
-                          ? [Colors.blueGrey]
-                          : [Colors.blueGrey[700]!],
+                      ? [Colors.blueGrey]
+                      : [Colors.blueGrey[700]!],
                   activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
                   inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
                       ? Colors.white
                       : _themeProvider.currentTheme == AppTheme.dark
-                          ? Colors.grey[800]
-                          : Colors.black,
+                      ? Colors.grey[800]
+                      : Colors.black,
                   inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
                   borderWidth: 1,
                   cornerRadius: 5,
@@ -272,7 +295,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                   onToggle: (index) {
                     index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
                   },
-                )
+                ),
               ],
             ),
           ),
@@ -307,14 +330,12 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     } on Exception catch (e) {
                       if (e.toString().contains("No header found")) {
                         BotToast.showText(
-                            text: "No header was found in the script, it will be injected in all pages!",
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: Colors.orange[800]!,
-                            duration: const Duration(seconds: 4),
-                            contentPadding: const EdgeInsets.all(10));
+                          text: "No header was found in the script, it will be injected in all pages!",
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                          contentColor: Colors.orange[800]!,
+                          duration: const Duration(seconds: 4),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
                         return null;
                       } else {
                         // If the error is not about the header, show it to the user.
@@ -353,9 +374,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     ),
                   ],
                 ),
-              )
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -454,21 +475,23 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
   Widget _remoteLoadTab() {
     return Padding(
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
-        child: Column(children: [
+      padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
+      child: Column(
+        children: [
           Padding(
             padding: const EdgeInsets.all(8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
-                    width: 20,
-                    child: GestureDetector(
-                      child: const Icon(MdiIcons.arrowLeft),
-                      onTap: () {
-                        _tabController.animateTo(0);
-                      },
-                    )),
+                  width: 20,
+                  child: GestureDetector(
+                    child: const Icon(MdiIcons.arrowLeft),
+                    onTap: () {
+                      _tabController.animateTo(0);
+                    },
+                  ),
+                ),
                 Row(
                   children: [
                     const Icon(MdiIcons.earth),
@@ -511,112 +534,117 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                    child: Text(widget.editingExistingScript ? "Check for Update" : "Fetch"),
-                    onPressed: () async {
-                      if (!_remoteUrlKey.currentState!.validate()) {
-                        return;
-                      }
-                      bool success = false;
-                      String? message;
-                      UserScriptModel? resultModel;
+                  child: Text(widget.editingExistingScript ? "Check for Update" : "Fetch"),
+                  onPressed: () async {
+                    if (!_remoteUrlKey.currentState!.validate()) {
+                      return;
+                    }
+                    bool success = false;
+                    String? message;
+                    UserScriptModel? resultModel;
 
-                      try {
-                        setState(() => _remoteSourceFetching = true);
+                    try {
+                      setState(() => _remoteSourceFetching = true);
 
-                        final result = await UserScriptModel.fromURL(_remoteUrlController.text.trim());
+                      final result = await UserScriptModel.fromURL(_remoteUrlController.text.trim());
 
-                        success = result.success;
-                        message = result.message;
-                        resultModel = result.model;
-                      } catch (e) {
-                        log(e.toString());
-                        message = "Fetch error: $e";
-                      } finally {
-                        bool fetchWasSuccessful = success && resultModel != null;
-                        bool newRemoteSourceIsCandidate = false;
+                      success = result.success;
+                      message = result.message;
+                      resultModel = result.model;
+                    } catch (e) {
+                      log(e.toString());
+                      message = "Fetch error: $e";
+                    } finally {
+                      bool fetchWasSuccessful = success && resultModel != null;
+                      bool newRemoteSourceIsCandidate = false;
 
-                        if (fetchWasSuccessful) {
-                          _fetchedRemoteModel = resultModel;
-                          _remoteSourceController.text = resultModel.source;
-                          _remoteNameController.text = resultModel.name;
-                          _remoteRunTimeController.text = resultModel.time.name;
-                          newRemoteSourceIsCandidate = resultModel.source.contains(pdaKeyWord);
+                      if (fetchWasSuccessful) {
+                        _fetchedRemoteModel = resultModel;
+                        _remoteSourceController.text = resultModel.source;
+                        _remoteNameController.text = resultModel.name;
+                        _remoteRunTimeController.text = resultModel.time.name;
+                        newRemoteSourceIsCandidate = resultModel.source.contains(pdaKeyWord);
 
-                          if (mounted) {
-                            setState(() {
-                              _isCurrentScriptCandidateForCustomApiKey = newRemoteSourceIsCandidate;
-                              _showCustomApiKeyButton = newRemoteSourceIsCandidate;
-                              _remoteTabFirstLoadOrSavePress = true;
-                            });
-                          }
+                        if (mounted) {
+                          setState(() {
+                            _isCurrentScriptCandidateForCustomApiKey = newRemoteSourceIsCandidate;
+                            _showCustomApiKeyButton = newRemoteSourceIsCandidate;
+                            _remoteTabFirstLoadOrSavePress = true;
+                          });
                         }
+                      }
 
-                        if (!widget.editingExistingScript) {
-                          // New remote script
+                      if (!widget.editingExistingScript) {
+                        // New remote script
+                        BotToast.showText(
+                          align: const Alignment(0, 0),
+                          clickClose: true,
+                          text:
+                              message ??
+                              (fetchWasSuccessful
+                                  ? "Fetch successful. Review and Load."
+                                  : "An unknown error occurred during fetch."),
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                          contentColor: fetchWasSuccessful ? Colors.green : Colors.orange[800]!,
+                          duration: const Duration(seconds: 4),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      } else {
+                        // Editing existing script
+                        if (!fetchWasSuccessful) {
+                          log(
+                            "An error occurred while checking for update for script ${widget.scriptBeingEdited!.name}: $message",
+                          );
                           BotToast.showText(
                             align: const Alignment(0, 0),
                             clickClose: true,
-                            text: message ??
-                                (fetchWasSuccessful
-                                    ? "Fetch successful. Review and Load."
-                                    : "An unknown error occurred during fetch."),
+                            text: message ?? "An unknown error occurred while checking for update.",
                             textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                            contentColor: fetchWasSuccessful ? Colors.green : Colors.orange[800]!,
+                            contentColor: Colors.orange[800]!,
                             duration: const Duration(seconds: 4),
                             contentPadding: const EdgeInsets.all(10),
                           );
                         } else {
-                          // Editing existing script
-                          if (!fetchWasSuccessful) {
-                            log("An error occurred while checking for update for script ${widget.scriptBeingEdited!.name}: $message");
+                          try {
+                            final String newVersion = resultModel.version;
+                            final String oldVersion = widget.scriptBeingEdited!.version;
+                            final bool isNewerVersionAvailable = UserScriptModel.isNewerVersion(newVersion, oldVersion);
+                            final String finalMessage = isNewerVersionAvailable
+                                ? "Newer version found: $newVersion\nPlease review changes and save!"
+                                : "No newer version found. Current: $oldVersion";
+                            log(finalMessage);
                             BotToast.showText(
                               align: const Alignment(0, 0),
                               clickClose: true,
-                              text: message ?? "An unknown error occurred while checking for update.",
+                              text: finalMessage,
+                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                              contentColor: isNewerVersionAvailable ? Colors.green : Colors.orange[800]!,
+                              duration: const Duration(seconds: 4),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          } catch (e) {
+                            log(
+                              "An error occurred processing remote data for script ${widget.scriptBeingEdited!.name}: $e",
+                            );
+                            BotToast.showText(
+                              align: const Alignment(0, 0),
+                              clickClose: true,
+                              text: "An unknown error occurred whilst parsing the remote script.",
                               textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                               contentColor: Colors.orange[800]!,
                               duration: const Duration(seconds: 4),
                               contentPadding: const EdgeInsets.all(10),
                             );
-                          } else {
-                            try {
-                              final String newVersion = resultModel.version;
-                              final String oldVersion = widget.scriptBeingEdited!.version;
-                              final bool isNewerVersionAvailable =
-                                  UserScriptModel.isNewerVersion(newVersion, oldVersion);
-                              final String finalMessage = isNewerVersionAvailable
-                                  ? "Newer version found: $newVersion\nPlease review changes and save!"
-                                  : "No newer version found. Current: $oldVersion";
-                              log(finalMessage);
-                              BotToast.showText(
-                                align: const Alignment(0, 0),
-                                clickClose: true,
-                                text: finalMessage,
-                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                contentColor: isNewerVersionAvailable ? Colors.green : Colors.orange[800]!,
-                                duration: const Duration(seconds: 4),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            } catch (e) {
-                              log("An error occurred processing remote data for script ${widget.scriptBeingEdited!.name}: $e");
-                              BotToast.showText(
-                                align: const Alignment(0, 0),
-                                clickClose: true,
-                                text: "An unknown error occurred whilst parsing the remote script.",
-                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                contentColor: Colors.orange[800]!,
-                                duration: const Duration(seconds: 4),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            }
                           }
                         }
-
-                        if (mounted) {
-                          setState(() => _remoteSourceFetching = false);
-                        }
                       }
-                    }),
+
+                      if (mounted) {
+                        setState(() => _remoteSourceFetching = false);
+                      }
+                    }
+                  },
+                ),
                 const SizedBox(width: 20),
                 ElevatedButton(
                   child: const Text("Clear"),
@@ -653,11 +681,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Fetching script..."),
-                      SizedBox(height: 20),
-                      CircularProgressIndicator(),
-                    ],
+                    children: [Text("Fetching script..."), SizedBox(height: 20), CircularProgressIndicator()],
                   ),
                 )
               : Expanded(
@@ -677,8 +701,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           isDense: true,
                           counterText: "",
                           border: const OutlineInputBorder(),
-                          label:
-                              _remoteSourceController.text.isEmpty ? const Center(child: Text("Remote source")) : null,
+                          label: _remoteSourceController.text.isEmpty
+                              ? const Center(child: Text("Remote source"))
+                              : null,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -697,83 +722,89 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               if (_showCustomApiKeyButton) _customApiKeyButton() else const SizedBox(),
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                  ElevatedButton(
-                    child: Text(widget.editingExistingScript ? "Update" : "Load"),
-                    onPressed: _remoteNameController.text.isEmpty ||
-                            _remoteSourceController.text.isEmpty ||
-                            _remoteRunTimeController.text.isEmpty ||
-                            _fetchedRemoteModel == null
-                        ? null
-                        : () async {
-                            if (_isCurrentScriptCandidateForCustomApiKey &&
-                                _remoteTabFirstLoadOrSavePress &&
-                                _customApiKey.isEmpty) {
-                              setState(() {
-                                _remoteTabFirstLoadOrSavePress = false;
-                                _showCustomApiKeyButton = true;
-                              });
-                              _saveScriptWithoutApiKeyWarning();
-                              return;
-                            }
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      child: Text(widget.editingExistingScript ? "Update" : "Load"),
+                      onPressed:
+                          _remoteNameController.text.isEmpty ||
+                              _remoteSourceController.text.isEmpty ||
+                              _remoteRunTimeController.text.isEmpty ||
+                              _fetchedRemoteModel == null
+                          ? null
+                          : () async {
+                              if (_isCurrentScriptCandidateForCustomApiKey &&
+                                  _remoteTabFirstLoadOrSavePress &&
+                                  _customApiKey.isEmpty) {
+                                setState(() {
+                                  _remoteTabFirstLoadOrSavePress = false;
+                                  _showCustomApiKeyButton = true;
+                                });
+                                _saveScriptWithoutApiKeyWarning();
+                                return;
+                              }
 
-                            if (!await _confirmGrantedAccess(_fetchedRemoteModel!.grants)) {
-                              return;
-                            }
+                              if (!await _confirmGrantedAccess(_fetchedRemoteModel!.grants)) {
+                                return;
+                              }
 
-                            Navigator.of(context).pop();
+                              Navigator.of(context).pop();
 
-                            if (!widget.editingExistingScript) {
-                              _fetchedRemoteModel!.customApiKey = _customApiKey;
-                              _fetchedRemoteModel!.customApiKeyCandidate = _isCurrentScriptCandidateForCustomApiKey;
-                              _userScriptsProvider.addUserScriptByModel(_fetchedRemoteModel!);
-                              BotToast.showText(
-                                align: const Alignment(0, 0),
-                                clickClose: true,
-                                text: "Script successfully added!",
-                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                contentColor: Colors.green,
-                                duration: const Duration(seconds: 4),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            } else {
-                              final bool couldParseHeader = _userScriptsProvider.updateUserScript(
-                                editedModel: widget.scriptBeingEdited!,
-                                name: _fetchedRemoteModel!.name,
-                                time: _fetchedRemoteModel!.time,
-                                source: _fetchedRemoteModel!.source,
-                                manuallyEdited: false, // remote source is not manually edited
-                                isFromRemote: true, // isFromRemote
-                                customApiKey: _customApiKey,
-                                customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
-                              );
+                              if (!widget.editingExistingScript) {
+                                _fetchedRemoteModel!.customApiKey = _customApiKey;
+                                _fetchedRemoteModel!.customApiKeyCandidate = _isCurrentScriptCandidateForCustomApiKey;
+                                _userScriptsProvider.addUserScriptByModel(_fetchedRemoteModel!);
+                                BotToast.showText(
+                                  align: const Alignment(0, 0),
+                                  clickClose: true,
+                                  text: "Script successfully added!",
+                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                  contentColor: Colors.green,
+                                  duration: const Duration(seconds: 4),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              } else {
+                                final bool couldParseHeader = _userScriptsProvider.updateUserScript(
+                                  editedModel: widget.scriptBeingEdited!,
+                                  name: _fetchedRemoteModel!.name,
+                                  time: _fetchedRemoteModel!.time,
+                                  source: _fetchedRemoteModel!.source,
+                                  manuallyEdited: false, // remote source is not manually edited
+                                  isFromRemote: true, // isFromRemote
+                                  customApiKey: _customApiKey,
+                                  customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
+                                );
 
-                              BotToast.showText(
-                                align: const Alignment(0, 0),
-                                clickClose: true,
-                                text: couldParseHeader
-                                    ? "Script successfully updated!"
-                                    : "Could not parse the header, the script will inject on all pages.",
-                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                contentColor: couldParseHeader ? Colors.green : Colors.orange[800]!,
-                                duration: const Duration(seconds: 4),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            }
-                            _remoteTabFirstLoadOrSavePress = true;
-                            _customApiKey = "";
-                            _isCurrentScriptCandidateForCustomApiKey = false;
-                            _showCustomApiKeyButton = false;
-                            _fetchedRemoteModel = null;
-                          },
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(child: const Text("Cancel"), onPressed: Navigator.of(context).pop)
-                ]),
+                                BotToast.showText(
+                                  align: const Alignment(0, 0),
+                                  clickClose: true,
+                                  text: couldParseHeader
+                                      ? "Script successfully updated!"
+                                      : "Could not parse the header, the script will inject on all pages.",
+                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                  contentColor: couldParseHeader ? Colors.green : Colors.orange[800]!,
+                                  duration: const Duration(seconds: 4),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              }
+                              _remoteTabFirstLoadOrSavePress = true;
+                              _customApiKey = "";
+                              _isCurrentScriptCandidateForCustomApiKey = false;
+                              _showCustomApiKeyButton = false;
+                              _fetchedRemoteModel = null;
+                            },
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(child: const Text("Cancel"), onPressed: Navigator.of(context).pop),
+                  ],
+                ),
               ),
             ],
-          )
-        ]));
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _addPressedInManualEditTab(BuildContext context) async {
@@ -836,24 +867,27 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         } on Exception catch (e) {
           if (e.toString().contains("No header found")) {
             BotToast.showText(
-                text: "No header was found in the script, it will be injected in all pages!",
-                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                contentColor: Colors.orange[800]!,
-                duration: const Duration(seconds: 4),
-                contentPadding: const EdgeInsets.all(10));
-            _userScriptsProvider.addUserScriptByModel(UserScriptModel(
-              enabled: true,
-              matches: const ["*"],
-              name: inputName,
-              version: "0.0.0",
-              manuallyEdited: true,
-              source: inputSource,
-              time: inputTime,
-              updateStatus: UserScriptUpdateStatus.noRemote,
-              isExample: false,
-              customApiKey: _customApiKey,
-              customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
-            ));
+              text: "No header was found in the script, it will be injected in all pages!",
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.orange[800]!,
+              duration: const Duration(seconds: 4),
+              contentPadding: const EdgeInsets.all(10),
+            );
+            _userScriptsProvider.addUserScriptByModel(
+              UserScriptModel(
+                enabled: true,
+                matches: const ["*"],
+                name: inputName,
+                version: "0.0.0",
+                manuallyEdited: true,
+                source: inputSource,
+                time: inputTime,
+                updateStatus: UserScriptUpdateStatus.noRemote,
+                isExample: false,
+                customApiKey: _customApiKey,
+                customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
+              ),
+            );
           } else {
             BotToast.showText(
               align: const Alignment(0, 0),
@@ -925,23 +959,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                 ),
                 const SizedBox(height: 12),
                 ...visibleGrants.map(
-                  (grant) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text("- $grant"),
-                  ),
+                  (grant) => Padding(padding: const EdgeInsets.only(bottom: 6), child: Text("- $grant")),
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(
-              child: const Text("Cancel"),
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-            ),
-            TextButton(
-              child: const Text("Continue"),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-            ),
+            TextButton(child: const Text("Cancel"), onPressed: () => Navigator.of(dialogContext).pop(false)),
+            TextButton(child: const Text("Continue"), onPressed: () => Navigator.of(dialogContext).pop(true)),
           ],
         );
       },
@@ -952,7 +977,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
   void _saveScriptWithoutApiKeyWarning() {
     BotToast.showText(
-      text: "This script uses an API key.\n\nUnless you specify a custom one for it, "
+      text:
+          "This script uses an API key.\n\nUnless you specify a custom one for it, "
           "your Torn PDA API key will be used!"
           "\n\nPress 'Set API Key' to configure or "
           "'${widget.editingExistingScript ? "Save Update" : "Load Script"}' again to proceed without one.",
@@ -1014,23 +1040,22 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           text: TextSpan(
                             children: <TextSpan>[
                               const TextSpan(
-                                style: TextStyle(
-                                  fontSize: 16,
-                                ),
+                                style: TextStyle(fontSize: 16),
                                 text:
                                     "You can find more information about Torn API key rules, permission levels, and what data they can access on the official Torn API documentation page:\n\n",
                               ),
                               TextSpan(
-                                  text: apiUrl,
-                                  style: TextStyle(
-                                    color: _themeProvider.mainText,
-                                    decoration: TextDecoration.underline,
-                                    fontSize: 16,
-                                  ),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () {
-                                      openWebViewSimpleDialog(context: context, initUrl: apiUrl);
-                                    }),
+                                text: apiUrl,
+                                style: TextStyle(
+                                  color: _themeProvider.mainText,
+                                  decoration: TextDecoration.underline,
+                                  fontSize: 16,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    openWebViewSimpleDialog(context: context, initUrl: apiUrl);
+                                  },
+                              ),
                             ],
                           ),
                         ),
@@ -1049,11 +1074,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               },
             );
           },
-          child: const Icon(
-            Icons.info_outline,
-            size: 20,
-          ),
-        )
+          child: const Icon(Icons.info_outline, size: 20),
+        ),
       ],
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +22,12 @@ class FFScouterResult<T> {
 
 class FFScouterComm {
   static const String _baseUrl = 'https://ffscouter.com/api/v1';
+
+  static void _logError(String method, Object e, StackTrace stackTrace) {
+    log("FFScouterComm.$method error: $e");
+    if (e is SocketException || e is http.ClientException || e is HandshakeException) return;
+    FirebaseCrashlytics.instance.recordError("FFScouter $method error: $e", stackTrace);
+  }
 
   /// Fetches battle stats estimates for up to 205 targets at once
   /// Rate limit: 20 requests per minute per IP
@@ -49,8 +56,7 @@ class FFScouterComm {
     } on TimeoutException {
       return FFScouterResult(success: false, errorMessage: "Request timed out, please try again");
     } catch (e, stackTrace) {
-      log("FFScouterComm.getStats error: $e");
-      FirebaseCrashlytics.instance.recordError("FFScouter getStats error: $e", stackTrace);
+      _logError("getStats", e, stackTrace);
       return FFScouterResult(success: false, errorMessage: "Error contacting FFScouter: $e");
     }
   }
@@ -99,8 +105,7 @@ class FFScouterComm {
     } on TimeoutException {
       return FFScouterResult(success: false, errorMessage: "Request timed out, please try again");
     } catch (e, stackTrace) {
-      log("FFScouterComm.getTargets error: $e");
-      FirebaseCrashlytics.instance.recordError("FFScouter getTargets error: $e", stackTrace);
+      _logError("getTargets", e, stackTrace);
       return FFScouterResult(success: false, errorMessage: "Error contacting FFScouter: $e");
     }
   }
@@ -123,8 +128,7 @@ class FFScouterComm {
     } on TimeoutException {
       return FFScouterResult(success: false, errorMessage: "Request timed out, please try again");
     } catch (e, stackTrace) {
-      log("FFScouterComm.checkKey error: $e");
-      FirebaseCrashlytics.instance.recordError("FFScouter checkKey error: $e", stackTrace);
+      _logError("checkKey", e, stackTrace);
       return FFScouterResult(success: false, errorMessage: "Error contacting FFScouter: $e");
     }
   }
@@ -152,8 +156,7 @@ class FFScouterComm {
     } on TimeoutException {
       return FFScouterResult(success: false, errorMessage: "Request timed out, please try again");
     } catch (e, stackTrace) {
-      log("FFScouterComm.registerKey error: $e");
-      FirebaseCrashlytics.instance.recordError("FFScouter registerKey error: $e", stackTrace);
+      _logError("registerKey", e, stackTrace);
       return FFScouterResult(success: false, errorMessage: "Error contacting FFScouter: $e");
     }
   }
@@ -179,8 +182,7 @@ class FFScouterComm {
     } on TimeoutException {
       return FFScouterResult(success: false, errorMessage: "Request timed out, please try again");
     } catch (e, stackTrace) {
-      log("FFScouterComm.getPlayerFlights error: $e");
-      FirebaseCrashlytics.instance.recordError("FFScouter getPlayerFlights error: $e", stackTrace);
+      _logError("getPlayerFlights", e, stackTrace);
       return FFScouterResult(success: false, errorMessage: "Error contacting FFScouter: $e");
     }
   }
@@ -214,8 +216,7 @@ class FFScouterComm {
     } on TimeoutException {
       return FFScouterResult(success: false, errorMessage: "Request timed out, please try again");
     } catch (e, stackTrace) {
-      log("FFScouterComm.getActivityPlayer error: $e");
-      FirebaseCrashlytics.instance.recordError("FFScouter getActivityPlayer error: $e", stackTrace);
+      _logError("getActivityPlayer", e, stackTrace);
       return FFScouterResult(success: false, errorMessage: "Error contacting FFScouter: $e");
     }
   }
@@ -249,8 +250,7 @@ class FFScouterComm {
     } on TimeoutException {
       return FFScouterResult(success: false, errorMessage: "Request timed out, please try again");
     } catch (e, stackTrace) {
-      log("FFScouterComm.getActivityFaction error: $e");
-      FirebaseCrashlytics.instance.recordError("FFScouter getActivityFaction error: $e", stackTrace);
+      _logError("getActivityFaction", e, stackTrace);
       return FFScouterResult(success: false, errorMessage: "Error contacting FFScouter: $e");
     }
   }

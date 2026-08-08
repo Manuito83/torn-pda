@@ -1,13 +1,13 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/revive_services/revive_provider.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/combat_ready_revive.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
+import 'package:torn_pda/widgets/revive/revive_provider_info_text.dart';
 
 class CombatReadyReviveButton extends StatefulWidget {
   final ThemeProvider? themeProvider;
@@ -99,53 +99,7 @@ Future<void> openCombatReadyReviveDialog(BuildContext ctx, ThemeProvider themePr
                           ],
                         ),
                       ),
-                      Flexible(
-                        child: RichText(
-                          text: TextSpan(
-                            text: "Combat Ready is a faction providing revive services."
-                                "\n\nCheck out their ",
-                            style: TextStyle(
-                              color: context.read<ThemeProvider>().mainText,
-                              fontSize: 13,
-                            ),
-                            children: <InlineSpan>[
-                              WidgetSpan(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).pop();
-                                    context.read<WebViewProvider>().openBrowserPreference(
-                                          context: context,
-                                          url: 'https://www.torn.com/forums.php#/p=threads&f=10&t=16541147',
-                                          browserTapType: BrowserTapType.short,
-                                        );
-                                  },
-                                  onLongPress: () {
-                                    Navigator.of(context).pop();
-                                    context.read<WebViewProvider>().openBrowserPreference(
-                                          context: context,
-                                          url: 'https://www.torn.com/forums.php#/p=threads&f=10&t=16541147',
-                                          browserTapType: BrowserTapType.long,
-                                        );
-                                  },
-                                  child: const Text(
-                                    'forum thread',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const TextSpan(text: ' for more information.'),
-                              TextSpan(
-                                text: "\n\nRevives cost ${context.read<SettingsProvider>().reviveCombatReadyPrice}, "
-                                    "unless on a contract. Refusal to pay will result in being Blacklisted.",
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      Flexible(child: ReviveProviderInfoText(provider: ReviveProviders.combatReady)),
                       const SizedBox(height: 15),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,

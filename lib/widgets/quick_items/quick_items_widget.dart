@@ -181,6 +181,9 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       itemList = List.from(_itemsProviderFaction.activeQuickItemsFaction);
     } else {
       itemList = List.from(_itemsProvider.activeQuickItems);
+      if (_itemsProvider.hideLoadouts) {
+        itemList.removeWhere((item) => item.isLoadout!);
+      }
     }
 
     if (itemList.isEmpty) {

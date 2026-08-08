@@ -332,6 +332,7 @@ class Prefs {
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kQuickItemsRefreshAfterEquip = "pda_quickItemsRefreshAfterEquip";
   final String _kQuickItemsHideInventoryCount = "pda_quickItemsHideInventoryCount";
+  final String _kQuickItemsHideLoadouts = "pda_quickItemsHideLoadouts";
   final String _kQuickItemsLongPressToAdd = "pda_quickItemsLongPressToAdd";
   final String _kQuickItemsEnabled = "pda_quickItemsEnabled";
   final String _kQuickItemsFactionEnabled = "pda_quickItemsFactionEnabled";
@@ -383,6 +384,7 @@ class Prefs {
   final String _kUseMidnightXRevive = "pda_useMidnightXRevive";
   final String _kUseWolverinesRevive = "pda_useWolverinesRevive";
   final String _kUseCombatReadyRevive = "pda_useCombatReadyRevive";
+  final String _kUseAsclepiusRevive = "pda_useAsclepiusRevive";
 
   // Chaining stats sharing
   final String _kStatsShareIncludeHiddenTargets = "pda_statsShareIncludeHiddenTargets";
@@ -420,6 +422,13 @@ class Prefs {
   final String _kRemoveUnusedTabsRangeDays = "pda_removeUnusedTabsRangeDays";
 
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
+  // Browser memory settings: RC provides the default, the user can override it ("default"/"on"/"off",
+  // and 0 = follow default for the sleep period). RC values are persisted to be known at cold start
+  final String _kTabSleepMinutesOverride = "pda_tabSleepMinutesOverride";
+  final String _kTabSleepMinutesDefaultRC = "pda_tabSleepMinutesDefaultRC";
+  final String _kParkBackgroundTabsOverride = "pda_parkBackgroundTabsOverride";
+  final String _kParkBackgroundTabsDefaultRC = "pda_parkBackgroundTabsDefaultRC";
+  final String _kParkBackgroundTabsAllowedRC = "pda_parkBackgroundTabsAllowedRC";
   final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
@@ -546,6 +555,8 @@ class Prefs {
 
   // FCM token
   final String _kFCMToken = "pda_fcmToken";
+  // Last FCM token we confirmed written to Firestore
+  final String _kFCMTokenSynced = "pda_fcmTokenSynced";
 
   // Sendbird notifications
   final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
@@ -1460,14 +1471,11 @@ class Prefs {
     return await PrefsDatabase.getInt(_kFabButtonCount, 4); // Default to 4 buttons
   }
 
-// --
+  // --
 
   Future setFabButtonActions(List<WebviewFabAction> actions) async {
     final actionIndices = actions.map((action) => action.index).toList();
-    return await PrefsDatabase.setStringList(
-      _kFabButtonActions,
-      actionIndices.map((e) => e.toString()).toList(),
-    );
+    return await PrefsDatabase.setStringList(_kFabButtonActions, actionIndices.map((e) => e.toString()).toList());
   }
 
   Future<List<WebviewFabAction>> getFabButtonActions() async {
@@ -1492,7 +1500,7 @@ class Prefs {
     ];
   }
 
-// --
+  // --
 
   Future setFabDoubleTapAction(WebviewFabAction action) async {
     return await PrefsDatabase.setInt(_kFabDoubleTapAction, action.index);
@@ -1505,7 +1513,7 @@ class Prefs {
         : WebviewFabAction.openTabsMenu; // Default to Open Tabs Menu
   }
 
-// --
+  // --
 
   Future setFabTripleTapAction(WebviewFabAction action) async {
     return await PrefsDatabase.setInt(_kFabTripleTapAction, action.index);
@@ -2841,6 +2849,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kUseCombatReadyRevive, value);
   }
 
+  Future<bool> getUseAsclepiusRevive() async {
+    return await PrefsDatabase.getBool(_kUseAsclepiusRevive, false);
+  }
+
+  Future setUseAsclepiusRevive(bool value) async {
+    return await PrefsDatabase.setBool(_kUseAsclepiusRevive, value);
+  }
+
   /// ---------------------------------------
   /// Methods for stats sharing configuration
   /// ---------------------------------------
@@ -2989,6 +3005,14 @@ class Prefs {
 
   Future setQuickItemsHideInventoryCount(bool value) async {
     return await PrefsDatabase.setBool(_kQuickItemsHideInventoryCount, value);
+  }
+
+  Future<bool> getQuickItemsHideLoadouts() async {
+    return await PrefsDatabase.getBool(_kQuickItemsHideLoadouts, false);
+  }
+
+  Future setQuickItemsHideLoadouts(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsHideLoadouts, value);
   }
 
   Future<bool> getQuickItemsLongPressToAdd() async {
@@ -3842,6 +3866,51 @@ class Prefs {
     return await PrefsDatabase.setBool(_kOnlyLoadTabsWhenUsed, value);
   }
 
+  /// 0 means "follow the Remote Config default"
+  Future<int> getTabSleepMinutesOverride() async {
+    return await PrefsDatabase.getInt(_kTabSleepMinutesOverride, 0);
+  }
+
+  Future setTabSleepMinutesOverride(int value) async {
+    return await PrefsDatabase.setInt(_kTabSleepMinutesOverride, value);
+  }
+
+  /// Last known Remote Config value, so it is available before the fetch on next launch
+  Future<int> getTabSleepMinutesDefaultRC() async {
+    return await PrefsDatabase.getInt(_kTabSleepMinutesDefaultRC, 720);
+  }
+
+  Future setTabSleepMinutesDefaultRC(int value) async {
+    return await PrefsDatabase.setInt(_kTabSleepMinutesDefaultRC, value);
+  }
+
+  /// "default" (follow Remote Config), "on" or "off"
+  Future<String> getParkBackgroundTabsOverride() async {
+    return await PrefsDatabase.getString(_kParkBackgroundTabsOverride, "default");
+  }
+
+  Future setParkBackgroundTabsOverride(String value) async {
+    return await PrefsDatabase.setString(_kParkBackgroundTabsOverride, value);
+  }
+
+  /// Last known Remote Config value, so it is available before the fetch on next launch
+  Future<bool> getParkBackgroundTabsDefaultRC() async {
+    return await PrefsDatabase.getBool(_kParkBackgroundTabsDefaultRC, false);
+  }
+
+  Future setParkBackgroundTabsDefaultRC(bool value) async {
+    return await PrefsDatabase.setBool(_kParkBackgroundTabsDefaultRC, value);
+  }
+
+  /// Kill-switch, also persisted so that it applies before the Remote Config fetch
+  Future<bool> getParkBackgroundTabsAllowedRC() async {
+    return await PrefsDatabase.getBool(_kParkBackgroundTabsAllowedRC, true);
+  }
+
+  Future setParkBackgroundTabsAllowedRC(bool value) async {
+    return await PrefsDatabase.setBool(_kParkBackgroundTabsAllowedRC, value);
+  }
+
   Future<bool> getAutomaticChangeToNewTabFromURL() async {
     return await PrefsDatabase.getBool(_kAutomaticChangeToNewTabFromURL, true);
   }
@@ -4416,6 +4485,14 @@ class Prefs {
     return await PrefsDatabase.setString(_kFCMToken, value);
   }
 
+  Future<String> getFCMTokenSynced() async {
+    return await PrefsDatabase.getString(_kFCMTokenSynced, "");
+  }
+
+  Future setFCMTokenSynced(String value) async {
+    return await PrefsDatabase.setString(_kFCMTokenSynced, value);
+  }
+
   /// ----------------------------
   /// Methods for Sendbird notifications
   /// ----------------------------
@@ -4606,10 +4683,7 @@ class Prefs {
     }
   }
 
-  Future<void> setLaPushToken({
-    required LiveActivityType activityType,
-    required String? token,
-  }) async {
+  Future<void> setLaPushToken({required LiveActivityType activityType, required String? token}) async {
     final key = _getLaPushTokenKey(activityType);
     if (token == null) {
       await PrefsDatabase.remove(key);
@@ -4618,9 +4692,7 @@ class Prefs {
     }
   }
 
-  Future<String?> getLaPushToken({
-    required LiveActivityType activityType,
-  }) async {
+  Future<String?> getLaPushToken({required LiveActivityType activityType}) async {
     final key = _getLaPushTokenKey(activityType);
     final value = await PrefsDatabase.getString(key, "");
     return value.isEmpty ? null : value;

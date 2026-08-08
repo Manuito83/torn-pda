@@ -31,6 +31,7 @@ class AndroidTravelLiveUpdateAdapter(
 
     override fun startOrUpdate(sessionId: String, payload: LiveUpdatePayload): LiveUpdateAdapterResult {
         LiveUpdateNotificationChannel.ensureCreated(context, LiveUpdateActivityType.TRAVEL)
+        LiveUpdateNotificationChannel.sweepForeignIds(context, LiveUpdateActivityType.TRAVEL)
         val isExistingSession = activeSessionId == sessionId && cachedPayload != null
         // Skip re-posting when content is unchanged to avoid a visual flash
         // on IMPORTANCE_HIGH channels when the app resumes
@@ -45,10 +46,12 @@ class AndroidTravelLiveUpdateAdapter(
         val dismissIntent = LiveUpdateNotificationReceiver.createDismissIntent(context, sessionId)
         if (contentChanged) {
             val notification = notificationFactory.build(sessionId, payload, tapIntent, dismissIntent)
-            notifySurface(sessionId.hashCode(), notification)
+            notifySurface(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID, notification)
         }
         TravelLiveUpdateRefreshScheduler.scheduleNextRefresh(context, sessionId, payload)
         TravelLiveUpdateRefreshScheduler.scheduleArrived(context, sessionId, payload)
+        // Self-cancels unless this is an arrival abroad
+        TravelLiveUpdateRefreshScheduler.scheduleAbroadPoll(context, sessionId, payload)
 
         startUpdateLoop(sessionId, tapIntent, dismissIntent)
 
@@ -78,7 +81,7 @@ class AndroidTravelLiveUpdateAdapter(
     override fun end(sessionId: String?): LiveUpdateAdapterResult {
         val resolvedId = sessionId ?: activeSessionId
         resolvedId?.let {
-            notificationManager.cancel(it.hashCode())
+            notificationManager.cancel(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID)
             clearState(it)
         }
         return LiveUpdateAdapterResult(status = LiveUpdateRequestStatus.UPDATED)
@@ -108,10 +111,16 @@ class AndroidTravelLiveUpdateAdapter(
     }
 
     private fun clearState(sessionId: String) {
+        // Alarms outlive this adapter: they are keyed by a sessionId persisted in
+        // SharedPreferences, while activeSessionId is process memory and is null after the
+        // engine is recreated mid-trip. Guarding the cancellation on it stranded the
+        // ARRIVED/REFRESH alarms of the previous session, which then posted a second,
+        // independent notification under the old id once a new session had started.
+        TravelLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
+        TravelLiveUpdateRefreshScheduler.cancelArrived(context, sessionId)
+        TravelLiveUpdateRefreshScheduler.cancelAbroadPoll(context, sessionId)
         if (sessionId == activeSessionId) {
             updateJob?.cancel()
-            TravelLiveUpdateRefreshScheduler.cancelRefresh(context, sessionId)
-            TravelLiveUpdateRefreshScheduler.cancelArrived(context, sessionId)
             cachedPayload = null
             activeSessionId = null
         }
@@ -136,7 +145,7 @@ class AndroidTravelLiveUpdateAdapter(
                 if (current.hasArrived) break
 
                 val notification = notificationFactory.build(sessionId, current, tapIntent, dismissIntent)
-                notifySurface(sessionId.hashCode(), notification)
+                notifySurface(LiveUpdateNotificationChannel.TRAVEL_NOTIFICATION_ID, notification)
             }
         }
     }

@@ -115,6 +115,8 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
       disableLongPressContextMenuOnLinks: true,
       ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
+      // Shared renderer death must be handled here too or Android kills the whole app
+      useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
     );
   }
 

@@ -173,6 +173,23 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       dense: true,
+                      title: const Text('Hide loadouts', style: TextStyle(fontSize: 13)),
+                      subtitle: const Text(
+                        'Hide loadout chips from the quick items bar without removing them, '
+                        'keeping their names and order.',
+                        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                      ),
+                      trailing: Switch(
+                        value: itemsProvider.hideLoadouts,
+                        onChanged: (value) {
+                          itemsProvider.setHideLoadouts(value);
+                        },
+                      ),
+                    ),
+                  if (!widget.isFaction)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
                       title: const Text('Long-press to add items', style: TextStyle(fontSize: 13)),
                       subtitle: const Text(
                         'Replace the (+) button with a long-press gesture anywhere on the widget. '
@@ -575,13 +592,18 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                     },
                                     child: const Icon(Icons.info_outline, size: 19),
                                   )
-                                else if (item.isLoadout!)
+                                else if (item.isLoadout!) ...[
+                                  if (itemsProvider.hideLoadouts) ...[
+                                    Icon(Icons.visibility_off, size: 19, color: Colors.orange[700]),
+                                    const SizedBox(width: 10),
+                                  ],
                                   GestureDetector(
                                     onTap: () {
                                       _openLoadoutsNameDialog(item);
                                     },
                                     child: const Icon(Icons.edit, size: 19),
                                   ),
+                                ],
                                 const SizedBox(width: 10),
                                 const Icon(Icons.reorder),
                                 const SizedBox(width: 10),

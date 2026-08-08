@@ -111,10 +111,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
         color: themeProvider.secondBackground,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -122,10 +119,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           Container(
             width: 40,
             height: 5,
-            decoration: BoxDecoration(
-              color: Colors.grey[400],
-              borderRadius: BorderRadius.circular(10),
-            ),
+            decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(10)),
           ),
           const SizedBox(height: 10),
           TabBar(
@@ -208,10 +202,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           child: RadioListTile<WarSortType>(
             title: Text(WarSort(type: type).description),
             subtitle: subtitle != null
-                ? Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  )
+                ? Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey))
                 : null,
             value: type,
             secondary: IconButton(
@@ -246,8 +237,10 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                     type: MaterialType.transparency,
                     child: SwitchListTile(
                       title: const Text("Show 'Okay' targets at top", style: TextStyle(fontSize: 14)),
-                      subtitle: Text("Targets not in hospital will appear first.",
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                      subtitle: Text(
+                        "Targets not in hospital will appear first.",
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
                       value: _settings.okayTargetsAtTop,
                       onChanged: (val) {
                         setState(() {
@@ -271,17 +264,30 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                               const SizedBox(width: 10),
                               Expanded(
                                 child: DropdownButton<WarSortType>(
-                                  value: _settings.secondarySortForOkay,
+                                  // Migrates users that had hospital saved as secondary before it was blocked
+                                  value:
+                                      _settings.secondarySortForOkay == WarSortType.hospitalDes ||
+                                          _settings.secondarySortForOkay == WarSortType.hospitalAsc
+                                      ? WarSortType.levelDes
+                                      : _settings.secondarySortForOkay,
                                   isExpanded: true,
                                   isDense: true,
                                   underline: Container(height: 1, color: Colors.grey),
-                                  items: WarSortType.values.map((WarSortType type) {
-                                    return DropdownMenuItem<WarSortType>(
-                                      value: type,
-                                      child:
-                                          Text(WarSort(type: type).description, style: const TextStyle(fontSize: 12)),
-                                    );
-                                  }).toList(),
+                                  items: WarSortType.values
+                                      // Hospital can't be the secondary sort of a hospital sort
+                                      .where(
+                                        (type) => type != WarSortType.hospitalDes && type != WarSortType.hospitalAsc,
+                                      )
+                                      .map((WarSortType type) {
+                                        return DropdownMenuItem<WarSortType>(
+                                          value: type,
+                                          child: Text(
+                                            WarSort(type: type).description,
+                                            style: const TextStyle(fontSize: 12),
+                                          ),
+                                        );
+                                      })
+                                      .toList(),
                                   onChanged: (WarSortType? newValue) {
                                     if (newValue != null) {
                                       setState(() {
@@ -355,10 +361,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                 if (!isSecondarySort) ...[
                   const SizedBox(height: 10),
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
                     onPressed: () {
                       setState(() {
                         _warController.sortTargets(WarSortType.smartScore);
@@ -381,9 +384,10 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           ],
         ),
         Text(
-            "Adjust how important each factor is. Negative values prioritize LOW attributes, "
-            "positive values prioritize HIGH attributes.",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          "Adjust how important each factor is. Negative values prioritize LOW attributes, "
+          "positive values prioritize HIGH attributes.",
+          style: TextStyle(color: Colors.grey[600], fontSize: 12),
+        ),
         const SizedBox(height: 20),
         _buildSlider("Hospital time", _settings.weightHospitalTime, (val) => _settings.weightHospitalTime = val),
         _buildSlider("Life", _settings.weightLife, (val) => _settings.weightLife = val),
@@ -396,7 +400,9 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           color: theme.secondBackground,
           elevation: 2,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10), side: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+          ),
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
@@ -473,7 +479,8 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
       rangeKey = 'Spd';
     else if (label == 'Dexterity')
       rangeKey = 'Dex';
-    else if (label.toLowerCase() == 'hospital time') rangeKey = 'Hospital';
+    else if (label.toLowerCase() == 'hospital time')
+      rangeKey = 'Hospital';
 
     String rangeText = '';
     bool hasData = false;
@@ -567,7 +574,10 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
         if (value != 0)
           Padding(
             padding: const EdgeInsets.only(top: 2.0),
-            child: Text(prioritySubtitle, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500)),
+            child: Text(
+              prioritySubtitle,
+              style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
+            ),
           ),
         if (rangeText.isNotEmpty)
           Padding(
@@ -690,8 +700,10 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
             ),
           ],
         ),
-        const Text("Values show score contribution from each factor.",
-            style: TextStyle(color: Colors.grey, fontSize: 12)),
+        const Text(
+          "Values show score contribution from each factor.",
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
 
         // Warnings
         if (_settings.okayTargetsAtTop &&
@@ -737,10 +749,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
         Container(
           padding: const EdgeInsets.all(8),
           margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(4),
-          ),
+          decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
           child: const Text(
             "Note: External factors like hidden targets, main page exclusions, or other global settings are not reflected in this preview.",
             style: TextStyle(fontSize: 10, color: Colors.grey),
@@ -770,7 +779,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
             'Str',
             'Def',
             'Spd',
-            'Dex'
+            'Dex',
           ];
 
           var sortedEntries = components.entries.toList()
@@ -823,8 +832,8 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
               String statsStr = stats >= 1000000000
                   ? "${(stats / 1000000000).toStringAsFixed(1)}B"
                   : stats >= 1000000
-                      ? "${(stats / 1000000).toStringAsFixed(1)}M"
-                      : "${(stats / 1000).toStringAsFixed(1)}k";
+                  ? "${(stats / 1000000).toStringAsFixed(1)}M"
+                  : "${(stats / 1000).toStringAsFixed(1)}k";
               infoParts.add("Stats: $statsStr");
             } else {
               infoParts.add("Stats: Unk");
@@ -862,79 +871,86 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("#$currentRank ${m.name ?? "Unknown"}",
-                          style: TextStyle(color: theme.mainText, fontWeight: FontWeight.bold)),
-                      Text("Score: $scoreText", style: TextStyle(color: theme.mainText, fontWeight: FontWeight.bold)),
+                      Text(
+                        "#$currentRank ${m.name ?? "Unknown"}",
+                        style: TextStyle(color: theme.mainText, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Score: $scoreText",
+                        style: TextStyle(color: theme.mainText, fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    infoText,
-                    style: TextStyle(color: theme.mainText.withValues(alpha: 0.7), fontSize: 12),
-                  ),
+                  Text(infoText, style: TextStyle(color: theme.mainText.withValues(alpha: 0.7), fontSize: 12)),
                   const SizedBox(height: 4),
                   Wrap(
                     spacing: 8,
-                    children: sortedEntries.where((e) {
-                      bool isSignificant = e.value.abs() > 0.01;
-                      bool isActive = false;
-                      switch (e.key) {
-                        case 'Hospital':
-                          isActive = _settings.weightHospitalTime != 0;
-                          break;
-                        case 'Life':
-                          isActive = _settings.weightLife != 0;
-                          break;
-                        case 'Stats':
-                          isActive = _settings.weightStats != 0;
-                          break;
-                        case 'Estimated Stats':
-                          isActive = _settings.weightEstimatedStats != 0;
-                          break;
-                        case 'Str':
-                          isActive = _settings.weightStrength != 0;
-                          break;
-                        case 'Def':
-                          isActive = _settings.weightDefense != 0;
-                          break;
-                        case 'Spd':
-                          isActive = _settings.weightSpeed != 0;
-                          break;
-                        case 'Dex':
-                          isActive = _settings.weightDexterity != 0;
-                          break;
-                        case 'Fair Fight':
-                          isActive = _settings.weightFairFight != 0;
-                          break;
-                        case 'Level':
-                          isActive = _settings.weightLevel != 0;
-                          break;
-                      }
-                      return isSignificant || isActive;
-                    }).map((e) {
-                      // Show Score Contribution directly
-                      String valStr = (e.value * 100).toStringAsFixed(0);
+                    children: sortedEntries
+                        .where((e) {
+                          bool isSignificant = e.value.abs() > 0.01;
+                          bool isActive = false;
+                          switch (e.key) {
+                            case 'Hospital':
+                              isActive = _settings.weightHospitalTime != 0;
+                              break;
+                            case 'Life':
+                              isActive = _settings.weightLife != 0;
+                              break;
+                            case 'Stats':
+                              isActive = _settings.weightStats != 0;
+                              break;
+                            case 'Estimated Stats':
+                              isActive = _settings.weightEstimatedStats != 0;
+                              break;
+                            case 'Str':
+                              isActive = _settings.weightStrength != 0;
+                              break;
+                            case 'Def':
+                              isActive = _settings.weightDefense != 0;
+                              break;
+                            case 'Spd':
+                              isActive = _settings.weightSpeed != 0;
+                              break;
+                            case 'Dex':
+                              isActive = _settings.weightDexterity != 0;
+                              break;
+                            case 'Fair Fight':
+                              isActive = _settings.weightFairFight != 0;
+                              break;
+                            case 'Level':
+                              isActive = _settings.weightLevel != 0;
+                              break;
+                          }
+                          return isSignificant || isActive;
+                        })
+                        .map((e) {
+                          // Show Score Contribution directly
+                          String valStr = (e.value * 100).toStringAsFixed(0);
 
-                      // Handle Unknowns
-                      if ((e.key == 'Str' && (m.statsStr == null || m.statsStr == -1)) ||
-                          (e.key == 'Def' && (m.statsDef == null || m.statsDef == -1)) ||
-                          (e.key == 'Spd' && (m.statsSpd == null || m.statsSpd == -1)) ||
-                          (e.key == 'Dex' && (m.statsDex == null || m.statsDex == -1)) ||
-                          (e.key == 'Stats' &&
-                              (m.statsExactTotal == null || m.statsExactTotal == -1) &&
-                              (m.statsEstimated == null || m.statsEstimated!.isEmpty))) {
-                        valStr = "Unk";
-                      }
+                          // Handle Unknowns
+                          if ((e.key == 'Str' && (m.statsStr == null || m.statsStr == -1)) ||
+                              (e.key == 'Def' && (m.statsDef == null || m.statsDef == -1)) ||
+                              (e.key == 'Spd' && (m.statsSpd == null || m.statsSpd == -1)) ||
+                              (e.key == 'Dex' && (m.statsDex == null || m.statsDex == -1)) ||
+                              (e.key == 'Stats' &&
+                                  (m.statsExactTotal == null || m.statsExactTotal == -1) &&
+                                  (m.statsEstimated == null || m.statsEstimated!.isEmpty))) {
+                            valStr = "Unk";
+                          }
 
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text("${e.key}: ", style: TextStyle(color: theme.mainText, fontSize: 10)),
-                          Text(valStr,
-                              style: TextStyle(color: theme.mainText, fontWeight: FontWeight.bold, fontSize: 10)),
-                        ],
-                      );
-                    }).toList(),
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text("${e.key}: ", style: TextStyle(color: theme.mainText, fontSize: 10)),
+                              Text(
+                                valStr,
+                                style: TextStyle(color: theme.mainText, fontWeight: FontWeight.bold, fontSize: 10),
+                              ),
+                            ],
+                          );
+                        })
+                        .toList(),
                   ),
                 ],
               ),
@@ -984,7 +1000,10 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
           _buildRangeSlider("Life", _settings.lifeRange, 0, 10000, (val) => _settings.lifeRange = val),
           _buildRangeSlider("Fair Fight", _settings.fairFightRange, 1.0, 3.0, (val) => _settings.fairFightRange = val),
           _buildHospitalRangeSlider(
-              "Hospital Time", _settings.hospitalTimeRange, (val) => _settings.hospitalTimeRange = val),
+            "Hospital Time",
+            _settings.hospitalTimeRange,
+            (val) => _settings.hospitalTimeRange = val,
+          ),
 
           // Stats Filters
           const SizedBox(height: 20),
@@ -992,7 +1011,9 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
             color: theme.secondBackground,
             elevation: 2,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), side: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+              borderRadius: BorderRadius.circular(10),
+              side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+            ),
             child: Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
@@ -1025,25 +1046,58 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                 childrenPadding: const EdgeInsets.all(12.0),
                 children: [
                   _buildEstimateRangeSlider(
-                      "Estimated Stats", _settings.estimatedStatsRange, (val) => _settings.estimatedStatsRange = val),
+                    "Estimated Stats",
+                    _settings.estimatedStatsRange,
+                    (val) => _settings.estimatedStatsRange = val,
+                  ),
                   const Divider(),
                   _buildRangeSlider(
-                      "Total Stats", _settings.statsRange, 0, _maxStats, (val) => _settings.statsRange = val,
-                      subtitle: _maxStats > 0
-                          ? "Spied/FFS \u00b7 max ${_formatStatValue(_maxStats)}"
-                          : "Spied/FFS \u00b7 no spy data",
-                      showCalculator: true),
+                    "Total Stats",
+                    _settings.statsRange,
+                    0,
+                    _maxStats,
+                    (val) => _settings.statsRange = val,
+                    subtitle: _maxStats > 0
+                        ? "Spied/FFS \u00b7 max ${_formatStatValue(_maxStats)}"
+                        : "Spied/FFS \u00b7 no spy data",
+                    showCalculator: true,
+                  ),
                   _buildRangeSlider(
-                      "Strength", _settings.strengthRange, 0, _maxStr, (val) => _settings.strengthRange = val,
-                      subtitle: _maxStr > 0 ? "max ${_formatStatValue(_maxStr)}" : "No spy data", showCalculator: true),
+                    "Strength",
+                    _settings.strengthRange,
+                    0,
+                    _maxStr,
+                    (val) => _settings.strengthRange = val,
+                    subtitle: _maxStr > 0 ? "max ${_formatStatValue(_maxStr)}" : "No spy data",
+                    showCalculator: true,
+                  ),
                   _buildRangeSlider(
-                      "Defense", _settings.defenseRange, 0, _maxDef, (val) => _settings.defenseRange = val,
-                      subtitle: _maxDef > 0 ? "max ${_formatStatValue(_maxDef)}" : "No spy data", showCalculator: true),
-                  _buildRangeSlider("Speed", _settings.speedRange, 0, _maxSpd, (val) => _settings.speedRange = val,
-                      subtitle: _maxSpd > 0 ? "max ${_formatStatValue(_maxSpd)}" : "No spy data", showCalculator: true),
+                    "Defense",
+                    _settings.defenseRange,
+                    0,
+                    _maxDef,
+                    (val) => _settings.defenseRange = val,
+                    subtitle: _maxDef > 0 ? "max ${_formatStatValue(_maxDef)}" : "No spy data",
+                    showCalculator: true,
+                  ),
                   _buildRangeSlider(
-                      "Dexterity", _settings.dexterityRange, 0, _maxDex, (val) => _settings.dexterityRange = val,
-                      subtitle: _maxDex > 0 ? "max ${_formatStatValue(_maxDex)}" : "No spy data", showCalculator: true),
+                    "Speed",
+                    _settings.speedRange,
+                    0,
+                    _maxSpd,
+                    (val) => _settings.speedRange = val,
+                    subtitle: _maxSpd > 0 ? "max ${_formatStatValue(_maxSpd)}" : "No spy data",
+                    showCalculator: true,
+                  ),
+                  _buildRangeSlider(
+                    "Dexterity",
+                    _settings.dexterityRange,
+                    0,
+                    _maxDex,
+                    (val) => _settings.dexterityRange = val,
+                    subtitle: _maxDex > 0 ? "max ${_formatStatValue(_maxDex)}" : "No spy data",
+                    showCalculator: true,
+                  ),
                 ],
               ),
             ),
@@ -1213,8 +1267,14 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
   }
 
   Widget _buildRangeSlider(
-      String label, RangeValues? currentRange, double min, double max, Function(RangeValues?) onChanged,
-      {String? subtitle, bool showCalculator = false}) {
+    String label,
+    RangeValues? currentRange,
+    double min,
+    double max,
+    Function(RangeValues?) onChanged, {
+    String? subtitle,
+    bool showCalculator = false,
+  }) {
     String formatLabel(double value) {
       if (value >= 1000000000) {
         return "${(value / 1000000000).toStringAsFixed(1)}B";
@@ -1278,9 +1338,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                 children: [
                   Row(
                     children: [
-                      Flexible(
-                        child: Text(subtitle != null ? label : "$label (max: ${formatLabel(max)})"),
-                      ),
+                      Flexible(child: Text(subtitle != null ? label : "$label (max: ${formatLabel(max)})")),
                       if (showCalculator)
                         SizedBox(
                           width: 32,
@@ -1288,13 +1346,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                           child: IconButton(
                             padding: EdgeInsets.zero,
                             icon: Icon(Icons.calculate_outlined, size: 20, color: Colors.blueGrey[400]),
-                            onPressed: () => _showRangeInputDialog(
-                              label,
-                              min,
-                              max,
-                              currentRange,
-                              onChanged,
-                            ),
+                            onPressed: () => _showRangeInputDialog(label, min, max, currentRange, onChanged),
                           ),
                         ),
                     ],
@@ -1302,10 +1354,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                   if (subtitle != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 1.0),
-                      child: Text(
-                        subtitle,
-                        style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                      ),
+                      child: Text(subtitle, style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
                     ),
                 ],
               ),
@@ -1354,7 +1403,12 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
   }
 
   void _showRangeInputDialog(
-      String label, double min, double max, RangeValues? currentRange, Function(RangeValues?) onChanged) {
+    String label,
+    double min,
+    double max,
+    RangeValues? currentRange,
+    Function(RangeValues?) onChanged,
+  ) {
     final minController = TextEditingController(
       text: currentRange != null ? currentRange.start.round().toString() : min.round().toString(),
     );
@@ -1439,10 +1493,7 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
                 ],
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text("Cancel"),
-                ),
+                TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Cancel")),
                 TextButton(
                   onPressed: () {
                     double? newMin = double.tryParse(minController.text);
@@ -1483,40 +1534,51 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildHelpSection("Importance vs. value",
-                  "The sliders control two things simultaneously:\n\n• Direction (left/right): whether you want LOW values (e.g. low hospital time) or HIGH values (e.g. high stats).\n\n• Importance (distance from center): how much this factor influences the final score compared to others.\n"),
+              _buildHelpSection(
+                "Importance vs. value",
+                "The sliders control two things simultaneously:\n\n• Direction (left/right): whether you want LOW values (e.g. low hospital time) or HIGH values (e.g. high stats).\n\n• Importance (distance from center): how much this factor influences the final score compared to others.\n",
+              ),
               const SizedBox(height: 10),
-              _buildHelpSection("Combine factors!",
-                  "If you only activate one slider, Smart Score acts just like a normal sort. The real power comes from combining multiple factors.\n\nExample: You can prioritize 'low level' AND 'low hospital time' simultaneously to find weak targets that are about to leave the hospital.\n"),
+              _buildHelpSection(
+                "Combine factors!",
+                "If you only activate one slider, Smart Score acts just like a normal sort. The real power comes from combining multiple factors.\n\nExample: You can prioritize 'low level' AND 'low hospital time' simultaneously to find weak targets that are about to leave the hospital.\n",
+              ),
               const SizedBox(height: 10),
-              _buildHelpSection("Relative vs. absolute",
-                  "• Stats/Level (relative): 'low' means the importance goes towards the weakest person in the current list, it's stat-dependent. 'High' means the opposite (importance goes towards the member with the highest stat).\n\n• Hospital (Absolute): 'low' always means 0 minutes. 'high' always means 100 hours. Targets NOT in hospital are ignored (neutral score)."),
+              _buildHelpSection(
+                "Relative vs. absolute",
+                "• Stats/Level (relative): 'low' means the importance goes towards the weakest person in the current list, it's stat-dependent. 'High' means the opposite (importance goes towards the member with the highest stat).\n\n• Hospital (Absolute): 'low' always means 0 minutes. 'high' always means 100 hours. Targets NOT in hospital are ignored (neutral score).",
+              ),
               const Divider(height: 60),
               const Text("Technical details", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 20),
-              _buildHelpSection("Dynamic relative scoring",
-                  "The Smart Score system utilizes a dynamic logarithmic normalization algorithm to evaluate target viability. This method processes the order of magnitude of the parameters, so that it results in a robust comparison between targets regardless of the variance.\n"),
+              _buildHelpSection(
+                "Dynamic relative scoring",
+                "The Smart Score system utilizes a dynamic logarithmic normalization algorithm to evaluate target viability. This method processes the order of magnitude of the parameters, so that it results in a robust comparison between targets regardless of the variance.\n",
+              ),
               const SizedBox(height: 10),
-              _buildHelpSection("Normalization",
-                  "Raw values are transformed using a base-10 logarithmic scale before applying Min-Max Scaling relative to the current target group.\n"),
+              _buildHelpSection(
+                "Normalization",
+                "Raw values are transformed using a base-10 logarithmic scale before applying Min-Max Scaling relative to the current target group.\n",
+              ),
               const SizedBox(height: 10),
-              _buildHelpSection("Dampening",
-                  "We compress extreme values, preventing a single entity from rendering the scoring resolution of the remaining population obsolete.\n"),
+              _buildHelpSection(
+                "Dampening",
+                "We compress extreme values, preventing a single entity from rendering the scoring resolution of the remaining population obsolete.\n",
+              ),
               const SizedBox(height: 10),
-              _buildHelpSection("Stabilization",
-                  "We enforce a minimum variance threshold. It prevents minor fluctuations from generating disproportionate scoring differences.\n"),
+              _buildHelpSection(
+                "Stabilization",
+                "We enforce a minimum variance threshold. It prevents minor fluctuations from generating disproportionate scoring differences.\n",
+              ),
               const SizedBox(height: 10),
-              _buildHelpSection("Final score calculation",
-                  "The final index (0–100) is derived from positive weighting (prioritizes max values within the range and negative weighting (prioritizes min values within the range). The cumulative score is the weighted sum of all active attributes.\n"),
+              _buildHelpSection(
+                "Final score calculation",
+                "The final index (0–100) is derived from positive weighting (prioritizes max values within the range and negative weighting (prioritizes min values within the range). The cumulative score is the weighted sum of all active attributes.\n",
+              ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Got it"),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Got it"))],
       ),
     );
   }

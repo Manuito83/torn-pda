@@ -137,6 +137,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Used to avoid racing condition with browser launch from notifications (not included in the FutureBuilder), as
   // preferences take time to load
   final Completer _preferencesCompleter = Completer();
+  // Fires as soon as local preferences are read, before the connectivity check and the
+  // profile API refresh. AuthRecoveryWidget waits on this one so it doesn't time out
+  final Completer _localPreferencesCompleter = Completer();
   // Used for the main UI loading (FutureBuilder)
   Future? _finishedWithPreferencesAndDialogs;
 
@@ -395,6 +398,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             return;
           }
         });
+
+        // Heal tokens that rotated before we listened
+        if (appHasBeenUpdated) {
+          FirestoreHelper().reconcileMessagingToken();
+        }
+        _messaging.onTokenRefresh.listen((newToken) {
+          FirestoreHelper().onMessagingTokenRefreshed(newToken);
+        });
       }
     } catch (e, stackTrace) {
       log("Error initializing Firebase messaging: $e");
@@ -501,6 +512,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // This ensures AuthRecoveryWidget has the correct value before it starts
     _authRecoveryEnabledRC = await Prefs().getAuthRecoveryEnabledRC();
 
+    // Register the gate before anything can complete it: AuthRecoveryWidget may finish
+    // in a few hundred ms (e.g. no API key) and its completion must not be missed
+    DialogQueue.setAuthGate(_authGateCompleter);
+
+    // Local preferences first
+    try {
+      await _loadLocalPreferences();
+    } finally {
+      if (!_localPreferencesCompleter.isCompleted) {
+        _localPreferencesCompleter.complete();
+      }
+    }
+
     // Wait for initial connectivity check to complete
     if (ConnectivityHandler.instance.connectivityCheckEnabled) {
       await _ensureConnectivity();
@@ -509,10 +533,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     await _loadPreferencesAsync();
 
     if (mounted) {
-      // Set up auth gate so dialogs wait for AuthRecoveryWidget to complete
-      // This prevents dialogs from appearing over loading/timeout screens
-      DialogQueue.setAuthGate(_authGateCompleter);
-
       // Start collecting dialogs for 500ms before processing
       // This ensures proper priority ordering during app startup
       DialogQueue.startCollectingDialogs();
@@ -555,7 +575,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       await reconfigureNotificationChannels(mod: vibration);
     }
 
-    await _loadInitPreferences();
+    await _loadStartupNetworkTasks();
 
     if (!_preferencesCompleter.isCompleted) {
       _preferencesCompleter.complete();
@@ -707,6 +727,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_engine_prewarm_allowed": true,
         "browser_webview_recovery_allowed": true,
         "browser_render_process_gone_allowed": true,
+        "browser_park_background_tabs_allowed": true,
+        // Default for the browser memory settings (can be overriden)
+        "browser_park_background_tabs_default": false,
+        "browser_tab_sleep_minutes_default": 720,
         "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
@@ -716,6 +740,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "revive_uhc": "1.8 million or 2 Xanax",
         "revive_wtf": "1.8 million or 2 Xanax",
         "revive_combat_ready": "1.5 million or 2 Xanax",
+        "revive_asclepius": "\$1M",
         // Torn API
         "apiV2LegacyRequests": "",
         // PDA Update Details
@@ -795,6 +820,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed = remoteConfig.getBool(
         "browser_render_process_gone_allowed",
       );
+      _webViewProvider.parkBackgroundTabsRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_park_background_tabs_allowed",
+      );
+
+      // Browser memory defaults (also persisted, so they are known before the fetch on next launch)
+      _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");
+      final int tabSleepMinutesRC = remoteConfig.getInt("browser_tab_sleep_minutes_default");
+      if (tabSleepMinutesRC > 0) {
+        _webViewProvider.tabSleepMinutesDefaultRC = tabSleepMinutesRC;
+      }
 
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
@@ -814,6 +849,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
       _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
       _settingsProvider.reviveCombatReadyPrice = remoteConfig.getString("revive_combat_ready");
+      _settingsProvider.reviveAsclepiusPrice = remoteConfig.getString("revive_asclepius");
 
       // Sendbird
       final sb = Get.find<SendbirdController>();
@@ -894,6 +930,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
 
     if (state == AppLifecycleState.paused) {
+      // Park background tabs while we are still allowed to run (Android)
+      _webViewProvider.onAppBackgrounded();
+
       // Stop stakeouts
       _s.stopTimer();
       log("Stakeouts stopped");
@@ -1235,7 +1274,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
           for (final not in activeNotifications) {
             if (not.id == null) continue;
-            if (not.channelId == 'travel_live_updates') continue;
+            if (not.channelId == 'live_updates_travel' || not.channelId == 'live_updates_racing') continue;
             // Platform channel to cancel direct Firebase notifications (we can call
             // "cancelAll()" there without affecting scheduled notifications, which is
             // a problem with the local plugin)
@@ -1375,7 +1414,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       browserUrl = "https://www.torn.com/travelagency.php";
     } else if (abroadStay) {
       launchBrowserWithUrl = true;
-      browserUrl = "https://www.torn.com/travelagency.php";
+      browserUrl = "https://www.torn.com";
     } else if (racing) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/page.php?sid=racing";
@@ -1669,6 +1708,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload == 'restocks') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
+      } else if (payload == 'abroadStay') {
+        launchBrowserWithUrl = true;
+        browserUrl = 'https://www.torn.com';
       } else if (payload.contains('energy')) {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/gym.php';
@@ -2008,7 +2050,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     _s.callbackBrowser = _openBrowserFromToast;
     return AuthRecoveryWidget(
-      preferencesCompleter: _preferencesCompleter,
+      preferencesCompleter: _localPreferencesCompleter,
       appHasBeenUpdated: appHasBeenUpdated,
       enabled: _authRecoveryEnabledRC,
       onAuthCompleted: () => DialogQueue.completeAuthGate(),
@@ -2448,7 +2490,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
   }
 
-  Future _loadInitPreferences() async {
+  /// Local storage only. Must stay free of network calls, as [_localPreferencesCompleter]
+  /// completes right after this and AuthRecoveryWidget is waiting on it
+  Future _loadLocalPreferences() async {
     // Set up SettingsProvider so that user preferences are applied
     // ## Leave this first as other options below need this to be initialized ##
     await _settingsProvider.loadPreferences();
@@ -2464,9 +2508,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Set up UserController. If key is empty, redirect to the Settings page.
     // Else, open the default
+    // (the API refresh runs later, in [_loadStartupNetworkTasks])
     final userController = Get.find<UserController>();
     try {
-      await userController.loadPreferences();
+      await userController.loadPreferences(refreshFromApi: false);
     } catch (e) {
       // UserController handles its own initialization
     }
@@ -2494,19 +2539,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       _selected = resolvedSection;
       _activeDrawerIndex = resolvedSection;
-
-      await _initializeAndHandleFirebaseAuth();
-
-      // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
-      // since some people might leave the app opened for weeks in the background)
-      // Completer to ensure that we have a valid UID and avoid any race condition!!
-      if (!Platform.isWindows) {
-        FirestoreHelper().uidCompleter.future.whenComplete(() {
-          _updateLastActiveTime();
-        });
-      }
-
-      checkForScriptUpdates();
     }
 
     // Change device preferences
@@ -2521,6 +2553,34 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     }
+  }
+
+  /// Startup work that hits the network. Runs after the connectivity check, so that a cold
+  /// start without internet doesn't fire the profile call, the anonymous sign-in and the
+  /// script update check into a dead connection
+  Future _loadStartupNetworkTasks() async {
+    final userController = Get.find<UserController>();
+
+    try {
+      await userController.refreshUserFromApi();
+    } catch (e) {
+      // UserController handles its own initialization
+    }
+
+    if (!userController.isApiKeyValid) return;
+
+    await _initializeAndHandleFirebaseAuth();
+
+    // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
+    // since some people might leave the app opened for weeks in the background)
+    // Completer to ensure that we have a valid UID and avoid any race condition!!
+    if (!Platform.isWindows) {
+      FirestoreHelper().uidCompleter.future.whenComplete(() {
+        _updateLastActiveTime();
+      });
+    }
+
+    checkForScriptUpdates();
   }
 
   // ## Firebase Auth Quick Check ##

@@ -140,7 +140,7 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
         restockElapsed: restockElapsed,
       };
 
-      transaction.set(docRef, newData, { merge: true });
+      transaction.set(docRef, newData);
     });
   } catch (e) {
     logger.warn(`ERROR updating stock ${codeName}: \n${e}`);
@@ -466,70 +466,64 @@ export const fillRestocks = onSchedule({
 });
 
 // UTIL FUNCTION
-// Cleans up any periodicMap with more than 200 entries in case we have a leak in any other methods
+// Safety net for periodicMap leaks
 export const oneTimeClean = onSchedule({
   schedule: "0 3 * * *", // At 03:00 every day
   region: "us-east4",
-  memory: "256MiB",
-  timeoutSeconds: 300
+  memory: "512MiB",
+  timeoutSeconds: 540
 }, async () => {
   logger.info("🧹 ONETIMECLEAN STARTING");
 
   const db = admin.firestore();
-  const batchSize = 500;
-  let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+
+  const CONCURRENCY = 5;
+
+  const idsSnapshot = await db.collection("stocks-main")
+    .select()
+    .orderBy(FieldPath.documentId())
+    .get();
+
+  const docIds = idsSnapshot.docs.map((d) => d.id);
+  logger.info(`📊 Analyzing ${docIds.length} stock documents for periodicMap cleanup`);
+
   let numberCleared = 0;
   let totalProcessed = 0;
 
-  while (true) {
-    let query = db.collection("stocks-main")
-      .orderBy(FieldPath.documentId())
-      .limit(batchSize);
+  const cleanOne = async (docId: string) => {
+    const docRef = db.collection("stocks-main").doc(docId);
+    const snapshot = await docRef.get();
+    totalProcessed++;
 
-    if (lastDoc) {
-      query = query.startAfter(lastDoc);
+    const bigMap = snapshot.get("periodicMap");
+    if (!bigMap || typeof bigMap !== "object") return;
+
+    const allKeys = Object.keys(bigMap)
+      .map(Number)
+      .filter((k) => !isNaN(k))
+      .sort((a, b) => b - a);
+
+    if (allKeys.length <= MAX_ENTRIES) return;
+
+    const filteredMap: { [key: number]: number } = {};
+    for (const k of allKeys.slice(0, MAX_ENTRIES)) {
+      filteredMap[k] = bigMap[k];
     }
 
-    const snapshot = await query.get();
-    if (snapshot.empty) {
-      break;
-    }
+    await docRef.update({ periodicMap: filteredMap });
+    numberCleared++;
+    logger.info(`🔧 Cleaned ${docId}: reduced from ${allKeys.length} to ${MAX_ENTRIES} entries`);
+  };
 
-    logger.info(`📊 Analyzing ${snapshot.size} stock documents for periodicMap cleanup`);
-
-    const batch = db.batch();
-    let batchOps = 0;
-
-    for (const doc of snapshot.docs) {
-      const docData = doc.data();
-      if (docData.periodicMap && typeof docData.periodicMap === "object") {
-        const bigMap = docData.periodicMap;
-        const allKeys = Object.keys(bigMap)
-          .map(Number)
-          .filter((k) => !isNaN(k))
-          .sort((a, b) => b - a);
-
-        if (allKeys.length > 200) {
-          const keysToKeep = allKeys.slice(0, 200);
-          const filteredMap: { [key: number]: number } = {};
-          for (const k of keysToKeep) {
-            filteredMap[k] = bigMap[k];
-          }
-
-          batch.set(doc.ref, { periodicMap: filteredMap }, { merge: true });
-          batchOps++;
-          logger.info(`🔧 Cleaned ${doc.id}: reduced from ${allKeys.length} to 200 entries`);
-          numberCleared++;
-        }
+  for (let i = 0; i < docIds.length; i += CONCURRENCY) {
+    const group = docIds.slice(i, i + CONCURRENCY);
+    await Promise.all(group.map(async (docId) => {
+      try {
+        await cleanOne(docId);
+      } catch (e) {
+        logger.warn(`⚠️ Could not clean ${docId}: ${e}`);
       }
-    }
-
-    if (batchOps > 0) {
-      await batch.commit();
-    }
-
-    totalProcessed += snapshot.size;
-    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+    }));
   }
 
   logger.info(`✅ Cleanup completed: ${numberCleared} documents cleaned out of ${totalProcessed} total`);

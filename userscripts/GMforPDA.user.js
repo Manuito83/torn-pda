@@ -21,11 +21,13 @@
 	function __GM_getValue(key, defaultValue) {
 		if (!key) throw new TypeError("No key supplied to GM_getValue");
 		try {
-			const r = localStorage.getItem(key);
+			const r = localStorage ? localStorage.getItem(key) : null;
 			if (typeof r !== "string") return defaultValue;
-			if (r.startsWith("GMV2_"))
-				return JSON.parse(r.slice(5)) ?? defaultValue;
-			else return r ?? defaultValue;
+			if (!r.startsWith("GMV2_")) return r ?? defaultValue;
+			const json = r.slice(5);
+			// Guard against "GMV2_undefined" written by a buggy GM_setValue call
+			if (json === "undefined") return defaultValue;
+			return JSON.parse(json) ?? defaultValue;
 		} catch (e) {
 			console.error(e);
 			return defaultValue;
@@ -49,7 +51,28 @@
 	}
 	function __GM_setValue(key, value) {
 		if (!key) throw new TypeError("No key supplied to GM_setValue");
-		localStorage.setItem(key, "GMV2_" + JSON.stringify(value));
+		if (!localStorage) return;
+		// JSON.stringify(undefined) returns the JS value undefined (not the string),
+		// which string-concatenates to "GMV2_undefined" — unreadable by JSON.parse.
+		// Treat that the same as deleting the key.
+		const serialized = JSON.stringify(value);
+		if (serialized === undefined) { localStorage.removeItem(key); return; }
+		try {
+			localStorage.setItem(key, "GMV2_" + serialized);
+		} catch (err) {
+			console.warn("PDA-GM: localStorage full, GM_setValue('" + key + "') dropped", err);
+			try {
+				const now = Date.now();
+				if (!window.__pdaGMQuotaToastAt || now - window.__pdaGMQuotaToastAt > 60000) {
+					window.__pdaGMQuotaToastAt = now;
+					window.flutter_inappwebview && window.flutter_inappwebview.callHandler("showToast", {
+						text: "A userscript ran out of browser storage. Some data was not saved.",
+						seconds: 5,
+						bgColor: { a: 255, r: 230, g: 145, b: 0 }
+					});
+				}
+			} catch (_) {}
+		}
 	}
 	function __GM_setValues(values) {
 		for (const [key, value] of Object.entries(values)) {
@@ -58,7 +81,7 @@
 	}
 	function __GM_deleteValue(key) {
 		if (!key) throw new TypeError("No key supplied to GM_deleteValue");
-		localStorage.removeItem(key);
+		localStorage?.removeItem(key);
 	}
 	function __GM_deleteValues(keys) {
 		for (const key of keys) {
@@ -66,7 +89,7 @@
 		}
 	}
 	function __GM_listValues() {
-		return Object.keys(localStorage);
+		return localStorage ? Object.keys(localStorage) : [];
 	}
 	function __GM_addStyle(style) {
 		if (!style || typeof style !== "string") return;
@@ -244,4 +267,9 @@
 			});
 		return { abortController, prom };
 	}
-})(window, Object, DOMException, AbortController, Promise, localStorage);
+})(window, Object, DOMException, AbortController, Promise,
+   // Safe-capture localStorage: accessing it throws SecurityError in some
+   // contexts (restrictive iframes, private-mode storage blocked, etc.).
+   // Passing null lets the GM functions degrade gracefully instead of
+   // aborting the entire IIFE and leaving GM/GM_getValue/... undefined.
+   (() => { try { return localStorage; } catch (_) { return null; } })());

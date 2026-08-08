@@ -38,6 +38,25 @@ String handler_tabContext(String tabUid) {
 	''';
 }
 
+String handler_activeTabFocus() {
+  // Android WebView often reports document.hasFocus()=false even when visible
+  // When PDA knows this tab is the active, visible one, report focus so scripts (isPageActive) work
+  return '''
+		(function() {
+			if (window.__pdaActiveTabFocus) return;
+			window.__pdaActiveTabFocus = true;
+			const real = document.hasFocus ? document.hasFocus.bind(document) : function() { return true; };
+			document.hasFocus = function() {
+				try {
+					const s = window.__tornpda && window.__tornpda.tab && window.__tornpda.tab.state;
+					if (s && s.isActiveTab && s.isWebViewVisible) return true;
+				} catch (_) {}
+				return real();
+			};
+		})();
+	''';
+}
+
 String handler_pdaAPI() {
   // PDA HTTP helpers (PDA_httpGet/Post/Put/Delete/Patch)
   return RemoteSnippets.resolve(RemoteSnippets.pdaApi);
@@ -96,12 +115,13 @@ String handler_GM() {
       function a(e, t) {
         if (!e) throw new TypeError("No key supplied to GM_getValue");
         try {
-          const r = i.getItem(e);
-          return "string" != typeof r
-            ? t
-            : r.startsWith("GMV2_")
-              ? (JSON.parse(r.slice(5)) ?? t)
-              : (r ?? t);
+          const r = i ? i.getItem(e) : null;
+          if ("string" != typeof r) return t;
+          if (!r.startsWith("GMV2_")) return r ?? t;
+          const json = r.slice(5);
+          // Guard against "GMV2_undefined" written by a buggy GM_setValue call
+          if (json === "undefined") return t;
+          return (JSON.parse(json) ?? t);
         } catch (e) {
           return (console.error(e), t);
         }
@@ -119,17 +139,38 @@ String handler_GM() {
       }
       function u(e, t) {
         if (!e) throw new TypeError("No key supplied to GM_setValue");
-        i.setItem(e, "GMV2_" + JSON.stringify(t));
+        if (!i) return;
+        // JSON.stringify(undefined) returns the JS value undefined (not the string),
+        // which string-concatenates to "GMV2_undefined" — unreadable by JSON.parse.
+        // Treat that the same as deleting the key.
+        const serialized = JSON.stringify(t);
+        if (serialized === undefined) { i.removeItem(e); return; }
+        try {
+          i.setItem(e, "GMV2_" + serialized);
+        } catch (err) {
+          console.warn("PDA-GM: localStorage full, GM_setValue('" + e + "') dropped", err);
+          try {
+            const now = Date.now();
+            if (!window.__pdaGMQuotaToastAt || now - window.__pdaGMQuotaToastAt > 60000) {
+              window.__pdaGMQuotaToastAt = now;
+              window.flutter_inappwebview && window.flutter_inappwebview.callHandler("showToast", {
+                text: "A userscript ran out of browser storage. Some data was not saved.",
+                seconds: 5,
+                bgColor: { a: 255, r: 230, g: 145, b: 0 }
+              });
+            }
+          } catch (_) {}
+        }
       }
       function l(e) {
         for (const [r, o] of t.entries(e)) u(r, o);
       }
       function d(e) {
         if (!e) throw new TypeError("No key supplied to GM_deleteValue");
-        i.removeItem(e);
+        i?.removeItem(e);
       }
       function f() {
-        return t.keys(i);
+        return i ? t.keys(i) : [];
       }
       function p(e) {
         if (!e || "string" != typeof e) return;
@@ -295,6 +336,19 @@ String handler_GM() {
           configurable: !1,
         });
       });
-    })(window, Object, DOMException, AbortController, Promise, localStorage);
+    })(window, Object, DOMException, AbortController, Promise,
+       // Safe-capture localStorage: accessing it throws SecurityError in some
+       // contexts (restrictive iframes, private-mode storage blocked, etc.).
+       // Passing null lets the GM functions degrade gracefully instead of
+       // aborting the entire IIFE and leaving GM/GM_getValue/... undefined.
+       // Warn once, or a storage-less page silently drops every userscript with nothing in the log.
+       // about: pages are ours (parking, prewarm) and always land here, so they stay quiet
+       (() => { try { return localStorage; } catch (_) {
+          if (!window.__pdaGMStoreWarned && location.protocol !== "about:") {
+            window.__pdaGMStoreWarned = true;
+            console.warn("PDA-GM: localStorage denied at " + location.href + ", GM values are unavailable here");
+          }
+          return null;
+       } })());
   ''';
 }

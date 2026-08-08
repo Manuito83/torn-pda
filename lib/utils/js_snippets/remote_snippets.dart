@@ -47,8 +47,8 @@ class RemoteSnippets {
       version: '1.0.0',
       buildBase: _travelRemovePlaneBaseJS,
     ),
-    travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.1', buildBase: _travelBuyMaxBaseJS),
-    barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.0', buildBase: _barsDoubleClickBaseJS),
+    travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.2', buildBase: _travelBuyMaxBaseJS),
+    barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.2', buildBase: _barsDoubleClickBaseJS),
   };
 
   static final Map<String, _Override> _overrides = {};
@@ -144,6 +144,34 @@ class RemoteSnippets {
           window.loadedPdaApiPatchUrls[key] = now;
           await window.__PDA_platformReadyPromise;
           return window.flutter_inappwebview.callHandler('PDA_httpPatch', url, headers, body);
+        };
+
+        // Per-script native storage
+        window.__pdaStorageFactory = window.__pdaStorageFactory || function(sid) {
+          var call = async function(method, payload, fallback) {
+            await window.__PDA_platformReadyPromise;
+            // The bridge is absent in some frames (cross-origin subframes)
+            if (!window.flutter_inappwebview || typeof window.flutter_inappwebview.callHandler !== 'function') {
+              return fallback;
+            }
+            var r = await window.flutter_inappwebview.callHandler('PDA_storage', sid, method, payload || {});
+            if (r && r.ok === false) {
+              var e = new Error(r.error || 'PDA_storage error');
+              e.code = r.error; e.used = r.used; e.quota = r.quota;
+              throw e;
+            }
+            return r ? r.value : undefined;
+          };
+          return {
+            get: function(key, def) { return call('get', { key: key, def: def }, def); },
+            set: function(key, value) { return call('set', { key: key, value: value }); },
+            delete: function(key) { return call('delete', { key: key }); },
+            list: function() { return call('list', {}, []); },
+            loadAll: function() { return call('loadAll', {}, {}); },
+            getMany: function(keys) { return call('getMany', { keys: keys }, {}); },
+            setMany: function(obj) { return call('setMany', { obj: obj }); },
+            usage: function() { return call('usage', {}, { used: 0, quota: 0 }); }
+          };
         };
       })();
     ''';
@@ -562,6 +590,11 @@ class RemoteSnippets {
 
         // Improved Mode Detection
         const isHorizontalMode = () => {
+            // Baskets (buyCell) only exist in the narrow layout
+            if (document.querySelector('[class*="buyCell___"]')) {
+                return false;
+            }
+
             // 1. Check for VISIBLE "Type" header
             const headers = Array.from(document.querySelectorAll('[class*="itemsHeader___"] > div'));
             const visibleTypeHeader = headers.find(h =>
@@ -922,8 +955,8 @@ class RemoteSnippets {
 
         function addBarsListener() {
           const barElements = Array.from(document.querySelectorAll('[class*="bar___"]'));
-          const energyBar = barElements.find((el) => el.className.includes('energy___'));
-          const nerveBar = barElements.find((el) => el.className.includes('nerve___'));
+          const energyBar = barElements.find((el) => (el.getAttribute('class') || '').includes('energy___'));
+          const nerveBar = barElements.find((el) => (el.getAttribute('class') || '').includes('nerve___'));
 
           if (!energyBar || !nerveBar) {
             return false;
@@ -968,12 +1001,17 @@ class RemoteSnippets {
 
         let pass = 0;
         const waitForBarsAndRun = setInterval(() => {
-          if (addBarsListener()) {
-            return clearInterval(waitForBarsAndRun);
+          pass++;
+
+          let done = false;
+          try {
+            done = addBarsListener();
+          } catch (e) {
+            console.warn('PDA bars snippet aborted: ' + e);
+            done = true;
           }
 
-          pass++;
-          if (pass > 20) {
+          if (done || pass > 20) {
             clearInterval(waitForBarsAndRun);
           }
         }, 300);

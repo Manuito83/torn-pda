@@ -265,6 +265,22 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
+  Widget _storageSupportBadge(UserScriptModel script) {
+    return GestureDetector(
+      child: const Icon(Icons.sd_storage, color: Colors.green, size: 20),
+      onTap: () => BotToast.showText(
+        text:
+            "This script uses Torn PDA's native storage. Its data does not compete for the browser's space "
+            "and is more stable. Edit the script to see its usage and raise its limit.",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.grey[800]!,
+        contentPadding: const EdgeInsets.all(10),
+        clickClose: true,
+        duration: const Duration(seconds: 8),
+      ),
+    );
+  }
+
   ListView scriptsCards() {
     final scriptList = <Widget>[];
     for (final script in _userScriptsProvider.userScriptList) {
@@ -446,6 +462,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           );
                         },
                       ),
+                    if (script.storageSupport == ScriptStorageSupport.pdaNative) ...[
+                      const SizedBox(width: 12),
+                      _storageSupportBadge(script),
+                    ],
                     const SizedBox(width: 12),
                     GestureDetector(
                       child: const Icon(Icons.edit, size: 20),
@@ -505,6 +525,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           onSelected: (value) {
             if (value == 'export') {
               _showExportDialog();
+            } else if (value == 'export_userjs') {
+              _showUserJsExportDialog();
             } else if (value == 'import') {
               _showImportDialog();
             }
@@ -522,12 +544,22 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
               ),
               const PopupMenuItem<String>(
+                value: 'export_userjs',
+                child: Row(
+                  children: [
+                    Icon(Icons.javascript, color: Colors.grey),
+                    SizedBox(width: 10),
+                    Text('Export to .user.js'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
                 value: 'import',
                 child: Row(
                   children: [
                     Icon(Icons.download, color: Colors.grey),
                     SizedBox(width: 10),
-                    Text('Import from JSON'),
+                    Text('Import from file'),
                   ],
                 ),
               ),
@@ -590,7 +622,32 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  void _showExportSelectionDialog() {
+  void _showUserJsExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Export to .user.js"),
+        content: const Text(
+          "This exports each selected script as a standard .user.js file that you can install in "
+          "Tampermonkey/Violentmonkey on a desktop browser (just open the file to trigger the install).\n\n"
+          "Note: scripts that rely on Torn PDA's own API key placeholder or PDA-specific features may need "
+          "manual adjustments to work on desktop.",
+        ),
+        actions: [
+          OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showExportSelectionDialog(asUserJs: true);
+            },
+            child: const Text("Continue"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExportSelectionDialog({bool asUserJs = false}) {
     final allScripts = _userScriptsProvider.userScriptList;
     final selectedScripts = Set<UserScriptModel>.from(allScripts);
 
@@ -667,7 +724,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ? null
                       : () {
                           Navigator.of(context).pop();
-                          _performExport(selectedScripts.toList());
+                          _performExport(selectedScripts.toList(), asUserJs: asUserJs);
                         },
                   child: const Text("Share File"),
                 ),
@@ -679,16 +736,39 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  Future<void> _performExport(List<UserScriptModel> scripts) async {
+  Future<void> _performExport(List<UserScriptModel> scripts, {bool asUserJs = false}) async {
     try {
-      final jsonString = _userScriptsProvider.exportScriptsToJson(scripts);
       final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/userscripts_export.json');
-      await file.writeAsString(jsonString);
+      final List<XFile> filesToShare = [];
+
+      if (asUserJs) {
+        // One .user.js file per script, with the raw source
+        final usedNames = <String>{};
+        for (final script in scripts) {
+          String base = _sanitizeFileName(script.name);
+          if (base.isEmpty) base = "script";
+          String fileName = "$base.user.js";
+          int counter = 1;
+          while (usedNames.contains(fileName)) {
+            fileName = "$base ($counter).user.js";
+            counter++;
+          }
+          usedNames.add(fileName);
+
+          final file = File('${directory.path}/$fileName');
+          await file.writeAsString(script.source);
+          filesToShare.add(XFile(file.path));
+        }
+      } else {
+        final jsonString = _userScriptsProvider.exportScriptsToJson(scripts);
+        final file = File('${directory.path}/userscripts_export.json');
+        await file.writeAsString(jsonString);
+        filesToShare.add(XFile(file.path));
+      }
 
       await SharePlus.instance.share(
         ShareParams(
-          files: [XFile(file.path)],
+          files: filesToShare,
           sharePositionOrigin: Rect.fromLTWH(
             0,
             0,
@@ -702,14 +782,19 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     }
   }
 
+  String _sanitizeFileName(String name) {
+    return name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
   void _showImportDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Import Scripts"),
         content: const Text(
-          "You can import scripts from a JSON file (a specific format valid for Torn PDA is required, "
-          "so it's easier if it comes from previous Torn PDA export).\n\n"
+          "You can import scripts from:\n\n"
+          "- A JSON file (Torn PDA export format), which may contain several scripts.\n"
+          "- A single .user.js file (e.g. exported from Tampermonkey/Violentmonkey on desktop).\n\n"
           "Note: bear in mind that you can also restore from the Share, "
           "Cloud backup and Local backup features in Settings.",
         ),
@@ -727,40 +812,81 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
+  UserScriptModel _userScriptFromRawSource(String source, String fileName) {
+    // Fallback name from the file name (strip .user.js / .js) in case the header has no @name
+    String fallbackName = fileName
+        .replaceAll(RegExp(r'\.user\.js$', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\.js$', caseSensitive: false), '')
+        .trim();
+    if (fallbackName.isEmpty) fallbackName = "Imported script";
+
+    Map<String, dynamic>? metaMap;
+    try {
+      metaMap = UserScriptModel.parseHeader(source);
+    } catch (_) {
+      metaMap = null;
+    }
+
+    final headerName = (metaMap?["name"] as String?)?.trim();
+    final matches = (metaMap?["matches"] as List?)?.cast<String>();
+    final grants = (metaMap?["grants"] as List?)?.cast<String>();
+    final requires = (metaMap?["requires"] as List?)?.cast<String>();
+    final downloadUrl = metaMap?["downloadURL"] as String?;
+
+    return UserScriptModel(
+      name: (headerName != null && headerName.isNotEmpty) ? headerName : fallbackName,
+      version: metaMap?["version"] ?? "0.0.0",
+      source: source,
+      matches: (matches != null && matches.isNotEmpty) ? matches : const ["*"],
+      url: downloadUrl,
+      updateStatus: downloadUrl != null ? UserScriptUpdateStatus.upToDate : UserScriptUpdateStatus.noRemote,
+      time: metaMap?["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end,
+      isExample: false,
+      grants: grants ?? const [],
+      requires: requires ?? const [],
+    );
+  }
+
   Future<void> _pickImportFile() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['json'],
+        allowedExtensions: ['json', 'js'],
       );
 
       if (result != null) {
-        final file = File(result.files.single.path!);
+        final picked = result.files.single;
+        final file = File(picked.path!);
         final content = await file.readAsString();
-        _parseAndShowImportSelection(content);
+        final isUserJs = (picked.name.toLowerCase().endsWith('.js'));
+        _parseAndShowImportSelection(content, fileName: picked.name, isUserJs: isUserJs);
       }
     } catch (e) {
       BotToast.showText(text: "Error picking file: $e");
     }
   }
 
-  void _parseAndShowImportSelection(String jsonContent) {
+  void _parseAndShowImportSelection(String content, {required String fileName, bool isUserJs = false}) {
     List<UserScriptModel> importedScripts = [];
     try {
-      final decoded = json.decode(jsonContent);
-      if (decoded is List) {
-        for (final item in decoded) {
-          importedScripts.add(UserScriptModel.fromJson(item));
-        }
+      if (isUserJs) {
+        importedScripts.add(_userScriptFromRawSource(content, fileName));
       } else {
-        throw const FormatException("JSON is not a list");
+        final decoded = json.decode(content);
+        if (decoded is List) {
+          for (final item in decoded) {
+            importedScripts.add(UserScriptModel.fromJson(item));
+          }
+        } else {
+          throw const FormatException("JSON is not a list");
+        }
       }
     } catch (e) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("Invalid Format"),
-          content: Text("The file could not be parsed as a valid script list.\nError: $e"),
+          content: Text("The file could not be parsed as a valid script.\nError: $e"),
           actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("OK"))],
         ),
       );

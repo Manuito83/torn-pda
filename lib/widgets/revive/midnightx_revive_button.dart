@@ -1,15 +1,14 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/revive_services/revive_provider.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/midnightx_revive.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/widgets/revive/revive_provider_info_text.dart';
 
 class MidnightXReviveButton extends StatefulWidget {
   final ThemeProvider? themeProvider;
@@ -88,62 +87,7 @@ Future<void> openMidnightXReviveDialog(BuildContext ctx, ThemeProvider themeProv
                           ],
                         ),
                       ),
-                      Flexible(
-                        child: RichText(
-                          text: TextSpan(
-                            text:
-                                "Midnight X is a member of the NITE Family of factions. The majority of their "
-                                "members are at premium skill levels and stay highly active."
-                                "\n\nCheck out their ",
-                            style: TextStyle(color: context.read<ThemeProvider>().mainText, fontSize: 13),
-                            children: <InlineSpan>[
-                              WidgetSpan(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).pop();
-                                    const url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16291239&b=0&a=0';
-                                    context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.short,
-                                    );
-                                  },
-                                  onLongPress: () {
-                                    Navigator.of(context).pop();
-                                    const url = 'https://www.torn.com/forums.php#/p=threads&f=10&t=16291239&b=0&a=0';
-                                    context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.long,
-                                    );
-                                  },
-                                  child: const Text(
-                                    'forum thread',
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 13),
-                                  ),
-                                ),
-                              ),
-                              const TextSpan(text: ' and '),
-                              TextSpan(
-                                text: 'Discord server',
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 13),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    const url = 'https://discord.gg/nite';
-                                    if (await canLaunchUrl(Uri.parse(url))) {
-                                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                                    }
-                                  },
-                              ),
-                              TextSpan(
-                                text:
-                                    "\n\nRevives cost ${context.read<SettingsProvider>().reviveMidnightPrice}, "
-                                    "unless on contract. Refusal to pay will result in getting blacklisted.",
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      Flexible(child: ReviveProviderInfoText(provider: ReviveProviders.midnightX)),
                       const SizedBox(height: 15),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,

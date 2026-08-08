@@ -375,9 +375,7 @@ export const onPlayerUpdated = onDocumentUpdated({
 async function manageStats(statName: string, changeInValue: number) {
   const totalUserRef = admin.database().ref().child("stats").child(statName);
 
-  let totalUsers = parseInt((await totalUserRef.once("value")).val() || "0");
-  totalUsers = totalUsers + changeInValue;
-  await totalUserRef.set(totalUsers);
+  await totalUserRef.transaction((current: number | null) => (current || 0) + changeInValue);
 }
 
 export const lookupPlayerByApiKey = onCall({

@@ -45,8 +45,10 @@ class DefaultLiveUpdateManager(
         val existingSession = sessionStore.current()
         val sessionId = existingSession?.sessionId ?: sessionIdProvider()
 
-        // Dedup avoids re-popping the heads-up and re-arming WorkManager on every poll.
+        // Dedup avoids re-popping the heads-up and re-arming WorkManager on every poll
         if (existingSession != null
+            && !existingSession.watchOnly
+            && adapter.isActivityActive()
             && existingSession.contentIdentifier == parsedPayload.contentIdentifier
             && existingSession.lastHasArrived == parsedPayload.hasArrived
         ) {

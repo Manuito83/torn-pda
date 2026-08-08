@@ -19,6 +19,7 @@ import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
+import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
@@ -106,6 +107,7 @@ class UserScriptsProvider extends ChangeNotifier {
   UnmodifiableListView<UserScript> getHandlerSources({
     required String apiKey,
     required String tabUid,
+    bool activeTabFocusEnabled = false,
   }) {
     final scriptList = <UserScript>[];
     if (_userScriptsEnabled) {
@@ -116,6 +118,17 @@ class UserScriptsProvider extends ChangeNotifier {
           source: handler_tabContext(tabUid),
         ),
       );
+
+      // Android: report document.hasFocus()=true when PDA knows this tab is active+visible (RC-gated)
+      if (activeTabFocusEnabled) {
+        scriptList.add(
+          UserScript(
+            groupName: "__TornPDA_ActiveTabFocus__",
+            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+            source: handler_activeTabFocus(),
+          ),
+        );
+      }
 
       // Add the main event to let other handlers that the platform is ready
       scriptList.add(
@@ -164,19 +177,18 @@ class UserScriptsProvider extends ChangeNotifier {
     if (_userScriptsEnabled) {
       try {
         return UnmodifiableListView(
-          _userScriptList.where((s) => s.shouldInject(url, time)).map(
-            (s) {
-              return UserScript(
-                groupName: s.name,
-                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                // If the script is a custom API key script, we need to replace the API key
-                source: adaptSource(
-                  source: s.source,
-                  scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
-                ),
-              );
-            },
-          ),
+          _userScriptList.where((s) => s.shouldInject(url, time)).map((s) {
+            return UserScript(
+              groupName: s.name,
+              injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+              // If the script is a custom API key script, we need to replace the API key
+              source: adaptSource(
+                source: s.source,
+                scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
+                storageId: s.storageId,
+              ),
+            );
+          }),
         );
       } catch (e, trace) {
         if (!Platform.isWindows) {
@@ -194,9 +206,7 @@ class UserScriptsProvider extends ChangeNotifier {
     return _userScriptList.where((s) => s.shouldInject(url)).toList();
   }
 
-  List<String> getScriptsToRemove({
-    required String url,
-  }) {
+  List<String> getScriptsToRemove({required String url}) {
     if (!_userScriptsEnabled) {
       return const <String>[];
     } else {
@@ -204,9 +214,13 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
-  String adaptSource({required String source, required String scriptFinalApiKey}) {
+  String adaptSource({required String source, required String scriptFinalApiKey, required String storageId}) {
     final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
-    String anonFunction = "(function() {$withApiKey}());";
+    // Bind PDA_storage to this script's namespace inside its own closure (sid not reachable elsewhere)
+    // jsonEncode the id: it can come from imported/restored data, so never interpolate it raw into JS
+    final String bind =
+        'const PDA_storage = window.__pdaStorageFactory && window.__pdaStorageFactory(${jsonEncode(storageId)});';
+    String anonFunction = "(function() {$bind$withApiKey}());";
     anonFunction = anonFunction.replaceAll(RegExp(r'[“”]'), '"').replaceAll(RegExp(r'[‘’]'), "'");
     return anonFunction;
   }
@@ -277,7 +291,9 @@ class UserScriptsProvider extends ChangeNotifier {
       matches ??= const ["*"];
     }
 
-    userScriptList.firstWhere((script) => script.name == editedModel.name).update(
+    userScriptList
+        .firstWhere((script) => script.name == editedModel.name)
+        .update(
           name: name,
           time: time,
           source: source,
@@ -308,6 +324,7 @@ class UserScriptsProvider extends ChangeNotifier {
   void removeUserScript(UserScriptModel removedModel) {
     _invalidateGlobalDisable();
     _userScriptList.remove(removedModel);
+    unawaited(ScriptStorage.deleteNamespace(removedModel.storageId));
     notifyListeners();
     _saveUserScriptsToStorage();
   }
@@ -327,9 +344,13 @@ class UserScriptsProvider extends ChangeNotifier {
   void wipe() {
     _invalidateGlobalDisable();
     _userScriptList.clear();
+    unawaited(ScriptStorage.deleteAll());
     notifyListeners();
     _saveUserScriptsToStorage();
   }
+
+  // Drop PDA_storage namespaces of scripts no longer installed (orphans from crashes/uninstalls)
+  void _gcScriptStorage() => unawaited(ScriptStorage.gc({for (final s in _userScriptList) s.storageId}));
 
   /// [defaultToDisabled] makes all scripts inactive, if we can trust them 100% because they come from a shared backup
   Future<void> restoreScriptsFromServerSave({
@@ -381,19 +402,20 @@ class UserScriptsProvider extends ChangeNotifier {
           if (scriptExists) continue;
 
           final newScriptModel = UserScriptModel(
-              name: decodedModel.name,
-              time: decodedModel.time,
-              source: decodedModel.source,
-              enabled: defaultToDisabled ? false : decodedModel.enabled,
-              version: decodedModel.version,
-              manuallyEdited: decodedModel.manuallyEdited,
-              isExample: decodedModel.isExample,
-              updateStatus: decodedModel.updateStatus,
-              url: decodedModel.url,
-              matches: decodedModel.matches,
-              // Custom API key fields are already part of fromJson, but explicitly listing them is fine.
-              customApiKey: decodedModel.customApiKey,
-              customApiKeyCandidate: decodedModel.customApiKeyCandidate);
+            name: decodedModel.name,
+            time: decodedModel.time,
+            source: decodedModel.source,
+            enabled: defaultToDisabled ? false : decodedModel.enabled,
+            version: decodedModel.version,
+            manuallyEdited: decodedModel.manuallyEdited,
+            isExample: decodedModel.isExample,
+            updateStatus: decodedModel.updateStatus,
+            url: decodedModel.url,
+            matches: decodedModel.matches,
+            // Custom API key fields are already part of fromJson, but explicitly listing them is fine.
+            customApiKey: decodedModel.customApiKey,
+            customApiKeyCandidate: decodedModel.customApiKeyCandidate,
+          );
 
           _addScript(_userScriptList, newScriptModel, "restoreScriptsFromServerSave-merge");
         } catch (e, trace) {
@@ -667,6 +689,7 @@ class UserScriptsProvider extends ChangeNotifier {
         _checkForCustomApiKeyCandidates();
         _isSafeToSave = true;
         notifyListeners();
+        _gcScriptStorage();
 
         // IMPORTANT: we create a backup immediately after successful load
         // (If Prefs fails in the next run, we already have a backup)
@@ -697,6 +720,7 @@ class UserScriptsProvider extends ChangeNotifier {
         _checkForCustomApiKeyCandidates();
         _isSafeToSave = true;
         notifyListeners();
+        _gcScriptStorage();
 
         // Repair Prefs immediately
         final saveString = json.encode(_userScriptList);
@@ -753,17 +777,13 @@ class UserScriptsProvider extends ChangeNotifier {
               "If this happens repeatedly, please go to 'Settings > Advanced Browser Settings > Manage Scripts' to reset them, "
               "or alternatively import a local or cloud backup if you have one.",
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("OK"),
-              ),
-            ],
+            actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("OK"))],
           ),
         );
       } else {
         BotToast.showText(
-          text: "⚠️"
+          text:
+              "⚠️"
               "\n\nThere was a problem retrieving userscripts: $e"
               "\n\nConsider restarting the app to ensure that no data is lost!",
           textStyle: const TextStyle(fontSize: 14, color: Colors.white),
@@ -811,10 +831,12 @@ class UserScriptsProvider extends ChangeNotifier {
 
     // Filter scripts that need checking
     final scriptsToCheck = _userScriptList
-        .where((s) =>
-            s.updateStatus != UserScriptUpdateStatus.localModified &&
-            s.updateStatus != UserScriptUpdateStatus.noRemote &&
-            s.url != null)
+        .where(
+          (s) =>
+              s.updateStatus != UserScriptUpdateStatus.localModified &&
+              s.updateStatus != UserScriptUpdateStatus.noRemote &&
+              s.url != null,
+        )
         .toList();
 
     // If no scripts need checking, return
@@ -825,30 +847,35 @@ class UserScriptsProvider extends ChangeNotifier {
 
     // Update process
     try {
-      await Future.wait<void>(scriptsToCheck.map((s) {
-        s.updateStatus = UserScriptUpdateStatus.updating;
-        // Notify listeners of the change to show updating, but **do not save this to shared prefs**
-        notifyListeners();
-
-        return s.checkUpdateStatus().then((updateStatus) {
-          if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
-
-          if (s.updateStatus != updateStatus) {
-            s.updateStatus = updateStatus;
-            hasChanges = true;
-          }
-          // Notify listeners of the change after every row
+      await Future.wait<void>(
+        scriptsToCheck.map((s) {
+          s.updateStatus = UserScriptUpdateStatus.updating;
+          // Notify listeners of the change to show updating, but **do not save this to shared prefs**
           notifyListeners();
-        }).catchError((e) {
-          log("$e", name: "UserScriptsProvider");
-          if (s.updateStatus != UserScriptUpdateStatus.error) {
-            s.updateStatus = UserScriptUpdateStatus.error;
-            hasChanges = true;
-          }
-          // Notify listeners of the change after every row
-          notifyListeners();
-        });
-      }));
+
+          return s
+              .checkUpdateStatus()
+              .then((updateStatus) {
+                if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
+
+                if (s.updateStatus != updateStatus) {
+                  s.updateStatus = updateStatus;
+                  hasChanges = true;
+                }
+                // Notify listeners of the change after every row
+                notifyListeners();
+              })
+              .catchError((e) {
+                log("$e", name: "UserScriptsProvider");
+                if (s.updateStatus != UserScriptUpdateStatus.error) {
+                  s.updateStatus = UserScriptUpdateStatus.error;
+                  hasChanges = true;
+                }
+                // Notify listeners of the change after every row
+                notifyListeners();
+              });
+        }),
+      );
 
       // Only save if we have actual changes and at the end of all updates
       // so that we don't save the "updating" status
@@ -911,11 +938,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
     _checkForCustomApiKeyCandidates();
 
-    return (
-      added: added,
-      failed: failed,
-      removed: removed,
-    );
+    return (added: added, failed: failed, removed: removed);
   }
 
   Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
@@ -950,10 +973,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   /// Import scripts from a list of models
-  Future<void> importScriptsFromList({
-    required List<UserScriptModel> scriptsToImport,
-    required bool overwrite,
-  }) async {
+  Future<void> importScriptsFromList({required List<UserScriptModel> scriptsToImport, required bool overwrite}) async {
     if (overwrite) {
       _userScriptList.clear();
       for (final script in scriptsToImport) {

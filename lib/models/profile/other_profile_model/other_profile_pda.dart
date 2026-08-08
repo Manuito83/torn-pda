@@ -205,6 +205,15 @@ class PersonalStats {
 }
 
 // ========== BAZAAR ITEM ==========
+
+// Torn sends bazaar prices as double every now and then
+int? _asInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.round();
+  return num.tryParse(value.toString())?.round();
+}
+
 class BazaarItem {
   final int? id;
   final String? name;
@@ -214,26 +223,18 @@ class BazaarItem {
   final int? marketPrice;
   final int? uid;
 
-  BazaarItem({
-    this.id,
-    this.name,
-    this.type,
-    this.quantity,
-    this.price,
-    this.marketPrice,
-    this.uid,
-  });
+  BazaarItem({this.id, this.name, this.type, this.quantity, this.price, this.marketPrice, this.uid});
 
   /// Extract from API response (same structure in V1 and V2)
   factory BazaarItem.fromJson(Map<String, dynamic> json) {
     return BazaarItem(
-      id: json['ID'] ?? 0,
+      id: _asInt(json['ID']) ?? 0,
       name: json['name'] ?? '',
       type: json['type'] ?? '',
-      quantity: json['quantity'] ?? 0,
-      price: json['price'] ?? 0,
-      marketPrice: json['market_price'] ?? 0,
-      uid: json['UID'],
+      quantity: _asInt(json['quantity']) ?? 0,
+      price: _asInt(json['price']) ?? 0,
+      marketPrice: _asInt(json['market_price']) ?? 0,
+      uid: _asInt(json['UID']),
     );
   }
 

@@ -6,7 +6,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 
 class DevToolsStorageTab extends StatefulWidget {
   final InAppWebViewController? webViewController;
@@ -24,8 +28,9 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
 
   final CookieManager _cookieManager = CookieManager.instance();
   final WebStorageManager? _webStorageManager = !Platform.isWindows ? WebStorageManager.instance() : null;
-  final HttpAuthCredentialDatabase? _httpAuthCredentialDatabase =
-      !Platform.isWindows ? HttpAuthCredentialDatabase.instance() : null;
+  final HttpAuthCredentialDatabase? _httpAuthCredentialDatabase = !Platform.isWindows
+      ? HttpAuthCredentialDatabase.instance()
+      : null;
 
   final TextEditingController _newCookieNameController = TextEditingController();
   final TextEditingController _newCookieValueController = TextEditingController();
@@ -59,6 +64,14 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   String _httpAuthSortField = _httpAuthSortOptions.first;
   bool _httpAuthAscending = true;
 
+  static const int _cellPreviewChars = 200;
+  static const int _dialogFullChars = 20000;
+
+  Future<List<Cookie>>? _cookiesFuture;
+  Future<Map<String, dynamic>>? _localFuture;
+  Future<Map<String, dynamic>>? _sessionFuture;
+  Future<List<Map<String, dynamic>>>? _scriptStorageFuture;
+
   @override
   void initState() {
     super.initState();
@@ -85,35 +98,65 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     return {'origin': url?.origin ?? 'N/A', 'items': items ?? []};
   }
 
-  void _showValueEditDialog(
-      {required String title, required String initialValue, required Future<void> Function(String newValue) onSave}) {
+  Future<List<Cookie>> _loadCookies() async {
+    final url = await widget.webViewController?.getUrl();
+    if (url == null) return <Cookie>[];
+    return _cookieManager.getCookies(url: url);
+  }
+
+  void _refreshCookies() => setState(() => _cookiesFuture = _loadCookies());
+
+  void _refreshLocal() =>
+      setState(() => _localFuture = _getStorageData(widget.webViewController!.webStorage.localStorage));
+
+  void _refreshSession() =>
+      setState(() => _sessionFuture = _getStorageData(widget.webViewController!.webStorage.sessionStorage));
+
+  // Truncate a value for row display so a huge value never gets laid out
+  String _preview(String value) =>
+      value.length > _cellPreviewChars ? '${value.substring(0, _cellPreviewChars)}…' : value;
+
+  void _showValueEditDialog({
+    required String title,
+    required String initialValue,
+    required Future<void> Function(String newValue) onSave,
+  }) {
     final controller = TextEditingController(text: initialValue);
     showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-              title: Text("Edit $title"),
-              content: TextFormField(controller: controller, autofocus: true, maxLines: 5, minLines: 1),
-              actions: [
-                TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
-                TextButton(
-                    onPressed: () async {
-                      await onSave(controller.text);
-                      Navigator.of(dialogContext).pop();
-                    },
-                    child: const Text("Save")),
-              ],
-            ));
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text("Edit $title"),
+        content: initialValue.length > _dialogFullChars
+            ? Text(
+                "This value is too large to edit here (${_formatBytes(utf8.encode(initialValue).length)}). Delete it or edit it from the userscript instead.",
+              )
+            : TextFormField(controller: controller, autofocus: true, maxLines: 5, minLines: 1),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
+          if (initialValue.length <= _dialogFullChars)
+            TextButton(
+              onPressed: () async {
+                await onSave(controller.text);
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text("Save"),
+            ),
+        ],
+      ),
+    );
   }
 
   void _showCookieEditDialog({required Cookie cookie, required Future<void> Function(Cookie updatedCookie) onSave}) {
     final valueController = TextEditingController(text: cookie.value);
-    DateTime? expiresDate =
-        cookie.expiresDate != null ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!) : null;
+    DateTime? expiresDate = cookie.expiresDate != null
+        ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!)
+        : null;
 
     showDialog(
-        context: context,
-        builder: (dialogContext) {
-          return StatefulBuilder(builder: (context, setDialogState) {
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
             return AlertDialog(
               title: Text("Edit ${cookie.name}", overflow: TextOverflow.ellipsis),
               content: SingleChildScrollView(
@@ -121,18 +164,20 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
-                        controller: valueController,
-                        decoration: const InputDecoration(labelText: "Value"),
-                        maxLines: 3,
-                        minLines: 1),
+                      controller: valueController,
+                      decoration: const InputDecoration(labelText: "Value"),
+                      maxLines: 3,
+                      minLines: 1,
+                    ),
                     const SizedBox(height: 16),
                     InkWell(
                       onTap: () async {
                         final picked = await showDatePicker(
-                            context: context,
-                            initialDate: expiresDate ?? DateTime.now(),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime(9999));
+                          context: context,
+                          initialDate: expiresDate ?? DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(9999),
+                        );
                         if (picked != null) setDialogState(() => expiresDate = picked);
                       },
                       child: Padding(
@@ -145,15 +190,17 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                                 children: [
                                   const Text("Expires Date", style: TextStyle(fontSize: 12)),
                                   Text(
-                                      expiresDate != null ? expiresDate!.toIso8601String().substring(0, 10) : "Session",
-                                      style: const TextStyle(fontSize: 16)),
+                                    expiresDate != null ? expiresDate!.toIso8601String().substring(0, 10) : "Session",
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
                                 ],
                               ),
                             ),
                             if (expiresDate != null)
                               IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () => setDialogState(() => expiresDate = null)),
+                                icon: const Icon(Icons.clear),
+                                onPressed: () => setDialogState(() => expiresDate = null),
+                              ),
                           ],
                         ),
                       ),
@@ -164,25 +211,28 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
               actions: [
                 TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("Cancel")),
                 TextButton(
-                    onPressed: () async {
-                      final updatedCookie = Cookie(
-                        name: cookie.name,
-                        value: valueController.text,
-                        expiresDate: expiresDate?.millisecondsSinceEpoch,
-                        isSecure: cookie.isSecure,
-                        domain: cookie.domain,
-                        path: cookie.path,
-                        isHttpOnly: cookie.isHttpOnly,
-                        sameSite: cookie.sameSite,
-                      );
-                      await onSave(updatedCookie);
-                      Navigator.of(dialogContext).pop();
-                    },
-                    child: const Text("Save")),
+                  onPressed: () async {
+                    final updatedCookie = Cookie(
+                      name: cookie.name,
+                      value: valueController.text,
+                      expiresDate: expiresDate?.millisecondsSinceEpoch,
+                      isSecure: cookie.isSecure,
+                      domain: cookie.domain,
+                      path: cookie.path,
+                      isHttpOnly: cookie.isHttpOnly,
+                      sameSite: cookie.sameSite,
+                    );
+                    await onSave(updatedCookie);
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: const Text("Save"),
+                ),
               ],
             );
-          });
-        });
+          },
+        );
+      },
+    );
   }
 
   void _showActionDialog({
@@ -194,68 +244,87 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     DateTime? expiresDate,
   }) {
     showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-              title: Text(title, style: const TextStyle(fontSize: 18), overflow: TextOverflow.ellipsis),
-              content: Container(
-                width: double.maxFinite,
-                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text("Value:", style: TextStyle(fontWeight: FontWeight.bold)),
-                      SelectableText(value),
-                      if (expiresDate != null) ...[
-                        const SizedBox(height: 16),
-                        const Text("Expires:", style: TextStyle(fontWeight: FontWeight.bold)),
-                        SelectableText(expiresDate.toIso8601String().substring(0, 10)),
-                      ],
-                    ],
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title, style: const TextStyle(fontSize: 18), overflow: TextOverflow.ellipsis),
+        content: Container(
+          width: double.maxFinite,
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Value:", style: TextStyle(fontWeight: FontWeight.bold)),
+                if (value.length > _dialogFullChars) ...[
+                  Text(
+                    "Large value (${_formatBytes(utf8.encode(value).length)}). Showing a preview; use Copy for the full value.",
+                    style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
                   ),
+                  const SizedBox(height: 8),
+                  SelectableText('${value.substring(0, _dialogFullChars)}…'),
+                ] else
+                  SelectableText(value),
+                if (expiresDate != null) ...[
+                  const SizedBox(height: 16),
+                  const Text("Expires:", style: TextStyle(fontWeight: FontWeight.bold)),
+                  SelectableText(expiresDate.toIso8601String().substring(0, 10)),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceBetween,
+        actions: <Widget>[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tooltip(
+                message: "Edit",
+                child: IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                    onEdit();
+                  },
                 ),
               ),
-              actionsAlignment: MainAxisAlignment.spaceBetween,
-              actions: <Widget>[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Tooltip(
-                        message: "Edit",
-                        child: IconButton(
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: () {
-                              Navigator.of(dialogContext).pop();
-                              onEdit();
-                            })),
-                    Tooltip(
-                        message: "Copy",
-                        child: IconButton(
-                            icon: const Icon(Icons.copy_outlined),
-                            onPressed: () {
-                              Clipboard.setData(ClipboardData(text: value));
-                              Navigator.of(dialogContext).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Value copied')));
-                            })),
-                    if (canDelete)
-                      Tooltip(
-                          message: "Delete",
-                          child: IconButton(
-                              icon: Icon(Icons.delete_outline, color: Colors.red.shade700),
-                              onPressed: () async {
-                                await onDelete();
-                                Navigator.of(dialogContext).pop();
-                              })),
-                  ],
+              Tooltip(
+                message: "Copy",
+                child: IconButton(
+                  icon: const Icon(Icons.copy_outlined),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: value));
+                    Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Value copied')));
+                  },
                 ),
-                TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("CLOSE")),
-              ],
-            ));
+              ),
+              if (canDelete)
+                Tooltip(
+                  message: "Delete",
+                  child: IconButton(
+                    icon: Icon(Icons.delete_outline, color: Colors.red.shade700),
+                    onPressed: () async {
+                      await onDelete();
+                      Navigator.of(dialogContext).pop();
+                    },
+                  ),
+                ),
+            ],
+          ),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text("CLOSE")),
+        ],
+      ),
+    );
   }
 
-  Widget _buildDataRow(
-      {required String keyText, required String valueText, required VoidCallback onCellTap, Widget? deleteWidget}) {
+  Widget _buildDataRow({
+    required String keyText,
+    required String valueText,
+    required VoidCallback onCellTap,
+    Widget? deleteWidget,
+  }) {
     return InkWell(
       onTap: onCellTap,
       child: Padding(
@@ -265,7 +334,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           children: [
             Expanded(flex: 3, child: Text(keyText, maxLines: 2, overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
-            Expanded(flex: 5, child: Text(valueText, maxLines: 2, overflow: TextOverflow.ellipsis)),
+            Expanded(flex: 5, child: Text(_preview(valueText), maxLines: 2, overflow: TextOverflow.ellipsis)),
             SizedBox(width: 48, child: deleteWidget ?? Container()),
           ],
         ),
@@ -289,7 +358,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           children: [
             Expanded(flex: 3, child: Text(keyText, maxLines: 2, overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
-            Expanded(flex: 4, child: Text(valueText, maxLines: 2, overflow: TextOverflow.ellipsis)),
+            Expanded(flex: 4, child: Text(_preview(valueText), maxLines: 2, overflow: TextOverflow.ellipsis)),
             Expanded(
               flex: 2,
               child: Text(sizeText, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right),
@@ -342,15 +411,6 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     totalBytes += utf8.encode(item.key ?? '').length;
     totalBytes += utf8.encode(item.value).length;
     return totalBytes;
-  }
-
-  String _calculateStorageSize(List<WebStorageItem> items) {
-    double totalBytes = 0;
-    for (var item in items) {
-      totalBytes += utf8.encode(item.key ?? '').length;
-      totalBytes += utf8.encode(item.value).length;
-    }
-    return _formatBytes(totalBytes);
   }
 
   Future<void> _onSortCookies(String field) async {
@@ -468,8 +528,14 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
       return const Center(child: Text("WebView not available."));
     }
 
+    _cookiesFuture ??= _loadCookies();
+    _localFuture ??= _getStorageData(widget.webViewController!.webStorage.localStorage);
+    _sessionFuture ??= _getStorageData(widget.webViewController!.webStorage.sessionStorage);
+    _scriptStorageFuture ??= ScriptStorage.namespaces();
+
     var entryItems = <Widget>[
       _buildCookiesExpansionTile(),
+      _buildScriptStorageExpansionTile(),
       _buildWebLocalStorageExpansionTile(),
       _buildWebSessionStorageExpansionTile(),
       if (!Platform.isWindows) _buildHttpAuthCredentialDatabaseExpansionTile(),
@@ -477,17 +543,114 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
       if (Platform.isIOS || Platform.isMacOS) _buildIOSWebStorageExpansionTile(),
     ];
 
-    return ListView.builder(
-      itemCount: entryItems.length,
-      itemBuilder: (context, index) => entryItems[index],
+    return ListView.builder(itemCount: entryItems.length, itemBuilder: (context, index) => entryItems[index]);
+  }
+
+  void _refreshScriptStorage() => setState(() => _scriptStorageFuture = ScriptStorage.namespaces());
+
+  Widget _buildScriptStorageExpansionTile() {
+    final names = {
+      for (final s in Provider.of<UserScriptsProvider>(context, listen: false).userScriptList) s.storageId: s.name
+    };
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _scriptStorageFuture,
+      builder: (context, snapshot) {
+        final rows = snapshot.data ?? [];
+        final total = rows.fold<int>(0, (a, r) => a + (r['used'] as int));
+        return ExpansionTile(
+          key: const ValueKey('script_storage'),
+          title: const Text("Torn PDA Script Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+          subtitle: Text(
+            "Native per-script storage - ${_formatBytes(total)} / ${_formatBytes(ScriptStorage.globalCapBytes)}",
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          children: [
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+            else if (rows.isEmpty)
+              const Padding(padding: EdgeInsets.all(16.0), child: Text("No script is using native storage yet."))
+            else
+              for (final r in rows) _buildScriptStorageRow(r, names[r['sid']]),
+          ],
+        );
+      },
     );
+  }
+
+  Widget _buildScriptStorageRow(Map<String, dynamic> row, String? name) {
+    final sid = row['sid'] as String;
+    final used = row['used'] as int;
+    final count = row['count'] as int;
+    final override = row['quota'] as int;
+    final quota = override > 0 ? override : ScriptStorage.defaultQuotaBytes;
+    return ExpansionTile(
+      key: ValueKey('ns_$sid'),
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
+      title: Text(name ?? "Unknown script", maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text("${_formatBytes(used)} / ${_formatBytes(quota)} · $count keys",
+          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton.icon(
+              icon: const Icon(Icons.tune, size: 18),
+              label: const Text("Set limit"),
+              onPressed: () => _editScriptQuota(sid),
+            ),
+            TextButton.icon(
+              icon: Icon(Icons.delete_outline, size: 18, color: Colors.red.shade700),
+              label: Text("Clear", style: TextStyle(color: Colors.red.shade700)),
+              onPressed: () async {
+                await ScriptStorage.deleteNamespace(sid);
+                _refreshScriptStorage();
+              },
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        const Divider(height: 1),
+        FutureBuilder<List<Map<String, dynamic>>>(
+          future: ScriptStorage.entries(sid),
+          builder: (context, snapshot) {
+            final entries = snapshot.data ?? [];
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(padding: EdgeInsets.all(12.0), child: LinearProgressIndicator());
+            }
+            if (entries.isEmpty) {
+              return const Padding(padding: EdgeInsets.all(12.0), child: Text("Empty."));
+            }
+            return Column(
+              children: [
+                for (final e in entries)
+                  _buildStorageItemRow(
+                    keyText: e['key'] as String,
+                    valueText: e['value'] as String,
+                    sizeText: _formatBytes(e['bytes'] as int),
+                    onCellTap: () => _showFullTextDialog(e['key'] as String, e['value'] as String),
+                    deleteWidget: IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      onPressed: () async {
+                        await ScriptStorage.deleteKey(sid, e['key'] as String);
+                        _refreshScriptStorage();
+                      },
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _editScriptQuota(String sid) async {
+    if (await showScriptStorageQuotaDialog(context, sid)) _refreshScriptStorage();
   }
 
   Widget _buildCookiesExpansionTile() {
     return FutureBuilder<List<Cookie>>(
-      future: widget.webViewController
-          ?.getUrl()
-          .then((url) => url == null ? Future.value(<Cookie>[]) : _cookieManager.getCookies(url: url)),
+      future: _cookiesFuture,
       builder: (context, snapshot) {
         final cookies = snapshot.data ?? [];
         final sortedCookies = [...cookies];
@@ -510,7 +673,9 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           title: const Text("Cookies", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
           children: [
             if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+              const Center(
+                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
+              )
             else
               Column(
                 children: [
@@ -520,21 +685,26 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                     child: Row(
                       children: [
                         _buildSortableHeaderCell(
-                            title: "Name",
-                            isActive: _cookiesSortField == 'name',
-                            isAscending: _cookiesAscending,
-                            onTap: () => _onSortCookies('name'),
-                            flex: 3),
+                          title: "Name",
+                          isActive: _cookiesSortField == 'name',
+                          isAscending: _cookiesAscending,
+                          onTap: () => _onSortCookies('name'),
+                          flex: 3,
+                        ),
                         const SizedBox(width: 8),
                         _buildSortableHeaderCell(
-                            title: "Value",
-                            isActive: _cookiesSortField == 'value',
-                            isAscending: _cookiesAscending,
-                            onTap: () => _onSortCookies('value'),
-                            flex: 5),
+                          title: "Value",
+                          isActive: _cookiesSortField == 'value',
+                          isAscending: _cookiesAscending,
+                          onTap: () => _onSortCookies('value'),
+                          flex: 5,
+                        ),
                         const SizedBox(
-                            width: 48,
-                            child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                          width: 48,
+                          child: Center(
+                            child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -546,46 +716,58 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                       keyText: cookie.name,
                       valueText: cookie.value,
                       onCellTap: () => _showActionDialog(
-                          title: cookie.name,
-                          value: cookie.value,
-                          expiresDate: cookie.expiresDate != null
-                              ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!)
-                              : null,
-                          canDelete: cookie.isHttpOnly != true,
-                          onDelete: () async {
+                        title: cookie.name,
+                        value: cookie.value,
+                        expiresDate: cookie.expiresDate != null
+                            ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!)
+                            : null,
+                        canDelete: cookie.isHttpOnly != true,
+                        onDelete: () async {
+                          final url = await widget.webViewController?.getUrl();
+                          if (url == null) return;
+                          await _cookieManager.deleteCookie(
+                            url: url,
+                            name: cookie.name,
+                            domain: cookie.domain,
+                            path: cookie.path ?? '/',
+                          );
+                          _refreshCookies();
+                        },
+                        onEdit: () => _showCookieEditDialog(
+                          cookie: cookie,
+                          onSave: (updatedCookie) async {
                             final url = await widget.webViewController?.getUrl();
                             if (url == null) return;
-                            await _cookieManager.deleteCookie(
-                                url: url, name: cookie.name, domain: cookie.domain, path: cookie.path ?? '/');
-                            setState(() {});
+                            await _cookieManager.setCookie(
+                              url: url,
+                              name: updatedCookie.name,
+                              value: updatedCookie.value,
+                              domain: updatedCookie.domain,
+                              path: updatedCookie.path ?? '/',
+                              expiresDate: updatedCookie.expiresDate,
+                              isSecure: updatedCookie.isSecure,
+                            );
+                            _refreshCookies();
                           },
-                          onEdit: () => _showCookieEditDialog(
-                              cookie: cookie,
-                              onSave: (updatedCookie) async {
-                                final url = await widget.webViewController?.getUrl();
-                                if (url == null) return;
-                                await _cookieManager.setCookie(
-                                    url: url,
-                                    name: updatedCookie.name,
-                                    value: updatedCookie.value,
-                                    domain: updatedCookie.domain,
-                                    path: updatedCookie.path ?? '/',
-                                    expiresDate: updatedCookie.expiresDate,
-                                    isSecure: updatedCookie.isSecure);
-                                setState(() {});
-                              })),
+                        ),
+                      ),
                       deleteWidget: cookie.isHttpOnly == true
                           ? Tooltip(
                               message: "HttpOnly cookies cannot be deleted individually",
-                              child: Icon(Icons.lock, size: 20, color: Colors.grey.shade600))
+                              child: Icon(Icons.lock, size: 20, color: Colors.grey.shade600),
+                            )
                           : IconButton(
                               icon: const Icon(Icons.delete_outline, size: 20),
                               onPressed: () async {
                                 final url = await widget.webViewController?.getUrl();
                                 if (url == null) return;
                                 await _cookieManager.deleteCookie(
-                                    url: url, name: cookie.name, domain: cookie.domain, path: cookie.path ?? '/');
-                                setState(() {});
+                                  url: url,
+                                  name: cookie.name,
+                                  domain: cookie.domain,
+                                  path: cookie.path ?? '/',
+                                );
+                                _refreshCookies();
                               },
                             ),
                     ),
@@ -597,7 +779,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                       final url = await widget.webViewController?.getUrl();
                       if (url == null) return;
                       await _cookieManager.deleteCookies(url: url);
-                      setState(() {});
+                      _refreshCookies();
                     },
                   ),
                 ],
@@ -610,11 +792,13 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
 
   Widget _buildWebLocalStorageExpansionTile() {
     return FutureBuilder<Map<String, dynamic>>(
-      future: _getStorageData(widget.webViewController!.webStorage.localStorage),
+      future: _localFuture,
       builder: (context, snapshot) {
         final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
         final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
-        final size = _calculateStorageSize(items);
+        // Encode each value once (not per sort comparison and again for the total).
+        final sizes = <WebStorageItem, int>{for (final it in items) it: _calculateItemSizeBytes(it)};
+        final size = _formatBytes(sizes.values.fold<int>(0, (a, b) => a + b));
         final sortedItems = [...items];
         sortedItems.sort((a, b) {
           int comparison;
@@ -626,7 +810,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
               comparison = a.value.compareTo(b.value);
               break;
             case 'size':
-              comparison = _calculateItemSizeBytes(a).compareTo(_calculateItemSizeBytes(b));
+              comparison = (sizes[a] ?? 0).compareTo(sizes[b] ?? 0);
               break;
             default:
               comparison = 0;
@@ -640,7 +824,9 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           subtitle: Text("Origin: $origin - Size: $size", style: const TextStyle(fontSize: 12, color: Colors.grey)),
           children: [
             if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+              const Center(
+                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
+              )
             else
               Column(
                 children: [
@@ -650,28 +836,34 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                     child: Row(
                       children: [
                         _buildSortableHeaderCell(
-                            title: "Key",
-                            isActive: _localSortField == 'key',
-                            isAscending: _localAscending,
-                            onTap: () => _onSortLocal('key'),
-                            flex: 3),
+                          title: "Key",
+                          isActive: _localSortField == 'key',
+                          isAscending: _localAscending,
+                          onTap: () => _onSortLocal('key'),
+                          flex: 3,
+                        ),
                         const SizedBox(width: 8),
                         _buildSortableHeaderCell(
-                            title: "Value",
-                            isActive: _localSortField == 'value',
-                            isAscending: _localAscending,
-                            onTap: () => _onSortLocal('value'),
-                            flex: 4),
+                          title: "Value",
+                          isActive: _localSortField == 'value',
+                          isAscending: _localAscending,
+                          onTap: () => _onSortLocal('value'),
+                          flex: 4,
+                        ),
                         _buildSortableHeaderCell(
-                            title: "Size",
-                            isActive: _localSortField == 'size',
-                            isAscending: _localAscending,
-                            onTap: () => _onSortLocal('size'),
-                            flex: 2,
-                            alignment: TextAlign.right),
+                          title: "Size",
+                          isActive: _localSortField == 'size',
+                          isAscending: _localAscending,
+                          onTap: () => _onSortLocal('size'),
+                          flex: 2,
+                          alignment: TextAlign.right,
+                        ),
                         const SizedBox(
-                            width: 48,
-                            child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                          width: 48,
+                          child: Center(
+                            child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -680,40 +872,47 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                     const Padding(padding: EdgeInsets.all(16.0), child: Text("Local Storage is empty.")),
                   for (final item in sortedItems)
                     _buildStorageItemRow(
-                        keyText: item.key ?? '',
-                        valueText: item.value,
-                        sizeText: _formatBytes(_calculateItemSizeBytes(item)),
-                        onCellTap: () => _showActionDialog(
-                            title: item.key!,
-                            value: item.value,
-                            onDelete: () async {
-                              await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
-                              setState(() {});
-                            },
-                            onEdit: () => _showValueEditDialog(
-                                title: item.key!,
-                                initialValue: item.value,
-                                onSave: (newValue) async {
-                                  await widget.webViewController!.webStorage.localStorage
-                                      .setItem(key: item.key!, value: newValue);
-                                  setState(() {});
-                                })),
-                        deleteWidget: IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            onPressed: () async {
-                              await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
-                              setState(() {});
-                            })),
+                      keyText: item.key ?? '',
+                      valueText: item.value,
+                      sizeText: _formatBytes(sizes[item] ?? 0),
+                      onCellTap: () => _showActionDialog(
+                        title: item.key!,
+                        value: item.value,
+                        onDelete: () async {
+                          await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
+                          _refreshLocal();
+                        },
+                        onEdit: () => _showValueEditDialog(
+                          title: item.key!,
+                          initialValue: item.value,
+                          onSave: (newValue) async {
+                            await widget.webViewController!.webStorage.localStorage.setItem(
+                              key: item.key!,
+                              value: newValue,
+                            );
+                            _refreshLocal();
+                          },
+                        ),
+                      ),
+                      deleteWidget: IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        onPressed: () async {
+                          await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
+                          _refreshLocal();
+                        },
+                      ),
+                    ),
                   _buildAddNewWebStorageItem(
-                      formKey: _newLocalStorageItemFormKey,
-                      nameController: _newLocalStorageKeyController,
-                      valueController: _newLocalStorageValueController,
-                      labelName: "Local Item Key",
-                      labelValue: "Local Item Value",
-                      onAdded: (name, value) async {
-                        await widget.webViewController!.webStorage.localStorage.setItem(key: name, value: value);
-                        setState(() {});
-                      }),
+                    formKey: _newLocalStorageItemFormKey,
+                    nameController: _newLocalStorageKeyController,
+                    valueController: _newLocalStorageValueController,
+                    labelName: "Local Item Key",
+                    labelValue: "Local Item Value",
+                    onAdded: (name, value) async {
+                      await widget.webViewController!.webStorage.localStorage.setItem(key: name, value: value);
+                      _refreshLocal();
+                    },
+                  ),
                 ],
               ),
           ],
@@ -724,11 +923,12 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
 
   Widget _buildWebSessionStorageExpansionTile() {
     return FutureBuilder<Map<String, dynamic>>(
-      future: _getStorageData(widget.webViewController!.webStorage.sessionStorage),
+      future: _sessionFuture,
       builder: (context, snapshot) {
         final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
         final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
-        final size = _calculateStorageSize(items);
+        final sizes = <WebStorageItem, int>{for (final it in items) it: _calculateItemSizeBytes(it)};
+        final size = _formatBytes(sizes.values.fold<int>(0, (a, b) => a + b));
         final sortedItems = [...items];
         sortedItems.sort((a, b) {
           int comparison;
@@ -740,7 +940,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
               comparison = a.value.compareTo(b.value);
               break;
             case 'size':
-              comparison = _calculateItemSizeBytes(a).compareTo(_calculateItemSizeBytes(b));
+              comparison = (sizes[a] ?? 0).compareTo(sizes[b] ?? 0);
               break;
             default:
               comparison = 0;
@@ -754,7 +954,9 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           subtitle: Text("Origin: $origin - Size: $size", style: const TextStyle(fontSize: 12, color: Colors.grey)),
           children: [
             if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+              const Center(
+                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
+              )
             else
               Column(
                 children: [
@@ -764,28 +966,34 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                     child: Row(
                       children: [
                         _buildSortableHeaderCell(
-                            title: "Key",
-                            isActive: _sessionSortField == 'key',
-                            isAscending: _sessionAscending,
-                            onTap: () => _onSortSession('key'),
-                            flex: 3),
+                          title: "Key",
+                          isActive: _sessionSortField == 'key',
+                          isAscending: _sessionAscending,
+                          onTap: () => _onSortSession('key'),
+                          flex: 3,
+                        ),
                         const SizedBox(width: 8),
                         _buildSortableHeaderCell(
-                            title: "Value",
-                            isActive: _sessionSortField == 'value',
-                            isAscending: _sessionAscending,
-                            onTap: () => _onSortSession('value'),
-                            flex: 4),
+                          title: "Value",
+                          isActive: _sessionSortField == 'value',
+                          isAscending: _sessionAscending,
+                          onTap: () => _onSortSession('value'),
+                          flex: 4,
+                        ),
                         _buildSortableHeaderCell(
-                            title: "Size",
-                            isActive: _sessionSortField == 'size',
-                            isAscending: _sessionAscending,
-                            onTap: () => _onSortSession('size'),
-                            flex: 2,
-                            alignment: TextAlign.right),
+                          title: "Size",
+                          isActive: _sessionSortField == 'size',
+                          isAscending: _sessionAscending,
+                          onTap: () => _onSortSession('size'),
+                          flex: 2,
+                          alignment: TextAlign.right,
+                        ),
                         const SizedBox(
-                            width: 48,
-                            child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                          width: 48,
+                          child: Center(
+                            child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -794,40 +1002,47 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                     const Padding(padding: EdgeInsets.all(16.0), child: Text("Session Storage is empty.")),
                   for (final item in sortedItems)
                     _buildStorageItemRow(
-                        keyText: item.key ?? '',
-                        valueText: item.value,
-                        sizeText: _formatBytes(_calculateItemSizeBytes(item)),
-                        onCellTap: () => _showActionDialog(
-                            title: item.key!,
-                            value: item.value,
-                            onDelete: () async {
-                              await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
-                              setState(() {});
-                            },
-                            onEdit: () => _showValueEditDialog(
-                                title: item.key!,
-                                initialValue: item.value,
-                                onSave: (newValue) async {
-                                  await widget.webViewController!.webStorage.sessionStorage
-                                      .setItem(key: item.key!, value: newValue);
-                                  setState(() {});
-                                })),
-                        deleteWidget: IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            onPressed: () async {
-                              await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
-                              setState(() {});
-                            })),
+                      keyText: item.key ?? '',
+                      valueText: item.value,
+                      sizeText: _formatBytes(sizes[item] ?? 0),
+                      onCellTap: () => _showActionDialog(
+                        title: item.key!,
+                        value: item.value,
+                        onDelete: () async {
+                          await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
+                          _refreshSession();
+                        },
+                        onEdit: () => _showValueEditDialog(
+                          title: item.key!,
+                          initialValue: item.value,
+                          onSave: (newValue) async {
+                            await widget.webViewController!.webStorage.sessionStorage.setItem(
+                              key: item.key!,
+                              value: newValue,
+                            );
+                            _refreshSession();
+                          },
+                        ),
+                      ),
+                      deleteWidget: IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        onPressed: () async {
+                          await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
+                          _refreshSession();
+                        },
+                      ),
+                    ),
                   _buildAddNewWebStorageItem(
-                      formKey: _newSessionStorageItemFormKey,
-                      nameController: _newSessionStorageKeyController,
-                      valueController: _newSessionStorageValueController,
-                      labelName: "Session Item Key",
-                      labelValue: "Session Item Value",
-                      onAdded: (name, value) async {
-                        await widget.webViewController!.webStorage.sessionStorage.setItem(key: name, value: value);
-                        setState(() {});
-                      }),
+                    formKey: _newSessionStorageItemFormKey,
+                    nameController: _newSessionStorageKeyController,
+                    valueController: _newSessionStorageValueController,
+                    labelName: "Session Item Key",
+                    labelValue: "Session Item Value",
+                    onAdded: (name, value) async {
+                      await widget.webViewController!.webStorage.sessionStorage.setItem(key: name, value: value);
+                      _refreshSession();
+                    },
+                  ),
                 ],
               ),
           ],
@@ -846,30 +1061,38 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             Row(
               children: <Widget>[
                 Expanded(
-                    child: TextFormField(
-                        controller: _newCookieNameController,
-                        decoration: const InputDecoration(labelText: "Cookie Name"),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null)),
+                  child: TextFormField(
+                    controller: _newCookieNameController,
+                    decoration: const InputDecoration(labelText: "Cookie Name"),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
-                    child: TextFormField(
-                        controller: _newCookieValueController,
-                        decoration: const InputDecoration(labelText: "Cookie Value"),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null)),
+                  child: TextFormField(
+                    controller: _newCookieValueController,
+                    decoration: const InputDecoration(labelText: "Cookie Value"),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
+                ),
               ],
             ),
             Row(
               children: <Widget>[
                 Expanded(
-                    child: TextFormField(
-                        controller: _newCookieDomainController,
-                        decoration: const InputDecoration(labelText: "Cookie Domain"))),
+                  child: TextFormField(
+                    controller: _newCookieDomainController,
+                    decoration: const InputDecoration(labelText: "Cookie Domain"),
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
-                    child: TextFormField(
-                        controller: _newCookiePathController,
-                        decoration: const InputDecoration(labelText: "Cookie Path"),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null)),
+                  child: TextFormField(
+                    controller: _newCookiePathController,
+                    decoration: const InputDecoration(labelText: "Cookie Path"),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
+                ),
               ],
             ),
             Row(
@@ -880,10 +1103,11 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                     onTap: () async {
                       FocusScope.of(context).unfocus();
                       final picked = await showDatePicker(
-                          context: context,
-                          initialDate: _newCookieExpiresDate ?? DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime(9999));
+                        context: context,
+                        initialDate: _newCookieExpiresDate ?? DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(9999),
+                      );
                       if (picked != null) setState(() => _newCookieExpiresDate = picked);
                     },
                     child: Padding(
@@ -896,17 +1120,19 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                               children: [
                                 const Text("Expires in:", style: TextStyle(fontSize: 12)),
                                 Text(
-                                    _newCookieExpiresDate != null
-                                        ? _newCookieExpiresDate!.toIso8601String().substring(0, 10)
-                                        : "Session",
-                                    style: const TextStyle(fontSize: 16)),
+                                  _newCookieExpiresDate != null
+                                      ? _newCookieExpiresDate!.toIso8601String().substring(0, 10)
+                                      : "Session",
+                                  style: const TextStyle(fontSize: 16),
+                                ),
                               ],
                             ),
                           ),
                           if (_newCookieExpiresDate != null)
                             IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () => setState(() => _newCookieExpiresDate = null)),
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => setState(() => _newCookieExpiresDate = null),
+                            ),
                         ],
                       ),
                     ),
@@ -921,48 +1147,51 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
               ],
             ),
             SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  child: const Text("Add Cookie"),
-                  onPressed: () async {
-                    if (_newCookieFormKey.currentState?.validate() ?? false) {
-                      final url = await widget.webViewController?.getUrl();
-                      if (url == null) return;
-                      await _cookieManager.setCookie(
-                          url: url,
-                          name: _newCookieNameController.text,
-                          value: _newCookieValueController.text,
-                          domain: _newCookieDomainController.text.isEmpty ? null : _newCookieDomainController.text,
-                          isSecure: _newCookieIsSecure,
-                          path: _newCookiePathController.text,
-                          expiresDate: _newCookieExpiresDate?.millisecondsSinceEpoch);
+              width: double.infinity,
+              child: TextButton(
+                child: const Text("Add Cookie"),
+                onPressed: () async {
+                  if (_newCookieFormKey.currentState?.validate() ?? false) {
+                    final url = await widget.webViewController?.getUrl();
+                    if (url == null) return;
+                    await _cookieManager.setCookie(
+                      url: url,
+                      name: _newCookieNameController.text,
+                      value: _newCookieValueController.text,
+                      domain: _newCookieDomainController.text.isEmpty ? null : _newCookieDomainController.text,
+                      isSecure: _newCookieIsSecure,
+                      path: _newCookiePathController.text,
+                      expiresDate: _newCookieExpiresDate?.millisecondsSinceEpoch,
+                    );
 
-                      _newCookieNameController.clear();
-                      _newCookieValueController.clear();
-                      _newCookieDomainController.clear();
-                      _newCookiePathController.text = "/";
-                      setState(() {
-                        _newCookieIsSecure = false;
-                        _newCookieExpiresDate = null;
-                      });
-                      FocusScope.of(context).unfocus();
-                      setState(() {});
-                    }
-                  },
-                ))
+                    _newCookieNameController.clear();
+                    _newCookieValueController.clear();
+                    _newCookieDomainController.clear();
+                    _newCookiePathController.text = "/";
+                    setState(() {
+                      _newCookieIsSecure = false;
+                      _newCookieExpiresDate = null;
+                    });
+                    FocusScope.of(context).unfocus();
+                    _refreshCookies();
+                  }
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAddNewWebStorageItem(
-      {required GlobalKey<FormState> formKey,
-      required TextEditingController nameController,
-      required TextEditingController valueController,
-      required String labelName,
-      required String labelValue,
-      Function(String name, String value)? onAdded}) {
+  Widget _buildAddNewWebStorageItem({
+    required GlobalKey<FormState> formKey,
+    required TextEditingController nameController,
+    required TextEditingController valueController,
+    required String labelName,
+    required String labelValue,
+    Function(String name, String value)? onAdded,
+  }) {
     return Form(
       key: formKey,
       child: Padding(
@@ -972,16 +1201,20 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             Row(
               children: <Widget>[
                 Expanded(
-                    child: TextFormField(
-                        controller: nameController,
-                        decoration: InputDecoration(labelText: labelName),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null)),
+                  child: TextFormField(
+                    controller: nameController,
+                    decoration: InputDecoration(labelText: labelName),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
-                    child: TextFormField(
-                        controller: valueController,
-                        decoration: InputDecoration(labelText: labelValue),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null)),
+                  child: TextFormField(
+                    controller: valueController,
+                    decoration: InputDecoration(labelText: labelValue),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -1014,31 +1247,38 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             if (!urlSnapshot.hasData || urlSnapshot.data == null)
               const Padding(padding: EdgeInsets.all(16.0), child: Text("No URL found"))
             else
-              Builder(builder: (context) {
-                final origin = urlSnapshot.data!.origin;
-                return Column(
-                  children: <Widget>[
-                    ListTile(
+              Builder(
+                builder: (context) {
+                  final origin = urlSnapshot.data!.origin;
+                  return Column(
+                    children: <Widget>[
+                      ListTile(
                         title: const Text("Quota"),
                         subtitle: FutureBuilder<int?>(
-                            future: _webStorageManager?.getQuotaForOrigin(origin: origin),
-                            builder: (context, snapshot) =>
-                                Text(snapshot.hasData ? snapshot.data.toString() : "Loading..."))),
-                    ListTile(
+                          future: _webStorageManager?.getQuotaForOrigin(origin: origin),
+                          builder: (context, snapshot) =>
+                              Text(snapshot.hasData ? snapshot.data.toString() : "Loading..."),
+                        ),
+                      ),
+                      ListTile(
                         title: const Text("Usage"),
                         subtitle: FutureBuilder<int?>(
-                            future: _webStorageManager?.getUsageForOrigin(origin: origin),
-                            builder: (context, snapshot) =>
-                                Text(snapshot.hasData ? snapshot.data.toString() : "Loading...")),
+                          future: _webStorageManager?.getUsageForOrigin(origin: origin),
+                          builder: (context, snapshot) =>
+                              Text(snapshot.hasData ? snapshot.data.toString() : "Loading..."),
+                        ),
                         trailing: IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () async {
-                              await _webStorageManager?.deleteOrigin(origin: origin);
-                              setState(() {});
-                            })),
-                  ],
-                );
-              }),
+                          icon: const Icon(Icons.clear),
+                          onPressed: () async {
+                            await _webStorageManager?.deleteOrigin(origin: origin);
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
           ],
         );
       },
@@ -1055,18 +1295,12 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: CircularProgressIndicator(),
-                ),
+                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
               );
             }
             if (snapshot.hasError || !snapshot.hasData) {
               return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text("Could not load data."),
-                ),
+                child: Padding(padding: EdgeInsets.all(16.0), child: Text("Could not load data.")),
               );
             }
 
@@ -1094,20 +1328,26 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                   child: Row(
                     children: [
                       _buildSortableHeaderCell(
-                          title: "Display Name",
-                          isActive: _iosDataSortField == 'displayName',
-                          isAscending: _iosDataAscending,
-                          onTap: () => _onSortIosData('displayName'),
-                          flex: 3),
+                        title: "Display Name",
+                        isActive: _iosDataSortField == 'displayName',
+                        isAscending: _iosDataAscending,
+                        onTap: () => _onSortIosData('displayName'),
+                        flex: 3,
+                      ),
                       const SizedBox(width: 8),
                       _buildSortableHeaderCell(
-                          title: "Data Types",
-                          isActive: _iosDataSortField == 'dataTypes',
-                          isAscending: _iosDataAscending,
-                          onTap: () => _onSortIosData('dataTypes'),
-                          flex: 5),
+                        title: "Data Types",
+                        isActive: _iosDataSortField == 'dataTypes',
+                        isAscending: _iosDataAscending,
+                        onTap: () => _onSortIosData('dataTypes'),
+                        flex: 5,
+                      ),
                       const SizedBox(
-                          width: 48, child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                        width: 48,
+                        child: Center(
+                          child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1119,24 +1359,31 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                     onCellTap: () =>
                         _showFullTextDialog(dataRecord.displayName ?? 'Item', dataRecord.dataTypes?.join(",\n") ?? ''),
                     deleteWidget: IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        onPressed: () async {
-                          if (dataRecord.dataTypes != null) {
-                            await _webStorageManager
-                                ?.removeDataFor(dataTypes: dataRecord.dataTypes!, dataRecords: [dataRecord]);
-                          }
-                          setState(() {});
-                        }),
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      onPressed: () async {
+                        if (dataRecord.dataTypes != null) {
+                          await _webStorageManager?.removeDataFor(
+                            dataTypes: dataRecord.dataTypes!,
+                            dataRecords: [dataRecord],
+                          );
+                        }
+                        setState(() {});
+                      },
+                    ),
                   ),
                 SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                        child: const Text("Clear all"),
-                        onPressed: () async {
-                          await _webStorageManager?.removeDataModifiedSince(
-                              dataTypes: WebsiteDataType.ALL, date: DateTime.fromMillisecondsSinceEpoch(0));
-                          setState(() {});
-                        }))
+                  width: double.infinity,
+                  child: TextButton(
+                    child: const Text("Clear all"),
+                    onPressed: () async {
+                      await _webStorageManager?.removeDataModifiedSince(
+                        dataTypes: WebsiteDataType.ALL,
+                        date: DateTime.fromMillisecondsSinceEpoch(0),
+                      );
+                      setState(() {});
+                    },
+                  ),
+                ),
               ],
             );
           },
@@ -1147,11 +1394,13 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
 
   void _showFullTextDialog(String title, String content) {
     showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-            title: Text(title),
-            content: SingleChildScrollView(child: SelectableText(content)),
-            actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))]));
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(child: SelectableText(content)),
+        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+      ),
+    );
   }
 
   Widget _buildHttpAuthCredentialDatabaseExpansionTile() {
@@ -1163,10 +1412,14 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           future: _httpAuthCredentialDatabase?.getAllAuthCredentials(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()));
+              return const Center(
+                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
+              );
             }
             if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text("No credentials saved.")));
+              return const Center(
+                child: Padding(padding: EdgeInsets.all(16.0), child: Text("No credentials saved.")),
+              );
             }
 
             return Column(
@@ -1175,30 +1428,38 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                   Column(
                     children: [
                       Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text("Protection Space: ${p.protectionSpace?.host ?? ""}",
-                              style: const TextStyle(fontWeight: FontWeight.bold))),
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          "Protection Space: ${p.protectionSpace?.host ?? ""}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                         color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
                         child: Row(
                           children: [
                             _buildSortableHeaderCell(
-                                title: "Username",
-                                isActive: _httpAuthSortField == 'username',
-                                isAscending: _httpAuthAscending,
-                                onTap: () => _onSortHttpAuth('username'),
-                                flex: 3),
+                              title: "Username",
+                              isActive: _httpAuthSortField == 'username',
+                              isAscending: _httpAuthAscending,
+                              onTap: () => _onSortHttpAuth('username'),
+                              flex: 3,
+                            ),
                             const SizedBox(width: 8),
                             _buildSortableHeaderCell(
-                                title: "Password",
-                                isActive: _httpAuthSortField == 'password',
-                                isAscending: _httpAuthAscending,
-                                onTap: () => _onSortHttpAuth('password'),
-                                flex: 5),
+                              title: "Password",
+                              isActive: _httpAuthSortField == 'password',
+                              isAscending: _httpAuthAscending,
+                              onTap: () => _onSortHttpAuth('password'),
+                              flex: 5,
+                            ),
                             const SizedBox(
-                                width: 48,
-                                child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                              width: 48,
+                              child: Center(
+                                child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1210,23 +1471,27 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                           onCellTap: () =>
                               _showFullTextDialog(c.username ?? 'Credential', "Password: ${c.password ?? ''}"),
                           deleteWidget: IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20),
-                              onPressed: () async {
-                                if (p.protectionSpace != null) {
-                                  await _httpAuthCredentialDatabase?.removeHttpAuthCredential(
-                                      protectionSpace: p.protectionSpace!, credential: c);
-                                }
-                                setState(() {});
-                              }),
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            onPressed: () async {
+                              if (p.protectionSpace != null) {
+                                await _httpAuthCredentialDatabase?.removeHttpAuthCredential(
+                                  protectionSpace: p.protectionSpace!,
+                                  credential: c,
+                                );
+                              }
+                              setState(() {});
+                            },
+                          ),
                         ),
                     ],
                   ),
                 TextButton(
-                    child: const Text("Clear all"),
-                    onPressed: () async {
-                      await _httpAuthCredentialDatabase?.clearAllAuthCredentials();
-                      setState(() {});
-                    })
+                  child: const Text("Clear all"),
+                  onPressed: () async {
+                    await _httpAuthCredentialDatabase?.clearAllAuthCredentials();
+                    setState(() {});
+                  },
+                ),
               ],
             );
           },

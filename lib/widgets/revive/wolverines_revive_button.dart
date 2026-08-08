@@ -1,14 +1,14 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/revive_services/revive_provider.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/wolverines_revive.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/widgets/revive/revive_provider_info_text.dart';
 
 class WolverinesReviveButton extends StatefulWidget {
   final ThemeProvider? themeProvider;
@@ -87,34 +87,7 @@ Future<void> openWolverinesReviveDialog(BuildContext ctx, ThemeProvider themePro
                           ],
                         ),
                       ),
-                      Flexible(
-                        child: RichText(
-                          text: TextSpan(
-                            text:
-                                "The Wolverines is an independent revive faction that believes that revives should be more accessible."
-                                "\n\nCheck out their ",
-                            style: TextStyle(color: context.read<ThemeProvider>().mainText, fontSize: 13),
-                            children: <InlineSpan>[
-                              TextSpan(
-                                text: 'Discord server',
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 13),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    const url = 'https://discord.gg/XmR6TpHXHb';
-                                    if (await canLaunchUrl(Uri.parse(url))) {
-                                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                                    }
-                                  },
-                              ),
-                              TextSpan(
-                                text:
-                                    "\n\nRevives cost ${context.read<SettingsProvider>().reviveWolverinesPrice},"
-                                    " unless on contract. Refusal to pay will result in getting blacklisted.",
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      Flexible(child: ReviveProviderInfoText(provider: ReviveProviders.wolverines)),
                       const SizedBox(height: 15),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
