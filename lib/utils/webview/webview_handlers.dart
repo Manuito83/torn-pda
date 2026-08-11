@@ -493,6 +493,15 @@ class WebviewHandlers {
         return result;
       },
     );
+
+    // GM (localStorage) quota exhausted, debug only
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_gmStorageQuota',
+      callback: (JavaScriptHandlerFunctionData data) {
+        final key = data.args.isNotEmpty ? (data.args[0]?.toString() ?? "") : "";
+        logToUser("GM storage full (browser localStorage), '$key' was not saved", duration: 5);
+      },
+    );
   }
 
   static DateTime? _lastQuotaToast;
