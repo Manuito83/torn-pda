@@ -108,7 +108,10 @@ List<_MVersion> _modernChangelog() => [
         icon: Icons.trending_up,
         title: 'Improved',
         color: Color(0xFFE65100),
-        items: [_MItem('Script storage capacity warnings are now only shown when debug messages are enabled')],
+        items: [
+          _MItem('Script storage capacity warnings are now only shown when debug messages are enabled'),
+          _MItem('Travel live updates: icons now show the direction of travel [bombel]', androidOnly: true),
+        ],
       ),
     ],
   ),
