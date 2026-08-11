@@ -49,10 +49,54 @@ class TravelLiveUpdateAssetsTest {
     }
 
     @Test
-    fun notificationIconDoesNotRenderAsTrackerPlane() {
+    fun abroadOriginResolvesToTheRouteCountryFlag() {
+        assertEquals(
+            "the homeward leg must show the country it departed from",
+            TravelLiveUpdateAssets.flagIconFor("Switzerland"),
+            TravelLiveUpdateAssets.flagIconFor("Abroad", routeCountry = "Switzerland"),
+        )
+        assertEquals(
+            TravelLiveUpdateAssets.flagIconFor("Cayman Islands"),
+            TravelLiveUpdateAssets.flagIconFor("Abroad", routeCountry = "  cayman islands  "),
+        )
+    }
+
+    @Test
+    fun abroadFallsBackToTheGlobeWhenRouteCountryIsUselessOrAbsent() {
+        val globe = TravelLiveUpdateAssets.flagIconFor("Abroad")
+        assertEquals(globe, TravelLiveUpdateAssets.flagIconFor("Abroad", routeCountry = null))
+        assertEquals(globe, TravelLiveUpdateAssets.flagIconFor("Abroad", routeCountry = "Atlantis"))
+        // Torn is never a valid foreign origin, so it must not leak in as a ball_torn origin
+        assertEquals(globe, TravelLiveUpdateAssets.flagIconFor("Abroad", routeCountry = "Torn"))
+    }
+
+    @Test
+    fun routeCountryOnlyOverridesTheGenericAbroadOrigin() {
+        assertEquals(
+            "a named origin must ignore routeCountry",
+            TravelLiveUpdateAssets.flagIconFor("Japan"),
+            TravelLiveUpdateAssets.flagIconFor("Japan", routeCountry = "Mexico"),
+        )
+        assertEquals(
+            TravelLiveUpdateAssets.flagIconFor("Hospital"),
+            TravelLiveUpdateAssets.flagIconFor("Hospital", routeCountry = "Mexico"),
+        )
+    }
+
+    @Test
+    fun notificationIconFlipsForHomewardTrip() {
         assertNotEquals(
+            TravelLiveUpdateAssets.notificationIcon("Mexico"),
+            TravelLiveUpdateAssets.notificationIcon("Torn"),
+        )
+        assertEquals(
+            TravelLiveUpdateAssets.notificationIcon("Torn"),
+            TravelLiveUpdateAssets.notificationIcon("  torn  "),
+        )
+        // Outbound shares the tracker's right-facing plane; only the capsule flips
+        assertEquals(
             TravelLiveUpdateAssets.trackerIconFor(),
-            TravelLiveUpdateAssets.notificationIcon(),
+            TravelLiveUpdateAssets.notificationIcon("Mexico"),
         )
     }
 }

@@ -355,7 +355,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         val origin = payload.originDisplayName
         val earliestReturnTs = payload.earliestReturnTimestamp
 
-        val notificationIcon = TravelLiveUpdateAssets.notificationIcon()
+        val notificationIcon = TravelLiveUpdateAssets.notificationIcon(destination)
         val timeFormat = android.text.format.DateFormat.getTimeFormat(context)
 
         val arrivedAtMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
@@ -382,6 +382,12 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
 
         val builder = androidx.core.app.NotificationCompat.Builder(context, channelId)
             .setSmallIcon(notificationIcon)
+            .setLargeIcon(
+                android.graphics.BitmapFactory.decodeResource(
+                    context.resources,
+                    TravelLiveUpdateAssets.flagIconFor(destination, payload.routeCountry),
+                )
+            )
             .setContentTitle(arrivedTitle)
             .setContentText(arrivedContentText)
             .setContentIntent(tapIntent)
