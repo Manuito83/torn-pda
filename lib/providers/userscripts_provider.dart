@@ -24,6 +24,23 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
 
+/// Reviewable entry for the bulk update dialog
+class BulkUpdateReviewItem {
+  BulkUpdateReviewItem({required this.script, this.remote, this.fetchError, this.newGrants = const []});
+
+  final UserScriptModel script;
+  final UserScriptModel? remote;
+  final String? fetchError;
+
+  // Grants declared by the remote version but not by the installed source
+  final List<String> newGrants;
+
+  bool selected = false;
+
+  // Items with new grants can only be selected after the user has expanded them
+  bool reviewed = false;
+}
+
 class UserScriptsProvider extends ChangeNotifier {
   final _initializationCompleter = Completer<void>();
   Future<void> get onInitialized => _initializationCompleter.future;
@@ -58,6 +75,33 @@ class UserScriptsProvider extends ChangeNotifier {
   set setUserScriptsNotifyUpdates(bool enabled) {
     _userScriptsNotifyUpdates = enabled;
     Prefs().setUserScriptsNotifyUpdates(enabled);
+    notifyListeners();
+  }
+
+  // Bulk update banner
+  Set<String> _bulkUpdateDismissedPairs = {};
+
+  int get pendingUpdatesCount =>
+      _userScriptList.where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable).length;
+
+  List<String> get _pendingUpdatePairs => _userScriptList
+      .where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable)
+      .map((s) => "${s.name}|${s.version}")
+      .toList();
+
+  bool get showBulkUpdateBanner => _pendingUpdatePairs.any((p) => !_bulkUpdateDismissedPairs.contains(p));
+
+  void dismissBulkUpdateBanner() {
+    _bulkUpdateDismissedPairs = _pendingUpdatePairs.toSet();
+    Prefs().setUserScriptsBulkUpdateDismissed(json.encode(_bulkUpdateDismissedPairs.toList()));
+    notifyListeners();
+  }
+
+  // Called on manual update
+  void resetBulkUpdateBannerDismiss() {
+    if (_bulkUpdateDismissedPairs.isEmpty) return;
+    _bulkUpdateDismissedPairs = {};
+    Prefs().setUserScriptsBulkUpdateDismissed("");
     notifyListeners();
   }
 
@@ -633,6 +677,14 @@ class UserScriptsProvider extends ChangeNotifier {
     _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
     _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
     _userScriptsNotifyUpdates = await Prefs().getUserScriptsNotifyUpdates();
+    try {
+      final dismissed = await Prefs().getUserScriptsBulkUpdateDismissed();
+      if (dismissed.isNotEmpty) {
+        _bulkUpdateDismissedPairs = (json.decode(dismissed) as List).cast<String>().toSet();
+      }
+    } catch (_) {
+      _bulkUpdateDismissedPairs = {};
+    }
     _isSafeToSave = false; // Reset safety lock
 
     // Load Global Disable State
@@ -899,6 +951,107 @@ class UserScriptsProvider extends ChangeNotifier {
     }
 
     return updates;
+  }
+
+  /// Fetches the remote source of every script
+  Future<List<BulkUpdateReviewItem>> fetchBulkUpdateItems() async {
+    final candidates = _userScriptList
+        .where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable && s.url != null)
+        .toList();
+
+    final items = <BulkUpdateReviewItem>[];
+    bool statusChanged = false;
+
+    await Future.wait(
+      candidates.map((script) async {
+        try {
+          final result = await UserScriptModel.fromURL(script.url!, isExample: script.isExample);
+          if (!result.success || result.model == null) {
+            items.add(BulkUpdateReviewItem(script: script, fetchError: result.message));
+            return;
+          }
+          final remote = result.model!;
+          if (!UserScriptModel.isNewerVersion(remote.version, script.version)) {
+            script.updateStatus = UserScriptUpdateStatus.upToDate;
+            statusChanged = true;
+            return;
+          }
+          items.add(BulkUpdateReviewItem(script: script, remote: remote, newGrants: _newGrants(script, remote)));
+        } catch (e) {
+          items.add(BulkUpdateReviewItem(script: script, fetchError: "$e"));
+        }
+      }),
+    );
+
+    // Preselect only updates that don't ask for new permissions
+    for (final item in items) {
+      item.selected = item.remote != null && item.newGrants.isEmpty;
+    }
+
+    if (statusChanged) {
+      notifyListeners();
+      await _saveUserScriptsToStorage();
+    }
+
+    items.sort((a, b) => a.script.name.toLowerCase().compareTo(b.script.name.toLowerCase()));
+    return items;
+  }
+
+  List<String> _newGrants(UserScriptModel script, UserScriptModel remote) {
+    List<String> current;
+    try {
+      current = UserScriptModel.parseHeader(script.source)["grants"];
+    } catch (_) {
+      current = script.grants;
+    }
+    bool relevant(String g) => g.trim().isNotEmpty && g.trim() != "none";
+    final currentSet = current.where(relevant).map((g) => g.trim()).toSet();
+    return remote.grants.where(relevant).map((g) => g.trim()).where((g) => !currentSet.contains(g)).toList();
+  }
+
+  /// Applies the selected updates
+  Future<({int updated, int failed})> applyBulkUpdates(List<BulkUpdateReviewItem> items) async {
+    _invalidateGlobalDisable();
+    int updated = 0;
+    int failed = 0;
+
+    for (final item in items) {
+      final remote = item.remote;
+      if (remote == null) {
+        failed++;
+        continue;
+      }
+      try {
+        final script = _userScriptList.firstWhere((s) => s.name == item.script.name);
+        // If the remote renamed the script to a name that already exists, keep the old name
+        final bool nameCollision = _userScriptList.any(
+          (s) => !identical(s, script) && s.name.toLowerCase() == remote.name.toLowerCase(),
+        );
+        script.update(
+          name: nameCollision ? script.name : remote.name,
+          time: remote.time,
+          source: remote.source,
+          manuallyEdited: false,
+          matches: UserScriptModel.tryGetMatches(remote.source),
+          customApiKey: script.customApiKey,
+          customApiKeyCandidate: remote.source.contains("###PDA-APIKEY###"),
+          updateStatus: UserScriptUpdateStatus.upToDate,
+        );
+        script.grants = remote.grants;
+        script.requires = remote.requires;
+        updated++;
+      } catch (e) {
+        failed++;
+        log("Bulk update failed for ${item.script.name}: $e", name: "UserScriptsProvider");
+      }
+    }
+
+    if (updated > 0) {
+      _sort();
+      await _saveUserScriptsToStorage();
+    }
+    notifyListeners();
+    return (updated: updated, failed: failed);
   }
 
   Future<({int added, int failed, int removed})> addDefaultScripts({bool overwriteExisting = false}) async {

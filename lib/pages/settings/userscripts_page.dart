@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
+import 'package:torn_pda/widgets/settings/userscripts_bulk_update_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -159,16 +160,17 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           ),
                           onPressed: _userScriptsProvider.userScriptList.isEmpty
                               ? null
-                              : () => _userScriptsProvider.checkForUpdates().then(
-                                  (i) => BotToast.showText(
+                              : () => _userScriptsProvider.checkForUpdates().then((i) {
+                                  _userScriptsProvider.resetBulkUpdateBannerDismiss();
+                                  BotToast.showText(
                                     text: i > 0
                                         ? "$i script${i == 1 ? " is" : "s are"} ready to update"
                                         : "No updates found",
                                     textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                                     contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
                                     contentPadding: const EdgeInsets.all(10),
-                                  ),
-                                ),
+                                  );
+                                }),
                           child: Icon(Icons.refresh, size: 20, color: _themeProvider.mainText),
                         ),
                       ),
@@ -242,6 +244,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                     ],
                   ),
+                  if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
                   const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -259,6 +262,47 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bulkUpdateBanner() {
+    final int count = _userScriptsProvider.pendingUpdatesCount;
+    final bool light = _themeProvider.currentTheme == AppTheme.light;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+      child: Card(
+        margin: EdgeInsets.zero,
+        color: light ? Colors.green[50] : Colors.green[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.green[light ? 700 : 400]!),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 2, 2, 2),
+          child: Row(
+            children: [
+              Icon(MdiIcons.earthPlus, size: 18, color: Colors.green[light ? 800 : 300]),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "$count script update${count == 1 ? "" : "s"} available",
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+              TextButton(
+                child: const Text("REVIEW", style: TextStyle(fontSize: 12)),
+                onPressed: () {
+                  showDialog(context: context, builder: (_) => const UserScriptsBulkUpdateDialog());
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 16),
+                onPressed: _userScriptsProvider.dismissBulkUpdateBanner,
+              ),
+            ],
           ),
         ),
       ),

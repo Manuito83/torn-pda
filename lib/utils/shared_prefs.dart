@@ -351,6 +351,7 @@ class Prefs {
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
   final String _kUserScriptsNotifyUpdates = "pda_userScriptsNotifyUpdates";
+  final String _kUserScriptsBulkUpdateDismissed = "pda_userScriptsBulkUpdateDismissed";
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
@@ -3556,6 +3557,14 @@ class Prefs {
 
   Future setUserScriptsNotifyUpdates(bool value) async {
     return await PrefsDatabase.setBool(_kUserScriptsNotifyUpdates, value);
+  }
+
+  Future<String> getUserScriptsBulkUpdateDismissed() async {
+    return await PrefsDatabase.getString(_kUserScriptsBulkUpdateDismissed, "");
+  }
+
+  Future setUserScriptsBulkUpdateDismissed(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsBulkUpdateDismissed, value);
   }
 
   Future<String?> getUserScriptsList() async {

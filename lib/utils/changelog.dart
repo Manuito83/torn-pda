@@ -83,6 +83,36 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  const _MVersion(
+    version: 'v3.16.0',
+    date: '20 August 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Userscripts: update all your scripts at once',
+            detail:
+                'When script updates are available, a banner in the user scripts page opens a review screen '
+                'with all of them: pick the ones you want and update them in a single tap, keeping their '
+                'on/off state and custom API keys.\n\n'
+                'Updates that request new permissions are flagged, and you need to expand '
+                'them to review their code before they can be selected.',
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [_MItem('Script storage capacity warnings are now only shown when debug messages are enabled')],
+      ),
+    ],
+  ),
+
   // TODO (App release): confirm the release date before publishing
   const _MVersion(
     version: 'v3.15.0',

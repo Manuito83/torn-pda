@@ -955,7 +955,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             child: ListBody(
               children: [
                 const Text(
-                  "This script declares access to the following userscript APIs. Only continue if you trust the script and understand what these permissions are used for.",
+                  "This script requests the following permissions (@grant). Only continue if you trust the script and understand what these permissions are used for.",
                 ),
                 const SizedBox(height: 12),
                 ...visibleGrants.map(
