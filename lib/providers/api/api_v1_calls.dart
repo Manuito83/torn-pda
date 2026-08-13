@@ -58,8 +58,8 @@ class ApiCallsV1 {
     await apiCaller
         .enqueueApiCall(apiSelection: ApiSelection_v1.appWidget, limit: limit, forcedApiKey: forcedApiKey)
         .then((value) {
-      apiResult = value;
-    });
+          apiResult = value;
+        });
     if (apiResult is! ApiError) {
       try {
         return AppWidgetApiModel.fromJson(apiResult as Map<String, dynamic>);
@@ -122,8 +122,8 @@ class ApiCallsV1 {
     await apiCaller
         .enqueueApiCall(apiSelection: ApiSelection_v1.ownExtended, limit: limit, forcedApiKey: forcedApiKey)
         .then((value) {
-      apiResult = value;
-    });
+          apiResult = value;
+        });
     if (apiResult is! ApiError) {
       try {
         return OwnProfileExtended.fromJson(apiResult as Map<String, dynamic>);
@@ -134,6 +134,39 @@ class ApiCallsV1 {
     } else {
       return apiResult;
     }
+  }
+
+  /// Like [getOwnProfileExtended] plus the events node, so Profile skips its events call
+  static Future<dynamic> getOwnProfileExtendedWithEvents({required int limit}) async {
+    dynamic apiResult;
+    final apiCaller = Get.find<ApiCallerController>();
+    await apiCaller.enqueueApiCall(apiSelection: ApiSelection_v1.ownExtendedWithEvents, limit: limit).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is ApiError) return apiResult;
+
+    try {
+      return parseOwnProfileExtendedWithEvents(apiResult as Map<String, dynamic>);
+    } catch (e, trace) {
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+      return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
+    }
+  }
+
+  static ProfileExtendedResult parseOwnProfileExtendedWithEvents(Map<String, dynamic> map) {
+    final dynamic eventsNode = map["events"];
+    final Map<String, dynamic> profileMap = Map<String, dynamic>.from(map)..remove("events");
+    final profile = OwnProfileExtended.fromJson(profileMap);
+
+    List<Event>? events;
+    if (eventsNode is Map) {
+      events = <Event>[];
+      for (final eventData in eventsNode.values) {
+        events.add(Event.fromJson(Map<String, dynamic>.from(eventData as Map)));
+      }
+    }
+
+    return ProfileExtendedResult(profile, events);
   }
 
   static Future<dynamic> getEvents({required int limit, int? from}) async {
@@ -307,9 +340,9 @@ class ApiCallsV1 {
   static Future<dynamic> getBarsAndPlayerStatusBackground({required String? forcedApiKey}) async {
     dynamic apiResult;
     final apiCaller = ApiCallerController();
-    await apiCaller
-        .enqueueApiCall(apiSelection: ApiSelection_v1.barsAndPlayerStatus, forcedApiKey: forcedApiKey)
-        .then((value) {
+    await apiCaller.enqueueApiCall(apiSelection: ApiSelection_v1.barsAndPlayerStatus, forcedApiKey: forcedApiKey).then((
+      value,
+    ) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -530,4 +563,10 @@ class ApiCallsV1 {
       return apiResult;
     }
   }
+}
+
+class ProfileExtendedResult {
+  final OwnProfileExtended profile;
+  final List<Event>? events;
+  ProfileExtendedResult(this.profile, this.events);
 }

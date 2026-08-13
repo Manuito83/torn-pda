@@ -522,6 +522,10 @@ class Prefs {
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
   final String _kTornStatsChartShowBoth = "pda_tornStatsChartShowBoth";
 
+  // Torn education catalog cache (Profile)
+  final String _kTornEducationCatalogSave = "pda_tornEducationCatalogSave";
+  final String _kTornEducationCatalogTimestamp = "pda_tornEducationCatalogTimestamp";
+
   // Appwidget
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
   final String _kAppwidgetRemoveShortcutsOneRowLayout = "pda_appwidgetRemoveShortcutsOneRowLayout";
@@ -3538,6 +3542,22 @@ class Prefs {
 
   Future setTornStatsChartShowBoth(bool value) async {
     return await PrefsDatabase.setBool(_kTornStatsChartShowBoth, value);
+  }
+
+  Future<String> getTornEducationCatalogSave() async {
+    return await PrefsDatabase.getString(_kTornEducationCatalogSave, "");
+  }
+
+  Future setTornEducationCatalogSave(String value) async {
+    return await PrefsDatabase.setString(_kTornEducationCatalogSave, value);
+  }
+
+  Future<int> getTornEducationCatalogTimestamp() async {
+    return await PrefsDatabase.getInt(_kTornEducationCatalogTimestamp, 0);
+  }
+
+  Future setTornEducationCatalogTimestamp(int value) async {
+    return await PrefsDatabase.setInt(_kTornEducationCatalogTimestamp, value);
   }
 
   /// -----------------------------

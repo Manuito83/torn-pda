@@ -317,6 +317,11 @@ class ApiCallerController extends GetxController {
       case ApiSelection_v1.ownExtended:
         url += 'user/?selections=profile,bars,networth,cooldowns,notifications,travel,icons,money,education,messages';
         break;
+      case ApiSelection_v1.ownExtendedWithEvents:
+        url +=
+            'user/?selections=profile,bars,networth,cooldowns,notifications,travel,icons,money,education,messages,'
+            'events';
+        break;
       case ApiSelection_v1.events:
         url += 'user/?selections=events';
         break;

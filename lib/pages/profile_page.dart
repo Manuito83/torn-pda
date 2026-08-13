@@ -12,14 +12,12 @@ import 'package:android_intent_plus/android_intent.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -35,21 +33,16 @@ import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
-import 'package:torn_pda/models/company/employees_model.dart';
 import 'package:torn_pda/models/education_model.dart';
-import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/models/chaining/bars_model.dart' as bars_model;
 import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
-import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/api/api_v2_calls.dart';
-import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -141,23 +134,20 @@ class ProfilePage extends StatefulWidget {
 }
 
 class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
-  Future? _apiFetched;
-  bool _apiGoodData = false;
-  ApiError? _apiError = ApiError();
-  int _apiRetries = 0;
+  // API state in ProfileApiCallsController, exposed getters are here
+  final ProfileApiCallsController _profileApi = Get.find<ProfileApiCallsController>();
+  Future? get _apiFetched => _profileApi.apiFetched;
+  bool get _apiGoodData => _profileApi.apiGoodData;
+  ApiError? get _apiError => _profileApi.apiError;
+  OwnProfileExtended? get _user => _profileApi.user;
+  List<Event> get _events => _profileApi.events;
+  DateTime get _serverTime => _profileApi.serverTime;
 
-  OwnProfileExtended? _user;
-  List<Event> _events = <Event>[];
-
-  late DateTime _serverTime;
-
-  Timer? _tickerCallApi;
   late Stream _browserHasClosed;
   late StreamSubscription _browserHasClosedSubscription;
 
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
-  final _chainController = Get.find<ChainStatusController>();
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
   final UserController _u = Get.find<UserController>();
@@ -248,15 +238,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late bool _alarmSound;
   late bool _alarmVibration;
 
-  bool _miscApiFetchedOnce = false;
-  OwnProfileMisc? _miscModel;
-  TornEducationModel? _tornEducationModel;
-  UserItemMarketResponse? _marketItemsV2;
-  UserVirus? _virusModel;
-
-  // API call rate limiting
-  DateTime _lastFetchApiTime = DateTime.now();
-  DateTime _lastMiscUpdateTime = DateTime.now();
+  bool get _miscApiFetchedOnce => _profileApi.miscApiFetchedOnce;
+  OwnProfileMisc? get _miscModel => _profileApi.miscModel;
+  TornEducationModel? get _tornEducationModel => _profileApi.tornEducationModel;
+  UserItemMarketResponse? get _marketItemsV2 => _profileApi.marketItemsV2;
+  UserVirus? get _virusModel => _profileApi.virusModel;
 
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
@@ -266,23 +252,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   // ######## //
   /// OC V2 ///
   // ######## //
-  UserOrganizedCrimeResponse? _oc2Model;
+  UserOrganizedCrimeResponse? get _oc2Model => _profileApi.oc2Model;
 
   // ######## //
   /// OC V1 ///
   // ######## //
   // We will first try to get the full crimes if we have AA access, in which case
   // we consider it as Complex. Otherwise, with events, it will be Simple.
-  DateTime _ocTime = DateTime.now();
+  DateTime get _ocTime => _profileApi.ocTime;
   // Simple OC
-  bool _ocSimpleExists = false;
-  String _ocSimpleStringFinal = "";
-  bool _ocSimpleReady = false;
+  bool get _ocSimpleExists => _profileApi.ocSimpleExists;
+  String get _ocSimpleStringFinal => _profileApi.ocSimpleStringFinal;
+  bool get _ocSimpleReady => _profileApi.ocSimpleReady;
   // Complex OC
-  String _ocFinalStringLong = "";
-  String _ocFinalStringShort = "";
-  int _ocComplexPeopleNotReady = 0;
-  bool _ocComplexReady = false;
+  String get _ocFinalStringLong => _profileApi.ocFinalStringLong;
+  String get _ocFinalStringShort => _profileApi.ocFinalStringShort;
+  int get _ocComplexPeopleNotReady => _profileApi.ocComplexPeopleNotReady;
+  bool get _ocComplexReady => _profileApi.ocComplexReady;
   // ## END OC ## //
 
   bool _warnAboutChains = false;
@@ -292,7 +278,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _dedicatedTravelCard = false;
   bool _hideProfileFab = false;
 
-  late ChainModel _chainModel;
+  ChainModel get _chainModel => _profileApi.chainModel;
 
   final _eventsExpController = ExpandableController();
   final _messagesExpController = ExpandableController();
@@ -325,14 +311,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _sharedEffTotal = "";
   var _sharedJobPoints = "";
 
-  StatsChartTornStats? _statsChartModel;
-  bool _statsChartIsCached = false;
-  String? _statsChartError;
-  Future? _statsChartDataFetched;
+  StatsChartTornStats? get _statsChartModel => _profileApi.statsChartModel;
+  bool get _statsChartIsCached => _profileApi.statsChartIsCached;
+  String? get _statsChartError => _profileApi.statsChartError;
+  Future? get _statsChartDataFetched => _profileApi.statsChartDataFetched;
 
-  RankedWar? _factionRankedWar;
+  RankedWar? get _factionRankedWar => _profileApi.factionRankedWar;
 
-  int? _companyAddiction;
+  int? get _companyAddiction => _profileApi.companyAddiction;
 
   // Showcases
   final GlobalKey _showcaseProfileBars = GlobalKey();
@@ -346,19 +332,29 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _retrievePendingNotifications();
 
-    _loadPreferences().whenComplete(() {
-      _apiFetched = _fetchApi();
-    });
+    _profileApi.activate(
+      settingsProvider: context.read<SettingsProvider>(),
+      webViewProvider: context.read<WebViewProvider>(),
+      hooks: ProfileApiPageHooks(
+        onStateUpdated: () {
+          if (mounted) setState(() {});
+        },
+        onUserFetched: _onUserFetched,
+        onMiscFetched: (misc, forced) => _checkProperties(misc, forced),
+        onFetchCycleEnd: _retrievePendingNotifications,
+      ),
+    );
 
-    // Initialize periodic API refresh
-    _resetApiTimer();
+    _loadPreferences().whenComplete(() {
+      _profileApi.startInitialFetch(messagesShowNumber: _messagesShowNumber!, eventsShowNumber: _eventsShowNumber!);
+    });
 
     // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
     // So that we can 1) refresh the API, 2) start the API timer again
     _browserHasClosed = context.read<WebViewProvider>().browserHasClosedStream.stream;
     _browserHasClosedSubscription = _browserHasClosed.listen((event) {
       log("Browser has closed in Profile, resuming API calls!");
-      _resetApiTimer(initCall: true);
+      _profileApi.resetApiTimer(initCall: true, trigger: "browser-closed");
     });
 
     analytics?.logScreenView(screenName: 'profile');
@@ -367,45 +363,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     routeName = "profile`";
   }
 
-  /// Restarts the API timer with 1-second checks
-  /// [initCall] forces an immediate refresh (e.g., user pull-to-refresh)
-  void _resetApiTimer({bool initCall = false}) {
-    if (initCall && (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive)) {
-      _apiRefreshPeriodic(forceMisc: false);
+  void _onUserFetched(OwnProfileExtended user) {
+    // If max values have decreased or were never initialized
+    if (_customEnergyTrigger! > user.energy!.maximum! || _customEnergyTrigger == 0) {
+      _customEnergyTrigger = user.energy!.maximum;
+      Prefs().setEnergyNotificationValue(_customEnergyTrigger!);
+    }
+    if (_customNerveTrigger! > user.nerve!.maximum! || _customNerveTrigger == 0) {
+      _customNerveTrigger = user.nerve!.maximum;
+      Prefs().setNerveNotificationValue(_customNerveTrigger!);
     }
 
-    _tickerCallApi?.cancel();
-    _tickerCallApi = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      if (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive) {
-        _apiRefreshPeriodic();
-      }
-    });
-  }
-
-  void _apiRefreshPeriodic({bool forceMisc = false}) {
-    // Fast calls: only if data is older than 20 seconds
-    final secondsSinceLastFetch = DateTime.now().difference(_lastFetchApiTime).inSeconds;
-    if (secondsSinceLastFetch >= 20) {
-      _fetchApi();
-      _refreshEvents();
-      _lastFetchApiTime = DateTime.now();
-    }
-
-    // Misc calls: only if data is older than 60 seconds (or forced)
-    final secondsSinceLastMisc = DateTime.now().difference(_lastMiscUpdateTime).inSeconds;
-    if (secondsSinceLastMisc >= 60 || forceMisc) {
-      _getMiscCardInfo(forcedUpdate: forceMisc);
-      _getStatsChart();
-      _getRankedWars();
-      _getCompanyAddiction();
-      _lastMiscUpdateTime = DateTime.now();
-    }
+    _checkIfNotificationsAreCurrent();
   }
 
   @override
   void dispose() {
-    _chainController.statusUpdateSource = "provider";
-    _tickerCallApi?.cancel();
+    _profileApi.deactivate();
     _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -416,9 +390,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (Platform.isWindows) return;
 
     if (state == AppLifecycleState.resumed) {
-      _resetApiTimer(initCall: false);
+      _profileApi.resetApiTimer(initCall: false, trigger: "lifecycle-resume");
     } else if (state == AppLifecycleState.paused) {
-      _tickerCallApi?.cancel();
+      _profileApi.pauseTicker();
     }
   }
 
@@ -449,7 +423,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   if (_apiGoodData) {
                     return RefreshIndicator(
                       onRefresh: () async {
-                        _resetApiTimer(initCall: true);
+                        _profileApi.resetApiTimer(initCall: true, trigger: "pull-refresh");
                         await Future.delayed(const Duration(seconds: 1));
                       },
                       child: SingleChildScrollView(
@@ -465,7 +439,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   } else {
                     return RefreshIndicator(
                       onRefresh: () async {
-                        _fetchApi();
+                        _profileApi.fetchApi(trigger: "pull-refresh-error");
                         await Future.delayed(const Duration(seconds: 1));
                       },
                       child: SingleChildScrollView(
@@ -903,18 +877,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _userSectionOrder = sectionList;
             });
 
+            _profileApi.setShowNumbers(messagesNumber, eventsNumber);
+
             // If we reactivated faction crimes, they might take up to a minute
             // to appear unless we call them directly
             if (_settingsProvider!.oCrimesEnabled) {
               if (_settingsProvider!.playerInOCv2) {
-                _getFactionCrimesV2();
+                _profileApi.getFactionCrimesV2(trigger: "options-return");
               } else {
-                _getFactionCrimesV1();
+                _profileApi.getFactionCrimesV1(trigger: "options-return");
               }
             }
 
             if (_settingsProvider!.tornStatsChartDateTime == 0) {
-              _getStatsChart();
+              _profileApi.getStatsChart(trigger: "options-return");
             }
           },
         ),
@@ -3235,12 +3211,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int loopCount = 1;
     int? maxCount;
+    bool showingAllAvailable = false;
 
     if (_events.length > maxToShow!) {
       maxCount = maxToShow;
     } else {
       maxCount = _events.length;
       maxToShow = _events.length;
+      showingAllAvailable = true;
     }
 
     for (final Event e in _events) {
@@ -3296,7 +3274,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         padding: const EdgeInsets.only(top: 10),
         child: Center(
           child: Text(
-            "(Showing last $maxToShow events)",
+            showingAllAvailable
+                ? "(Showing all $maxToShow events from the last month)"
+                : "(Showing last $maxToShow events)",
             style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
@@ -3907,7 +3887,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                             ? TornStatsChartType.Line
                                             : TornStatsChartType.Pie,
                                         userController: _u,
-                                        callbackStatsUpdate: _getStatsChart,
+                                        callbackStatsUpdate: _profileApi.getStatsChart,
                                         isCachedData: _statsChartIsCached,
                                       ),
                                     ),
@@ -4205,7 +4185,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                               ? TornStatsChartType.Line
                                               : TornStatsChartType.Pie,
                                           userController: _u,
-                                          callbackStatsUpdate: _getStatsChart,
+                                          callbackStatsUpdate: _profileApi.getStatsChart,
                                           isCachedData: _statsChartIsCached,
                                         ),
                                       ),
@@ -5311,655 +5291,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _fetchApi() async {
-    if (!mounted) return;
-
-    // Try to get only as many messages as strictly necessary, as per Torn recommendations
-    var limit = 3;
-    if (_messagesShowNumber! > limit) limit = _messagesShowNumber!;
-    if (_eventsShowNumber! > limit) limit = _eventsShowNumber!;
-
-    final apiResponse = await ApiCallsV1.getOwnProfileExtended(limit: limit);
-
-    // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
-    // Otherwise, call the API
-    dynamic chain;
-
-    if (_chainController.chainModel is ChainModel) {
-      chain = _chainController.chainModel;
-    } else {
-      chain = await ApiCallsV1.getChainStatus();
-    }
-
-    if (mounted) {
-      setState(() {
-        if (apiResponse is OwnProfileExtended) {
-          _apiRetries = 0;
-          _user = apiResponse;
-          _serverTime = DateTime.fromMillisecondsSinceEpoch(_user!.serverTime! * 1000);
-          _apiGoodData = true;
-
-          // If max values have decreased or were never initialized
-          if (_customEnergyTrigger! > _user!.energy!.maximum! || _customEnergyTrigger == 0) {
-            _customEnergyTrigger = _user!.energy!.maximum;
-            Prefs().setEnergyNotificationValue(_customEnergyTrigger!);
-          }
-          if (_customNerveTrigger! > _user!.nerve!.maximum! || _customNerveTrigger == 0) {
-            _customNerveTrigger = _user!.nerve!.maximum;
-            Prefs().setNerveNotificationValue(_customNerveTrigger!);
-          }
-
-          if (chain is ChainModel) {
-            _chainModel = chain;
-          } else {
-            // Default to empty chain, with all parameters at 0
-            _chainModel = ChainModel();
-            _chainModel.chain = ChainDetails();
-          }
-
-          if (apiResponse.status != null && apiResponse.travel != null) {
-            // Signal that we are updating from the profile page
-            _chainController.statusUpdateSource = "profile";
-
-            // We need to adapt Status and Travel models to the BarsModel
-            bars_model.Status chainStatusModel = bars_model.Status()
-              ..color = apiResponse.status!.color
-              ..description = apiResponse.status!.description
-              ..details = apiResponse.status!.details
-              ..state = apiResponse.status!.state
-              ..until = apiResponse.status!.until;
-
-            bars_model.Travel chainTravelModel = bars_model.Travel()
-              ..departed = apiResponse.travel!.departed
-              ..destination = apiResponse.travel!.destination
-              ..departed = apiResponse.travel!.departed
-              ..timeLeft = apiResponse.travel!.timeLeft
-              ..timestamp = apiResponse.travel!.timestamp;
-
-            // Map icons from the profile response so Racing LA can detect
-            // race state immediately (icon17 = racing/waiting, icon18 = finished)
-            bars_model.Basicicons? chainBasicicons;
-            if (apiResponse.icons != null) {
-              chainBasicicons = bars_model.Basicicons(
-                icon17: apiResponse.icons!.icon17,
-                icon18: apiResponse.icons!.icon18,
-              );
-            }
-
-            bars_model.BarsStatusCooldownsModel externalStatusModel = bars_model.BarsStatusCooldownsModel()
-              ..status = chainStatusModel
-              ..travel = chainTravelModel
-              ..basicicons = chainBasicicons;
-
-            _chainController.getOrSetStatus(externalStatusModel: externalStatusModel);
-          }
-
-          if (apiResponse.faction?.factionId != null && apiResponse.faction!.factionId! > 0) {
-            _u.factionId = apiResponse.faction!.factionId!;
-          }
-
-          if (apiResponse.job?.companyId != null && apiResponse.job!.companyId! > 0) {
-            _u.companyId = apiResponse.job!.companyId!;
-          }
-
-          _checkIfNotificationsAreCurrent();
-        } else {
-          if (_apiGoodData && _apiRetries < 8) {
-            _apiRetries++;
-          } else {
-            _apiGoodData = false;
-            _apiError = apiResponse as ApiError?;
-            _apiRetries = 0;
-          }
-        }
-      });
-    }
-
-    // We get other kind of information separately once per minute and onResumed
-    // As part of MiscCardInfo()
-    //  - (sync) Education, money and skills with miscInfo call
-    //  - (async) OC Crimes (both types) with AA call or from events
-    //  - (async) Bazaar
-    //  - (async) RankedWars
-    if (_apiGoodData && !_miscApiFetchedOnce) {
-      await _getMiscCardInfo();
-      _statsChartDataFetched = _getStatsChart();
-      _getRankedWars();
-      _getCompanyAddiction();
-      _refreshEvents();
-    }
-
-    _retrievePendingNotifications();
-  }
-
-  Future _getMiscCardInfo({bool forcedUpdate = false}) async {
-    if (_user == null) return;
-
-    try {
-      dynamic miscApiResponse;
-
-      // 1.- Try first with API V2
-      miscApiResponse = await ApiCallsV2.getUserProfileMisc_v2();
-
-      if (miscApiResponse is! OwnProfileMisc) {
-        return;
-      }
-
-      // Get Education
-      var education = await ApiCallsV1.getEducation();
-      if (education != null) {
-        _tornEducationModel = education;
-      }
-
-      // Get Market Items V2
-      var marketItems = await _getUserMarketItems();
-      if (marketItems != null) {
-        _marketItemsV2 = marketItems;
-      }
-
-      // Get Virus (separate v2 endpoint; null when not currently programming a virus)
-      final virus = await ApiCallsV2.getUserVirus_v2();
-      if (virus is UserVirus) {
-        _virusModel = virus;
-      } else if (virus == null) {
-        _virusModel = null;
-      }
-
-      // Get this async
-      if (_settingsProvider!.oCrimesEnabled) {
-        if (_settingsProvider!.playerInOCv2) {
-          _getFactionCrimesV2();
-        } else {
-          _getFactionCrimesV1();
-        }
-      }
-
-      _checkProperties(miscApiResponse, forcedUpdate);
-
-      setState(() {
-        _miscModel = miscApiResponse;
-        _miscApiFetchedOnce = true;
-      });
-    } catch (e) {
-      // If something fails, we simple don't show the MISC section
-    }
-  }
-
-  Future<dynamic> _getUserMarketItems() async {
-    try {
-      return await ApiCallsV2.getUserMarketItemsApi_v2();
-    } catch (e, t) {
-      log("Issue getting market items: $e, $t");
-    }
-  }
-
-  Future _getStatsChart() async {
-    Future<void> loadFromCacheOrError(String errorMsg, {bool forceShow = false}) async {
-      final savedChart = await Prefs().getTornStatsChartSave();
-      if (savedChart.isNotEmpty) {
-        setState(() {
-          _statsChartModel = statsChartTornStatsFromJson(savedChart);
-          _statsChartIsCached = true;
-          _statsChartError = null;
-        });
-      } else {
-        setState(() {
-          String errorStr = errorMsg;
-          if (!forceShow && errorStr.length > 20) {
-            errorStr = '${errorStr.substring(0, 20)}...';
-          }
-          _statsChartError = "Torn Stats chart error: $errorStr";
-        });
-      }
-    }
-
-    try {
-      if (!_settingsProvider!.tornStatsChartEnabled) return;
-
-      final DateTime lastFetched = DateTime.fromMillisecondsSinceEpoch(_settingsProvider!.tornStatsChartDateTime);
-
-      if (DateTime.now().difference(lastFetched).inHours < 26) {
-        final savedChart = await Prefs().getTornStatsChartSave();
-        if (savedChart.isNotEmpty) {
-          setState(() {
-            _statsChartModel = statsChartTornStatsFromJson(savedChart);
-            _statsChartIsCached = true;
-            _statsChartError = null;
-          });
-          return;
-        }
-      }
-
-      final String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/battlestats/graph';
-      final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 5));
-      if (resp.statusCode == 200) {
-        final StatsChartTornStats statsJson = statsChartTornStatsFromJson(resp.body);
-        if (statsJson.status == true && statsJson.data != null && statsJson.data!.isNotEmpty) {
-          setState(() {
-            _statsChartModel = statsJson;
-            _statsChartIsCached = false;
-            _statsChartError = null;
-          });
-
-          Prefs().setTornStatsChartSave(resp.body);
-          _settingsProvider!.setTornStatsChartDateTime = DateTime.now().millisecondsSinceEpoch;
-        } else {
-          final errorMsg = formatTornStatsErrorMessage(statsJson.message);
-          await loadFromCacheOrError(errorMsg, forceShow: errorMsg.toLowerCase().contains('user not found'));
-        }
-      } else {
-        String errorMsg;
-        bool forceShow = false;
-        if (resp.statusCode == 404 && resp.body.contains("User not found")) {
-          errorMsg = formatTornStatsErrorMessage('User not found.');
-          forceShow = true;
-        } else {
-          errorMsg = formatTornStatsHttpError(resp.statusCode);
-        }
-        await loadFromCacheOrError(errorMsg, forceShow: forceShow);
-      }
-    } catch (e) {
-      if (e is TimeoutException) {
-        await loadFromCacheOrError("connection timed out");
-      } else {
-        await loadFromCacheOrError(e.toString());
-      }
-    }
-  }
-
-  Future _getRankedWars() async {
-    if (_user == null) return;
-
-    // DEBUG #####
-    /*
-    // Create a fake ranked war to check time parameters
-    if (kDebugMode) {
-      RankedWar debugWar = RankedWar(
-        factions: {
-          _user!.faction!.factionId.toString(): WarFaction()
-            ..chain = 0
-            ..name = _user!.faction!.factionName
-            ..score = 0,
-          _user!.faction!.factionId.toString(): WarFaction()
-            ..chain = 0
-            ..name = _user!.faction!.factionName
-            ..score = 0,
-        },
-        war: War(
-          start: (DateTime(2024, 4, 2, 20, 0).millisecondsSinceEpoch / 1000).round(),
-          end: 0,
-          target: 2000,
-          winner: 0,
-        ),
-      );
-      setState(() {
-        _factionRankedWar = debugWar;
-      });
-      return;
-    }
-    */
-    // DEBUG ENDS #####
-
-    try {
-      if (_user!.faction!.factionId == 0) return;
-      if (!_settingsProvider!.rankedWarsInProfile) return;
-
-      final dynamic apiResponse = await ApiCallsV1.getRankedWars();
-      if (apiResponse is RankedWarsModel) {
-        for (final warMap in apiResponse.rankedwars!.entries) {
-          if (warMap.value.factions!.keys.contains(_user!.faction!.factionId.toString())) {
-            final int ts = DateTime.now().millisecondsSinceEpoch;
-            final bool warInFuture = warMap.value.war!.start! * 1000 > ts;
-            final bool warActive = warMap.value.war!.start! < ts && warMap.value.war!.end == 0;
-            if (warInFuture || warActive) {
-              setState(() {
-                _factionRankedWar = warMap.value;
-              });
-            }
-            return;
-          }
-        }
-      }
-    } catch (e) {
-      // Returns null
-    }
-    _factionRankedWar = null;
-    return;
-  }
-
-  Future _getCompanyAddiction() async {
-    if (_user == null) return;
-
-    try {
-      if (_user!.job!.companyId == 0) return;
-
-      final nextFetchTime = await Prefs().getJobAddictionNextCallTime();
-
-      final int currentTimeMillis = DateTime.now().toUtc().millisecondsSinceEpoch;
-      final bool shouldCallApi = currentTimeMillis >= nextFetchTime;
-
-      // If we should call the API, fetch the data and update SharedPreferences
-      if (shouldCallApi || nextFetchTime == 0) {
-        log("Fetching job addiction!");
-        final dynamic apiResponse = await ApiCallsV1.getCompanyEmployees();
-        if (apiResponse is CompanyEmployees) {
-          for (final eMap in apiResponse.companyEmployees!.entries) {
-            // Loop until we find the user
-            if (eMap.key != _user!.playerId.toString()) continue;
-
-            // Calculate the next allowed API call time
-            final DateTime now = DateTime.now().toUtc();
-            DateTime nextAllowedTime = DateTime.utc(now.year, now.month, now.day, 18, 30);
-            if (now.isAfter(nextAllowedTime)) {
-              nextAllowedTime = nextAllowedTime.add(const Duration(days: 1));
-            }
-            final int nextAllowedTimeMillis = nextAllowedTime.millisecondsSinceEpoch;
-
-            Prefs().setJobAddictionNextCallTime(nextAllowedTimeMillis);
-            Prefs().setJobAdditionValue(eMap.value.effectiveness!.addiction ?? 0);
-            setState(() {
-              _companyAddiction = eMap.value.effectiveness!.addiction ?? 0;
-            });
-            return;
-          }
-        }
-      } else {
-        final int savedAddition = await Prefs().getJobAddictionValue();
-        setState(() {
-          _companyAddiction = savedAddition;
-        });
-      }
-    } catch (e) {
-      _companyAddiction = null;
-      return;
-    }
-  }
-
-  /// To be restrictive with API calls, we will only perform a full events update if > 30 minutes from last
-  /// In between, we will only update new events from X timestamp
-  Future _refreshEvents() async {
-    try {
-      // Get the saved events from shared prefs
-      List<Event> eventsSave = <Event>[];
-      List<String> save = await Prefs().getEventsSave();
-      for (final s in save) {
-        eventsSave.add(eventFromJson(s));
-      }
-
-      // Calculate time difference from last time we obtained events
-      final DateTime lastEventsTs = DateTime.fromMillisecondsSinceEpoch(await Prefs().getEventsLastRetrieved());
-      int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
-
-      // ### DEBUG ###
-      /*
-      if (kDebugMode) {
-        minutesDiff = 30;
-      } else if (minutesDiff < 0) {
-        minutesDiff = 30;
-      }
-      */
-      // #############
-
-      // If less than 30 minutes have elapse, we'll just query for new events and fill the list
-      if (minutesDiff < 30 && eventsSave.isNotEmpty) {
-        // Get the last saved event, find out what's the TS
-        if (eventsSave.isEmpty) return;
-        int? lastTs = eventsSave[0].timestamp;
-
-        // Get new events after that and add them
-        final dynamic newEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: lastTs);
-        if (newEventsResponse is List<Event>) {
-          if (newEventsResponse.isNotEmpty) {
-            for (int i = 0; i < newEventsResponse.length; i++) {
-              bool repeated = false;
-              for (final Event inSave in eventsSave) {
-                if (newEventsResponse[i].event == inSave.event && newEventsResponse[i].timestamp == inSave.timestamp) {
-                  repeated = true;
-                  break;
-                }
-              }
-              // Avoid events repetition (even adding 1 ms to lastTs didn't help)
-              if (!repeated) {
-                eventsSave.insert(i, newEventsResponse[i]);
-              }
-            }
-
-            List<String> eventsListToSave = [];
-            for (final Event e in eventsSave) {
-              eventsListToSave.add(eventToJson(e));
-            }
-            Prefs().setEventsSave(eventsListToSave);
-          }
-          // Save last retrieved date as now
-          Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
-        }
-
-        // Refresh events (even if no additions have been made, as we might be starting
-        // the app with [_events] with a null value)
-        if (mounted) {
-          setState(() {
-            _events = List<Event>.from(eventsSave);
-          });
-        }
-        return;
-      }
-
-      // If more than 30 minutes elapsed, we get the whole pack
-      // Calculate one month ago
-      log("Events save elapse more than 30 minutes, getting all events");
-      final int monthAgo = ((DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
-      final dynamic allEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: monthAgo);
-      if (allEventsResponse is List<Event>) {
-        // Save events and last retrieved timestamp
-        List<String> eventsListToSave = [];
-        for (final Event e in allEventsResponse) {
-          eventsListToSave.add(eventToJson(e));
-        }
-        Prefs().setEventsSave(eventsListToSave);
-        Prefs().setEventsLastRetrieved(DateTime.now().millisecondsSinceEpoch);
-
-        // Refresh events
-        if (mounted) {
-          setState(() {
-            _events = List<Event>.from(allEventsResponse);
-          });
-        }
-      } else {
-        // In case of error, return what's saved
-        if (mounted) {
-          setState(() {
-            _events = List<Event>.from(eventsSave);
-          });
-        }
-      }
-    } catch (e, trace) {
-      logToUser("PDA Error at Profile Events: $e, $trace");
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
-    }
-  }
-
-  Future<void> _getFactionCrimesV1() async {
-    // If we are in OCv2, we don't need to get v1 crimes
-    if (_settingsProvider!.playerInOCv2) return;
-
-    try {
-      if (_user == null) return;
-      final factionCrimes = await ApiCallsV1.getFactionCrimes(playerId: _user!.playerId.toString());
-
-      // OPTION 1 - Check if we have faction access
-      if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
-        String? complexString = "";
-        DateTime complexTime = DateTime.now();
-
-        // Get main crime and time
-        factionCrimes.crimes!.forEach((key, crime) {
-          if (crime.initiated == 0 && complexString!.isEmpty) {
-            var participantsNotReady = 0;
-            for (final participant in crime.participants!) {
-              // There is only one participant, but in another map
-              participant.forEach((key, values) {
-                if (values?.description != "Okay") {
-                  participantsNotReady++;
-                }
-              });
-
-              if (participant.containsKey(UserHelper.playerId.toString())) {
-                complexString = crime.crimeName;
-                complexTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady! * 1000);
-              }
-            }
-
-            // If found our crime, assign final number of participants not ready
-            if (complexString!.isNotEmpty) _ocComplexPeopleNotReady = participantsNotReady;
-          }
-        });
-
-        // Calculate time and final string for widgets
-        if (complexString!.isNotEmpty) {
-          bool complexReady = false;
-          String complexTimeString = "";
-          if (complexTime.isAfter(DateTime.now())) {
-            final formattedTime = TimeFormatter(
-              inputTime: complexTime,
-              timeFormatSetting: _settingsProvider!.currentTimeFormat,
-              timeZoneSetting: _settingsProvider!.currentTimeZone,
-            ).formatHourWithDaysElapsed();
-            complexTimeString =
-                "OC will be ready @ $formattedTime${_timeFormatted(complexTime, previous: formattedTime)}";
-          } else {
-            complexReady = true;
-            if (_ocComplexPeopleNotReady == 0) {
-              complexTimeString = "OC and all participants are ready!";
-            } else if (_ocComplexPeopleNotReady == 1) {
-              complexTimeString = "OC is ready, but 1 participant is not!";
-            } else {
-              complexTimeString = "OC is ready, but $_ocComplexPeopleNotReady participants are not!";
-            }
-          }
-
-          if (!mounted) return;
-
-          setState(() {
-            _ocFinalStringLong = "$complexString $complexTimeString";
-            _ocFinalStringShort = complexTimeString;
-            _ocComplexReady = complexReady;
-            _ocTime = complexTime;
-          });
-
-          return;
-        }
-      }
-
-      // OPTION 2 - Could indicate that we have no AA access, so we are looking for events!
-      if (factionCrimes == null || factionCrimes is ApiError || _ocFinalStringLong.isEmpty) {
-        bool simpleExists = false;
-        DateTime simpleTime = DateTime.now();
-        String simpleString = "";
-        bool simpleReady = false;
-
-        void calculateSimpleReadiness() {
-          if (simpleTime.isBefore(DateTime.now())) {
-            simpleReady = true;
-            simpleString = "A faction organized crime might be ready!";
-          } else {
-            final formattedTime = TimeFormatter(
-              inputTime: simpleTime,
-              timeFormatSetting: _settingsProvider!.currentTimeFormat,
-              timeZoneSetting: _settingsProvider!.currentTimeZone,
-            ).formatHourWithDaysElapsed();
-            simpleString =
-                "A faction organized crime will be ready @ "
-                "$formattedTime${_timeFormatted(simpleTime, previous: formattedTime)}";
-          }
-        }
-
-        // Try to find quick crimes in events
-        bool foundExpired = false;
-        bool foundProgress = false;
-        bool error = false;
-
-        // Try to find our crime by reviewing the last 100 events. The first one we
-        // can find is the one that counts
-        for (final Event e in _events) {
-          if (!foundExpired && !foundProgress && !error) {
-            if (e.event!.contains("You and your team") ||
-                (e.event!.contains("canceled the") && e.event!.contains("that you were selected for"))) {
-              foundExpired = true;
-            } else if (e.event!.contains("You have been selected")) {
-              final RegExp strRaw = RegExp("([0-9]+) hours");
-              final matches = strRaw.allMatches(e.event!);
-              if (matches.isNotEmpty) {
-                for (final match in matches) {
-                  final hoursString = match.group(1)!;
-                  try {
-                    final hours = int.parse(hoursString);
-                    simpleTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp! * 1000).add(Duration(hours: hours));
-                    foundProgress = true;
-                    simpleExists = true;
-                    _settingsProvider!.changeOCrimeLastKnown = simpleTime.millisecondsSinceEpoch;
-                    calculateSimpleReadiness();
-                  } catch (e) {
-                    foundExpired = false;
-                    foundProgress = false;
-                    error = true;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        // If we haven't found anything in 100 events (including no cancellations), but we are still
-        // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
-        // take place after 8 days). If that's the case, show that one anyway.
-        if (!foundProgress && !foundExpired && !error) {
-          final lastKnown = DateTime.fromMillisecondsSinceEpoch(_settingsProvider!.oCrimeLastKnown);
-          if (DateTime.now().isBefore(lastKnown)) {
-            simpleExists = true;
-            simpleTime = lastKnown;
-            foundProgress = true;
-            calculateSimpleReadiness();
-          }
-        }
-
-        // Check if we were disregarding this crime before (in which case we don't show it)
-        if (foundProgress) {
-          if (_settingsProvider!.oCrimeDisregarded == simpleTime.millisecondsSinceEpoch) {
-            simpleExists = false;
-            _ocSimpleStringFinal = "";
-          }
-        }
-
-        if (!mounted) return;
-
-        setState(() {
-          _ocSimpleExists = simpleExists;
-          _ocSimpleReady = simpleReady;
-          _ocSimpleStringFinal = simpleString;
-          _ocTime = simpleTime;
-        });
-      }
-    } catch (e) {
-      // Don't fill anything
-      log(e.toString());
-    }
-  }
-
-  Future<void> _getFactionCrimesV2() async {
-    // If we are in OCv1, we don't need to get v2 crimes
-    if (!_settingsProvider!.playerInOCv2) return;
-    if (UserHelper.factionId == 0) return;
-
-    final dynamic apiResponse = await ApiCallsV2.getUserOC2Crime_v2();
-    if (apiResponse != null) {
-      final crime = apiResponse as UserOrganizedCrimeResponse;
-      setState(() {
-        _oc2Model = crime;
-      });
-    }
-  }
-
   SpeedDial buildSpeedDial() {
     return SpeedDial(
       animationDuration: const Duration(),
@@ -6124,11 +5455,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // In turn, we only call the API every 30 seconds with the timer
     await Future.delayed(const Duration(seconds: 5));
     if (mounted) {
-      _fetchApi();
+      _profileApi.fetchApi(trigger: "button-callback");
     }
     await Future.delayed(const Duration(seconds: 10));
     if (mounted) {
-      _fetchApi();
+      _profileApi.fetchApi(trigger: "button-callback");
     }
   }
 
@@ -7285,6 +6616,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _messagesShowNumber = messagesNumber;
       _basicInfoExpController.expanded = expandBasicInfo;
       _networthExpController.expanded = expandNetworth;
+      _profileApi.setShowNumbers(messagesNumber, eventsNumber);
 
       if (Platform.isIOS) {
         if (_travelNotificationType == NotificationType.timer) {
@@ -8385,13 +7717,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _disregardCrimeCallback() {
-    // We first remove the crime from the current screen
-    setState(() {
-      _ocSimpleExists = false;
-      _ocSimpleStringFinal = "";
-    });
-    // Afterwards, ensure that it does not show again if it's the same one
-    _settingsProvider!.changeOCrimeDisregarded = _ocTime.millisecondsSinceEpoch;
+    _profileApi.disregardSimpleCrime();
   }
 
   DateTime? _parseRaceTime(String input) {

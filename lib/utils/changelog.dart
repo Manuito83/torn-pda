@@ -111,6 +111,7 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem('Script storage capacity warnings are now only shown when debug messages are enabled'),
           _MItem('Travel live updates: icons now show the direction of travel [bombel]', androidOnly: true),
+          _MItem('Profile section now uses about half the API calls'),
         ],
       ),
     ],

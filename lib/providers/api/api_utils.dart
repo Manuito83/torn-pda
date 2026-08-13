@@ -9,6 +9,7 @@ enum ApiSelection_v1 {
   travel,
   ownBasic,
   ownExtended,
+  ownExtendedWithEvents,
   events,
   ownPersonalStats,
   ownMisc,

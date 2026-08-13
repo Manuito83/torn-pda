@@ -40,6 +40,7 @@ import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
@@ -714,6 +715,7 @@ Future<void> _initializeGetXControllers() async {
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);
     Get.put(ChainStatusController(), permanent: true);
+    Get.put(ProfileApiCallsController(), permanent: true);
 
     final bool enableLiveUpdateBridge = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
     if (enableLiveUpdateBridge) {
