@@ -114,6 +114,15 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Profile section now uses about half the API calls'),
         ],
       ),
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Events: HTML tags no longer show up in the timeline text'),
+          _MItem('Events: fixed a stray "\$1" replacing punctuation in item names and personal messages'),
+        ],
+      ),
     ],
   ),
 
