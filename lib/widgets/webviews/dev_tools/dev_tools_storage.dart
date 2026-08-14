@@ -20,11 +20,44 @@ class DevToolsStorageTab extends StatefulWidget {
   State<DevToolsStorageTab> createState() => _DevToolsStorageTabState();
 }
 
+class _StorageRow {
+  const _StorageRow({
+    required this.id,
+    required this.keyText,
+    required this.valueText,
+    this.bytes = 0,
+    this.deletable = true,
+    this.cookie,
+    this.encodedValue,
+  });
+
+  final String id;
+  final String keyText;
+  final String valueText;
+  final int bytes;
+  final bool deletable;
+  final Cookie? cookie;
+  final String? encodedValue;
+}
+
+class _SectionData {
+  List<_StorageRow> rows = const [];
+  final Set<String> selected = <String>{};
+  bool loading = false;
+  bool loaded = false;
+  bool selecting = false;
+  String origin = '';
+}
+
 class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   static const List<String> _cookiesSortOptions = ['name', 'value'];
   static const List<String> _kvSortOptions = ['key', 'value', 'size'];
   static const List<String> _iosDataSortOptions = ['displayName', 'dataTypes'];
   static const List<String> _httpAuthSortOptions = ['username', 'password'];
+
+  static const String _cookiesId = 'cookies';
+  static const String _localId = 'local';
+  static const String _sessionId = 'session';
 
   final CookieManager _cookieManager = CookieManager.instance();
   final WebStorageManager? _webStorageManager = !Platform.isWindows ? WebStorageManager.instance() : null;
@@ -67,16 +100,23 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   static const int _cellPreviewChars = 200;
   static const int _dialogFullChars = 20000;
 
-  Future<List<Cookie>>? _cookiesFuture;
-  Future<Map<String, dynamic>>? _localFuture;
-  Future<Map<String, dynamic>>? _sessionFuture;
-  Future<List<Map<String, dynamic>>>? _scriptStorageFuture;
+  final Map<String, _SectionData> _sections = {};
+
+  List<Map<String, dynamic>> _namespaces = const [];
+  bool _namespacesLoading = false;
+  bool _namespacesLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _newCookiePathController.text = "/";
     _loadSortPrefs();
+    if (widget.webViewController != null) {
+      _reloadCookies();
+      _reloadWebStorage(local: true);
+      _reloadWebStorage(local: false);
+      _reloadNamespaces();
+    }
   }
 
   @override
@@ -92,27 +132,285 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     super.dispose();
   }
 
-  Future<Map<String, dynamic>> _getStorageData(dynamic webStorage) async {
-    final url = await widget.webViewController?.getUrl();
-    final items = await webStorage.getItems();
-    return {'origin': url?.origin ?? 'N/A', 'items': items ?? []};
+  _SectionData _sec(String id) => _sections.putIfAbsent(id, () => _SectionData());
+
+  String _nsId(String sid) => 'ns_$sid';
+
+  int _sizeOf(String key, String value) => utf8.encode(key).length + utf8.encode(value).length;
+
+  Future<void> _loadSection(String id, Future<List<_StorageRow>> Function() loader, {String? origin}) async {
+    final s = _sec(id);
+    if (s.loading) return;
+    s.loading = true;
+    if (mounted) setState(() {});
+
+    List<_StorageRow> rows;
+    try {
+      rows = await loader();
+    } catch (_) {
+      rows = const [];
+    }
+
+    if (!mounted) return;
+    setState(() {
+      s.rows = rows;
+      if (origin != null) s.origin = origin;
+      s.loading = false;
+      s.loaded = true;
+      s.selected.retainWhere((selectedId) => rows.any((r) => r.id == selectedId));
+      if (s.selected.isEmpty) s.selecting = false;
+    });
   }
 
-  Future<List<Cookie>> _loadCookies() async {
+  Future<void> _reloadCookies() async {
     final url = await widget.webViewController?.getUrl();
-    if (url == null) return <Cookie>[];
-    return _cookieManager.getCookies(url: url);
+    await _loadSection(_cookiesId, () async {
+      if (url == null) return <_StorageRow>[];
+      final cookies = await _cookieManager.getCookies(url: url);
+      return [for (final c in cookies) _cookieRow(c)];
+    }, origin: url?.origin ?? 'N/A');
   }
 
-  void _refreshCookies() => setState(() => _cookiesFuture = _loadCookies());
+  _StorageRow _cookieRow(Cookie cookie) {
+    final value = cookie.value?.toString() ?? '';
+    return _StorageRow(
+      id: '${cookie.name}|${cookie.domain ?? ''}|${cookie.path ?? ''}',
+      keyText: cookie.name,
+      valueText: value,
+      bytes: _sizeOf(cookie.name, value),
+      deletable: cookie.isHttpOnly != true,
+      cookie: cookie,
+    );
+  }
 
-  void _refreshLocal() =>
-      setState(() => _localFuture = _getStorageData(widget.webViewController!.webStorage.localStorage));
+  dynamic _webStorage({required bool local}) =>
+      local ? widget.webViewController!.webStorage.localStorage : widget.webViewController!.webStorage.sessionStorage;
 
-  void _refreshSession() =>
-      setState(() => _sessionFuture = _getStorageData(widget.webViewController!.webStorage.sessionStorage));
+  Future<void> _reloadWebStorage({required bool local}) async {
+    final url = await widget.webViewController?.getUrl();
+    await _loadSection(local ? _localId : _sessionId, () async {
+      final items = await _webStorage(local: local).getItems();
+      return [
+        for (final WebStorageItem item in (items ?? <WebStorageItem>[]))
+          _webStorageRow(item.key ?? '', item.value?.toString() ?? ''),
+      ];
+    }, origin: url?.origin ?? 'N/A');
+  }
 
-  // Truncate a value for row display so a huge value never gets laid out
+  _StorageRow _webStorageRow(String key, String value) =>
+      _StorageRow(id: key, keyText: key, valueText: value, bytes: _sizeOf(key, value));
+
+  Future<void> _reloadNamespaces() async {
+    if (_namespacesLoading) return;
+    _namespacesLoading = true;
+    if (mounted) setState(() {});
+
+    List<Map<String, dynamic>> rows;
+    try {
+      rows = await ScriptStorage.namespaces();
+    } catch (_) {
+      rows = const [];
+    }
+
+    if (!mounted) return;
+    final sids = {for (final r in rows) r['sid'] as String};
+    setState(() {
+      _namespaces = rows;
+      _namespacesLoading = false;
+      _namespacesLoaded = true;
+      _sections.removeWhere((id, _) => id.startsWith('ns_') && !sids.contains(id.substring(3)));
+    });
+
+    for (final sid in sids) {
+      final section = _sections[_nsId(sid)];
+      if (section != null && section.loaded) _reloadNamespaceEntries(sid);
+    }
+  }
+
+  Future<void> _reloadNamespaceEntries(String sid) async {
+    await _loadSection(_nsId(sid), () async {
+      final entries = await ScriptStorage.entries(sid);
+      return [
+        for (final e in entries)
+          _StorageRow(
+            id: e['key'] as String,
+            keyText: e['key'] as String,
+            valueText: e['value'] as String,
+            bytes: e['bytes'] as int,
+            encodedValue: e['value'] as String,
+          ),
+      ];
+    });
+  }
+
+  void _showSnack(String message, {SnackBarAction? action}) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 5), action: action));
+  }
+
+  void _toggleSelection(String sectionId, _StorageRow row) {
+    if (!row.deletable) return;
+    final s = _sec(sectionId);
+    setState(() {
+      if (!s.selected.remove(row.id)) s.selected.add(row.id);
+      if (s.selected.isEmpty) s.selecting = false;
+    });
+  }
+
+  void _startSelection(String sectionId, _StorageRow row) {
+    if (!row.deletable) return;
+    final s = _sec(sectionId);
+    setState(() {
+      s.selecting = true;
+      s.selected.add(row.id);
+    });
+  }
+
+  List<_StorageRow> _selectedRows(String sectionId) {
+    final s = _sec(sectionId);
+    return [
+      for (final r in s.rows)
+        if (s.selected.contains(r.id)) r,
+    ];
+  }
+
+  Future<void> _deleteRows({
+    required String sectionId,
+    required List<_StorageRow> rows,
+    required Future<void> Function(_StorageRow row) delete,
+    required Future<void> Function(_StorageRow row) restore,
+  }) async {
+    if (rows.isEmpty) return;
+    final s = _sec(sectionId);
+    final removedIds = {for (final r in rows) r.id};
+
+    setState(() {
+      s.rows = [
+        for (final r in s.rows)
+          if (!removedIds.contains(r.id)) r,
+      ];
+      s.selected.removeAll(removedIds);
+      if (s.selected.isEmpty) s.selecting = false;
+    });
+
+    final failed = <_StorageRow>[];
+    for (final row in rows) {
+      try {
+        await delete(row);
+      } catch (_) {
+        failed.add(row);
+      }
+    }
+
+    if (!mounted) return;
+
+    if (failed.isNotEmpty) {
+      final failedIds = {for (final r in failed) r.id};
+      setState(() => s.rows = [...s.rows.where((r) => !failedIds.contains(r.id)), ...failed]);
+    }
+
+    final deleted = [
+      for (final r in rows)
+        if (!failed.contains(r)) r,
+    ];
+    if (deleted.isEmpty) {
+      _showSnack("Could not delete ${failed.length == 1 ? rows.first.keyText : '${failed.length} items'}");
+      return;
+    }
+
+    final message = deleted.length == 1 ? "Deleted ${deleted.first.keyText}" : "Deleted ${deleted.length} items";
+    _showSnack(
+      failed.isEmpty ? message : "$message (${failed.length} failed)",
+      action: SnackBarAction(label: "UNDO", onPressed: () => _restoreRows(sectionId, deleted, restore)),
+    );
+  }
+
+  Future<void> _restoreRows(
+    String sectionId,
+    List<_StorageRow> rows,
+    Future<void> Function(_StorageRow row) restore,
+  ) async {
+    final s = _sec(sectionId);
+    final restored = <_StorageRow>[];
+    for (final row in rows) {
+      try {
+        await restore(row);
+        restored.add(row);
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+    final restoredIds = {for (final r in restored) r.id};
+    setState(() => s.rows = [...s.rows.where((r) => !restoredIds.contains(r.id)), ...restored]);
+    if (restored.length != rows.length) {
+      _showSnack("Could not restore ${rows.length - restored.length} of ${rows.length} items");
+    }
+
+    if (restored.isNotEmpty && sectionId.startsWith('ns_')) {
+      final sid = sectionId.substring(3);
+      if (!_namespaces.any((n) => n['sid'] == sid)) _reloadNamespaces();
+    }
+  }
+
+  Future<bool> _confirm(String title, String message, String confirmLabel) async {
+    final answer = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(confirmLabel, style: TextStyle(color: Colors.red.shade700)),
+          ),
+        ],
+      ),
+    );
+    return answer ?? false;
+  }
+
+  Future<void> _deleteCookie(_StorageRow row) async {
+    final url = await widget.webViewController?.getUrl();
+    if (url == null) throw Exception("No URL");
+    final cookie = row.cookie!;
+    await _cookieManager.deleteCookie(url: url, name: cookie.name, domain: cookie.domain, path: cookie.path ?? '/');
+  }
+
+  Future<void> _restoreCookie(_StorageRow row) async {
+    final url = await widget.webViewController?.getUrl();
+    if (url == null) throw Exception("No URL");
+    final cookie = row.cookie!;
+    await _cookieManager.setCookie(
+      url: url,
+      name: cookie.name,
+      value: cookie.value,
+      domain: cookie.domain,
+      path: cookie.path ?? '/',
+      expiresDate: cookie.expiresDate,
+      isSecure: cookie.isSecure,
+    );
+  }
+
+  Future<void> _deleteCookieRows(List<_StorageRow> rows) =>
+      _deleteRows(sectionId: _cookiesId, rows: rows, delete: _deleteCookie, restore: _restoreCookie);
+
+  Future<void> _deleteWebStorageRows({required bool local, required List<_StorageRow> rows}) => _deleteRows(
+    sectionId: local ? _localId : _sessionId,
+    rows: rows,
+    delete: (row) => _webStorage(local: local).removeItem(key: row.keyText),
+    restore: (row) => _webStorage(local: local).setItem(key: row.keyText, value: row.valueText),
+  );
+
+  Future<void> _deleteScriptRows(String sid, List<_StorageRow> rows) => _deleteRows(
+    sectionId: _nsId(sid),
+    rows: rows,
+    delete: (row) => ScriptStorage.deleteKey(sid, row.keyText),
+    restore: (row) => ScriptStorage.restoreEntry(sid, row.keyText, row.encodedValue ?? row.valueText, row.bytes),
+  );
+
   String _preview(String value) =>
       value.length > _cellPreviewChars ? '${value.substring(0, _cellPreviewChars)}…' : value;
 
@@ -137,7 +435,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             TextButton(
               onPressed: () async {
                 await onSave(controller.text);
-                Navigator.of(dialogContext).pop();
+                if (dialogContext.mounted) Navigator.of(dialogContext).pop();
               },
               child: const Text("Save"),
             ),
@@ -147,7 +445,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   }
 
   void _showCookieEditDialog({required Cookie cookie, required Future<void> Function(Cookie updatedCookie) onSave}) {
-    final valueController = TextEditingController(text: cookie.value);
+    final valueController = TextEditingController(text: cookie.value?.toString() ?? '');
     DateTime? expiresDate = cookie.expiresDate != null
         ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!)
         : null;
@@ -223,7 +521,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                       sameSite: cookie.sameSite,
                     );
                     await onSave(updatedCookie);
-                    Navigator.of(dialogContext).pop();
+                    if (dialogContext.mounted) Navigator.of(dialogContext).pop();
                   },
                   child: const Text("Save"),
                 ),
@@ -238,7 +536,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   void _showActionDialog({
     required String title,
     required String value,
-    required Future<void> Function() onDelete,
+    required VoidCallback onDelete,
     required VoidCallback onEdit,
     bool canDelete = true,
     DateTime? expiresDate,
@@ -296,7 +594,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: value));
                     Navigator.of(dialogContext).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Value copied')));
+                    _showSnack("Value copied");
                   },
                 ),
               ),
@@ -305,9 +603,9 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                   message: "Delete",
                   child: IconButton(
                     icon: Icon(Icons.delete_outline, color: Colors.red.shade700),
-                    onPressed: () async {
-                      await onDelete();
+                    onPressed: () {
                       Navigator.of(dialogContext).pop();
+                      onDelete();
                     },
                   ),
                 ),
@@ -342,30 +640,139 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     );
   }
 
-  Widget _buildStorageItemRow({
-    required String keyText,
-    required String valueText,
-    required String sizeText,
+  Widget _buildSelectableRow({
+    required String sectionId,
+    required _StorageRow row,
+    required bool showSize,
     required VoidCallback onCellTap,
-    Widget? deleteWidget,
+    required VoidCallback onDelete,
+    Widget? lockedWidget,
   }) {
+    final s = _sec(sectionId);
+    final selected = s.selected.contains(row.id);
     return InkWell(
-      onTap: onCellTap,
-      child: Padding(
+      onTap: s.selecting ? (row.deletable ? () => _toggleSelection(sectionId, row) : null) : onCellTap,
+      onLongPress: row.deletable && !s.selecting ? () => _startSelection(sectionId, row) : null,
+      child: Container(
+        color: selected ? Theme.of(context).colorScheme.onSurface.withAlpha(18) : null,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(flex: 3, child: Text(keyText, maxLines: 2, overflow: TextOverflow.ellipsis)),
+            Expanded(flex: 3, child: Text(row.keyText, maxLines: 2, overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
-            Expanded(flex: 4, child: Text(_preview(valueText), maxLines: 2, overflow: TextOverflow.ellipsis)),
             Expanded(
-              flex: 2,
-              child: Text(sizeText, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right),
+              flex: showSize ? 4 : 5,
+              child: Text(_preview(row.valueText), maxLines: 2, overflow: TextOverflow.ellipsis),
             ),
-            SizedBox(width: 48, child: deleteWidget ?? Container()),
+            if (showSize)
+              Expanded(
+                flex: 2,
+                child: Text(
+                  _formatBytes(row.bytes),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            SizedBox(
+              width: 48,
+              child: !row.deletable
+                  ? (lockedWidget ?? Container())
+                  : s.selecting
+                  ? IconButton(
+                      icon: Icon(
+                        selected ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                        size: 20,
+                        color: selected ? null : Colors.grey.shade600,
+                      ),
+                      onPressed: () => _toggleSelection(sectionId, row),
+                    )
+                  : IconButton(icon: const Icon(Icons.delete_outline, size: 20), onPressed: onDelete),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionToolbar({
+    required String sectionId,
+    required VoidCallback onDeleteSelected,
+    VoidCallback? onReload,
+    List<Widget> extraActions = const [],
+  }) {
+    final s = _sec(sectionId);
+    if (s.selecting) return _buildSelectionBar(sectionId, onDeleteSelected);
+
+    final canSelect = s.rows.any((r) => r.deletable);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          ...extraActions,
+          TextButton.icon(
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text("Reload"),
+            onPressed: s.loading ? null : onReload,
+          ),
+          TextButton.icon(
+            icon: const Icon(Icons.checklist, size: 18),
+            label: const Text("Select"),
+            onPressed: canSelect ? () => setState(() => s.selecting = true) : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectionBar(String sectionId, VoidCallback onDeleteSelected) {
+    final s = _sec(sectionId);
+    final selectable = [
+      for (final r in s.rows)
+        if (r.deletable) r,
+    ];
+    final allSelected = selectable.isNotEmpty && s.selected.length >= selectable.length;
+    return Container(
+      color: Theme.of(context).colorScheme.onSurface.withAlpha(12),
+      padding: const EdgeInsets.only(left: 16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text("${s.selected.length} selected", style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () => setState(() {
+              s.selected.clear();
+              if (!allSelected) s.selected.addAll(selectable.map((r) => r.id));
+            }),
+            child: Text(allSelected ? "NONE" : "ALL"),
+          ),
+          IconButton(
+            tooltip: "Delete selected",
+            icon: Icon(Icons.delete_outline, color: s.selected.isEmpty ? null : Colors.red.shade700),
+            onPressed: s.selected.isEmpty ? null : onDeleteSelected,
+          ),
+          IconButton(
+            tooltip: "Cancel",
+            icon: const Icon(Icons.close),
+            onPressed: () => setState(() {
+              s.selecting = false;
+              s.selected.clear();
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteHeaderCell(String sectionId) {
+    return SizedBox(
+      width: 48,
+      child: Center(
+        child: Text(_sec(sectionId).selecting ? "Sel" : "Del", style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -406,11 +813,27 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     return "${(bytes / pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}";
   }
 
-  int _calculateItemSizeBytes(WebStorageItem item) {
-    int totalBytes = 0;
-    totalBytes += utf8.encode(item.key ?? '').length;
-    totalBytes += utf8.encode(item.value).length;
-    return totalBytes;
+  List<_StorageRow> _sortedRows(List<_StorageRow> rows, String field, bool ascending) {
+    final sorted = [...rows];
+    sorted.sort((a, b) {
+      int comparison;
+      switch (field) {
+        case 'name':
+        case 'key':
+          comparison = a.keyText.compareTo(b.keyText);
+          break;
+        case 'value':
+          comparison = a.valueText.compareTo(b.valueText);
+          break;
+        case 'size':
+          comparison = a.bytes.compareTo(b.bytes);
+          break;
+        default:
+          comparison = 0;
+      }
+      return ascending ? comparison : -comparison;
+    });
+    return sorted;
   }
 
   Future<void> _onSortCookies(String field) async {
@@ -431,40 +854,36 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     await Prefs().setDevToolsStorageCookiesSortAscending(nextAscending);
   }
 
-  Future<void> _onSortLocal(String field) async {
-    var nextField = _localSortField;
-    var nextAscending = _localAscending;
-    if (_localSortField == field) {
-      nextAscending = !_localAscending;
-    } else {
-      nextField = field;
-      nextAscending = true;
-    }
-    setState(() {
-      _localSortField = nextField;
-      _localAscending = nextAscending;
-    });
-    final idx = _kvSortOptions.indexOf(nextField);
-    await Prefs().setDevToolsStorageLocalSortColumn(idx >= 0 ? idx : 0);
-    await Prefs().setDevToolsStorageLocalSortAscending(nextAscending);
-  }
+  String _kvSortField(bool local) => local ? _localSortField : _sessionSortField;
 
-  Future<void> _onSortSession(String field) async {
-    var nextField = _sessionSortField;
-    var nextAscending = _sessionAscending;
-    if (_sessionSortField == field) {
-      nextAscending = !_sessionAscending;
+  bool _kvAscending(bool local) => local ? _localAscending : _sessionAscending;
+
+  Future<void> _onSortKv(bool local, String field) async {
+    var nextField = _kvSortField(local);
+    var nextAscending = _kvAscending(local);
+    if (nextField == field) {
+      nextAscending = !nextAscending;
     } else {
       nextField = field;
       nextAscending = true;
     }
     setState(() {
-      _sessionSortField = nextField;
-      _sessionAscending = nextAscending;
+      if (local) {
+        _localSortField = nextField;
+        _localAscending = nextAscending;
+      } else {
+        _sessionSortField = nextField;
+        _sessionAscending = nextAscending;
+      }
     });
     final idx = _kvSortOptions.indexOf(nextField);
-    await Prefs().setDevToolsStorageSessionSortColumn(idx >= 0 ? idx : 0);
-    await Prefs().setDevToolsStorageSessionSortAscending(nextAscending);
+    if (local) {
+      await Prefs().setDevToolsStorageLocalSortColumn(idx >= 0 ? idx : 0);
+      await Prefs().setDevToolsStorageLocalSortAscending(nextAscending);
+    } else {
+      await Prefs().setDevToolsStorageSessionSortColumn(idx >= 0 ? idx : 0);
+      await Prefs().setDevToolsStorageSessionSortAscending(nextAscending);
+    }
   }
 
   Future<void> _onSortIosData(String field) async {
@@ -528,16 +947,11 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
       return const Center(child: Text("WebView not available."));
     }
 
-    _cookiesFuture ??= _loadCookies();
-    _localFuture ??= _getStorageData(widget.webViewController!.webStorage.localStorage);
-    _sessionFuture ??= _getStorageData(widget.webViewController!.webStorage.sessionStorage);
-    _scriptStorageFuture ??= ScriptStorage.namespaces();
-
     var entryItems = <Widget>[
       _buildCookiesExpansionTile(),
       _buildScriptStorageExpansionTile(),
-      _buildWebLocalStorageExpansionTile(),
-      _buildWebSessionStorageExpansionTile(),
+      _buildWebStorageExpansionTile(local: true),
+      _buildWebStorageExpansionTile(local: false),
       if (!Platform.isWindows) _buildHttpAuthCredentialDatabaseExpansionTile(),
       if (Platform.isAndroid) _buildAndroidWebStorageExpansionTile(),
       if (Platform.isIOS || Platform.isMacOS) _buildIOSWebStorageExpansionTile(),
@@ -546,508 +960,354 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     return ListView.builder(itemCount: entryItems.length, itemBuilder: (context, index) => entryItems[index]);
   }
 
-  void _refreshScriptStorage() => setState(() => _scriptStorageFuture = ScriptStorage.namespaces());
+  int _namespaceUsed(Map<String, dynamic> namespace) {
+    final s = _sections[_nsId(namespace['sid'] as String)];
+    if (s != null && s.loaded) return s.rows.fold<int>(0, (a, r) => a + r.bytes);
+    return namespace['used'] as int;
+  }
+
+  int _namespaceCount(Map<String, dynamic> namespace) {
+    final s = _sections[_nsId(namespace['sid'] as String)];
+    if (s != null && s.loaded) return s.rows.length;
+    return namespace['count'] as int;
+  }
 
   Widget _buildScriptStorageExpansionTile() {
     final names = {
-      for (final s in Provider.of<UserScriptsProvider>(context, listen: false).userScriptList) s.storageId: s.name
+      for (final s in Provider.of<UserScriptsProvider>(context, listen: false).userScriptList) s.storageId: s.name,
     };
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _scriptStorageFuture,
-      builder: (context, snapshot) {
-        final rows = snapshot.data ?? [];
-        final total = rows.fold<int>(0, (a, r) => a + (r['used'] as int));
-        return ExpansionTile(
-          key: const ValueKey('script_storage'),
-          title: const Text("Torn PDA Script Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-          subtitle: Text(
-            "Native per-script storage - ${_formatBytes(total)} / ${_formatBytes(ScriptStorage.globalCapBytes)}",
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+    final total = _namespaces.fold<int>(0, (a, n) => a + _namespaceUsed(n));
+
+    return ExpansionTile(
+      key: const ValueKey('script_storage'),
+      title: const Text("Torn PDA Script Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+      subtitle: Text(
+        "Native per-script storage - ${_formatBytes(total)} / ${_formatBytes(ScriptStorage.globalCapBytes)}",
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
+      children: [
+        if (_namespacesLoading && !_namespacesLoaded)
+          const Center(
+            child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
+          )
+        else if (_namespaces.isEmpty)
+          const Padding(padding: EdgeInsets.all(16.0), child: Text("No script is using native storage yet."))
+        else
+          for (final n in _namespaces) _buildScriptStorageNamespace(n, names[n['sid']]),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text("Reload"),
+                onPressed: _namespacesLoading ? null : _reloadNamespaces,
+              ),
+            ],
           ),
-          children: [
-            if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
-            else if (rows.isEmpty)
-              const Padding(padding: EdgeInsets.all(16.0), child: Text("No script is using native storage yet."))
-            else
-              for (final r in rows) _buildScriptStorageRow(r, names[r['sid']]),
-          ],
-        );
-      },
+        ),
+      ],
     );
   }
 
-  Widget _buildScriptStorageRow(Map<String, dynamic> row, String? name) {
-    final sid = row['sid'] as String;
-    final used = row['used'] as int;
-    final count = row['count'] as int;
-    final override = row['quota'] as int;
+  Widget _buildScriptStorageNamespace(Map<String, dynamic> namespace, String? name) {
+    final sid = namespace['sid'] as String;
+    final sectionId = _nsId(sid);
+    final s = _sec(sectionId);
+    final override = namespace['quota'] as int;
     final quota = override > 0 ? override : ScriptStorage.defaultQuotaBytes;
+
     return ExpansionTile(
-      key: ValueKey('ns_$sid'),
+      key: ValueKey(sectionId),
       tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
       title: Text(name ?? "Unknown script", maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text("${_formatBytes(used)} / ${_formatBytes(quota)} · $count keys",
-          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      subtitle: Text(
+        "${_formatBytes(_namespaceUsed(namespace))} / ${_formatBytes(quota)} · ${_namespaceCount(namespace)} keys",
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
+      onExpansionChanged: (expanded) {
+        if (expanded && !s.loaded && !s.loading) _reloadNamespaceEntries(sid);
+      },
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
+        _buildSectionToolbar(
+          sectionId: sectionId,
+          onReload: () => _reloadNamespaceEntries(sid),
+          onDeleteSelected: () => _deleteScriptRows(sid, _selectedRows(sectionId)),
+          extraActions: [
             TextButton.icon(
               icon: const Icon(Icons.tune, size: 18),
               label: const Text("Set limit"),
               onPressed: () => _editScriptQuota(sid),
             ),
             TextButton.icon(
-              icon: Icon(Icons.delete_outline, size: 18, color: Colors.red.shade700),
+              icon: Icon(Icons.delete_sweep_outlined, size: 18, color: Colors.red.shade700),
               label: Text("Clear", style: TextStyle(color: Colors.red.shade700)),
-              onPressed: () async {
-                await ScriptStorage.deleteNamespace(sid);
-                _refreshScriptStorage();
-              },
+              onPressed: () => _clearNamespace(sid, name),
             ),
-            const SizedBox(width: 8),
           ],
         ),
         const Divider(height: 1),
-        FutureBuilder<List<Map<String, dynamic>>>(
-          future: ScriptStorage.entries(sid),
-          builder: (context, snapshot) {
-            final entries = snapshot.data ?? [];
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Padding(padding: EdgeInsets.all(12.0), child: LinearProgressIndicator());
-            }
-            if (entries.isEmpty) {
-              return const Padding(padding: EdgeInsets.all(12.0), child: Text("Empty."));
-            }
-            return Column(
-              children: [
-                for (final e in entries)
-                  _buildStorageItemRow(
-                    keyText: e['key'] as String,
-                    valueText: e['value'] as String,
-                    sizeText: _formatBytes(e['bytes'] as int),
-                    onCellTap: () => _showFullTextDialog(e['key'] as String, e['value'] as String),
-                    deleteWidget: IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 20),
-                      onPressed: () async {
-                        await ScriptStorage.deleteKey(sid, e['key'] as String);
-                        _refreshScriptStorage();
-                      },
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
+        if (!s.loaded)
+          const Padding(padding: EdgeInsets.all(12.0), child: LinearProgressIndicator())
+        else if (s.rows.isEmpty)
+          const Padding(padding: EdgeInsets.all(12.0), child: Text("Empty."))
+        else
+          for (final row in s.rows)
+            _buildSelectableRow(
+              sectionId: sectionId,
+              row: row,
+              showSize: true,
+              onCellTap: () => _showFullTextDialog(row.keyText, row.valueText),
+              onDelete: () => _deleteScriptRows(sid, [row]),
+            ),
       ],
     );
   }
 
   Future<void> _editScriptQuota(String sid) async {
-    if (await showScriptStorageQuotaDialog(context, sid)) _refreshScriptStorage();
+    if (await showScriptStorageQuotaDialog(context, sid)) _reloadNamespaces();
+  }
+
+  Future<void> _clearNamespace(String sid, String? name) async {
+    final confirmed = await _confirm(
+      "Clear storage",
+      "This deletes every key stored by ${name ?? 'this script'}, and its custom storage limit. It cannot be undone.",
+      "CLEAR",
+    );
+    if (!confirmed) return;
+
+    await ScriptStorage.deleteNamespace(sid);
+    if (!mounted) return;
+    setState(() {
+      _namespaces = [
+        for (final n in _namespaces)
+          if (n['sid'] != sid) n,
+      ];
+      _sections.remove(_nsId(sid));
+    });
   }
 
   Widget _buildCookiesExpansionTile() {
-    return FutureBuilder<List<Cookie>>(
-      future: _cookiesFuture,
-      builder: (context, snapshot) {
-        final cookies = snapshot.data ?? [];
-        final sortedCookies = [...cookies];
-        sortedCookies.sort((a, b) {
-          int comparison;
-          switch (_cookiesSortField) {
-            case 'name':
-              comparison = a.name.compareTo(b.name);
-              break;
-            case 'value':
-              comparison = a.value.compareTo(b.value);
-              break;
-            default:
-              comparison = 0;
-          }
-          return _cookiesAscending ? comparison : -comparison;
-        });
-        return ExpansionTile(
-          key: const ValueKey('cookies'),
-          title: const Text("Cookies", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-          children: [
-            if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(
-                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
-              )
-            else
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
-                    child: Row(
-                      children: [
-                        _buildSortableHeaderCell(
-                          title: "Name",
-                          isActive: _cookiesSortField == 'name',
-                          isAscending: _cookiesAscending,
-                          onTap: () => _onSortCookies('name'),
-                          flex: 3,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildSortableHeaderCell(
-                          title: "Value",
-                          isActive: _cookiesSortField == 'value',
-                          isAscending: _cookiesAscending,
-                          onTap: () => _onSortCookies('value'),
-                          flex: 5,
-                        ),
-                        const SizedBox(
-                          width: 48,
-                          child: Center(
-                            child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, thickness: 1),
-                  if (sortedCookies.isEmpty)
-                    const Padding(padding: EdgeInsets.all(16.0), child: Text("No cookies for this domain.")),
-                  for (final cookie in sortedCookies)
-                    _buildDataRow(
-                      keyText: cookie.name,
-                      valueText: cookie.value,
-                      onCellTap: () => _showActionDialog(
-                        title: cookie.name,
-                        value: cookie.value,
-                        expiresDate: cookie.expiresDate != null
-                            ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!)
-                            : null,
-                        canDelete: cookie.isHttpOnly != true,
-                        onDelete: () async {
-                          final url = await widget.webViewController?.getUrl();
-                          if (url == null) return;
-                          await _cookieManager.deleteCookie(
-                            url: url,
-                            name: cookie.name,
-                            domain: cookie.domain,
-                            path: cookie.path ?? '/',
-                          );
-                          _refreshCookies();
-                        },
-                        onEdit: () => _showCookieEditDialog(
-                          cookie: cookie,
-                          onSave: (updatedCookie) async {
-                            final url = await widget.webViewController?.getUrl();
-                            if (url == null) return;
-                            await _cookieManager.setCookie(
-                              url: url,
-                              name: updatedCookie.name,
-                              value: updatedCookie.value,
-                              domain: updatedCookie.domain,
-                              path: updatedCookie.path ?? '/',
-                              expiresDate: updatedCookie.expiresDate,
-                              isSecure: updatedCookie.isSecure,
-                            );
-                            _refreshCookies();
-                          },
-                        ),
-                      ),
-                      deleteWidget: cookie.isHttpOnly == true
-                          ? Tooltip(
-                              message: "HttpOnly cookies cannot be deleted individually",
-                              child: Icon(Icons.lock, size: 20, color: Colors.grey.shade600),
-                            )
-                          : IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20),
-                              onPressed: () async {
-                                final url = await widget.webViewController?.getUrl();
-                                if (url == null) return;
-                                await _cookieManager.deleteCookie(
-                                  url: url,
-                                  name: cookie.name,
-                                  domain: cookie.domain,
-                                  path: cookie.path ?? '/',
-                                );
-                                _refreshCookies();
-                              },
-                            ),
-                    ),
-                  _buildNewCookieForm(),
-                  const Divider(height: 1, thickness: 1),
-                  TextButton(
-                    child: const Text("Clear all cookies for this domain"),
-                    onPressed: () async {
-                      final url = await widget.webViewController?.getUrl();
-                      if (url == null) return;
-                      await _cookieManager.deleteCookies(url: url);
-                      _refreshCookies();
-                    },
-                  ),
-                ],
+    final s = _sec(_cookiesId);
+    final sortedCookies = _sortedRows(s.rows, _cookiesSortField, _cookiesAscending);
+
+    return ExpansionTile(
+      key: const ValueKey('cookies'),
+      title: const Text("Cookies", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+      children: [
+        if (s.loading && !s.loaded)
+          const Center(
+            child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
+          )
+        else
+          Column(
+            children: [
+              _buildSectionToolbar(
+                sectionId: _cookiesId,
+                onReload: _reloadCookies,
+                onDeleteSelected: () => _deleteCookieRows(_selectedRows(_cookiesId)),
               ),
-          ],
-        );
-      },
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+                child: Row(
+                  children: [
+                    _buildSortableHeaderCell(
+                      title: "Name",
+                      isActive: _cookiesSortField == 'name',
+                      isAscending: _cookiesAscending,
+                      onTap: () => _onSortCookies('name'),
+                      flex: 3,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildSortableHeaderCell(
+                      title: "Value",
+                      isActive: _cookiesSortField == 'value',
+                      isAscending: _cookiesAscending,
+                      onTap: () => _onSortCookies('value'),
+                      flex: 5,
+                    ),
+                    _buildDeleteHeaderCell(_cookiesId),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, thickness: 1),
+              if (sortedCookies.isEmpty)
+                const Padding(padding: EdgeInsets.all(16.0), child: Text("No cookies for this domain.")),
+              for (final row in sortedCookies)
+                _buildSelectableRow(
+                  sectionId: _cookiesId,
+                  row: row,
+                  showSize: false,
+                  onDelete: () => _deleteCookieRows([row]),
+                  lockedWidget: Tooltip(
+                    message: "HttpOnly cookies cannot be deleted individually",
+                    child: Icon(Icons.lock, size: 20, color: Colors.grey.shade600),
+                  ),
+                  onCellTap: () => _showActionDialog(
+                    title: row.keyText,
+                    value: row.valueText,
+                    expiresDate: row.cookie?.expiresDate != null
+                        ? DateTime.fromMillisecondsSinceEpoch(row.cookie!.expiresDate!)
+                        : null,
+                    canDelete: row.deletable,
+                    onDelete: () => _deleteCookieRows([row]),
+                    onEdit: () => _showCookieEditDialog(
+                      cookie: row.cookie!,
+                      onSave: (updatedCookie) async {
+                        final url = await widget.webViewController?.getUrl();
+                        if (url == null) return;
+                        await _cookieManager.setCookie(
+                          url: url,
+                          name: updatedCookie.name,
+                          value: updatedCookie.value,
+                          domain: updatedCookie.domain,
+                          path: updatedCookie.path ?? '/',
+                          expiresDate: updatedCookie.expiresDate,
+                          isSecure: updatedCookie.isSecure,
+                        );
+                        _replaceRow(_cookiesId, row.id, _cookieRow(updatedCookie));
+                      },
+                    ),
+                  ),
+                ),
+              _buildNewCookieForm(),
+              const Divider(height: 1, thickness: 1),
+              TextButton(
+                child: const Text("Clear all cookies for this domain"),
+                onPressed: () async {
+                  final confirmed = await _confirm(
+                    "Clear cookies",
+                    "This deletes every cookie for this domain and will log you out. It cannot be undone.",
+                    "CLEAR",
+                  );
+                  if (!confirmed) return;
+                  final url = await widget.webViewController?.getUrl();
+                  if (url == null) return;
+                  await _cookieManager.deleteCookies(url: url);
+                  _reloadCookies();
+                },
+              ),
+            ],
+          ),
+      ],
     );
   }
 
-  Widget _buildWebLocalStorageExpansionTile() {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _localFuture,
-      builder: (context, snapshot) {
-        final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
-        final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
-        // Encode each value once (not per sort comparison and again for the total).
-        final sizes = <WebStorageItem, int>{for (final it in items) it: _calculateItemSizeBytes(it)};
-        final size = _formatBytes(sizes.values.fold<int>(0, (a, b) => a + b));
-        final sortedItems = [...items];
-        sortedItems.sort((a, b) {
-          int comparison;
-          switch (_localSortField) {
-            case 'key':
-              comparison = (a.key ?? '').compareTo(b.key ?? '');
-              break;
-            case 'value':
-              comparison = a.value.compareTo(b.value);
-              break;
-            case 'size':
-              comparison = (sizes[a] ?? 0).compareTo(sizes[b] ?? 0);
-              break;
-            default:
-              comparison = 0;
-          }
-          return _localAscending ? comparison : -comparison;
-        });
-
-        return ExpansionTile(
-          key: const ValueKey('local_storage'),
-          title: const Text("Local Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-          subtitle: Text("Origin: $origin - Size: $size", style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          children: [
-            if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(
-                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
-              )
-            else
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
-                    child: Row(
-                      children: [
-                        _buildSortableHeaderCell(
-                          title: "Key",
-                          isActive: _localSortField == 'key',
-                          isAscending: _localAscending,
-                          onTap: () => _onSortLocal('key'),
-                          flex: 3,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildSortableHeaderCell(
-                          title: "Value",
-                          isActive: _localSortField == 'value',
-                          isAscending: _localAscending,
-                          onTap: () => _onSortLocal('value'),
-                          flex: 4,
-                        ),
-                        _buildSortableHeaderCell(
-                          title: "Size",
-                          isActive: _localSortField == 'size',
-                          isAscending: _localAscending,
-                          onTap: () => _onSortLocal('size'),
-                          flex: 2,
-                          alignment: TextAlign.right,
-                        ),
-                        const SizedBox(
-                          width: 48,
-                          child: Center(
-                            child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, thickness: 1),
-                  if (sortedItems.isEmpty)
-                    const Padding(padding: EdgeInsets.all(16.0), child: Text("Local Storage is empty.")),
-                  for (final item in sortedItems)
-                    _buildStorageItemRow(
-                      keyText: item.key ?? '',
-                      valueText: item.value,
-                      sizeText: _formatBytes(sizes[item] ?? 0),
-                      onCellTap: () => _showActionDialog(
-                        title: item.key!,
-                        value: item.value,
-                        onDelete: () async {
-                          await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
-                          _refreshLocal();
-                        },
-                        onEdit: () => _showValueEditDialog(
-                          title: item.key!,
-                          initialValue: item.value,
-                          onSave: (newValue) async {
-                            await widget.webViewController!.webStorage.localStorage.setItem(
-                              key: item.key!,
-                              value: newValue,
-                            );
-                            _refreshLocal();
-                          },
-                        ),
-                      ),
-                      deleteWidget: IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        onPressed: () async {
-                          await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
-                          _refreshLocal();
-                        },
-                      ),
-                    ),
-                  _buildAddNewWebStorageItem(
-                    formKey: _newLocalStorageItemFormKey,
-                    nameController: _newLocalStorageKeyController,
-                    valueController: _newLocalStorageValueController,
-                    labelName: "Local Item Key",
-                    labelValue: "Local Item Value",
-                    onAdded: (name, value) async {
-                      await widget.webViewController!.webStorage.localStorage.setItem(key: name, value: value);
-                      _refreshLocal();
-                    },
-                  ),
-                ],
-              ),
-          ],
-        );
-      },
-    );
+  void _replaceRow(String sectionId, String oldId, _StorageRow newRow) {
+    if (!mounted) return;
+    final s = _sec(sectionId);
+    setState(() {
+      s.rows = [
+        for (final r in s.rows)
+          if (r.id == oldId) newRow else r,
+      ];
+      if (s.selected.remove(oldId)) s.selected.add(newRow.id);
+    });
   }
 
-  Widget _buildWebSessionStorageExpansionTile() {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _sessionFuture,
-      builder: (context, snapshot) {
-        final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
-        final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
-        final sizes = <WebStorageItem, int>{for (final it in items) it: _calculateItemSizeBytes(it)};
-        final size = _formatBytes(sizes.values.fold<int>(0, (a, b) => a + b));
-        final sortedItems = [...items];
-        sortedItems.sort((a, b) {
-          int comparison;
-          switch (_sessionSortField) {
-            case 'key':
-              comparison = (a.key ?? '').compareTo(b.key ?? '');
-              break;
-            case 'value':
-              comparison = a.value.compareTo(b.value);
-              break;
-            case 'size':
-              comparison = (sizes[a] ?? 0).compareTo(sizes[b] ?? 0);
-              break;
-            default:
-              comparison = 0;
-          }
-          return _sessionAscending ? comparison : -comparison;
-        });
+  void _upsertRow(String sectionId, _StorageRow newRow) {
+    if (!mounted) return;
+    final s = _sec(sectionId);
+    setState(() {
+      s.rows = [...s.rows.where((r) => r.id != newRow.id), newRow];
+    });
+  }
 
-        return ExpansionTile(
-          key: const ValueKey('session_storage'),
-          title: const Text("Session Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-          subtitle: Text("Origin: $origin - Size: $size", style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          children: [
-            if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(
-                child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
-              )
-            else
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
-                    child: Row(
-                      children: [
-                        _buildSortableHeaderCell(
-                          title: "Key",
-                          isActive: _sessionSortField == 'key',
-                          isAscending: _sessionAscending,
-                          onTap: () => _onSortSession('key'),
-                          flex: 3,
-                        ),
-                        const SizedBox(width: 8),
-                        _buildSortableHeaderCell(
-                          title: "Value",
-                          isActive: _sessionSortField == 'value',
-                          isAscending: _sessionAscending,
-                          onTap: () => _onSortSession('value'),
-                          flex: 4,
-                        ),
-                        _buildSortableHeaderCell(
-                          title: "Size",
-                          isActive: _sessionSortField == 'size',
-                          isAscending: _sessionAscending,
-                          onTap: () => _onSortSession('size'),
-                          flex: 2,
-                          alignment: TextAlign.right,
-                        ),
-                        const SizedBox(
-                          width: 48,
-                          child: Center(
-                            child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, thickness: 1),
-                  if (sortedItems.isEmpty)
-                    const Padding(padding: EdgeInsets.all(16.0), child: Text("Session Storage is empty.")),
-                  for (final item in sortedItems)
-                    _buildStorageItemRow(
-                      keyText: item.key ?? '',
-                      valueText: item.value,
-                      sizeText: _formatBytes(sizes[item] ?? 0),
-                      onCellTap: () => _showActionDialog(
-                        title: item.key!,
-                        value: item.value,
-                        onDelete: () async {
-                          await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
-                          _refreshSession();
-                        },
-                        onEdit: () => _showValueEditDialog(
-                          title: item.key!,
-                          initialValue: item.value,
-                          onSave: (newValue) async {
-                            await widget.webViewController!.webStorage.sessionStorage.setItem(
-                              key: item.key!,
-                              value: newValue,
-                            );
-                            _refreshSession();
-                          },
-                        ),
-                      ),
-                      deleteWidget: IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        onPressed: () async {
-                          await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
-                          _refreshSession();
-                        },
-                      ),
-                    ),
-                  _buildAddNewWebStorageItem(
-                    formKey: _newSessionStorageItemFormKey,
-                    nameController: _newSessionStorageKeyController,
-                    valueController: _newSessionStorageValueController,
-                    labelName: "Session Item Key",
-                    labelValue: "Session Item Value",
-                    onAdded: (name, value) async {
-                      await widget.webViewController!.webStorage.sessionStorage.setItem(key: name, value: value);
-                      _refreshSession();
-                    },
-                  ),
-                ],
+  Widget _buildWebStorageExpansionTile({required bool local}) {
+    final sectionId = local ? _localId : _sessionId;
+    final s = _sec(sectionId);
+    final title = local ? "Local Storage" : "Session Storage";
+    final size = _formatBytes(s.rows.fold<int>(0, (a, r) => a + r.bytes));
+    final origin = s.loaded ? s.origin : "Loading...";
+    final sortedItems = _sortedRows(s.rows, _kvSortField(local), _kvAscending(local));
+
+    return ExpansionTile(
+      key: ValueKey(local ? 'local_storage' : 'session_storage'),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+      subtitle: Text("Origin: $origin - Size: $size", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      children: [
+        if (s.loading && !s.loaded)
+          const Center(
+            child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()),
+          )
+        else
+          Column(
+            children: [
+              _buildSectionToolbar(
+                sectionId: sectionId,
+                onReload: () => _reloadWebStorage(local: local),
+                onDeleteSelected: () => _deleteWebStorageRows(local: local, rows: _selectedRows(sectionId)),
               ),
-          ],
-        );
-      },
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+                child: Row(
+                  children: [
+                    _buildSortableHeaderCell(
+                      title: "Key",
+                      isActive: _kvSortField(local) == 'key',
+                      isAscending: _kvAscending(local),
+                      onTap: () => _onSortKv(local, 'key'),
+                      flex: 3,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildSortableHeaderCell(
+                      title: "Value",
+                      isActive: _kvSortField(local) == 'value',
+                      isAscending: _kvAscending(local),
+                      onTap: () => _onSortKv(local, 'value'),
+                      flex: 4,
+                    ),
+                    _buildSortableHeaderCell(
+                      title: "Size",
+                      isActive: _kvSortField(local) == 'size',
+                      isAscending: _kvAscending(local),
+                      onTap: () => _onSortKv(local, 'size'),
+                      flex: 2,
+                      alignment: TextAlign.right,
+                    ),
+                    _buildDeleteHeaderCell(sectionId),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, thickness: 1),
+              if (sortedItems.isEmpty) Padding(padding: const EdgeInsets.all(16.0), child: Text("$title is empty.")),
+              for (final row in sortedItems)
+                _buildSelectableRow(
+                  sectionId: sectionId,
+                  row: row,
+                  showSize: true,
+                  onDelete: () => _deleteWebStorageRows(local: local, rows: [row]),
+                  onCellTap: () => _showActionDialog(
+                    title: row.keyText,
+                    value: row.valueText,
+                    onDelete: () => _deleteWebStorageRows(local: local, rows: [row]),
+                    onEdit: () => _showValueEditDialog(
+                      title: row.keyText,
+                      initialValue: row.valueText,
+                      onSave: (newValue) async {
+                        await _webStorage(local: local).setItem(key: row.keyText, value: newValue);
+                        _replaceRow(sectionId, row.id, _webStorageRow(row.keyText, newValue));
+                      },
+                    ),
+                  ),
+                ),
+              _buildAddNewWebStorageItem(
+                formKey: local ? _newLocalStorageItemFormKey : _newSessionStorageItemFormKey,
+                nameController: local ? _newLocalStorageKeyController : _newSessionStorageKeyController,
+                valueController: local ? _newLocalStorageValueController : _newSessionStorageValueController,
+                labelName: local ? "Local Item Key" : "Session Item Key",
+                labelValue: local ? "Local Item Value" : "Session Item Value",
+                onAdded: (name, value) async {
+                  await _webStorage(local: local).setItem(key: name, value: value);
+                  _upsertRow(sectionId, _webStorageRow(name, value));
+                },
+              ),
+            ],
+          ),
+      ],
     );
   }
 
@@ -1172,8 +1432,8 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                       _newCookieIsSecure = false;
                       _newCookieExpiresDate = null;
                     });
-                    FocusScope.of(context).unfocus();
-                    _refreshCookies();
+                    if (mounted) FocusScope.of(context).unfocus();
+                    _reloadCookies();
                   }
                 },
               ),
