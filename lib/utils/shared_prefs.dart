@@ -357,6 +357,10 @@ class Prefs {
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
+  final String _kScriptCatalogCache = "pda_scriptCatalogCache";
+  final String _kScriptCatalogEnabled = "pda_scriptCatalogEnabled";
+  final String _kScriptDocsCache = "pda_scriptDocsCache";
+  final String _kScriptDocsDisclaimerRead = "pda_scriptDocsDisclaimerRead";
   // DevTools sorting
   final String _kDevToolsNetworkSortColumn = "pda_devToolsNetworkSortColumn";
   final String _kDevToolsNetworkSortAscending = "pda_devToolsNetworkSortAscending";
@@ -3594,6 +3598,40 @@ class Prefs {
 
   Future setUserScriptsList(String value) async {
     return await PrefsDatabase.setString(_kUserScriptsList, value);
+  }
+
+  // --
+
+  Future<String> getScriptCatalogCache() async {
+    return await PrefsDatabase.getString(_kScriptCatalogCache, "");
+  }
+
+  Future setScriptCatalogCache(String value) async {
+    return await PrefsDatabase.setString(_kScriptCatalogCache, value);
+  }
+
+  Future<bool> getScriptCatalogEnabled() async {
+    return await PrefsDatabase.getBool(_kScriptCatalogEnabled, true);
+  }
+
+  Future setScriptCatalogEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kScriptCatalogEnabled, value);
+  }
+
+  Future<String> getScriptDocsCache() async {
+    return await PrefsDatabase.getString(_kScriptDocsCache, "");
+  }
+
+  Future setScriptDocsCache(String value) async {
+    return await PrefsDatabase.setString(_kScriptDocsCache, value);
+  }
+
+  Future<bool> getScriptDocsDisclaimerRead() async {
+    return await PrefsDatabase.getBool(_kScriptDocsDisclaimerRead, false);
+  }
+
+  Future setScriptDocsDisclaimerRead(bool value) async {
+    return await PrefsDatabase.setBool(_kScriptDocsDisclaimerRead, value);
   }
 
   // --

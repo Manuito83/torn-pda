@@ -1,0 +1,700 @@
+{
+  "schemaVersion": 1,
+  "enabled": true,
+  "updated": "2026-08-14",
+  "provider": {
+    "name": "TornTools",
+    "author": "DeKleineKobini and the TornTools team",
+    "description": "Well known TornTools features, published individually as userscripts. Install only the ones you want, straight from Greasy Fork.",
+    "links": {
+      "forum": "https://www.torn.com/forums.php#/p=threads&f=67&t=16572211",
+      "github": "https://github.com/Mephiles/torntools_extension",
+      "discord": "https://discord.gg/56hequGRps",
+      "support": "https://github.com/Mephiles/torntools_extension/issues",
+      "donate": "https://buymeacoffee.com/dekleinekobini"
+    }
+  },
+  "categories": [
+    {
+      "id": "general",
+      "name": "General"
+    },
+    {
+      "id": "profile",
+      "name": "Profile"
+    },
+    {
+      "id": "items",
+      "name": "Items & Market"
+    },
+    {
+      "id": "travel",
+      "name": "Travel"
+    },
+    {
+      "id": "faction",
+      "name": "Faction"
+    },
+    {
+      "id": "lists",
+      "name": "Lists & Filters"
+    },
+    {
+      "id": "gym",
+      "name": "Gym"
+    },
+    {
+      "id": "combat",
+      "name": "Combat"
+    },
+    {
+      "id": "crimes",
+      "name": "Crimes & Missions"
+    },
+    {
+      "id": "jobs",
+      "name": "Jobs & Company"
+    },
+    {
+      "id": "casino",
+      "name": "Casino"
+    },
+    {
+      "id": "racing",
+      "name": "Racing"
+    },
+    {
+      "id": "forums",
+      "name": "Forums"
+    }
+  ],
+  "scripts": [
+    {
+      "id": "torntools.bank-investment-info",
+      "greasyforkId": 590848,
+      "name": "Bank Investment Info",
+      "description": "Display an overview of the bank profit per period.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590848/TORN%3A%20TornTools%20-%20Bank%20Investment%20Info.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590848-torn-torntools-bank-investment-info",
+      "matches": [
+        "https://*.torn.com/bank.php*"
+      ]
+    },
+    {
+      "id": "torntools.bar-links",
+      "greasyforkId": 589851,
+      "name": "Bar Links",
+      "description": "Make the bars clickable.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/589851/TORN%3A%20TornTools%20-%20Bar%20Links.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/589851-torn-torntools-bar-links",
+      "matches": [
+        "https://*.torn.com/*"
+      ]
+    },
+    {
+      "id": "torntools.city-items",
+      "greasyforkId": 583184,
+      "name": "City Items",
+      "description": "List all available items in your city and allow you to collect them with a single click.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/583184/TORN%3A%20TornTools%20-%20City%20Items.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/583184-torn-torntools-city-items",
+      "matches": [
+        "https://*.torn.com/city.php*"
+      ]
+    },
+    {
+      "id": "torntools.effective-battle-stats",
+      "greasyforkId": 586662,
+      "name": "Effective Battle Stats",
+      "description": "Display your effective battle stats in the homepage.",
+      "category": "profile",
+      "downloadUrl": "https://update.greasyfork.org/scripts/586662/TORN%3A%20TornTools%20-%20Effective%20Battle%20Stats.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/586662-torn-torntools-effective-battle-stats",
+      "matches": [
+        "https://*.torn.com/index.php*"
+      ]
+    },
+    {
+      "id": "torntools.live-networth",
+      "greasyforkId": 584602,
+      "name": "Live Networth",
+      "description": "Compare your daily networth with the 'live' networth.",
+      "category": "profile",
+      "downloadUrl": "https://update.greasyfork.org/scripts/584602/TORN%3A%20TornTools%20-%20Live%20Networth.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/584602-torn-torntools-live-networth",
+      "matches": [
+        "https://*.torn.com/index.php*"
+      ]
+    },
+    {
+      "id": "torntools.mini-profile-last-action",
+      "greasyforkId": 590689,
+      "name": "Mini Profile Last Action",
+      "description": "Display the last action in the mini profile.",
+      "category": "profile",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590689/TORN%3A%20TornTools%20-%20Mini%20Profile%20Last%20Action.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590689-torn-torntools-mini-profile-last-action",
+      "matches": [
+        "https://*.torn.com/*"
+      ]
+    },
+    {
+      "id": "torntools.profile-box",
+      "greasyforkId": 582356,
+      "name": "Profile Box: Personal Stats",
+      "description": "Compare personal stats from the profile you are currently viewing.",
+      "category": "profile",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582356/TORN%3A%20TornTools%20-%20Profile%20Box%3A%20Personal%20Stats.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582356-torn-torntools-profile-box-personal-stats",
+      "matches": [
+        "https://*.torn.com/profiles.php*"
+      ]
+    },
+    {
+      "id": "torntools.auction-house-filter",
+      "greasyforkId": 582365,
+      "name": "Auction House Filter",
+      "description": "Filter the list of items in the auction house.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582365/TORN%3A%20TornTools%20-%20Auction%20House%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582365-torn-torntools-auction-house-filter",
+      "matches": [
+        "https://*.torn.com/amarket.php*"
+      ]
+    },
+    {
+      "id": "torntools.bazaar-market",
+      "greasyforkId": 590627,
+      "name": "Bazaar Market",
+      "description": "Additionally display bazaar entries in the item market.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590627/TORN%3A%20TornTools%20-%20Bazaar%20Market.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590627-torn-torntools-bazaar-market",
+      "matches": [
+        "https://*.torn.com/page.php?sid=ItemMarket*"
+      ]
+    },
+    {
+      "id": "torntools.can-energy",
+      "greasyforkId": 581676,
+      "name": "Can Energy",
+      "description": "Show the amount of energy a can would give.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581676/TORN%3A%20TornTools%20-%20Can%20Energy.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581676-torn-torntools-can-energy",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.drug-details",
+      "greasyforkId": 582354,
+      "name": "Drug Details",
+      "description": "Display the full details of drugs on various pages.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582354/TORN%3A%20TornTools%20-%20Drug%20Details.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582354-torn-torntools-drug-details",
+      "matches": [
+        "https://*.torn.com/item.php*",
+        "https://*.torn.com/bazaar.php*",
+        "https://*.torn.com/displaycase.php*",
+        "https://*.torn.com/factions.php*",
+        "https://*.torn.com/page.php?sid=travel*",
+        "https://*.torn.com/page.php?sid=ItemMarket*"
+      ]
+    },
+    {
+      "id": "torntools.fill-max",
+      "greasyforkId": 589859,
+      "name": "Fill Max",
+      "description": "Show a button to fill the amount input to the maximum amount.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/589859/TORN%3A%20TornTools%20-%20Fill%20Max.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/589859-torn-torntools-fill-max",
+      "matches": [
+        "https://*.torn.com/page.php?sid=ItemMarket*",
+        "https://*.torn.com/page.php?sid=travel*",
+        "https://*.torn.com/bazaar.php*",
+        "https://*.torn.com/bigalgunshop.php.php*",
+        "https://*.torn.com/shops.php*"
+      ]
+    },
+    {
+      "id": "torntools.item-values",
+      "greasyforkId": 582355,
+      "name": "Item Values",
+      "description": "Display the value of items on various pages.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582355/TORN%3A%20TornTools%20-%20Item%20Values.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582355-torn-torntools-item-values",
+      "matches": [
+        "https://*.torn.com/item.php*",
+        "https://*.torn.com/bazaar.php*",
+        "https://*.torn.com/displaycase.php*",
+        "https://*.torn.com/factions.php*",
+        "https://*.torn.com/trade.php*",
+        "https://*.torn.com/itemuseparcel.php*"
+      ]
+    },
+    {
+      "id": "torntools.opened-supply-pack-value",
+      "greasyforkId": 587765,
+      "name": "Opened Supply Pack Value",
+      "description": "Display the value of the supply pack you just opened.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587765/TORN%3A%20TornTools%20-%20Opened%20Supply%20Pack%20Value.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587765-torn-torntools-opened-supply-pack-value",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.quick-items",
+      "greasyforkId": 590997,
+      "name": "Quick Items",
+      "description": "Use your items faster.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590997/TORN%3A%20TornTools%20-%20Quick%20Items.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590997-torn-torntools-quick-items",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.shop-filters",
+      "greasyforkId": 582249,
+      "name": "Shop Filters",
+      "description": "Show filters in the various city item shops.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582249/TORN%3A%20TornTools%20-%20Shop%20Filters.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582249-torn-torntools-shop-filters",
+      "matches": [
+        "https://*.torn.com/bigalgunshop.php*",
+        "https://*.torn.com/shops.php*"
+      ]
+    },
+    {
+      "id": "torntools.stocks-filter",
+      "greasyforkId": 582370,
+      "name": "Stocks Filter",
+      "description": "Filter the stocks lists.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582370/TORN%3A%20TornTools%20-%20Stocks%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582370-torn-torntools-stocks-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=stocks*"
+      ]
+    },
+    {
+      "id": "torntools.trade-values",
+      "greasyforkId": 583022,
+      "name": "Trade Values",
+      "description": "Display the value of items on your trades.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/583022/TORN%3A%20TornTools%20-%20Trade%20Values.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/583022-torn-torntools-trade-values",
+      "matches": [
+        "https://*.torn.com/trade.php*"
+      ]
+    },
+    {
+      "id": "torntools.abroad-items-filter",
+      "greasyforkId": 582248,
+      "name": "Abroad Items Filter",
+      "description": "Filter the list of items available while abroad.",
+      "category": "travel",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582248/TORN%3A%20TornTools%20-%20Abroad%20Items%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582248-torn-torntools-abroad-items-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=travel*"
+      ]
+    },
+    {
+      "id": "torntools.abroad-people-filter",
+      "greasyforkId": 581879,
+      "name": "Abroad People Filter",
+      "description": "Filter the list of people abroad.",
+      "category": "travel",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581879/TORN%3A%20TornTools%20-%20Abroad%20People%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581879-torn-torntools-abroad-people-filter",
+      "matches": [
+        "https://*.torn.com/index.php?page=people*"
+      ]
+    },
+    {
+      "id": "torntools.landing-time",
+      "greasyforkId": 585961,
+      "name": "Landing Time",
+      "description": "Display at what local time your plane will be landing.",
+      "category": "travel",
+      "downloadUrl": "https://update.greasyfork.org/scripts/585961/TORN%3A%20TornTools%20-%20Landing%20Time.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/585961-torn-torntools-landing-time",
+      "matches": [
+        "https://*.torn.com/page.php?sid=travel*"
+      ]
+    },
+    {
+      "id": "torntools.travel-cooldown",
+      "greasyforkId": 590850,
+      "name": "Travel Cooldown",
+      "description": "Receive cooldown information before flying.",
+      "category": "travel",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590850/TORN%3A%20TornTools%20-%20Travel%20Cooldown.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590850-torn-torntools-travel-cooldown",
+      "matches": [
+        "https://*.torn.com/page.php?sid=travel*"
+      ]
+    },
+    {
+      "id": "torntools.travel-item-profits",
+      "greasyforkId": 584601,
+      "name": "Travel Item Profits",
+      "description": "Show the profit of each item abroad.",
+      "category": "travel",
+      "downloadUrl": "https://update.greasyfork.org/scripts/584601/TORN%3A%20TornTools%20-%20Travel%20Item%20Profits.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/584601-torn-torntools-travel-item-profits",
+      "matches": [
+        "https://*.torn.com/page.php?sid=travel*"
+      ]
+    },
+    {
+      "id": "torntools.travel-table",
+      "greasyforkId": 582357,
+      "name": "Travel Table",
+      "description": "Show the amount of items abroad, and sync this information.",
+      "category": "travel",
+      "downloadUrl": "https://update.greasyfork.org/scripts/582357/TORN%3A%20TornTools%20-%20Travel%20Table.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/582357-torn-torntools-travel-table",
+      "matches": [
+        "https://*.torn.com/page.php?sid=travel*"
+      ]
+    },
+    {
+      "id": "torntools.armory-filter",
+      "greasyforkId": 581954,
+      "name": "Armory Filter",
+      "description": "Filter the list of items in a factions armory.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581954/TORN%3A%20TornTools%20-%20Armory%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581954-torn-torntools-armory-filter",
+      "matches": [
+        "https://*.torn.com/factions.php*"
+      ]
+    },
+    {
+      "id": "torntools.faction-member-filter",
+      "greasyforkId": 581766,
+      "name": "Faction Member Filter",
+      "description": "Filter the list of members in a faction.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581766/TORN%3A%20TornTools%20-%20Faction%20Member%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581766-torn-torntools-faction-member-filter",
+      "matches": [
+        "https://*.torn.com/factions.php*"
+      ]
+    },
+    {
+      "id": "torntools.faction-quick-items",
+      "greasyforkId": 590998,
+      "name": "Faction Quick Items",
+      "description": "Use items from the faction armory faster.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590998/TORN%3A%20TornTools%20-%20Faction%20Quick%20Items.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590998-torn-torntools-faction-quick-items",
+      "matches": [
+        "https://*.torn.com/factions.php*"
+      ]
+    },
+    {
+      "id": "torntools.oc2-filter",
+      "greasyforkId": 587908,
+      "name": "OC2 Filter",
+      "description": "Filter the OC2 list.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587908/TORN%3A%20TornTools%20-%20OC2%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587908-torn-torntools-oc2-filter",
+      "matches": [
+        "https://*.torn.com/factions.php*"
+      ]
+    },
+    {
+      "id": "torntools.ranked-war-filter",
+      "greasyforkId": 581679,
+      "name": "Ranked War Filter",
+      "description": "Filter the ranked war views.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581679/TORN%3A%20TornTools%20-%20Ranked%20War%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581679-torn-torntools-ranked-war-filter",
+      "matches": [
+        "https://*.torn.com/factions.php*"
+      ]
+    },
+    {
+      "id": "torntools.bounty-filter",
+      "greasyforkId": 581880,
+      "name": "Bounty Filter",
+      "description": "Filter the bounties list.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581880/TORN%3A%20TornTools%20-%20Bounty%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581880-torn-torntools-bounty-filter",
+      "matches": [
+        "https://*.torn.com/bounties.php*"
+      ]
+    },
+    {
+      "id": "torntools.enemy-filter",
+      "greasyforkId": 587902,
+      "name": "Enemy Filter",
+      "description": "Filter the enemy list.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587902/TORN%3A%20TornTools%20-%20Enemy%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587902-torn-torntools-enemy-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=list&type=enemies*"
+      ]
+    },
+    {
+      "id": "torntools.friend-filter",
+      "greasyforkId": 587909,
+      "name": "Friend Filter",
+      "description": "Filter the friend list.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587909/TORN%3A%20TornTools%20-%20Friend%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587909-torn-torntools-friend-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=list&type=friends*"
+      ]
+    },
+    {
+      "id": "torntools.hospital-filter",
+      "greasyforkId": 581765,
+      "name": "Hospital Filter",
+      "description": "Filter the list currently in the hospital.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581765/TORN%3A%20TornTools%20-%20Hospital%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581765-torn-torntools-hospital-filter",
+      "matches": [
+        "https://*.torn.com/hospitalview.php*"
+      ]
+    },
+    {
+      "id": "torntools.jail-filter",
+      "greasyforkId": 581881,
+      "name": "Jail Filter",
+      "description": "Filter the list of users currently in jail.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581881/TORN%3A%20TornTools%20-%20Jail%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581881-torn-torntools-jail-filter",
+      "matches": [
+        "https://*.torn.com/jailview.php*"
+      ]
+    },
+    {
+      "id": "torntools.properties-filter",
+      "greasyforkId": 590849,
+      "name": "Properties Filter",
+      "description": "Filter the properties you and your spouse own.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590849/TORN%3A%20TornTools%20-%20Properties%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590849-torn-torntools-properties-filter",
+      "matches": [
+        "https://*.torn.com/properties.php*"
+      ]
+    },
+    {
+      "id": "torntools.target-filter",
+      "greasyforkId": 587907,
+      "name": "Target Filter",
+      "description": "Filter the target list.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587907/TORN%3A%20TornTools%20-%20Target%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587907-torn-torntools-target-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=list&type=targets*"
+      ]
+    },
+    {
+      "id": "torntools.userlist-filter",
+      "greasyforkId": 581840,
+      "name": "Userlist Filter",
+      "description": "Filter the (advanced) search userlist.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581840/TORN%3A%20TornTools%20-%20Userlist%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581840-torn-torntools-userlist-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=UserList*"
+      ]
+    },
+    {
+      "id": "torntools.gym-disable-stats",
+      "greasyforkId": 589850,
+      "name": "Gym Disable Stats",
+      "description": "Disable certain stats to avoid training them accidentally.",
+      "category": "gym",
+      "downloadUrl": "https://update.greasyfork.org/scripts/589850/TORN%3A%20TornTools%20-%20Gym%20Disable%20Stats.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/589850-torn-torntools-gym-disable-stats",
+      "matches": [
+        "https://*.torn.com/gym.php*"
+      ]
+    },
+    {
+      "id": "torntools.gym-steadfast",
+      "greasyforkId": 589849,
+      "name": "Gym Steadfast",
+      "description": "Show the amount of steadfast for every stats.",
+      "category": "gym",
+      "downloadUrl": "https://update.greasyfork.org/scripts/589849/TORN%3A%20TornTools%20-%20Gym%20Steadfast.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/589849-torn-torntools-gym-steadfast",
+      "matches": [
+        "https://*.torn.com/gym.php*"
+      ]
+    },
+    {
+      "id": "torntools.specialist-gyms",
+      "greasyforkId": 581656,
+      "name": "Specialist Gyms",
+      "description": "Calculate your stat ratio for activating your specialist gyms.",
+      "category": "gym",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581656/TORN%3A%20TornTools%20-%20Specialist%20Gyms.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581656-torn-torntools-specialist-gyms",
+      "matches": [
+        "https://*.torn.com/gym.php*"
+      ]
+    },
+    {
+      "id": "torntools.weapon-experience",
+      "greasyforkId": 584600,
+      "name": "Weapon Experience",
+      "description": "Show your weapon experience while attacking.",
+      "category": "combat",
+      "downloadUrl": "https://update.greasyfork.org/scripts/584600/TORN%3A%20TornTools%20-%20Weapon%20Experience.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/584600-torn-torntools-weapon-experience",
+      "matches": [
+        "https://*.torn.com/page.php?sid=attack*"
+      ]
+    },
+    {
+      "id": "torntools.crime-value",
+      "greasyforkId": 590636,
+      "name": "Crime Value",
+      "description": "Display the value of the items part of the crime outcome.",
+      "category": "crimes",
+      "downloadUrl": "https://update.greasyfork.org/scripts/590636/TORN%3A%20TornTools%20-%20Crime%20Value.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/590636-torn-torntools-crime-value",
+      "matches": [
+        "https://*.torn.com/page.php?sid=crimes*"
+      ]
+    },
+    {
+      "id": "torntools.efficient-rehab",
+      "greasyforkId": 587837,
+      "name": "Efficient Rehab",
+      "description": "Select how many rehabs are efficient at your current level.",
+      "category": "crimes",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587837/TORN%3A%20TornTools%20-%20Efficient%20Rehab.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587837-torn-torntools-efficient-rehab",
+      "matches": [
+        "https://*.torn.com/index.php?page=rehab*"
+      ]
+    },
+    {
+      "id": "torntools.fast-hunting",
+      "greasyforkId": 589121,
+      "name": "Fast Hunting",
+      "description": "Don't move the hunt again button to be able to hunt faster.",
+      "category": "crimes",
+      "downloadUrl": "https://update.greasyfork.org/scripts/589121/TORN%3A%20TornTools%20-%20Fast%20Hunting.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/589121-torn-torntools-fast-hunting",
+      "matches": [
+        "https://*.torn.com/index.php?page=hunting*"
+      ]
+    },
+    {
+      "id": "torntools.mission-hints",
+      "greasyforkId": 581839,
+      "name": "Mission Hints",
+      "description": "Provide you with the task of the mission before accepting, and sometimes also an additional hint.",
+      "category": "crimes",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581839/TORN%3A%20TornTools%20-%20Mission%20Hints.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581839-torn-torntools-mission-hints",
+      "matches": [
+        "https://*.torn.com/page.php?sid=missions*"
+      ]
+    },
+    {
+      "id": "torntools.company-stock-fill",
+      "greasyforkId": 586798,
+      "name": "Company Stock Fill",
+      "description": "Fill your company stock based on the previous day.",
+      "category": "jobs",
+      "downloadUrl": "https://update.greasyfork.org/scripts/586798/TORN%3A%20TornTools%20-%20Company%20Stock%20Fill.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/586798-torn-torntools-company-stock-fill",
+      "matches": [
+        "https://*.torn.com/companies.php*"
+      ]
+    },
+    {
+      "id": "torntools.job-specials",
+      "greasyforkId": 587573,
+      "name": "Job Specials",
+      "description": "Show all of the specials available for the company your are viewing.",
+      "category": "jobs",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587573/TORN%3A%20TornTools%20-%20Job%20Specials.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587573-torn-torntools-job-specials",
+      "matches": [
+        "https://*.torn.com/joblist.php*"
+      ]
+    },
+    {
+      "id": "torntools.blackjack-strategy",
+      "greasyforkId": 587767,
+      "name": "Blackjack Strategy",
+      "description": "Display the best strategic option in blackjack.",
+      "category": "casino",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587767/TORN%3A%20TornTools%20-%20Blackjack%20Strategy.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587767-torn-torntools-blackjack-strategy",
+      "matches": [
+        "https://*.torn.com/page.php?sid=blackjack*"
+      ]
+    },
+    {
+      "id": "torntools.high-low-helper",
+      "greasyforkId": 587766,
+      "name": "High Low Helper",
+      "description": "Display the best strategic option in high-low.",
+      "category": "casino",
+      "downloadUrl": "https://update.greasyfork.org/scripts/587766/TORN%3A%20TornTools%20-%20High%20Low%20Helper.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/587766-torn-torntools-high-low-helper",
+      "matches": [
+        "https://*.torn.com/page.php?sid=highlow*"
+      ]
+    },
+    {
+      "id": "torntools.racing-filter",
+      "greasyforkId": 581882,
+      "name": "Racing Filter",
+      "description": "Filter the racing competition list.",
+      "category": "racing",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581882/TORN%3A%20TornTools%20-%20Racing%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581882-torn-torntools-racing-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=racing*"
+      ]
+    },
+    {
+      "id": "torntools.only-new-feed",
+      "greasyforkId": 581399,
+      "name": "Only New Feed",
+      "description": "Only show unread items in your forum feeds.",
+      "category": "forums",
+      "downloadUrl": "https://update.greasyfork.org/scripts/581399/TORN%3A%20TornTools%20-%20Only%20New%20Feed.user.js",
+      "pageUrl": "https://greasyfork.org/scripts/581399-torn-torntools-only-new-feed",
+      "matches": [
+        "https://*.torn.com/forums.php*"
+      ]
+    }
+  ]
+}

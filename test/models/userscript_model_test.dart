@@ -2,17 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 
-/// Tests for [UserScriptModel] — header parsing, version comparison and URL
-/// matching logic.
-///
-/// These are all pure Dart, no device or network required.
-/// Run with:  flutter test test/models/userscript_model_test.dart
+/// Tests for [UserScriptModel]: header parsing, version comparison and URL
+/// matching logic
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Minimal valid userscript source for test fixtures.
+/// Minimal valid userscript source for test fixtures
 String _script({
   String name = 'Test Script',
   String version = '1.0.0',
@@ -43,14 +40,7 @@ UserScriptModel _model({
   UserScriptTime time = UserScriptTime.end,
   bool enabled = true,
 }) {
-  return UserScriptModel(
-    name: 'stub',
-    source: '',
-    isExample: false,
-    matches: matches,
-    time: time,
-    enabled: enabled,
-  );
+  return UserScriptModel(name: 'stub', source: '', isExample: false, matches: matches, time: time, enabled: enabled);
 }
 
 // ---------------------------------------------------------------------------
@@ -93,10 +83,7 @@ void main() {
     });
 
     test('throws when source has no header block', () {
-      expect(
-        () => UserScriptModel.parseHeader('just some random JS'),
-        throwsException,
-      );
+      expect(() => UserScriptModel.parseHeader('just some random JS'), throwsException);
     });
 
     test('extracts downloadURL', () {
@@ -108,18 +95,12 @@ void main() {
     test('collects grants and requires in declaration order', () {
       final source = _script(
         grants: ['GM_xmlhttpRequest', 'GM.setValue'],
-        requires: [
-          'https://cdn.example.com/first.js',
-          'https://cdn.example.com/second.js',
-        ],
+        requires: ['https://cdn.example.com/first.js', 'https://cdn.example.com/second.js'],
       );
 
       final meta = UserScriptModel.parseHeader(source);
       expect(meta['grants'], ['GM_xmlhttpRequest', 'GM.setValue']);
-      expect(meta['requires'], [
-        'https://cdn.example.com/first.js',
-        'https://cdn.example.com/second.js',
-      ]);
+      expect(meta['requires'], ['https://cdn.example.com/first.js', 'https://cdn.example.com/second.js']);
     });
 
     test('returns document-end as default injection time', () {
@@ -226,10 +207,7 @@ void main() {
     });
 
     test('multiple match patterns — any match suffices', () {
-      final m = _model(matches: [
-        'https://www.torn.com/*',
-        'https://api.torn.com/*',
-      ]);
+      final m = _model(matches: ['https://www.torn.com/*', 'https://api.torn.com/*']);
       expect(m.shouldInject('https://www.torn.com/page'), isTrue);
       expect(m.shouldInject('https://api.torn.com/user'), isTrue);
       expect(m.shouldInject('https://example.com/'), isFalse);
@@ -302,10 +280,7 @@ void main() {
     });
 
     test('fromMetaMap carries grants and requires into the model', () {
-      final source = _script(
-        grants: ['GM_xmlhttpRequest'],
-        requires: ['https://cdn.example.com/lib.js'],
-      );
+      final source = _script(grants: ['GM_xmlhttpRequest'], requires: ['https://cdn.example.com/lib.js']);
       final meta = UserScriptModel.parseHeader(source);
 
       final model = UserScriptModel.fromMetaMap(meta, isExample: false);
@@ -340,6 +315,92 @@ void main() {
 
       expect(adapted, contains('const text = "value";'));
       expect(adapted, contains("const other = 'x';"));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // tryGetUpdateUrl
+  // -------------------------------------------------------------------------
+  group('tryGetUpdateUrl', () {
+    test('extracts updateURL from the header', () {
+      const source =
+          '// ==UserScript==\n'
+          '// @name         Test\n'
+          '// @version      1.0.0\n'
+          '// @downloadURL  https://update.greasyfork.org/scripts/1/Test.user.js\n'
+          '// @updateURL    https://update.greasyfork.org/scripts/1/Test.meta.js\n'
+          '// ==/UserScript==\n';
+
+      expect(UserScriptModel.tryGetUpdateUrl(source), 'https://update.greasyfork.org/scripts/1/Test.meta.js');
+    });
+
+    test('returns null when the script declares no updateURL', () {
+      final source = _script(downloadUrl: 'https://example.com/s.user.js');
+      expect(UserScriptModel.tryGetUpdateUrl(source), isNull);
+    });
+
+    test('returns null on a source with no header at all', () {
+      expect(UserScriptModel.tryGetUpdateUrl('console.log("no header");'), isNull);
+    });
+
+    test('a real Greasy Fork .meta.js parses as a header and exposes its version', () {
+      // Same shape Greasy Fork serves for @updateURL: header only, no body
+      const metaJs =
+          '// ==UserScript==\n'
+          '// @name             TORN: TornTools - Only New Feed\n'
+          '// @namespace        torntools.only-new-feed\n'
+          '// @version          1.0.17\n'
+          '// @match            https://*.torn.com/forums.php*\n'
+          '// @grant            GM_addStyle\n'
+          '// @run-at           document-end\n'
+          '// ==/UserScript==\n';
+
+      final parsed = UserScriptModel.parseHeader(metaJs);
+      expect(parsed['version'], '1.0.17');
+      expect(parsed['name'], 'TORN: TornTools - Only New Feed');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // catalogName
+  // -------------------------------------------------------------------------
+  group('catalogName', () {
+    UserScriptModel catalogScript() {
+      final model = UserScriptModel(
+        name: 'City Items',
+        source: _script(name: 'TORN: TornTools - City Items', version: '1.0.0'),
+        isExample: false,
+        version: '1.0.0',
+      );
+      model.catalogName = 'City Items';
+      return model;
+    }
+
+    test('a remote update does not bring back the long name', () {
+      final model = catalogScript();
+      model.update(
+        source: _script(name: 'TORN: TornTools - City Items', version: '1.1.0'),
+        updateStatus: UserScriptUpdateStatus.upToDate,
+      );
+
+      expect(model.name, 'City Items');
+      expect(model.version, '1.1.0');
+    });
+
+    test('scripts without a catalog name keep taking the name from the header', () {
+      final model = UserScriptModel(name: 'Old', source: '', isExample: false);
+      model.update(
+        source: _script(name: 'Brand New Name', version: '2.0.0'),
+        updateStatus: UserScriptUpdateStatus.upToDate,
+      );
+
+      expect(model.name, 'Brand New Name');
+    });
+
+    test('survives a save and load round trip', () {
+      final restored = UserScriptModel.fromJson(catalogScript().toJson());
+      expect(restored.catalogName, 'City Items');
+      expect(restored.name, 'City Items');
     });
   });
 }

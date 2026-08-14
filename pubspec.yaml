@@ -80,6 +80,7 @@ dependencies:
       ## branch pda-dev-0.9.2
       ref: 0de8dc63df940cd70453b9d05465836a24a226ce
       path: packages/home_widget
+  flutter_markdown_plus: 1.0.12
   html: 0.15.6
   http: 1.5.0
   internet_connection_checker_plus: 2.7.2
@@ -215,6 +216,11 @@ flutter:
     - userscripts/TornPDA_Ready.js
     - userscripts/TornPDA_API.js
     - userscripts/TornPDA_EvaluateJavascript.js
+    - userscripts/catalog/torntools.json
+    - docs/userscripts/gm-compatibility.md
+    - docs/webview/
+    - userscripts/GMforPDA.user.js
+    - userscripts/TornPDA_Storage.md
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

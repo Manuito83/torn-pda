@@ -94,6 +94,16 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF1565C0),
         items: [
           _MItem(
+            'Userscripts: install TornTools scripts from inside the app',
+            detail:
+                'The user scripts page now has a TornTools section listing the features that the TornTools team '
+                'publishes as standalone scripts, sorted by category and searchable.\n\n'
+                'Install the ones you want with a single tap and they will be kept up to date like any other script.\n\n'
+                'These scripts are made and maintained by the TornTools team, not by Torn PDA, so please report '
+                'any problem with them through their own channels, which are linked in the section.',
+          ),
+          _MItem('Userscripts: added documentation section'),
+          _MItem(
             'Userscripts: update all your scripts at once',
             detail:
                 'When script updates are available, a banner in the user scripts page opens a review screen '

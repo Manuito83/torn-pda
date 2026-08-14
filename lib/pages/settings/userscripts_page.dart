@@ -5,9 +5,7 @@ import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:path_provider/path_provider.dart';
@@ -17,6 +15,8 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/pages/settings/scripts_catalog_page.dart';
+import 'package:torn_pda/pages/settings/scripts_docs_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
@@ -25,8 +25,6 @@ import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_bulk_update_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class UserScriptsPage extends StatefulWidget {
   final bool? fromWebview;
@@ -245,6 +243,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                   ),
                   if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
+                  if (_userScriptsProvider.scriptCatalogEnabled) _catalogBanner(),
                   const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -261,6 +260,56 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _catalogBanner() {
+    final bool light = _themeProvider.currentTheme == AppTheme.light;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+      child: Card(
+        margin: EdgeInsets.zero,
+        color: light ? Colors.blue[50] : Colors.blueGrey[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.blueGrey[light ? 200 : 700]!),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (BuildContext context) => const ScriptsCatalogPage()),
+            ).then((_) {
+              routeWithDrawer = false;
+              routeName = "userscripts";
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+            child: Row(
+              children: [
+                Icon(MdiIcons.toolbox, size: 20, color: light ? Colors.blue[800] : Colors.blue[200]),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("TornTools scripts", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Browse and install TornTools features as individual scripts",
+                        style: TextStyle(fontSize: 11, color: Colors.grey[light ? 700 : 400]),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, size: 20),
+              ],
             ),
           ),
         ),
@@ -315,7 +364,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       onTap: () => BotToast.showText(
         text:
             "This script uses Torn PDA's native storage. Its data does not compete for the browser's space "
-            "and is more stable. Edit the script to see its usage and raise its limit.",
+            "and is more stable. Edit the script to see its usage and raise its limit."
+            "\n\nGreat job by the script author for using this feature!",
         textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: Colors.grey[800]!,
         contentPadding: const EdgeInsets.all(10),
@@ -565,7 +615,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       ),
       actions: [
         PopupMenuButton<String>(
-          icon: const Icon(MdiIcons.contentSaveEditOutline),
+          icon: const Icon(MdiIcons.cogOutline),
           onSelected: (value) {
             if (value == 'export') {
               _showExportDialog();
@@ -573,6 +623,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _showUserJsExportDialog();
             } else if (value == 'import') {
               _showImportDialog();
+            } else if (value == 'toggle_catalog') {
+              _userScriptsProvider.setScriptCatalogEnabled = !_userScriptsProvider.scriptCatalogEnabled;
             }
           },
           itemBuilder: (BuildContext context) {
@@ -607,6 +659,22 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                   ],
                 ),
               ),
+              const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'toggle_catalog',
+                child: Row(
+                  children: [
+                    Icon(
+                      _userScriptsProvider.scriptCatalogEnabled ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      _userScriptsProvider.scriptCatalogEnabled ? 'Hide TornTools section' : 'Show TornTools section',
+                    ),
+                  ],
+                ),
+              ),
             ];
           },
         ),
@@ -617,15 +685,16 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           },
         ),
         IconButton(
-          icon: Icon(MdiIcons.alertDecagramOutline, color: Colors.orange[300]),
+          icon: Icon(MdiIcons.bookOpenPageVariantOutline, color: Colors.orange[300]),
           onPressed: () async {
-            await showDialog(
-              useRootNavigator: false,
-              context: context,
-              builder: (BuildContext context) {
-                return _disclaimerDialog();
-              },
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (BuildContext context) => ScriptsDocsPage(onOpenDisclaimer: _openDisclaimerDialog),
+              ),
             );
+            routeWithDrawer = false;
+            routeName = "userscripts";
           },
         ),
       ],
@@ -1306,380 +1375,48 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
+  Future<void> _openDisclaimerDialog() async {
+    await showDialog(
+      useRootNavigator: false,
+      context: context,
+      builder: (BuildContext context) {
+        return _disclaimerDialog();
+      },
+    );
+  }
+
   AlertDialog _disclaimerDialog() {
     return AlertDialog(
       title: const Text("DISCLAIMER"),
-      content: Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "User scripts are small programs written in JavaScript that enhance the browser's "
-                  "functionalities. Be careful when using them and ensure that you understand the code "
-                  "and what the script accomplishes; otherwise, ensure they come from a reliable "
-                  "source and have been checked by someone you trust.\n\n"
-                  "As in any other browser, user scripts might be used maliciously to get information "
-                  "from your Torn account or other websites you visit.",
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 25),
-                const Text("TIPS", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                EasyRichText(
-                  "Join our Discord server if you need help or are willing to contribute with new userscripts ideas or working code. "
-                  "There is a list of tested userscripts in our GitHub repository.",
-                  patternList: [
-                    EasyRichTextPattern(
-                      targetString: 'Discord server',
-                      style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue[400]),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () async {
-                          const url = 'https://discord.gg/vyP23kJ';
-                          if (await canLaunchUrl(Uri.parse(url))) {
-                            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                          }
-                        },
-                    ),
-                    EasyRichTextPattern(
-                      targetString: 'list of tested userscripts',
-                      style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue[400]),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () async {
-                          const url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
-                          await context.read<WebViewProvider>().openBrowserPreference(
-                            context: context,
-                            url: url,
-                            browserTapType: BrowserTapType.short,
-                          );
-                        },
-                    ),
-                  ],
-                  defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Any remote script needs to have a valid header, or else the remote install will fail. "
-                  "Local UserScripts do not have this constraint, although without a valid header the match pattern "
-                  "will not be validated and the script will be injected in all pages.",
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "The remote URL can be any URL that returns a plaintext file with a valid userscript header. "
-                  "However, the popup will only be added automatically on requests with the \"text/javascript\" "
-                  "content-type header. If you want to add a script that does not have this header (such as "
-                  "raw GitHub links) you must copy the url and navigate to the userscript section to add it.",
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
-                  "Torn PDA will replace it with your API key in runtime.",
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "User scripts are isolated from one another on runtime and executed inside anonymous functions. "
-                  "There is no need for you to adapt them this way.",
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 25),
-                const Text("TROUBLESHOOTING", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                const Text(
-                  "Preexisting Torn user scripts (e.g. for GreaseMonkey) may require some "
-                  "code changes to work with Torn PDA if external libraries were used. If you are an advanced user, "
-                  "please scroll down to the 'GM handlers' section for more information an alternatives.\n\n"
-                  "If a script does not work as intended after changing its code in Torn PDA, please "
-                  "try resetting your browser cache in the advanced browser settings section.",
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 25),
-                const Text("INJECTION CONSTRAINTS", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                const Text(
-                  "Torn PDA injects user scripts by using the native WebView of your device. It will try to comply "
-                  "as much as possible with script injection times and URLs. However, due to the different limitations "
-                  "imposed by the native platform, scripts might be injected twice in certain pages, or will need to "
-                  "be injected again in pages with pagination (e.g.: jail, hospital, forums...). Also, reloading the "
-                  "page might result in scripts being injected multiple times.\n\n"
-                  "Hence, it's the script developer's responsibility to control all these constraints. A few ideas: "
-                  "make sure that that the script is prepared for multiple injection retries by adding a variable to "
-                  "the main container; make sure that pagination works by adding click listeners; make sure that no "
-                  "conflicts exist with other scripts (variable names, etc.) by enclosing the script in an "
-                  "anonymous function.",
-                  style: TextStyle(fontSize: 13),
-                ),
-                const SizedBox(height: 25),
-                const Text("SCRIPT INJECTION TIME", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                const Text.rich(
-                  TextSpan(
-                    text:
-                        "Torn PDA can try to inject user scripts at two different moments: before the HTML Document "
-                        "loads (START) and after the load has been completed (END). The user can select when each "
-                        "script should be loaded by editing its details.\n\n"
-                        "By loading the script at the ",
-                    style: TextStyle(fontSize: 13),
-                    children: [
-                      TextSpan(
-                        text: "START",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text:
-                            ", you might be able to fetch resources loading and ajax calls, for example. However, "
-                            "Torn PDA will inject the script even before the HTML Document or jQuery are available; "
-                            "therefore, you need to plan for this and check their availability before doing any work. "
-                            "This can be accomplished with ",
-                      ),
-                      TextSpan(
-                        text: "intervals",
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      TextSpan(text: " or properties such as "),
-                      TextSpan(
-                        text: "'Document.readyState'",
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      TextSpan(text: " or checks like "),
-                      TextSpan(
-                        text: "'typeof window.jQuery'",
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      TextSpan(text: "."),
-                      TextSpan(
-                        text:
-                            "\n\n"
-                            "By loading the script at the ",
-                        style: TextStyle(fontSize: 13),
-                        children: [
-                          TextSpan(
-                            text: "END",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextSpan(
-                            text:
-                                ", Torn PDA will wait until the main HTML Document has loaded to inject the script. "
-                                "However, please be aware that there might be some items being dynamically "
-                                "loaded (e.g.: items list, jail and hospital lists, etc.), so it might still be "
-                                "necessary to ensure that certain elements are available before doing any work.",
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 25),
-                if (Platform.isIOS)
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("UNSUPPORTED WINDOWS (iOS)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 10),
-                      Text(
-                        "Be aware that user scripts injection at LOAD START is NOT supported on iOS when a tab has been opened as a 'new window' (e.g. "
-                        "when a link is long-pressed and 'open in a new window' is selected, when a pop-up window opens, or when a new tab "
-                        "is opened automatically from the HTML code)."
-                        "\n\nIn these cases, a warning will appear in the Terminal. "
-                        "The only work-around is to open pages as standard tabs by adding them manually if you need user script support. Alternatively, "
-                        "injection at LOAD END should work with no issues.",
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      SizedBox(height: 25),
-                    ],
-                  ),
-                const Text(
-                  "CROSS-ORIGIN REQUESTS (ADVANCED)",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text.rich(
-                  TextSpan(
-                    text:
-                        "Torn limits cross-origin requests via the content-security-policy header. In order to "
-                        "allow other APIs to be called from within the browser (though an userscript), Torn PDA "
-                        "incorporates its own JavasScript API.\n\n"
-                        "For more information regarding GET and POST calls, please visit the ",
-                    style: const TextStyle(fontSize: 13),
-                    children: [
-                      TextSpan(
-                        text: "JavasScript API implementation",
-                        style: const TextStyle(decoration: TextDecoration.underline),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const String scriptApiUrl =
-                                "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_API.js";
-                            if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
-                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
-                            }
-                          },
-                      ),
-                      const TextSpan(text: "."),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 25),
-                const Text(
-                  "JAVASCRIPT HANDLER (ADVANCED)",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text.rich(
-                  TextSpan(
-                    text:
-                        "Torn limits the use of the eval() function in javascript via the content-security-policy "
-                        "header. In order to allow the execution of javascript code retrieved at runtime by userscripts, "
-                        " Torn PDA incorporates a handler through which source code can be passed which is then "
-                        "evaluated directly from the app.\n\n"
-                        "For more information, please visit the ",
-                    style: const TextStyle(fontSize: 13),
-                    children: [
-                      TextSpan(
-                        text: "EvaluateJavascript Handler implementation",
-                        style: const TextStyle(decoration: TextDecoration.underline),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const String scriptApiUrl =
-                                "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_EvaluateJavascript.js";
-                            if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
-                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
-                            }
-                          },
-                      ),
-                      const TextSpan(text: "."),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 25),
-                const Text("GM HANDLERS (ADVANCED)", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                Text.rich(
-                  TextSpan(
-                    text:
-                        "As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not "
-                        "include any external libraries that are served in frameworks such as GM or TM. Therefore, "
-                        "if you are trying to use a script that was developed for another platform or that won't even "
-                        "work in your (desktop) browser console, you might need to adapt the code.\n\n"
-                        "However, Torn PDA incorporates basic GM handlers to make life easier when converting scripts, "
-                        "supporting dot notation (e.g.: 'GM.addStyle') and underscode notation (e.g.: 'GM_addStyle').\n\n"
-                        "Whilst these handlers supply vanilla JS counterparts to the GM_ functions, they cannot prepare "
-                        "your script to run on mobile devices: viewports are different, the page looks different, "
-                        "some selectors change, etcetera. So even if using these handlers, be prepared to adapt "
-                        "your script as necessary.\n\n"
-                        "For more information on how to proceed, please visit the ",
-                    style: const TextStyle(fontSize: 13),
-                    children: [
-                      TextSpan(
-                        text: "GM-For-PDA handler implementation",
-                        style: const TextStyle(decoration: TextDecoration.underline),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const String scriptApiUrl =
-                                "https://github.com/Manuito83/torn-pda/blob/master/userscripts/GMforPDA.user.js";
-                            if (await canLaunchUrl(Uri.parse(scriptApiUrl))) {
-                              await launchUrl(Uri.parse(scriptApiUrl), mode: LaunchMode.externalApplication);
-                            }
-                          },
-                      ),
-                      const TextSpan(
-                        text:
-                            ".\n\nAlso, in case of doubt, please head to our Discord server where "
-                            "we will be delighted to support you with this.\n\n"
-                            "Credit goes to Kwack for the development and testing of this integration.\n\n",
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 25),
-                const Text(
-                  "NOTIFICATION HANDLERS (ADVANCED)",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text.rich(
-                  TextSpan(
-                    text:
-                        "You can schedule native notifications (+ alarms and timers on Android) from JS code "
-                        "by using the notification handlers. To learn more about this and the different handlers avaiblable "
-                        ", please visit the docs section in Github\n\n",
-                    style: const TextStyle(fontSize: 13),
-                    children: [
-                      TextSpan(
-                        text: "Notification Handlers wiki",
-                        style: const TextStyle(decoration: TextDecoration.underline),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const String url =
-                                "https://github.com/Manuito83/torn-pda/blob/develop/docs/webview/notification-handlers.md";
-                            await context.read<WebViewProvider>().openBrowserPreference(
-                              context: context,
-                              url: url,
-                              browserTapType: BrowserTapType.short,
-                            );
-                          },
-                      ),
-                      const TextSpan(
-                        text:
-                            "\n\nAlso, you can access this website to try out the different paramenters and "
-                            "trigger a real action in your mobile device: ",
-                      ),
-                      TextSpan(
-                        text: "\n\nNotification Handlers test website",
-                        style: const TextStyle(decoration: TextDecoration.underline),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const String url = "https://info.tornpda.com/notifications-test.html";
-                            await context.read<WebViewProvider>().openBrowserPreference(
-                              context: context,
-                              url: url,
-                              browserTapType: BrowserTapType.short,
-                            );
-                          },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 50),
-                const Text(
-                  "OTHER HANDLERS AND FEATURES (ADVANCED)",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Text.rich(
-                  TextSpan(
-                    text:
-                        "Please be aware that there are other handlers available for you to use.\n\n"
-                        "For further information, you can visit our Discord server or the GitHub docs "
-                        "for developers:\n\n",
-                    style: const TextStyle(fontSize: 13),
-                    children: [
-                      TextSpan(
-                        text: "Torn PDA developers docs",
-                        style: const TextStyle(decoration: TextDecoration.underline),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const String url = "https://github.com/Manuito83/torn-pda/blob/develop/docs/README.md";
-                            await context.read<WebViewProvider>().openBrowserPreference(
-                              context: context,
-                              url: url,
-                              browserTapType: BrowserTapType.short,
-                            );
-                          },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 50),
-              ],
+      content: const SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "User scripts are small programs written in JavaScript that enhance the browser's "
+              "functionalities. Be careful when using them and ensure that you understand the code "
+              "and what the script accomplishes; otherwise, ensure they come from a reliable "
+              "source and have been checked by someone you trust.\n\n"
+              "As in any other browser, user scripts might be used maliciously to get information "
+              "from your Torn account or other websites you visit.",
+              style: TextStyle(fontSize: 13),
             ),
-          ),
+            SizedBox(height: 15),
+            Text(
+              "Remote scripts can be updated by their author at any time. Even though a script may "
+              "have been safe previously, malicious updates can be added. Ensure you verify all "
+              "changes before you install any update. If you are unsure, please reach out in the "
+              "UserScripts section of the Discord server.",
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 15),
+            Text(
+              "Everything else about user scripts, such as how they are injected, how to write them, "
+              "native storage, the app handlers and troubleshooting, is explained in the docs section.",
+              style: TextStyle(fontSize: 13),
+            ),
+          ],
         ),
       ),
       actions: [

@@ -78,6 +78,14 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _scriptCatalogEnabled = true;
+  bool get scriptCatalogEnabled => _scriptCatalogEnabled;
+  set setScriptCatalogEnabled(bool enabled) {
+    _scriptCatalogEnabled = enabled;
+    Prefs().setScriptCatalogEnabled(enabled);
+    notifyListeners();
+  }
+
   // Bulk update banner
   Set<String> _bulkUpdateDismissedPairs = {};
 
@@ -677,6 +685,7 @@ class UserScriptsProvider extends ChangeNotifier {
     _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
     _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
     _userScriptsNotifyUpdates = await Prefs().getUserScriptsNotifyUpdates();
+    _scriptCatalogEnabled = await Prefs().getScriptCatalogEnabled();
     try {
       final dismissed = await Prefs().getUserScriptsBulkUpdateDismissed();
       if (dismissed.isNotEmpty) {
@@ -1025,10 +1034,10 @@ class UserScriptsProvider extends ChangeNotifier {
         final script = _userScriptList.firstWhere((s) => s.name == item.script.name);
         // If the remote renamed the script to a name that already exists, keep the old name
         final bool nameCollision = _userScriptList.any(
-          (s) => !identical(s, script) && s.name.toLowerCase() == remote.name.toLowerCase(),
+          (s) => !identical(s, script) && s.name.toLowerCase() == script.preferredName(remote.name).toLowerCase(),
         );
         script.update(
-          name: nameCollision ? script.name : remote.name,
+          name: nameCollision ? script.name : script.preferredName(remote.name),
           time: remote.time,
           source: remote.source,
           manuallyEdited: false,
