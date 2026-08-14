@@ -5446,8 +5446,18 @@ class WebViewFullState extends State<WebViewFull>
 
   // Called from parent though GlobalKey state
   void loadFromExterior({required String? url, required bool omitHistory}) {
+    _dropPark();
     _omitTabHistory = omitHistory;
     _loadUrl(url);
+  }
+
+  void _dropPark() {
+    if (!_isParked) return;
+    _isParked = false;
+    _parkedUrl = null;
+    try {
+      webViewController?.resume();
+    } catch (_) {}
   }
 
   // Called from parent though GlobalKey state

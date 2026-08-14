@@ -1278,10 +1278,15 @@ class RetalCardState extends State<RetalCard> {
     final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
-        List<RetalsCardDetails> myTargetList = _r.orderedCardsDetails;
+        final List<RetalsCardDetails> myTargetList = List<RetalsCardDetails>.from(_r.orderedCardsDetails);
 
         // Adjust the list (remove targets above the one selected)
-        myTargetList.removeRange(0, myTargetList.indexWhere((element) => element.retalId == _retal!.retalId));
+        final int selectedIndex = myTargetList.indexWhere((element) => element.retalId == _retal!.retalId);
+        if (selectedIndex > 0) {
+          myTargetList.removeRange(0, selectedIndex);
+        } else if (selectedIndex == -1) {
+          myTargetList.clear();
+        }
 
         List<String> attacksIds = <String>[];
         List<String?> attacksNames = <String?>[];
@@ -1292,6 +1297,13 @@ class RetalCardState extends State<RetalCard> {
           attacksNames.add(tar.name);
           attackNotes.add(tar.personalNote);
           attacksNotesColor.add(tar.personalNoteColor);
+        }
+
+        if (attacksIds.isEmpty) {
+          attacksIds.add(_retal!.retalId.toString());
+          attacksNames.add(_retal!.name);
+          attackNotes.add(_retal!.personalNote);
+          attacksNotesColor.add(_retal!.personalNoteColor);
         }
 
         final bool showNotes = await Prefs().getShowTargetsNotes();

@@ -1583,18 +1583,46 @@ class WebViewProvider extends ChangeNotifier {
   void loadMainTabUrl(String? url) {
     if (_tabList.isEmpty) return;
     final tab = _tabList[0];
-    tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
+
+    final WebViewFullState? state = tab.webViewKey?.currentState;
+    if (state != null && !tab.needsReloadAfterRendererGone) {
+      state.loadFromExterior(url: url, omitHistory: false);
+    } else {
+      if (url != null && url.isNotEmpty) tab.currentUrl = url;
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.recordError(
+          "Main tab could not receive an external URL and was rebuilt "
+          "(state=${state == null ? "null" : "alive"}, rendererGone=${tab.needsReloadAfterRendererGone})",
+          null,
+          reason: "External URL dropped by an unmounted or dead main tab",
+          fatal: false,
+        );
+      }
+      rebuildUnresponsiveWebView(
+        tabUid: tab.id,
+        isChainingBrowser: tab.isChainingBrowser,
+        chainingPayload: tab.chainingPayload,
+      );
+    }
+
     if (currentTab != 0) {
       activateTab(0);
     }
   }
 
   void convertToChainingBrowser({ChainingPayload? chainingPayload}) {
-    if (_tabList.isEmpty) return;
+    if (_tabList.isEmpty || chainingPayload == null) return;
     final tab = _tabList[0];
     tab.isChainingBrowser = true;
     tab.chainingPayload = chainingPayload;
-    tab.webViewKey?.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload!);
+
+    final WebViewFullState? state = tab.webViewKey?.currentState;
+    if (state != null) {
+      state.convertToChainingBrowser(chainingPayload: chainingPayload);
+    } else {
+      rebuildUnresponsiveWebView(tabUid: tab.id, isChainingBrowser: true, chainingPayload: chainingPayload);
+    }
+
     if (currentTab != 0) {
       activateTab(0);
     }

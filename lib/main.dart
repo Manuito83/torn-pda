@@ -803,14 +803,12 @@ Future<void> _initializeFirebase() async {
           FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('192.168.1.172', 5001);
         }
         await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-
-        //if (kDebugMode) {
-        PlatformDispatcher.instance.onError = (error, stack) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
-          return false;
-        };
-        //}
       }
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
+        return false;
+      };
 
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     }

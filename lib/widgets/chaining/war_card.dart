@@ -1135,10 +1135,15 @@ class WarCardState extends State<WarCard> {
     final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
-        List<WarCardDetails> myTargetList = _w.orderedCardsDetails;
+        final List<WarCardDetails> myTargetList = List<WarCardDetails>.from(_w.orderedCardsDetails);
 
         // Adjust the list (remove targets above the one selected)
-        myTargetList.removeRange(0, myTargetList.indexWhere((element) => element.memberId == _member.memberId));
+        final int selectedIndex = myTargetList.indexWhere((element) => element.memberId == _member.memberId);
+        if (selectedIndex > 0) {
+          myTargetList.removeRange(0, selectedIndex);
+        } else if (selectedIndex == -1) {
+          myTargetList.clear();
+        }
 
         List<String> attacksIds = <String>[];
         List<String?> attacksNames = <String?>[];
@@ -1148,6 +1153,14 @@ class WarCardState extends State<WarCard> {
           attacksIds.add(tar.memberId.toString());
           attacksNames.add(tar.name);
           final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(tar.memberId.toString());
+          attackNotes.add(playerNote?.note);
+          attacksNotesColor.add(playerNote?.color);
+        }
+
+        if (attacksIds.isEmpty) {
+          final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(_member.memberId.toString());
+          attacksIds.add(_member.memberId.toString());
+          attacksNames.add(_member.name);
           attackNotes.add(playerNote?.note);
           attacksNotesColor.add(playerNote?.color);
         }
