@@ -231,7 +231,7 @@ class UserScriptsProvider extends ChangeNotifier {
         return UnmodifiableListView(
           _userScriptList.where((s) => s.shouldInject(url, time)).map((s) {
             return UserScript(
-              groupName: s.name,
+              groupName: s.storageId,
               injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
               // If the script is a custom API key script, we need to replace the API key
               source: adaptSource(
@@ -262,7 +262,7 @@ class UserScriptsProvider extends ChangeNotifier {
     if (!_userScriptsEnabled) {
       return const <String>[];
     } else {
-      return _userScriptList.where((s) => !s.shouldInject(url)).map((s) => s.name).toList();
+      return _userScriptList.where((s) => !s.shouldInject(url)).map((s) => s.storageId).toList();
     }
   }
 

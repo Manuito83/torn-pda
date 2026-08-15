@@ -9,6 +9,8 @@ class LiveActivityManager {
 
   /// The currently managed Live Activity instance.
   private var currentActivity: Activity<TravelActivityAttributes>?
+  private var stateObservationTask: Task<Void, Never>?
+  private var tokenObservationTask: Task<Void, Never>?
 
   /// The most recent push token for the current Live Activity.
   public private(set) var activityPushToken: String?
@@ -379,8 +381,12 @@ class LiveActivityManager {
       return
     }
 
+    // Re-adoption calls this repeatedly; replace previous observers instead of stacking them
+    stateObservationTask?.cancel()
+    tokenObservationTask?.cancel()
+
     // Task to observe changes in the activity's state (e.g., active -> ended, active -> dismissed).
-    Task { [weak self] in
+    stateObservationTask = Task { [weak self] in
       guard let self = self else { return }  // Avoid retain cycles.
       for await stateUpdate in activityToObserve.activityStateUpdates {
         // If this activity is no longer the `currentActivity`, stop observing for this task.
@@ -404,7 +410,7 @@ class LiveActivityManager {
     }
 
     // Task to observe push token updates for the activity.
-    Task { [weak self] in
+    tokenObservationTask = Task { [weak self] in
       guard let self = self else { return }
       for await tokenData in activityToObserve.pushTokenUpdates {
         // If this activity is no longer the `currentActivity`, stop observing.
@@ -427,6 +433,8 @@ class LiveActivityManager {
 class RacingLiveActivityManager {
 
   private var currentActivity: Activity<RacingActivityAttributes>?
+  private var stateObservationTask: Task<Void, Never>?
+  private var tokenObservationTask: Task<Void, Never>?
 
   public private(set) var activityPushToken: String?
 
@@ -677,7 +685,10 @@ class RacingLiveActivityManager {
       return
     }
 
-    Task { [weak self] in
+    stateObservationTask?.cancel()
+    tokenObservationTask?.cancel()
+
+    stateObservationTask = Task { [weak self] in
       guard let self = self else { return }
       for await stateUpdate in activityToObserve.activityStateUpdates {
         guard activityToObserve.id == self.currentActivity?.id else {
@@ -697,7 +708,7 @@ class RacingLiveActivityManager {
       }
     }
 
-    Task { [weak self] in
+    tokenObservationTask = Task { [weak self] in
       guard let self = self else { return }
       for await tokenData in activityToObserve.pushTokenUpdates {
         guard activityToObserve.id == self.currentActivity?.id else {

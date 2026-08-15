@@ -19,6 +19,9 @@ import workmanager_apple
   var memoryChannel: FlutterMethodChannel!
   var liveActivityChannel: FlutterMethodChannel!
 
+  // LA tokens must not cross the channel before the engine runs (see markEngineRunning)
+  private var flutterEngineRunning = false
+
   lazy var liveActivityManager: Any? = {
     if #available(iOS 16.2, *) {
       let manager = LiveActivityManager()
@@ -82,6 +85,26 @@ import workmanager_apple
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+  // Any inbound Dart call proves the engine is running: push tokens withheld until then.
+  // Also covers push-to-start background launches, where the token arrives with no Dart
+  // running and gets resynced on the next real app open
+  private func markEngineRunning() {
+    if flutterEngineRunning { return }
+    flutterEngineRunning = true
+    if #available(iOS 16.2, *), let channel = liveActivityChannel {
+      if let token = activityManager?.activityPushToken {
+        channel.invokeMethod(
+          "liveActivityTokenUpdated",
+          arguments: ["activityType": "travel", "token": token])
+      }
+      if let token = racingActivityManager?.activityPushToken {
+        channel.invokeMethod(
+          "liveActivityTokenUpdated",
+          arguments: ["activityType": "racing", "token": token])
+      }
+    }
+  }
+
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
@@ -106,7 +129,8 @@ import workmanager_apple
     let protectedDataChannel = FlutterMethodChannel(
       name: "tornpda/protected_data", binaryMessenger: messenger)
     protectedDataChannel.setMethodCallHandler {
-      (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      self?.markEngineRunning()
       if call.method == "isProtectedDataAvailable" {
         result(UIApplication.shared.isProtectedDataAvailable)
       } else {
@@ -118,6 +142,7 @@ import workmanager_apple
     iconChannel = FlutterMethodChannel(
       name: "tornpda/icon", binaryMessenger: messenger)
     iconChannel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      self.markEngineRunning()
       if call.method == "changeIcon" {
         // Handle the passed arguments properly
         if let args = call.arguments as? [String: Any],
@@ -228,20 +253,28 @@ import workmanager_apple
 
     if #available(iOS 16.2, *) {
       self.activityManager?.onNewActivityPushToken = { [weak self] token in
-        self?.liveActivityChannel.invokeMethod(
-          "liveActivityTokenUpdated",
-          arguments: [
-            "activityType": "travel",
-            "token": token as Any,
-          ])
+        // ActivityKit delivers off the main thread and possibly before the engine runs;
+        // channel calls need both, and a withheld token is resynced by markEngineRunning
+        DispatchQueue.main.async {
+          guard let self, self.flutterEngineRunning else { return }
+          self.liveActivityChannel.invokeMethod(
+            "liveActivityTokenUpdated",
+            arguments: [
+              "activityType": "travel",
+              "token": token as Any,
+            ])
+        }
       }
       self.racingActivityManager?.onNewActivityPushToken = { [weak self] token in
-        self?.liveActivityChannel.invokeMethod(
-          "liveActivityTokenUpdated",
-          arguments: [
-            "activityType": "racing",
-            "token": token as Any,
-          ])
+        DispatchQueue.main.async {
+          guard let self, self.flutterEngineRunning else { return }
+          self.liveActivityChannel.invokeMethod(
+            "liveActivityTokenUpdated",
+            arguments: [
+              "activityType": "racing",
+              "token": token as Any,
+            ])
+        }
       }
 
       liveActivityChannel.setMethodCallHandler { [weak self] (call, result) in
@@ -258,6 +291,7 @@ import workmanager_apple
           )
           return
         }
+        self.markEngineRunning()
         let args = call.arguments as? [String: Any]
 
         switch call.method {

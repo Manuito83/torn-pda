@@ -86,7 +86,6 @@ dependencies:
   internet_connection_checker_plus: 2.7.2
   intl: 0.20.2
   json_annotation: 4.9.0 # Used by swagger_dart_code_generator
-  lints: 6.0.0
   flutter_material_design_icons: 3.1.0+7447
   path_provider: 2.1.5
   ## Bug submitted for v4.2.5 (plane icon out of place)
@@ -98,7 +97,7 @@ dependencies:
   receive_intent:
     git:
       url: https://github.com/daadu/receive_intent
-      ref: master
+      ref: 21f20d96f745c49b2de5d792c9392c0ceb31b955
   rxdart: 0.28.0
   synchronized: 3.4.1+1
   sendbird_chat_sdk: 4.7.0
@@ -169,6 +168,8 @@ dev_dependencies:
   json_serializable: 6.11.1 
   ## flutter pub run import_sorter:main
   import_sorter: 5.0.0-releasecandidate.1
+  ## Only consumed by analysis_options.yaml
+  lints: 6.0.0
   swagger_dart_code_generator: 4.0.0
 
 flutter_icons:

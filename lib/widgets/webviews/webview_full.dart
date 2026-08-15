@@ -2443,12 +2443,12 @@ class WebViewFullState extends State<WebViewFull>
     final List<UserScript> guarded = scripts.map(_guardedOnce).toList();
     final result = _scriptLock.then((_) async {
       if (webViewController == null) return;
+      final groups = <String>{};
       for (final s in guarded) {
         final group = s.groupName;
-        if (group != null) {
-          await webViewController!.removeUserScriptsByGroupName(groupName: group);
-        }
+        if (group != null) groups.add(group);
       }
+      await Future.wait(groups.map((g) => webViewController!.removeUserScriptsByGroupName(groupName: g)));
       await webViewController!.addUserScripts(userScripts: guarded);
     });
     // Next caller waits for this one; swallow errors so a single failure doesn't break the chain

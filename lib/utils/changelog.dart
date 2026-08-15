@@ -119,7 +119,8 @@ List<_MVersion> _modernChangelog() => [
         title: 'Improved',
         color: Color(0xFFE65100),
         items: [
-          _MItem('Script storage capacity warnings are now only shown when debug messages are enabled'),
+          _MItem('Userscripts: storage capacity warnings are now only shown when debug messages are enabled'),
+          _MItem('Userscripts: faster injection when loading pages'),
           _MItem('Travel live updates: icons now show the direction of travel [bombel]', androidOnly: true),
           _MItem('Profile section now uses about half the API calls'),
           _MItem('Developer tools: storage entries can be deleted in bulk'),
@@ -133,6 +134,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Events: HTML tags no longer show up in the timeline text'),
           _MItem('Events: fixed a stray "\$1" replacing punctuation in item names and personal messages'),
           _MItem('Chaining: tapping a target in the war or retaliation lists no longer fails to start the attack'),
+          _MItem('Fixed startup crashes on some devices'),
         ],
       ),
     ],

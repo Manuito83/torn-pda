@@ -410,7 +410,7 @@ class _DevToolsScriptsTabState extends State<DevToolsScriptsTab> {
   Future<void> _disableAndRemove(UserScriptModel script) async {
     if (widget.webViewController != null) {
       try {
-        await widget.webViewController!.removeUserScriptsByGroupName(groupName: script.name);
+        await widget.webViewController!.removeUserScriptsByGroupName(groupName: script.storageId);
       } catch (e) {
         debugPrint("Error removing script: $e");
       }

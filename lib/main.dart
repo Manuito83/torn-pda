@@ -131,7 +131,7 @@ const bool pointFunctionsEmulatorToLocal = false;
 // TODO (App release)
 const bool enableWakelockForDebug = true;
 
-final enableAccessibilityTools = false;
+const enableAccessibilityTools = false;
 
 bool logAndShowToUser = false;
 
