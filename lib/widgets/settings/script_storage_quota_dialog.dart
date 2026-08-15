@@ -27,6 +27,11 @@ Future<bool> showScriptStorageQuotaDialog(BuildContext context, String sid) asyn
               "compete for the browser's space.",
               style: TextStyle(fontSize: 12),
             ),
+            const SizedBox(height: 8),
+            const Text(
+              "Great job by the script author for using this feature!",
+              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Color(0xFFB8860B)),
+            ),
             const SizedBox(height: 12),
             Text("Currently using ${_formatBytes(used)}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const Divider(height: 24),

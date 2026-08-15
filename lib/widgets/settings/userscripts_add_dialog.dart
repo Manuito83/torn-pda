@@ -14,6 +14,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/widgets/settings/gold_storage_icon.dart';
 import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_simple_dialog.dart';
 
@@ -162,7 +163,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       child: Align(
         alignment: Alignment.centerLeft,
         child: Material(
-          color: Colors.green.withAlpha(30),
+          color: Colors.amber.withAlpha(40),
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
@@ -172,14 +173,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.sd_storage, color: Colors.green, size: 16),
+                  const GoldStorageIcon(size: 16),
                   const SizedBox(width: 6),
                   Text(
                     "Native storage: set limit",
-                    style: TextStyle(fontSize: 11, color: Colors.green.shade700, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 11, color: Colors.amber.shade800, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(width: 4),
-                  Icon(Icons.tune, size: 14, color: Colors.green.shade700),
+                  Icon(Icons.tune, size: 14, color: Colors.amber.shade800),
                 ],
               ),
             ),

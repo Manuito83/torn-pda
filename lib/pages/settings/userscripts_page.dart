@@ -21,6 +21,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/settings/gold_storage_icon.dart';
+import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_bulk_update_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
@@ -360,18 +362,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   Widget _storageSupportBadge(UserScriptModel script) {
     return GestureDetector(
-      child: const Icon(Icons.sd_storage, color: Colors.green, size: 20),
-      onTap: () => BotToast.showText(
-        text:
-            "This script uses Torn PDA's native storage. Its data does not compete for the browser's space "
-            "and is more stable. Edit the script to see its usage and raise its limit."
-            "\n\nGreat job by the script author for using this feature!",
-        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: Colors.grey[800]!,
-        contentPadding: const EdgeInsets.all(10),
-        clickClose: true,
-        duration: const Duration(seconds: 8),
-      ),
+      child: const GoldStorageIcon(size: 20),
+      onTap: () => showScriptStorageQuotaDialog(context, script.storageId),
     );
   }
 
