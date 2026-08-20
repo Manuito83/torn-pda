@@ -134,6 +134,12 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Events: HTML tags no longer show up in the timeline text'),
           _MItem('Events: fixed a stray "\$1" replacing punctuation in item names and personal messages'),
           _MItem('Chaining: tapping a target in the war or retaliation lists no longer fails to start the attack'),
+          _MItem(
+            'Alarms can now be set for waits longer than 24 hours',
+            detail:
+                'Alarms requested from a user script are not included and still stop at 24 hours, but a script '
+                'can schedule a notification for any date.',
+          ),
           _MItem('Fixed startup crashes on some devices'),
         ],
       ),

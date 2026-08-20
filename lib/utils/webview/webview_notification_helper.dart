@@ -73,15 +73,9 @@ class WebviewNotificationsHelper {
       ledOffMs: 500,
     );
 
-    const iosDetails = DarwinNotificationDetails(
-      presentSound: true,
-      sound: 'aircraft_seatbelt.aiff',
-    );
+    const iosDetails = DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
 
-    final details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
     if (Platform.isAndroid) {
       await assessNotificationPermissions();
@@ -111,8 +105,8 @@ class WebviewNotificationsHelper {
         contentColor: toastColor.toLowerCase() == "red"
             ? Colors.red
             : toastColor.toLowerCase() == "green"
-                ? Colors.green
-                : Colors.blue,
+            ? Colors.green
+            : Colors.blue,
         duration: Duration(seconds: toastDurationSeconds),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -157,6 +151,11 @@ class WebviewNotificationsHelper {
       return 'Error: Alarms are only available on Android or iOS';
     }
 
+    // SET_ALARM carries no date
+    if (alarmTime.difference(DateTime.now()).inSeconds >= 86400) {
+      return 'Error: Android alarms cannot be set more than 24 hours ahead, use a scheduled notification instead';
+    }
+
     final intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
       arguments: {
@@ -174,12 +173,13 @@ class WebviewNotificationsHelper {
   }
 
   /// Set an Android Timer via Intent
-  static Future<String> setAndroidTimer({
-    required int seconds,
-    String message = 'TORN PDA Timer',
-  }) async {
+  static Future<String> setAndroidTimer({required int seconds, String message = 'TORN PDA Timer'}) async {
     if (!Platform.isAndroid) {
       return 'Error: Timers are only available on Android';
+    }
+
+    if (seconds < 1 || seconds > 86400) {
+      return 'Error: Timer length must be between 1 and 86400 seconds (24 hours)';
     }
 
     final intent = AndroidIntent(

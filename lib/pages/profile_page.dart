@@ -7,6 +7,7 @@ import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:android_intent_plus/android_intent.dart';
 // Package imports:
@@ -97,6 +98,11 @@ enum ProfileNotification {
 }
 
 enum NotificationType { notification, alarm, timer }
+
+/// DEBUG: schedules profile notifications
+/// Hot restart + setup alarm
+bool debugQuickProfileAlerts = true;
+int debugQuickProfileLeadSeconds = 5;
 
 extension ProfileNotificationExtension on ProfileNotification {
   String? get string {
@@ -5697,12 +5703,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       await assessExactAlarmsPermissionsAndroid(context, _settingsProvider!);
     }
 
+    final int scheduleInSeconds = debugQuickProfileAlerts && kDebugMode
+        ? debugQuickProfileLeadSeconds
+        : secondsToNotification!;
+    if (debugQuickProfileAlerts && kDebugMode) {
+      log('Quick profile alert: notification moved to $scheduleInSeconds seconds');
+    }
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       notificationId,
       notificationTitle,
       notificationSubtitle,
-      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)), // DEBUG
-      tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification!)),
+      tz.TZDateTime.now(tz.local).add(Duration(seconds: scheduleInSeconds)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidScheduleMode: exactAlarmsPermissionAndroid
@@ -6848,11 +6860,39 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         message = isIOS ? 'Virus' : 'Torn PDA Virus';
     }
 
-    if (moreThan24Hours) {
+    // Debug
+    if (debugQuickProfileAlerts && kDebugMode) {
+      alarmDateTime = DateTime.now().add(Duration(seconds: debugQuickProfileLeadSeconds));
+      hour = alarmDateTime.hour;
+      minute = alarmDateTime.minute;
+      moreThan24Hours = true;
+      log('Quick profile alert: alarm moved to $alarmDateTime, forcing the long wait branch');
+    }
+
+    // Beyond 24 hours the Android clock cannot hold the date, so Torn PDA sounds the alarm itself
+    // AlarmKit takes any date, so iOS never needs this
+    if (moreThan24Hours && Platform.isAndroid) {
+      if (alarmDateTime == null) return;
+      await assessExactAlarmsPermissionsAndroid(context, _settingsProvider!);
+      await scheduleAlarmGradeNotificationAndroid(
+        notificationId: 1000 + profileNotification.index,
+        channelName: 'Profile alarms',
+        channelDescription: 'Manual alarms for profile timers longer than 24 hours',
+        title: message,
+        body: _settingsProvider!.discreetNotifications ? " " : 'Your wait is over!',
+        targetTime: alarmDateTime,
+        payload: descriptor.payload,
+        sound: 'slow_spring_board',
+        playSound: _alarmSound,
+        vibrate: _alarmVibration,
+      );
+
       BotToast.showText(
-        text: "Alarms can't be set for a period longer than 24 hours!",
+        text: '$alarmSetString (activated by Torn PDA, as it is over 24 hours away)',
         textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: _themeProvider!.getTextColor(Colors.red),
+        contentColor: percentageError
+            ? _themeProvider!.getTextColor(Colors.red)
+            : _themeProvider!.getTextColor(Colors.green),
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -7013,6 +7053,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.virus:
         totalSeconds = _virusNotificationTime?.difference(DateTime.now()).inSeconds ?? 0;
         message = 'Torn PDA Virus';
+    }
+
+    // SET_TIMER is capped at 86400 seconds, same limit the alarm path already enforces
+    if (totalSeconds > 86400) {
+      BotToast.showText(
+        text: "Timers can't be set for a period longer than 24 hours!",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: _themeProvider!.getTextColor(Colors.red),
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
+      );
+      return;
     }
 
     final AndroidIntent intent = AndroidIntent(

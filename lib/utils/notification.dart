@@ -13,6 +13,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 
 // Project imports:
+import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -285,52 +286,31 @@ Future showNotificationBoth(Map payload, int notId) async {
     );
   } else if (Platform.isIOS) {
     var platformChannelSpecifics = const NotificationDetails(
-      iOS: DarwinNotificationDetails(
-        presentSound: true,
-        sound: 'slow_spring_board.aiff',
-      ),
+      iOS: DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff'),
     );
     if (channelName.contains("travel")) {
       platformChannelSpecifics = const NotificationDetails(
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          sound: 'aircraft_seatbelt.aiff',
-        ),
+        iOS: DarwinNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff'),
       );
     } else if (channelName.contains("assists")) {
       platformChannelSpecifics = const NotificationDetails(
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          sound: 'sword_clash.aiff',
-        ),
+        iOS: DarwinNotificationDetails(presentSound: true, sound: 'sword_clash.aiff'),
       );
     } else if (channelName.contains("loot")) {
       platformChannelSpecifics = const NotificationDetails(
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          sound: 'sword_clash.aiff',
-        ),
+        iOS: DarwinNotificationDetails(presentSound: true, sound: 'sword_clash.aiff'),
       );
     } else if (channelName.contains("retals")) {
       platformChannelSpecifics = const NotificationDetails(
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          sound: 'sword_clash.aiff',
-        ),
+        iOS: DarwinNotificationDetails(presentSound: true, sound: 'sword_clash.aiff'),
       );
     } else if (channelName.contains("race")) {
       platformChannelSpecifics = const NotificationDetails(
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          sound: 'car_start.aiff',
-        ),
+        iOS: DarwinNotificationDetails(presentSound: true, sound: 'car_start.aiff'),
       );
     } else if (channelName.contains("sendbird")) {
       platformChannelSpecifics = const NotificationDetails(
-        iOS: DarwinNotificationDetails(
-          presentSound: true,
-          sound: 'keyboard.aiff',
-        ),
+        iOS: DarwinNotificationDetails(presentSound: true, sound: 'keyboard.aiff'),
       );
     }
 
@@ -956,8 +936,8 @@ Future reconfigureNotificationChannels({String? mod}) async {
 }
 
 Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvider settingsProvider) async {
-  final androidImplementation =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
+  final androidImplementation = flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
   exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
 
   if (!exactAlarmsPermissionAndroid) {
@@ -985,9 +965,68 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
   }
 }
 
+/// Android alarm for targets the system clock cannot hold as SET_TIMER is capped at 86400 seconds
+Future<void> scheduleAlarmGradeNotificationAndroid({
+  required int notificationId,
+  required String channelName,
+  required String channelDescription,
+  required String title,
+  required String body,
+  required DateTime targetTime,
+  required String payload,
+  required String sound,
+  bool playSound = true,
+  bool vibrate = true,
+  String icon = 'notification_icon',
+}) async {
+  if (!Platform.isAndroid) return;
+
+  final modifier = await getNotificationChannelsModifiers();
+  final channelId = "$channelName ${modifier.channelIdModifier}";
+
+  final androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    channelId,
+    channelId,
+    channelDescription: channelDescription,
+    importance: Importance.max,
+    priority: Priority.max,
+    visibility: NotificationVisibility.public,
+    category: AndroidNotificationCategory.alarm,
+    audioAttributesUsage: AudioAttributesUsage.alarm,
+    playSound: playSound,
+    sound: playSound ? RawResourceAndroidNotificationSound(sound) : null,
+    enableVibration: vibrate,
+    vibrationPattern: vibrate ? modifier.vibrationPattern : null,
+    // FLAG_INSISTENT, repeats until dismissed, bounded by timeoutAfter so that it cannot ring forever
+    additionalFlags: Int32List.fromList([4]),
+    timeoutAfter: 600000,
+    icon: icon,
+    color: Colors.grey,
+    ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ledOnMs: 1000,
+    ledOffMs: 500,
+  );
+
+  await flutterLocalNotificationsPlugin.zonedSchedule(
+    notificationId,
+    title,
+    body,
+    tz.TZDateTime.from(targetTime, tz.local),
+    NotificationDetails(android: androidPlatformChannelSpecifics),
+    payload: payload,
+    androidScheduleMode: exactAlarmsPermissionAndroid
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle,
+  );
+}
+
 @pragma("vm:entry-point")
-Future<void> showSendbirdNotification(String sender, String message, String channelUrl,
-    {bool fromBackground = false}) async {
+Future<void> showSendbirdNotification(
+  String sender,
+  String message,
+  String channelUrl, {
+  bool fromBackground = false,
+}) async {
   // Note: with the app on the background we can't access providers, so take Prefs()
 
   // We might have Sendbird notifications disabled, but we are nontheless registered
@@ -1090,10 +1129,7 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
         'Reply',
         showsUserInterface: true,
         inputs: <AndroidNotificationActionInput>[
-          AndroidNotificationActionInput(
-            label: 'Type your reply',
-            allowFreeFormInput: true,
-          ),
+          AndroidNotificationActionInput(label: 'Type your reply', allowFreeFormInput: true),
         ],
       ),
       /*
@@ -1105,10 +1141,7 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
     ],
   );
 
-  const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
-    presentSound: true,
-    sound: 'keyboard.aiff',
-  );
+  const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'keyboard.aiff');
 
   final platformChannelSpecifics = NotificationDetails(
     android: androidPlatformChannelSpecifics,
@@ -1124,9 +1157,7 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
     sender,
     message,
     platformChannelSpecifics,
-    payload: jsonEncode({
-      'channelUrl': channelUrl,
-    }),
+    payload: jsonEncode({'channelUrl': channelUrl}),
   );
 }
 
@@ -1148,8 +1179,8 @@ void handleNotificationTap(NotificationResponse? notificationResponse) {
 void createSendBirdNotificationsChannel() async {
   if (!Platform.isAndroid) return;
 
-  final androidImpl =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+  final androidImpl = flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
   const sendbirdGroup = AndroidNotificationChannelGroup(
     'sendbird',
