@@ -132,7 +132,6 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF2E7D32),
         items: [
           _MItem('Events: HTML tags no longer show up in the timeline text'),
-          _MItem('Events: fixed a stray "\$1" replacing punctuation in item names and personal messages'),
           _MItem('Chaining: tapping a target in the war or retaliation lists no longer fails to start the attack'),
           _MItem(
             'Alarms can now be set for waits longer than 24 hours',
