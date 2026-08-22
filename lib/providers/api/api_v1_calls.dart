@@ -98,6 +98,11 @@ class ApiCallsV1 {
     }
   }
 
+  static Future<dynamic> validateApiKey({required String key}) async {
+    final apiCaller = Get.find<ApiCallerController>();
+    return await apiCaller.enqueueApiCall(apiSelection: ApiSelection_v1.keyValidation, forcedApiKey: key);
+  }
+
   static Future<dynamic> getOwnProfileBasic({String? forcedApiKey = ""}) async {
     dynamic apiResult;
     final apiCaller = Get.find<ApiCallerController>();

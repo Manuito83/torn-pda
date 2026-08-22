@@ -14,11 +14,14 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/models/userscripts/script_catalog_model.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/script_catalog_service.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ScriptsCatalogPage extends StatefulWidget {
@@ -35,6 +38,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
   late WebViewProvider _webViewProvider;
 
   final _searchController = TextEditingController();
+  final _keyController = TextEditingController();
   final _scrollController = ScrollController();
 
   late StreamSubscription _willPopSubscription;
@@ -46,6 +50,11 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
   String? _categoryFilter;
 
   final Set<String> _installing = {};
+
+  static const String _pdaKeyWord = "###PDA-APIKEY###";
+
+  // Key applied to every catalog script that supports one, empty means the Torn PDA key
+  String _catalogApiKey = "";
 
   @override
   void initState() {
@@ -60,11 +69,15 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     });
 
     _loadCatalog();
+    Prefs().getScriptCatalogApiKey().then((value) {
+      if (mounted) setState(() => _catalogApiKey = value);
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _keyController.dispose();
     _scrollController.dispose();
     _willPopSubscription.cancel();
     super.dispose();
@@ -116,6 +129,13 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
       toolbarHeight: 50,
       title: const Text('TornTools scripts', style: TextStyle(color: Colors.white)),
       leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: _goBack),
+      actions: [
+        IconButton(
+          icon: Icon(_catalogApiKey.isEmpty ? Icons.vpn_key_outlined : Icons.vpn_key, color: Colors.white),
+          tooltip: "API key for these scripts",
+          onPressed: _catalogKeyPressed,
+        ),
+      ],
     );
   }
 
@@ -544,6 +564,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (script.usesApiKey) _keyBadge(script, installedModel),
                       if (script.pageUrl.isNotEmpty)
                         GestureDetector(
                           onTap: () => _openInBrowser(script.pageUrl),
@@ -581,6 +602,31 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Green when the script runs with a key of its own, amber when it borrows the Torn PDA one
+  Widget _keyBadge(CatalogScript script, UserScriptModel? installedModel) {
+    final bool ownKey = installedModel != null ? installedModel.customApiKey.isNotEmpty : _catalogApiKey.isNotEmpty;
+    final green = _light ? Colors.green[700]! : Colors.green[300]!;
+    final amber = _light ? Colors.orange[800]! : Colors.orange[300]!;
+    final color = ownKey ? green : amber;
+
+    final String message = installedModel != null
+        ? (ownKey
+              ? "Uses a Torn API key: running with a key of its own"
+              : "Uses a Torn API key: running with your Torn PDA key")
+        : (ownKey
+              ? "Uses a Torn API key: your TornTools key will be applied when you install it"
+              : "Uses a Torn API key: it will use your Torn PDA key unless you set one");
+
+    return GestureDetector(
+      onTap: () => _toast(message, ownKey ? Colors.green[800]! : Colors.orange[800]!),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Icon(ownKey ? Icons.vpn_key : Icons.vpn_key_outlined, size: 13, color: color),
       ),
     );
   }
@@ -677,6 +723,55 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                               "You can manage it from the user scripts list, or use the shortcuts below.",
                     style: const TextStyle(fontSize: 13, height: 1.35),
                   ),
+                  if (model.source.contains(_pdaKeyWord)) ...[
+                    const SizedBox(height: 12),
+                    InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () async {
+                        final result = await _askCustomApiKey(
+                          scriptName: script.name,
+                          currentKey: model.customApiKey.isNotEmpty ? model.customApiKey : _catalogApiKey,
+                          alreadyInstalled: true,
+                        );
+                        if (result == null) return;
+                        if (result.applyToAll) {
+                          final changed = await _applyKeyToWholeCatalog(result.key);
+                          _toast(
+                            changed == 1 ? "Key applied to 1 script" : "Key applied to $changed scripts",
+                            Colors.green[800]!,
+                          );
+                        } else {
+                          _setScriptKey(model, result.key);
+                        }
+                        setDialogState(() {});
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: _hairline),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.vpn_key_outlined, size: 16, color: _accent),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                model.customApiKey.isEmpty
+                                    ? "Running with your Torn PDA API key"
+                                    : "Running with a custom API key",
+                                style: const TextStyle(fontSize: 12.5, height: 1.3),
+                              ),
+                            ),
+                            Text(
+                              "CHANGE",
+                              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: _accent),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   if (confirmingDelete) ...[
                     const SizedBox(height: 14),
                     Container(
@@ -743,6 +838,317 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     if (mounted) setState(() {});
   }
 
+  /// A key the user already set for another script of this catalog
+  String _keyFromAnotherCatalogScript() {
+    for (final installed in _userScriptsProvider.userScriptList) {
+      if (installed.customApiKey.isEmpty) continue;
+      if (CatalogScript.greasyforkIdFromUrl(installed.url) != null) return installed.customApiKey;
+    }
+    return "";
+  }
+
+  /// Returns null if cancelled, or the key to use (empty means the Torn PDA key)
+  /// A null scriptName opens the dialog for the whole catalog instead of a single script
+  Future<({String key, bool applyToAll})?> _askCustomApiKey({
+    String? scriptName,
+    required String currentKey,
+    required bool alreadyInstalled,
+  }) async {
+    final bool global = scriptName == null;
+    final amber = _light ? Colors.orange[800]! : Colors.orange[300]!;
+    final red = _light ? Colors.red[700]! : Colors.red[300]!;
+    _keyController.text = currentKey;
+    bool applyToAll = global;
+    bool verifying = false;
+    String? errorText;
+
+    final result = await showDialog<({String key, bool applyToAll})>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setDialogState) {
+            return AlertDialog(
+              backgroundColor: _themeProvider.secondBackground,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              titlePadding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+              contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
+              title: Row(
+                children: [
+                  Icon(Icons.vpn_key_outlined, size: 20, color: _accent),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      global ? "TornTools API key" : scriptName,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Some of these scripts call the Torn API. If you leave this empty, they default to use your Torn PDA key."
+                      "\n\nYou can provide here an alternative key of their own, so that you can configure different access "
+                      "permissions or revoke it without affecting Torn PDA.",
+                      style: TextStyle(fontSize: 12.5, height: 1.35),
+                    ),
+                    if (alreadyInstalled) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: amber.withValues(alpha: 0.12),
+                          border: Border.all(color: amber.withValues(alpha: 0.4)),
+                        ),
+                        child: Text(
+                          global
+                              ? "Scripts that are already running might not pick this up until you kill and restart "
+                                    "the app."
+                              : "The script is already running, so this might not take effect until you kill and "
+                                    "restart the app.",
+                          style: TextStyle(fontSize: 12.5, height: 1.3, color: amber),
+                        ),
+                      ),
+                    ] else if (currentKey.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        "Filled in with the key you set for another script from this catalog.",
+                        style: TextStyle(fontSize: 11.5, height: 1.3, color: _subtleText),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _keyController,
+                      autofocus: false,
+                      enabled: !verifying,
+                      style: const TextStyle(fontSize: 14),
+                      onChanged: (_) => setDialogState(() {}),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: "Custom API key",
+                        hintStyle: TextStyle(fontSize: 13, color: _subtleText),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        suffixIcon: _keyController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                icon: Icon(Icons.clear, size: 18, color: _subtleText),
+                                tooltip: "Clear",
+                                onPressed: verifying
+                                    ? null
+                                    : () => setDialogState(() {
+                                        _keyController.clear();
+                                        errorText = null;
+                                      }),
+                              ),
+                        suffixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      ),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: red.withValues(alpha: 0.12),
+                          border: Border.all(color: red.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.error_outline, size: 16, color: red),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(errorText!, style: TextStyle(fontSize: 12.5, height: 1.3, color: red)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (!global) ...[
+                      const SizedBox(height: 6),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => setDialogState(() => applyToAll = !applyToAll),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: applyToAll,
+                                  visualDensity: VisualDensity.compact,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  activeColor: _accent,
+                                  onChanged: (value) => setDialogState(() => applyToAll = value ?? false),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Use it for every TornTools script",
+                                      style: TextStyle(fontSize: 12.5, height: 1.3),
+                                    ),
+                                    Text(
+                                      "Applies to the ones you already have and to anything you install from this "
+                                      "catalog later",
+                                      style: TextStyle(fontSize: 11, height: 1.25, color: _subtleText),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actionsPadding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+              actions: [
+                TextButton(
+                  onPressed: verifying ? null : () => Navigator.of(dialogContext).pop(),
+                  child: Text("CANCEL", style: TextStyle(color: _subtleText)),
+                ),
+                TextButton(
+                  onPressed: verifying
+                      ? null
+                      : () async {
+                          final String candidate = _keyController.text.trim();
+                          // An empty key just means going back to the Torn PDA one, nothing to check
+                          if (candidate.isEmpty) {
+                            Navigator.of(dialogContext).pop((key: "", applyToAll: applyToAll));
+                            return;
+                          }
+
+                          setDialogState(() {
+                            verifying = true;
+                            errorText = null;
+                          });
+
+                          final dynamic check = await ApiCallsV1.validateApiKey(key: candidate);
+                          if (!dialogContext.mounted) return;
+
+                          if (check is ApiError) {
+                            setDialogState(() {
+                              verifying = false;
+                              errorText = "Torn rejected this key: ${_apiErrorText(check)}";
+                            });
+                            return;
+                          }
+
+                          final String owner = check is Map && check["name"] is String ? check["name"] : "";
+                          final dynamic ownerId = check is Map ? check["player_id"] : null;
+
+                          Navigator.of(dialogContext).pop((key: candidate, applyToAll: applyToAll));
+                          _toast(
+                            owner.isEmpty
+                                ? "Key verified"
+                                : "Key verified: $owner${ownerId != null ? " [$ownerId]" : ""}",
+                            Colors.green[800]!,
+                          );
+                        },
+                  child: verifying
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(_accent),
+                          ),
+                        )
+                      : Text(
+                          global
+                              ? "APPLY"
+                              : alreadyInstalled
+                              ? "SAVE"
+                              : "INSTALL",
+                          style: TextStyle(color: _accent, fontWeight: FontWeight.w700),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    return result;
+  }
+
+  String _apiErrorText(ApiError error) {
+    // The stock text for 16 talks about Torn PDA's own key, which is not what we are checking here
+    if (error.errorId == 16) return "its access level is too low";
+    if (error.errorReason.isNotEmpty) return error.errorReason;
+    if (error.tornErrorDetails.isNotEmpty) return error.tornErrorDetails;
+    if (error.pdaErrorDetails.isNotEmpty) return error.pdaErrorDetails;
+    return "unknown error";
+  }
+
+  /// Installed scripts from this catalog that can take a key of their own
+  List<UserScriptModel> _installedKeyScripts() {
+    final catalog = _result?.catalog;
+    if (catalog == null) return const [];
+    final ids = catalog.scripts.map((s) => s.greasyforkId).toSet();
+    return _userScriptsProvider.userScriptList
+        .where((s) => ids.contains(CatalogScript.greasyforkIdFromUrl(s.url)) && s.source.contains(_pdaKeyWord))
+        .toList();
+  }
+
+  /// Stores the catalog wide key and pushes it to every installed script that takes one
+  Future<int> _applyKeyToWholeCatalog(String key) async {
+    await Prefs().setScriptCatalogApiKey(key);
+    if (mounted) setState(() => _catalogApiKey = key);
+
+    int changed = 0;
+    for (final installed in _installedKeyScripts()) {
+      if (installed.customApiKey == key) continue;
+      _setScriptKey(installed, key);
+      changed++;
+    }
+    return changed;
+  }
+
+  Future<void> _catalogKeyPressed() async {
+    final result = await _askCustomApiKey(
+      currentKey: _catalogApiKey,
+      alreadyInstalled: _installedKeyScripts().isNotEmpty,
+    );
+    if (result == null) return;
+
+    final changed = await _applyKeyToWholeCatalog(result.key);
+    final String scripts = changed == 1 ? "1 script" : "$changed scripts";
+    _toast(
+      result.key.isEmpty
+          ? (changed > 0 ? "Custom key removed from $scripts" : "Custom key removed")
+          : (changed > 0 ? "Key applied to $scripts" : "Key saved for the scripts you install"),
+      result.key.isEmpty ? Colors.orange[800]! : Colors.green[800]!,
+    );
+  }
+
+  void _setScriptKey(UserScriptModel model, String key) {
+    _userScriptsProvider.updateUserScript(
+      editedModel: model,
+      name: model.name,
+      time: model.time,
+      source: model.source,
+      manuallyEdited: model.manuallyEdited,
+      isFromRemote: model.url != null && model.url!.isNotEmpty,
+      customApiKey: key,
+      customApiKeyCandidate: true,
+    );
+  }
+
   Future<void> _install(CatalogScript script) async {
     setState(() => _installing.add(script.id));
 
@@ -757,8 +1163,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
       }
 
       final model = result.model!;
-      model.catalogName = script.name;
-      model.name = script.name;
+      model.customApiKeyCandidate = model.source.contains(_pdaKeyWord);
 
       // The provider skips scripts whose name is taken, which would fail silently otherwise
       final String newName = model.name.toLowerCase();
@@ -771,8 +1176,29 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
         return;
       }
 
+      bool usedCatalogKey = false;
+      if (model.customApiKeyCandidate) {
+        if (_catalogApiKey.isNotEmpty) {
+          // Already answered for the whole catalog, no point in asking again
+          model.customApiKey = _catalogApiKey;
+          usedCatalogKey = true;
+        } else {
+          final result = await _askCustomApiKey(
+            scriptName: script.name,
+            currentKey: _keyFromAnotherCatalogScript(),
+            alreadyInstalled: false,
+          );
+          if (!mounted || result == null) return;
+          model.customApiKey = result.key;
+          if (result.applyToAll) await _applyKeyToWholeCatalog(result.key);
+        }
+      }
+
       _userScriptsProvider.addUserScriptByModel(model);
-      _toast("${script.name} installed", Colors.green[800]!);
+      _toast(
+        usedCatalogKey ? "${script.name} installed with your TornTools key" : "${script.name} installed",
+        Colors.green[800]!,
+      );
     } catch (e) {
       if (mounted) _toast("Could not install ${script.name}: $e", Colors.red[800]!);
     } finally {

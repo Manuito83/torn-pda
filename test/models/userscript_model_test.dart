@@ -362,32 +362,26 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // catalogName
+  // Naming on updates
   // -------------------------------------------------------------------------
-  group('catalogName', () {
-    UserScriptModel catalogScript() {
+  group('name on remote updates', () {
+    test('takes the name from the header, long TornTools names included', () {
       final model = UserScriptModel(
         name: 'City Items',
         source: _script(name: 'TORN: TornTools - City Items', version: '1.0.0'),
         isExample: false,
         version: '1.0.0',
       );
-      model.catalogName = 'City Items';
-      return model;
-    }
-
-    test('a remote update does not bring back the long name', () {
-      final model = catalogScript();
       model.update(
         source: _script(name: 'TORN: TornTools - City Items', version: '1.1.0'),
         updateStatus: UserScriptUpdateStatus.upToDate,
       );
 
-      expect(model.name, 'City Items');
+      expect(model.name, 'TORN: TornTools - City Items');
       expect(model.version, '1.1.0');
     });
 
-    test('scripts without a catalog name keep taking the name from the header', () {
+    test('picks up a rename made on the remote', () {
       final model = UserScriptModel(name: 'Old', source: '', isExample: false);
       model.update(
         source: _script(name: 'Brand New Name', version: '2.0.0'),
@@ -398,9 +392,14 @@ void main() {
     });
 
     test('survives a save and load round trip', () {
-      final restored = UserScriptModel.fromJson(catalogScript().toJson());
-      expect(restored.catalogName, 'City Items');
-      expect(restored.name, 'City Items');
+      final model = UserScriptModel(
+        name: 'TORN: TornTools - City Items',
+        source: _script(name: 'TORN: TornTools - City Items', version: '1.0.0'),
+        isExample: false,
+        version: '1.0.0',
+      );
+      final restored = UserScriptModel.fromJson(model.toJson());
+      expect(restored.name, 'TORN: TornTools - City Items');
     });
   });
 }

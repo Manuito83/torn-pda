@@ -119,6 +119,7 @@ class CatalogScript {
     required this.downloadUrl,
     required this.pageUrl,
     required this.matches,
+    required this.usesApiKey,
   });
 
   final String id;
@@ -129,6 +130,7 @@ class CatalogScript {
   final String downloadUrl;
   final String pageUrl;
   final List<String> matches;
+  final bool usesApiKey;
 
   bool get isValid => id.isNotEmpty && name.isNotEmpty && downloadUrl.isNotEmpty;
 
@@ -225,6 +227,7 @@ class CatalogScript {
     downloadUrl: json["downloadUrl"] is String ? json["downloadUrl"] : "",
     pageUrl: json["pageUrl"] is String ? json["pageUrl"] : "",
     matches: json["matches"] is List<dynamic> ? (json["matches"] as List<dynamic>).whereType<String>().toList() : [],
+    usesApiKey: json["usesApiKey"] is bool ? json["usesApiKey"] : false,
   );
 
   /// Greasy Fork script id taken from any of its URL, used to detect

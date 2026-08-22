@@ -6,6 +6,7 @@ import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 
 enum ApiSelection_v1 {
   appWidget,
+  keyValidation,
   travel,
   ownBasic,
   ownExtended,

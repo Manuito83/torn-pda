@@ -30,7 +30,6 @@ class UserScriptModel {
     this.time = UserScriptTime.end,
     this.url,
     this.updateUrl,
-    this.catalogName,
     this.updateStatus = UserScriptUpdateStatus.noRemote,
     required this.isExample,
     this.customApiKey = "",
@@ -52,10 +51,6 @@ class UserScriptModel {
   // @updateURL, when the script offers one
   // Only holds a header, so it's much cheaper than the full source
   String? updateUrl;
-
-  // Short name given by the script catalog, kept across updates so the long
-  // "TORN: TornTools - x" name from the remote header doesn't come back
-  String? catalogName;
 
   UserScriptUpdateStatus updateStatus;
   bool isExample;
@@ -104,7 +99,6 @@ class UserScriptModel {
         time: time,
         url: url,
         updateUrl: json["updateUrl"] is String ? json["updateUrl"] : null,
-        catalogName: json["catalogName"] is String ? json["catalogName"] : null,
         updateStatus: updateStatus,
         isExample: isExample,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
@@ -122,7 +116,6 @@ class UserScriptModel {
         time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end,
         url: json["url"],
         updateUrl: json["updateUrl"] is String ? json["updateUrl"] : null,
-        catalogName: json["catalogName"] is String ? json["catalogName"] : null,
         updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
         customApiKey: json["customApiKey"] ?? "",
@@ -227,7 +220,6 @@ class UserScriptModel {
     "source": source,
     "url": url,
     "updateUrl": updateUrl,
-    "catalogName": catalogName,
     "updateStatus": updateStatus.name,
     "isExample": isExample,
     "time": time == UserScriptTime.start ? "start" : "end",
@@ -386,7 +378,7 @@ class UserScriptModel {
           this.matches = metaMap["matches"];
         }
         if (metaMap["name"] != null) {
-          this.name = preferredName(metaMap["name"]);
+          this.name = metaMap["name"];
         }
         if (metaMap["injectionTime"] != null) {
           this.time = metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end;
@@ -496,9 +488,6 @@ class UserScriptModel {
       return null;
     }
   }
-
-  String preferredName(String remoteName) =>
-      (catalogName != null && catalogName!.isNotEmpty) ? catalogName! : remoteName;
 
   static String? tryGetUpdateUrl(String source) {
     try {

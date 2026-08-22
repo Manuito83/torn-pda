@@ -308,6 +308,9 @@ class ApiCallerController extends GetxController {
       case ApiSelection_v1.appWidget:
         url += 'user/?selections=profile,icons,bars,cooldowns,newevents,newmessages,travel,money';
         break;
+      case ApiSelection_v1.keyValidation:
+        url += 'user/?selections=basic';
+        break;
       case ApiSelection_v1.travel:
         url += 'user/?selections=money,travel';
         break;

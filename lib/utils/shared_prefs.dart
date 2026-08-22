@@ -359,6 +359,7 @@ class Prefs {
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
   final String _kScriptCatalogCache = "pda_scriptCatalogCache";
   final String _kScriptCatalogEnabled = "pda_scriptCatalogEnabled";
+  final String _kScriptCatalogApiKey = "pda_scriptCatalogApiKey";
   final String _kScriptDocsCache = "pda_scriptDocsCache";
   final String _kScriptDocsDisclaimerRead = "pda_scriptDocsDisclaimerRead";
   // DevTools sorting
@@ -3608,6 +3609,14 @@ class Prefs {
 
   Future setScriptCatalogCache(String value) async {
     return await PrefsDatabase.setString(_kScriptCatalogCache, value);
+  }
+
+  Future<String> getScriptCatalogApiKey() async {
+    return await PrefsDatabase.getString(_kScriptCatalogApiKey, "");
+  }
+
+  Future setScriptCatalogApiKey(String value) async {
+    return await PrefsDatabase.setString(_kScriptCatalogApiKey, value);
   }
 
   Future<bool> getScriptCatalogEnabled() async {

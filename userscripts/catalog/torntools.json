@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "enabled": true,
-  "updated": "2026-08-14",
+  "updated": "2026-08-22",
   "provider": {
     "name": "TornTools",
     "author": "DeKleineKobini and the TornTools team",
@@ -75,6 +75,7 @@
       "name": "Bank Investment Info",
       "description": "Display an overview of the bank profit per period.",
       "category": "general",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/590848/TORN%3A%20TornTools%20-%20Bank%20Investment%20Info.user.js",
       "pageUrl": "https://greasyfork.org/scripts/590848-torn-torntools-bank-investment-info",
       "matches": [
@@ -123,6 +124,7 @@
       "name": "Live Networth",
       "description": "Compare your daily networth with the 'live' networth.",
       "category": "profile",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/584602/TORN%3A%20TornTools%20-%20Live%20Networth.user.js",
       "pageUrl": "https://greasyfork.org/scripts/584602-torn-torntools-live-networth",
       "matches": [
@@ -147,6 +149,7 @@
       "name": "Profile Box: Personal Stats",
       "description": "Compare personal stats from the profile you are currently viewing.",
       "category": "profile",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/582356/TORN%3A%20TornTools%20-%20Profile%20Box%3A%20Personal%20Stats.user.js",
       "pageUrl": "https://greasyfork.org/scripts/582356-torn-torntools-profile-box-personal-stats",
       "matches": [
@@ -183,6 +186,7 @@
       "name": "Can Energy",
       "description": "Show the amount of energy a can would give.",
       "category": "items",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/581676/TORN%3A%20TornTools%20-%20Can%20Energy.user.js",
       "pageUrl": "https://greasyfork.org/scripts/581676-torn-torntools-can-energy",
       "matches": [
@@ -282,6 +286,7 @@
       "name": "Stocks Filter",
       "description": "Filter the stocks lists.",
       "category": "items",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/582370/TORN%3A%20TornTools%20-%20Stocks%20Filter.user.js",
       "pageUrl": "https://greasyfork.org/scripts/582370-torn-torntools-stocks-filter",
       "matches": [
@@ -342,6 +347,7 @@
       "name": "Travel Cooldown",
       "description": "Receive cooldown information before flying.",
       "category": "travel",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/590850/TORN%3A%20TornTools%20-%20Travel%20Cooldown.user.js",
       "pageUrl": "https://greasyfork.org/scripts/590850-torn-torntools-travel-cooldown",
       "matches": [
@@ -546,6 +552,7 @@
       "name": "Gym Steadfast",
       "description": "Show the amount of steadfast for every stats.",
       "category": "gym",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/589849/TORN%3A%20TornTools%20-%20Gym%20Steadfast.user.js",
       "pageUrl": "https://greasyfork.org/scripts/589849-torn-torntools-gym-steadfast",
       "matches": [
@@ -570,6 +577,7 @@
       "name": "Weapon Experience",
       "description": "Show your weapon experience while attacking.",
       "category": "combat",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/584600/TORN%3A%20TornTools%20-%20Weapon%20Experience.user.js",
       "pageUrl": "https://greasyfork.org/scripts/584600-torn-torntools-weapon-experience",
       "matches": [
@@ -594,6 +602,7 @@
       "name": "Efficient Rehab",
       "description": "Select how many rehabs are efficient at your current level.",
       "category": "crimes",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/587837/TORN%3A%20TornTools%20-%20Efficient%20Rehab.user.js",
       "pageUrl": "https://greasyfork.org/scripts/587837-torn-torntools-efficient-rehab",
       "matches": [

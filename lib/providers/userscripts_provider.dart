@@ -1034,10 +1034,10 @@ class UserScriptsProvider extends ChangeNotifier {
         final script = _userScriptList.firstWhere((s) => s.name == item.script.name);
         // If the remote renamed the script to a name that already exists, keep the old name
         final bool nameCollision = _userScriptList.any(
-          (s) => !identical(s, script) && s.name.toLowerCase() == script.preferredName(remote.name).toLowerCase(),
+          (s) => !identical(s, script) && s.name.toLowerCase() == remote.name.toLowerCase(),
         );
         script.update(
-          name: nameCollision ? script.name : script.preferredName(remote.name),
+          name: nameCollision ? script.name : remote.name,
           time: remote.time,
           source: remote.source,
           manuallyEdited: false,
