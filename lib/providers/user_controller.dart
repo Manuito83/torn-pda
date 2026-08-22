@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
+import 'package:torn_pda/utils/crashlytics_identity.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class UserController extends GetxController {
@@ -77,6 +78,8 @@ class UserController extends GetxController {
     if (_basic?.job?.companyId != null) {
       companyId = _basic!.job!.companyId!;
     }
+
+    publishCrashlyticsIdentity(playerId);
   }
 
   Future<void> _setupAlternativeKeys() async {

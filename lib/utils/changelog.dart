@@ -85,7 +85,7 @@ class _MVersion {
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
     version: 'v3.16.0',
-    date: '20 August 2026',
+    date: '28 August 2026',
     hotfixes: [],
     sections: [
       _MSection(
@@ -141,6 +141,7 @@ List<_MVersion> _modernChangelog() => [
                 'can schedule a notification for any date.',
           ),
           _MItem('Fixed startup crashes on some devices'),
+          _MItem('Browser: a page or script opening a window without an address no longer leaves a broken tab'),
         ],
       ),
     ],

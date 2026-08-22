@@ -223,6 +223,8 @@ class WebViewFullState extends State<WebViewFull>
   bool _handlersInjected = false;
   // Shared across tabs: one renderer death hits every webview, record ONE Crashlytics event per death
   static DateTime? _lastRendererGoneRecorded;
+  static final Set<String> _failuresReported = <String>{};
+  static bool _blankTabReported = false;
 
   // Scripts registered at webview construction (before the first load), computed once
   UnmodifiableListView<UserScript>? _initialUserScriptsCache;
@@ -342,6 +344,8 @@ class WebViewFullState extends State<WebViewFull>
 
   // Parked: background tab sent to about:blank while the app is minimized (Android)
   static const String _blankUrl = "about:blank";
+
+  Timer? _blankTabCheckTimer;
   bool _isParked = false;
   bool _wakingFromPark = false;
   String? _parkedUrl;
@@ -630,6 +634,7 @@ class WebViewFullState extends State<WebViewFull>
     try {
       _webViewCreatedWatchdog?.cancel();
       _reloadWatchdog?.cancel();
+      _blankTabCheckTimer?.cancel();
 
       // Send details to provider in case we are rotating
       _webViewProvider.rotatedTabDetails.add(
@@ -1473,7 +1478,11 @@ class WebViewFullState extends State<WebViewFull>
           },
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
-            final String url = request.request.url.toString().replaceAll("http:", "https:");
+            final Uri? requestedUri = request.request.url;
+            // A window opened without a URL would otherwise become the literal string "null"
+            final String url = requestedUri == null
+                ? "about:blank"
+                : requestedUri.toString().replaceAll("http:", "https:");
 
             // On Android, userscript URLs can sometimes be detected here
             if (url.endsWith(".user.js")) {
@@ -1497,8 +1506,9 @@ class WebViewFullState extends State<WebViewFull>
               // to the _openNewTabFromWindowRequest method, instead of the usual 'null' if the URL is valid
 
               dynamic windowId;
-              if (request.request.url == null) {
+              if (requestedUri == null) {
                 windowId = request.windowId;
+                _recordBrowserFailure("window_without_url", "adopted");
               }
 
               _openNewTabFromWindowRequest(url, windowId);
@@ -2102,9 +2112,21 @@ class WebViewFullState extends State<WebViewFull>
                 final DateTime now = DateTime.now();
                 if (_lastRendererGoneRecorded == null || now.difference(_lastRendererGoneRecorded!).inSeconds >= 2) {
                   _lastRendererGoneRecorded = now;
+
+                  // Every tab reports the same death but only one report is saved, so describe the
+                  // tab the user has open and not the one that was reported first
+                  final List<TabDetails> allTabs = _webViewProvider.tabList;
+                  final int activeIndex = _webViewProvider.currentTab;
+                  final String? restoreUrl = (activeIndex >= 0 && activeIndex < allTabs.length)
+                      ? allTabs[activeIndex].currentUrl
+                      : null;
+                  final bool restoreOk =
+                      restoreUrl != null && (restoreUrl.startsWith("https://") || restoreUrl.startsWith("http://"));
+
                   FirebaseCrashlytics.instance.recordError(
                     "WebViewRenderProcessGone didCrash=${detail.didCrash} "
                     "priority=${detail.rendererPriorityAtExit} resumed=$appResumed "
+                    "restoreOk=$restoreOk "
                     "tabs=${_webViewProvider.tabList.length}",
                     null,
                     reason: "Android WebView renderer gone (recovered, app not killed)",
@@ -2129,6 +2151,16 @@ class WebViewFullState extends State<WebViewFull>
             } else {
               _webViewProvider.getTabByUid(_tabUid)?.needsReloadAfterRendererGone = true;
             }
+          },
+          onReceivedError: (c, request, error) {
+            if (!(request.isForMainFrame ?? false)) return;
+            _recordBrowserFailure("load_error", "${error.type}", url: request.url);
+          },
+          onReceivedHttpError: (c, request, errorResponse) {
+            if (!(request.isForMainFrame ?? false)) return;
+            final int status = errorResponse.statusCode ?? 0;
+            if (status < 400) return;
+            _recordBrowserFailure("http_error", "$status", url: request.url);
           },
           onReceivedHttpAuthRequest: (c, challenge) async {
             TextEditingController usernameController = TextEditingController();
@@ -5668,6 +5700,7 @@ class WebViewFullState extends State<WebViewFull>
         return;
       }
       if (_isParked) wakeFromPark();
+      _scheduleBlankTabCheck();
     }
 
     if (webViewController == null) return;
@@ -5806,6 +5839,41 @@ class WebViewFullState extends State<WebViewFull>
 
   String reportCurrentUrl() {
     return _currentUrl;
+  }
+
+  void _recordBrowserFailure(String kind, String detail, {WebUri? url}) {
+    if (Platform.isWindows) return;
+    if (!_failuresReported.add("$kind:$detail")) return;
+    try {
+      FirebaseCrashlytics.instance.recordError(
+        "Browser $kind ($detail) host=${url?.host ?? "none"} tabs=${_webViewProvider.tabList.length}",
+        null,
+        reason: "Browser failure",
+        fatal: false,
+      );
+    } catch (_) {}
+  }
+
+  void _scheduleBlankTabCheck() {
+    if (_blankTabReported || Platform.isWindows) return;
+    _blankTabCheckTimer?.cancel();
+    _blankTabCheckTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted || _blankTabReported || _isParked) return;
+      if (!_webViewProvider.isTabUidActive(_tabUid)) return;
+      final String current = _currentUrl.trim();
+      final bool dead = current.isEmpty || current == _blankUrl || current == "null";
+      if (!dead) return;
+      _blankTabReported = true;
+      try {
+        FirebaseCrashlytics.instance.recordError(
+          "Blank tab shown to the user: url=${current.isEmpty ? "<empty>" : current} "
+          "isWindow=${widget.windowId != null} tabs=${_webViewProvider.tabList.length}",
+          null,
+          reason: "Browser tab visible with no page",
+          fatal: false,
+        );
+      } catch (_) {}
+    });
   }
 
   String? reportCurrentTitle() {

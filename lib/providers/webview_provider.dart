@@ -2452,6 +2452,11 @@ class WebViewProvider extends ChangeNotifier {
       final uri1 = Uri.parse(url1);
       final uri2 = Uri.parse(url2);
 
+      // These two rules only apply to the same website; otherwise, all root URLs would look identical
+      final String host1 = uri1.host.startsWith("www.") ? uri1.host.substring(4) : uri1.host;
+      final String host2 = uri2.host.startsWith("www.") ? uri2.host.substring(4) : uri2.host;
+      if (host1 != host2) return false;
+
       // Check for index.php equivalence
       // https://www.torn.com/index.php == https://www.torn.com/
       if ((uri1.path == '/' || uri1.path.isEmpty || uri1.path == '/index.php') &&

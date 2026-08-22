@@ -69,6 +69,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/background_inbox.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
+import 'package:torn_pda/utils/crashlytics_identity.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
@@ -82,8 +83,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.16.0';
-const String androidCompilation = '675';
-const String iosCompilation = '675';
+const String androidCompilation = '676';
+const String iosCompilation = '676';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -797,6 +798,9 @@ Future<void> _initializeFirebase() async {
 
     if (!Platform.isWindows) {
       FirebaseMessaging.onBackgroundMessage(messagingBackgroundHandler);
+
+      // Before the rest of the startup, which is where the fatals we cannot attribute happen
+      await seedCrashlyticsIdentityFromStorage();
 
       if (kDebugMode) {
         if (pointFunctionsEmulatorToLocal) {

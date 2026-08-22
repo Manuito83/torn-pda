@@ -1,5 +1,6 @@
 // Package imports:
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:torn_pda/utils/telemetry_sanitize.dart';
 import 'package:http/http.dart' as http;
 
 // Project imports:
@@ -58,7 +59,7 @@ class TornExchangeComm {
       inModel.serverError = true;
       inModel.serverErrorReason = "$e. $t";
       FirebaseCrashlytics.instance.log("PDA TornExchange comm error");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      FirebaseCrashlytics.instance.recordError(redactUrlQueries("PDA Error: $e"), t);
     }
 
     return inModel;
