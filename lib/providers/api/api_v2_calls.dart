@@ -23,10 +23,7 @@ class ApiCallsV2 {
     final apiResponse = await apiCaller.enqueueApiCall<MarketItemMarketResponse>(
       apiSelection_v2: ApiSelection_v2.marketItem,
       apiCall: (client, apiKey) {
-        return client.marketIdItemmarketGet(
-          id: payload["id"],
-          bonus: payload["bonus"],
-        );
+        return client.marketIdItemmarketGet(id: payload["id"], bonus: payload["bonus"]);
       },
     );
     return apiResponse;
@@ -43,21 +40,78 @@ class ApiCallsV2 {
     return apiResponse;
   }
 
-  static Future<dynamic> getUserProfileMisc_v2() async {
+  /// Returns [ProfileMiscResult], [ApiError] or null
+  static Future<dynamic> getUserProfileMiscAndMarket_v2({
+    bool includeOrganizedCrime = false,
+    bool includeVirus = false,
+  }) async {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
       apiSelection_v2: ApiSelection_v2.userProfileMisc,
       apiCall: (client, apiKey) {
         return client.userGet(
-          selections: "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket",
+          selections:
+              "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket"
+              "${includeOrganizedCrime ? ",organizedcrime" : ""}"
+              "${includeVirus ? ",virus" : ""}",
         );
       },
     );
 
     if (apiResponse is ApiError) return apiResponse;
+    return parseProfileMisc(
+      apiResponse as Map<String, dynamic>,
+      includeOrganizedCrime: includeOrganizedCrime,
+      includeVirus: includeVirus,
+    );
+  }
+
+  static ProfileMiscResult? parseProfileMisc(
+    Map<String, dynamic> apiResponse, {
+    bool includeOrganizedCrime = false,
+    bool includeVirus = false,
+  }) {
     try {
-      final ownProfileMisc = OwnProfileMisc.fromJson(apiResponse as Map<String, dynamic>);
-      return ownProfileMisc;
+      final ownProfileMisc = OwnProfileMisc.fromJson(apiResponse);
+
+      UserItemMarketResponse? market;
+      try {
+        final raw = _deepCastJson(apiResponse["itemmarket"]);
+        if (raw is List) {
+          market = UserItemMarketResponse(
+            itemmarket: raw.map((e) => UserItemMarketListing.fromJson(e as Map<String, dynamic>)).toList(),
+            // Not paginated
+            metadata: const RequestMetadataWithLinks(links: RequestLinks(next: null, prev: null)),
+          );
+        }
+      } catch (e) {
+        log("Error converting misc itemmarket node: $e");
+      }
+
+      UserOrganizedCrimeResponse? oc;
+      if (includeOrganizedCrime) {
+        for (final key in const ["organizedCrime", "organizedcrime"]) {
+          if (apiResponse.containsKey(key)) {
+            final node = apiResponse[key];
+            if (!_isSelectionError(node)) {
+              oc = UserOrganizedCrimeResponse(organizedCrime: _deepCastJson(node));
+            }
+            break;
+          }
+        }
+      }
+
+      bool virusResolved = false;
+      UserVirus? virus;
+      if (includeVirus && apiResponse.containsKey("virus")) {
+        final node = apiResponse["virus"];
+        if (!_isSelectionError(node)) {
+          virusResolved = true;
+          if (node != null) virus = UserVirus.fromJson(_deepCastJson(node) as Map<String, dynamic>);
+        }
+      }
+
+      return ProfileMiscResult(ownProfileMisc, market, oc, virusResolved, virus);
     } catch (e, trace) {
       log("Error converting V2 OwnProfileMisc: $e, $trace");
       return null;
@@ -167,24 +221,35 @@ class ApiCallsV2 {
     return null;
   }
 
-  static Future<dynamic> getUserTargetsList_v2({
-    int limit = 50,
-    int offset = 0,
-    enums.ApiSortAsc? sort,
-  }) async {
+  static Future<dynamic> getUserTargetsList_v2({int limit = 50, int offset = 0, enums.ApiSortAsc? sort}) async {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<UserListResponse>(
       apiSelection_v2: ApiSelection_v2.userTargetsList,
       apiCall: (client, apiKey) {
-        return client.userListGet(
-          cat: enums.UserListEnum.targets,
-          limit: limit,
-          offset: offset,
-          sort: sort,
-        );
+        return client.userListGet(cat: enums.UserListEnum.targets, limit: limit, offset: offset, sort: sort);
       },
     );
 
     return apiResponse;
   }
+}
+
+/// Torn can answer a single selection with {code, error} instead of the data, and only
+/// the top level error is checked elsewhere
+bool _isSelectionError(dynamic node) => node is Map && node.containsKey('code') && node.containsKey('error');
+
+/// Nested nodes can arrive as `Map<dynamic, dynamic>`, which the swagger parsers reject
+dynamic _deepCastJson(dynamic node) {
+  if (node is Map) return node.map((k, v) => MapEntry(k.toString(), _deepCastJson(v)));
+  if (node is List) return node.map(_deepCastJson).toList();
+  return node;
+}
+
+class ProfileMiscResult {
+  final OwnProfileMisc misc;
+  final UserItemMarketResponse? itemmarket;
+  final UserOrganizedCrimeResponse? organizedCrime;
+  final bool virusResolved; // if false, the virus below means nothing
+  final UserVirus? virus; // null means nothing being programmed
+  ProfileMiscResult(this.misc, this.itemmarket, this.organizedCrime, this.virusResolved, this.virus);
 }

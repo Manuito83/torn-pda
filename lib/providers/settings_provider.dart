@@ -4,6 +4,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -2112,6 +2113,10 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> configureRefreshRate() async {
+    // The plugin calls View.getRootSurfaceControl() (API 31) unguarded, and the
+    // resulting NoSuchMethodError is an Error
+    if (Platform.isAndroid && kSdkAndroid < 31) return;
+
     try {
       if (_highRefreshRateEnabled) {
         final success = await _refreshRateControl.requestHighRefreshRate();

@@ -29,6 +29,7 @@ class UserScriptModel {
     required this.source,
     this.time = UserScriptTime.end,
     this.url,
+    this.updateUrl,
     this.updateStatus = UserScriptUpdateStatus.noRemote,
     required this.isExample,
     this.customApiKey = "",
@@ -46,6 +47,11 @@ class UserScriptModel {
   String source;
   UserScriptTime time;
   String? url;
+
+  // @updateURL, when the script offers one
+  // Only holds a header, so it's much cheaper than the full source
+  String? updateUrl;
+
   UserScriptUpdateStatus updateStatus;
   bool isExample;
   String customApiKey;
@@ -92,6 +98,7 @@ class UserScriptModel {
         source: source,
         time: time,
         url: url,
+        updateUrl: json["updateUrl"] is String ? json["updateUrl"] : null,
         updateStatus: updateStatus,
         isExample: isExample,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
@@ -108,6 +115,7 @@ class UserScriptModel {
         source: json["source"],
         time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end,
         url: json["url"],
+        updateUrl: json["updateUrl"] is String ? json["updateUrl"] : null,
         updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
         customApiKey: json["customApiKey"] ?? "",
@@ -144,6 +152,7 @@ class UserScriptModel {
       source: source ?? metaMap["source"],
       matches: metaMap["matches"] ?? ["*"],
       url: url ?? metaMap["downloadURL"],
+      updateUrl: metaMap["updateURL"],
       updateStatus: updateStatus,
       manuallyEdited: manuallyEdited ?? false,
       time: time ?? (metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end),
@@ -210,6 +219,7 @@ class UserScriptModel {
     "edited": manuallyEdited,
     "source": source,
     "url": url,
+    "updateUrl": updateUrl,
     "updateStatus": updateStatus.name,
     "isExample": isExample,
     "time": time == UserScriptTime.start ? "start" : "end",
@@ -376,6 +386,9 @@ class UserScriptModel {
         if (metaMap["downloadURL"] != null) {
           this.url = metaMap["downloadURL"];
         }
+        if (metaMap["updateURL"] != null) {
+          updateUrl = metaMap["updateURL"];
+        }
       } catch (e) {
         // Do nothing
       }
@@ -415,6 +428,19 @@ class UserScriptModel {
       return UserScriptUpdateStatus.noRemote;
     }
 
+    // Try the metadata file first
+    // Anything unexpected there falls back to the full source below
+    final String? declared = updateUrl ?? tryGetUpdateUrl(source);
+    final String? metaUrl = (declared != null && declared.isNotEmpty && declared != url) ? declared : null;
+    if (metaUrl != null) {
+      final String? remoteVersion = await _fetchRemoteVersion(metaUrl);
+      if (remoteVersion != null) {
+        return UserScriptModel.isNewerVersion(remoteVersion, version)
+            ? UserScriptUpdateStatus.updateAvailable
+            : UserScriptUpdateStatus.upToDate;
+      }
+    }
+
     try {
       final response = await http.get(Uri.parse(url!));
       if (response.statusCode == 200) {
@@ -432,6 +458,19 @@ class UserScriptModel {
     return UserScriptUpdateStatus.error;
   }
 
+  /// Version declared in a remote header, or null if it can't be read for any reason
+  static Future<String?> _fetchRemoteVersion(String from) async {
+    try {
+      final response = await http.get(Uri.parse(from));
+      if (response.statusCode != 200) return null;
+      final metaMap = UserScriptModel.parseHeader(response.body);
+      final version = metaMap["version"];
+      return version is String && version.isNotEmpty ? version : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static List<String> tryGetMatches(String source) {
     try {
       final metaMap = parseHeader(source);
@@ -445,6 +484,15 @@ class UserScriptModel {
     try {
       final metaMap = UserScriptModel.parseHeader(source);
       return metaMap["downloadURL"];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static String? tryGetUpdateUrl(String source) {
+    try {
+      final metaMap = UserScriptModel.parseHeader(source);
+      return metaMap["updateURL"];
     } catch (e) {
       return null;
     }

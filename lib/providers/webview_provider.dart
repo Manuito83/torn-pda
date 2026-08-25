@@ -1583,18 +1583,46 @@ class WebViewProvider extends ChangeNotifier {
   void loadMainTabUrl(String? url) {
     if (_tabList.isEmpty) return;
     final tab = _tabList[0];
-    tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
+
+    final WebViewFullState? state = tab.webViewKey?.currentState;
+    if (state != null && !tab.needsReloadAfterRendererGone) {
+      state.loadFromExterior(url: url, omitHistory: false);
+    } else {
+      if (url != null && url.isNotEmpty) tab.currentUrl = url;
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.recordError(
+          "Main tab could not receive an external URL and was rebuilt "
+          "(state=${state == null ? "null" : "alive"}, rendererGone=${tab.needsReloadAfterRendererGone})",
+          null,
+          reason: "External URL dropped by an unmounted or dead main tab",
+          fatal: false,
+        );
+      }
+      rebuildUnresponsiveWebView(
+        tabUid: tab.id,
+        isChainingBrowser: tab.isChainingBrowser,
+        chainingPayload: tab.chainingPayload,
+      );
+    }
+
     if (currentTab != 0) {
       activateTab(0);
     }
   }
 
   void convertToChainingBrowser({ChainingPayload? chainingPayload}) {
-    if (_tabList.isEmpty) return;
+    if (_tabList.isEmpty || chainingPayload == null) return;
     final tab = _tabList[0];
     tab.isChainingBrowser = true;
     tab.chainingPayload = chainingPayload;
-    tab.webViewKey?.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload!);
+
+    final WebViewFullState? state = tab.webViewKey?.currentState;
+    if (state != null) {
+      state.convertToChainingBrowser(chainingPayload: chainingPayload);
+    } else {
+      rebuildUnresponsiveWebView(tabUid: tab.id, isChainingBrowser: true, chainingPayload: chainingPayload);
+    }
+
     if (currentTab != 0) {
       activateTab(0);
     }
@@ -1789,7 +1817,7 @@ class WebViewProvider extends ChangeNotifier {
     setCurrentUiMode(uiMode, context);
 
     final browserType = await Prefs().getDefaultBrowser();
-    if (browserType == 'app') {
+    if (browserType == 'app' || browserTapType == BrowserTapType.deeplink) {
       analytics?.logScreenView(screenName: 'browser_full');
 
       String? authUrl = await _assessNativeAuth(inputUrl: url, nativeUser: nativeUser, nativeAuth: nativeAuth);
@@ -2423,6 +2451,11 @@ class WebViewProvider extends ChangeNotifier {
     try {
       final uri1 = Uri.parse(url1);
       final uri2 = Uri.parse(url2);
+
+      // These two rules only apply to the same website; otherwise, all root URLs would look identical
+      final String host1 = uri1.host.startsWith("www.") ? uri1.host.substring(4) : uri1.host;
+      final String host2 = uri2.host.startsWith("www.") ? uri2.host.substring(4) : uri2.host;
+      if (host1 != host2) return false;
 
       // Check for index.php equivalence
       // https://www.torn.com/index.php == https://www.torn.com/

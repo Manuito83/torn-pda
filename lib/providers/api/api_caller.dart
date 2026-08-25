@@ -308,6 +308,9 @@ class ApiCallerController extends GetxController {
       case ApiSelection_v1.appWidget:
         url += 'user/?selections=profile,icons,bars,cooldowns,newevents,newmessages,travel,money';
         break;
+      case ApiSelection_v1.keyValidation:
+        url += 'user/?selections=basic';
+        break;
       case ApiSelection_v1.travel:
         url += 'user/?selections=money,travel';
         break;
@@ -316,6 +319,11 @@ class ApiCallerController extends GetxController {
         break;
       case ApiSelection_v1.ownExtended:
         url += 'user/?selections=profile,bars,networth,cooldowns,notifications,travel,icons,money,education,messages';
+        break;
+      case ApiSelection_v1.ownExtendedWithEvents:
+        url +=
+            'user/?selections=profile,bars,networth,cooldowns,notifications,travel,icons,money,education,messages,'
+            'events';
         break;
       case ApiSelection_v1.events:
         url += 'user/?selections=events';

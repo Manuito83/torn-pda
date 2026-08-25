@@ -48,6 +48,7 @@ class PrefsBackupService {
     'pda_alternativeTSCKey',
     'pda_alternativeFFScouterKeyEnabled',
     'pda_alternativeFFScouterKey',
+    'pda_scriptCatalogApiKey',
     'pda_webViewSessionCookie',
     'pda_webViewLastActiveTab',
     'pda_webViewMainTab',

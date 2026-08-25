@@ -23,35 +23,16 @@ import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNote
 import 'package:vibration/vibration.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-enum WatchDefcon {
-  cooldown,
-  green1,
-  green2,
-  orange1,
-  orange2,
-  red1,
-  red2,
-  panic,
-  off,
-  apiFail,
-}
+enum WatchDefcon { cooldown, green1, green2, orange1, orange2, red1, red2, panic, off, apiFail }
 
-enum PlayerStatusColor {
-  ok,
-  hospital,
-  jail,
-  travel,
-}
+enum PlayerStatusColor { ok, hospital, jail, travel }
 
 // In use, for example, for travel live activities
 class StatusObservable {
   final PlayerStatusColor statusColor;
   final BarsStatusCooldownsModel? barsAndStatusModel;
 
-  StatusObservable({
-    required this.statusColor,
-    this.barsAndStatusModel,
-  });
+  StatusObservable({required this.statusColor, this.barsAndStatusModel});
 }
 
 class ChainStatusController extends GetxController {
@@ -244,15 +225,12 @@ class ChainStatusController extends GetxController {
     _tickerCallFullChainApi?.cancel();
     _tickerDecreaseCount?.cancel();
     _tickerCallFullChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
-    _tickerDecreaseCount = Timer.periodic(
-      const Duration(seconds: 1),
-      (Timer t) {
-        _decreaseTimer();
-        if (_watcherActive) {
-          _chainWatchCheck();
-        }
-      },
-    );
+    _tickerDecreaseCount = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      _decreaseTimer();
+      if (_watcherActive) {
+        _chainWatchCheck();
+      }
+    });
 
     log("Chain watcher timers activated!");
   }
@@ -769,18 +747,22 @@ class ChainStatusController extends GetxController {
       bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
       bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
 
-      navigatorKey.currentState?.push(MaterialPageRoute(builder: (context) {
-        return WebViewPanic(
-          attackIdList: attacksIds,
-          attackNameList: attacksNames,
-          attackNotesColorList: attackNotesColorList,
-          attackNotesList: attackNotesList,
-          panic: true,
-          showNotes: showNotes,
-          showBlankNotes: showBlankNotes,
-          showOnlineFactionWarning: showOnlineFactionWarning,
-        );
-      }));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (context) {
+            return WebViewPanic(
+              attackIdList: attacksIds,
+              attackNameList: attacksNames,
+              attackNotesColorList: attackNotesColorList,
+              attackNotesList: attackNotesList,
+              panic: true,
+              showNotes: showNotes,
+              showBlankNotes: showBlankNotes,
+              showOnlineFactionWarning: showOnlineFactionWarning,
+            );
+          },
+        ),
+      );
     }
   }
 
@@ -848,12 +830,7 @@ class ChainStatusController extends GetxController {
   }
 
   // MARK: - Notifications
-  Future<void> showNotification(
-    int id,
-    String payload,
-    String title,
-    String subtitle,
-  ) async {
+  Future<void> showNotification(int id, String payload, String title, String subtitle) async {
     const String channelTitle = 'Manual chain';
     const String channelSubtitle = 'Manual chain';
     const String channelDescription = 'Manual notifications for chain';
@@ -876,10 +853,7 @@ class ChainStatusController extends GetxController {
       ledOffMs: 500,
     );
 
-    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
-      presentSound: true,
-      sound: 'slow_spring_board.aiff',
-    );
+    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
 
     final platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -1873,7 +1847,7 @@ class ChainStatusController extends GetxController {
     return 0;
   }
 
-// 'Possible' means that the next defcon is displaced until it leaves 20 seconds gap
+  // 'Possible' means that the next defcon is displaced until it leaves 20 seconds gap
   double _findHighestPossibleValue(WatchDefcon defcon) {
     switch (defcon) {
       case WatchDefcon.cooldown:

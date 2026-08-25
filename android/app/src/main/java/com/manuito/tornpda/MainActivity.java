@@ -51,7 +51,11 @@ public class MainActivity extends FlutterActivity {
                     }
                 });
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        // Skipped on Android 13: registering the listener makes the system transfer the
+        // splash view, which crashes in ActivityThread.syncTransferSplashscreenViewTransaction
+        // on OPPO/realme/OnePlus ROMs (SurfaceControl already released)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && Build.VERSION.SDK_INT != Build.VERSION_CODES.TIRAMISU) {
             // Disable the Android splash screen fade out animation to avoid
             // a flicker before the similar frame is drawn in Flutter.
             getSplashScreen()

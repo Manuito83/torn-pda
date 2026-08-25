@@ -40,6 +40,7 @@ import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
@@ -68,6 +69,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/background_inbox.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
+import 'package:torn_pda/utils/crashlytics_identity.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
@@ -80,9 +82,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.15.0';
-const String androidCompilation = '673';
-const String iosCompilation = '673';
+const String appVersion = '3.16.0';
+const String androidCompilation = '677';
+const String iosCompilation = '677';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -130,7 +132,7 @@ const bool pointFunctionsEmulatorToLocal = false;
 // TODO (App release)
 const bool enableWakelockForDebug = true;
 
-final enableAccessibilityTools = false;
+const enableAccessibilityTools = false;
 
 bool logAndShowToUser = false;
 
@@ -714,6 +716,7 @@ Future<void> _initializeGetXControllers() async {
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);
     Get.put(ChainStatusController(), permanent: true);
+    Get.put(ProfileApiCallsController(), permanent: true);
 
     final bool enableLiveUpdateBridge = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
     if (enableLiveUpdateBridge) {
@@ -796,19 +799,20 @@ Future<void> _initializeFirebase() async {
     if (!Platform.isWindows) {
       FirebaseMessaging.onBackgroundMessage(messagingBackgroundHandler);
 
+      // Before the rest of the startup, which is where the fatals we cannot attribute happen
+      await seedCrashlyticsIdentityFromStorage();
+
       if (kDebugMode) {
         if (pointFunctionsEmulatorToLocal) {
           FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('192.168.1.172', 5001);
         }
         await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
-
-        //if (kDebugMode) {
-        PlatformDispatcher.instance.onError = (error, stack) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
-          return false;
-        };
-        //}
       }
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
+        return false;
+      };
 
       FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     }

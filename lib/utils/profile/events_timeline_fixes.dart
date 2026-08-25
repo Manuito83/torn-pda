@@ -59,10 +59,7 @@ String processEventMessage(String message) {
   });
 
   // Convert [view] to (view) while preserving links
-  RegExp bracketedViewExp = RegExp(
-    r'\[\s*(<a\b[^>]*?>\s*view\s*<\/a>|\bview\b)\s*\]',
-    caseSensitive: false,
-  );
+  RegExp bracketedViewExp = RegExp(r'\[\s*(<a\b[^>]*?>\s*view\s*<\/a>|\bview\b)\s*\]', caseSensitive: false);
 
   newMessage = newMessage.replaceAllMapped(bracketedViewExp, (match) {
     String content = match.group(1) ?? '';
@@ -84,7 +81,7 @@ String stripUnsupportedHtmlTags(String message) {
 
 String _normalizePunctuationSpacing(String text) {
   // Remove stray spaces before punctuation such as commas.
-  return text.replaceAll(RegExp(r'\s+([,.;:!?])'), r'$1');
+  return text.replaceAllMapped(RegExp(r'\s+([,.;:!?])'), (match) => match.group(1)!);
 }
 
 Widget buildEventMessageWidget(
@@ -120,27 +117,25 @@ Widget buildEventMessageWidget(
     String href = match.group(1) ?? '';
     String linkText = _normalizePunctuationSpacing(match.group(2) ?? '');
 
-    spans.add(WidgetSpan(
-      child: GestureDetector(
-        onTap: () {
-          launchBrowser(url: href, shortTap: true);
-        },
-        onLongPress: () {
-          launchBrowser(url: href, shortTap: false);
-        },
-        child: Text(
-          linkText,
-          style: TextStyle(
-            color: Colors.blue,
-            decoration: TextDecoration.none,
-            fontWeight: fontWeight,
-            fontSize: 12,
+    spans.add(
+      WidgetSpan(
+        child: GestureDetector(
+          onTap: () {
+            launchBrowser(url: href, shortTap: true);
+          },
+          onLongPress: () {
+            launchBrowser(url: href, shortTap: false);
+          },
+          // Auction events nest <b> inside the <a>, so the link text needs parsing too
+          child: Text.rich(
+            TextSpan(children: _parseBoldText(linkText, fontWeight)),
+            style: TextStyle(color: Colors.blue, decoration: TextDecoration.none, fontWeight: fontWeight, fontSize: 12),
           ),
         ),
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
       ),
-      alignment: PlaceholderAlignment.baseline,
-      baseline: TextBaseline.alphabetic,
-    ));
+    );
 
     currentIndex = matchEnd;
   }
@@ -154,43 +149,47 @@ Widget buildEventMessageWidget(
   return RichText(
     text: TextSpan(
       children: spans,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: fontWeight,
-        color: themeProvider.mainText,
-      ),
+      style: TextStyle(fontSize: 12, fontWeight: fontWeight, color: themeProvider.mainText),
     ),
   );
 }
 
 /// Helper function to parse text with <b> tags and apply bold styling
+///
+/// Tags are counted instead of paired, because Torn
+/// doubles them in some events (`<b><b>Diamond III</b></b>`)
 List<InlineSpan> _parseBoldText(String text, FontWeight fontWeight) {
   List<InlineSpan> spans = [];
 
-  RegExp boldExp = RegExp(r'<b>(.*?)<\/b>', caseSensitive: false);
+  RegExp boldExp = RegExp(r'<\/?b\b[^>]*>', caseSensitive: false);
   int currentIndex = 0;
+  int depth = 0;
 
-  // Iterate over bold matches
+  void addSpan(String content, bool bold) {
+    if (content.isEmpty) return;
+    spans.add(
+      TextSpan(
+        text: content,
+        style: TextStyle(fontWeight: bold ? FontWeight.bold : fontWeight),
+      ),
+    );
+  }
+
   for (final match in boldExp.allMatches(text)) {
-    int matchStart = match.start;
-    int matchEnd = match.end;
+    addSpan(text.substring(currentIndex, match.start), depth > 0);
 
-    // Add any text before <b> tag
-    if (matchStart > currentIndex) {
-      spans.add(TextSpan(text: text.substring(currentIndex, matchStart), style: TextStyle(fontWeight: fontWeight)));
+    if (match.group(0)!.startsWith('</')) {
+      // A stray closing tag is dropped, not printed
+      if (depth > 0) depth--;
+    } else {
+      depth++;
     }
 
-    // Add bold text
-    String boldText = match.group(1) ?? '';
-    spans.add(TextSpan(text: boldText, style: const TextStyle(fontWeight: FontWeight.bold)));
-
-    currentIndex = matchEnd;
+    currentIndex = match.end;
   }
 
   // Add any remaining text after the last <b> tag
-  if (currentIndex < text.length) {
-    spans.add(TextSpan(text: text.substring(currentIndex), style: TextStyle(fontWeight: fontWeight)));
-  }
+  addSpan(text.substring(currentIndex), depth > 0);
 
   return spans;
 }

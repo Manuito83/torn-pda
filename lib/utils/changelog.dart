@@ -83,6 +83,69 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  const _MVersion(
+    version: 'v3.16.0',
+    date: '28 August 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Userscripts: install TornTools scripts from inside the app',
+            detail:
+                'The user scripts page now has a TornTools section listing the features that the TornTools team '
+                'publishes as standalone scripts, sorted by category and searchable.\n\n'
+                'Install the ones you want with a single tap and they will be kept up to date like any other script.\n\n'
+                'These scripts are made and maintained by the TornTools team, not by Torn PDA, so please report '
+                'any problem with them through their own channels, which are linked in the section.',
+          ),
+          _MItem('Userscripts: added documentation section'),
+          _MItem(
+            'Userscripts: update all your scripts at once',
+            detail:
+                'When script updates are available, a banner in the user scripts page opens a review screen '
+                'with all of them: pick the ones you want and update them in a single tap, keeping their '
+                'on/off state and custom API keys.\n\n'
+                'Updates that request new permissions are flagged, and you need to expand '
+                'them to review their code before they can be selected.',
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [
+          _MItem('Userscripts: storage capacity warnings are now only shown when debug messages are enabled'),
+          _MItem('Userscripts: faster injection when loading pages'),
+          _MItem('Travel live updates: icons now show the direction of travel [bombel]', androidOnly: true),
+          _MItem('Profile section now uses about half the API calls'),
+          _MItem('Developer tools: storage entries can be deleted in bulk'),
+        ],
+      ),
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Events: HTML tags no longer show up in the timeline text'),
+          _MItem('Chaining: tapping a target in the war or retaliation lists no longer fails to start the attack'),
+          _MItem(
+            'Alarms can now be set for waits longer than 24 hours',
+            detail:
+                'Alarms requested from a user script are not included and still stop at 24 hours, but a script '
+                'can schedule a notification for any date.',
+          ),
+          _MItem('Fixed startup crashes on some devices'),
+          _MItem('Browser: a page or script opening a window without an address no longer leaves a broken tab'),
+        ],
+      ),
+    ],
+  ),
+
   // TODO (App release): confirm the release date before publishing
   const _MVersion(
     version: 'v3.15.0',

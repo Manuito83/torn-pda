@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:torn_pda/utils/telemetry_sanitize.dart';
 import 'package:http/http.dart' as http;
 
 // Project imports:
@@ -45,7 +46,7 @@ class NukeRevive {
       }
     } catch (e) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Nuke Revive Comm");
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(redactUrlQueries("PDA Error: $e"), null);
     }
 
     return false;

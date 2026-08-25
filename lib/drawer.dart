@@ -723,6 +723,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
         "browser_center_editing_text_field_allowed": true,
+        "browser_extend_height_for_keyboard_allowed": true,
         "browser_restore_webview_focus_allowed": true,
         "browser_engine_prewarm_allowed": true,
         "browser_webview_recovery_allowed": true,
@@ -834,12 +835,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
       Prefs().setAuthRecoveryEnabledRC(_authRecoveryEnabledRC);
-
-      if (!_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed &&
-          _settingsProvider.browserExtendHeightForKeyboard) {
-        // If RC disables the feature, also turn off the user toggle to avoid confusion
-        _settingsProvider.browserExtendHeightForKeyboard = false;
-      }
 
       // Revives
       _settingsProvider.reviveWolverinesPrice = remoteConfig.getString("revive_wolverines");

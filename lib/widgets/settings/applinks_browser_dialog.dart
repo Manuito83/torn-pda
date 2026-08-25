@@ -1,4 +1,5 @@
 // Flutter imports:
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
@@ -12,6 +13,18 @@ class AppLinksBrowserDialog extends StatefulWidget {
 }
 
 class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
+  Future<void> _openOpenByDefaultSettings() async {
+    try {
+      const AndroidIntent intent = AndroidIntent(
+        action: 'android.settings.APP_OPEN_BY_DEFAULT_SETTINGS',
+        data: 'package:com.manuito.tornpda',
+      );
+      await intent.launch();
+    } catch (_) {
+      await AppSettings.openAppSettings();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -27,8 +40,8 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
               "If you prefer to use an external browser, you WILL NEED to change your device app's settings and "
               "deselect the 'open supported links' option inside of the 'open by default' section, so that Torn PDA "
               "no longer tries to open Torn links by default.\n\n"
-              "Otherwise, Torn PDA won't be able to redirect to any other browser (and the in-app browser will also "
-              "fail to open).",
+              "Otherwise, Torn links will keep opening in Torn PDA's in-app browser, even though you have chosen "
+              "an external one here.",
               defaultStyle: TextStyle(
                 fontSize: 13,
                 color: context.read<ThemeProvider>().mainText,
@@ -40,7 +53,7 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
                       decoration: TextDecoration.underline, color: Colors.blue[400], fontStyle: FontStyle.italic),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () async {
-                      await AppSettings.openAppSettings();
+                      await _openOpenByDefaultSettings();
                     },
                 ),
                 const EasyRichTextPattern(
@@ -63,7 +76,7 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
             textAlign: TextAlign.center,
           ),
           onPressed: () async {
-            await AppSettings.openAppSettings();
+            await _openOpenByDefaultSettings();
             Navigator.of(context).pop();
           },
         ),

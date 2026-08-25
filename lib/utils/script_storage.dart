@@ -224,6 +224,16 @@ class ScriptStorage {
 
   static Future<void> deleteKey(String sid, String key) => _delete(sid, key);
 
+  static Future<void> restoreEntry(String sid, String key, String encodedValue, int bytes) async {
+    final db = await _database;
+    await db.insert('script_storage', {
+      'sid': sid,
+      'key': key,
+      'value': encodedValue,
+      'bytes': bytes,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   static Future<void> deleteAll() async {
     final db = await _database;
     await db.delete('script_storage');

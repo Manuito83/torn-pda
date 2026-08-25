@@ -1163,8 +1163,9 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
           ),
         ),
       ],
-      onChanged: (value) {
-        Prefs().setEventsShowNumber(int.parse(value!));
+      onChanged: (value) async {
+        await Prefs().setEventsShowNumber(int.parse(value!));
+        if (!mounted) return;
         setState(() {
           _eventsNumber = int.parse(value);
         });
@@ -1219,8 +1220,9 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
           ),
         ),
       ],
-      onChanged: (value) {
-        Prefs().setMessagesShowNumber(int.parse(value!));
+      onChanged: (value) async {
+        await Prefs().setMessagesShowNumber(int.parse(value!));
+        if (!mounted) return;
         setState(() {
           _messagesNumber = int.parse(value);
         });

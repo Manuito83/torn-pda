@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:torn_pda/utils/telemetry_sanitize.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_activity_model.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_flights_model.dart';
@@ -26,7 +27,7 @@ class FFScouterComm {
   static void _logError(String method, Object e, StackTrace stackTrace) {
     log("FFScouterComm.$method error: $e");
     if (e is SocketException || e is http.ClientException || e is HandshakeException) return;
-    FirebaseCrashlytics.instance.recordError("FFScouter $method error: $e", stackTrace);
+    FirebaseCrashlytics.instance.recordError(redactUrlQueries("FFScouter $method error: $e"), stackTrace);
   }
 
   /// Fetches battle stats estimates for up to 205 targets at once
