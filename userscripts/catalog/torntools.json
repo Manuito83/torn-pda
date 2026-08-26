@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "enabled": true,
-  "updated": "2026-08-22",
+  "updated": "2026-08-25",
   "provider": {
     "name": "TornTools",
     "author": "DeKleineKobini and the TornTools team",
@@ -703,6 +703,81 @@
       "pageUrl": "https://greasyfork.org/scripts/581399-torn-torntools-only-new-feed",
       "matches": [
         "https://*.torn.com/forums.php*"
+      ]
+    },
+    {
+      "id": "torntools.alcohol-nerve",
+      "greasyforkId": 583034,
+      "name": "Alcohol Nerve",
+      "description": "Show the amount of nerve alcohol would give.",
+      "category": "items",
+      "usesApiKey": true,
+      "downloadUrl": "https://update.greasyfork.org/scripts/583034/TORN%3A%20TornTools%20-%20Alcohol%20Nerve.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/583034-torn-torntools-alcohol-nerve",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.book-effect",
+      "greasyforkId": 583033,
+      "name": "Book Effect",
+      "description": "Show the book effect for books.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/583033/TORN%3A%20TornTools%20-%20Book%20Effect.user.js",
+      "pageUrl": "https://update.greasyfork.org/scripts/583033/TORN%3A%20TornTools%20-%20Book%20Effect.user.js",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.candy-happy",
+      "greasyforkId": 583032,
+      "name": "Candy Happy",
+      "description": "Show the amount of happy candy would give.",
+      "category": "items",
+      "usesApiKey": true,
+      "downloadUrl": "https://update.greasyfork.org/scripts/583032/TORN%3A%20TornTools%20-%20Candy%20Happy.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/583032-torn-torntools-candy-happy",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.shop-profits",
+      "greasyforkId": 588134,
+      "name": "Shop Profits",
+      "description": "Display the amount of profit per city shop item.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/588134/TORN%3A%20TornTools%20-%20Shop%20Profits.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/588134-torn-torntools-shop-profits",
+      "matches": [
+        "https://*.torn.com/bigalgunshop.php*",
+        "https://*.torn.com/shops.php*"
+      ]
+    },
+    {
+      "id": "torntools.ranked-war-value",
+      "greasyforkId": 591667,
+      "name": "Ranked War Value",
+      "description": "Show the total value of the ranked war rewards.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/591667/TORN%3A%20TornTools%20-%20Ranked%20War%20Value.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/591667-torn-torntools-ranked-war-value",
+      "matches": [
+        "https://*.torn.com/war.php?step=rankreport*"
+      ]
+    },
+    {
+      "id": "torntools.stocks-money-input",
+      "greasyforkId": 592273,
+      "name": "Stocks Money Input",
+      "description": "Easier money parking in stocks.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/592273/TORN%3A%20TornTools%20-%20Stocks%20Money%20Input.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/592273-torn-torntools-stocks-money-input",
+      "matches": [
+        "https://*.torn.com/page.php?sid=stocks*"
       ]
     }
   ]
