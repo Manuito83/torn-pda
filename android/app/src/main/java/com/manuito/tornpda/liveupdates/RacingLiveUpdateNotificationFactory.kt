@@ -381,6 +381,10 @@ class RacingLiveUpdateNotificationFactory(
     private fun LiveUpdatePayload.toExtrasBundle(): android.os.Bundle {
         return android.os.Bundle().also { bundle ->
             extras.forEach { (key, value) ->
+                // Notification extras are readable by any app holding
+                // notification-listener access, so the API key must never
+                // be included (it travels only in our own alarm intents)
+                if (key == "apiKey") return@forEach
                 when (value) {
                     is String -> bundle.putString(key, value)
                     is Boolean -> bundle.putBoolean(key, value)
