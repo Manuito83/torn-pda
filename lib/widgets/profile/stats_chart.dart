@@ -423,234 +423,11 @@ class _StatsChartState extends State<StatsChart> {
   }
 
   LineChartData _buildLineChartData() {
-    double maxStat = 0;
-
-    final strengthSpots = <FlSpot>[];
-    final speedSpots = <FlSpot>[];
-    final defenseSpots = <FlSpot>[];
-    final dexteritySpots = <FlSpot>[];
-    final timestamps = <int?>[];
-
-    // Filter data based on range
-    var data = widget.statsData!.data!;
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    final int rangeMonths = settingsProvider.tornStatsChartRange;
-
-    if (rangeMonths > 0 && data.isNotEmpty) {
-      // Show the last X months of AVAILABLE data
-      int maxTimestamp = 0;
-      for (var element in data) {
-        if (element.timestamp != null && element.timestamp! > maxTimestamp) {
-          maxTimestamp = element.timestamp!;
-        }
-      }
-
-      if (maxTimestamp > 0) {
-        final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
-        final cutoffDate = latestDate.subtract(Duration(days: rangeMonths * 30));
-        data = data.where((element) {
-          if (element.timestamp == null) return false;
-          final date = DateTime.fromMillisecondsSinceEpoch(element.timestamp! * 1000);
-          return date.isAfter(cutoffDate);
-        }).toList();
-      }
-    }
-
-    for (int i = 0; i < data.length; i++) {
-      strengthSpots.add(FlSpot(i.toDouble(), data[i].strength!.toDouble()));
-      speedSpots.add(FlSpot(i.toDouble(), data[i].speed!.toDouble()));
-      defenseSpots.add(FlSpot(i.toDouble(), data[i].defense!.toDouble()));
-      dexteritySpots.add(FlSpot(i.toDouble(), data[i].dexterity!.toDouble()));
-      timestamps.add(data[i].timestamp);
-      final int thisMax = [
-        data[i].strength ?? 0,
-        data[i].speed ?? 0,
-        data[i].defense ?? 0,
-        data[i].dexterity ?? 0,
-      ].fold(0, max);
-      if (thisMax > maxStat) {
-        maxStat = thisMax.toDouble();
-      }
-    }
-
-    return LineChartData(
-      maxY: maxStat * 1.1,
-      lineBarsData: [
-        LineChartBarData(
-          spots: strengthSpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.blue,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-        LineChartBarData(
-          spots: speedSpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.orange,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-        LineChartBarData(
-          spots: defenseSpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.red,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-        LineChartBarData(
-          spots: dexteritySpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.green,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-      ],
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: false,
-        getDrawingHorizontalLine: (value) {
-          return const FlLine(
-            strokeWidth: 0.2,
-            color: Colors.grey,
-          );
-        },
-      ),
-      lineTouchData: LineTouchData(
-        touchTooltipData: LineTouchTooltipData(
-          fitInsideHorizontally: true,
-          fitInsideVertically: false,
-          getTooltipColor: (touchedSpot) => Colors.blueGrey.withAlpha(255),
-          getTooltipItems: (value) {
-            final tooltips = <LineTooltipItem>[];
-            int thisX = value[0].x.toInt();
-
-            final NumberFormat f = NumberFormat("###,###", "en_US");
-
-            // Get time comparing position in x with timestamps
-            var ts = 0;
-            final timesList = [];
-            for (final e in timestamps) {
-              timesList.add("$e");
-            }
-            if (thisX > timesList.length) {
-              thisX = timesList.length;
-            }
-            ts = int.parse(timesList[thisX]);
-            final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-            final DateFormat formatter = DateFormat('d LLL yyyy');
-
-            // The first line (STR) will be preceded by date
-            final String strLine = formatter.format(date);
-
-            // Configure the last line to show totals
-            double total = 0;
-            for (final stat in value) {
-              total += stat.y;
-            }
-            final String dexLine = "TOTAL ${f.format(total.toInt())}";
-
-            // Values come unsorted, we sort them here to our liking
-            tooltips.add(
-              LineTooltipItem(
-                "$strLine\n\nSTR: ${f.format(data[thisX].strength)}",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-            tooltips.add(
-              LineTooltipItem(
-                "DEF: ${f.format(data[thisX].defense)}",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-            tooltips.add(
-              LineTooltipItem(
-                "SPD: ${f.format(data[thisX].speed)}",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-            tooltips.add(
-              LineTooltipItem(
-                "DEX: ${f.format(data[thisX].dexterity)}\n\n$dexLine",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-
-            return tooltips;
-          },
-        ),
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: (position, meta) {
-              if (position == 0 || position.toInt() >= timestamps.length) {
-                return const SizedBox.shrink();
-              }
-
-              final int ts = timestamps[position.toInt()]! * 1000;
-              final DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts);
-              final DateFormat formatter = DateFormat('d LLL');
-              final String date = formatter.format(dt);
-
-              const degrees = -50;
-              const radians = degrees * pi / 180;
-
-              // Color logic based on year
-              final int currentYear = DateTime.now().year;
-              Color yearColor;
-              if (dt.year == currentYear) {
-                yearColor = context.read<ThemeProvider>().mainText;
-              } else if (dt.year == currentYear - 1) {
-                yearColor = Colors.blue;
-              } else if (dt.year == currentYear - 2) {
-                yearColor = Colors.yellow[800]!;
-              } else {
-                yearColor = Colors.red;
-              }
-
-              return Transform.rotate(
-                angle: radians,
-                child: SizedBox(
-                  width: 60,
-                  child: Text(
-                    date,
-                    style: TextStyle(fontSize: 9, color: yearColor),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            reservedSize: 50,
-            showTitles: true,
-            getTitlesWidget: (position, meta) {
-              if (position == 0) return const SizedBox.shrink();
-              return Text(
-                formatBigNumbers(position.toInt()),
-                style: const TextStyle(fontSize: 9),
-              );
-            },
-          ),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-      ),
+    return buildStatsLineChartData(
+      allData: widget.statsData!.data!,
+      rangeMonths: settingsProvider.tornStatsChartRange,
+      currentYearColor: context.read<ThemeProvider>().mainText,
     );
   }
 
@@ -700,4 +477,235 @@ class _StatsChartState extends State<StatsChart> {
         return Colors.grey;
     }
   }
+}
+
+const double _gapBreakMinDays = 7;
+const double _gapBreakMedianFactor = 6;
+
+double statsChartGapLimitInDays(List<double> xValues) {
+  if (xValues.length < 3) return double.infinity;
+  final gaps = <double>[];
+  for (int i = 1; i < xValues.length; i++) {
+    gaps.add(xValues[i] - xValues[i - 1]);
+  }
+  gaps.sort();
+  final double median = gaps[gaps.length ~/ 2];
+  return max(_gapBreakMinDays, median * _gapBreakMedianFactor);
+}
+
+LineChartData buildStatsLineChartData({
+  required List<Datum> allData,
+  required int rangeMonths,
+  required Color currentYearColor,
+}) {
+  var data = allData.where((e) => e.timestamp != null && e.timestamp! > 0).toList();
+
+  if (rangeMonths > 0 && data.isNotEmpty) {
+    // Show the last X months of AVAILABLE data
+    final int maxTimestamp = data.map((e) => e.timestamp!).reduce(max);
+    final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
+    final cutoffDate = latestDate.subtract(Duration(days: rangeMonths * 30));
+    data = data.where((e) {
+      return DateTime.fromMillisecondsSinceEpoch(e.timestamp! * 1000).isAfter(cutoffDate);
+    }).toList();
+  }
+
+  final xValues = <double>[];
+  final indexByX = <double, int>{};
+  double maxStat = 0;
+
+  for (int i = 0; i < data.length; i++) {
+    final double x = data[i].timestamp! / 86400;
+    xValues.add(x);
+    indexByX[x] = i;
+    final int thisMax = [
+      data[i].strength ?? 0,
+      data[i].speed ?? 0,
+      data[i].defense ?? 0,
+      data[i].dexterity ?? 0,
+    ].fold(0, max);
+    if (thisMax > maxStat) {
+      maxStat = thisMax.toDouble();
+    }
+  }
+
+  final double gapLimit = statsChartGapLimitInDays(xValues);
+
+  List<FlSpot> spotsOf(int? Function(Datum d) stat) {
+    final spots = <FlSpot>[];
+    for (int i = 0; i < data.length; i++) {
+      if (i > 0 && xValues[i] - xValues[i - 1] > gapLimit) {
+        spots.add(FlSpot.nullSpot);
+      }
+      spots.add(FlSpot(xValues[i], (stat(data[i]) ?? 0).toDouble()));
+    }
+    return spots;
+  }
+
+  final gapBands = <VerticalRangeAnnotation>[];
+  for (int i = 1; i < xValues.length; i++) {
+    if (xValues[i] - xValues[i - 1] > gapLimit) {
+      gapBands.add(
+        VerticalRangeAnnotation(
+          x1: xValues[i - 1],
+          x2: xValues[i],
+          color: Colors.grey.withAlpha(38),
+        ),
+      );
+    }
+  }
+
+  final double minX = xValues.isEmpty ? 0 : xValues.reduce(min);
+  final double maxX = xValues.isEmpty ? 1 : xValues.reduce(max);
+  final double labelInterval = maxX > minX ? (maxX - minX) / 5 : 1;
+
+  return LineChartData(
+    minX: minX,
+    maxX: maxX,
+    maxY: maxStat * 1.1,
+    rangeAnnotations: RangeAnnotations(verticalRangeAnnotations: gapBands),
+    lineBarsData: [
+      LineChartBarData(
+        spots: spotsOf((d) => d.strength),
+        isCurved: false,
+        barWidth: 2,
+        color: Colors.blue,
+        dotData: const FlDotData(
+          show: false,
+        ),
+      ),
+      LineChartBarData(
+        spots: spotsOf((d) => d.speed),
+        isCurved: false,
+        barWidth: 2,
+        color: Colors.orange,
+        dotData: const FlDotData(
+          show: false,
+        ),
+      ),
+      LineChartBarData(
+        spots: spotsOf((d) => d.defense),
+        isCurved: false,
+        barWidth: 2,
+        color: Colors.red,
+        dotData: const FlDotData(
+          show: false,
+        ),
+      ),
+      LineChartBarData(
+        spots: spotsOf((d) => d.dexterity),
+        isCurved: false,
+        barWidth: 2,
+        color: Colors.green,
+        dotData: const FlDotData(
+          show: false,
+        ),
+      ),
+    ],
+    gridData: FlGridData(
+      show: true,
+      drawVerticalLine: false,
+      getDrawingHorizontalLine: (value) {
+        return const FlLine(
+          strokeWidth: 0.2,
+          color: Colors.grey,
+        );
+      },
+    ),
+    lineTouchData: LineTouchData(
+      touchTooltipData: LineTouchTooltipData(
+        fitInsideHorizontally: true,
+        fitInsideVertically: false,
+        getTooltipColor: (touchedSpot) => Colors.blueGrey.withAlpha(255),
+        getTooltipItems: (touchedSpots) {
+          final int? index = touchedSpots.isEmpty ? null : indexByX[touchedSpots.first.x];
+          if (index == null || touchedSpots.length != 4) {
+            return List<LineTooltipItem?>.filled(touchedSpots.length, null);
+          }
+
+          final Datum touched = data[index];
+          final NumberFormat f = NumberFormat("###,###", "en_US");
+          final DateTime date = DateTime.fromMillisecondsSinceEpoch(touched.timestamp! * 1000);
+          final String header = DateFormat('d LLL yyyy').format(date);
+          final int total =
+              (touched.strength ?? 0) + (touched.defense ?? 0) + (touched.speed ?? 0) + (touched.dexterity ?? 0);
+          const style = TextStyle(fontSize: 10, color: Colors.white);
+
+          return [
+            LineTooltipItem("$header\n\nSTR: ${f.format(touched.strength ?? 0)}", style),
+            LineTooltipItem("DEF: ${f.format(touched.defense ?? 0)}", style),
+            LineTooltipItem("SPD: ${f.format(touched.speed ?? 0)}", style),
+            LineTooltipItem("DEX: ${f.format(touched.dexterity ?? 0)}\n\nTOTAL ${f.format(total)}", style),
+          ];
+        },
+      ),
+    ),
+    titlesData: FlTitlesData(
+      show: true,
+      bottomTitles: AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true,
+          interval: labelInterval,
+          getTitlesWidget: (position, meta) {
+            if (meta.appliedInterval > 0 && position != meta.min && position != meta.max) {
+              final double edge = meta.appliedInterval * 0.5;
+              if (position - meta.min < edge || meta.max - position < edge) {
+                return const SizedBox.shrink();
+              }
+            }
+
+            final DateTime dt = DateTime.fromMillisecondsSinceEpoch((position * 86400 * 1000).round());
+            final DateFormat formatter = DateFormat('d LLL');
+            final String date = formatter.format(dt);
+
+            const degrees = -50;
+            const radians = degrees * pi / 180;
+
+            // Color logic based on year
+            final int currentYear = DateTime.now().year;
+            Color yearColor;
+            if (dt.year == currentYear) {
+              yearColor = currentYearColor;
+            } else if (dt.year == currentYear - 1) {
+              yearColor = Colors.blue;
+            } else if (dt.year == currentYear - 2) {
+              yearColor = Colors.yellow[800]!;
+            } else {
+              yearColor = Colors.red;
+            }
+
+            return Transform.rotate(
+              angle: radians,
+              child: SizedBox(
+                width: 60,
+                child: Text(
+                  date,
+                  style: TextStyle(fontSize: 9, color: yearColor),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      leftTitles: AxisTitles(
+        sideTitles: SideTitles(
+          reservedSize: 50,
+          showTitles: true,
+          getTitlesWidget: (position, meta) {
+            if (position == 0) return const SizedBox.shrink();
+            return Text(
+              formatBigNumbers(position.toInt()),
+              style: const TextStyle(fontSize: 9),
+            );
+          },
+        ),
+      ),
+      topTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      rightTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+    ),
+  );
 }
