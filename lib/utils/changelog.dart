@@ -83,6 +83,21 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  // TODO: confirm the release date
+  const _MVersion(
+    version: 'v3.17.0',
+    date: '15 September 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [_MItem('Profile: the stats chart now correctly spaces records even when there are gaps in the data')],
+      ),
+    ],
+  ),
+
   const _MVersion(
     version: 'v3.16.0',
     date: '28 August 2026',
