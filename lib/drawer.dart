@@ -3098,6 +3098,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _openDrawer() {
     if (routeWithDrawer) {
+      // Dialogs sit on top of this route and the back button never reaches them
+      final ModalRoute<dynamic>? route = ModalRoute.of(context);
+      if (route != null && !route.isCurrent) {
+        Navigator.of(context).maybePop();
+        return;
+      }
+
       if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
         _scaffoldKey.currentState!.openEndDrawer();
       } else {

@@ -63,6 +63,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
@@ -4883,6 +4884,13 @@ class WebViewFullState extends State<WebViewFull>
 
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
+
+      // Avoid then traveling or abroad
+      final playerState = stats.status?.state;
+      if (isTraveling(state: playerState) ||
+          countryCheck(state: playerState, description: stats.status?.description) != "Torn") {
+        return;
+      }
 
       final List<Widget> warnRows = [];
       final List<Widget> cooldownRows = [];
