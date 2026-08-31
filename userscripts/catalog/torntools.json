@@ -786,6 +786,7 @@
       "name": "Company ID",
       "description": "Display the company id besides the name.",
       "category": "jobs",
+      "usesApiKey": true,
       "downloadUrl": "https://update.greasyfork.org/scripts/593761/TORN%3A%20TornTools%20-%20Company%20ID.user.js",
       "pageUrl": "https://greasyfork.org/en/scripts/593761-torn-torntools-company-id",
       "matches": [
@@ -802,6 +803,18 @@
       "pageUrl": "https://greasyfork.org/en/scripts/593760-torn-torntools-faction-id",
       "matches": [
         "https://*.torn.com/factions.php*"
+      ]
+    },
+    {
+      "id": "torntools.profile-id",
+      "greasyforkId": 593793,
+      "name": "Profile ID",
+      "description": "Display the user id on the profile besides the name.",
+      "category": "profile",
+      "downloadUrl": "https://update.greasyfork.org/scripts/593793/TORN%3A%20TornTools%20-%20Profile%20ID.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/593793-torn-torntools-profile-id",
+      "matches": [
+        "https://*.torn.com/profiles.php*"
       ]
     }
   ]
