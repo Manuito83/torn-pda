@@ -779,6 +779,30 @@
       "matches": [
         "https://*.torn.com/page.php?sid=stocks*"
       ]
+    },
+    {
+      "id": "torntools.company-id",
+      "greasyforkId": 593761,
+      "name": "Company ID",
+      "description": "Display the company id besides the name.",
+      "category": "jobs",
+      "downloadUrl": "https://update.greasyfork.org/scripts/593761/TORN%3A%20TornTools%20-%20Company%20ID.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/593761-torn-torntools-company-id",
+      "matches": [
+        "https://*.torn.com/joblist.php*"
+      ]
+    },
+    {
+      "id": "torntools.faction-id",
+      "greasyforkId": 593760,
+      "name": "Faction ID",
+      "description": "Display the faction id besides the name.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/593760/TORN%3A%20TornTools%20-%20Faction%20ID.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/593760-torn-torntools-faction-id",
+      "matches": [
+        "https://*.torn.com/factions.php*"
+      ]
     }
   ]
 }
