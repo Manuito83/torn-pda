@@ -93,7 +93,11 @@ List<_MVersion> _modernChangelog() => [
         icon: Icons.handyman,
         title: 'Fixed',
         color: Color(0xFF2E7D32),
-        items: [_MItem('Profile: the stats chart now correctly spaces records even when there are gaps in the data')],
+        items: [
+          _MItem('Profile: fixed spacing in stats chart when there is data missing'),
+          _MItem('Travel: expenditure warnings are no longer shown when you are abroad or traveling'),
+          _MItem('Fixed issue with back button not correctly closing some dialogs', androidOnly: true),
+        ],
       ),
     ],
   ),

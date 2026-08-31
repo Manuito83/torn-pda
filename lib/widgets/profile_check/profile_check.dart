@@ -356,7 +356,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               SizedBox(width: 10),
               Flexible(
                 child: Text(
-                  "This is you, you're beautiful!",
+                  "This is you. You're beautiful!",
                   style: TextStyle(
                     color: Colors.green,
                     fontSize: 12,
