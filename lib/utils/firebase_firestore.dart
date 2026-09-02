@@ -139,8 +139,39 @@ class FirestoreHelper {
         });
   }
 
-  Future<void> changeForeignRestockNotificationOnlyCurrentCountry(bool? enabled) async {
-    await _firestore.collection("players").doc(_uid).update({"foreignRestockNotificationOnlyCurrentCountry": enabled});
+  Future<void> changeForeignRestockNotificationOnlyCurrentCountry(bool enabled) async {
+    // Waiting for the landing only makes sense while limited to the current country
+    await _firestore.collection("players").doc(_uid).update({
+      "foreignRestockNotificationOnlyCurrentCountry": enabled,
+      if (!enabled) "foreignRestockNotificationOnlyLanded": false,
+    });
+  }
+
+  Future<void> changeForeignRestockNotificationOnlyLanded(bool enabled) async {
+    await _firestore.collection("players").doc(_uid).update({"foreignRestockNotificationOnlyLanded": enabled});
+  }
+
+  Future<void> changeForeignRestockSellout(bool enabled) async {
+    final Map<String, Object?> update = {"foreignRestockNotificationSellout": enabled};
+
+    // Reset existing stock alert timestamps to now, so that old sellouts are not
+    // notified on the first pass after enabling
+    if (enabled) {
+      final Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
+      if (previous.isNotEmpty) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        previous.forEach((key, value) {
+          previous[key] = now;
+        });
+        update["restockActiveAlerts"] = previous;
+      }
+    }
+
+    await _firestore.collection("players").doc(_uid).update(update);
+  }
+
+  Future<void> changeTravelStocksInNotification(bool enabled) async {
+    await _firestore.collection("players").doc(_uid).update({"travelStocksInNotification": enabled});
   }
 
   Future<void> subscribeToAbroadStayNotification(bool? subscribe) async {

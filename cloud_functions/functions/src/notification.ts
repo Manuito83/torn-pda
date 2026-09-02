@@ -10,7 +10,7 @@ export interface NotificationParams {
   body: string;
   icon?: string;
   color?: string;
-  channelId?: string;
+  channelId: string;
   tornMessageId?: string;
   tornTradeId?: string;
   assistId?: string;
@@ -652,7 +652,7 @@ export function sendEventsNotification(userStats: any, subscriber: any) {
     // Creates a set tornKeySet an array and filters knownEvents by checking
     // if its elements exist in the set, removing any that do not exist
     const tornKeySet = new Set(allTornKeys);
-    const filteredEvents = knownEvents.filter(event => tornKeySet.has(event));
+    const filteredEvents = knownEvents.filter((event: string) => tornKeySet.has(event));
     if (knownEvents.length !== filteredEvents.length) {
       changes = true;
       knownEvents = filteredEvents;
@@ -928,24 +928,39 @@ export function sendEventsNotification(userStats: any, subscriber: any) {
   return result;
 }
 
+/**
+ * Stock providers use the short country name, while the Torn API returns the long one
+ */
+export function normalizeStockCountry(name: any): string | null {
+  if (!name || typeof name !== "string") return null;
+  if (name === "United Kingdom") return "UK";
+  return name;
+}
+
 export function sendForeignRestockNotification(userStats: any, dbStocks: any, subscriber: any) {
   const result: NotificationCheckResult = {};
 
   try {
 
-    let updates = 0;
-    const stocksUpdated: any[] = [];
+    const stocksRestocked: string[] = [];
+    const stocksSoldOut: string[] = [];
 
     const userStocks = subscriber.restockActiveAlerts || {};
+    const alsoWhenSoldOut = subscriber.foreignRestockNotificationSellout === true;
+
+    // Country filter, with three possible states: all countries, the country the user is flying to or
+    // staying in, or only once the user has actually landed there
+    let allowedCountry: string | null = null;
+    if (subscriber.foreignRestockNotificationOnlyLanded === true) {
+      const { abroad, country } = detectAbroadPresence(userStats, true);
+      if (!abroad) return result;
+      allowedCountry = normalizeStockCountry(country);
+    } else if (subscriber.foreignRestockNotificationOnlyCurrentCountry === true) {
+      allowedCountry = normalizeStockCountry(userStats?.travel?.destination);
+      if (!allowedCountry || allowedCountry === "Torn") return result;
+    }
 
     for (const [userCodeName, userTime] of Object.entries(userStocks)) {
-
-      /*
-      console.log("User stocks: " + userCodeName + " - " + userStocks[userCodeName]);
-      console.log("Stock country: " + dbStocks[userCodeName].country);
-      console.log("User travel or destination: " + userStats.travel.destination);
-      console.log("Only current country alerts: " + subscriber.foreignRestockNotificationOnlyCurrentCountry);
-      */
 
       const stockEntry = dbStocks[userCodeName];
       if (!stockEntry) {
@@ -953,64 +968,50 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
       }
 
       const databaseCountryName = stockEntry.country;
-      let playerDestination = userStats?.travel?.destination;
-
-      // If the user has activated the option in Torn PDA only to be notified if the restock is happening
-      // in the country he is flying to / staying in, we need to check whether they match before proceeding
-      if (subscriber.foreignRestockNotificationOnlyCurrentCountry) {
-        // We are looking for the SPECIFIC country of the item here
-
-        if (!playerDestination || !databaseCountryName) {
-          continue;
-        }
-
-        if (playerDestination === "United Kingdom") {
-          // Standardize with values in the database and API
-          playerDestination = "UK";
-        }
-
-        if (playerDestination !== databaseCountryName) {
-          // No country coincidence, continue with the next stock
-          continue;
-        }
-
-        //console.log("Country matched, continue to notification!")
+      if (allowedCountry && databaseCountryName !== allowedCountry) {
+        continue;
       }
 
-      if (userCodeName in dbStocks) {
-        const dbTime = stockEntry.restock;
-        if (typeof dbTime !== "number") {
-          continue;
-        }
-        const timeDifference = <number>userTime - dbTime * 1000;
+      // Note: we already have a method in Torn PDA [subscribeToForeignRestockNotification()] that ensures that
+      // the timestamp values of Firestore's [restockActiveAlerts] are updated to DateTime.now() when this notifications
+      // are enabled after certain time, so that we avoid sending old and expiry notifications in a after activation
+      let lastNotified = <number>userTime;
 
-        if (timeDifference < 0) {
-          // Note: we already have a method in Torn PDA [subscribeToForeignRestockNotification()] that ensures that
-          //the timestamp values of Firestore's [restockActiveAlerts] are updated to DateTime.now() when this notifications 
-          // are enabled after certain time, so that we avoid sending old and expiry notifications in a after activation
-
-          updates++;
-          stocksUpdated.push(`${dbStocks[userCodeName].name} (${databaseCountryName})`)
-          userStocks[userCodeName] = dbTime * 1000;
-        }
+      const restockTime = stockEntry.restock;
+      if (typeof restockTime === "number" && lastNotified - restockTime * 1000 < 0) {
+        stocksRestocked.push(`${stockEntry.name} (${databaseCountryName})`);
+        lastNotified = restockTime * 1000;
       }
+
+      const selloutTime = stockEntry.sellout;
+      if (alsoWhenSoldOut && typeof selloutTime === "number" && lastNotified - selloutTime * 1000 < 0) {
+        stocksSoldOut.push(`${stockEntry.name} (${databaseCountryName})`);
+        lastNotified = selloutTime * 1000;
+      }
+
+      userStocks[userCodeName] = lastNotified;
     }
 
-    if (updates > 0) {
-      const notificationTitle = "Foreign items restocked!";
-      const notificationSubtitle = stocksUpdated.join(', ');
+    if (stocksRestocked.length > 0 || stocksSoldOut.length > 0) {
+      let title = "Foreign items restocked!";
+      let body = stocksRestocked.join(", ");
+
+      if (stocksRestocked.length > 0 && stocksSoldOut.length > 0) {
+        title = "Foreign stock changes!";
+        body = `Restocked: ${stocksRestocked.join(", ")}. Sold out: ${stocksSoldOut.join(", ")}`;
+      } else if (stocksRestocked.length === 0) {
+        title = "Foreign items sold out!";
+        body = stocksSoldOut.join(", ");
+      }
 
       result.firestoreUpdate = {
         restockActiveAlerts: userStocks,
       }
 
-      let title = notificationTitle;
-      let body = notificationSubtitle;
       if (subscriber.discrete) {
         title = `Stock`;
         body = ` `;
       }
-
 
       result.notification = {
         token: subscriber.token,
@@ -1160,7 +1161,7 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
       let alertLow = match[2];
 
       // Locate the share in Torn's stock market
-      for (const value of Object.values(tornStocks.stocks)) {
+      for (const value of Object.values<any>(tornStocks.stocks)) {
         if (value["acronym"] === acronym) {
 
           if (alertHigh !== "n") {

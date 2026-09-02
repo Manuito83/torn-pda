@@ -3,6 +3,61 @@ import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
 
+// Max number of items named in the landing notification before summarizing the rest
+const MAX_DESTINATION_STOCKS = 8;
+
+// Stock code names are prefixed with the country code used by the providers
+const COUNTRY_CODES: { [destination: string]: string } = {
+  "Argentina": "arg",
+  "Canada": "can",
+  "Cayman Islands": "cay",
+  "China": "chi",
+  "Hawaii": "haw",
+  "Japan": "jap",
+  "Mexico": "mex",
+  "South Africa": "sou",
+  "Switzerland": "swi",
+  "UAE": "uae",
+  "United Arab Emirates": "uae",
+  "UK": "uni",
+  "United Kingdom": "uni",
+};
+
+/**
+ * Lists the items the user has restock alerts for that are in stock at the destination
+ * Only the subscribed code names are read, so there is no full snapshot download
+ */
+async function destinationStocksText(destination: string, userAlerts: any): Promise<string> {
+  const countryCode = COUNTRY_CODES[destination];
+  if (!countryCode || !userAlerts || typeof userAlerts !== "object") return "";
+
+  const subscribed = Object.keys(userAlerts).filter((codeName) => codeName.startsWith(`${countryCode}-`));
+  if (subscribed.length === 0) return "";
+
+  try {
+    const firebaseAdmin = require("firebase-admin");
+    const db = firebaseAdmin.database();
+
+    const stocks = await Promise.all(
+      subscribed.map(async (codeName) => (await db.ref(`stocks/restocks/${codeName}`).get()).val())
+    );
+
+    const names = stocks
+      .filter((stock) => stock && stock.quantity > 0)
+      .sort((a, b) => (b.cost || 0) - (a.cost || 0))
+      .map((stock) => stock.name);
+
+    if (names.length === 0) return "";
+    if (names.length <= MAX_DESTINATION_STOCKS) return ` In stock: ${names.join(", ")}`;
+
+    const listed = names.slice(0, MAX_DESTINATION_STOCKS).join(", ");
+    return ` In stock: ${listed} and ${names.length - MAX_DESTINATION_STOCKS} more`;
+  } catch (e) {
+    logger.warn(`ERROR TRAVEL STOCKS\n${e}`);
+    return "";
+  }
+}
+
 export const sendTravelNotifications = onSchedule(
   {
     schedule: "*/2 * * * *",
@@ -59,6 +114,10 @@ export const sendTravelNotifications = onSchedule(
             landingBody = `You are descending towards ${thisUser.travelDestination}, landing in one minute!`
           } else {
             landingBody = `You are descending towards ${thisUser.travelDestination}, landing in about ${minutesRemaining} minutes!`
+          }
+
+          if (thisUser.travelStocksInNotification === true && !thisUser.discrete) {
+            landingBody += await destinationStocksText(thisUser.travelDestination, thisUser.restockActiveAlerts);
           }
 
           let title = `Approaching ${thisUser.travelDestination}!`;

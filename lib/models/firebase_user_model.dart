@@ -6,8 +6,11 @@ class FirebaseUserModel extends OwnProfileExtended {
   String? uid;
   bool discreet = false;
   bool? travelNotification = false;
+  bool travelStocksInNotification = false;
   bool? foreignRestockNotification = false;
   bool? foreignRestockNotificationOnlyCurrentCountry = false;
+  bool foreignRestockNotificationOnlyLanded = false;
+  bool foreignRestockNotificationSellout = false;
   bool? abroadStayNotification = false;
   List<int> abroadStayIntervals = [];
   bool abroadStayIncludeHospital = false;
@@ -66,8 +69,11 @@ class FirebaseUserModel extends OwnProfileExtended {
       "status": status,
       "discrete": discreet, // We need to accept this typo (discreet)
       "travelNotification": travelNotification,
+      "travelStocksInNotification": travelStocksInNotification,
       "foreignRestockNotification": foreignRestockNotification,
       "foreignRestockNotificationOnlyCurrentCountry": foreignRestockNotificationOnlyCurrentCountry,
+      "foreignRestockNotificationOnlyLanded": foreignRestockNotificationOnlyLanded,
+      "foreignRestockNotificationSellout": foreignRestockNotificationSellout,
       "abroadStayNotification": abroadStayNotification,
       "abroadStayIntervals": abroadStayIntervals,
       "abroadStayIncludeHospital": abroadStayIncludeHospital,
@@ -112,8 +118,11 @@ class FirebaseUserModel extends OwnProfileExtended {
     return FirebaseUserModel()
       ..discreet = data["discrete"] ?? false // We need to accept this typo (discreet)
       ..travelNotification = data["travelNotification"] ?? false
+      ..travelStocksInNotification = data["travelStocksInNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
       ..foreignRestockNotificationOnlyCurrentCountry = data["foreignRestockNotificationOnlyCurrentCountry"] ?? false
+      ..foreignRestockNotificationOnlyLanded = data["foreignRestockNotificationOnlyLanded"] ?? false
+      ..foreignRestockNotificationSellout = data["foreignRestockNotificationSellout"] ?? false
       ..abroadStayNotification = data["abroadStayNotification"] ?? false
       ..abroadStayIntervals = List<int>.from(data["abroadStayIntervals"] ?? const <int>[])
       ..abroadStayIncludeHospital = data["abroadStayIncludeHospital"] ?? false
