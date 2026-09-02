@@ -90,6 +90,40 @@ List<_MVersion> _modernChangelog() => [
     hotfixes: [],
     sections: [
       _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Foreign stocks: restock alerts can now wait until you have landed',
+            detail:
+                'The option that limits restock alerts to your current country has a new setting under it. Turn '
+                'off "alert while still flying" and you will only hear about a restock once you have landed and '
+                'can actually buy, instead of while you are in the air.',
+          ),
+          _MItem(
+            'Foreign stocks: get alerted when an item sells out',
+            detail:
+                'A new option in the foreign stocks alerts sends you a notification when one of the items you '
+                'are subscribed to runs out, which helps to know when the next restock is due.',
+          ),
+          _MItem(
+            'Travel: the landing notification can list what is in stock at your destination',
+            detail:
+                'Enable it under the travel alert options. The notification will tell you which of the items you '
+                'have restock alerts for are in stock in the country you are landing in.',
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [
+          _MItem('Foreign stocks: item details now include the average time an item takes to sell out'),
+        ],
+      ),
+      _MSection(
         icon: Icons.handyman,
         title: 'Fixed',
         color: Color(0xFF2E7D32),

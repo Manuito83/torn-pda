@@ -273,6 +273,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           ),
                         ),
                       ),
+                      if (_firebaseUserModel!.travelNotification!) _travelStocksSelector(),
                       if (_firebaseUserModel!.travelNotification!) _travelNotificationTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
@@ -297,40 +298,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           ),
                         ),
                       ),
-                      if (_firebaseUserModel!.foreignRestockNotification ?? false)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.keyboard_arrow_right_outlined),
-                              Flexible(
-                                child: Material(
-                                  type: MaterialType.transparency,
-                                  child: CheckboxListTile(
-                                    checkColor: Colors.white,
-                                    activeColor: Colors.blueGrey,
-                                    value: _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry ?? false,
-                                    title: const Text(
-                                      "Limit to current country",
-                                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                                    ),
-                                    subtitle: const Text(
-                                      "If enabled, limit foreign restock alerts to the items that get restocked in the "
-                                      "country you are currently flying to or staying in ",
-                                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _firebaseUserModel?.foreignRestockNotificationOnlyCurrentCountry = value;
-                                      });
-                                      FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(value);
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      if (_firebaseUserModel!.foreignRestockNotification ?? false) _foreignRestockOptions(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: Material(
@@ -1417,6 +1385,157 @@ class AlertsSettingsState extends State<AlertsSettings> {
       },
       items: _travelTapDestinationItems,
       helperText: _travelTapDestinationExplanation,
+    );
+  }
+
+  Widget _travelStocksSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 8, 0),
+      child: Row(
+        children: [
+          const Icon(Icons.keyboard_arrow_right_outlined),
+          Flexible(
+            child: Material(
+              type: MaterialType.transparency,
+              child: CheckboxListTile(
+                checkColor: Colors.white,
+                activeColor: Colors.blueGrey,
+                value: _firebaseUserModel!.travelStocksInNotification,
+                title: const Text(
+                  "Include stocks at destination",
+                  style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                ),
+                subtitle: const Text(
+                  "If enabled, the landing notification will also tell you which of the items you have restock "
+                  "alerts for are in stock at your destination",
+                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+                onChanged: (value) {
+                  final include = value ?? false;
+                  setState(() {
+                    _firebaseUserModel!.travelStocksInNotification = include;
+                  });
+                  FirestoreHelper().changeTravelStocksInNotification(include);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _foreignRestockOptions() {
+    final bool onlyCurrentCountry = _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry ?? false;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(25, 0, 8, 0),
+          child: Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              Flexible(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: CheckboxListTile(
+                    checkColor: Colors.white,
+                    activeColor: Colors.blueGrey,
+                    value: onlyCurrentCountry,
+                    title: const Text(
+                      "Limit to current country",
+                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    ),
+                    subtitle: const Text(
+                      "If enabled, limit foreign restock alerts to the items that get restocked in the "
+                      "country you are currently flying to or staying in",
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                    onChanged: (value) {
+                      final limit = value ?? false;
+                      setState(() {
+                        _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry = limit;
+                        if (!limit) _firebaseUserModel!.foreignRestockNotificationOnlyLanded = false;
+                      });
+                      FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(limit);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (onlyCurrentCountry)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(45, 0, 8, 0),
+            child: Row(
+              children: [
+                const Icon(Icons.keyboard_arrow_right_outlined),
+                Flexible(
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: CheckboxListTile(
+                      checkColor: Colors.white,
+                      activeColor: Colors.blueGrey,
+                      value: !_firebaseUserModel!.foreignRestockNotificationOnlyLanded,
+                      title: const Text(
+                        "Alert while still flying",
+                        style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                      ),
+                      subtitle: const Text(
+                        "If disabled, alerts start once you have landed, so that you are not told about a restock "
+                        "you cannot buy from while in the air",
+                        style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                      ),
+                      onChanged: (value) {
+                        final onlyLanded = !(value ?? true);
+                        setState(() {
+                          _firebaseUserModel!.foreignRestockNotificationOnlyLanded = onlyLanded;
+                        });
+                        FirestoreHelper().changeForeignRestockNotificationOnlyLanded(onlyLanded);
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
+          child: Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              Flexible(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: CheckboxListTile(
+                    checkColor: Colors.white,
+                    activeColor: Colors.blueGrey,
+                    value: _firebaseUserModel!.foreignRestockNotificationSellout,
+                    title: const Text(
+                      "Alert also when items sell out",
+                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    ),
+                    subtitle: const Text(
+                      "If enabled, you will also get an alert when one of the items you are subscribed to runs out "
+                      "of stock, which is useful to estimate when the next restock is due",
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                    onChanged: (value) {
+                      final sellout = value ?? false;
+                      setState(() {
+                        _firebaseUserModel!.foreignRestockNotificationSellout = sellout;
+                      });
+                      FirestoreHelper().changeForeignRestockSellout(sellout);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

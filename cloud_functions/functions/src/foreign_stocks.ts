@@ -22,7 +22,7 @@ const PROMETHEUS_API_URL = "https://api.prombot.co.uk/api/travel";
 const MAX_ENTRIES = 216;
 
 // Helper function to perform fetch with a timeout
-async function fetchWithTimeout(url, options = {}, timeout = 15000) {
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout = 15000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
@@ -42,7 +42,7 @@ async function getYataStocks() {
     const response = await fetchWithTimeout(YATA_API_URL, {}, 15000);
     const data = await response.json() as any;
     return data.stocks;
-  } catch (e) {
+  } catch (e: any) {
     logger.warn(`⚠️ YATA API failed: ${e.message || e}`);
     return null;
   }
@@ -54,7 +54,7 @@ async function getPrometheusStocks() {
     const response = await fetchWithTimeout(PROMETHEUS_API_URL, {}, 12000);
     const data = await response.json() as any;
     return data.stocks;
-  } catch (e) {
+  } catch (e: any) {
     logger.warn(`⚠️ Prometheus API failed: ${e.message || e}`);
     return null;
   }
@@ -74,7 +74,7 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
     await admin.firestore().runTransaction(async (transaction) => {
       // Read the existing document inside the transaction
       const docSnapshot = await transaction.get(docRef);
-      const dbStockData = docSnapshot.exists ? docSnapshot.data() : {};
+      const dbStockData: FirebaseFirestore.DocumentData = docSnapshot.data() || {};
 
       // Update only if the new timestamp is more recent
       if (timestamp < (dbStockData.update || 0)) {
@@ -101,26 +101,41 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
       }
 
       // Save the timestamp of lastEmpty if this item just transitioned to 0 quantity
-      let lastEmpty = dbStockData.lastEmpty || 0;
-      if (
+      const justSoldOut =
         currentStockData.quantity === 0 &&
         (dbStockData.quantity || 0) > 0 &&
-        (dbStockData.quantity || 0) < 1000
-      ) {
+        (dbStockData.quantity || 0) < 1000;
+
+      const justRestocked = (dbStockData.quantity || 0) === 0 && currentStockData.quantity > 0;
+
+      let lastEmpty = dbStockData.lastEmpty || 0;
+      if (justSoldOut) {
         lastEmpty = timestamp;
+      }
+
+      // Mirror of lastEmpty, needed to measure how long an item takes to sell out
+      let lastRestock = dbStockData.lastRestock || 0;
+      if (justRestocked) {
+        lastRestock = timestamp;
       }
 
       // Update restockElapsed if an item was restocked
       const restockElapsed = dbStockData.restockElapsed || [];
-      if (
-        (dbStockData.quantity || 0) === 0 &&
-        currentStockData.quantity > 0 &&
-        dbStockData.lastEmpty
-      ) {
+      if (justRestocked && dbStockData.lastEmpty) {
         restockElapsed.push(timestamp - dbStockData.lastEmpty);
         // Keep only the last 15 restocks
         if (restockElapsed.length > 15) {
           restockElapsed.shift();
+        }
+      }
+
+      // Update selloutElapsed if an item was depleted
+      const selloutElapsed = dbStockData.selloutElapsed || [];
+      if (justSoldOut && dbStockData.lastRestock) {
+        selloutElapsed.push(timestamp - dbStockData.lastRestock);
+        // Keep only the last 15 sellouts
+        if (selloutElapsed.length > 15) {
+          selloutElapsed.shift();
         }
       }
 
@@ -137,7 +152,9 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
         source: source,
         periodicMap: newPeriodicMap,
         lastEmpty: lastEmpty,
+        lastRestock: lastRestock,
         restockElapsed: restockElapsed,
+        selloutElapsed: selloutElapsed,
       };
 
       transaction.set(docRef, newData);
@@ -160,16 +177,23 @@ async function updateRestock(currentStockData: any, timestamp: number, source: s
     const savedData = (await ref.get()).val();
 
     let restockTimestamp = 0;
+    let selloutTimestamp = 0;
 
     // If this is a known stock (the codeName key exists)
     if (savedData) {
       restockTimestamp = savedData.restock || 0;
+      selloutTimestamp = savedData.sellout || 0;
 
       // We will only update the restock timestamp if we have a restock otherwise, we leave the last known restock time
       // but we continue the execution since it will be necessary to update the current quantity in any case (so that
       // we can detect restocks in the next calls in the future)
       if (savedData.quantity === 0 && currentStockData.quantity > 0) {
         restockTimestamp = timestamp;
+      }
+
+      // Same for the sellout timestamp, with the quantity guardrail used in Firestore
+      if (currentStockData.quantity === 0 && savedData.quantity > 0 && savedData.quantity < 1000) {
+        selloutTimestamp = timestamp;
       }
     }
     // If the stock is not known yet (new stock)
@@ -221,6 +245,7 @@ async function updateRestock(currentStockData: any, timestamp: number, source: s
       id: currentStockData.id,
       cost: currentStockData.cost,
       restock: restockTimestamp,
+      sellout: selloutTimestamp,
       quantity: currentStockData.quantity,
       lastUpdated: timestamp,
       source: source,
@@ -354,7 +379,7 @@ export const checkStocks = onSchedule({
     // Summary log
     logger.info(`✅ Completed: ${totalStocksProcessed} stocks processed across ${allCountries.size} countries. Sources: YATA(${countriesFromYATA}), Prometheus(${countriesFromPrometheus}). New items: ${newItemsAdded}`);
 
-  } catch (e) {
+  } catch (e: any) {
     logger.error(`❌ ERROR in checkStocks: ${e}`);
     logger.error(`❌ Stack trace: ${e.stack}`);
   }
@@ -459,7 +484,7 @@ export const fillRestocks = onSchedule({
     // Summary log
     logger.info(`✅ Completed: ${totalStocksProcessed} stocks processed across ${allCountries.size} countries. Sources: YATA(${countriesFromYATA}), Prometheus(${countriesFromPrometheus}). New items: ${newItemsAdded}`);
 
-  } catch (e) {
+  } catch (e: any) {
     logger.error(`❌ ERROR in fillRestocks: ${e}`);
     logger.error(`❌ Stack trace: ${e.stack}`);
   }
@@ -570,7 +595,7 @@ export const deleteOldStocks = onSchedule({
 
     if (snapshot.empty) {
       logger.info("✅ No old stocks found to delete - task completed");
-      return null;
+      return;
     }
 
     logger.info(`📋 Found ${snapshot.size} old stocks to process`);
@@ -586,7 +611,7 @@ export const deleteOldStocks = onSchedule({
         logger.info(`Would delete: ${doc.id} (${ageInMonths} months old)`);
       }
       logger.info(`✅ Dry run completed - would delete ${snapshot.size} out of ${totalStocksCount} stocks`);
-      return null;
+      return;
     }
 
     // --- DELETIONS ---
@@ -621,13 +646,13 @@ export const deleteOldStocks = onSchedule({
       logger.error(`❌ Error during user alert cleanup (stock deletion still succeeded): ${cleanupError}`);
     }
 
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`❌ Error during deleteOldStocks: ${error}`);
     logger.error(`❌ Stack trace: ${error.stack}`);
     throw new Error("Failed to delete old stocks.");
   }
 
-  return null;
+  return;
 });
 
 /**
@@ -737,7 +762,7 @@ export const cleanupObsoleteRestocks = onSchedule("0 2 * * *", async () => {
 
     if (!snapshot.exists()) {
       logger.info("No restock data found in Realtime Database");
-      return null;
+      return;
     }
 
     const restockData = snapshot.val();
@@ -781,5 +806,5 @@ export const cleanupObsoleteRestocks = onSchedule("0 2 * * *", async () => {
     throw error;
   }
 
-  return null;
+  return;
 });
