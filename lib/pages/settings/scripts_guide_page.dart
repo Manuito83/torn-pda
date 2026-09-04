@@ -3,6 +3,7 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -394,6 +395,27 @@ class ScriptsGuidePageState extends State<ScriptsGuidePage> {
         _p(
           "Each script has its own switch, and there is also a button that disables every script at once, "
           "useful when you want to check whether a problem comes from a script or from the app itself.",
+        ),
+      ],
+    ),
+    _GuideSection(
+      title: "War mode",
+      icon: MdiIcons.swordCross,
+      body: [
+        _p(
+          "War mode is meant for wars and chains, when every script that runs adds latency to each page "
+          "load. While it is on, only the scripts you have selected for it run and the rest stay out of the "
+          "way. Your normal setup is not touched: leaving war mode brings everything back as it was.",
+        ),
+        _p(
+          "You can enter and leave it from the button at the bottom of the user scripts page, from the three-dotted "
+          "icon of the browser, or from a FAB button if you assign it one. If you do not use war mode, the "
+          "options menu of the scripts page lets you hide those shortcuts.",
+        ),
+        _p(
+          "While war mode is on, the switches in the scripts list choose what runs in it, and that selection "
+          "is remembered for the next time. The first time nothing is selected yet, so nothing runs until "
+          "you switch on the scripts you want.",
         ),
       ],
     ),

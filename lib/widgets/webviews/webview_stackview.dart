@@ -13,6 +13,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
@@ -837,6 +838,17 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                     );
                                   },
                                 ),
+                                if (context.read<UserScriptsProvider>().warShortcutsEnabled)
+                                  CircularMenuItem(
+                                    icon: MdiIcons.swordCross,
+                                    color: context.read<UserScriptsProvider>().isWarModeActive
+                                        ? Colors.orange[800]
+                                        : null,
+                                    onTap: () {
+                                      _webViewProvider.verticalMenuClose();
+                                      context.read<UserScriptsProvider>().toggleWarMode();
+                                    },
+                                  ),
                                 if (_webViewProvider.fabEnabled)
                                   CircularMenuItem(
                                     icon: MdiIcons.tab,

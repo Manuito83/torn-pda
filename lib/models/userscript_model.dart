@@ -19,6 +19,8 @@ enum ScriptStorageSupport { none, legacyOnly, pdaNative }
 
 enum UserScriptUpdateStatus { upToDate, updateAvailable, localModified, noRemote, error, updating }
 
+enum UserScriptSort { name, dateNewest }
+
 class UserScriptModel {
   UserScriptModel({
     this.enabled = true,
@@ -36,6 +38,8 @@ class UserScriptModel {
     this.customApiKeyCandidate = false,
     this.grants = const [],
     this.requires = const [],
+    this.installedAt = 0,
+    this.warEnabled = false,
     String? storageId,
   }) : storageId = (storageId != null && storageId.isNotEmpty) ? storageId : const Uuid().v4();
 
@@ -58,6 +62,11 @@ class UserScriptModel {
   bool customApiKeyCandidate;
   List<String> grants;
   List<String> requires;
+
+  // 0 for those installed before this existed
+  int installedAt;
+
+  bool warEnabled;
 
   // Immutable namespace for PDA_storage; survives rename/update, wiped on delete. Quota lives in ScriptStorage.
   final String storageId;
@@ -103,6 +112,8 @@ class UserScriptModel {
         isExample: isExample,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
+        installedAt: json["installedAt"] is int ? json["installedAt"] : 0,
+        warEnabled: json["warEnabled"] is bool ? json["warEnabled"] : false,
         storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     } else {
@@ -122,6 +133,8 @@ class UserScriptModel {
         customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
+        installedAt: json["installedAt"] is int ? json["installedAt"] : 0,
+        warEnabled: json["warEnabled"] is bool ? json["warEnabled"] : false,
         storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     }
@@ -227,6 +240,8 @@ class UserScriptModel {
     "customApiKeyCandidate": customApiKeyCandidate,
     "grants": grants,
     "requires": requires,
+    "installedAt": installedAt,
+    "warEnabled": warEnabled,
     "storageId": storageId,
   };
 
@@ -274,8 +289,16 @@ class UserScriptModel {
     };
   }
 
-  bool shouldInject(String url, [UserScriptTime? time]) =>
-      enabled && (this.time == time || time == null) && matches.any((match) => _matchPattern(match, url));
+  bool matchesQuery(String query, {bool inSource = false}) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    if (name.toLowerCase().contains(q)) return true;
+    return inSource && source.toLowerCase().contains(q);
+  }
+
+  /// Whether the script targets this url and injection time
+  bool matchesTarget(String url, [UserScriptTime? time]) =>
+      (this.time == time || time == null) && matches.any((match) => _matchPattern(match, url));
 
   /// Converts a Tampermonkey-style @match pattern to a [RegExp].
   ///

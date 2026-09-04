@@ -357,6 +357,11 @@ class Prefs {
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
+  final String _kUserScriptsBulkMode = "pda_userScriptsBulkMode";
+  final String _kUserScriptsSortOrder = "pda_userScriptsSortOrder";
+  final String _kUserScriptsUpdatesFirst = "pda_userScriptsUpdatesFirst";
+  final String _kUserScriptsSearchInSource = "pda_userScriptsSearchInSource";
+  final String _kUserScriptsWarShortcutsEnabled = "pda_userScriptsWarShortcutsEnabled";
   final String _kScriptCatalogCache = "pda_scriptCatalogCache";
   final String _kScriptCatalogEnabled = "pda_scriptCatalogEnabled";
   final String _kScriptCatalogApiKey = "pda_scriptCatalogApiKey";
@@ -3672,6 +3677,56 @@ class Prefs {
 
   Future setUserScriptsGlobalDisableState(String value) async {
     return await PrefsDatabase.setString(_kUserScriptsGlobalDisableState, value);
+  }
+
+  // --
+
+  Future<String> getUserScriptsBulkMode() async {
+    return await PrefsDatabase.getString(_kUserScriptsBulkMode, "none");
+  }
+
+  Future setUserScriptsBulkMode(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsBulkMode, value);
+  }
+
+  // --
+
+  Future<String> getUserScriptsSortOrder() async {
+    return await PrefsDatabase.getString(_kUserScriptsSortOrder, "name");
+  }
+
+  Future setUserScriptsSortOrder(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsSortOrder, value);
+  }
+
+  // --
+
+  Future<bool> getUserScriptsUpdatesFirst() async {
+    return await PrefsDatabase.getBool(_kUserScriptsUpdatesFirst, false);
+  }
+
+  Future setUserScriptsUpdatesFirst(bool value) async {
+    return await PrefsDatabase.setBool(_kUserScriptsUpdatesFirst, value);
+  }
+
+  // --
+
+  Future<bool> getUserScriptsSearchInSource() async {
+    return await PrefsDatabase.getBool(_kUserScriptsSearchInSource, false);
+  }
+
+  Future setUserScriptsSearchInSource(bool value) async {
+    return await PrefsDatabase.setBool(_kUserScriptsSearchInSource, value);
+  }
+
+  // --
+
+  Future<bool> getUserScriptsWarShortcutsEnabled() async {
+    return await PrefsDatabase.getBool(_kUserScriptsWarShortcutsEnabled, true);
+  }
+
+  Future setUserScriptsWarShortcutsEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kUserScriptsWarShortcutsEnabled, value);
   }
 
   Future<List<String>> getUserScriptsForcedVersions() async {

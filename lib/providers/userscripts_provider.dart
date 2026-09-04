@@ -24,6 +24,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
 
+enum ScriptsBulkMode { none, globalDisable, warMode }
+
 /// Reviewable entry for the bulk update dialog
 class BulkUpdateReviewItem {
   BulkUpdateReviewItem({required this.script, this.remote, this.fetchError, this.newGrants = const []});
@@ -86,6 +88,41 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Sorting and searching
+  var _sortOrder = UserScriptSort.name;
+  UserScriptSort get sortOrder => _sortOrder;
+  set setSortOrder(UserScriptSort value) {
+    _sortOrder = value;
+    Prefs().setUserScriptsSortOrder(value.name);
+    _sort();
+    notifyListeners();
+  }
+
+  var _updatesFirst = false;
+  bool get updatesFirst => _updatesFirst;
+  set setUpdatesFirst(bool value) {
+    _updatesFirst = value;
+    Prefs().setUserScriptsUpdatesFirst(value);
+    _sort();
+    notifyListeners();
+  }
+
+  var _searchInSource = false;
+  bool get searchInSource => _searchInSource;
+  set setSearchInSource(bool value) {
+    _searchInSource = value;
+    Prefs().setUserScriptsSearchInSource(value);
+    notifyListeners();
+  }
+
+  var _warShortcutsEnabled = true;
+  bool get warShortcutsEnabled => _warShortcutsEnabled;
+  set setWarShortcutsEnabled(bool value) {
+    _warShortcutsEnabled = value;
+    Prefs().setUserScriptsWarShortcutsEnabled(value);
+    notifyListeners();
+  }
+
   // Bulk update banner
   Set<String> _bulkUpdateDismissedPairs = {};
 
@@ -113,45 +150,84 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Global Disable
-  Map<String, bool>? _scriptStatesBeforeGlobalDisable;
-  bool get isGlobalDisableActive => _scriptStatesBeforeGlobalDisable != null;
+  ScriptsBulkMode _bulkMode = ScriptsBulkMode.none;
 
-  void toggleGlobalDisable() {
-    if (_scriptStatesBeforeGlobalDisable == null) {
-      // Activate Global Disable
-      _scriptStatesBeforeGlobalDisable = {};
-      for (var script in _userScriptList) {
-        _scriptStatesBeforeGlobalDisable![script.name] = script.enabled;
-        script.enabled = false;
-      }
-      Prefs().setUserScriptsGlobalDisableState(json.encode(_scriptStatesBeforeGlobalDisable));
-    } else {
-      // Restore Scripts
-      for (var script in _userScriptList) {
-        if (_scriptStatesBeforeGlobalDisable!.containsKey(script.name)) {
-          script.enabled = _scriptStatesBeforeGlobalDisable![script.name]!;
-        }
-      }
-      _scriptStatesBeforeGlobalDisable = null;
-      Prefs().setUserScriptsGlobalDisableState("");
+  bool get isGlobalDisableActive => _bulkMode == ScriptsBulkMode.globalDisable;
+  bool get isWarModeActive => _bulkMode == ScriptsBulkMode.warMode;
+
+  // Old disable settings by script name, used after the scripts are loaded
+  Map<String, bool>? _legacyGlobalDisableByName;
+
+  int get warEnabledCount => _userScriptList.where((s) => s.warEnabled).length;
+
+  /// Whether a script runs right now, which depends on the active mode and not only on its own switch
+  bool isActive(UserScriptModel script) {
+    switch (_bulkMode) {
+      case ScriptsBulkMode.none:
+        return script.enabled;
+      case ScriptsBulkMode.globalDisable:
+        return false;
+      case ScriptsBulkMode.warMode:
+        return script.warEnabled;
     }
+  }
+
+  void toggleGlobalDisable() => _setBulkMode(ScriptsBulkMode.globalDisable);
+
+  void toggleWarMode() {
+    _setBulkMode(ScriptsBulkMode.warMode);
+    final int count = warEnabledCount;
+    final String text = !isWarModeActive
+        ? "Scripts war mode off"
+        : count == 0
+        ? "Scripts war mode on, but no script is selected for it yet. Switch on the ones you want in the scripts "
+              "section: they will stay selected every time you enter war mode"
+        : "Scripts war mode on: $count script${count == 1 ? "" : "s"} running";
+    BotToast.showText(
+      text: text,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.orange[800]!,
+      duration: Duration(seconds: count == 0 && isWarModeActive ? 6 : 3),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  void _setBulkMode(ScriptsBulkMode mode) {
+    _bulkMode = _bulkMode == mode ? ScriptsBulkMode.none : mode;
+    Prefs().setUserScriptsBulkMode(_bulkMode.name);
+    notifyListeners();
+  }
+
+  void changeUserScriptWarEnabled(UserScriptModel changedModel, bool enabled) {
+    changedModel.warEnabled = enabled;
     notifyListeners();
     _saveUserScriptsToStorage();
   }
 
-  void _invalidateGlobalDisable() {
-    if (_scriptStatesBeforeGlobalDisable != null) {
-      _scriptStatesBeforeGlobalDisable = null;
-      Prefs().setUserScriptsGlobalDisableState("");
-      notifyListeners();
-      BotToast.showText(
-        text: "Global disable reset due to manual changes",
-        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: Colors.orange[800]!,
-        duration: const Duration(seconds: 4),
-      );
+  /// One time cleanup for installs that update while the old global disable was active
+  /// TODO: remove after 3.17.0, worst case is someone has to re-enable their scripts after updating, if the user was using global disable at that point...
+  Future<void> _migrateLegacyGlobalDisable() async {
+    final legacy = _legacyGlobalDisableByName;
+    _legacyGlobalDisableByName = null;
+    if (legacy == null || legacy.isEmpty) return;
+
+    int restored = 0;
+    for (final script in _userScriptList) {
+      final previous = legacy[script.name];
+      if (previous != null && script.enabled != previous) {
+        script.enabled = previous;
+        restored++;
+      }
     }
+
+    _bulkMode = ScriptsBulkMode.globalDisable;
+    await Prefs().setUserScriptsBulkMode(_bulkMode.name);
+
+    final encodedString = "PDA_B64:${base64Encode(utf8.encode(json.encode(_userScriptList)))}";
+    await Prefs().setUserScriptsList(encodedString);
+    await Prefs().setUserScriptsGlobalDisableState("");
+
+    log("📜 Restored $restored script switches from the legacy global disable state", name: "UserScriptsProvider");
   }
 
   List<String?> get defaultScriptUrls => UserScriptModel.exampleScriptURLs;
@@ -229,7 +305,7 @@ class UserScriptsProvider extends ChangeNotifier {
     if (_userScriptsEnabled) {
       try {
         return UnmodifiableListView(
-          _userScriptList.where((s) => s.shouldInject(url, time)).map((s) {
+          _userScriptList.where((s) => isActive(s) && s.matchesTarget(url, time)).map((s) {
             return UserScript(
               groupName: s.storageId,
               injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
@@ -255,14 +331,14 @@ class UserScriptsProvider extends ChangeNotifier {
 
   List<UserScriptModel> getActiveScriptsForUrl(String url) {
     if (!_userScriptsEnabled) return [];
-    return _userScriptList.where((s) => s.shouldInject(url)).toList();
+    return _userScriptList.where((s) => isActive(s) && s.matchesTarget(url)).toList();
   }
 
   List<String> getScriptsToRemove({required String url}) {
     if (!_userScriptsEnabled) {
       return const <String>[];
     } else {
-      return _userScriptList.where((s) => !s.shouldInject(url)).map((s) => s.storageId).toList();
+      return _userScriptList.where((s) => !(isActive(s) && s.matchesTarget(url))).map((s) => s.storageId).toList();
     }
   }
 
@@ -278,8 +354,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void addUserScriptByModel(UserScriptModel model) {
-    _invalidateGlobalDisable();
-    if (_addScript(_userScriptList, model, "addUserScriptByModel")) {
+    if (_addScript(_userScriptList, model, "addUserScriptByModel", stampInstall: true)) {
       _sort();
       _saveUserScriptsToStorage();
       notifyListeners();
@@ -300,7 +375,6 @@ class UserScriptsProvider extends ChangeNotifier {
     String? customApiKey,
     bool? customApiKeyCandidate,
   }) async {
-    _invalidateGlobalDisable();
     final newScript = UserScriptModel(
       name: name,
       time: time,
@@ -316,7 +390,7 @@ class UserScriptsProvider extends ChangeNotifier {
       customApiKeyCandidate: customApiKeyCandidate ?? false,
     );
 
-    if (_addScript(_userScriptList, newScript, "addUserScript")) {
+    if (_addScript(_userScriptList, newScript, "addUserScript", stampInstall: true)) {
       _sort();
       await _saveUserScriptsToStorage();
       notifyListeners();
@@ -334,7 +408,6 @@ class UserScriptsProvider extends ChangeNotifier {
     required String? customApiKey,
     required bool? customApiKeyCandidate,
   }) {
-    _invalidateGlobalDisable();
     List<String>? matches;
     bool couldParseHeader = true;
     try {
@@ -368,13 +441,13 @@ class UserScriptsProvider extends ChangeNotifier {
             return UserScriptUpdateStatus.localModified;
           }(),
         );
+    _sort();
     notifyListeners();
     _saveUserScriptsToStorage();
     return couldParseHeader;
   }
 
   void removeUserScript(UserScriptModel removedModel) {
-    _invalidateGlobalDisable();
     _userScriptList.remove(removedModel);
     unawaited(ScriptStorage.deleteNamespace(removedModel.storageId));
     notifyListeners();
@@ -382,7 +455,6 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void changeUserScriptEnabled(UserScriptModel changedModel, bool enabled) {
-    _invalidateGlobalDisable();
     for (final script in userScriptList) {
       if (script == changedModel) {
         script.enabled = enabled;
@@ -394,7 +466,6 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void wipe() {
-    _invalidateGlobalDisable();
     _userScriptList.clear();
     unawaited(ScriptStorage.deleteAll());
     notifyListeners();
@@ -410,7 +481,6 @@ class UserScriptsProvider extends ChangeNotifier {
     required String scriptsList,
     bool defaultToDisabled = false,
   }) async {
-    _invalidateGlobalDisable();
     // If we are restoring from a backup, we assume the data is valid and we can exit Safe Mode
     _isSafeToSave = true;
 
@@ -436,6 +506,8 @@ class UserScriptsProvider extends ChangeNotifier {
       if (defaultToDisabled) {
         for (final script in _userScriptList) {
           script.enabled = false;
+          // Avoid that scripts run as soon as war mode is on when restoring
+          script.warEnabled = false;
         }
       }
     } else {
@@ -644,11 +716,34 @@ class UserScriptsProvider extends ChangeNotifier {
     return null;
   }
 
-  void _sort() {
-    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  int _compareByName(UserScriptModel a, UserScriptModel b) => a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+  int _compareByDate(UserScriptModel a, UserScriptModel b) {
+    // Scripts installed before installedAt have a 0 and are sorted alphabetically
+    if (a.installedAt == b.installedAt) return _compareByName(a, b);
+    if (a.installedAt == 0) return 1;
+    if (b.installedAt == 0) return -1;
+    return b.installedAt.compareTo(a.installedAt);
   }
 
-  bool _addScript(List<UserScriptModel> targetList, UserScriptModel script, String context) {
+  void _sort() {
+    final base = _sortOrder == UserScriptSort.dateNewest ? _compareByDate : _compareByName;
+    _userScriptList.sort((a, b) {
+      if (_updatesFirst) {
+        final aPending = a.updateStatus == UserScriptUpdateStatus.updateAvailable;
+        final bPending = b.updateStatus == UserScriptUpdateStatus.updateAvailable;
+        if (aPending != bPending) return aPending ? -1 : 1;
+      }
+      return base(a, b);
+    });
+  }
+
+  bool _addScript(
+    List<UserScriptModel> targetList,
+    UserScriptModel script,
+    String context, {
+    bool stampInstall = false,
+  }) {
     try {
       final String scriptName = script.name.toLowerCase();
       if (targetList.any((existingScript) => existingScript.name.toLowerCase() == scriptName)) {
@@ -657,6 +752,11 @@ class UserScriptsProvider extends ChangeNotifier {
           name: "UserScriptsProvider",
         );
         return false;
+      }
+
+      // Only fresh installs get a date; loads, imports and restores keep whatever they carried
+      if (stampInstall && script.installedAt == 0) {
+        script.installedAt = DateTime.now().millisecondsSinceEpoch;
       }
 
       targetList.add(script);
@@ -686,6 +786,11 @@ class UserScriptsProvider extends ChangeNotifier {
     _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
     _userScriptsNotifyUpdates = await Prefs().getUserScriptsNotifyUpdates();
     _scriptCatalogEnabled = await Prefs().getScriptCatalogEnabled();
+    final savedSort = await Prefs().getUserScriptsSortOrder();
+    _sortOrder = UserScriptSort.values.firstWhere((s) => s.name == savedSort, orElse: () => UserScriptSort.name);
+    _updatesFirst = await Prefs().getUserScriptsUpdatesFirst();
+    _searchInSource = await Prefs().getUserScriptsSearchInSource();
+    _warShortcutsEnabled = await Prefs().getUserScriptsWarShortcutsEnabled();
     try {
       final dismissed = await Prefs().getUserScriptsBulkUpdateDismissed();
       if (dismissed.isNotEmpty) {
@@ -696,15 +801,21 @@ class UserScriptsProvider extends ChangeNotifier {
     }
     _isSafeToSave = false; // Reset safety lock
 
-    // Load Global Disable State
-    final savedGlobalDisableState = await Prefs().getUserScriptsGlobalDisableState();
-    if (savedGlobalDisableState != null && savedGlobalDisableState.isNotEmpty) {
+    // Active bulk mode (global disable or war mode)
+    final savedMode = await Prefs().getUserScriptsBulkMode();
+    _bulkMode = ScriptsBulkMode.values.firstWhere((m) => m.name == savedMode, orElse: () => ScriptsBulkMode.none);
+
+    // Installs coming from the version where global disable really turned every script off:
+    // the switches have to be put back, which needs the list loaded
+    final legacyState = await Prefs().getUserScriptsGlobalDisableState();
+    if (legacyState != null && legacyState.isNotEmpty) {
       try {
-        final Map<String, dynamic> decodedMap = json.decode(savedGlobalDisableState);
-        _scriptStatesBeforeGlobalDisable = decodedMap.map((key, value) => MapEntry(key, value as bool));
+        final Map<String, dynamic> decodedMap = json.decode(legacyState);
+        _legacyGlobalDisableByName = decodedMap.map((key, value) => MapEntry(key, value as bool));
       } catch (e) {
-        log("Error loading global disable state: $e", name: "UserScriptsProvider");
-        _scriptStatesBeforeGlobalDisable = null;
+        log("Error loading legacy global disable state: $e", name: "UserScriptsProvider");
+        _legacyGlobalDisableByName = null;
+        Prefs().setUserScriptsGlobalDisableState("");
       }
     }
 
@@ -746,6 +857,7 @@ class UserScriptsProvider extends ChangeNotifier {
         // Apply loaded scripts
         _userScriptList.clear();
         _userScriptList.addAll(tempList);
+        await _migrateLegacyGlobalDisable();
         _sort();
         _checkForCustomApiKeyCandidates();
         _isSafeToSave = true;
@@ -777,6 +889,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
         _userScriptList.clear();
         _userScriptList.addAll(tempList);
+        await _migrateLegacyGlobalDisable();
         _sort();
         _checkForCustomApiKeyCandidates();
         _isSafeToSave = true;
@@ -941,6 +1054,9 @@ class UserScriptsProvider extends ChangeNotifier {
       // Only save if we have actual changes and at the end of all updates
       // so that we don't save the "updating" status
       if (hasChanges) {
+        // The pending updates might have to float to the top
+        _sort();
+        notifyListeners();
         await _saveUserScriptsToStorage();
       }
     } catch (e, trace) {
@@ -1020,7 +1136,6 @@ class UserScriptsProvider extends ChangeNotifier {
 
   /// Applies the selected updates
   Future<({int updated, int failed})> applyBulkUpdates(List<BulkUpdateReviewItem> items) async {
-    _invalidateGlobalDisable();
     int updated = 0;
     int failed = 0;
 
@@ -1083,7 +1198,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
       if (response.success && response.model != null) {
         if (!existingScriptNames.contains(response.model!.name.toLowerCase())) {
-          if (_addScript(_userScriptList, response.model!, "addDefaultScripts")) {
+          if (_addScript(_userScriptList, response.model!, "addDefaultScripts", stampInstall: true)) {
             added++;
           }
         }
@@ -1110,7 +1225,7 @@ class UserScriptsProvider extends ChangeNotifier {
         return (success: false, message: "Script with same name already exists");
       }
 
-      if (_addScript(_userScriptList, response.model!, "addUserScriptFromURL")) {
+      if (_addScript(_userScriptList, response.model!, "addUserScriptFromURL", stampInstall: true)) {
         _sort();
         _saveUserScriptsToStorage();
         notifyListeners();
