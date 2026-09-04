@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/multitab_detector.dart';
 
@@ -17,6 +19,7 @@ enum WebviewFabAction {
   openTabsMenu,
   closeCurrentTab,
   closeBrowser,
+  warMode,
 }
 
 extension FabActionExtension on WebviewFabAction {
@@ -36,6 +39,8 @@ extension FabActionExtension on WebviewFabAction {
         return 'Close current tab';
       case WebviewFabAction.closeBrowser:
         return 'Close browser';
+      case WebviewFabAction.warMode:
+        return 'Scripts war mode';
     }
   }
 
@@ -61,6 +66,7 @@ class FabSettings {
     WebviewFabAction.openTabsMenu,
     WebviewFabAction.closeCurrentTab,
     WebviewFabAction.closeBrowser,
+    WebviewFabAction.warMode,
   ];
 
   static VoidCallback? getCallbackForAction(
@@ -86,6 +92,8 @@ class FabSettings {
           return null;
         }
         return webviewProvider.closeWebViewFromOutside;
+      case WebviewFabAction.warMode:
+        return () => context.read<UserScriptsProvider>().toggleWarMode();
     }
   }
 
@@ -212,6 +220,8 @@ class WebviewFab extends StatelessWidget {
         return Icons.delete_forever_outlined;
       case WebviewFabAction.closeBrowser:
         return Icons.close;
+      case WebviewFabAction.warMode:
+        return MdiIcons.swordCross;
     }
   }
 

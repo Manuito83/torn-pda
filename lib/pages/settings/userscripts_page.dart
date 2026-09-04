@@ -47,6 +47,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   final _scrollController = ScrollController();
 
+  final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  bool _searchActive = false;
+  String _searchText = "";
+  Timer? _searchDebounce;
+
   late StreamSubscription _willPopSubscription;
 
   @override
@@ -72,6 +78,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       }
     });
 
+    _searchController.addListener(_onSearchInputChange);
+
     routeWithDrawer = false;
     routeName = "userscripts";
     _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
@@ -81,9 +89,31 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    _searchFocus.dispose();
     _scrollController.dispose();
     _willPopSubscription.cancel();
     super.dispose();
+  }
+
+  void _onSearchInputChange() {
+    if (_userScriptsProvider.searchInSource) {
+      _searchDebounce?.cancel();
+      _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+        if (mounted) setState(() => _searchText = _searchController.text);
+      });
+      return;
+    }
+    _searchDebounce?.cancel();
+    setState(() => _searchText = _searchController.text);
+  }
+
+  bool get _showWarFab => _userScriptsProvider.warShortcutsEnabled && _userScriptsProvider.userScriptList.isNotEmpty;
+
+  List<UserScriptModel> _visibleScripts() {
+    final bool inSource = _userScriptsProvider.searchInSource;
+    return _userScriptsProvider.userScriptList.where((s) => s.matchesQuery(_searchText, inSource: inSource)).toList();
   }
 
   @override
@@ -104,6 +134,18 @@ class UserScriptsPageState extends State<UserScriptsPage> {
         left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
+          floatingActionButton: _showWarFab
+              ? FloatingActionButton.extended(
+                  icon: const Icon(MdiIcons.swordCross, color: Colors.white),
+                  label: Text(
+                    _userScriptsProvider.isWarModeActive ? "Exit war mode" : "War mode",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  elevation: 4,
+                  backgroundColor: _userScriptsProvider.isWarModeActive ? Colors.orange[800] : Colors.blueGrey,
+                  onPressed: _userScriptsProvider.toggleWarMode,
+                )
+              : null,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
@@ -244,6 +286,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                     ],
                   ),
+                  if (_userScriptsProvider.isWarModeActive || _userScriptsProvider.isGlobalDisableActive)
+                    _bulkModeBanner(),
                   if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
                   if (_userScriptsProvider.scriptCatalogEnabled) _catalogBanner(),
                   const SizedBox(height: 10),
@@ -319,6 +363,53 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
+  Widget _bulkModeBanner() {
+    final bool light = _themeProvider.currentTheme == AppTheme.light;
+    final bool warMode = _userScriptsProvider.isWarModeActive;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+      child: Card(
+        margin: EdgeInsets.zero,
+        color: light ? Colors.orange[50] : Colors.orange[900],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.orange[light ? 700 : 400]!),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 2, 2, 2),
+          child: Row(
+            children: [
+              Icon(
+                warMode ? MdiIcons.swordCross : Icons.remove_circle_outline,
+                size: 18,
+                color: Colors.orange[light ? 800 : 300],
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  warMode
+                      ? "War mode is on: the switches below select which scripts run during a war"
+                      : "All scripts are temporarily disabled",
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+              TextButton(
+                child: const Text("EXIT", style: TextStyle(fontSize: 12)),
+                onPressed: () {
+                  if (warMode) {
+                    _userScriptsProvider.toggleWarMode();
+                  } else {
+                    _userScriptsProvider.toggleGlobalDisable();
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _bulkUpdateBanner() {
     final int count = _userScriptsProvider.pendingUpdatesCount;
     final bool light = _themeProvider.currentTheme == AppTheme.light;
@@ -369,7 +460,41 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   ListView scriptsCards() {
     final scriptList = <Widget>[];
-    for (final script in _userScriptsProvider.userScriptList) {
+    final visible = _visibleScripts();
+    final bool warMode = _userScriptsProvider.isWarModeActive;
+
+    if (visible.isEmpty && _userScriptsProvider.userScriptList.isNotEmpty) {
+      final bool inSource = _userScriptsProvider.searchInSource;
+      return ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              children: [
+                Text(
+                  inSource
+                      ? "No script name or code contains '${_searchText.trim()}'"
+                      : "No script name contains '${_searchText.trim()}'",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13, fontStyle: FontStyle.italic),
+                ),
+                if (!inSource)
+                  TextButton.icon(
+                    icon: const Icon(Icons.code, size: 16),
+                    label: const Text("Search inside the code too", style: TextStyle(fontSize: 12)),
+                    onPressed: () {
+                      _userScriptsProvider.setSearchInSource = true;
+                      _onSearchInputChange();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    for (final script in visible) {
       scriptList.add(
         Card(
           key: UniqueKey(),
@@ -385,13 +510,17 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         height: 20,
                         width: 60,
                         child: Switch(
-                          value: script.enabled,
-                          activeTrackColor: Colors.green[100],
-                          activeThumbColor: Colors.green,
+                          value: warMode ? script.warEnabled : script.enabled,
+                          activeTrackColor: warMode ? Colors.orange[100] : Colors.green[100],
+                          activeThumbColor: warMode ? Colors.orange[800] : Colors.green,
                           inactiveThumbColor: Colors.grey,
                           inactiveTrackColor: Colors.grey[300],
                           onChanged: (value) {
-                            _userScriptsProvider.changeUserScriptEnabled(script, value);
+                            if (warMode) {
+                              _userScriptsProvider.changeUserScriptWarEnabled(script, value);
+                            } else {
+                              _userScriptsProvider.changeUserScriptEnabled(script, value);
+                            }
                           },
                         ),
                       ),
@@ -581,6 +710,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       );
     }
 
+    if (_showWarFab) scriptList.add(const SizedBox(height: 70));
     return ListView(children: scriptList);
   }
 
@@ -589,7 +719,18 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      title: const Text('User scripts', style: TextStyle(color: Colors.white)),
+      title: _searchActive
+          ? TextField(
+              controller: _searchController,
+              focusNode: _searchFocus,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: _userScriptsProvider.searchInSource ? "search name or code" : "search scripts",
+                hintStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
+              ),
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            )
+          : const Text('User scripts', style: TextStyle(color: Colors.white)),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
@@ -606,6 +747,24 @@ class UserScriptsPageState extends State<UserScriptsPage> {
         ],
       ),
       actions: [
+        IconButton(
+          icon: Icon(
+            _searchActive ? Icons.cancel : Icons.search,
+            color: _searchText.isNotEmpty ? Colors.orange[500] : Colors.white,
+          ),
+          onPressed: () {
+            setState(() {
+              _searchActive = !_searchActive;
+              if (_searchActive) {
+                // The field does not exist until this rebuild
+                WidgetsBinding.instance.addPostFrameCallback((_) => _searchFocus.requestFocus());
+              } else {
+                _searchController.clear();
+                _searchFocus.unfocus();
+              }
+            });
+          },
+        ),
         PopupMenuButton<String>(
           icon: const Icon(MdiIcons.cogOutline),
           onSelected: (value) {
@@ -617,10 +776,86 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _showImportDialog();
             } else if (value == 'toggle_catalog') {
               _userScriptsProvider.setScriptCatalogEnabled = !_userScriptsProvider.scriptCatalogEnabled;
+            } else if (value == 'sort_name') {
+              _userScriptsProvider.setSortOrder = UserScriptSort.name;
+            } else if (value == 'sort_date') {
+              _userScriptsProvider.setSortOrder = UserScriptSort.dateNewest;
+            } else if (value == 'updates_first') {
+              _userScriptsProvider.setUpdatesFirst = !_userScriptsProvider.updatesFirst;
+            } else if (value == 'search_source') {
+              _userScriptsProvider.setSearchInSource = !_userScriptsProvider.searchInSource;
+              _onSearchInputChange();
+            } else if (value == 'war_mode') {
+              _userScriptsProvider.toggleWarMode();
+            } else if (value == 'toggle_war_shortcuts') {
+              _userScriptsProvider.setWarShortcutsEnabled = !_userScriptsProvider.warShortcutsEnabled;
             }
           },
           itemBuilder: (BuildContext context) {
+            final bool byName = _userScriptsProvider.sortOrder == UserScriptSort.name;
+            final bool warMode = _userScriptsProvider.isWarModeActive;
+            const selected = TextStyle(fontWeight: FontWeight.bold);
             return [
+              if (!_showWarFab) ...[
+                PopupMenuItem<String>(
+                  value: 'war_mode',
+                  child: Row(
+                    children: [
+                      Icon(MdiIcons.swordCross, color: warMode ? Colors.orange[800] : Colors.grey),
+                      const SizedBox(width: 10),
+                      Text(warMode ? 'Exit war mode' : 'Enter war mode'),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+              ],
+              PopupMenuItem<String>(
+                value: 'sort_name',
+                child: Row(
+                  children: [
+                    const Icon(MdiIcons.sortAlphabeticalAscending, color: Colors.grey),
+                    const SizedBox(width: 10),
+                    Text('Sort by name', style: byName ? selected : null),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'sort_date',
+                child: Row(
+                  children: [
+                    const Icon(MdiIcons.sortCalendarDescending, color: Colors.grey),
+                    const SizedBox(width: 10),
+                    Text('Sort by install date', style: byName ? null : selected),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'updates_first',
+                child: Row(
+                  children: [
+                    Icon(
+                      _userScriptsProvider.updatesFirst ? Icons.check_box : Icons.check_box_outline_blank,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 10),
+                    const Text('Pending updates first'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'search_source',
+                child: Row(
+                  children: [
+                    Icon(
+                      _userScriptsProvider.searchInSource ? Icons.check_box : Icons.check_box_outline_blank,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 10),
+                    const Text('Search inside code'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
               const PopupMenuItem<String>(
                 value: 'export',
                 child: Row(
@@ -664,6 +899,19 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                     Text(
                       _userScriptsProvider.scriptCatalogEnabled ? 'Hide TornTools section' : 'Show TornTools section',
                     ),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'toggle_war_shortcuts',
+                child: Row(
+                  children: [
+                    Icon(
+                      _userScriptsProvider.warShortcutsEnabled ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(_userScriptsProvider.warShortcutsEnabled ? 'Hide war mode shortcuts' : 'Show war mode shortcuts'),
                   ],
                 ),
               ),

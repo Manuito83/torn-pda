@@ -521,11 +521,12 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
   Widget _scriptCard(CatalogScript script) {
     final installedModel = _installedModel(script);
     final installed = installedModel != null;
-    final paused = installed && !installedModel.enabled;
+    // A script can have its own switch on and still not run, if a bulk mode is active
+    final stopped = installed && !_userScriptsProvider.isActive(installedModel);
     final installing = _installing.contains(script.id);
     final green = _light ? Colors.green[700]! : Colors.green[300]!;
     final amber = _light ? Colors.orange[800]! : Colors.orange[300]!;
-    final stateColor = paused ? amber : green;
+    final stateColor = stopped ? amber : green;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(14, 4, 14, 4),
@@ -596,7 +597,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                   installedModel: installedModel,
                   installing: installing,
                   stateColor: stateColor,
-                  paused: paused,
+                  stopped: stopped,
                 ),
               ),
             ),
@@ -636,7 +637,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     required UserScriptModel? installedModel,
     required bool installing,
     required Color stateColor,
-    required bool paused,
+    required bool stopped,
   }) {
     if (installing) {
       return SizedBox(
@@ -654,7 +655,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
           width: 34,
           height: 34,
           decoration: BoxDecoration(shape: BoxShape.circle, color: stateColor.withValues(alpha: 0.16)),
-          child: Icon(paused ? Icons.pause_rounded : Icons.check_rounded, size: 19, color: stateColor),
+          child: Icon(stopped ? Icons.pause_rounded : Icons.check_rounded, size: 19, color: stateColor),
         ),
       );
     }
@@ -685,6 +686,14 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     return null;
   }
 
+  /// Reason why a script with its own switch on is still not running, when a bulk mode is active
+  String? _modeBlockReason(UserScriptModel model) {
+    if (!model.enabled || _userScriptsProvider.isActive(model)) return null;
+    return _userScriptsProvider.isWarModeActive
+        ? "war mode is on and this script is not in your war selection"
+        : "all scripts are temporarily disabled";
+  }
+
   Future<void> _showInstalledDialog(CatalogScript script, UserScriptModel model) async {
     bool confirmingDelete = false;
 
@@ -694,6 +703,13 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
             final paused = !model.enabled;
+            final blockedReason = _modeBlockReason(model);
+            final running = _userScriptsProvider.isActive(model);
+            final String stateText = blockedReason != null
+                ? "This script is enabled, but $blockedReason, so it is not running."
+                : paused
+                ? "This script is installed but paused, so it is not running."
+                : "This script is already installed and running.";
             final amber = _light ? Colors.orange[800]! : Colors.orange[300]!;
             final red = _light ? Colors.red[700]! : Colors.red[300]!;
 
@@ -704,7 +720,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
               contentPadding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
               title: Row(
                 children: [
-                  Icon(paused ? Icons.pause_circle_outline : Icons.check_circle_outline, size: 20, color: _accent),
+                  Icon(running ? Icons.check_circle_outline : Icons.pause_circle_outline, size: 20, color: _accent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(script.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
@@ -716,11 +732,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    paused
-                        ? "This script is installed but paused, so it is not running.\n\n"
-                              "You can manage it from the user scripts list, or use the shortcuts below."
-                        : "This script is already installed and running.\n\n"
-                              "You can manage it from the user scripts list, or use the shortcuts below.",
+                    "$stateText\n\nYou can manage it from the user scripts list, or use the shortcuts below.",
                     style: const TextStyle(fontSize: 13, height: 1.35),
                   ),
                   if (model.source.contains(_pdaKeyWord)) ...[
@@ -817,9 +829,14 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                         onPressed: () {
                           _userScriptsProvider.changeUserScriptEnabled(model, paused);
                           setDialogState(() {});
+                          final String? stillBlocked = paused ? _modeBlockReason(model) : null;
                           _toast(
-                            paused ? "${script.name} resumed" : "${script.name} paused",
-                            paused ? Colors.green[800]! : Colors.orange[800]!,
+                            paused
+                                ? (stillBlocked == null
+                                      ? "${script.name} resumed"
+                                      : "${script.name} resumed, but $stillBlocked")
+                                : "${script.name} paused",
+                            paused && stillBlocked == null ? Colors.green[800]! : Colors.orange[800]!,
                           );
                         },
                         child: Text(paused ? "RESUME" : "PAUSE", style: TextStyle(color: amber)),

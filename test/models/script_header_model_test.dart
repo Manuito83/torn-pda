@@ -76,10 +76,10 @@ void main() {
       );
 
       // Test simple wildcard patterns (original behavior)
-      expect(model.shouldInject('https://torn.com/'), true);
-      expect(model.shouldInject('https://sub.torn.com/'), true);
-      expect(model.shouldInject('https://torn.com/path/test'), true);
-      expect(model.shouldInject('https://other.com/'), false);
+      expect(model.matchesTarget('https://torn.com/'), true);
+      expect(model.matchesTarget('https://sub.torn.com/'), true);
+      expect(model.matchesTarget('https://torn.com/path/test'), true);
+      expect(model.matchesTarget('https://other.com/'), false);
     });
 
     test('version comparison with VersionModel', () {

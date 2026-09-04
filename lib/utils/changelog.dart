@@ -113,6 +113,14 @@ List<_MVersion> _modernChangelog() => [
                 'Enable it under the travel alert options. The notification will tell you which of the items you '
                 'have restock alerts for are in stock in the country you are landing in.',
           ),
+          _MItem(
+            'Scripts: added war mode',
+            detail:
+                'Keep only the scripts you need during a war or a chain. Enter it from the options menu of the '
+                'scripts section, from the browser three-dotted icon or from a FAB button, then use the switches in the '
+                'list to choose what runs in war mode. Your normal setup is kept untouched, so leaving it changes '
+                'nothing else.',
+          ),
         ],
       ),
       _MSection(
@@ -121,6 +129,12 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFFE65100),
         items: [
           _MItem('Foreign stocks: item details now include the average time an item takes to sell out'),
+          _MItem(
+            'Scripts: the list can now be searched and sorted',
+            detail:
+                'Search by name (or inside the code, if you enable it in the options menu) and sort the list '
+                'alphabetically or by install date. You can also keep the scripts with a pending update at the top.',
+          ),
         ],
       ),
       _MSection(
