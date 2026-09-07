@@ -1283,6 +1283,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _tornStatsChartHiddenStats = <String>[];
+  List<String> get tornStatsChartHiddenStats => _tornStatsChartHiddenStats;
+  set setTornStatsChartHiddenStats(List<String> value) {
+    _tornStatsChartHiddenStats = value;
+    Prefs().setTornStatsChartHiddenStats(tornStatsChartHiddenStats);
+    notifyListeners();
+  }
+
   var _retaliationSectionEnabled = true;
   bool get retaliationSectionEnabled => _retaliationSectionEnabled;
   set setRetaliationSectionEnabled(bool value) {
@@ -1895,6 +1903,7 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartRange = await Prefs().getTornStatsChartRange();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
     _tornStatsChartShowBoth = await Prefs().getTornStatsChartShowBoth();
+    _tornStatsChartHiddenStats = await Prefs().getTornStatsChartHiddenStats();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _targetFinderSectionEnabled = await Prefs().getTargetFinderSectionEnabled();

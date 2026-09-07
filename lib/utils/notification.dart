@@ -234,6 +234,12 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts forums';
     channelName = 'Alerts forums';
     channelDescription = 'Automatic alerts for forums';
+  } else if (channel.contains("Alerts work stats")) {
+    notificationIcon = "notification_icon";
+    notificationColor = Colors.amber;
+    channelId = 'Alerts work stats';
+    channelName = 'Alerts work stats';
+    channelDescription = 'Automatic alerts for work stats targets';
   }
 
   String title = payload["title"] ?? "";
@@ -914,6 +920,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       description: 'Information messages',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('aircraft_seatbelt'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts work stats ${modifier.channelIdModifier}',
+      'Alerts work stats ${modifier.channelIdModifier}',
+      description: 'Automatic alerts for work stats targets',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),

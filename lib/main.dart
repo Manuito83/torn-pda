@@ -83,8 +83,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.17.0';
-const String androidCompilation = '678';
-const String iosCompilation = '678';
+const String androidCompilation = '679';
+const String iosCompilation = '679';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -126,6 +126,10 @@ const List<String> kAlertFirestoreFields = [
   "lootRangersNotification",
   "lootAlertAheadSeconds",
   "lootRangersAheadSeconds",
+  "workStatsNotification",
+  "workStatsManualLaborTarget",
+  "workStatsIntelligenceTarget",
+  "workStatsEnduranceTarget",
 ];
 
 bool appHasBeenUpdated = false;

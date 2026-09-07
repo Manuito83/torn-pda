@@ -121,6 +121,12 @@ List<_MVersion> _modernChangelog() => [
                 'list to choose what runs in war mode. Your normal setup is kept untouched, so leaving it changes '
                 'nothing else.',
           ),
+          _MItem(
+            'Alerts: set a target for your work stats',
+            detail:
+                'A new alert lets you choose a value for your manual labor, intelligence and endurance, and '
+                'notifies you as soon as you reach it.',
+          ),
         ],
       ),
       _MSection(
@@ -134,6 +140,12 @@ List<_MVersion> _modernChangelog() => [
             detail:
                 'Search by name (or inside the code, if you enable it in the options menu) and sort the list '
                 'alphabetically or by install date. You can also keep the scripts with a pending update at the top.',
+          ),
+          _MItem(
+            'Profile: choose which stats are shown in the Torn Stats chart',
+            detail:
+                'Tap the legend under the chart to open a dialog where you can hide any of strength, defense, '
+                'speed and dexterity.',
           ),
         ],
       ),

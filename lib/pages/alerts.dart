@@ -6,6 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
@@ -29,6 +30,7 @@ import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 import 'package:torn_pda/widgets/alerts/sendbird_dnd_dialog.dart';
+import 'package:torn_pda/widgets/alerts/work_stats_targets_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 
 class AlertsSettings extends StatefulWidget {
@@ -1318,6 +1320,25 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           ),
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.workStatsNotification ?? false,
+                            title: const Text("Work stats targets"),
+                            subtitle: const Text(
+                              "Get notified once your manual labor, intelligence or endurance reach the values you "
+                              "choose. Each target is notified only once, and is armed again if you change it",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                            ),
+                            onChanged: (value) => _onWorkStatsToggled(value ?? false),
+                          ),
+                        ),
+                      ),
+                      if (_firebaseUserModel!.workStatsNotification ?? false) _workStatsTargets(),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -2349,6 +2370,106 @@ class AlertsSettingsState extends State<AlertsSettings> {
         });
         FirestoreHelper().setLootRangersAheadSeconds(seconds);
       },
+    );
+  }
+
+  bool _anyWorkStatsTarget() {
+    return _firebaseUserModel!.workStatsManualLaborTarget > 0 ||
+        _firebaseUserModel!.workStatsIntelligenceTarget > 0 ||
+        _firebaseUserModel!.workStatsEnduranceTarget > 0;
+  }
+
+  void _workStatsToast(String message) {
+    BotToast.showText(
+      clickClose: true,
+      text: message,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.orange[900]!,
+      duration: const Duration(seconds: 4),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  Future<bool> _showWorkStatsTargetsDialog() async {
+    final saved = await showDialog<bool>(
+      useRootNavigator: false,
+      context: context,
+      builder: (BuildContext context) {
+        return WorkStatsTargetsDialog(userModel: _firebaseUserModel);
+      },
+    );
+    return saved == true;
+  }
+
+  Future<void> _onWorkStatsToggled(bool enabled) async {
+    if (!enabled) {
+      setState(() {
+        _firebaseUserModel?.workStatsNotification = false;
+      });
+      FirestoreHelper().subscribeToWorkStatsNotification(false);
+      return;
+    }
+
+    if (!_anyWorkStatsTarget()) {
+      final saved = await _showWorkStatsTargetsDialog();
+      if (!saved || !_anyWorkStatsTarget()) {
+        _workStatsToast("Set at least one target to enable this alert");
+        return;
+      }
+    }
+
+    setState(() {
+      _firebaseUserModel?.workStatsNotification = true;
+    });
+    FirestoreHelper().subscribeToWorkStatsNotification(true);
+  }
+
+  Widget _workStatsTargets() {
+    final formatter = NumberFormat("#,##0", "en_US");
+
+    String targetLabel(int target) => target > 0 ? formatter.format(target) : "not set";
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 20, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Manual labor: ${targetLabel(_firebaseUserModel!.workStatsManualLaborTarget)}",
+                  style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                ),
+                Text(
+                  "Intelligence: ${targetLabel(_firebaseUserModel!.workStatsIntelligenceTarget)}",
+                  style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                ),
+                Text(
+                  "Endurance: ${targetLabel(_firebaseUserModel!.workStatsEnduranceTarget)}",
+                  style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () async {
+              final saved = await _showWorkStatsTargetsDialog();
+              if (!saved) return;
+              setState(() {});
+              if (!_anyWorkStatsTarget()) {
+                setState(() {
+                  _firebaseUserModel?.workStatsNotification = false;
+                });
+                FirestoreHelper().subscribeToWorkStatsNotification(false);
+                _workStatsToast("Work stats alert disabled, as you removed all targets");
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 

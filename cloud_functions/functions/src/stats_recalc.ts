@@ -23,6 +23,7 @@ const booleanStats = [
   "factionAssistMessage",
   "retalsNotification",
   "forumsSubscriptionsNotification",
+  "workStatsNotification",
 ];
 
 // The counters are kept by adding deltas from the player triggers, which drifts
