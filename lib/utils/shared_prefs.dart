@@ -531,6 +531,7 @@ class Prefs {
   final String _kTornStatsChartRange = "pda_tornStatsChartRange";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
   final String _kTornStatsChartShowBoth = "pda_tornStatsChartShowBoth";
+  final String _kTornStatsChartHiddenStats = "pda_tornStatsChartHiddenStats";
 
   // Torn education catalog cache (Profile)
   final String _kTornEducationCatalogSave = "pda_tornEducationCatalogSave";
@@ -3552,6 +3553,14 @@ class Prefs {
 
   Future setTornStatsChartShowBoth(bool value) async {
     return await PrefsDatabase.setBool(_kTornStatsChartShowBoth, value);
+  }
+
+  Future<List<String>> getTornStatsChartHiddenStats() async {
+    return await PrefsDatabase.getStringList(_kTornStatsChartHiddenStats, <String>[]);
+  }
+
+  Future setTornStatsChartHiddenStats(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kTornStatsChartHiddenStats, value);
   }
 
   Future<String> getTornEducationCatalogSave() async {

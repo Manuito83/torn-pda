@@ -18,6 +18,49 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 enum TornStatsChartType { Line, Pie }
 
+enum StatSeries { strength, defense, speed, dexterity }
+
+extension StatSeriesDisplay on StatSeries {
+  String get shortLabel => switch (this) {
+        StatSeries.strength => 'STR',
+        StatSeries.defense => 'DEF',
+        StatSeries.speed => 'SPD',
+        StatSeries.dexterity => 'DEX',
+      };
+
+  String get fullLabel => switch (this) {
+        StatSeries.strength => 'Strength',
+        StatSeries.defense => 'Defense',
+        StatSeries.speed => 'Speed',
+        StatSeries.dexterity => 'Dexterity',
+      };
+
+  Color get color => switch (this) {
+        StatSeries.strength => Colors.blue,
+        StatSeries.defense => Colors.red,
+        StatSeries.speed => Colors.orange,
+        StatSeries.dexterity => Colors.green,
+      };
+}
+
+const Set<StatSeries> _allStatSeries = {
+  StatSeries.strength,
+  StatSeries.defense,
+  StatSeries.speed,
+  StatSeries.dexterity,
+};
+
+Set<StatSeries> statSeriesFromHiddenKeys(List<String> hiddenKeys) {
+  final hidden = <StatSeries>{};
+  for (final key in hiddenKeys) {
+    for (final stat in StatSeries.values) {
+      if (stat.name == key) hidden.add(stat);
+    }
+  }
+  if (hidden.length >= _allStatSeries.length) return {};
+  return hidden;
+}
+
 String formatTornStatsErrorMessage(
   String? message, {
   String prefix = '',
@@ -73,10 +116,69 @@ class StatsChart extends StatefulWidget {
 class _StatsChartState extends State<StatsChart> {
   bool _statsUpdating = false;
 
+  void _toggleStat(SettingsProvider settingsProvider, StatSeries stat) {
+    final hidden = statSeriesFromHiddenKeys(settingsProvider.tornStatsChartHiddenStats);
+    if (hidden.contains(stat)) {
+      hidden.remove(stat);
+    } else if (hidden.length < _allStatSeries.length - 1) {
+      hidden.add(stat);
+    } else {
+      return;
+    }
+    settingsProvider.setTornStatsChartHiddenStats = hidden.map((e) => e.name).toList();
+  }
+
+  Future<void> _showLegendDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Consumer<SettingsProvider>(
+          builder: (context, settingsProvider, _) {
+            final hidden = statSeriesFromHiddenKeys(settingsProvider.tornStatsChartHiddenStats);
+            return AlertDialog(
+              title: const Text('Chart stats', style: TextStyle(fontSize: 16)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final stat in StatSeries.values)
+                    SwitchListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(color: stat.color, shape: BoxShape.circle),
+                      ),
+                      title: Text(stat.fullLabel, style: const TextStyle(fontSize: 14)),
+                      value: !hidden.contains(stat),
+                      onChanged: (!hidden.contains(stat) && hidden.length >= _allStatSeries.length - 1)
+                          ? null
+                          : (_) => _toggleStat(settingsProvider, stat),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     bool showBoth = settingsProvider.tornStatsChartShowBoth;
+
+    final (List<String> hiddenKeys, int rangeMonths) = context.select<SettingsProvider, (List<String>, int)>(
+      (sp) => (sp.tornStatsChartHiddenStats, sp.tornStatsChartRange),
+    );
+    final Set<StatSeries> hidden = statSeriesFromHiddenKeys(hiddenKeys);
 
     bool isOldData = false;
     bool isStaleData = false;
@@ -145,17 +247,17 @@ class _StatsChartState extends State<StatsChart> {
       Widget secondChart;
 
       if (widget.chartType == TornStatsChartType.Line) {
-        firstChart = LineChart(_buildLineChartData());
-        secondChart = PieChart(_buildPieChartData());
+        firstChart = LineChart(_buildLineChartData(rangeMonths, hidden));
+        secondChart = PieChart(_buildPieChartData(hidden));
       } else {
-        firstChart = PieChart(_buildPieChartData());
-        secondChart = LineChart(_buildLineChartData());
+        firstChart = PieChart(_buildPieChartData(hidden));
+        secondChart = LineChart(_buildLineChartData(rangeMonths, hidden));
       }
 
       return Column(
         children: [
           if (warningWidget != null) warningWidget,
-          _legend(),
+          _legend(hidden),
           const SizedBox(height: 5),
           Flexible(child: firstChart),
           const SizedBox(height: 20),
@@ -166,15 +268,15 @@ class _StatsChartState extends State<StatsChart> {
 
     Widget chart;
     if (widget.chartType == TornStatsChartType.Line) {
-      chart = LineChart(_buildLineChartData());
+      chart = LineChart(_buildLineChartData(rangeMonths, hidden));
     } else {
-      chart = PieChart(_buildPieChartData());
+      chart = PieChart(_buildPieChartData(hidden));
     }
 
     return Column(
       children: [
         if (warningWidget != null) warningWidget,
-        _legend(),
+        _legend(hidden),
         const SizedBox(height: 5),
         Flexible(
           child: chart,
@@ -183,7 +285,7 @@ class _StatsChartState extends State<StatsChart> {
     );
   }
 
-  Row _legend() {
+  Row _legend(Set<StatSeries> hidden) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -377,70 +479,54 @@ class _StatsChartState extends State<StatsChart> {
           },
         ),
         const SizedBox(width: 30),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.blue,
-            shape: BoxShape.circle,
+        GestureDetector(
+          onTap: _showLegendDialog,
+          child: Row(
+            children: [
+              for (final stat in StatSeries.values) ...[
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: hidden.contains(stat) ? stat.color.withAlpha(70) : stat.color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Text(
+                  ' ${stat.shortLabel}',
+                  style: TextStyle(
+                    fontSize: 7,
+                    color: hidden.contains(stat) ? Colors.grey : null,
+                  ),
+                ),
+                if (stat != StatSeries.values.last) const SizedBox(width: 6),
+              ],
+            ],
           ),
         ),
-        const Text(' STR', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.red,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Text(' DEF', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.orange,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Text(' SPD', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.green,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Text(' DEX', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        const Text('', style: TextStyle(fontSize: 8)),
       ],
     );
   }
 
-  LineChartData _buildLineChartData() {
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+  LineChartData _buildLineChartData(int rangeMonths, Set<StatSeries> hidden) {
     return buildStatsLineChartData(
       allData: widget.statsData!.data!,
-      rangeMonths: settingsProvider.tornStatsChartRange,
+      rangeMonths: rangeMonths,
       currentYearColor: context.read<ThemeProvider>().mainText,
+      visibleStats: _allStatSeries.difference(hidden),
     );
   }
 
-  PieChartData _buildPieChartData() {
+  PieChartData _buildPieChartData(Set<StatSeries> hidden) {
     List<PieChartSectionData> sections = [];
-    Map<String, double> sums = calculateSumOfStats();
+    Map<StatSeries, double> sums = calculateSumOfStats(hidden);
     double totalSum = sums.values.reduce((a, b) => a + b);
 
-    sums.forEach((label, value) {
+    sums.forEach((stat, value) {
       double percent = (value / totalSum) * 100;
       sections.add(
         PieChartSectionData(
-          color: getColorForLabel(label),
+          color: stat.color,
           value: value,
           title: '${percent.toStringAsFixed(0)}%',
           radius: 50,
@@ -454,28 +540,17 @@ class _StatsChartState extends State<StatsChart> {
     );
   }
 
-  Map<String, double> calculateSumOfStats() {
-    return {
-      'Strength': widget.statsData!.data!.last.strength!.toDouble(),
-      'Speed': widget.statsData!.data!.last.speed!.toDouble(),
-      'Defense': widget.statsData!.data!.last.defense!.toDouble(),
-      'Dexterity': widget.statsData!.data!.last.dexterity!.toDouble(),
+  Map<StatSeries, double> calculateSumOfStats(Set<StatSeries> hidden) {
+    final values = {
+      StatSeries.strength: widget.statsData!.data!.last.strength!.toDouble(),
+      StatSeries.speed: widget.statsData!.data!.last.speed!.toDouble(),
+      StatSeries.defense: widget.statsData!.data!.last.defense!.toDouble(),
+      StatSeries.dexterity: widget.statsData!.data!.last.dexterity!.toDouble(),
     };
-  }
-
-  Color getColorForLabel(String label) {
-    switch (label) {
-      case 'Strength':
-        return Colors.blue;
-      case 'Speed':
-        return Colors.orange;
-      case 'Defense':
-        return Colors.red;
-      case 'Dexterity':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
+    return {
+      for (final entry in values.entries)
+        if (!hidden.contains(entry.key)) entry.key: entry.value,
+    };
   }
 }
 
@@ -497,7 +572,13 @@ LineChartData buildStatsLineChartData({
   required List<Datum> allData,
   required int rangeMonths,
   required Color currentYearColor,
+  Set<StatSeries> visibleStats = _allStatSeries,
 }) {
+  final List<StatSeries> orderedVisible =
+      [StatSeries.strength, StatSeries.defense, StatSeries.speed, StatSeries.dexterity]
+          .where(visibleStats.contains)
+          .toList();
+
   var data = allData.where((e) => e.timestamp != null && e.timestamp! > 0).toList();
 
   if (rangeMonths > 0 && data.isNotEmpty) {
@@ -519,10 +600,10 @@ LineChartData buildStatsLineChartData({
     xValues.add(x);
     indexByX[x] = i;
     final int thisMax = [
-      data[i].strength ?? 0,
-      data[i].speed ?? 0,
-      data[i].defense ?? 0,
-      data[i].dexterity ?? 0,
+      if (visibleStats.contains(StatSeries.strength)) data[i].strength ?? 0,
+      if (visibleStats.contains(StatSeries.speed)) data[i].speed ?? 0,
+      if (visibleStats.contains(StatSeries.defense)) data[i].defense ?? 0,
+      if (visibleStats.contains(StatSeries.dexterity)) data[i].dexterity ?? 0,
     ].fold(0, max);
     if (thisMax > maxStat) {
       maxStat = thisMax.toDouble();
@@ -565,42 +646,46 @@ LineChartData buildStatsLineChartData({
     maxY: maxStat * 1.1,
     rangeAnnotations: RangeAnnotations(verticalRangeAnnotations: gapBands),
     lineBarsData: [
-      LineChartBarData(
-        spots: spotsOf((d) => d.strength),
-        isCurved: false,
-        barWidth: 2,
-        color: Colors.blue,
-        dotData: const FlDotData(
-          show: false,
+      if (visibleStats.contains(StatSeries.strength))
+        LineChartBarData(
+          spots: spotsOf((d) => d.strength),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.blue,
+          dotData: const FlDotData(
+            show: false,
+          ),
         ),
-      ),
-      LineChartBarData(
-        spots: spotsOf((d) => d.speed),
-        isCurved: false,
-        barWidth: 2,
-        color: Colors.orange,
-        dotData: const FlDotData(
-          show: false,
+      if (visibleStats.contains(StatSeries.speed))
+        LineChartBarData(
+          spots: spotsOf((d) => d.speed),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.orange,
+          dotData: const FlDotData(
+            show: false,
+          ),
         ),
-      ),
-      LineChartBarData(
-        spots: spotsOf((d) => d.defense),
-        isCurved: false,
-        barWidth: 2,
-        color: Colors.red,
-        dotData: const FlDotData(
-          show: false,
+      if (visibleStats.contains(StatSeries.defense))
+        LineChartBarData(
+          spots: spotsOf((d) => d.defense),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.red,
+          dotData: const FlDotData(
+            show: false,
+          ),
         ),
-      ),
-      LineChartBarData(
-        spots: spotsOf((d) => d.dexterity),
-        isCurved: false,
-        barWidth: 2,
-        color: Colors.green,
-        dotData: const FlDotData(
-          show: false,
+      if (visibleStats.contains(StatSeries.dexterity))
+        LineChartBarData(
+          spots: spotsOf((d) => d.dexterity),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.green,
+          dotData: const FlDotData(
+            show: false,
+          ),
         ),
-      ),
     ],
     gridData: FlGridData(
       show: true,
@@ -619,7 +704,7 @@ LineChartData buildStatsLineChartData({
         getTooltipColor: (touchedSpot) => Colors.blueGrey.withAlpha(255),
         getTooltipItems: (touchedSpots) {
           final int? index = touchedSpots.isEmpty ? null : indexByX[touchedSpots.first.x];
-          if (index == null || touchedSpots.length != 4) {
+          if (index == null || touchedSpots.length != orderedVisible.length) {
             return List<LineTooltipItem?>.filled(touchedSpots.length, null);
           }
 
@@ -631,11 +716,23 @@ LineChartData buildStatsLineChartData({
               (touched.strength ?? 0) + (touched.defense ?? 0) + (touched.speed ?? 0) + (touched.dexterity ?? 0);
           const style = TextStyle(fontSize: 10, color: Colors.white);
 
+          int valueOf(StatSeries stat) => switch (stat) {
+                StatSeries.strength => touched.strength ?? 0,
+                StatSeries.defense => touched.defense ?? 0,
+                StatSeries.speed => touched.speed ?? 0,
+                StatSeries.dexterity => touched.dexterity ?? 0,
+              };
+
           return [
-            LineTooltipItem("$header\n\nSTR: ${f.format(touched.strength ?? 0)}", style),
-            LineTooltipItem("DEF: ${f.format(touched.defense ?? 0)}", style),
-            LineTooltipItem("SPD: ${f.format(touched.speed ?? 0)}", style),
-            LineTooltipItem("DEX: ${f.format(touched.dexterity ?? 0)}\n\nTOTAL ${f.format(total)}", style),
+            for (int i = 0; i < orderedVisible.length; i++)
+              LineTooltipItem(
+                [
+                  if (i == 0) "$header\n\n",
+                  "${orderedVisible[i].shortLabel}: ${f.format(valueOf(orderedVisible[i]))}",
+                  if (i == orderedVisible.length - 1) "\n\nTOTAL ${f.format(total)}",
+                ].join(),
+                style,
+              ),
           ];
         },
       ),

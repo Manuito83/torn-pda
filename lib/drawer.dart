@@ -1330,6 +1330,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool retals = false;
     bool sendbird = false;
     bool forums = false;
+    bool workStats = false;
 
     String? channel = '';
     String? messageId = '';
@@ -1393,6 +1394,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       sendbird = true;
     } else if (channel.contains("Alerts forums")) {
       forums = true;
+    } else if (channel.contains("Alerts work stats")) {
+      workStats = true;
     }
 
     if (travel) {
@@ -1649,6 +1652,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         launchBrowserWithUrl = true;
         browserUrl = bulkDetails;
       }
+    } else if (workStats) {
+      launchBrowserWithUrl = true;
+      browserUrl = "https://www.torn.com/jobs.php";
     }
 
     if (launchBrowserWithUrl) {

@@ -643,4 +643,20 @@ class FirestoreHelper {
       "la_racing_activity_push_token": FieldValue.delete(),
     });
   }
+
+  Future<void> subscribeToWorkStatsNotification(bool? subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({"workStatsNotification": subscribe});
+  }
+
+  Future<void> setWorkStatsTargets({
+    required int manualLabor,
+    required int intelligence,
+    required int endurance,
+  }) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "workStatsManualLaborTarget": manualLabor,
+      "workStatsIntelligenceTarget": intelligence,
+      "workStatsEnduranceTarget": endurance,
+    });
+  }
 }

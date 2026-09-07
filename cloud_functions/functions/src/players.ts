@@ -134,6 +134,10 @@ export const onPlayerDeleted = onDocumentDeleted(
       promises.push(manageStats("forumsSubscriptionsNotification", -1));
     }
 
+    if (beforeStat.workStatsNotification) {
+      promises.push(manageStats("workStatsNotification", -1));
+    }
+
     if (beforeStat.la_travel_push_token) {
       promises.push(manageStats("la_travel_enabled", -1));
     }
@@ -279,6 +283,12 @@ export const onPlayerUpdated = onDocumentUpdated({
       )
     );
 
+  if (beforeStat.workStatsNotification !== afterStat.workStatsNotification)
+    promises.push(
+      manageStats("workStatsNotification", afterStat.workStatsNotification ? 1 : -1
+      )
+    );
+
   const wasLaEnabled = beforeStat.la_travel_push_token ? true : false;
   const isLaEnabled = afterStat.la_travel_push_token ? true : false;
   if (wasLaEnabled !== isLaEnabled) {
@@ -311,6 +321,7 @@ export const onPlayerUpdated = onDocumentUpdated({
     !afterStat.refillsNotification &&
     !afterStat.stockMarketNotification &&
     !afterStat.forumsSubscriptionsNotification &&
+    !afterStat.workStatsNotification &&
     // NOTE: do NOT include here notifications that are outside of the main notification loop
     // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
     // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
@@ -342,6 +353,7 @@ export const onPlayerUpdated = onDocumentUpdated({
       || afterStat.refillsNotification
       || afterStat.stockMarketNotification
       || afterStat.forumsSubscriptionsNotification
+      || afterStat.workStatsNotification
       // NOTE: do NOT include here notifications that are outside of the main notification loop
       // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
       // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active

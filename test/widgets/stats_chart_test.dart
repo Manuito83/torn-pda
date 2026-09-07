@@ -33,15 +33,37 @@ List<Datum> _recordsWithGap({required int gapDays}) {
   return [...before, ...after];
 }
 
-LineChartData _chartOf(List<Datum> data, {int rangeMonths = 0}) {
+const Set<StatSeries> _allSeries = {
+  StatSeries.strength,
+  StatSeries.defense,
+  StatSeries.speed,
+  StatSeries.dexterity,
+};
+
+const List<StatSeries> _fixedOrder = [
+  StatSeries.strength,
+  StatSeries.defense,
+  StatSeries.speed,
+  StatSeries.dexterity,
+];
+
+LineChartData _chartOf(List<Datum> data, {int rangeMonths = 0, Set<StatSeries> visibleStats = _allSeries}) {
   return buildStatsLineChartData(
     allData: data,
     rangeMonths: rangeMonths,
     currentYearColor: Colors.white,
+    visibleStats: visibleStats,
   );
 }
 
 List<FlSpot> _strengthSpots(LineChartData chart) => chart.lineBarsData.first.spots;
+
+int _valueOf(Datum d, StatSeries stat) => switch (stat) {
+      StatSeries.strength => d.strength ?? 0,
+      StatSeries.defense => d.defense ?? 0,
+      StatSeries.speed => d.speed ?? 0,
+      StatSeries.dexterity => d.dexterity ?? 0,
+    };
 
 void main() {
   group('stats chart X axis', () {
@@ -144,6 +166,79 @@ void main() {
         expect(date.isAfter(cutoff), isTrue);
       }
       expect(spots.length, lessThan(data.length));
+    });
+  });
+
+  group('stats chart tooltip with hidden series', () {
+    final data = _dailyRecords(10);
+
+    void expectTooltipWorksFor(Set<StatSeries> visible) {
+      final chart = _chartOf(data, visibleStats: visible);
+      final bars = chart.lineBarsData;
+      expect(bars.length, visible.length);
+
+      final int spotIndex = bars.first.spots.length - 1;
+      final touched = <LineBarSpot>[
+        for (int bar = 0; bar < bars.length; bar++) LineBarSpot(bars[bar], bar, bars[bar].spots[spotIndex]),
+      ];
+
+      final items = chart.lineTouchData.touchTooltipData.getTooltipItems(touched);
+      expect(items.length, visible.length);
+      expect(items.every((i) => i != null), isTrue);
+
+      final ordered = _fixedOrder.where(visible.contains).toList();
+      final Datum expected = data.last;
+      final f = NumberFormat("###,###", "en_US");
+      final String expectedDate = DateFormat('d LLL yyyy').format(
+        DateTime.fromMillisecondsSinceEpoch(expected.timestamp! * 1000),
+      );
+      final int expectedTotal =
+          (expected.strength ?? 0) + (expected.defense ?? 0) + (expected.speed ?? 0) + (expected.dexterity ?? 0);
+
+      expect(items.first!.text, contains(expectedDate));
+      expect(items.first!.text, contains(f.format(_valueOf(expected, ordered.first))));
+      expect(items.last!.text, contains('TOTAL ${f.format(expectedTotal)}'));
+    }
+
+    test('works with all 4 series visible', () {
+      expectTooltipWorksFor({StatSeries.strength, StatSeries.defense, StatSeries.speed, StatSeries.dexterity});
+    });
+
+    test('works with 3 series visible', () {
+      expectTooltipWorksFor({StatSeries.strength, StatSeries.defense, StatSeries.speed});
+    });
+
+    test('works with 2 series visible', () {
+      expectTooltipWorksFor({StatSeries.strength, StatSeries.dexterity});
+    });
+
+    test('works with 1 series visible', () {
+      expectTooltipWorksFor({StatSeries.defense});
+    });
+  });
+
+  group('statSeriesFromHiddenKeys', () {
+    test('maps known keys to their StatSeries', () {
+      expect(statSeriesFromHiddenKeys(['defense', 'speed']), {StatSeries.defense, StatSeries.speed});
+    });
+
+    test('ignores unknown or corrupted keys', () {
+      expect(statSeriesFromHiddenKeys(['not_a_stat', 'defense']), {StatSeries.defense});
+    });
+
+    test('empty input hides nothing', () {
+      expect(statSeriesFromHiddenKeys([]), isEmpty);
+    });
+
+    test('three hidden keys are honored, one stat stays visible', () {
+      expect(
+        statSeriesFromHiddenKeys(['strength', 'defense', 'speed']),
+        {StatSeries.strength, StatSeries.defense, StatSeries.speed},
+      );
+    });
+
+    test('never hides all four, even if prefs say so', () {
+      expect(statSeriesFromHiddenKeys(['strength', 'defense', 'speed', 'dexterity']), isEmpty);
     });
   });
 }

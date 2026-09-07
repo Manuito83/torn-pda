@@ -48,6 +48,10 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool? forumsSubscription = false;
   String? laTravelPushToken;
   String? laRacingPushToken;
+  bool? workStatsNotification = false;
+  int workStatsManualLaborTarget = 0;
+  int workStatsIntelligenceTarget = 0;
+  int workStatsEnduranceTarget = 0;
 
   FirebaseUserModel();
 
@@ -111,6 +115,10 @@ class FirebaseUserModel extends OwnProfileExtended {
       "forumsSubscriptionsNotification": forumsSubscription,
       "la_travel_push_token": laTravelPushToken,
       "la_racing_push_token": laRacingPushToken,
+      "workStatsNotification": workStatsNotification,
+      "workStatsManualLaborTarget": workStatsManualLaborTarget,
+      "workStatsIntelligenceTarget": workStatsIntelligenceTarget,
+      "workStatsEnduranceTarget": workStatsEnduranceTarget,
     };
   }
 
@@ -163,6 +171,10 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..retalsNotificationDonor = data["retalsNotificationDonor"] ?? false
       ..forumsSubscription = data["forumsSubscriptionsNotification"] ?? false
       ..laTravelPushToken = data["la_travel_push_token"]
-      ..laRacingPushToken = data["la_racing_push_token"];
+      ..laRacingPushToken = data["la_racing_push_token"]
+      ..workStatsNotification = data["workStatsNotification"] ?? false
+      ..workStatsManualLaborTarget = data["workStatsManualLaborTarget"] ?? 0
+      ..workStatsIntelligenceTarget = data["workStatsIntelligenceTarget"] ?? 0
+      ..workStatsEnduranceTarget = data["workStatsEnduranceTarget"] ?? 0;
   }
 }

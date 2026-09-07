@@ -17,6 +17,7 @@ import {
   sendForeignRestockNotification,
   sendAbroadStayNotification,
   sendStockMarketNotification,
+  sendWorkStatsNotification,
   sendNotificationToUser,
   NotificationParams,
   NotificationCheckResult,
@@ -377,6 +378,9 @@ async function sendNotificationForProfile(
       }
       if (subscriber.stockMarketNotification) {
         checkResults.push(sendStockMarketNotification(stockMarket, subscriber));
+      }
+      if (subscriber.workStatsNotification) {
+        checkResults.push(sendWorkStatsNotification(userStats, subscriber));
       }
 
       // 3. Process collected results, both notifications and Firestore updates
