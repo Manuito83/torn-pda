@@ -944,6 +944,7 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
 
     const stocksRestocked: string[] = [];
     const stocksSoldOut: string[] = [];
+    const stocksRestockedAndGone: string[] = [];
 
     const userStocks = subscriber.restockActiveAlerts || {};
     const alsoWhenSoldOut = subscriber.foreignRestockNotificationSellout === true;
@@ -976,30 +977,42 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
       // the timestamp values of Firestore's [restockActiveAlerts] are updated to DateTime.now() when this notifications
       // are enabled after certain time, so that we avoid sending old and expiry notifications in a after activation
       let lastNotified = <number>userTime;
+      const label = `${stockEntry.name} (${databaseCountryName})`;
 
-      const restockTime = stockEntry.restock;
-      if (typeof restockTime === "number" && lastNotified - restockTime * 1000 < 0) {
-        stocksRestocked.push(`${stockEntry.name} (${databaseCountryName})`);
-        lastNotified = restockTime * 1000;
-      }
+      const restockMs = typeof stockEntry.restock === "number" ? stockEntry.restock * 1000 : 0;
+      const selloutMs = typeof stockEntry.sellout === "number" ? stockEntry.sellout * 1000 : 0;
+      const newRestock = restockMs > lastNotified;
+      const newSellout = selloutMs > lastNotified;
 
-      const selloutTime = stockEntry.sellout;
-      if (alsoWhenSoldOut && typeof selloutTime === "number" && lastNotified - selloutTime * 1000 < 0) {
-        stocksSoldOut.push(`${stockEntry.name} (${databaseCountryName})`);
-        lastNotified = selloutTime * 1000;
+      if (newRestock && newSellout && selloutMs > restockMs) {
+        // Restocked and gone again since the last notice
+        stocksRestockedAndGone.push(label);
+        lastNotified = selloutMs;
+      } else if (newRestock) {
+        stocksRestocked.push(label);
+        lastNotified = restockMs;
+      } else if (alsoWhenSoldOut && newSellout) {
+        stocksSoldOut.push(label);
+        lastNotified = selloutMs;
       }
 
       userStocks[userCodeName] = lastNotified;
     }
 
-    if (stocksRestocked.length > 0 || stocksSoldOut.length > 0) {
-      let title = "Foreign items restocked!";
-      let body = stocksRestocked.join(", ");
+    if (stocksRestocked.length > 0 || stocksSoldOut.length > 0 || stocksRestockedAndGone.length > 0) {
+      const segments: string[] = [];
+      if (stocksRestocked.length > 0) segments.push(`Restocked: ${stocksRestocked.join(", ")}`);
+      if (stocksRestockedAndGone.length > 0) {
+        segments.push(`Restocked and sold out again: ${stocksRestockedAndGone.join(", ")}`);
+      }
+      if (stocksSoldOut.length > 0) segments.push(`Sold out: ${stocksSoldOut.join(", ")}`);
 
-      if (stocksRestocked.length > 0 && stocksSoldOut.length > 0) {
-        title = "Foreign stock changes!";
-        body = `Restocked: ${stocksRestocked.join(", ")}. Sold out: ${stocksSoldOut.join(", ")}`;
-      } else if (stocksRestocked.length === 0) {
+      let title = "Foreign stock changes!";
+      let body = segments.join(". ");
+      if (segments.length === 1 && stocksRestocked.length > 0) {
+        title = "Foreign items restocked!";
+        body = stocksRestocked.join(", ");
+      } else if (segments.length === 1 && stocksSoldOut.length > 0) {
         title = "Foreign items sold out!";
         body = stocksSoldOut.join(", ");
       }
