@@ -82,6 +82,8 @@ class TabDetails {
   // Last known scroll at renderer death, restored by the rebuilt webview
   int? rendererGoneScrollX;
   int? rendererGoneScrollY;
+  // Captured while the app is backgrounded (Android only)
+  Uint8List? rendererGoneSnapshot;
   // Kept so a deferred rebuild (on focus) can restore a chaining tab's payload
   ChainingPayload? chainingPayload;
 }
@@ -135,6 +137,12 @@ class WebViewProvider extends ChangeNotifier {
   // Valid user choices for the two browser memory settings (0 and "default" follow Remote Config)
   static const List<int> tabSleepMinutesOptions = [0, 30, 60, 360, 720];
   static const List<String> parkOverrideOptions = ["default", "on", "off"];
+
+  static const List<String> _recoveryRebuildReasons = [
+    "renderer_gone",
+    "disposed_controller",
+    "webview_never_created",
+  ];
 
   // Time for hibernating idle background tabs. Memory pressure hibernates immediately (below)
   // Remote Config sets the default; the user can override it
@@ -1033,6 +1041,7 @@ class WebViewProvider extends ChangeNotifier {
       tab.needsReloadAfterRendererGone = false;
       tab.rendererGoneScrollX = null;
       tab.rendererGoneScrollY = null;
+      tab.rendererGoneSnapshot = null;
       tab.sleepTab = true;
       tab.webView = null;
       tab.sleepingWebView = SleepingWebView(
@@ -1118,10 +1127,29 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
-  void rebuildUnresponsiveWebView({String? tabUid, required bool isChainingBrowser, required dynamic chainingPayload}) {
+  void storeTabSnapshot(String tabUid, Uint8List? bytes) {
+    final int index = _tabList.indexWhere((t) => t.id == tabUid);
+    if (index < 0) return;
+    _tabList[index].rendererGoneSnapshot = bytes;
+  }
+
+  void clearTabSnapshot(String tabUid) {
+    final int index = _tabList.indexWhere((t) => t.id == tabUid);
+    if (index < 0) return;
+    _tabList[index].rendererGoneSnapshot = null;
+  }
+
+  void rebuildUnresponsiveWebView({
+    String? tabUid,
+    required bool isChainingBrowser,
+    required dynamic chainingPayload,
+    String reason = "renderer_gone",
+  }) {
     final int index = tabUid == null ? currentTab : _tabList.indexWhere((t) => t.id == tabUid);
     if (index < 0 || index >= _tabList.length) return;
     final crashedTab = _tabList[index];
+
+    final bool recovering = Platform.isAndroid && _recoveryRebuildReasons.contains(reason);
 
     // Reconnect the controller and widgets with a new key
     final newKey = GlobalKey<WebViewFullState>();
@@ -1137,6 +1165,7 @@ class WebViewProvider extends ChangeNotifier {
       allowDownloads: true,
       restoreScrollX: crashedTab.rendererGoneScrollX,
       restoreScrollY: crashedTab.rendererGoneScrollY,
+      recoveryReason: recovering ? reason : null,
     );
 
     _tabList[index].webView = crashedTab.webView;
@@ -1144,6 +1173,8 @@ class WebViewProvider extends ChangeNotifier {
     crashedTab.needsReloadAfterRendererGone = false;
     crashedTab.rendererGoneScrollX = null;
     crashedTab.rendererGoneScrollY = null;
+    // The rebuilt webview takes the snapshot and clears it
+    if (!recovering) crashedTab.rendererGoneSnapshot = null;
 
     _callAssessMethods();
     notifyListeners();
@@ -1602,6 +1633,7 @@ class WebViewProvider extends ChangeNotifier {
         tabUid: tab.id,
         isChainingBrowser: tab.isChainingBrowser,
         chainingPayload: tab.chainingPayload,
+        reason: "external_url",
       );
     }
 
@@ -1620,7 +1652,12 @@ class WebViewProvider extends ChangeNotifier {
     if (state != null) {
       state.convertToChainingBrowser(chainingPayload: chainingPayload);
     } else {
-      rebuildUnresponsiveWebView(tabUid: tab.id, isChainingBrowser: true, chainingPayload: chainingPayload);
+      rebuildUnresponsiveWebView(
+        tabUid: tab.id,
+        isChainingBrowser: true,
+        chainingPayload: chainingPayload,
+        reason: "chaining",
+      );
     }
 
     if (currentTab != 0) {

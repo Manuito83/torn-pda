@@ -94,6 +94,7 @@ import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
 import 'package:torn_pda/widgets/webviews/handlers/travel_handler.dart';
 import 'package:torn_pda/widgets/webviews/memory_widget_browser.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
+import 'package:torn_pda/widgets/webviews/webview_recovery.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_terminal.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
@@ -160,6 +161,9 @@ class WebViewFull extends StatefulWidget {
   final int? restoreScrollX;
   final int? restoreScrollY;
 
+  // Set when the tab is rebuilt after a failure: placeholder plus main frame retries (Android only)
+  final String? recoveryReason;
+
   const WebViewFull({
     required this.tabUid,
     this.windowId,
@@ -172,6 +176,7 @@ class WebViewFull extends StatefulWidget {
     this.key,
     this.restoreScrollX,
     this.restoreScrollY,
+    this.recoveryReason,
 
     // Chaining
     this.isChainingBrowser = false,
@@ -355,6 +360,11 @@ class WebViewFullState extends State<WebViewFull>
   /// The blank page must never reach the tab state (URL, title, history, scroll)
   bool _isParkingBlank(Uri? uri) => _parkedUrl != null && uri?.toString() == _blankUrl;
 
+  // Rebuild recovery (Android): placeholder over the new webview plus main frame retries
+  WebviewRecovery? _recovery;
+  bool _restoreScrollAfterRebuild = false;
+  bool _backgroundSnapshotRequested = false;
+
   bool _foundDisposedRotation = false;
   int _disposedScrollX = 0;
   int _disposedScrollY = 0;
@@ -470,6 +480,27 @@ class WebViewFullState extends State<WebViewFull>
       _scrollX = widget.restoreScrollX ?? 0;
       _scrollY = widget.restoreScrollY ?? 0;
       _scrollAfterLoad = true;
+      _restoreScrollAfterRebuild = widget.recoveryReason != null;
+    }
+
+    if (Platform.isAndroid && widget.recoveryReason != null) {
+      // Taken here even with the kill switch off, so no capture outlives the tab that owns it
+      final Uint8List? shot = _webViewProvider.getTabByUid(_tabUid)?.rendererGoneSnapshot;
+      _webViewProvider.clearTabSnapshot(_tabUid);
+
+      if (_settingsProvider.browserRecoveryOverlayActive) {
+        _recovery = WebviewRecovery(
+          reason: widget.recoveryReason!,
+          snapshot: shot,
+          urlToReload: () => (widget.customUrl?.isNotEmpty ?? false) ? widget.customUrl! : _currentUrl,
+          tabCount: () => _webViewProvider.tabList.length,
+          onReload: _reloadForRecovery,
+          onChanged: () {
+            if (mounted) setState(() {});
+          },
+          onLog: _logRecovery,
+        );
+      }
     }
 
     // We will later changed this for a listenable one in build()
@@ -633,6 +664,9 @@ class WebViewFullState extends State<WebViewFull>
   @override
   void dispose() async {
     try {
+      // Before anything that can throw, so the snapshot never stays in the image cache
+      _recovery?.dispose();
+
       _webViewCreatedWatchdog?.cancel();
       _reloadWatchdog?.cancel();
       _blankTabCheckTimer?.cancel();
@@ -675,13 +709,20 @@ class WebViewFullState extends State<WebViewFull>
 
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+        if (!_backgroundSnapshotRequested) {
+          _backgroundSnapshotRequested = true;
+          _captureTabSnapshot();
+        }
         if (_webViewProvider.browserDoNotPauseWebview) return;
         webViewController?.pauseTimers();
       } else {
         webViewController?.resumeTimers();
         // A renderer killed while we were in background
         if (state == AppLifecycleState.resumed) {
+          _backgroundSnapshotRequested = false;
+          final bool willRebuild = _webViewProvider.getTabByUid(_tabUid)?.needsReloadAfterRendererGone ?? false;
           _webViewProvider.reloadActiveTabIfRendererGone();
+          if (!willRebuild) _webViewProvider.clearTabSnapshot(_tabUid);
         }
       }
     }
@@ -1527,6 +1568,7 @@ class WebViewFullState extends State<WebViewFull>
             // Ignore the parking placeholder; a real page taking over unparks the tab
             if (_isParkingBlank(uri)) return;
             if (_isParked && uri != null) _isParked = false;
+            _recovery?.onLoadStart();
 
             _heightExtendInjected = false;
 
@@ -1667,6 +1709,7 @@ class WebViewFullState extends State<WebViewFull>
             if (!mounted) return;
             _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
+            _recovery?.onLoadStopBegin();
             if (_isParked && uri != null) _isParked = false;
 
             // Consumed here: clearing it further down (past several awaits that throw) could
@@ -1796,9 +1839,16 @@ class WebViewFullState extends State<WebViewFull>
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
-              if (restoreScrollNow && _settingsProvider.restoreScrollAfterReload) {
+              // A recovery error page keeps the rebuild target for the retry that loads
+              final bool recoveryErrorPage = _recovery?.waitingRetry ?? false;
+              if (restoreScrollNow &&
+                  !recoveryErrorPage &&
+                  (_settingsProvider.restoreScrollAfterReload || _restoreScrollAfterRebuild)) {
+                _restoreScrollAfterRebuild = false;
                 webViewController!.scrollTo(x: _scrollX ?? 0, y: _scrollY ?? 0);
               }
+
+              _recovery?.onLoadStopEnd();
 
               // If we have a disposed rotation, we scroll to the last position
               if (_foundDisposedRotation) {
@@ -2156,6 +2206,7 @@ class WebViewFullState extends State<WebViewFull>
           onReceivedError: (c, request, error) {
             if (!(request.isForMainFrame ?? false)) return;
             _recordBrowserFailure("load_error", "${error.type}", url: request.url);
+            _recovery?.onLoadFailure("${error.type}");
           },
           onReceivedHttpError: (c, request, errorResponse) {
             if (!(request.isForMainFrame ?? false)) return;
@@ -2218,6 +2269,10 @@ class WebViewFullState extends State<WebViewFull>
             return HttpAuthResponse(action: HttpAuthResponseAction.CANCEL);
           },
         ),
+        if (_recovery?.visible ?? false)
+          Positioned.fill(
+            child: WebviewRecoveryOverlay(recovery: _recovery!, background: _themeProvider.canvas),
+          ),
       ],
     );
   }
@@ -3170,6 +3225,46 @@ class WebViewFullState extends State<WebViewFull>
         : const SizedBox.shrink();
   }
 
+  void _logRecovery(String message) {
+    if (Platform.isWindows) return;
+    try {
+      FirebaseCrashlytics.instance.log(message);
+    } catch (_) {}
+  }
+
+  void _reloadForRecovery(String url) {
+    if (_restoreScrollAfterRebuild) {
+      _scrollX = widget.restoreScrollX ?? 0;
+      _scrollY = widget.restoreScrollY ?? 0;
+      _scrollAfterLoad = true;
+    }
+    try {
+      webViewController?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+    } catch (_) {
+      _recovery?.onLoadFailure("load_threw");
+    }
+  }
+
+  Future<void> _captureTabSnapshot() async {
+    if (!Platform.isAndroid || !_settingsProvider.browserRecoveryOverlayActive) return;
+    final InAppWebViewController? controller = webViewController;
+    if (controller == null || _isParked || (_recovery?.active ?? false)) return;
+    if (!_webViewProvider.isTabUidActive(_tabUid)) return;
+    // An off screen webview can return a blank frame
+    if (!_webViewProvider.browserShowInForeground && !_webViewProvider.webViewSplitActive) return;
+    if (_currentUrl.isEmpty || _currentUrl == _blankUrl) return;
+
+    try {
+      final Uint8List? shot = await controller.takeScreenshot(
+        screenshotConfiguration: ScreenshotConfiguration(compressFormat: CompressFormat.JPEG, quality: 60),
+      );
+      if (shot == null || shot.isEmpty) return;
+      // The app came back while the capture was running
+      if (!mounted || !_backgroundSnapshotRequested) return;
+      _webViewProvider.storeTabSnapshot(_tabUid, shot);
+    } catch (_) {}
+  }
+
   /// Armed as soon as the spinner shows, so a platform channel that never answers
   /// (dead renderer) can't leave the spinner running forever
   void _setReloadInProgress(bool value) {
@@ -3229,6 +3324,7 @@ class WebViewFullState extends State<WebViewFull>
           _webViewProvider.rebuildUnresponsiveWebView(
             isChainingBrowser: _isChainingBrowser,
             chainingPayload: _chainingPayload,
+            reason: "disposed_controller",
           );
           logToUser("Found crashed browser, trying to rebuild!", duration: 5);
           _setReloadInProgress(false);
@@ -5941,6 +6037,7 @@ class WebViewFullState extends State<WebViewFull>
         _webViewProvider.rebuildUnresponsiveWebView(
           isChainingBrowser: _isChainingBrowser,
           chainingPayload: _chainingPayload,
+          reason: "webview_never_created",
         );
       }
     });

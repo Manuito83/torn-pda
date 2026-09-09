@@ -3295,6 +3295,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Widget _memory() {
     final bool parkingAllowed = _webViewProvider.parkBackgroundTabsRemoteConfigAllowed;
+    final bool recoveryNoticeAllowed = _settingsProvider.browserRecoveryOverlayRemoteConfigAllowed;
 
     List<SearchableRow> rows = [
       if (Platform.isAndroid)
@@ -3355,6 +3356,52 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     "again next time you tap them. Needs \"Only load tabs when used\" to be enabled",
                     style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Show a notice when a tab recovers",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Show a notice when a tab recovers")),
+                    Switch(
+                      value: recoveryNoticeAllowed && _settingsProvider.browserRecoveryOverlayEnabled,
+                      onChanged: recoveryNoticeAllowed
+                          ? (value) {
+                              setState(() {
+                                _settingsProvider.browserRecoveryOverlayEnabled = value;
+                              });
+                            }
+                          : null,
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: recoveryNoticeAllowed
+                      ? Text(
+                          "When Android drops a page to free memory, Torn PDA builds the tab again. "
+                          "This keeps the last view on screen with a \"Reloading tab\" notice, and tries "
+                          "a few more times if the page does not come back. Turn it off and the tab "
+                          "reloads with nothing on top",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        )
+                      : Text(
+                          "This option is temporarily disabled from Torn PDA and can't be changed right now",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
                 ),
               ],
             ),

@@ -228,6 +228,25 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _browserRecoveryOverlayEnabled = true;
+  bool get browserRecoveryOverlayEnabled => _browserRecoveryOverlayEnabled;
+  set browserRecoveryOverlayEnabled(bool value) {
+    _browserRecoveryOverlayEnabled = value;
+    Prefs().setBrowserRecoveryOverlay(_browserRecoveryOverlayEnabled);
+    notifyListeners();
+  }
+
+  bool get browserRecoveryOverlayActive =>
+      _browserRecoveryOverlayRemoteConfigAllowed && _browserRecoveryOverlayEnabled;
+
+  // Rebuild placeholder kill-switch (RemoteConfig): when off, a rebuilt tab shows no overlay at all
+  bool _browserRecoveryOverlayRemoteConfigAllowed = true;
+  bool get browserRecoveryOverlayRemoteConfigAllowed => _browserRecoveryOverlayRemoteConfigAllowed;
+  set browserRecoveryOverlayRemoteConfigAllowed(bool value) {
+    _browserRecoveryOverlayRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   // Android renderer-gone handling kill-switch (RemoteConfig): when off, useOnRenderProcessGone is not set,
   // so an OOM / crashed webview might kills the whole app
   bool _browserRenderProcessGoneRemoteConfigAllowed = true;
@@ -1705,6 +1724,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
     _restoreScrollAfterReload = await Prefs().getRestoreScrollAfterReload();
+    _browserRecoveryOverlayEnabled = await Prefs().getBrowserRecoveryOverlay();
     _highRefreshRateEnabled = await Prefs().getHighRefreshRateEnabled();
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
