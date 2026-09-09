@@ -377,7 +377,6 @@ class _StatsChartState extends State<StatsChart> {
                                 if (success)
                                   TextButton(
                                     onPressed: () {
-                                      toastification.dismiss(holder);
                                       const url = 'https://tornstats.com/';
                                       context.read<WebViewProvider>().openBrowserPreference(
                                             context: context,
@@ -404,7 +403,6 @@ class _StatsChartState extends State<StatsChart> {
                                   GestureDetector(
                                     onTap: () {
                                       Clipboard.setData(ClipboardData(text: message));
-                                      toastification.dismiss(holder);
                                       toastification.showCustom(
                                         autoCloseDuration: const Duration(seconds: 2),
                                         alignment: Alignment.center,

@@ -2329,7 +2329,8 @@ class WebViewFullState extends State<WebViewFull>
           if (_webViewProvider.lastLockToastShown == null ||
               DateTime.now().difference(_webViewProvider.lastLockToastShown!).inSeconds > 2) {
             _webViewProvider.lastLockToastShown = DateTime.now();
-            toastification.show(
+            late final ToastificationItem lockToast;
+            lockToast = toastification.show(
               closeOnClick: true,
               alignment: Alignment.bottomCenter,
               margin: const EdgeInsets.only(bottom: 50),
@@ -2354,7 +2355,7 @@ class WebViewFullState extends State<WebViewFull>
                         ),
                       ),
                       onTap: () {
-                        toastification.dismissAll();
+                        toastification.dismiss(lockToast);
                         _forceAllowWhenLocked = true;
                         webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri.uri(incomingUrl)));
                         Future.delayed(const Duration(seconds: 2), () {
@@ -4988,6 +4989,7 @@ class WebViewFullState extends State<WebViewFull>
         return;
       }
 
+      late final ToastificationItem wasteToast;
       final List<Widget> warnRows = [];
       final List<Widget> cooldownRows = [];
 
@@ -5030,7 +5032,7 @@ class WebViewFullState extends State<WebViewFull>
                     child: Image.asset('images/icons/map/gym.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
                       _loadUrl("https://www.torn.com/gym.php");
-                      toastification.dismissAll();
+                      toastification.dismiss(wasteToast);
                     },
                   ),
                 ],
@@ -5075,7 +5077,7 @@ class WebViewFullState extends State<WebViewFull>
                     child: Image.asset('images/icons/home/crimes.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
                       _loadUrl("https://www.torn.com/page.php?sid=crimes");
-                      toastification.dismissAll();
+                      toastification.dismiss(wasteToast);
                     },
                   ),
                 ],
@@ -5122,7 +5124,7 @@ class WebViewFullState extends State<WebViewFull>
                         child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
                         onTap: () {
                           _loadUrl("https://www.torn.com/item.php#medical-items");
-                          toastification.dismissAll();
+                          toastification.dismiss(wasteToast);
                         },
                       ),
                       if (stats.faction?.factionId != 0)
@@ -5135,7 +5137,7 @@ class WebViewFullState extends State<WebViewFull>
                                 _loadUrl(
                                   "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical",
                                 );
-                                toastification.dismissAll();
+                                toastification.dismiss(wasteToast);
                               },
                             ),
                           ],
@@ -5183,7 +5185,7 @@ class WebViewFullState extends State<WebViewFull>
                         child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
                         onTap: () {
                           _loadUrl("https://www.torn.com/item.php#drugs-items");
-                          toastification.dismissAll();
+                          toastification.dismiss(wasteToast);
                         },
                       ),
                       if (stats.faction?.factionId != 0)
@@ -5196,7 +5198,7 @@ class WebViewFullState extends State<WebViewFull>
                                 _loadUrl(
                                   "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs",
                                 );
-                                toastification.dismissAll();
+                                toastification.dismiss(wasteToast);
                               },
                             ),
                           ],
@@ -5244,7 +5246,7 @@ class WebViewFullState extends State<WebViewFull>
                         child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
                         onTap: () {
                           _loadUrl("https://www.torn.com/item.php");
-                          toastification.dismissAll();
+                          toastification.dismiss(wasteToast);
                         },
                       ),
                       if (stats.faction?.factionId != 0)
@@ -5255,7 +5257,7 @@ class WebViewFullState extends State<WebViewFull>
                               child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
                               onTap: () {
                                 _loadUrl("https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0");
-                                toastification.dismissAll();
+                                toastification.dismiss(wasteToast);
                               },
                             ),
                           ],
@@ -5295,7 +5297,7 @@ class WebViewFullState extends State<WebViewFull>
                       child: Icon(MdiIcons.safe, size: 24, color: _themeProvider.mainText),
                       onTap: () {
                         _loadUrl("https://www.torn.com/properties.php#/p=options&tab=vault");
-                        toastification.dismissAll();
+                        toastification.dismiss(wasteToast);
                       },
                     ),
                 ],
@@ -5306,7 +5308,7 @@ class WebViewFullState extends State<WebViewFull>
       }
 
       if (warnRows.isNotEmpty || cooldownRows.isNotEmpty) {
-        toastification.showCustom(
+        wasteToast = toastification.showCustom(
           autoCloseDuration: const Duration(seconds: 8),
           alignment: Alignment.center,
           builder: (BuildContext context, ToastificationItem holder) {

@@ -29,6 +29,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
   List<GlobalKey<CircularMenuTabsState>> _circularMenuKeys = <GlobalKey<CircularMenuTabsState>>[];
 
+  ToastificationItem? _lockToast;
+
   @override
   void initState() {
     super.initState();
@@ -231,8 +233,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
                             if (!_webViewProvider!.tabList[i].isLocked &&
                                 context.read<SettingsProvider>().showTabLockWarnings) {
-                              toastification.dismissAll();
-                              toastification.show(
+                              if (_lockToast != null) toastification.dismiss(_lockToast!);
+                              _lockToast = toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
                                 margin: const EdgeInsets.only(bottom: 50),
@@ -275,8 +277,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                             }
 
                             if (context.read<SettingsProvider>().showTabLockWarnings) {
-                              toastification.dismissAll();
-                              toastification.show(
+                              if (_lockToast != null) toastification.dismiss(_lockToast!);
+                              _lockToast = toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
                                 margin: const EdgeInsets.only(bottom: 50),
