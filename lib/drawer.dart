@@ -728,6 +728,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_engine_prewarm_allowed": true,
         "browser_webview_recovery_allowed": true,
         "browser_render_process_gone_allowed": true,
+        "browser_recovery_overlay_allowed": true,
         "browser_park_background_tabs_allowed": true,
         // Default for the browser memory settings (can be overriden)
         "browser_park_background_tabs_default": false,
@@ -820,6 +821,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       );
       _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed = remoteConfig.getBool(
         "browser_render_process_gone_allowed",
+      );
+      _settingsProvider.browserRecoveryOverlayRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_recovery_overlay_allowed",
       );
       _webViewProvider.parkBackgroundTabsRemoteConfigAllowed = remoteConfig.getBool(
         "browser_park_background_tabs_allowed",
