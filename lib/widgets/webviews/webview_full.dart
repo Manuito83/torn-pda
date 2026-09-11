@@ -15,6 +15,7 @@ import 'package:dio/dio.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
@@ -566,6 +567,7 @@ class WebViewFullState extends State<WebViewFull>
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
       javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
+      isInspectable: kDebugMode,
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it

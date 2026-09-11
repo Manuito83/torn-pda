@@ -65,8 +65,8 @@ class WorkStatsTargetsDialogState extends State<WorkStatsTargetsDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "You'll get a single notification for each target as soon as you reach it. Leave a field empty "
-                "to disable that particular target",
+                "You'll get a single notification for each target as soon as you reach it, and the target will "
+                "then be cleared. Leave a field empty to disable that particular target",
                 style: TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 15),
