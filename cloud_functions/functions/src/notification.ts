@@ -1251,7 +1251,6 @@ interface WorkStatDefinition {
   label: string;
   apiField: string;
   targetField: string;
-  sentField: string;
 }
 
 const workStatDefinitions: WorkStatDefinition[] = [
@@ -1259,19 +1258,16 @@ const workStatDefinitions: WorkStatDefinition[] = [
     label: "Manual labor",
     apiField: "manual_labor",
     targetField: "workStatsManualLaborTarget",
-    sentField: "workStatsManualLaborSentTarget",
   },
   {
     label: "Intelligence",
     apiField: "intelligence",
     targetField: "workStatsIntelligenceTarget",
-    sentField: "workStatsIntelligenceSentTarget",
   },
   {
     label: "Endurance",
     apiField: "endurance",
     targetField: "workStatsEnduranceTarget",
-    sentField: "workStatsEnduranceSentTarget",
   },
 ];
 
@@ -1281,45 +1277,34 @@ export function sendWorkStatsNotification(userStats: any, subscriber: any) {
   try {
     const reached: string[] = [];
     const updates: { [key: string]: any } = {};
+    let pendingTargets = 0;
 
     for (const definition of workStatDefinitions) {
       const target = Number(subscriber[definition.targetField]) || 0;
-      const sentTarget = Number(subscriber[definition.sentField]) || 0;
+      if (target <= 0) continue;
+
       const current = Number(userStats[definition.apiField]);
-
-      // No target set: disarm so that setting one again notifies
-      if (target <= 0) {
-        if (sentTarget !== 0) {
-          updates[definition.sentField] = 0;
-        }
+      if (!Number.isFinite(current) || current < target) {
+        pendingTargets++;
         continue;
       }
-
-      if (!Number.isFinite(current)) continue;
-
-      // Below target: disarm, but never on a spurious zero from the API
-      if (current < target) {
-        if (sentTarget !== 0 && current > 0) {
-          updates[definition.sentField] = 0;
-        }
-        continue;
-      }
-
-      // Already notified for this exact target, don't repeat
-      if (sentTarget === target) continue;
 
       reached.push(`${definition.label}: ${target.toLocaleString("en-US")}`);
-      updates[definition.sentField] = target;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      result.firestoreUpdate = updates;
+      updates[definition.targetField] = 0;
     }
 
     if (reached.length === 0) return result;
 
+    if (pendingTargets === 0) {
+      updates.workStatsNotification = false;
+    }
+    result.firestoreUpdate = updates;
+
     let title = reached.length > 1 ? `Work stats targets reached` : `Work stat target reached`;
     let body = reached.join("\n");
+    if (pendingTargets === 0) {
+      body += `\nNo targets left, the alert has been disabled`;
+    }
     if (subscriber.discrete) {
       title = `W`;
       body = ` `;

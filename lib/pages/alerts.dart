@@ -1331,7 +1331,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             title: const Text("Work stats targets"),
                             subtitle: const Text(
                               "Get notified once your manual labor, intelligence or endurance reach the values you "
-                              "choose. Each target is notified only once, and is armed again if you change it",
+                              "choose. Each target is cleared as soon as it's reached, and the alert switches itself "
+                              "off when no targets are left",
                               style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                             ),
                             onChanged: (value) => _onWorkStatsToggled(value ?? false),
