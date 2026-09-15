@@ -816,6 +816,30 @@
       "matches": [
         "https://*.torn.com/profiles.php*"
       ]
+    },
+    {
+      "id": "torntools.elimination-filter",
+      "greasyforkId": 595696,
+      "name": "Elimination Filter",
+      "description": "Filter the elimination rosters.",
+      "category": "combat",
+      "downloadUrl": "https://update.greasyfork.org/scripts/595696/TORN%3A%20TornTools%20-%20Elimination%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/595696-torn-torntools-elimination-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=elimination*"
+      ]
+    },
+    {
+      "id": "torntools.average-personal-stats",
+      "greasyforkId": 595945,
+      "name": "Average Personal Stats",
+      "description": "Calculate the average personal stat increase.",
+      "category": "profile",
+      "downloadUrl": "https://update.greasyfork.org/scripts/595945/TORN%3A%20TornTools%20-%20Average%20Personal%20Stats.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/595945-torn-torntools-average-personal-stats",
+      "matches": [
+        "https://*.torn.com/personalstats.php*"
+      ]
     }
   ]
 }
