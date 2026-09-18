@@ -100,6 +100,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts restocks';
     channelName = 'Alerts restocks';
     channelDescription = 'Automatic alerts for foreign restocks';
+  } else if (channel.contains("Alerts city shops")) {
+    notificationIcon = "notification_city_shops";
+    notificationColor = Colors.blue;
+    onTapPayload += 'cityShops:${payload["shopId"] ?? ""}';
+    channelId = 'Alerts city shops';
+    channelName = 'Alerts city shops';
+    channelDescription = 'Automatic alerts for city shop restocks';
   } else if (channel.contains("Alerts abroad stay")) {
     notificationIcon = "notification_travel";
     notificationColor = Colors.blue;
@@ -420,6 +427,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Alerts restocks ${modifier.channelIdModifier}',
       'Alerts restocks ${modifier.channelIdModifier}',
       description: 'Automatic alerts for foreign restocks',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts city shops ${modifier.channelIdModifier}',
+      'Alerts city shops ${modifier.channelIdModifier}',
+      description: 'Automatic alerts for city shop restocks',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

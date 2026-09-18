@@ -11,6 +11,7 @@ const booleanStats = [
   "lifeNotification",
   "travelNotification",
   "foreignRestockNotification",
+  "cityShopRestockNotification",
   "hospitalNotification",
   "drugsNotification",
   "medicalNotification",

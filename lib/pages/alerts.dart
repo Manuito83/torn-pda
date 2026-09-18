@@ -15,6 +15,7 @@ import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/pages/alerts/alerts_troubleshooting_page.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
+import 'package:torn_pda/pages/cityshops/city_shops_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -301,6 +302,37 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       ),
                       if (_firebaseUserModel!.foreignRestockNotification ?? false) _foreignRestockOptions(),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: CheckboxListTile(
+                            checkColor: Colors.white,
+                            activeColor: Colors.blueGrey,
+                            value: _firebaseUserModel!.cityShopRestockNotification ?? false,
+                            title: const Text("City shops"),
+                            subtitle: const Text(
+                              "Get notified about restocks of city shop items you follow",
+                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                            ),
+                            onChanged: (value) {
+                              final enabled = value ?? false;
+                              setState(() {
+                                _firebaseUserModel?.cityShopRestockNotification = enabled;
+                              });
+                              FirestoreHelper().subscribeToCityShopRestockNotification(enabled).then((success) {
+                                if (!success && mounted) {
+                                  setState(() {
+                                    _firebaseUserModel?.cityShopRestockNotification = !enabled;
+                                  });
+                                  _cityShopUpdateFailedToast();
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      if (_firebaseUserModel!.cityShopRestockNotification ?? false) _cityShopOptions(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: Material(
@@ -1550,6 +1582,95 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         _firebaseUserModel!.foreignRestockNotificationSellout = sellout;
                       });
                       FirestoreHelper().changeForeignRestockSellout(sellout);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _cityShopUpdateFailedToast() {
+    BotToast.showText(
+      clickClose: true,
+      text: "Could not update, check your connection",
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.orange[900]!,
+      duration: const Duration(seconds: 4),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  Widget _cityShopOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(25, 0, 8, 0),
+          child: Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              Flexible(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: CheckboxListTile(
+                    checkColor: Colors.white,
+                    activeColor: Colors.blueGrey,
+                    value: _firebaseUserModel!.cityShopOnlyConfirmed,
+                    title: const Text(
+                      "Only notify when in stock",
+                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    ),
+                    subtitle: const Text(
+                      "Skip the early warning, notify only when the restock is seen",
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                    onChanged: (value) {
+                      final onlyConfirmed = value ?? false;
+                      setState(() {
+                        _firebaseUserModel?.cityShopOnlyConfirmed = onlyConfirmed;
+                      });
+                      FirestoreHelper().setCityShopOnlyConfirmed(onlyConfirmed).then((success) {
+                        if (!success && mounted) {
+                          setState(() {
+                            _firebaseUserModel?.cityShopOnlyConfirmed = !onlyConfirmed;
+                          });
+                          _cityShopUpdateFailedToast();
+                        }
+                      });
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
+          child: Row(
+            children: [
+              const Icon(Icons.keyboard_arrow_right_outlined),
+              Flexible(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: ListTile(
+                    title: const Text(
+                      "Choose the items to follow",
+                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                    ),
+                    subtitle: const Text(
+                      "Browse city shop items, filter by shop or mode, and pick the ones you want alerts for",
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                    trailing: const Icon(Icons.keyboard_arrow_right_outlined),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CityShopsPage()),
+                      );
                     },
                   ),
                 ),

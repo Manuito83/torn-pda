@@ -95,6 +95,13 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF1565C0),
         items: [
           _MItem(
+            'Alerts: get notified when city shop items restock',
+            detail:
+                'Choose the items you want to follow in Alerts, under City Shops. Items whose restock can be '
+                'predicted warn you a few minutes in advance; the rest notify you as soon as the restock is seen. '
+                'You can also ask to be notified only once the item is confirmed in stock.',
+          ),
+          _MItem(
             'Foreign stocks: restock alerts can now wait until you have landed',
             detail:
                 'The option that limits restock alerts to your current country has a new setting under it. Turn '

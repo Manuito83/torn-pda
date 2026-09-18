@@ -17,6 +17,7 @@ export interface NotificationParams {
   bulkDetails?: string;
   vibration: string;
   sound?: string;
+  extraData?: Record<string, string>;
 }
 
 export interface NotificationCheckResult {
@@ -1339,6 +1340,7 @@ export async function sendNotificationToUser({
   bulkDetails = "",
   vibration,
   sound = "slow_spring_board.aiff",
+  extraData = {},
 }: NotificationParams): Promise<any> {
 
   // Guard: skip invalid tokens to avoid unnecessary FCM errors
@@ -1399,6 +1401,7 @@ export async function sendNotificationToUser({
       tornTradeId: tornTradeId,
       assistId: assistId,
       bulkDetails: bulkDetails,
+      ...extraData,
     },
   };
 
