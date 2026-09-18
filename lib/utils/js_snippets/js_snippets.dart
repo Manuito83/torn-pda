@@ -1128,3 +1128,58 @@ String ageToWordsOnProfile() {
     })();
   """;
 }
+
+String hospitalTimerJS({required int until}) {
+  return """
+    (() => {
+      const until = $until;
+      if (window.__pdaHospitalTimer) clearInterval(window.__pdaHospitalTimer);
+      if (window.__pdaHospitalObserver) window.__pdaHospitalObserver.disconnect();
+
+      const find = () => {
+        const nodes = document.querySelectorAll('[class*="defender___"] [class*="title___"]');
+        for (const n of nodes) {
+          if (/in hospital/i.test(n.textContent)) return n;
+        }
+        return null;
+      };
+
+      const fmt = (s) => {
+        const h = Math.floor(s / 3600);
+        const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+        const x = String(s % 60).padStart(2, '0');
+        return h ? `\${h}:\${m}:\${x}` : `\${m}:\${x}`;
+      };
+
+      const stop = () => {
+        clearInterval(window.__pdaHospitalTimer);
+        window.__pdaHospitalObserver.disconnect();
+      };
+
+      const paint = (el) => {
+        const left = until - Math.floor(Date.now() / 1000);
+        if (left <= 0) return false;
+        el.textContent = `In hospital for \${fmt(left)}`;
+        return true;
+      };
+
+      let misses = 0;
+      window.__pdaHospitalTimer = setInterval(() => {
+        const el = find();
+        if (!el) {
+          if (++misses > 30) stop();
+          return;
+        }
+        misses = 0;
+        if (!paint(el)) stop();
+      }, 1000);
+
+      // React re-renders put the original text back for up to a second
+      window.__pdaHospitalObserver = new MutationObserver(() => {
+        const el = find();
+        if (el && !/In hospital for/.test(el.textContent)) paint(el);
+      });
+      window.__pdaHospitalObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+    })();
+  """;
+}

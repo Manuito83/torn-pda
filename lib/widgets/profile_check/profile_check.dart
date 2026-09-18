@@ -41,6 +41,7 @@ class ProfileAttackCheckWidget extends StatefulWidget {
   final String? apiKey;
   final ProfileCheckType profileCheckType;
   final ThemeProvider? themeProvider;
+  final void Function(String? state, int? until)? onStatusFetched;
 
   const ProfileAttackCheckWidget({
     required this.profileId,
@@ -48,6 +49,7 @@ class ProfileAttackCheckWidget extends StatefulWidget {
     required this.profileCheckType,
     required Key key,
     required this.themeProvider,
+    this.onStatusFetched,
   }) : super(key: key);
 
   @override
@@ -249,6 +251,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _factionName = otherProfile.factionName;
         _factionId = otherProfile.factionId;
         _isTravelingForFFS = otherProfile.statusState == "Traveling";
+        widget.onStatusFetched?.call(otherProfile.statusState, otherProfile.statusUntil);
 
         // Estimated stats is not awaited, since it can take a few seconds
         // to contact YATA / TS and decide what we show

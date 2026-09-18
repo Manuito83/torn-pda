@@ -164,6 +164,13 @@ List<_MVersion> _modernChangelog() => [
             'Profile: tap your ID in the header to open your own profile in the browser',
             detail: 'Tapping your name still shows your online status, and a long press still copies your ID.',
           ),
+          _MItem(
+            'Browser: hospital timer on the attack page',
+            detail:
+                'The "This person is currently in hospital and cannot be attacked" message is replaced with a '
+                'countdown of their remaining hospital time. The page automatically updates to "Start fight" when '
+                'they are released.',
+          ),
         ],
       ),
       _MSection(
