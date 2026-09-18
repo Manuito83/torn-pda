@@ -160,6 +160,10 @@ List<_MVersion> _modernChangelog() => [
                 'Tap the legend under the chart to open a dialog where you can hide any of strength, defense, '
                 'speed and dexterity.',
           ),
+          _MItem(
+            'Profile: tap your ID in the header to open your own profile in the browser',
+            detail: 'Tapping your name still shows your online status, and a long press still copies your ID.',
+          ),
         ],
       ),
       _MSection(
