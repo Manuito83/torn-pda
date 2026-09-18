@@ -727,6 +727,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_extend_height_for_keyboard_allowed": true,
         "browser_restore_webview_focus_allowed": true,
         "browser_engine_prewarm_allowed": true,
+        "browser_engine_prewarm_unmount_after_load": false,
         "browser_webview_recovery_allowed": true,
         "browser_render_process_gone_allowed": true,
         "browser_recovery_overlay_allowed": true,
@@ -816,6 +817,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       );
       _settingsProvider.browserEnginePrewarmRemoteConfigAllowed = remoteConfig.getBool(
         "browser_engine_prewarm_allowed",
+      );
+      _settingsProvider.browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_engine_prewarm_unmount_after_load",
       );
       _settingsProvider.browserWebViewRecoveryRemoteConfigAllowed = remoteConfig.getBool(
         "browser_webview_recovery_allowed",

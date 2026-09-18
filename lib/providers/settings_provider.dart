@@ -220,6 +220,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Unmounts the prewarm once its about:blank has loaded (RemoteConfig)
+  bool _browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed = false;
+  bool get browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed =>
+      _browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed;
+  set browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed(bool value) {
+    _browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   // #2843 watchdog auto-recovery kill-switch (RemoteConfig): rebuilds a webview whose onWebViewCreated never fired
   bool _browserWebViewRecoveryRemoteConfigAllowed = true;
   bool get browserWebViewRecoveryRemoteConfigAllowed => _browserWebViewRecoveryRemoteConfigAllowed;
