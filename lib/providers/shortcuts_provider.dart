@@ -41,10 +41,9 @@ class ShortcutsProvider extends ChangeNotifier {
   void activateSavedShortcut(Shortcut activeShortcut) {
     activeShortcut.active = true;
 
-    // Note: this ensures that all custom colors are returned correctly after transitioning to Flutter 3.22 (v3.4.2)
-    // as custom colors were saved incorrectly and will be shown as black when restored from the model otherwise
-    // TODO: remove or allow users to select custom colors
-    if (activeShortcut.isCustom == true) {
+    // Black only comes from unparseable legacy colors (pre v3.4.2)
+    if (activeShortcut.isCustom == true &&
+        (activeShortcut.color == null || activeShortcut.color!.toARGB32() == Colors.black.toARGB32())) {
       activeShortcut.color = Colors.orange[500]!;
     }
 
