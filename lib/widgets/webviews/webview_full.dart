@@ -48,6 +48,7 @@ import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/config/webview_config.dart';
+import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
@@ -4679,9 +4680,11 @@ class WebViewFullState extends State<WebViewFull>
                 apiKey: UserHelper.apiKey,
                 profileCheckType: ProfileCheckType.attack,
                 themeProvider: _themeProvider,
+                onStatusFetched: _onAttackTargetStatus,
               );
             } else {
               _profileAttackWidget = const SizedBox.shrink();
+              _fetchAttackTargetStatus(userId);
             }
           });
         } catch (e) {
@@ -4689,6 +4692,19 @@ class WebViewFullState extends State<WebViewFull>
         }
       }
     }
+  }
+
+  Future<void> _fetchAttackTargetStatus(int userId) async {
+    final result = await ApiCallsV1.getOtherProfileBasic(playerId: userId.toString());
+    if (result is BasicProfileModel) {
+      _onAttackTargetStatus(result.status?.state, result.status?.until);
+    }
+  }
+
+  void _onAttackTargetStatus(String? state, int? until) {
+    if (!mounted || state != "Hospital" || until == null) return;
+    if (!_currentUrl.contains("sid=attack&user2ID=") && !_currentUrl.contains("sid=getInAttack&user2ID=")) return;
+    webViewController?.evaluateJavascript(source: hospitalTimerJS(until: until));
   }
 
   Future _assessBarsRedirect(dom.Document document) async {
