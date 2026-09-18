@@ -165,7 +165,7 @@ List<_MVersion> _modernChangelog() => [
             detail: 'Tapping your name still shows your online status, and a long press still copies your ID.',
           ),
           _MItem(
-            'Browser: hospital timer on the attack page',
+            'Browser: added hospital timer on the attack page',
             detail:
                 'The "This person is currently in hospital and cannot be attacked" message is replaced with a '
                 'countdown of their remaining hospital time. The page automatically updates to "Start fight" when '
