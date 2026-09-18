@@ -143,6 +143,12 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem('Foreign stocks: item details now include the average time an item takes to sell out'),
           _MItem(
+            'Browser: option to keep locked tabs loaded',
+            detail:
+                'When "only load tabs when used" is active, you can now exempt locked tabs. They load with the browser and '
+                'are never put to sleep or rested while you are away (except for memory pressure request from the OS).',
+          ),
+          _MItem(
             'Scripts: the list can now be searched and sorted',
             detail:
                 'Search by name (or inside the code, if you enable it in the options menu) and sort the list '

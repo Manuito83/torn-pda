@@ -699,6 +699,44 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+      if (_settingsProvider.useTabsFullBrowser && _webViewProvider.onlyLoadTabsWhenUsed)
+        SearchableRow(
+          label: "Keep locked tabs loaded",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.keyboard_arrow_right_outlined),
+                        Flexible(child: Text("Keep locked tabs loaded")),
+                      ],
+                    ),
+                    Switch(
+                      value: _webViewProvider.keepLockedTabsActive,
+                      onChanged: (value) {
+                        _webViewProvider.keepLockedTabsActive = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'Locked tabs are loaded as soon as the browser starts and are never put to sleep or rested '
+                  'while you are away, so they are always ready when you switch to them. Only the tabs you lock '
+                  'are exempt; the rest keep behaving as above. Under memory pressure they can still be '
+                  'deactivated to keep the app alive.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+        ),
       if (_settingsProvider.useTabsFullBrowser)
         SearchableRow(
           label: "Allow hiding tabs",
