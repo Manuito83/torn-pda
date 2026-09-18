@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
+import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
@@ -213,6 +214,115 @@ class FirestoreHelper {
         .catchError((e) {
           return false;
         });
+  }
+
+  // Returns false without writing anything if the update fails
+  Future<bool> subscribeToCityShopRestockNotification(bool? subscribe) async {
+    final Map<String, Object?> update = {"cityShopRestockNotification": subscribe};
+    if (subscribe == true) {
+      return _updateWithCityShopMarksNow(update);
+    }
+    try {
+      await _firestore.collection("players").doc(_uid).update(update);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Returns false without writing anything if the update fails
+  Future<bool> setCityShopOnlyConfirmed(bool enabled) async {
+    final Map<String, Object?> update = {"cityShopOnlyConfirmed": enabled};
+    if (enabled) {
+      return _updateWithCityShopMarksNow(update);
+    }
+    try {
+      await _firestore.collection("players").doc(_uid).update(update);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Sets every followed key to now, so restocks already seen are not notified
+  // Returns false without writing anything if the current alerts can't be read
+  Future<bool> _updateWithCityShopMarksNow(Map<String, Object?> update) async {
+    Map<String, dynamic> alerts;
+    try {
+      final doc = await _firestore.collection("players").doc(_uid).get();
+      final remote = doc.data()?["cityShopActiveAlerts"];
+      alerts = remote is Map ? Map<String, dynamic>.from(remote) : <String, dynamic>{};
+    } catch (e) {
+      return false;
+    }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final key in alerts.keys) {
+      alerts[key] = now;
+      update["cityShopActiveAlerts.$key"] = FieldValue.serverTimestamp();
+    }
+    try {
+      await _firestore.collection("players").doc(_uid).update(update);
+    } catch (e) {
+      return false;
+    }
+    _firebaseUserModel?.cityShopActiveAlerts = alerts;
+    return true;
+  }
+
+  // Single key, the server writes the others
+  Future<bool> setCityShopActiveAlert(String key, bool active) async {
+    return _firestore
+        .collection("players")
+        .doc(_uid)
+        .update({
+          "cityShopActiveAlerts.$key": active ? FieldValue.serverTimestamp() : FieldValue.delete(),
+          if (!active) "cityShopHeadsUp.$key": FieldValue.delete(),
+        })
+        .then((value) {
+          final alerts = _firebaseUserModel?.cityShopActiveAlerts;
+          if (active) {
+            alerts?[key] = DateTime.now().millisecondsSinceEpoch;
+          } else {
+            alerts?.remove(key);
+          }
+          return true;
+        })
+        .catchError((e) {
+          return false;
+        });
+  }
+
+  // Read from the player document, marks as milliseconds; null without a user
+  Future<Map<String, dynamic>?> getCityShopActiveAlerts() async {
+    if (_uid == null) return null;
+    final doc = await _firestore.collection("players").doc(_uid).get();
+    final remote = doc.data()?["cityShopActiveAlerts"];
+    if (remote is! Map) return <String, dynamic>{};
+    return remote.map(
+      (key, value) => MapEntry(key.toString(), value is Timestamp ? value.millisecondsSinceEpoch : value),
+    );
+  }
+
+  // Null on failure, empty when the document doesn't exist yet
+  Future<List<CityShopItemModel>?> getCityShopItems() async {
+    try {
+      final doc = await _firestore
+          .collection("cityshops")
+          .doc("items")
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(seconds: 8));
+      final raw = doc.data()?["json"];
+      if (raw is! String) return [];
+      final data = json.decode(raw);
+      if (data is! Map) return [];
+      return [
+        for (final value in data.values)
+          if (value is Map) CityShopItemModel.fromJson(Map<String, dynamic>.from(value)),
+      ];
+    } catch (e) {
+      log("City shop items fetch failed: $e");
+      return null;
+    }
   }
 
   Future<void> subscribeToNerveNotification(bool? subscribe) async {
@@ -429,6 +539,14 @@ class FirestoreHelper {
       }
     }
 
+    Map<String, dynamic> cityShopAlerts = {};
+    if (payload.containsKey("cityShopActiveAlerts") && payload["cityShopActiveAlerts"] is Map) {
+      cityShopAlerts = Map<String, dynamic>.from(payload["cityShopActiveAlerts"] as Map);
+      if (resetRestockTimestamps) {
+        cityShopAlerts = cityShopAlerts.map((k, _) => MapEntry(k.toString(), now));
+      }
+    }
+
     final Map<String, dynamic> updates = {};
     void addIfPresent(String key) {
       if (payload.containsKey(key)) updates[key] = payload[key];
@@ -441,6 +559,10 @@ class FirestoreHelper {
 
     if (restocks.isNotEmpty) {
       updates["restockActiveAlerts"] = restocks;
+    }
+
+    if (cityShopAlerts.isNotEmpty) {
+      updates["cityShopActiveAlerts"] = cityShopAlerts;
     }
 
     if (updates.isEmpty) return false;
@@ -464,7 +586,10 @@ class FirestoreHelper {
   Future<void> _persistLocalSnapshot() async {
     if (_firebaseUserModel == null) return;
     try {
-      final jsonStr = jsonEncode(_firebaseUserModel!.toMap());
+      final jsonStr = jsonEncode(
+        _firebaseUserModel!.toMap(),
+        toEncodable: (value) => value is Timestamp ? value.millisecondsSinceEpoch : value,
+      );
       await PrefsDatabase.setString(_kLocalUserSnapshot, jsonStr);
     } catch (e) {
       log("Snapshot save failed: $e");

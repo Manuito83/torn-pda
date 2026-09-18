@@ -23,6 +23,8 @@ import {
   NotificationCheckResult,
 } from "./notification";
 import { getUsersStat } from "./torn_api";
+import { sendCityShopRestockNotification } from "./city_shops";
+import { CityShopItem } from "./interfaces/city_shops_interface";
 
 const privateKey = require("../key/torn_key");
 
@@ -68,9 +70,9 @@ export const checkIOS = onSchedule(
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
     const stocksDB = db.ref("stocks/restocks");
-    const foreignStocks = {};
-    await stocksDB.once("value", function (snapshot) {
-      snapshot.forEach(function (childSnapshot) {
+    const foreignStocks: Record<string, any> = {};
+    await stocksDB.once("value", function (snapshot: admin.database.DataSnapshot) {
+      snapshot.forEach(function (childSnapshot: admin.database.DataSnapshot) {
         foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
       });
     });
@@ -118,6 +120,7 @@ export const checkIOS = onSchedule(
           [...alertsUsers, ...laTravelOnlyUsers, ...laRacingOnlyUsers].map((subscriber) => [subscriber.uid, subscriber])
         ).values()
       );
+      const cityItems = await readCityShopItems(subscribers);
       let iOSBlocks = 0;
 
       const batchSize = 500;
@@ -127,7 +130,9 @@ export const checkIOS = onSchedule(
           sendNotificationForProfile(
             subscriber,
             foreignStocks,
-            stockMarket
+            stockMarket,
+            false,
+            cityItems
           ).then(function (value) {
             if (value === "ip-block") {
               iOSBlocks++;
@@ -175,9 +180,9 @@ export const checkAndroidLow = onSchedule(
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
     const stocksDB = db.ref("stocks/restocks");
-    const foreignStocks = {};
-    await stocksDB.once("value", function (snapshot) {
-      snapshot.forEach(function (childSnapshot) {
+    const foreignStocks: Record<string, any> = {};
+    await stocksDB.once("value", function (snapshot: admin.database.DataSnapshot) {
+      snapshot.forEach(function (childSnapshot: admin.database.DataSnapshot) {
         foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
       });
     });
@@ -193,6 +198,7 @@ export const checkAndroidLow = onSchedule(
         .get();
 
       const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      const cityItems = await readCityShopItems(subscribers);
       let androidLow = 0;
 
       const batchSize = 500;
@@ -202,7 +208,9 @@ export const checkAndroidLow = onSchedule(
           sendNotificationForProfile(
             subscriber,
             foreignStocks,
-            stockMarket
+            stockMarket,
+            false,
+            cityItems
           ).then(function (value) {
             if (value === "ip-block") {
               androidLow++;
@@ -249,9 +257,9 @@ export const checkAndroidHigh = onSchedule(
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
     const stocksDB = db.ref("stocks/restocks");
-    const foreignStocks = {};
-    await stocksDB.once("value", function (snapshot) {
-      snapshot.forEach(function (childSnapshot) {
+    const foreignStocks: Record<string, any> = {};
+    await stocksDB.once("value", function (snapshot: admin.database.DataSnapshot) {
+      snapshot.forEach(function (childSnapshot: admin.database.DataSnapshot) {
         foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
       });
     });
@@ -267,6 +275,7 @@ export const checkAndroidHigh = onSchedule(
         .get();
 
       const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      const cityItems = await readCityShopItems(subscribers);
       let androidHigh = 0;
 
       const batchSize = 500;
@@ -276,7 +285,9 @@ export const checkAndroidHigh = onSchedule(
           sendNotificationForProfile(
             subscriber,
             foreignStocks,
-            stockMarket
+            stockMarket,
+            false,
+            cityItems
           ).then(function (value) {
             if (value === "ip-block") {
               androidHigh++;
@@ -303,11 +314,23 @@ export const checkAndroidHigh = onSchedule(
   }
 );
 
+async function readCityShopItems(subscribers: any[]): Promise<Record<string, CityShopItem>> {
+  if (!subscribers.some((s) => s.cityShopRestockNotification === true)) return {};
+  try {
+    const json = (await admin.firestore().collection("cityshops").doc("items").get()).get("json");
+    return typeof json === "string" ? JSON.parse(json) : {};
+  } catch (e: any) {
+    logger.warn(`CityShops: failed to read items, skipping city shop alerts this pass: ${e.message || e}`);
+    return {};
+  }
+}
+
 async function sendNotificationForProfile(
   subscriber: any,
   foreignStocks: any,
   stockMarket: any,
-  _forceTest: boolean = false
+  _forceTest: boolean = false,
+  cityItems: Record<string, CityShopItem> = {}
 ): Promise<any> {
   // Guard: skip subscribers without a valid uid (e.g. LA-only users missing this field)
   if (!subscriber.uid) {
@@ -381,6 +404,9 @@ async function sendNotificationForProfile(
       }
       if (subscriber.workStatsNotification) {
         checkResults.push(sendWorkStatsNotification(userStats, subscriber));
+      }
+      if (subscriber.cityShopRestockNotification === true) {
+        checkResults.push(sendCityShopRestockNotification(cityItems, subscriber, Date.now()));
       }
 
       // 3. Process collected results, both notifications and Firestore updates
@@ -496,9 +522,9 @@ export const runForUser = onCall(
     const stockMarket = await getStockMarket(privateKey.tornKey);
     const db = admin.database();
     const stocksDB = db.ref("stocks/restocks");
-    const foreignStocks = {};
-    await stocksDB.once("value", (snapshot) => {
-      snapshot.forEach(function (childSnapshot) {
+    const foreignStocks: Record<string, any> = {};
+    await stocksDB.once("value", (snapshot: admin.database.DataSnapshot) => {
+      snapshot.forEach(function (childSnapshot: admin.database.DataSnapshot) {
         foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
       });
     });
@@ -518,12 +544,15 @@ export const runForUser = onCall(
       return { success: false, message: message };
     }
 
+    const cityItems = await readCityShopItems(subscribers);
     let blocks = 0;
     for (const subscriber of subscribers) {
       const result = await sendNotificationForProfile(
         subscriber,
         foreignStocks,
-        stockMarket
+        stockMarket,
+        false,
+        cityItems
       );
       if (result === "ip-block") {
         blocks++;

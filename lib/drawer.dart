@@ -29,6 +29,7 @@ import 'package:receive_intent/receive_intent.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -1316,6 +1317,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool travel = false;
     bool hospital = false;
     bool restocks = false;
+    bool cityShops = false;
     bool abroadStay = false;
     bool racing = false;
     bool messages = false;
@@ -1341,6 +1343,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     String? tradeId = '';
     String? assistId = '';
     String? bulkDetails = '';
+    String? cityShopId = '';
 
     if (Platform.isIOS) {
       channel = message["channelId"] as String?;
@@ -1348,12 +1351,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       tradeId = message["tornTradeId"] as String?;
       assistId = message["assistId"] as String?;
       bulkDetails = message["bulkDetails"] as String?;
+      cityShopId = message["shopId"] as String?;
     } else if (Platform.isAndroid) {
       channel = message["channelId"] as String?;
       messageId = message["tornMessageId"] as String?;
       tradeId = message["tornTradeId"] as String?;
       assistId = message["assistId"] as String?;
       bulkDetails = message["bulkDetails"] as String?;
+      cityShopId = message["shopId"] as String?;
     }
 
     if (channel!.contains("Alerts travel")) {
@@ -1364,6 +1369,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       hospital = true;
     } else if (channel.contains("Alerts restocks")) {
       restocks = true;
+    } else if (channel.contains("Alerts city shops")) {
+      cityShops = true;
     } else if (channel.contains("Alerts racing")) {
       racing = true;
     } else if (channel.contains("Alerts messages")) {
@@ -1414,6 +1421,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (restocks) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/travelagency.php";
+    } else if (cityShops) {
+      launchBrowserWithUrl = true;
+      final firstShopId = int.tryParse((cityShopId ?? "").split(",").first);
+      browserUrl = CityShopSlugs.urlForShop(firstShopId);
     } else if (abroadStay) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com";
@@ -1713,6 +1724,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload == 'restocks') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
+      } else if (payload.startsWith('cityShops:')) {
+        launchBrowserWithUrl = true;
+        final cityShopId = payload.substring('cityShops:'.length);
+        final firstShopId = int.tryParse(cityShopId.split(",").first);
+        browserUrl = CityShopSlugs.urlForShop(firstShopId);
       } else if (payload == 'abroadStay') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com';

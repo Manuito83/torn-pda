@@ -59,7 +59,7 @@ export const sendLootRangersNotification = onSchedule({
     // Per-attack: one entry per bucket (seconds) marked with this attack ts once sent
     const refBuckets = db.ref(`lootRangers/lastAlertedBuckets/${nextAttackLR}`);
     let bucketMap: Record<string, number> = {};
-    await refBuckets.once("value", function (snapshot) {
+    await refBuckets.once("value", function (snapshot: admin.database.DataSnapshot) {
       bucketMap = snapshot.val() ?? {};
     });
 

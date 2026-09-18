@@ -86,6 +86,10 @@ export const onPlayerDeleted = onDocumentDeleted(
       promises.push(manageStats("foreignRestockNotification", -1));
     }
 
+    if (beforeStat.cityShopRestockNotification) {
+      promises.push(manageStats("cityShopRestockNotification", -1));
+    }
+
     if (beforeStat.hospitalNotification) {
       promises.push(manageStats("hospitalNotification", -1));
     }
@@ -211,6 +215,12 @@ export const onPlayerUpdated = onDocumentUpdated({
       )
     );
 
+  if (beforeStat.cityShopRestockNotification !== afterStat.cityShopRestockNotification)
+    promises.push(
+      manageStats("cityShopRestockNotification", afterStat.cityShopRestockNotification ? 1 : -1
+      )
+    );
+
   if (beforeStat.hospitalNotification !== afterStat.hospitalNotification)
     promises.push(
       manageStats("hospitalNotification", afterStat.hospitalNotification ? 1 : -1
@@ -311,6 +321,7 @@ export const onPlayerUpdated = onDocumentUpdated({
     !afterStat.lifeNotification &&
     !afterStat.travelNotification &&
     !afterStat.foreignRestockNotification &&
+    !afterStat.cityShopRestockNotification &&
     !afterStat.hospitalNotification &&
     !afterStat.drugsNotification &&
     !afterStat.medicalNotification &&
@@ -343,6 +354,7 @@ export const onPlayerUpdated = onDocumentUpdated({
       || afterStat.lifeNotification
       || afterStat.travelNotification
       || afterStat.foreignRestockNotification
+      || afterStat.cityShopRestockNotification
       || afterStat.hospitalNotification
       || afterStat.drugsNotification
       || afterStat.medicalNotification
@@ -374,7 +386,7 @@ export const onPlayerUpdated = onDocumentUpdated({
   if (afterStat.retalsNotification) {
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
-    db.ref(`retals/factions/${afterStat.faction}`).once("value", snapshot => {
+    db.ref(`retals/factions/${afterStat.faction}`).once("value", (snapshot: admin.database.DataSnapshot) => {
       if (!snapshot.exists()) {
         db.ref(`retals/factions/${afterStat.faction}`).set("");
       }

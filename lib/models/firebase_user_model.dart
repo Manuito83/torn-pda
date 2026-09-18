@@ -11,6 +11,9 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool? foreignRestockNotificationOnlyCurrentCountry = false;
   bool foreignRestockNotificationOnlyLanded = false;
   bool foreignRestockNotificationSellout = false;
+  bool? cityShopRestockNotification = false;
+  bool cityShopOnlyConfirmed = false;
+  Map<String, dynamic> cityShopActiveAlerts = {};
   bool? abroadStayNotification = false;
   List<int> abroadStayIntervals = [];
   bool abroadStayIncludeHospital = false;
@@ -78,6 +81,9 @@ class FirebaseUserModel extends OwnProfileExtended {
       "foreignRestockNotificationOnlyCurrentCountry": foreignRestockNotificationOnlyCurrentCountry,
       "foreignRestockNotificationOnlyLanded": foreignRestockNotificationOnlyLanded,
       "foreignRestockNotificationSellout": foreignRestockNotificationSellout,
+      "cityShopRestockNotification": cityShopRestockNotification,
+      "cityShopOnlyConfirmed": cityShopOnlyConfirmed,
+      "cityShopActiveAlerts": cityShopActiveAlerts,
       "abroadStayNotification": abroadStayNotification,
       "abroadStayIntervals": abroadStayIntervals,
       "abroadStayIncludeHospital": abroadStayIncludeHospital,
@@ -131,6 +137,9 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..foreignRestockNotificationOnlyCurrentCountry = data["foreignRestockNotificationOnlyCurrentCountry"] ?? false
       ..foreignRestockNotificationOnlyLanded = data["foreignRestockNotificationOnlyLanded"] ?? false
       ..foreignRestockNotificationSellout = data["foreignRestockNotificationSellout"] ?? false
+      ..cityShopRestockNotification = data["cityShopRestockNotification"] ?? false
+      ..cityShopOnlyConfirmed = data["cityShopOnlyConfirmed"] ?? false
+      ..cityShopActiveAlerts = Map<String, dynamic>.from(data["cityShopActiveAlerts"] ?? const <String, dynamic>{})
       ..abroadStayNotification = data["abroadStayNotification"] ?? false
       ..abroadStayIntervals = List<int>.from(data["abroadStayIntervals"] ?? const <int>[])
       ..abroadStayIncludeHospital = data["abroadStayIncludeHospital"] ?? false

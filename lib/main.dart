@@ -98,6 +98,8 @@ const List<String> kAlertFirestoreFields = [
   "foreignRestockNotificationOnlyCurrentCountry",
   "foreignRestockNotificationOnlyLanded",
   "foreignRestockNotificationSellout",
+  "cityShopRestockNotification",
+  "cityShopOnlyConfirmed",
   "abroadStayNotification",
   "abroadStayIntervals",
   "abroadStayIncludeHospital",

@@ -146,7 +146,7 @@ export const saveUserPrefs = onCall({
 
         // Iterate through input preferences and add / update them
         for (const prefKey in inputDetails.prefs) {
-            const prefValue = inputDetails.prefs[prefKey];
+            const prefValue = (inputDetails.prefs as any)[prefKey];
 
             // Special handling for userscripts - save to subcollection instead
             if (prefKey === 'pda_userScriptsList') {
@@ -271,7 +271,7 @@ export const getUserPrefs = onCall({
 
             if (!userscriptsSnapshot.empty) {
                 // New structure exists - reconstruct userscripts array
-                const userscripts = [];
+                const userscripts: any[] = [];
                 userscriptsSnapshot.docs.forEach(doc => {
                     const scriptJson = doc.data().scriptJson;
                     if (scriptJson) {
@@ -648,7 +648,7 @@ export const migrateLegacyUserscripts = onCall({
                     scriptCount: userscripts.length,
                     scriptNames,
                     migrated: false,
-                    error: null
+                    error: null as string | null
                 };
 
                 if (!dryRun) {

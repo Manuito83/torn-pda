@@ -36,6 +36,7 @@ import { sendTroubleshootingAutoNotification } from "./troubleshooting_notificat
 import { sendForumsSubscription } from "./forums";
 import { registerActivityToken, registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
 import { recalculateStats } from "./stats_recalc";
+import { updateCityShops, cityShopsTest } from "./city_shops";
 
 export const alerts = {
   checkIOS: checkIOS,
@@ -46,7 +47,8 @@ export const alerts = {
 export const alertsTest = {
   runForUser: runForUser,
   sendTestNotification: sendTestNotification,
-  sendMassNotification: sendMassNotification
+  sendMassNotification: sendMassNotification,
+  cityShops: cityShopsTest
 };
 
 export const loot = {
@@ -79,6 +81,10 @@ export const stocks = {
   oneTimeClean: oneTimeClean,
   deleteOldStocks: deleteOldStocks,
   cleanupObsoleteRestocks: cleanupObsoleteRestocks
+};
+
+export const cityShops = {
+  updateCityShops: updateCityShops
 };
 
 export const lootRangers = {
