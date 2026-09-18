@@ -488,6 +488,24 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Locked tabs are exempt from lazy load, timed sleep and parking (not from memory pressure)
+  var _keepLockedTabsActive = false;
+  bool get keepLockedTabsActive => _keepLockedTabsActive;
+  set keepLockedTabsActive(bool value) {
+    _keepLockedTabsActive = value;
+    Prefs().setKeepLockedTabsActive(_keepLockedTabsActive);
+    if (value) _wakeSleepingLockedTabs();
+    notifyListeners();
+  }
+
+  void _wakeSleepingLockedTabs() {
+    for (final tab in _tabList) {
+      if (!tab.isLocked || !tab.sleepTab || tab.sleepingWebView == null) continue;
+      tab.sleepTab = false;
+      tab.webView = _buildRealWebViewFromSleeping(tab.sleepingWebView!);
+    }
+  }
+
   var _automaticChangeToNewTabFromURL = true;
   bool get automaticChangeToNewTabFromURL => _automaticChangeToNewTabFromURL;
   set automaticChangeToNewTabFromURL(bool value) {
@@ -715,6 +733,7 @@ class WebViewProvider extends ChangeNotifier {
     final savedJson = await Prefs().getWebViewSecondaryTabs();
     final savedWebViews = tabSaveModelFromJson(savedJson);
     final bool sleepTabsByDefault = await Prefs().getOnlyLoadTabsWhenUsed();
+    final bool keepLocked = await Prefs().getKeepLockedTabsActive();
 
     _secondaryInitialised = true;
 
@@ -722,7 +741,7 @@ class WebViewProvider extends ChangeNotifier {
       if (useTabs) {
         await addTab(
           tabKey: wv.tabKey,
-          sleepTab: sleepTabsByDefault,
+          sleepTab: sleepTabsByDefault && !(keepLocked && wv.isLocked),
           url: wv.url,
           pageTitle: wv.pageTitle,
           chatRemovalActive: wv.chatRemovalActive,
@@ -1033,6 +1052,7 @@ class WebViewProvider extends ChangeNotifier {
       // continue (not return): keep evaluating the rest of the list
       if (tab.webView == null || tab.sleepTab || tab.isChainingBrowser || i == currentTab) continue;
       if (!force) {
+        if (_keepLockedTabsActive && tab.isLocked) continue;
         if (tab.lastUsedTimeDT == null) continue;
         if (now.difference(tab.lastUsedTimeDT!) < Duration(minutes: tabSleepMinutesActive)) continue;
       }
@@ -1076,6 +1096,7 @@ class WebViewProvider extends ChangeNotifier {
       final tab = _tabList[i];
       if (tab.webView == null || tab.sleepTab || tab.isChainingBrowser) continue;
       if (tab.needsReloadAfterRendererGone) continue;
+      if (_keepLockedTabsActive && tab.isLocked) continue;
       final WebViewFullState? state = tab.webViewKey?.currentState;
       if (state != null) targets.add(state);
     }
@@ -1405,6 +1426,8 @@ class WebViewProvider extends ChangeNotifier {
 
     tab.isLocked = forceLock || !tab.isLocked;
     tab.isLockFull = isLockFull;
+
+    if (tab.isLocked && _keepLockedTabsActive) _wakeSleepingLockedTabs();
 
     if (!wasLocked && tab.isLocked || wasLocked && !tab.isLocked) {
       final activeKey = _tabList[currentTab].webView?.key;
@@ -2412,6 +2435,7 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
+    _keepLockedTabsActive = await Prefs().getKeepLockedTabsActive();
 
     // Values are normalised on load: a restored backup could carry anything
     final int sleepOverride = await Prefs().getTabSleepMinutesOverride();

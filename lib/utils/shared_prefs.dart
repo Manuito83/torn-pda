@@ -434,6 +434,7 @@ class Prefs {
   final String _kRemoveUnusedTabsRangeDays = "pda_removeUnusedTabsRangeDays";
 
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
+  final String _kKeepLockedTabsActive = "pda_keepLockedTabsActive";
   // Browser memory settings: RC provides the default, the user can override it ("default"/"on"/"off",
   // and 0 = follow default for the sleep period). RC values are persisted to be known at cold start
   final String _kTabSleepMinutesOverride = "pda_tabSleepMinutesOverride";
@@ -4013,6 +4014,14 @@ class Prefs {
 
   Future setOnlyLoadTabsWhenUsed(bool value) async {
     return await PrefsDatabase.setBool(_kOnlyLoadTabsWhenUsed, value);
+  }
+
+  Future<bool> getKeepLockedTabsActive() async {
+    return await PrefsDatabase.getBool(_kKeepLockedTabsActive, false);
+  }
+
+  Future setKeepLockedTabsActive(bool value) async {
+    return await PrefsDatabase.setBool(_kKeepLockedTabsActive, value);
   }
 
   /// 0 means "follow the Remote Config default"
