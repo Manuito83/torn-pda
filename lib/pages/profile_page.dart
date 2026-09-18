@@ -430,6 +430,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     return RefreshIndicator(
                       onRefresh: () async {
                         _profileApi.resetApiTimer(initCall: true, trigger: "pull-refresh");
+                        _profileApi.refreshCompanyAddiction(trigger: "pull-refresh");
                         await Future.delayed(const Duration(seconds: 1));
                       },
                       child: SingleChildScrollView(

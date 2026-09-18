@@ -107,6 +107,11 @@ class ProfileApiCallsController extends GetxController {
   RankedWar? factionRankedWar;
   int? companyAddiction;
 
+  // Torn recalculates the company penalty daily just after 18:00 TCT
+  static const int _addictionTickHour = 18;
+  static const int _addictionTickMinute = 15;
+  static const Duration _addictionConfirmWindow = Duration(hours: 1);
+
   StatsChartTornStats? statsChartModel;
   bool statsChartIsCached = false;
   String? statsChartError;
@@ -614,7 +619,22 @@ class ProfileApiCallsController extends GetxController {
     return;
   }
 
-  Future _getCompanyAddiction({required String trigger}) async {
+  Future<void> refreshCompanyAddiction({required String trigger}) {
+    return _getCompanyAddiction(trigger: trigger, force: true);
+  }
+
+  // First read after the tick gets a confirmation read an hour later
+  static DateTime _nextAddictionCallTime(DateTime now) {
+    DateTime lastTick = DateTime.utc(now.year, now.month, now.day, _addictionTickHour, _addictionTickMinute);
+    if (now.isBefore(lastTick)) {
+      lastTick = lastTick.subtract(const Duration(days: 1));
+    }
+    final DateTime confirmTime = lastTick.add(_addictionConfirmWindow);
+    if (now.isBefore(confirmTime)) return confirmTime;
+    return lastTick.add(const Duration(days: 1));
+  }
+
+  Future _getCompanyAddiction({required String trigger, bool force = false}) async {
     if (user == null) {
       _logSkip("v1 company/employees", {"reason": "user-null"});
       return;
@@ -629,21 +649,19 @@ class ProfileApiCallsController extends GetxController {
       final nextFetchTime = await Prefs().getJobAddictionNextCallTime();
 
       final int currentTimeMillis = DateTime.now().toUtc().millisecondsSinceEpoch;
-      final bool shouldCallApi = currentTimeMillis >= nextFetchTime;
+      final bool shouldCallApi = force || currentTimeMillis >= nextFetchTime;
 
       if (shouldCallApi || nextFetchTime == 0) {
-        final dynamic apiResponse = await _timedCall("v1 company/employees", ApiCallsV1.getCompanyEmployees);
+        final dynamic apiResponse = await _timedCall(
+          "v1 company/employees",
+          ApiCallsV1.getCompanyEmployees,
+          kv: {"trigger": trigger, "force": force},
+        );
         if (apiResponse is CompanyEmployees) {
           for (final eMap in apiResponse.companyEmployees!.entries) {
             if (eMap.key != user!.playerId.toString()) continue;
 
-            // Next allowed call at 18:30 UTC
-            final DateTime now = DateTime.now().toUtc();
-            DateTime nextAllowedTime = DateTime.utc(now.year, now.month, now.day, 18, 30);
-            if (now.isAfter(nextAllowedTime)) {
-              nextAllowedTime = nextAllowedTime.add(const Duration(days: 1));
-            }
-            final int nextAllowedTimeMillis = nextAllowedTime.millisecondsSinceEpoch;
+            final int nextAllowedTimeMillis = _nextAddictionCallTime(DateTime.now().toUtc()).millisecondsSinceEpoch;
 
             Prefs().setJobAddictionNextCallTime(nextAllowedTimeMillis);
             Prefs().setJobAdditionValue(eMap.value.effectiveness!.addiction ?? 0);
