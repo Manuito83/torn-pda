@@ -1042,6 +1042,13 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     );
     tips.add(
       ExpandableTip(
+        headerValue: "Your name and ID in the app bar",
+        expandedValue: "Tap your name to see your online status and how long you have been away. "
+            "Tap your ID to open your own profile in the browser, or long-press it to copy the ID.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
         headerValue: "Medic call",
         expandedValue:
             "When you are in hospital, you'll get the chance to call a reviver by using the icon that appears in the Profile section (status card).\n\n"
