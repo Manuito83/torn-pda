@@ -17,6 +17,12 @@ class BrowserEnginePrewarmController {
 
   final ValueNotifier<bool> shouldMount = ValueNotifier<bool>(false);
   Completer<void>? _loaded;
+  bool _loadStopped = false;
+
+  // Not set by the ensureWarm timeout
+  bool get loadStopped => _loadStopped;
+
+  void unmount() => shouldMount.value = false;
 
   /// Completes when the engine is warm (the prewarm finished loading about:blank). Never holds the
   /// browser open for longer than [timeout].
@@ -39,6 +45,7 @@ class BrowserEnginePrewarmController {
   }
 
   void _onLoadStop() {
+    _loadStopped = true;
     if (_loaded != null && !_loaded!.isCompleted) _loaded!.complete();
   }
 }
@@ -55,8 +62,16 @@ class BrowserEnginePrewarm extends StatelessWidget {
     final renderGoneAllowed = context.select<SettingsProvider, bool>(
       (s) => s.browserRenderProcessGoneRemoteConfigAllowed,
     );
+    final unmountAfterLoad = context.select<SettingsProvider, bool>(
+      (s) => s.browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed,
+    );
+    final controller = BrowserEnginePrewarmController.instance;
+    // Covers the flag arriving from RC after the load already finished
+    if (unmountAfterLoad && controller.loadStopped && controller.shouldMount.value) {
+      Future.microtask(controller.unmount);
+    }
     return ValueListenableBuilder<bool>(
-      valueListenable: BrowserEnginePrewarmController.instance.shouldMount,
+      valueListenable: controller.shouldMount,
       builder: (context, mount, _) {
         if (!mount) return const SizedBox.shrink();
         return SizedBox(
@@ -69,7 +84,10 @@ class BrowserEnginePrewarm extends StatelessWidget {
               transparentBackground: true,
               useOnRenderProcessGone: renderGoneAllowed,
             ),
-            onLoadStop: (c, u) => BrowserEnginePrewarmController.instance._onLoadStop(),
+            onLoadStop: (c, u) {
+              controller._onLoadStop();
+              if (unmountAfterLoad) controller.unmount();
+            },
           ),
         );
       },
