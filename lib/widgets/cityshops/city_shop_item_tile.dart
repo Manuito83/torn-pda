@@ -91,18 +91,23 @@ class CityShopItemTile extends StatelessWidget {
     return overdue ? "Restock overdue (expected $start to $end)" : "Restock expected $start to $end";
   }
 
+  // Compares how long stock lasts with the width of this item's restock window
+  String? _timingAdvice() {
+    final lasts = item.stockMedianMin;
+    final base = item.baseMin;
+    if (lasts == null || base == null) return null;
+    final windowMin = base * 0.2 + 2;
+    if (lasts < windowMin) return "Be at the shop when it restocks";
+    if (lasts < windowMin * 3) return "A few minutes late is fine";
+    return "No rush";
+  }
+
   void _showDetail(BuildContext context, ThemeProvider themeProvider, SettingsProvider settingsProvider) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: themeProvider.canvas,
       builder: (context) {
-        final updatedText = TimeFormatter(
-          inputTime: DateTime.fromMillisecondsSinceEpoch(item.updated),
-          timeFormatSetting: settingsProvider.currentTimeFormat,
-          timeZoneSetting: settingsProvider.currentTimeZone,
-        ).formatHourWithDaysElapsed(includeToday: true);
-
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
@@ -147,28 +152,13 @@ class CityShopItemTile extends StatelessWidget {
                     "${item.stockMedianMin!.round()} min",
                     "Median time the item stays in stock once restocked",
                   ),
-                if (item.stockP10Min != null)
+                if (_timingAdvice() != null)
                   _detailRow(
                     themeProvider,
-                    "Stock lasts at least",
-                    "${item.stockP10Min!.round()} min",
-                    "In 9 out of 10 restocks, stock lasted at least this long",
+                    "Timing",
+                    _timingAdvice()!,
+                    "Whether you need to wait at the shop, based on how long stock lasts after a restock",
                   ),
-                if (item.fastSellFraction != null)
-                  _detailRow(
-                    themeProvider,
-                    "Sells out fast",
-                    "${(item.fastSellFraction! * 100).round()}%",
-                    "Share of restocks that sold out within a few minutes",
-                  ),
-                if (item.cycles > 0)
-                  _detailRow(
-                    themeProvider,
-                    "Restocks measured",
-                    "${item.cycles}",
-                    "Restocks this prediction is built on",
-                  ),
-                _detailRow(themeProvider, "Last change", updatedText, "Last time the stock or the prediction changed"),
               ],
             ),
           ),
