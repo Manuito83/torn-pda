@@ -134,6 +134,16 @@ List<_MVersion> _modernChangelog() => [
                 'A new alert lets you choose a value for your manual labor, intelligence and endurance, and '
                 'notifies you as soon as you reach it.',
           ),
+          _MItem(
+            'Items and foreign stocks: inventory quantities are back',
+            detail:
+                'Torn removed inventory from API v1 in 2023 and it is now available again in API v2, one call per '
+                'item category. To keep API usage under your control, inventory is only loaded when you tap the new '
+                'box icon in Items or Foreign stocks (or pick an inventory filter or sort). Items then shows how many '
+                'of each item you own (display case included) and their total value. If you would rather have it '
+                'loaded on entering those sections, enable "Load inventory automatically" in Settings, under API '
+                'call rate. Torn caches inventory for an hour, so recent purchases can take up to an hour to show.',
+          ),
         ],
       ),
       _MSection(

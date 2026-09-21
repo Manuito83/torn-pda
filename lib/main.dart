@@ -43,6 +43,7 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
@@ -217,6 +218,7 @@ Future<void> main() async {
         ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
         ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
+        ChangeNotifierProvider<InventoryProvider>(create: (context) => InventoryProvider()),
         ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
         ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
         ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),

@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 
 // Project imports:
-//import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';

@@ -359,9 +359,6 @@ class ApiCallerController extends GetxController {
       case ApiSelection_v1.items:
         url += 'torn/?selections=items';
         break;
-      case ApiSelection_v1.inventory:
-        url += 'user/?selections=inventory,display';
-        break;
       case ApiSelection_v1.education:
         url += 'torn/?selections=education';
         break;

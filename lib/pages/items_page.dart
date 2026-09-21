@@ -4,21 +4,22 @@ import 'dart:async';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:get/get.dart';
 // Package imports:
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
-import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items/items_sort.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/inventory_provider.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/inventory_feedback.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/items/item_card.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
@@ -54,8 +55,12 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   Future? _loadedApiItems;
   bool _itemsSuccess = false;
-  bool _inventorySuccess = false;
   String _errorMessage = "";
+
+  late final InventoryProvider _inventoryProvider;
+  Timer? _inventoryTimer;
+  bool _inventoryWanted = false;
+  final Map<String, String?> _inventoryCategoryOfType = <String, String?>{};
 
   // Filters
   int _ownedItemsFilter = 0;
@@ -69,10 +74,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     ItemsSort(type: ItemsSortType.nameDes),
     ItemsSort(type: ItemsSortType.categoryAsc),
     ItemsSort(type: ItemsSortType.categoryDes),
-    /*
     ItemsSort(type: ItemsSortType.ownedAsc),
     ItemsSort(type: ItemsSortType.ownedDes),
-    */
     ItemsSort(type: ItemsSortType.valueAsc),
     ItemsSort(type: ItemsSortType.valueDes),
     ItemsSort(type: ItemsSortType.totalValueAsc),
@@ -86,6 +89,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _inventoryProvider = Provider.of<InventoryProvider>(context, listen: false);
+    _inventoryProvider.addListener(_onInventoryChanged);
     _loadedApiItems = _getAllItems();
     _searchController.addListener(onSearchInputTextChange);
     analytics?.logScreenView(screenName: 'items');
@@ -96,6 +101,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _inventoryProvider.removeListener(_onInventoryChanged);
+    _inventoryTimer?.cancel();
     _searchController.dispose();
     _filterScroll.dispose();
     _searchFocusNode.dispose();
@@ -113,10 +120,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
       appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider!.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
           : null,
       body: Container(
         color: _themeProvider!.canvas,
@@ -176,10 +180,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
             } else {
               // Loading case
               return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(10),
-                  child: CircularProgressIndicator(),
-                ),
+                child: Padding(padding: EdgeInsets.all(10), child: CircularProgressIndicator()),
               );
             }
           },
@@ -214,21 +215,23 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       title: const Text('Items', style: TextStyle(color: Colors.white)),
       actions: [
         if (_itemsSuccess)
+          IconButton(
+            icon: Icon(MdiIcons.packageVariantClosed, color: _inventoryComplete ? Colors.green : Colors.white),
+            tooltip: "Load inventory",
+            onPressed: _requestInventory,
+          ),
+        if (_itemsSuccess)
           PopupMenuButton<ItemsSort>(
-            icon: const Icon(
-              Icons.sort,
-            ),
-            onSelected: _sortAndRebuildItemsCards,
+            icon: const Icon(Icons.sort),
+            onSelected: (choice) {
+              if (_sortNeedsInventory(choice.type)) _requestInventory();
+              _sortAndRebuildItemsCards(choice);
+            },
             itemBuilder: (BuildContext context) {
               return _popupSortChoices.map((ItemsSort choice) {
                 return PopupMenuItem<ItemsSort>(
                   value: choice,
-                  child: Text(
-                    choice.description,
-                    style: const TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
+                  child: Text(choice.description, style: const TextStyle(fontSize: 13)),
                 );
               }).toList();
             },
@@ -242,6 +245,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   Widget _itemsMain() {
     return Column(
       children: [
+        if (_inventoryLoading) const LinearProgressIndicator(minHeight: 2),
         Expanded(
           child: ListView.builder(
             itemCount: _allItemsCards.length,
@@ -268,11 +272,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
             labelText: "Search name or id",
             counterText: "",
             prefixIcon: const Icon(Icons.search),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(6.0),
-              ),
-            ),
+            border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(6.0))),
             suffixIcon: IconButton(
               onPressed: () {
                 setState(() {
@@ -296,12 +296,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         decoration: BoxDecoration(
           color: _themeProvider!.secondBackground,
           borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 2.0,
-              color: Colors.orange[800]!,
-            ),
-          ],
+          boxShadow: [BoxShadow(blurRadius: 2.0, color: Colors.orange[800]!)],
         ),
         margin: const EdgeInsets.all(24.0),
         child: Column(
@@ -320,9 +315,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                   children: [
                     Column(
                       children: [
-                        const SizedBox(
-                          height: 12.0,
-                        ),
+                        const SizedBox(height: 12.0),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
@@ -331,9 +324,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                               height: 5,
                               decoration: BoxDecoration(
                                 color: Colors.grey[400],
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(12.0),
-                                ),
+                                borderRadius: const BorderRadius.all(Radius.circular(12.0)),
                               ),
                             ),
                           ],
@@ -350,27 +341,17 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
-                  // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-                  /*
                   SizedBox(
                     width: 150,
                     height: 40,
                     child: Column(
                       children: [
                         if (_ownedItemsFilter == 1)
-                          const Text(
-                            "ONLY OWNED ITEMS",
-                            style: TextStyle(fontSize: 10),
-                          )
+                          const Text("ONLY OWNED ITEMS", style: TextStyle(fontSize: 10))
                         else if (_ownedItemsFilter == 2)
-                          const Text(
-                            "ONLY ITEMS NOT OWNED",
-                            style: TextStyle(fontSize: 10),
-                          )
+                          const Text("ONLY ITEMS NOT OWNED", style: TextStyle(fontSize: 10))
                         else
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
                         Padding(
                           padding: const EdgeInsets.only(left: 5),
                           child: SizedBox(
@@ -387,22 +368,24 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                               initialLabelIndex: _ownedItemsFilter == 0
                                   ? null
                                   : _ownedItemsFilter == 1
-                                      ? 0
-                                      : 1,
+                                  ? 0
+                                  : 1,
                               activeBgColor: _themeProvider!.currentTheme == AppTheme.light
                                   ? [Colors.blueGrey]
                                   : _themeProvider!.currentTheme == AppTheme.dark
-                                      ? [Colors.blueGrey]
-                                      : [Colors.blueGrey[900]!],
-                              activeFgColor:
-                                  _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                                  ? [Colors.blueGrey]
+                                  : [Colors.blueGrey[900]!],
+                              activeFgColor: _themeProvider!.currentTheme == AppTheme.light
+                                  ? Colors.black
+                                  : Colors.white,
                               inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
                                   ? Colors.white
                                   : _themeProvider!.currentTheme == AppTheme.dark
-                                      ? Colors.grey[800]
-                                      : Colors.black,
-                              inactiveFgColor:
-                                  _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                                  ? Colors.grey[800]
+                                  : Colors.black,
+                              inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light
+                                  ? Colors.black
+                                  : Colors.white,
                               totalSwitches: 2,
                               animate: true,
                               animationDuration: 500,
@@ -415,30 +398,23 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                                 } else if (index == 1) {
                                   _ownedItemsFilter = 2;
                                 }
+                                if (index != null) _requestInventory();
                                 _rebuildItemsCards();
                                 Prefs().setOnlyOwnedItemsFilter(_ownedItemsFilter);
                               },
                             ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
-                  */
                   SizedBox(
                     width: 150,
                     child: RawChip(
                       selected: _hiddenCategories.isEmpty ? true : false,
                       side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600]!, width: 1.5),
-                      avatar: CircleAvatar(
-                        backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
-                      ),
-                      label: const Text(
-                        "ALL",
-                        style: TextStyle(
-                          fontSize: 12,
-                        ),
-                      ),
+                      avatar: CircleAvatar(backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey),
+                      label: const Text("ALL", style: TextStyle(fontSize: 12)),
                       selectedColor: Colors.transparent,
                       disabledColor: Colors.grey,
                       onSelected: (bool isSelected) {
@@ -453,16 +429,14 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                         }
                         Prefs().setHiddenItemsCategories(_hiddenCategories);
                         _rebuildItemsCards();
+                        _loadInventory();
                       },
                     ),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: _categoryFilterWrap(),
-            ),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: _categoryFilterWrap()),
           ],
         ),
       ),
@@ -485,25 +459,20 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           showCheckmark: false,
           selected: _hiddenCategories.contains(cat.key) ? false : true,
           side: BorderSide(color: _hiddenCategories.contains(cat.key) ? Colors.grey[600]! : Colors.green, width: 1.5),
-          label: Text(
-            "$titleCapitalized (${cat.value})",
-            style: const TextStyle(fontSize: 10),
-          ),
+          label: Text("$titleCapitalized (${cat.value})", style: const TextStyle(fontSize: 10)),
           selectedColor: Colors.transparent,
           disabledColor: Colors.grey,
           onSelected: (bool isSelected) {
             isSelected ? _hiddenCategories.remove(cat.key) : _hiddenCategories.add(cat.key);
             Prefs().setHiddenItemsCategories(_hiddenCategories);
             _rebuildItemsCards();
+            _loadInventory();
           },
         ),
       );
     }
 
-    return Wrap(
-      spacing: 5,
-      children: catChips,
-    );
+    return Wrap(spacing: 5, children: catChips);
   }
 
   void onSearchInputTextChange() {
@@ -514,9 +483,6 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   Future _getAllItems() async {
     // First get all Torn items
     final apiItems = await ApiCallsV1.getItems();
-
-    // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-    final apiInventory = null; // = await ApiCallsV1.getInventory();
 
     if (apiItems is! ItemsModel) {
       final ApiError error = apiItems as ApiError;
@@ -536,46 +502,6 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       details.name = details.name;
       details.id = id;
 
-      // Inventory details
-      if (apiInventory is InventoryModel) {
-        final InventoryModel invModel = apiInventory;
-
-        try {
-          // Bazaar
-          InventoryItem? invItem = invModel.inventory!.firstWhereOrNull((i) => i.id.toString() == id);
-          if (invItem == null) {
-            details.inventoryOwned = 0;
-          } else {
-            if (invItem.uid != null) {
-              // This item is unique (does not have an quantity), but there can be other similar in our possession
-              details.inventoryOwned = invModel.inventory!.where((i) => i.id.toString() == id).length;
-            } else {
-              details.inventoryOwned = invItem.quantity ?? 0;
-            }
-          }
-
-          // Cabinet
-          DisplayCabinet? cabinetItem = invModel.display!.firstWhereOrNull((i) => i.id.toString() == id);
-          if (cabinetItem != null) {
-            if (cabinetItem.uid != null) {
-              // This item is unique (does not have an quantity), but there can be other similar in our possession
-              // So we add all similar ones we can find in our inventory
-              details.inventoryOwned += invModel.display!.where((i) => i.id.toString() == id).length;
-            } else {
-              details.inventoryOwned += cabinetItem.quantity!;
-            }
-          }
-
-          _inventorySuccess = true;
-        } catch (e, trace) {
-          logToUser("PDA Error at Get Items: $e, $trace");
-        }
-      }
-
-      if (details.inventoryOwned > 0) {
-        details.totalValue = details.inventoryOwned * details.marketValue!;
-      }
-
       // Populate categories
       if (!_allCategories.containsKey(details.type!.name)) {
         _allCategories.addAll({details.type!.name: ""});
@@ -592,13 +518,13 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     _allCategories.forEach((key, value) {
       final int amount = _allItems.where((element) => element.type!.name == key).length;
       _allCategories[key] = amount.toString();
+      _inventoryCategoryOfType[key] = _inventoryProvider.categoryOf(key);
     });
 
     // Reset saved filters
     _hiddenCategories = await Prefs().getHiddenItemsCategories();
-    // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-    //_ownedItemsFilter = await Prefs().getOnlyOwnedItemsFilter();
-    _ownedItemsFilter = 0; // TODO!
+    _ownedItemsFilter = await Prefs().getOnlyOwnedItemsFilter();
+    _inventoryWanted = await Prefs().getInventoryAutoLoad() || _ownedItemsFilter != 0;
 
     // Sort them for the first time
     final String savedSort = await Prefs().getItemsSort();
@@ -623,13 +549,9 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       case 'totalValueDes':
         itemSort.type = ItemsSortType.totalValueDes;
       case 'ownedAsc':
-        // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-        //itemSort.type = ItemsSortType.ownedAsc;
-        itemSort.type = ItemsSortType.nameAsc;
+        itemSort.type = ItemsSortType.ownedAsc;
       case 'ownedDes':
-        // Removed as above
-        //itemSort.type = ItemsSortType.ownedDes;
-        itemSort.type = ItemsSortType.nameAsc;
+        itemSort.type = ItemsSortType.ownedDes;
       case 'circulationAsc':
         itemSort.type = ItemsSortType.circulationAsc;
       case 'circulationDes':
@@ -637,7 +559,78 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     }
 
     // Build all
+    await _inventoryProvider.restored;
+    _allItems.forEach(_updateInventory);
     _sortAndRebuildItemsCards(itemSort, initialLoad: true);
+    _loadInventory();
+  }
+
+  Set<String> _visibleInventoryCategories() {
+    final Set<String> types = {
+      ..._allCategories.keys.where((type) => !_hiddenCategories.contains(type)),
+      ..._pinnedItems.map((item) => item.type!.name),
+    };
+    return types.map((type) => _inventoryCategoryOfType[type]).whereType<String>().toSet();
+  }
+
+  // Only after the user has asked for it: one API call per visible category
+  void _loadInventory() {
+    if (!_inventoryWanted) return;
+    unawaited(_inventoryProvider.ensureFresh(_visibleInventoryCategories()));
+  }
+
+  // Green only when there is nothing left to ask for
+  bool get _inventoryComplete {
+    final Set<String> visible = _visibleInventoryCategories();
+    return visible.isNotEmpty && visible.every(_inventoryProvider.isFresh);
+  }
+
+  void _requestInventory() {
+    final Set<String> visible = _visibleInventoryCategories();
+    final Set<String> pending = visible.where((c) => !_inventoryProvider.isFresh(c)).toSet();
+    if (!_inventoryWanted) setState(() => _inventoryWanted = true);
+    inventoryToast(
+      pending.isEmpty ? inventoryUpToDateMessage(_inventoryProvider, visible) : inventoryLoadingMessage(pending),
+    );
+    _loadInventory();
+  }
+
+  bool get _inventoryLoading => _inventoryProvider.loading;
+
+  static bool _sortNeedsInventory(ItemsSortType? type) =>
+      type == ItemsSortType.ownedAsc ||
+      type == ItemsSortType.ownedDes ||
+      type == ItemsSortType.totalValueAsc ||
+      type == ItemsSortType.totalValueDes;
+
+  bool _hasInventory(Item item) {
+    final String? category = _inventoryCategoryOfType[item.type!.name];
+    return category != null && _inventoryProvider.loaded(category);
+  }
+
+  void _updateInventory(Item item) {
+    final String? category = _inventoryCategoryOfType[item.type!.name];
+    final int? owned = category == null ? null : _inventoryProvider.quantity(int.parse(item.id!), category);
+    item.inventoryOwned = owned ?? 0;
+    item.totalValue = item.inventoryOwned * (item.marketValue ?? 0);
+  }
+
+  void _onInventoryChanged() {
+    // One rebuild per burst of categories
+    _inventoryTimer ??= Timer(const Duration(milliseconds: 300), () {
+      _inventoryTimer = null;
+      if (_allItemsCards.isEmpty) return;
+      _allItems.forEach(_updateInventory);
+      _sortAndRebuildItemsCards(_currentSort, initialLoad: true);
+    });
+  }
+
+  // Items without inventory data go last
+  int _compareInventory(Item a, Item b, int Function(Item) value, {required bool descending}) {
+    final bool aHasData = _hasInventory(a);
+    if (aHasData != _hasInventory(b)) return aHasData ? -1 : 1;
+    final int result = descending ? value(b).compareTo(value(a)) : value(a).compareTo(value(b));
+    return result != 0 ? result : a.name!.compareTo(b.name!);
   }
 
   Widget _errorMain() {
@@ -708,30 +701,28 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         sortToSave = 'valueAsc';
       case ItemsSortType.totalValueDes:
         setState(() {
-          _allItems.sort((a, b) => b.totalValue.compareTo(a.totalValue));
-          _pinnedItems.sort((a, b) => b.totalValue.compareTo(a.totalValue));
+          _allItems.sort((a, b) => _compareInventory(a, b, (i) => i.totalValue, descending: true));
+          _pinnedItems.sort((a, b) => _compareInventory(a, b, (i) => i.totalValue, descending: true));
         });
         sortToSave = 'totalValueDes';
       case ItemsSortType.totalValueAsc:
         setState(() {
-          _allItems.sort((a, b) => a.totalValue.compareTo(b.totalValue));
-          _pinnedItems.sort((a, b) => a.totalValue.compareTo(b.totalValue));
+          _allItems.sort((a, b) => _compareInventory(a, b, (i) => i.totalValue, descending: false));
+          _pinnedItems.sort((a, b) => _compareInventory(a, b, (i) => i.totalValue, descending: false));
         });
         sortToSave = 'totalValueAsc';
-      /*
       case ItemsSortType.ownedDes:
         setState(() {
-          _allItems.sort((a, b) => b.inventoryOwned.compareTo(a.inventoryOwned));
-          _pinnedItems.sort((a, b) => b.inventoryOwned.compareTo(a.inventoryOwned));
+          _allItems.sort((a, b) => _compareInventory(a, b, (i) => i.inventoryOwned, descending: true));
+          _pinnedItems.sort((a, b) => _compareInventory(a, b, (i) => i.inventoryOwned, descending: true));
         });
         sortToSave = 'ownedDes';
       case ItemsSortType.ownedAsc:
         setState(() {
-          _allItems.sort((a, b) => a.inventoryOwned.compareTo(b.inventoryOwned));
-          _pinnedItems.sort((a, b) => a.inventoryOwned.compareTo(b.inventoryOwned));
+          _allItems.sort((a, b) => _compareInventory(a, b, (i) => i.inventoryOwned, descending: false));
+          _pinnedItems.sort((a, b) => _compareInventory(a, b, (i) => i.inventoryOwned, descending: false));
         });
         sortToSave = 'ownedAsc';
-      */
       case ItemsSortType.circulationDes:
         setState(() {
           _allItems.sort((a, b) => b.circulation!.compareTo(a.circulation!));
@@ -801,7 +792,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               item: thisPinned,
               settingsProvider: _settingsProvider,
               themeProvider: _themeProvider,
-              inventorySuccess: _inventorySuccess,
+              inventorySuccess: _hasInventory(thisPinned),
               pinned: true,
             ),
           ),
@@ -813,18 +804,10 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           children: [
             const Padding(
               padding: EdgeInsets.all(8.0),
-              child: Text(
-                "PINNED ITEMS",
-                style: TextStyle(fontSize: 12),
-              ),
+              child: Text("PINNED ITEMS", style: TextStyle(fontSize: 12)),
             ),
             Column(children: pinnedCards),
-            const SizedBox(
-              width: 80,
-              child: Divider(
-                thickness: 2,
-              ),
-            ),
+            const SizedBox(width: 80, child: Divider(thickness: 2)),
           ],
         ),
       );
@@ -835,13 +818,16 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
     // Items
     for (final Item item in _allItems) {
-      final bool inSearch = item.name!.toLowerCase().contains(_currentSearchFilter) ||
+      final bool inSearch =
+          item.name!.toLowerCase().contains(_currentSearchFilter) ||
           item.id.toString().toLowerCase().contains(_currentSearchFilter);
 
       final bool inCategoryFilter = !_hiddenCategories.contains(item.type!.name);
       bool ownPass = true;
 
-      if ((_ownedItemsFilter == 1 && item.inventoryOwned == 0) || (_ownedItemsFilter == 2 && item.inventoryOwned > 0)) {
+      if (_hasInventory(item) &&
+          ((_ownedItemsFilter == 1 && item.inventoryOwned == 0) ||
+              (_ownedItemsFilter == 2 && item.inventoryOwned > 0))) {
         ownPass = false;
       }
 
@@ -861,6 +847,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                   onPressed: (context) {
                     _pinnedItems.add(item);
                     _savePinnedItems();
+                    _loadInventory();
                     _sortAndRebuildItemsCards(_currentSort);
                   },
                 ),
@@ -870,7 +857,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               item: item,
               settingsProvider: _settingsProvider,
               themeProvider: _themeProvider,
-              inventorySuccess: _inventorySuccess,
+              inventorySuccess: _hasInventory(item),
               pinned: false,
             ),
           ),
