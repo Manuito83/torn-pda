@@ -97,8 +97,6 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   var _restockExpectedSoon = false;
   var _depletionTrendPerSecond = 0.0;
 
-  int? _invQuantity = 0;
-
   var _delayedDepartureTime = DateTime.now();
   String _codeName = "";
 
@@ -739,11 +737,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
               width: 100,
               child: Text(stock.name!),
             ),
-            if (widget.inventoryEnabled && _invQuantity != null)
+            if (widget.inventoryEnabled && stock.inventoryQuantity != null)
               SizedBox(
                 width: 100,
                 child: Text(
-                  "Inv: x$_invQuantity",
+                  "Inv: x${stock.inventoryQuantity}",
                   style: const TextStyle(fontSize: 11),
                 ),
               ),
@@ -1715,9 +1713,6 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   void _calculateDetails() {
-    // INVENTORY
-    _invQuantity = widget.foreignStock.inventoryQuantity;
-
     // ARRIVAL TIMES
     _flyingToThisCountry = false;
     _flyingElsewhere = false;

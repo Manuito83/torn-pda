@@ -203,6 +203,8 @@ class Prefs {
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
   final String _kShowForeignInventory = "pda_showForeignInventory";
+  final String _kInventoryAutoLoad = "pda_inventoryAutoLoad";
+  final String _kInventoryCache = "pda_inventoryCache";
   final String _kShowArrivalTime = "pda_showArrivalTime";
   final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
@@ -2071,6 +2073,22 @@ class Prefs {
 
   Future setShowForeignInventory(bool value) async {
     return await PrefsDatabase.setBool(_kShowForeignInventory, value);
+  }
+
+  Future<bool> getInventoryAutoLoad() async {
+    return await PrefsDatabase.getBool(_kInventoryAutoLoad, false);
+  }
+
+  Future setInventoryAutoLoad(bool value) async {
+    return await PrefsDatabase.setBool(_kInventoryAutoLoad, value);
+  }
+
+  Future<String> getInventoryCache() async {
+    return await PrefsDatabase.getString(_kInventoryCache, "");
+  }
+
+  Future setInventoryCache(String value) async {
+    return await PrefsDatabase.setString(_kInventoryCache, value);
   }
 
   Future<bool> getShowArrivalTime() async {

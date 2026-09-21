@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
@@ -173,6 +174,7 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
                                     widget.formKey.currentState!.reset();
                                     widget.apiKeyInputController.clear();
                                     UserHelper.removeUser();
+                                    context.read<InventoryProvider>().clear();
                                     widget.setStateOnParent();
                                     widget.changeUserProfile(null);
                                     widget.changeApiError(false);

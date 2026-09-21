@@ -14,18 +14,19 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 // Project imports:
-import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
+import 'package:torn_pda/utils/inventory_feedback.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
@@ -58,6 +59,9 @@ class ForeignStockPage extends StatefulWidget {
 class ForeignStockPageState extends State<ForeignStockPage> {
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
+  late final InventoryProvider _inventoryProvider;
+  Timer? _inventoryTimer;
+  bool _inventoryWanted = false;
   late bool _previousRouteWithDrawer;
   late String _previousRouteName;
 
@@ -108,6 +112,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   bool get _hasItemFiltersApplied => _filteredTypes.any((enabled) => !enabled);
 
   Future? _apiCalled;
+  late final Future _prefsRestored;
   late bool _apiSuccess;
   bool _yataSuccess = false;
   bool _prometheusSuccess = false;
@@ -132,7 +137,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   bool _inventoryEnabled = true;
   bool _showArrivalTime = true;
   bool _showBarsCooldownAnalysis = true;
-  InventoryModel? _inventory;
   OwnProfileExtended? _profile;
   int _capacity = 1;
 
@@ -187,13 +191,15 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.name),
     StockSort(type: StockSortType.type),
     StockSort(type: StockSortType.quantity),
-    //StockSort(type: StockSortType.inventoryQuantity),
+    StockSort(type: StockSortType.inventoryQuantity),
     StockSort(type: StockSortType.price),
     StockSort(type: StockSortType.value),
     StockSort(type: StockSortType.profit),
     StockSort(type: StockSortType.arrivalTime),
     StockSort(type: StockSortType.rarity),
   ];
+
+  bool _isSortAvailable(StockSort choice) => _inventoryEnabled || choice.type != StockSortType.inventoryQuantity;
 
   final List<ForeignStock> _hiddenStocks = <ForeignStock>[];
   final Set<int> _blacklistedItemIds = <int>{};
@@ -204,8 +210,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _inventoryProvider = Provider.of<InventoryProvider>(context, listen: false);
+    _inventoryProvider.addListener(_onInventoryChanged);
     _apiCalled = _fetchApiInformation();
-    _restoreSharedPreferences();
+    _prefsRestored = _restoreSharedPreferences();
 
     _previousRouteWithDrawer = routeWithDrawer;
     _previousRouteName = routeName;
@@ -220,6 +228,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   @override
   void dispose() {
     _willPopSubscription.cancel();
+    _inventoryProvider.removeListener(_onInventoryChanged);
+    _inventoryTimer?.cancel();
     super.dispose();
   }
 
@@ -379,11 +389,20 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         ],
       ),
       actions: <Widget>[
+        if (_inventoryEnabled)
+          IconButton(
+            icon: Icon(MdiIcons.packageVariantClosed, color: _inventoryComplete ? Colors.green : Colors.white),
+            tooltip: "Load inventory",
+            onPressed: _requestInventory,
+          ),
         PopupMenuButton<StockSort>(
           icon: const Icon(Icons.sort),
-          onSelected: _sortStocks,
+          onSelected: (choice) {
+            if (choice.type == StockSortType.inventoryQuantity) _requestInventory();
+            _sortStocks(choice);
+          },
           itemBuilder: (BuildContext context) {
-            return _popupChoices.map((StockSort choice) {
+            return _popupChoices.where(_isSortAvailable).map((StockSort choice) {
               return PopupMenuItem<StockSort>(
                 value: choice,
                 child: Text(
@@ -1049,7 +1068,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         );
       }
 
-      await Future.wait<void>([tornItems(), inventory(), profileMisc()]);
+      await Future.wait<void>([tornItems(), profileMisc()]);
 
       if (_isDataFromCache && !_apiSuccess) {
         // Allow rendering with cached data
@@ -1060,6 +1079,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         log("Unsuccessful Torn API replies");
         return;
       }
+
+      await _inventoryProvider.restored;
 
       _stocksModel.countries!.forEach((countryKey, countryDetails) {
         for (final stock in countryDetails.stocks!) {
@@ -1113,28 +1134,14 @@ class ForeignStockPageState extends State<ForeignStockPage> {
             ),
           );
 
-          int? invQty;
-          if (_inventory?.inventory != null && _inventory?.display != null) {
-            invQty = 0;
-            for (final invItem in _inventory!.inventory!) {
-              if (invItem.id == stock.id) {
-                invQty = invItem.quantity!;
-                break;
-              }
-            }
-            for (final displayItem in _inventory!.display!) {
-              if (displayItem.id == stock.id) {
-                invQty = invQty! + displayItem.quantity!;
-              }
-            }
-          }
-
-          stock.inventoryQuantity = invQty;
+          stock.inventoryQuantity = _inventoryQuantity(stock);
         }
       });
 
       // This will trigger a filter by flags, types and also sorting
       _filterAndSortTopLists();
+
+      unawaited(_loadInventory());
     } catch (e, t) {
       _apiSuccess = false;
 
@@ -1159,6 +1166,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 6));
         if (responseDB.statusCode == 200) {
           _stocksModel = foreignStockInModelFromJson(responseDB.body);
+          _stockCategories = null;
           if (provider == "yata") _yataSuccess = true;
           if (provider == "prometheus") _prometheusSuccess = true;
           return (apiSuccess: true, apiMessage: "");
@@ -1185,6 +1193,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       if (tornPDAData != null && tornPDAData.isNotEmpty) {
         // Convert Torn PDA Database format to expected model
         _stocksModel = _convertTornPDADataToModel(tornPDAData);
+        _stockCategories = null;
 
         if (_stocksModel.countries != null && _stocksModel.countries!.isNotEmpty) {
           return (apiSuccess: true, apiMessage: "Valid cached data retrieved from Torn PDA Database");
@@ -1466,54 +1475,62 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     _allTornItems = itemsResponse;
+    _stockCategories = null;
   }
 
-  Future inventory() async {
-    return null;
+  Iterable<ForeignStock> get _allStocks =>
+      (_stocksModel.countries?.values ?? <CountryDetails>[]).expand((c) => c.stocks ?? <ForeignStock>[]);
 
-    // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-    /*
-    dynamic inventoryResponse = await ApiCallsV1.getInventory();
+  String? _inventoryCategory(ForeignStock stock) {
+    if (_allTornItems?.items?[stock.id!.toString()] == null) return null;
+    return _inventoryProvider.categoryOf(stock.itemType?.name ?? '');
+  }
 
-    String error = "";
-    if (inventoryResponse is ApiError) {
-      // Torn API generates lots of errors with this query (JAN 2023)
-      final ApiError e = inventoryResponse;
-      error = e.errorReason;
-      log("Recalling API due to profile error: ${e.errorReason}");
-      BotToast.showText(
-        text: "Torn API replied with error, retrying after a few seconds, please wait...",
-        textStyle: const TextStyle(
-          fontSize: 13,
-          color: Colors.white,
-        ),
-        contentColor: Colors.orange[800]!,
-        duration: const Duration(seconds: 5),
-        contentPadding: const EdgeInsets.all(10),
-      );
-      await Future.delayed(const Duration(seconds: 8));
-      inventoryResponse = await (ApiCallsV1.getInventory());
-    }
+  int? _inventoryQuantity(ForeignStock stock) {
+    final String? category = _inventoryCategory(stock);
+    return category == null ? null : _inventoryProvider.quantity(stock.id!, category);
+  }
 
-    if (inventoryResponse is ApiError) {
-      _apiSuccess = false;
-      if (inventoryResponse.errorReason.isNotEmpty) {
-        BotToast.showText(
-          text: "Torn API response with error: $error",
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red[800]!,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
-        );
-      }
-      return;
-    }
+  Set<String>? _stockCategories;
 
-    _inventory = inventoryResponse;
-    */
+  Set<String> _stockInventoryCategories() =>
+      _stockCategories ??= _allStocks.map(_inventoryCategory).whereType<String>().toSet();
+
+  // Only after the user has asked for it: one API call per category sold abroad
+  Future<void> _loadInventory() async {
+    await _prefsRestored;
+    if (!mounted || !_inventoryEnabled || !_inventoryWanted) return;
+    await _inventoryProvider.ensureFresh(_stockInventoryCategories());
+  }
+
+  // Green only when there is nothing left to ask for
+  bool get _inventoryComplete {
+    final Set<String> categories = _stockInventoryCategories();
+    return categories.isNotEmpty && categories.every(_inventoryProvider.isFresh);
+  }
+
+  void _requestInventory() {
+    final Set<String> categories = _stockInventoryCategories();
+    final Set<String> pending = categories.where((c) => !_inventoryProvider.isFresh(c)).toSet();
+    if (!_inventoryWanted) setState(() => _inventoryWanted = true);
+    inventoryToast(
+      pending.isEmpty ? inventoryUpToDateMessage(_inventoryProvider, categories) : inventoryLoadingMessage(pending),
+    );
+    unawaited(_loadInventory());
+  }
+
+  void _onInventoryChanged() {
+    // One rebuild per burst of categories
+    _inventoryTimer ??= Timer(const Duration(milliseconds: 300), () {
+      _inventoryTimer = null;
+      if (!mounted) return;
+      setState(() {
+        for (final stock in _allStocks) {
+          stock.inventoryQuantity = _inventoryQuantity(stock);
+        }
+        if (_currentSort?.type == StockSortType.inventoryQuantity) _sortStocks(_currentSort);
+      });
+    });
   }
 
   Future profileMisc() async {
@@ -1690,17 +1707,25 @@ class ForeignStockPageState extends State<ForeignStockPage> {
             return aCirculation.compareTo(bCirculation);
           });
           Prefs().setStockSort('rarity');
-        /*
         case StockSortType.inventoryQuantity:
-          _filteredStocksCards.sort((a, b) => b.inventoryQuantity!.compareTo(a.inventoryQuantity!));
+          _filteredStocksCards.sort(_compareInventory);
           Prefs().setStockSort('inventoryQuantity');
-        */
         default:
           _filteredStocksCards.sort((a, b) => a.name!.compareTo(b.name!));
           Prefs().setStockSort('name');
           break;
       }
     });
+  }
+
+  // Most owned first, stocks without data last
+  int _compareInventory(ForeignStock a, ForeignStock b) {
+    final int? qa = a.inventoryQuantity;
+    final int? qb = b.inventoryQuantity;
+    if (qa == qb) return 0;
+    if (qa == null) return 1;
+    if (qb == null) return -1;
+    return qb.compareTo(qa);
   }
 
   Future _restoreSharedPreferences() async {
@@ -1748,17 +1773,19 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     } else if (sortString == 'rarity') {
       sortType = StockSortType.rarity;
     } else if (sortString == 'inventoryQuantity') {
-      // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-      //sortType = StockSortType.inventoryQuantity;
-      sortType = StockSortType.country;
+      sortType = StockSortType.inventoryQuantity;
     }
     _currentSort = StockSort(type: sortType);
 
     _capacity = await Prefs().getStockCapacity();
     _inventoryEnabled = await Prefs().getShowForeignInventory();
+    if (!_inventoryEnabled && sortType == StockSortType.inventoryQuantity) {
+      _currentSort = StockSort(type: StockSortType.country);
+    }
     _showArrivalTime = await Prefs().getShowArrivalTime();
     _showBarsCooldownAnalysis = await Prefs().getShowBarsCooldownAnalysis();
     _autoFilterOnTravel = await Prefs().getStockAutoFilterOnTravel();
+    _inventoryWanted = _inventoryWanted || await Prefs().getInventoryAutoLoad();
 
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
 
@@ -1838,6 +1865,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     bool showBarsCooldownAnalysis,
     bool autoFilterOnTravel,
   ) {
+    final bool inventoryTurnedOn = inventoryEnabled && !_inventoryEnabled;
     _recalculateProfit();
     setState(() {
       _capacity = newCapacity;
@@ -1846,6 +1874,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       _showBarsCooldownAnalysis = showBarsCooldownAnalysis;
       _autoFilterOnTravel = autoFilterOnTravel;
     });
+
+    if (inventoryTurnedOn) _requestInventory();
+    if (!inventoryEnabled && _currentSort?.type == StockSortType.inventoryQuantity) {
+      _sortStocks(StockSort(type: StockSortType.country));
+    }
   }
 
   String _timeStampToString(int timeStamp) {

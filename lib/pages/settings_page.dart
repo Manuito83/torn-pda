@@ -33,6 +33,7 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -134,6 +135,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   // SEARCH ##########
   bool _isSearching = false;
+  bool _inventoryAutoLoad = false;
   String _searchText = '';
   final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
@@ -2647,6 +2649,45 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Load inventory automatically",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Load inventory automatically")),
+                  Switch(
+                    value: _inventoryAutoLoad,
+                    onChanged: (enabled) {
+                      setState(() {
+                        _inventoryAutoLoad = enabled;
+                      });
+                      Prefs().setInventoryAutoLoad(enabled);
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "If enabled, your inventory is loaded as soon as you open Items or Foreign Stocks. Torn serves inventory "
+                "by item category, one API call each (up to 25 in Items), cached for an hour. If disabled, inventory "
+                "is only loaded when you tap the box icon in those sections",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
 
     return buildSectionWithRows(
@@ -4018,6 +4059,7 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _getApiDetails({required bool userTriggered, required String currentKey}) async {
+    final InventoryProvider inventoryProvider = context.read<InventoryProvider>();
     int errorPlayerId = 0;
     dynamic firebaseErrorUser;
 
@@ -4032,6 +4074,7 @@ class SettingsPageState extends State<SettingsPage> {
           ..userApiKey = currentKey
           ..userApiKeyValid = true;
         UserHelper.setUserDetails(userDetails: myProfile);
+        if (userTriggered) inventoryProvider.clear();
 
         setState(() {
           _apiIsLoading = false;
@@ -4116,6 +4159,7 @@ class SettingsPageState extends State<SettingsPage> {
         // connectivity
         if (myProfile.errorId == 2) {
           UserHelper.removeUser();
+          inventoryProvider.clear();
         }
       }
     } catch (e, stack) {
@@ -4208,8 +4252,10 @@ class SettingsPageState extends State<SettingsPage> {
     final alertsVibration = await Prefs().getVibrationPattern();
     final manualAlarmSound = await Prefs().getManualAlarmSound();
     final manualAlarmVibration = await Prefs().getManualAlarmVibration();
+    final inventoryAutoLoad = await Prefs().getInventoryAutoLoad();
 
     setState(() {
+      _inventoryAutoLoad = inventoryAutoLoad;
       _removeNotificationsLaunch = _settingsProvider.removeNotificationsOnLaunch;
       _vibrationValue = alertsVibration;
       _manualAlarmSound = manualAlarmSound;
