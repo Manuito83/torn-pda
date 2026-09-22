@@ -144,6 +144,34 @@ List<_MVersion> _modernChangelog() => [
                 'loaded on entering those sections, enable "Load inventory automatically" in Settings, under API '
                 'call rate. Torn caches inventory for an hour, so recent purchases can take up to an hour to show.',
           ),
+          _MItem(
+            'FFScouter: shared notes',
+            detail:
+                'The notes dialog of any player now has an FFScouter tab with the notes stored in FFScouter: your '
+                'personal ones, the ones written by your faction and those from the FFScouter team. You can write '
+                'new personal or faction notes there, and copy notes between FFScouter and your Torn PDA note.\n\n'
+                'War, target and profile cards show how many FFScouter notes a player has: tap the counter to open '
+                'them, or the notebook icon for your Torn PDA note. Notes are stored by FFScouter, so they follow you '
+                'to any device and to the FFScouter scripts. In Settings, under FFScouter, you can choose which note '
+                'the cards show when there are both, or turn them off.',
+          ),
+          _MItem(
+            'FFScouter: hit calling in the war section',
+            detail:
+                'If you have FFScouter premium, tap the hand icon of a war card to call that target for your faction. '
+                'Everyone in your faction using Torn PDA or the FFScouter scripts sees who called what, and calls '
+                'expire on their own after a while. It can be disabled in the FFScouter premium features.',
+          ),
+          _MItem(
+            'FFScouter: new Bounty Board tab',
+            detail:
+                'The FFScouter section in Chaining has a Bounty Board tab next to the Target '
+                'Finder. It lists the players with bounties placed through FFScouter and what each hit pays: attack '
+                'one from there, hospitalize them and claim the hit, and FFScouter checks your attack log and pays '
+                'you. You can also place your own bounties, paid with Xanax, and follow them from the same tab.\n\n'
+                'The first time you open it you are asked to accept the Bounty Board rules and data policy, and the '
+                'tab can be hidden from Settings if you are not interested.',
+          ),
         ],
       ),
       _MSection(
@@ -151,6 +179,10 @@ List<_MVersion> _modernChangelog() => [
         title: 'Improved',
         color: Color(0xFFE65100),
         items: [
+          _MItem(
+            'FFScouter: stats dialog shows every estimate with its date, spies when available and a history chart',
+          ),
+          _MItem('FFScouter: travel timers for all the players in a list are now loaded in a single call'),
           _MItem('Foreign stocks: item details now include the average time an item takes to sell out'),
           _MItem(
             'Browser: option to keep locked tabs loaded',

@@ -772,6 +772,21 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _ffScouterBountiesEnabled = true;
+  bool get ffScouterBountiesEnabled => _ffScouterBountiesEnabled && _ffScouterBountiesEnabledRemoteConfig;
+  set ffScouterBountiesEnabled(bool value) {
+    _ffScouterBountiesEnabled = value;
+    Prefs().setFFScouterBountiesEnabled(value);
+    notifyListeners();
+  }
+
+  bool _ffScouterBountiesEnabledRemoteConfig = true;
+  bool get ffScouterBountiesEnabledRemoteConfig => _ffScouterBountiesEnabledRemoteConfig;
+  set ffScouterBountiesEnabledRemoteConfig(bool value) {
+    _ffScouterBountiesEnabledRemoteConfig = value;
+    notifyListeners();
+  }
+
   /// When true, FFScouter battle score estimates replace the vague estimated
   /// stats range on war/retal cards and profile checks (for unspied targets).
   /// Returns false if FFScouter is disabled, regardless of the stored value.
@@ -1804,6 +1819,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _ffScouterEnabledStatus = await Prefs().getFFScouterEnabledStatus();
     _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    _ffScouterBountiesEnabled = await Prefs().getFFScouterBountiesEnabled();
     _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
     _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
 

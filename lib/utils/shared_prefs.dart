@@ -89,6 +89,13 @@ class Prefs {
   final String _kFFScouterPremiumDistribution = "pda_ffScouterPremiumDistribution";
   final String _kFFScouterPremiumFlights = "pda_ffScouterPremiumFlights";
   final String _kFFScouterPremiumActivity = "pda_ffScouterPremiumActivity";
+  final String _kFFScouterHitCallingEnabled = "pda_ffScouterHitCallingEnabled";
+  final String _kFFScouterPolicyUpdateRequired = "pda_ffScouterPolicyUpdateRequired";
+  final String _kFFScouterNotesEnabled = "pda_ffScouterNotesEnabled";
+  final String _kFFScouterNotesPreferOnCards = "pda_ffScouterNotesPreferOnCards";
+  final String _kFFScouterFactionNoteWarned = "pda_ffScouterFactionNoteWarned";
+  final String _kFFScouterBountyOrders = "pda_ffScouterBountyOrders";
+  final String _kFFScouterBountiesEnabled = "pda_ffScouterBountiesEnabled";
   final String _kFactionAssistPrefs = "pda_factionAssistPrefs";
 
   // Other
@@ -3511,6 +3518,62 @@ class Prefs {
 
   Future setFFScouterPremiumActivity(bool value) async {
     return await PrefsDatabase.setBool(_kFFScouterPremiumActivity, value);
+  }
+
+  Future<bool> getFFScouterHitCallingEnabled() async {
+    return await PrefsDatabase.getBool(_kFFScouterHitCallingEnabled, true);
+  }
+
+  Future setFFScouterHitCallingEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterHitCallingEnabled, value);
+  }
+
+  Future<bool> getFFScouterPolicyUpdateRequired() async {
+    return await PrefsDatabase.getBool(_kFFScouterPolicyUpdateRequired, false);
+  }
+
+  Future setFFScouterPolicyUpdateRequired(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPolicyUpdateRequired, value);
+  }
+
+  Future<bool> getFFScouterNotesEnabled() async {
+    return await PrefsDatabase.getBool(_kFFScouterNotesEnabled, true);
+  }
+
+  Future setFFScouterNotesEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterNotesEnabled, value);
+  }
+
+  Future<bool> getFFScouterNotesPreferOnCards() async {
+    return await PrefsDatabase.getBool(_kFFScouterNotesPreferOnCards, false);
+  }
+
+  Future setFFScouterNotesPreferOnCards(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterNotesPreferOnCards, value);
+  }
+
+  Future<bool> getFFScouterFactionNoteWarned() async {
+    return await PrefsDatabase.getBool(_kFFScouterFactionNoteWarned, false);
+  }
+
+  Future setFFScouterFactionNoteWarned(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterFactionNoteWarned, value);
+  }
+
+  Future<List<String>> getFFScouterBountyOrders() async {
+    return await PrefsDatabase.getStringList(_kFFScouterBountyOrders, []);
+  }
+
+  Future setFFScouterBountyOrders(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kFFScouterBountyOrders, value);
+  }
+
+  Future<bool> getFFScouterBountiesEnabled() async {
+    return await PrefsDatabase.getBool(_kFFScouterBountiesEnabled, true);
+  }
+
+  Future setFFScouterBountiesEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterBountiesEnabled, value);
   }
 
   /// 0 = Off (FFS never overrides spied). 1-12 = months threshold.

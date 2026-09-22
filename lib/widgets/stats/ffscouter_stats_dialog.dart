@@ -10,6 +10,7 @@ import 'package:torn_pda/utils/external/ffscouter_comm.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_premium_gate.dart';
 import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
+import 'package:torn_pda/widgets/stats/ffscouter_stats_history_chart.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 
 class FFScouterStatsDialog extends StatefulWidget {
@@ -37,6 +38,7 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
   void initState() {
     super.initState();
     _ffScouterDetailsFetched = _fetchDetails();
+    Get.find<FFScouterPremiumController>().refreshPremiumStatus();
   }
 
   @override
@@ -56,6 +58,7 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
                 ),
               ],
             ),
+            const FFScouterPolicyNotice(padding: EdgeInsets.only(bottom: 12)),
             FutureBuilder(
               future: _ffScouterDetailsFetched,
               builder: (context, snapshot) {
@@ -254,6 +257,16 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
                 ],
               ),
             ),
+          if (stats.availableEstimates.length > 1) ...[
+            const SizedBox(height: 20),
+            _estimatesWidget(stats),
+          ],
+          if (stats.spies.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            _spiesWidget(stats.spies),
+          ],
+          const SizedBox(height: 20),
+          FFScouterStatsHistoryChart(playerId: widget.ffScouterStatsPayload.targetId),
           if (Get.find<FFScouterPremiumController>().distributionEnabled) ...[
             const SizedBox(height: 20),
             FFScouterPremiumGate(
@@ -265,6 +278,96 @@ class _FFScouterStatsDialogState extends State<FFScouterStatsDialog> {
         ],
       ),
     );
+  }
+
+  Widget _estimatesWidget(FFScouterPlayerStats stats) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "ESTIMATES BY SOURCE",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink[700], fontSize: 16),
+        ),
+        for (final estimate in stats.availableEstimates)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      switch (estimate.kind) {
+                        "premium" => "Premium",
+                        "bss" => "Public (BSS)",
+                        _ => "Spy${estimate.source != null ? " (${estimate.source})" : ""}",
+                      },
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    if (estimate.kind == stats.source)
+                      Text("  in use", style: TextStyle(fontSize: 12, color: Colors.pink[400])),
+                  ],
+                ),
+                Text(
+                  [
+                    estimate.bsEstimateHuman ?? formatBigNumbers(estimate.bsEstimate ?? 0),
+                    if (estimate.fairFight != null) "FF ${estimate.fairFight!.toStringAsFixed(2)}",
+                    if (estimate.lastUpdated != null) _daysAgo(estimate.lastUpdated!),
+                  ].join("  ·  "),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _spiesWidget(List<FFScouterSpy> spies) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "SPIES",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink[700], fontSize: 16),
+        ),
+        for (final spy in spies)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Total ${formatBigNumbers(spy.total ?? 0)}",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                Text(
+                  [
+                    if (spy.strength != null) "STR ${formatBigNumbers(spy.strength!)}",
+                    if (spy.defense != null) "DEF ${formatBigNumbers(spy.defense!)}",
+                    if (spy.speed != null) "SPD ${formatBigNumbers(spy.speed!)}",
+                    if (spy.dexterity != null) "DEX ${formatBigNumbers(spy.dexterity!)}",
+                  ].join("  "),
+                  style: const TextStyle(fontSize: 13),
+                ),
+                Text(
+                  [
+                    if (spy.source != null) spy.source!,
+                    if (spy.lastUpdated != null) _daysAgo(spy.lastUpdated!),
+                  ].join("  ·  "),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _daysAgo(int timestamp) {
+    final days = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(timestamp * 1000)).inDays;
+    if (days == 0) return "today";
+    return days == 1 ? "1 day ago" : "$days days ago";
   }
 
   Widget _distributionWidget(FFScouterDistribution? dist) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_flights_model.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
@@ -12,13 +14,15 @@ class _FlightCacheEntry {
 }
 
 /// Short-lived in-memory cache for player-flights
-/// Single-target, deduplicated, not persisted. Success/error-19 update premium
+/// Batched, deduplicated, not persisted. Success/error-19 update premium
 class FFScouterFlightsController extends GetxController {
   final Map<int, _FlightCacheEntry> _cache = {};
-  final Set<int> _inFlight = {};
+  final Map<int, List<Completer<FFScouterFlightsResponse?>>> _waiting = {};
+  Timer? _batchTimer;
 
   /// Re-fetch window. Short because the target may land or start a new trip
   static const int _ttlSeconds = 120;
+  static const int _batchSize = 100;
 
   int get _now => DateTime.now().millisecondsSinceEpoch ~/ 1000;
 
@@ -31,31 +35,50 @@ class FFScouterFlightsController extends GetxController {
   }
 
   /// Fetch flights for [target] (cached when fresh). Null if unavailable
-  Future<FFScouterFlightsResponse?> fetch(int target, {bool force = false}) async {
+  Future<FFScouterFlightsResponse?> fetch(int target, {bool force = false}) {
     if (!force) {
       final cached = get(target);
-      if (cached != null) return cached;
+      if (cached != null) return Future.value(cached);
     }
-    if (_inFlight.contains(target)) return get(target);
-    if (!Get.find<FFScouterCacheController>().remoteConfigEnabled) return null;
+    if (!Get.find<FFScouterCacheController>().remoteConfigEnabled) return Future.value(null);
+    if (Get.find<UserController>().alternativeFFScouterKey.isEmpty) return Future.value(null);
 
+    final completer = Completer<FFScouterFlightsResponse?>();
+    _waiting.putIfAbsent(target, () => []).add(completer);
+    _batchTimer ??= Timer(const Duration(milliseconds: 300), _fetchWaiting);
+    return completer.future;
+  }
+
+  Future<void> _fetchWaiting() async {
+    _batchTimer = null;
+    final waiting = Map.of(_waiting);
+    _waiting.clear();
+    final ids = waiting.keys.toList();
     final key = Get.find<UserController>().alternativeFFScouterKey;
-    if (key.isEmpty) return null;
-
-    _inFlight.add(target);
-    final result = await FFScouterComm.getPlayerFlights(key: key, target: target);
-    _inFlight.remove(target);
-
     final premiumRegistered = Get.isRegistered<FFScouterPremiumController>();
 
-    if (result.success && result.data != null) {
-      if (premiumRegistered) Get.find<FFScouterPremiumController>().markPremiumDetected();
-      _cache[target] = _FlightCacheEntry(result.data!, _now);
-      update();
-      return result.data;
-    } else if (result.errorCode == 19 && premiumRegistered) {
-      Get.find<FFScouterPremiumController>().markNotPremium();
+    for (int i = 0; i < ids.length; i += _batchSize) {
+      final chunk = ids.sublist(i, (i + _batchSize).clamp(0, ids.length));
+      final result = await FFScouterComm.getPlayerFlightsBatch(key: key, targets: chunk);
+
+      if (result.success && result.data != null) {
+        if (premiumRegistered) Get.find<FFScouterPremiumController>().markPremiumDetected();
+        final now = _now;
+        for (final id in chunk) {
+          final data = result.data!.firstWhereOrNull((f) => f.playerId == id) ?? FFScouterFlightsResponse(playerId: id);
+          _cache[id] = _FlightCacheEntry(data, now);
+        }
+      } else if (result.errorCode == 19 && premiumRegistered) {
+        Get.find<FFScouterPremiumController>().markNotPremium();
+      }
+
+      for (final id in chunk) {
+        final data = result.success ? _cache[id]?.data : null;
+        for (final completer in waiting[id]!) {
+          completer.complete(data);
+        }
+      }
     }
-    return null;
+    update();
   }
 }

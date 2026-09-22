@@ -23,10 +23,15 @@ class FFScouterPremiumController extends GetxController {
   bool _distributionEnabled = true;
   bool _flightsEnabled = true;
   bool _activityEnabled = true;
+  bool _hitCallingEnabled = true;
 
   bool get distributionEnabled => _distributionEnabled;
   bool get flightsEnabled => _flightsEnabled;
   bool get activityEnabled => _activityEnabled;
+  bool get hitCallingEnabled => _hitCallingEnabled;
+
+  bool _policyUpdateRequired = false;
+  bool get policyUpdateRequired => _policyUpdateRequired;
 
   set distributionEnabled(bool v) {
     _distributionEnabled = v;
@@ -46,6 +51,12 @@ class FFScouterPremiumController extends GetxController {
     update();
   }
 
+  set hitCallingEnabled(bool v) {
+    _hitCallingEnabled = v;
+    Prefs().setFFScouterHitCallingEnabled(v);
+    update();
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -59,6 +70,8 @@ class FFScouterPremiumController extends GetxController {
     _distributionEnabled = await Prefs().getFFScouterPremiumDistribution();
     _flightsEnabled = await Prefs().getFFScouterPremiumFlights();
     _activityEnabled = await Prefs().getFFScouterPremiumActivity();
+    _hitCallingEnabled = await Prefs().getFFScouterHitCallingEnabled();
+    _policyUpdateRequired = await Prefs().getFFScouterPolicyUpdateRequired();
     update();
   }
 
@@ -95,6 +108,11 @@ class FFScouterPremiumController extends GetxController {
     if (result.success && result.data != null) {
       _lastChecked = now;
       Prefs().setFFScouterPremiumLastChecked(now);
+      if (result.data!.policyUpdateRequired != _policyUpdateRequired) {
+        _policyUpdateRequired = result.data!.policyUpdateRequired;
+        Prefs().setFFScouterPolicyUpdateRequired(_policyUpdateRequired);
+        update();
+      }
       _applyPremium(result.data!.isPremium);
     }
   }
