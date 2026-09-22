@@ -124,15 +124,17 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                   // Using custom names
                                   tabCustomNameShown
                                   ? Container(
-                                      width: 30,
+                                      constraints: const BoxConstraints(minWidth: 30, maxWidth: 70),
                                       height: 32,
-                                      child: Center(
+                                      child: Align(
+                                        widthFactor: 1,
                                         child: ResponsiveText(
                                           text: _webViewProvider!.tabList[i].customName,
                                           maxLines: 3,
                                           maxFontSize: 11,
                                           minFontSize: 8,
                                           textAlign: TextAlign.center,
+                                          avoidWordBreak: true,
                                           style: const TextStyle(height: 0.9, fontWeight: FontWeight.bold),
                                         ),
                                       ),
