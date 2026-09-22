@@ -225,6 +225,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Fixed issue with back button not correctly closing some dialogs', androidOnly: true),
           _MItem('Fixed issues with company addiction refresh in Profile'),
           _MItem('Shortcuts: custom border color is now kept after restarting the app'),
+          _MItem('Browser: custom tab names are no longer split in the middle of a word'),
         ],
       ),
     ],
