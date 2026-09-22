@@ -15,6 +15,7 @@ import 'package:torn_pda/pages/chaining/retals_page.dart';
 import 'package:torn_pda/pages/chaining/ffscouter_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/war_page.dart';
+import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -55,6 +56,17 @@ class ChainingPageState extends State<ChainingPage> {
 
     routeWithDrawer = true;
     routeName = "chaining";
+  }
+
+  @override
+  void dispose() {
+    Get.find<FFScouterHitCallingController>().setWarVisible(false);
+    super.dispose();
+  }
+
+  void _setWarVisible(bool visible) {
+    final ffsEnabled = context.read<SettingsProvider>().ffScouterEnabledStatus == 1;
+    Get.find<FFScouterHitCallingController>().setWarVisible(visible && ffsEnabled);
   }
 
   @override
@@ -126,11 +138,7 @@ class ChainingPageState extends State<ChainingPage> {
                                 size: 18,
                               ),
                             if (_targetFinderEnabled)
-                              Icon(
-                                Icons.search,
-                                color: isThemeLight ? Colors.white : _themeProvider!.mainText,
-                                size: 22,
-                              ),
+                              _ffScouterTabIcon(isThemeLight),
                             // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                           ],
                           locationTop: true,
@@ -183,11 +191,7 @@ class ChainingPageState extends State<ChainingPage> {
                           size: 18,
                         ),
                       if (_targetFinderEnabled)
-                        Icon(
-                          Icons.search,
-                          color: isThemeLight ? Colors.white : _themeProvider!.mainText,
-                          size: 22,
-                        ),
+                        _ffScouterTabIcon(isThemeLight),
                       // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                     ],
                     locationTop: false,
@@ -225,6 +229,7 @@ class ChainingPageState extends State<ChainingPage> {
 
     // Avoid automatic retals retrieval with timer unless we are using the section
     _currentPage == 3 ? _r.sectionVisible = true : _r.sectionVisible = false;
+    _setWarVisible(_currentPage == 2);
 
     switch (_currentPage) {
       case 0:
@@ -249,9 +254,22 @@ class ChainingPageState extends State<ChainingPage> {
 
   // IndexedStack loads all sections at the same time, but we need to load certain things when we
   // enter the section
+  Widget _ffScouterTabIcon(bool isThemeLight) {
+    return Text(
+      "FFS",
+      style: TextStyle(
+        color: isThemeLight ? Colors.white : _themeProvider!.mainText,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+
   void handleSectionChange(int index) {
     // Avoid automatic retals retrieval with timer unless we are using the section
     index == 3 ? _r.sectionVisible = true : _r.sectionVisible = false;
+    _setWarVisible(index == 2);
 
     switch (index) {
       case 0:

@@ -61,6 +61,8 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
+import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -714,6 +716,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Remote Config defaults
       remoteConfig.setDefaults(const {
         "ffscouter_enabled": true,
+        "ffscouter_notes_enabled": true,
+        "ffscouter_hitcalling_enabled": true,
+        "ffscouter_bounties_enabled": true,
         "yata_stats_enabled": true,
         "yata_upload_enabled": true,
         "prometheus_upload_enabled": true,
@@ -797,6 +802,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     try {
       _settingsProvider.ffScouterEnabledStatusRemoteConfig = remoteConfig.getBool("ffscouter_enabled");
       Get.find<FFScouterCacheController>().remoteConfigEnabled = _settingsProvider.ffScouterEnabledStatusRemoteConfig;
+      Get.find<FFScouterNotesController>().remoteConfigEnabled = remoteConfig.getBool("ffscouter_notes_enabled");
+      Get.find<FFScouterHitCallingController>().remoteConfigEnabled = remoteConfig.getBool(
+        "ffscouter_hitcalling_enabled",
+      );
+      _settingsProvider.ffScouterBountiesEnabledRemoteConfig = remoteConfig.getBool("ffscouter_bounties_enabled");
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
       _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");

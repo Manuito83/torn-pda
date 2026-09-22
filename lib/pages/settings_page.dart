@@ -67,6 +67,7 @@ import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:vibration/vibration.dart';
@@ -148,7 +149,9 @@ class SettingsPageState extends State<SettingsPage> {
       _notificationsSection(),
       if (Platform.isAndroid) _appWidgetSection(),
       _spiesSection(),
-      _statsSection(),
+      _playerNotesSection(),
+      _ffScouterSection(),
+      _yataSection(),
       _ocSection(),
       _revivingServicesSection(),
       _screenConfigurationSection(),
@@ -1399,6 +1402,13 @@ class SettingsPageState extends State<SettingsPage> {
                   value: p.activityEnabled,
                   onChanged: (v) => p.activityEnabled = v,
                 ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text("Hit calling"),
+                  subtitle: const Text("Call war targets for your faction", style: TextStyle(fontSize: 12)),
+                  value: p.hitCallingEnabled,
+                  onChanged: (v) => p.hitCallingEnabled = v,
+                ),
               ],
             ),
           ),
@@ -1408,7 +1418,63 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _statsSection() {
+  Widget _playerNotesSection() {
+    List<SearchableRow> rows = [];
+
+    // Player Notes Manager
+    rows.add(
+      SearchableRow(
+        label: "Player Notes",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Player notes database',
+                      style: TextStyle(
+                        color: _themeProvider.mainText,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => const PlayerNotesListDialog(),
+                      );
+                    },
+                    child: const Text('Manage Notes'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'View and edit all your player notes, including those from targets, friends, stakeouts, and war members.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return buildSectionWithRows(
+      title: "PLAYER NOTES",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _ffScouterSection() {
     List<SearchableRow> rows = [];
 
     // FFScouter Block
@@ -1482,6 +1548,10 @@ class SettingsPageState extends State<SettingsPage> {
                     fontStyle: FontStyle.italic,
                   ),
                 ),
+                if (_settingsProvider.ffScouterEnabledStatus == 1) ...[
+                  _ffScouterStatusLine(),
+                  const FFScouterPolicyNotice(),
+                ],
               ],
             ),
           ),
@@ -1514,12 +1584,12 @@ class SettingsPageState extends State<SettingsPage> {
           label: "FFScouter premium features",
           searchText: _searchText,
           child: Padding(
-            padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
+            padding: const EdgeInsets.only(left: 32, top: 0, right: 20, bottom: 5),
             child: GetBuilder<FFScouterPremiumController>(
               builder: (ffsPremium) => Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Flexible(child: Text("FFScouter premium features")),
+                  const Flexible(child: Text("Premium features")),
                   if (ffsPremium.isPremium)
                     OutlinedButton.icon(
                       onPressed: _showFFScouterPremiumFeaturesDialog,
@@ -1548,6 +1618,122 @@ class SettingsPageState extends State<SettingsPage> {
       );
     }
 
+    // FFScouter shared notes
+    if (_settingsProvider.ffScouterEnabledStatusRemoteConfig &&
+        _settingsProvider.ffScouterEnabledStatus == 1 &&
+        Get.find<FFScouterNotesController>().remoteConfigEnabled) {
+      rows.add(
+        SearchableRow(
+          label: "FFScouter shared notes",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 32, top: 0, right: 20, bottom: 5),
+            child: GetBuilder<FFScouterNotesController>(
+              builder: (notes) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Flexible(child: Text("Shared notes")),
+                      Switch(
+                        value: notes.enabled,
+                        onChanged: (enabled) {
+                          notes.enabled = enabled;
+                          if (enabled) notes.resetKeyProblem();
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeThumbColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'Shows the personal and faction notes stored in FFScouter in the notes dialog, and a counter '
+                    'next to the notes of war, target and profile cards',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  if (notes.enabled) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Flexible(child: Text("Note shown on cards")),
+                        DropdownButton<bool>(
+                          value: notes.preferOnCards,
+                          items: const [
+                            DropdownMenuItem(value: false, child: Text("Torn PDA", style: TextStyle(fontSize: 14))),
+                            DropdownMenuItem(value: true, child: Text("FFScouter", style: TextStyle(fontSize: 14))),
+                          ],
+                          onChanged: (value) => notes.preferOnCards = value ?? false,
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'When a player has both a Torn PDA note and FFScouter notes, cards show this one. Tap the '
+                      'notebook icon to open your Torn PDA note, or the FFS counter to open the FFScouter ones',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // FFScouter Bounty Board
+    if (_settingsProvider.ffScouterEnabledStatusRemoteConfig &&
+        _settingsProvider.ffScouterEnabledStatus == 1 &&
+        _settingsProvider.ffScouterBountiesEnabledRemoteConfig) {
+      rows.add(
+        SearchableRow(
+          label: "FFScouter Bounty Board",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 32, top: 0, right: 20, bottom: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Bounty Board")),
+                    Switch(
+                      value: _settingsProvider.ffScouterBountiesEnabled,
+                      onChanged: (enabled) {
+                        setState(() {
+                          _settingsProvider.ffScouterBountiesEnabled = enabled;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'Shows the Bounty Board tab in the FFScouter section of Chaining, where you can hit the players '
+                  'with a bounty on them and place your own',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // FFScouter: prefer BS estimates over range-based estimates
     if (_settingsProvider.ffScouterEnabledStatusRemoteConfig && _settingsProvider.ffScouterEnabledStatus == 1) {
       rows.add(
@@ -1555,7 +1741,7 @@ class SettingsPageState extends State<SettingsPage> {
           label: "Prefer FFScouter battle score",
           searchText: _searchText,
           child: Padding(
-            padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
+            padding: const EdgeInsets.only(left: 32, top: 0, right: 20, bottom: 5),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1642,6 +1828,63 @@ class SettingsPageState extends State<SettingsPage> {
       );
     }
 
+    return buildSectionWithRows(
+      title: "FFSCOUTER",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _ffScouterStatusLine() {
+    return GetBuilder<FFScouterPremiumController>(
+      builder: (premium) {
+        final dedicatedKey = Get.find<UserController>().alternativeFFScouterKeyEnabled;
+        final keyProblem =
+            Get.find<FFScouterCacheController>().keyNotRegistered || Get.find<FFScouterNotesController>().keyProblem;
+        final status = [
+          dedicatedKey ? "Dedicated FFScouter key" : "Using your Torn PDA key",
+          if (premium.isPremium) "Premium",
+        ].join(" · ");
+        return Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            children: [
+              Icon(
+                keyProblem ? Icons.error_outline : Icons.check_circle_outline,
+                size: 14,
+                color: keyProblem ? Colors.orange : Colors.green,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  keyProblem ? "Your key is not registered with FFScouter" : status,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+              if (keyProblem)
+                TextButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FFScouterInfoPage(
+                        settingsProvider: _settingsProvider,
+                        themeProvider: _themeProvider,
+                        jumpToKeySetup: true,
+                      ),
+                    ),
+                  ),
+                  child: const Text("Register", style: TextStyle(fontSize: 12)),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _yataSection() {
+    List<SearchableRow> rows = [];
+
     // YATA Block
     if (_settingsProvider.yataStatsEnabledStatusRemoteConfig) {
       rows.add(
@@ -1708,54 +1951,8 @@ class SettingsPageState extends State<SettingsPage> {
       );
     }
 
-    // Player Notes Manager
-    rows.add(
-      SearchableRow(
-        label: "Player Notes",
-        searchText: _searchText,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Player notes database',
-                      style: TextStyle(
-                        color: _themeProvider.mainText,
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const PlayerNotesListDialog(),
-                      );
-                    },
-                    child: const Text('Manage Notes'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'View and edit all your player notes, including those from targets, friends, stakeouts, and war members.',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
     return buildSectionWithRows(
-      title: "STATS and PLAYER NOTES",
+      title: "YATA",
       rows: rows,
       searchText: _searchText,
     );

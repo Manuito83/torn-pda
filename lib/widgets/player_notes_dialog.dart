@@ -2,36 +2,44 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 // Project imports:
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_notes_section.dart';
 
 /// Pure content widget for player notes editing. Presentation (width, background,
 /// scrolling, dialog animations) is provided by [showPlayerNotesDialog]
 class PlayerNotesDialog extends StatefulWidget {
   final String playerId;
   final String? playerName;
+  final bool openFFScouter;
 
-  const PlayerNotesDialog({
-    required this.playerId,
-    this.playerName,
-    super.key,
-  });
+  const PlayerNotesDialog({required this.playerId, this.playerName, this.openFFScouter = false, super.key});
 
   @override
   PlayerNotesDialogState createState() => PlayerNotesDialogState();
 }
 
-class PlayerNotesDialogState extends State<PlayerNotesDialog> {
+class PlayerNotesDialogState extends State<PlayerNotesDialog> with SingleTickerProviderStateMixin {
   late PlayerNotesController _playerNotesController;
   late ThemeProvider _themeProvider;
+  late final TabController _tabController = TabController(
+    length: 2,
+    vsync: this,
+    initialIndex: widget.openFFScouter ? 1 : 0,
+  )..addListener(() => setState(() {}));
 
   String? _myTempChosenColor;
   final _personalNotesController = TextEditingController();
+
+  String _savedText = "";
+  String? _savedColor = PlayerNoteColor.none;
 
   @override
   void initState() {
@@ -39,6 +47,7 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
 
     _playerNotesController = Get.find<PlayerNotesController>();
     _myTempChosenColor = PlayerNoteColor.none;
+    _personalNotesController.addListener(() => setState(() {}));
 
     // Initialize with existing note if it exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -49,6 +58,8 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
       } else {
         _myTempChosenColor = PlayerNoteColor.none; // Default no color sentinel
       }
+      _savedText = _personalNotesController.text;
+      _savedColor = _myTempChosenColor;
       if (mounted) {
         setState(() {});
       }
@@ -57,9 +68,21 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _personalNotesController.dispose();
     super.dispose();
   }
+
+  bool get _hasChanges =>
+      _personalNotesController.text.trim() != _savedText.trim() ||
+      PlayerNoteColor.isNone(_myTempChosenColor) != PlayerNoteColor.isNone(_savedColor) ||
+      (!PlayerNoteColor.isNone(_myTempChosenColor) && _myTempChosenColor != _savedColor);
+
+  int? get _ffsPlayerId => int.tryParse(widget.playerId);
+
+  bool get _showFFScouter => _ffsPlayerId != null && ffScouterNotesVisible(context);
+
+  bool get _onFFScouterTab => _showFFScouter && _tabController.index == 1;
 
   @override
   Widget build(BuildContext context) {
@@ -72,93 +95,179 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
         // Title
         Text(
           widget.playerName != null ? "${widget.playerName} [${widget.playerId}]" : "Player [${widget.playerId}]",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: _themeProvider.mainText,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _themeProvider.mainText),
           textAlign: TextAlign.center,
         ),
+        if (_showFFScouter)
+          GetBuilder<FFScouterNotesController>(
+            builder: (ffs) {
+              final count = ffs.notesFor(_ffsPlayerId!).length;
+              return TabBar(
+                controller: _tabController,
+                labelColor: _themeProvider.mainText,
+                unselectedLabelColor: Colors.grey[500],
+                tabs: [
+                  Tab(height: 36, text: _hasChanges ? "Torn PDA *" : "Torn PDA"),
+                  Tab(height: 36, text: count > 0 ? "FFScouter ($count)" : "FFScouter"),
+                ],
+              );
+            },
+          ),
         const SizedBox(height: 16),
-        // Color selection chips
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            _buildColorChip('red', Colors.red),
-            const SizedBox(width: 16),
-            _buildColorChip('orange', Colors.orange[600]!),
-            const SizedBox(width: 16),
-            _buildColorChip('green', Colors.green),
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-        ),
-        TextFormField(
-          style: TextStyle(
-            fontSize: 14,
-            color: _themeProvider.mainText,
+        Visibility(
+          visible: !_onFFScouterTab,
+          maintainState: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Color selection chips
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  _buildColorChip('red', Colors.red),
+                  const SizedBox(width: 16),
+                  _buildColorChip('orange', Colors.orange[600]!),
+                  const SizedBox(width: 16),
+                  _buildColorChip('green', Colors.green),
+                ],
+              ),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 8)),
+              TextFormField(
+                style: TextStyle(fontSize: 14, color: _themeProvider.mainText),
+                textCapitalization: TextCapitalization.sentences,
+                controller: _personalNotesController,
+                maxLength: 500,
+                minLines: 3,
+                maxLines: 8,
+                textInputAction: TextInputAction.send,
+                onFieldSubmitted: (_) {
+                  _hasChanges ? _handleSave() : Navigator.of(context).pop();
+                },
+                onTapOutside: (_) {
+                  FocusScope.of(context).unfocus();
+                },
+                decoration: const InputDecoration(
+                  counterText: "",
+                  border: OutlineInputBorder(),
+                  labelText: 'Insert note',
+                ),
+              ),
+            ],
           ),
-          textCapitalization: TextCapitalization.sentences,
-          controller: _personalNotesController,
-          maxLength: 500,
-          minLines: 3,
-          maxLines: 8,
-          textInputAction: TextInputAction.send,
-          onFieldSubmitted: (_) {
-            _handleSave();
-          },
-          onTapOutside: (_) {
-            FocusScope.of(context).unfocus();
-          },
-          decoration: const InputDecoration(
-            counterText: "",
-            border: OutlineInputBorder(),
-            labelText: 'Insert note',
-          ),
         ),
+        if (_showFFScouter)
+          Visibility(
+            visible: _onFFScouterTab,
+            maintainState: true,
+            child: FFScouterNotesSection(
+              playerId: _ffsPlayerId!,
+              readPdaNote: () => _personalNotesController.text,
+              onCopyToPda: _appendToPdaNote,
+            ),
+          ),
         const SizedBox(height: 16.0),
         // Action buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 44),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: _themeProvider.buttonText,
-                  ),
-                  child: const Text("Save"),
-                  onPressed: () {
-                    _handleSave();
-                  },
-                ),
+        if (_onFFScouterTab) _ffScouterTabActions() else _pdaTabActions(),
+      ],
+    );
+  }
+
+  Widget _pdaTabActions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: <Widget>[
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 44),
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: _themeProvider.buttonText,
               ),
+              onPressed: _hasChanges ? _handleSave : null,
+              child: const Text("Save"),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 44),
-                    backgroundColor: _themeProvider.secondBackground,
-                    foregroundColor: _themeProvider.mainText,
-                    side: BorderSide(color: _alpha(_themeProvider.mainText, 0.3)),
-                  ),
-                  child: const Text("Cancel"),
-                  onPressed: () {
-                    FocusScope.of(context).unfocus();
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
-            ),
-          ],
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: _closeButton(label: _hasChanges ? "Cancel" : "Close"),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _ffScouterTabActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_hasChanges)
+          TextButton(
+            onPressed: () => _tabController.animateTo(0),
+            child: const Text("Your Torn PDA note has unsaved changes", style: TextStyle(fontSize: 12)),
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: _closeButton(label: "Close"),
+        ),
+      ],
+    );
+  }
+
+  Widget _closeButton({required String label}) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 44),
+        backgroundColor: _themeProvider.secondBackground,
+        foregroundColor: _themeProvider.mainText,
+        side: BorderSide(color: _alpha(_themeProvider.mainText, 0.3)),
+      ),
+      child: Text(label),
+      onPressed: () async {
+        FocusScope.of(context).unfocus();
+        if (_onFFScouterTab && _hasChanges && !await _confirmDiscard()) return;
+        if (mounted) Navigator.of(context).pop();
+      },
+    );
+  }
+
+  Future<bool> _confirmDiscard() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: const Text("Discard the changes to your Torn PDA note?", style: TextStyle(fontSize: 14)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text("Keep editing")),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text("Discard")),
+        ],
+      ),
+    );
+    return discard == true;
+  }
+
+  void _appendToPdaNote(String text) {
+    final current = _personalNotesController.text.trim();
+    String message;
+    if (current.contains(text)) {
+      message = "Already in your Torn PDA note";
+    } else {
+      final combined = current.isEmpty ? text : "$current\n$text";
+      if (combined.length > 500) {
+        message = "It does not fit in your Torn PDA note (500 characters max)";
+      } else {
+        _personalNotesController.text = combined;
+        _tabController.animateTo(0);
+        message = "Added to your Torn PDA note, tap Save to keep it";
+      }
+    }
+    BotToast.showText(
+      text: message,
+      contentColor: Colors.grey[800]!,
+      textStyle: const TextStyle(fontSize: 13, color: Colors.white),
+      duration: const Duration(seconds: 3),
     );
   }
 
@@ -180,19 +289,10 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
           color: color,
           shape: BoxShape.circle,
           border: isSelected
-              ? Border.all(
-                  color: _alpha(_themeProvider.mainText, 0.8),
-                  width: 3,
-                )
+              ? Border.all(color: _alpha(_themeProvider.mainText, 0.8), width: 3)
               : Border.all(color: Colors.transparent, width: 3),
         ),
-        child: isSelected
-            ? Icon(
-                Icons.check,
-                color: _alpha(_themeProvider.mainText, 0.8),
-                size: 24,
-              )
-            : null,
+        child: isSelected ? Icon(Icons.check, color: _alpha(_themeProvider.mainText, 0.8), size: 24) : null,
       ),
     );
   }
@@ -222,6 +322,7 @@ Future<void> showPlayerNotesDialog({
   required String playerId,
   String? playerName,
   bool barrierDismissible = false,
+  bool openFFScouter = false,
 }) async {
   final themeProvider = context.read<ThemeProvider>();
 
@@ -233,11 +334,7 @@ Future<void> showPlayerNotesDialog({
     transitionDuration: const Duration(milliseconds: 180),
     pageBuilder: (ctx, anim, secondary) => const SizedBox.shrink(),
     transitionBuilder: (ctx, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
       final mq = MediaQuery.of(ctx);
       final screenWidth = mq.size.width;
       final screenHeight = mq.size.height;
@@ -259,10 +356,7 @@ Future<void> showPlayerNotesDialog({
               child: ScaleTransition(
                 scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: dialogWidth,
-                    maxHeight: maxHeight,
-                  ),
+                  constraints: BoxConstraints(maxWidth: dialogWidth, maxHeight: maxHeight),
                   child: Material(
                     color: themeProvider.secondBackground,
                     elevation: 8,
@@ -275,6 +369,7 @@ Future<void> showPlayerNotesDialog({
                         child: PlayerNotesDialog(
                           playerId: playerId,
                           playerName: playerName,
+                          openFFScouter: openFFScouter,
                         ),
                       ),
                     ),

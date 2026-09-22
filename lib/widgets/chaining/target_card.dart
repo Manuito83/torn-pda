@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/pages/chaining/target_details_page.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -25,6 +26,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_activity_badge.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_notes_badge.dart';
 import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -81,19 +83,12 @@ class TargetCardState extends State<TargetCard> {
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Card(
         shape: RoundedRectangleBorder(
-          side: BorderSide(
-            color: _borderColor(),
-            width: 1.5,
-          ),
+          side: BorderSide(color: _borderColor(), width: 1.5),
           borderRadius: BorderRadius.circular(4.0),
         ),
         elevation: 2,
         child: ClipPath(
-          clipper: ShapeBorderClipper(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
+          clipper: ShapeBorderClipper(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3))),
           child: Container(
             decoration: BoxDecoration(
               border: Border(
@@ -140,17 +135,13 @@ class TargetCardState extends State<TargetCard> {
                                   const Icon(MdiIcons.graveStone, size: 18)
                                 else
                                   _attackIcon(),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5),
-                                ),
+                                const Padding(padding: EdgeInsets.symmetric(horizontal: 5)),
                                 SizedBox(
                                   width: 95,
                                   child: Text(
                                     '${_target!.name}',
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -174,9 +165,7 @@ class TargetCardState extends State<TargetCard> {
                                   },
                                   closedElevation: 0,
                                   closedShape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(56 / 2),
-                                    ),
+                                    borderRadius: BorderRadius.all(Radius.circular(56 / 2)),
                                   ),
                                   closedColor: Colors.transparent,
                                   openColor: _themeProvider.canvas,
@@ -184,10 +173,7 @@ class TargetCardState extends State<TargetCard> {
                                     return const SizedBox(
                                       height: 22,
                                       width: 30,
-                                      child: Icon(
-                                        Icons.info_outline,
-                                        size: 20,
-                                      ),
+                                      child: Icon(Icons.info_outline, size: 20),
                                     );
                                   },
                                 ),
@@ -195,16 +181,10 @@ class TargetCardState extends State<TargetCard> {
                                 _factionIcon(),
                               ],
                             ),
-                            Text(
-                              'Lvl ${_target!.level}',
-                            ),
+                            Text('Lvl ${_target!.level}'),
                             Padding(
                               padding: const EdgeInsets.only(right: 3),
-                              child: SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: _refreshIcon(),
-                              ),
+                              child: SizedBox(height: 22, width: 22, child: _refreshIcon()),
                             ),
                           ],
                         ),
@@ -281,40 +261,85 @@ class TargetCardState extends State<TargetCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Flexible(
-                        child: Row(
-                          children: <Widget>[
-                            SizedBox(
-                              width: 30,
-                              height: 20,
-                              child: IconButton(
-                                padding: const EdgeInsets.all(0),
-                                iconSize: 20,
-                                icon: Icon(
-                                  MdiIcons.notebookEditOutline,
-                                  color: _returnTargetNoteColor(),
-                                ),
-                                onPressed: () {
-                                  _showNotesDialog();
+                        child: GetBuilder<PlayerNotesController>(
+                          builder: (ctrl) => GetBuilder<FFScouterNotesController>(
+                            builder: (_) {
+                              final note = ctrl.getNoteForPlayer(_target!.playerId.toString());
+                              final playerId = _target!.playerId;
+                              final shown = cardNote(
+                                context,
+                                playerId: playerId,
+                                pdaText: note?.effectiveDisplayText ?? '',
+                              );
+                              final style = shown != null && shown.fromFFScouter
+                                  ? TextStyle(color: Colors.grey[500], fontSize: 13, fontStyle: FontStyle.italic)
+                                  : TextStyle(color: _returnTargetNoteColor());
+
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  // What the icon, the label and the counter take on the same line
+                                  const reserved = 134.0;
+                                  final fits =
+                                      shown == null ||
+                                      noteFitsInline(shown.text, style, constraints.maxWidth - reserved);
+                                  final row = Row(
+                                    children: <Widget>[
+                                      SizedBox(
+                                        width: 30,
+                                        height: 20,
+                                        child: IconButton(
+                                          padding: const EdgeInsets.all(0),
+                                          iconSize: 20,
+                                          icon: Icon(MdiIcons.notebookEditOutline, color: _returnTargetNoteColor()),
+                                          onPressed: () {
+                                            _showNotesDialog();
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Text('Notes: '),
+                                      if (shown != null && fits)
+                                        Flexible(
+                                          child: Text(
+                                            shown.text,
+                                            style: style,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      if (playerId != null)
+                                        FFScouterNotesBadge(
+                                          playerId: playerId,
+                                          fontSize: 13,
+                                          padding: const EdgeInsets.only(left: 5),
+                                          onTap: () => _showNotesDialog(openFFScouter: true),
+                                        ),
+                                    ],
+                                  );
+
+                                  if (fits) return row;
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      row,
+                                      GestureDetector(
+                                        onTap: () => _showNotesDialog(openFFScouter: shown.fromFFScouter),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 34, top: 2),
+                                          child: Text(
+                                            shown.text,
+                                            style: style,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
                                 },
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Text('Notes: '),
-                            GetBuilder<PlayerNotesController>(
-                              builder: (ctrl) {
-                                final note = ctrl.getNoteForPlayer(_target!.playerId.toString());
-                                final noteText = note?.effectiveDisplayText ?? '';
-                                return Flexible(
-                                  child: Text(
-                                    noteText,
-                                    style: TextStyle(
-                                      color: _returnTargetNoteColor(),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
+                              );
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -324,10 +349,7 @@ class TargetCardState extends State<TargetCard> {
                             BotToast.showText(
                               clickClose: true,
                               text: _target!.basicicons!.icon13!,
-                              textStyle: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
+                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                               contentColor: Colors.blue,
                               duration: const Duration(seconds: 3),
                               contentPadding: const EdgeInsets.all(10),
@@ -347,10 +369,7 @@ class TargetCardState extends State<TargetCard> {
                         child: Text(
                           '${_targetsProvider.allTargets.indexOf(_target) + 1}'
                           '/${_targetsProvider.allTargets.length}',
-                          style: TextStyle(
-                            color: Colors.brown[400],
-                            fontSize: 11,
-                          ),
+                          style: TextStyle(color: Colors.brown[400], fontSize: 11),
                         ),
                       ),
                     ],
@@ -369,20 +388,13 @@ class TargetCardState extends State<TargetCard> {
     return SizedBox(
       height: 20,
       width: 20,
-      child: Image.asset(
-        'images/icons/ic_target_account_black_48dp.png',
-        color: Colors.red,
-        width: 20,
-      ),
+      child: Image.asset('images/icons/ic_target_account_black_48dp.png', color: Colors.red, width: 20),
     );
   }
 
   Widget _refreshIcon() {
     if (_target!.isUpdating) {
-      return const Padding(
-        padding: EdgeInsets.all(4.0),
-        child: CircularProgressIndicator(),
-      );
+      return const Padding(padding: EdgeInsets.all(4.0), child: CircularProgressIndicator());
     } else {
       return IconButton(
         padding: const EdgeInsets.all(0.0),
@@ -406,26 +418,24 @@ class TargetCardState extends State<TargetCard> {
       void showFactionToast() {
         if (_target!.faction!.factionId == UserHelper.factionId) {
           BotToast.showText(
-            text: HtmlParser.fix("${_target!.name} belongs to your same faction "
-                "(${_target!.faction!.factionName}) as "
-                "${_target!.faction!.position}"),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
+            text: HtmlParser.fix(
+              "${_target!.name} belongs to your same faction "
+              "(${_target!.faction!.factionName}) as "
+              "${_target!.faction!.position}",
             ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.green,
             duration: const Duration(seconds: 5),
             contentPadding: const EdgeInsets.all(10),
           );
         } else {
           BotToast.showText(
-            text: HtmlParser.fix("${_target!.name} belongs to faction "
-                "${_target!.faction!.factionName} as "
-                "${_target!.faction!.position}"),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
+            text: HtmlParser.fix(
+              "${_target!.name} belongs to faction "
+              "${_target!.faction!.factionName} as "
+              "${_target!.faction!.position}",
             ),
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
             contentColor: Colors.grey[600]!,
             duration: const Duration(seconds: 5),
             contentPadding: const EdgeInsets.all(10),
@@ -437,10 +447,7 @@ class TargetCardState extends State<TargetCard> {
         type: MaterialType.transparency,
         child: Ink(
           decoration: BoxDecoration(
-            border: Border.all(
-              color: borderColor!,
-              width: 1.5,
-            ),
+            border: Border.all(color: borderColor!, width: 1.5),
             shape: BoxShape.circle,
           ),
           child: InkWell(
@@ -450,11 +457,7 @@ class TargetCardState extends State<TargetCard> {
             },
             child: Padding(
               padding: const EdgeInsets.all(2),
-              child: ImageIcon(
-                const AssetImage('images/icons/faction.png'),
-                size: 12,
-                color: iconColor,
-              ),
+              child: ImageIcon(const AssetImage('images/icons/faction.png'), size: 12, color: iconColor),
             ),
           ),
         ),
@@ -482,43 +485,31 @@ class TargetCardState extends State<TargetCard> {
     if (respect == -1) {
       respectResult = TextSpan(
         text: 'unk',
-        style: TextStyle(
-          color: _themeProvider.mainText,
-        ),
+        style: TextStyle(color: _themeProvider.mainText),
       );
     } else if (respect == 0) {
       if (_target!.userWonOrDefended!) {
         respectResult = TextSpan(
           text: '0 (def)',
-          style: TextStyle(
-            color: _themeProvider.mainText,
-          ),
+          style: TextStyle(color: _themeProvider.mainText),
         );
       } else {
         respectResult = TextSpan(
           text: 'Lost',
-          style: TextStyle(
-            color: _themeProvider.getTextColor(Colors.red),
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: _themeProvider.getTextColor(Colors.red), fontWeight: FontWeight.bold),
         );
       }
     } else {
       respectResult = TextSpan(
         text: respect!.toStringAsFixed(2),
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: _themeProvider.mainText,
-        ),
+        style: TextStyle(fontWeight: FontWeight.bold, color: _themeProvider.mainText),
       );
     }
 
     if (fairFight == -1) {
       fairFightResult = TextSpan(
         text: 'unk',
-        style: TextStyle(
-          color: _themeProvider.mainText,
-        ),
+        style: TextStyle(color: _themeProvider.mainText),
       );
     } else {
       var ffColor = _themeProvider.getTextColor(Colors.red);
@@ -530,10 +521,7 @@ class TargetCardState extends State<TargetCard> {
 
       fairFightResult = TextSpan(
         text: fairFight.toStringAsFixed(2),
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: ffColor,
-        ),
+        style: TextStyle(fontWeight: FontWeight.bold, color: ffColor),
       );
     }
 
@@ -546,9 +534,7 @@ class TargetCardState extends State<TargetCard> {
                 children: <TextSpan>[
                   TextSpan(
                     text: 'R: ',
-                    style: TextStyle(
-                      color: _themeProvider.mainText,
-                    ),
+                    style: TextStyle(color: _themeProvider.mainText),
                   ),
                   respectResult,
                 ],
@@ -564,9 +550,7 @@ class TargetCardState extends State<TargetCard> {
                   children: <TextSpan>[
                     TextSpan(
                       text: ' / FF: ',
-                      style: TextStyle(
-                        color: _themeProvider.mainText,
-                      ),
+                      style: TextStyle(color: _themeProvider.mainText),
                     ),
                     fairFightResult,
                   ],
@@ -593,19 +577,11 @@ class TargetCardState extends State<TargetCard> {
         _refreshLifeClock(endTimeStamp);
         lifeText = _currentLifeString;
         lifeBarColor = Colors.red[300];
-        hospitalWarning = const Icon(
-          Icons.local_hospital,
-          size: 20,
-          color: Colors.red,
-        );
+        hospitalWarning = const Icon(Icons.local_hospital, size: 20, color: Colors.red);
       } else {
         _lifeTicker?.cancel();
         lifeText = "OUT";
-        hospitalWarning = const Icon(
-          MdiIcons.bandage,
-          size: 20,
-          color: Colors.green,
-        );
+        hospitalWarning = const Icon(MdiIcons.bandage, size: 20, color: Colors.green);
       }
     } else {
       _lifeTicker?.cancel();
@@ -631,19 +607,14 @@ class TargetCardState extends State<TargetCard> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        const Text(
-          'Life ',
-        ),
+        const Text('Life '),
         LinearPercentIndicator(
           padding: const EdgeInsets.all(0),
           barRadius: const Radius.circular(10),
           width: 100,
           lineHeight: 16,
           progressColor: lifeBarColor,
-          center: Text(
-            lifeText,
-            style: const TextStyle(color: Colors.black, fontSize: 12),
-          ),
+          center: Text(lifeText, style: const TextStyle(color: Colors.black, fontSize: 12)),
           percent: lifePercentage,
         ),
         hospitalWarning,
@@ -690,10 +661,7 @@ class TargetCardState extends State<TargetCard> {
           onTap: () {
             BotToast.showText(
               text: _target!.status!.description!,
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
               contentColor: Colors.blue,
               duration: const Duration(seconds: 5),
               contentPadding: const EdgeInsets.all(10),
@@ -718,13 +686,7 @@ class TargetCardState extends State<TargetCard> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 5),
-                child: Image.asset(
-                  flag,
-                  width: 16,
-                ),
-              ),
+              Padding(padding: const EdgeInsets.only(right: 5), child: Image.asset(flag, width: 16)),
             ],
           ),
         ),
@@ -779,12 +741,13 @@ class TargetCardState extends State<TargetCard> {
     }
   }
 
-  Future<void> _showNotesDialog() {
+  Future<void> _showNotesDialog({bool openFFScouter = false}) {
     return showPlayerNotesDialog(
       context: context,
       barrierDismissible: false,
       playerId: _target?.playerId.toString() ?? '',
       playerName: _target?.name ?? '',
+      openFFScouter: openFFScouter,
     );
   }
 
@@ -797,10 +760,7 @@ class TargetCardState extends State<TargetCard> {
     } else {
       BotToast.showText(
         text: "Error updating ${_target!.name}!",
-        textStyle: const TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
         contentColor: _themeProvider.getTextColor(Colors.red),
         duration: const Duration(seconds: 3),
         contentPadding: const EdgeInsets.all(10),
@@ -926,7 +886,8 @@ class TargetCardState extends State<TargetCard> {
         );
 
       case BrowserSetting.external:
-        final url = 'https://www.torn.com/page.php?sid='
+        final url =
+            'https://www.torn.com/page.php?sid='
             'attack&user2ID=${_target!.playerId}';
         if (await canLaunchUrl(Uri.parse(url))) {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -936,13 +897,11 @@ class TargetCardState extends State<TargetCard> {
 
   void _warnFedetalOrFallen() {
     BotToast.showText(
-      text: "This player is "
+      text:
+          "This player is "
           "${_target!.status!.state!.replaceAll("Federal", "in federal jail").toLowerCase()}"
           " and cannot be attacked!",
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: _themeProvider.getTextColor(Colors.red),
       duration: const Duration(seconds: 5),
       contentPadding: const EdgeInsets.all(10),
