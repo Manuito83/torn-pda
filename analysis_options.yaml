@@ -1,6 +1,11 @@
 analyzer:
   errors:
     no_wildcard_variable_uses: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - windows/**
 include: package:lints/recommended.yaml
 
 linter:
