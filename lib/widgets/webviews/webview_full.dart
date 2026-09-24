@@ -71,6 +71,7 @@ import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
@@ -1383,6 +1384,8 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addPageReloadHandler(webview: webViewController!);
 
+            WebviewHandlers.addCityShopPurchaseHandler(webview: webViewController!);
+
             WebviewHandlers.addThemeChangeHandler(
               webview: webViewController!,
               setStateCallback: setState,
@@ -2088,6 +2091,9 @@ class WebViewFullState extends State<WebViewFull>
                 return;
               }
               if (!consoleMessage.message.contains("Refused to connect to ") &&
+                  !(consoleMessage.message.contains("TypeError: Load failed") &&
+                      (consoleMessage.message.contains("torn.com/js/debug/sentry") ||
+                          consoleMessage.message.contains("torn.com/builds/"))) &&
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("has been blocked by CORS policy") &&
                   !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
@@ -3420,6 +3426,20 @@ class WebViewFullState extends State<WebViewFull>
     _assessBugReportsWarning();
     _assessOldLoaderRedirect(document);
     await _assessCityShopBuy100();
+    await _assessCityShopPurchaseHook();
+  }
+
+  // Only players with city shop alerts on and auto-pause enabled report purchases
+  Future _assessCityShopPurchaseHook() async {
+    if (!_currentUrl.contains('shops.php')) return;
+    if (!await Prefs().getCityShopAutoPauseEnabled()) return;
+    try {
+      final profile = await FirestoreHelper().getUserProfile();
+      if (profile?.cityShopRestockNotification != true) return;
+    } catch (e) {
+      return;
+    }
+    await webViewController?.evaluateJavascript(source: cityShopsPurchaseHookJS());
   }
 
   Future _assessCityShopBuy100() async {

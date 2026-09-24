@@ -197,6 +197,9 @@ class Prefs {
   final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
   final String _kPreventBasketKeyboard = "pda_preventBasketKeyboard";
   final String _kCityShopsBuyMaxEnabled = "pda_cityShopsBuyMaxEnabled";
+  final String _kCityShopAutoPauseEnabled = "pda_cityShopAutoPauseEnabled";
+  final String _kCityShopBoughtDay = "pda_cityShopBoughtDay";
+  final String _kCityShopBoughtCount = "pda_cityShopBoughtCount";
   final String _kForeignStocksBuyMaxEnabled = "pda_foreignStocksBuyMaxEnabled";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
@@ -1884,6 +1887,29 @@ class Prefs {
 
   Future setCityShopsBuyMaxEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kCityShopsBuyMaxEnabled, value);
+  }
+
+  // Experimental: pause city shop alerts by itself when the daily purchase limit is reached
+  Future<bool> getCityShopAutoPauseEnabled() async {
+    return await PrefsDatabase.getBool(_kCityShopAutoPauseEnabled, false);
+  }
+
+  Future setCityShopAutoPauseEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kCityShopAutoPauseEnabled, value);
+  }
+
+  // Items bought in city shops, with the TCT day (yyyy-MM-dd) the count belongs to
+  Future<String> getCityShopBoughtDay() async {
+    return await PrefsDatabase.getString(_kCityShopBoughtDay, "");
+  }
+
+  Future<int> getCityShopBoughtCount() async {
+    return await PrefsDatabase.getInt(_kCityShopBoughtCount, 0);
+  }
+
+  Future setCityShopBought({required String day, required int count}) async {
+    await PrefsDatabase.setString(_kCityShopBoughtDay, day);
+    await PrefsDatabase.setInt(_kCityShopBoughtCount, count);
   }
 
   Future<bool> getForeignStocksBuyMaxEnabled() async {

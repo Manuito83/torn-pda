@@ -244,6 +244,43 @@ class FirestoreHelper {
     }
   }
 
+  // Returns false without writing anything if the update fails
+  Future<bool> setCityShopOnlyInTorn(bool enabled) async {
+    try {
+      await _firestore.collection("players").doc(_uid).update({"cityShopOnlyInTorn": enabled});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ms until which the server skips city shop alerts; 0 clears it
+  // Returns false without writing anything if the update fails
+  Future<bool> setCityShopMutedUntil(int untilMs) async {
+    try {
+      await _firestore.collection("players").doc(_uid).update({"cityShopMutedUntil": untilMs});
+      _firebaseUserModel?.cityShopMutedUntil = untilMs;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Hours are TCT minutes of the day
+  // Returns false without writing anything if the update fails
+  Future<bool> setCityShopHours({required bool enabled, required int fromMin, required int toMin}) async {
+    try {
+      await _firestore.collection("players").doc(_uid).update({
+        "cityShopHoursEnabled": enabled,
+        "cityShopHoursFrom": fromMin,
+        "cityShopHoursTo": toMin,
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Sets every followed key to now, so restocks already seen are not notified
   // Returns false without writing anything if the current alerts can't be read
   Future<bool> _updateWithCityShopMarksNow(Map<String, Object?> update) async {

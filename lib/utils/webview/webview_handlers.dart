@@ -25,6 +25,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
 import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
+import 'package:torn_pda/utils/city_shops_daily_limit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WebviewHandlers {
@@ -50,6 +51,16 @@ class WebviewHandlers {
       handlerName: 'isTornPDA',
       callback: (JavaScriptHandlerFunctionData data) async {
         return {'isTornPDA': true};
+      },
+    );
+  }
+
+  static void addCityShopPurchaseHandler({required InAppWebViewController webview}) {
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_cityShopPurchase',
+      callback: (JavaScriptHandlerFunctionData data) async {
+        if (data.args.isEmpty || data.args[0] is! Map) return;
+        await CityShopDailyLimit.onPurchaseReport(data.args[0] as Map);
       },
     );
   }
