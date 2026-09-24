@@ -1434,7 +1434,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       browserUrl = "https://www.torn.com";
     } else if (restocks) {
       launchBrowserWithUrl = true;
-      browserUrl = "https://www.torn.com/travelagency.php";
+      browserUrl = await _restockTapUrl();
     } else if (cityShops) {
       launchBrowserWithUrl = true;
       final firstShopId = int.tryParse((cityShopId ?? "").split(",").first);
@@ -1737,7 +1737,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com';
       } else if (payload == 'restocks') {
         launchBrowserWithUrl = true;
-        browserUrl = 'https://www.torn.com/travelagency.php';
+        browserUrl = await _restockTapUrl();
       } else if (payload.startsWith('cityShops:')) {
         launchBrowserWithUrl = true;
         final cityShopId = payload.substring('cityShops:'.length);
@@ -3095,6 +3095,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     await _openForeignStocksPageIfNeeded(temporaryDestinationCountry: destination);
     return true;
+  }
+
+  // Travel agency is blocked abroad
+  Future<String> _restockTapUrl() async {
+    final destination = await _getCurrentTravelDestination();
+    if (destination != null && destination != "Torn") return "https://www.torn.com";
+    return "https://www.torn.com/travelagency.php";
   }
 
   Future<String?> _getCurrentTravelDestination() async {
