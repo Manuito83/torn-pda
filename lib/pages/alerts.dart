@@ -22,10 +22,13 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/city_shops_daily_limit.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
+import 'package:torn_pda/widgets/alerts/alert_cards.dart';
 import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
@@ -65,6 +68,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
   String? _lootAheadSelection;
   String? _lootRangersAheadSelection;
   bool _aheadSelectionsInitialised = false;
+  bool _cityShopAutoPause = false;
 
   @override
   void initState() {
@@ -80,6 +84,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
     analytics?.logScreenView(screenName: 'alerts');
 
+    Prefs().getCityShopAutoPauseEnabled().then((value) {
+      if (mounted) setState(() => _cityShopAutoPause = value);
+    });
+
     routeWithDrawer = true;
     routeName = "alerts";
   }
@@ -93,6 +101,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
     super.dispose();
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
@@ -129,1249 +138,15 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 return SingleChildScrollView(
                   controller: _scrollController,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26))
-                        _liveActivities(),
-                      // Create alerts title if we are also showing live activities at the top
-                      if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26))
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-                          child: Text("ALERTS", style: TextStyle(fontSize: 9)),
-                        ),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-                        child: Text(
-                          "Alerts are automatic notifications that you only "
-                          "need to activate once. However, you will normally be notified "
-                          "earlier than with manual notifications; also, notifications might be delayed "
-                          "due to network status or device throttling.",
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 5, 8, 0),
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Row(
-                                children: [
-                                  const Text("Discreet alerts"),
-                                  IconButton(
-                                    icon: const Icon(Icons.info_outline),
-                                    onPressed: () {
-                                      showDialog(
-                                        useRootNavigator: false,
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return DiscreetInfo();
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Switch(
-                              value: _firebaseUserModel!.discreet,
-                              onChanged: (value) {
-                                setState(() {
-                                  setState(() {
-                                    _firebaseUserModel?.discreet = value;
-                                  });
-                                  FirestoreHelper().toggleDiscreet(value);
-                                });
-                              },
-                              activeTrackColor: Colors.lightGreenAccent,
-                              activeThumbColor: Colors.green,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.energyNotification ?? false,
-                            title: const Text("Energy full"),
-                            subtitle: const Text(
-                              "Get notified once you reach full energy",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.energyNotification = value;
-                              });
-                              FirestoreHelper().subscribeToEnergyNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.nerveNotification ?? false,
-                            title: const Text("Nerve full"),
-                            subtitle: const Text(
-                              "Get notified once you reach full nerve",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.nerveNotification = value;
-                              });
-                              FirestoreHelper().subscribeToNerveNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.lifeNotification ?? false,
-                            title: const Text("Life full"),
-                            subtitle: const Text(
-                              "Get notified once you reach full life",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.lifeNotification = value;
-                              });
-                              FirestoreHelper().subscribeToLifeNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.lifeNotification!) _lifeTapSelector(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.travelNotification ?? false,
-                            title: const Text("Travel"),
-                            subtitle: const Text(
-                              "Get notified just before you arrive",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.travelNotification = value;
-                              });
-                              FirestoreHelper().subscribeToTravelNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.travelNotification!) _travelStocksSelector(),
-                      if (_firebaseUserModel!.travelNotification!) _travelNotificationTapSelector(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.foreignRestockNotification ?? false,
-                            title: const Text("Foreign stocks"),
-                            subtitle: const Text(
-                              "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
-                              "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.foreignRestockNotification = value;
-                              });
-                              FirestoreHelper().subscribeToForeignRestockNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.foreignRestockNotification ?? false) _foreignRestockOptions(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.cityShopRestockNotification ?? false,
-                            title: const Text("City shops"),
-                            subtitle: const Text(
-                              "Get notified about restocks of city shop items you follow",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              final enabled = value ?? false;
-                              setState(() {
-                                _firebaseUserModel?.cityShopRestockNotification = enabled;
-                              });
-                              FirestoreHelper().subscribeToCityShopRestockNotification(enabled).then((success) {
-                                if (!success && mounted) {
-                                  setState(() {
-                                    _firebaseUserModel?.cityShopRestockNotification = !enabled;
-                                  });
-                                  _cityShopUpdateFailedToast();
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.cityShopRestockNotification ?? false) _cityShopOptions(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.abroadStayNotification ?? false,
-                            title: const Text("Abroad stay reminders"),
-                            subtitle: const Text(
-                              "Get reminded at the intervals you choose after landing in a foreign country, so you "
-                              "don't forget you are sitting abroad. Reminders restart on every new trip and stop "
-                              "automatically once you return to Torn",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.abroadStayNotification = value;
-                              });
-                              FirestoreHelper().subscribeToAbroadStayNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.abroadStayNotification ?? false) _abroadStayOptions(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.hospitalNotification ?? false,
-                            title: const Text("Hospital admission and release"),
-                            subtitle: const Text(
-                              "If you are offline, you'll be notified if you are "
-                              "hospitalized, revived or out of hospital",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.hospitalNotification = value;
-                              });
-                              FirestoreHelper().subscribeToHospitalNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.drugsNotification ?? false,
-                            title: const Text("Drugs cooldown"),
-                            subtitle: const Text(
-                              "Get notified when your drugs cooldown "
-                              "has expired",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.drugsNotification = value;
-                              });
-                              FirestoreHelper().subscribeToDrugsNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.drugsNotification!) _drugsTapSelector(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.medicalNotification ?? false,
-                            title: const Text("Medical cooldown"),
-                            subtitle: const Text(
-                              "Get notified when your medical cooldown "
-                              "has expired",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.medicalNotification = value;
-                              });
-                              FirestoreHelper().subscribeToMedicalNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.medicalNotification!) _medicalTapSelector(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.boosterNotification ?? false,
-                            title: const Text("Booster cooldown"),
-                            subtitle: const Text(
-                              "Get notified when your booster cooldown "
-                              "has expired",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.boosterNotification = value;
-                              });
-                              FirestoreHelper().subscribeToBoosterNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.boosterNotification!) _boosterTapSelector(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.lootAlerts.isNotEmpty,
-                            title: const Text("Loot"),
-                            subtitle: const Text(
-                              "Get notified when an NPC is about to reach level 4 or 5 (between 5 and 6 "
-                              "minutes in advance)",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) async {
-                              await showDialog(
-                                useRootNavigator: false,
-                                context: context,
-                                barrierDismissible: true,
-                                builder: (BuildContext context) {
-                                  return LootAlertsDialog(userModel: _firebaseUserModel);
-                                },
-                              );
-                              setState(() {
-                                // Refresh lootAlerts (check or uncheck box)
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.lootAlerts.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(35, 0, 15, 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                "Loot alert lead time",
-                                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                              ),
-                              _lootAheadDropdown(),
-                            ],
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.lootRangersAlerts ?? false,
-                            title: Row(
-                              children: [
-                                const Text("Loot Rangers attack"),
-                                const SizedBox(width: 5),
-                                GestureDetector(
-                                  onTap: () async {
-                                    await showDialog(
-                                      useRootNavigator: false,
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return LootRangersExplanationDialog(themeProvider: _themeProvider);
-                                      },
-                                    );
-                                  },
-                                  child: const Icon(Icons.info_outline, size: 20),
-                                ),
-                              ],
-                            ),
-                            subtitle: const Text(
-                              "Get notified shortly before a Loot Ranger attack is about to take place "
-                              ", including attack order",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) async {
-                              setState(() {
-                                _firebaseUserModel?.lootRangersAlerts = value;
-                              });
-                              FirestoreHelper().subscribeToLootRangersNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.lootRangersAlerts ?? false)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(35, 0, 15, 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                "Loot Rangers lead time",
-                                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                              ),
-                              _lootRangersAheadDropdown(),
-                            ],
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.racingNotification ?? false,
-                            title: const Text("Racing"),
-                            subtitle: const Text(
-                              "Get notified when you cross the finish line",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.racingNotification = value;
-                              });
-                              FirestoreHelper().subscribeToRacingNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.messagesNotification ?? false,
-                            title: const Text("Messages"),
-                            subtitle: const Text(
-                              "Get notified when you receive new messages",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.messagesNotification = value;
-                              });
-                              FirestoreHelper().subscribeToMessagesNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.eventsNotification ?? false,
-                            title: const Text("Events"),
-                            subtitle: const Text(
-                              "Get notified when you receive new events",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.eventsNotification = value;
-                              });
-                              FirestoreHelper().subscribeToEventsNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.eventsNotification!)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.only(left: 10),
-                                child: Text(
-                                  "Filter out events",
-                                  style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                                onPressed: () {
-                                  showDialog(
-                                    useRootNavigator: false,
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return EventsFilterDialog(userModel: _firebaseUserModel);
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.refillsNotification ?? false,
-                            title: const Text("Refills"),
-                            subtitle: const Text(
-                              "Get notified if you still have unused refills",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.refillsNotification = value;
-                              });
-                              FirestoreHelper().subscribeToRefillsNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.refillsNotification!)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.only(left: 10),
-                                child: Text("Time", style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic)),
-                              ),
-                              DropdownButton<int>(
-                                value: _firebaseUserModel?.refillsTime,
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: 16,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "16:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 17,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "17:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 18,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "18:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 19,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "19:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 20,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "20:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 21,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "21:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 22,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "22:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 23,
-                                    child: SizedBox(
-                                      width: 80,
-                                      child: Text(
-                                        "23:00 TCT",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(fontSize: 14),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (value) async {
-                                  setState(() {
-                                    _firebaseUserModel?.refillsTime = value;
-                                  });
-                                  FirestoreHelper().setRefillTime(value);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (_firebaseUserModel!.refillsNotification!)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.only(left: 10),
-                                child: Text(
-                                  "Choose refills",
-                                  style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                                onPressed: () {
-                                  showDialog(
-                                    useRootNavigator: false,
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return RefillsRequestedDialog(userModel: _firebaseUserModel);
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 15, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: ListTile(
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text("Stock market gain/loss"),
-                                GestureDetector(
-                                  child: const Icon(Icons.keyboard_arrow_right_outlined),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return StockMarketAlertsPage(
-                                            fbUser: _firebaseUserModel,
-                                            calledFromMenu: false,
-                                            stockMarketInMenuCallback: widget.stockMarketInMenuCallback,
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                            subtitle: const Text(
-                              "Configure price gain/loss alerts for any traded company",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.factionAssistMessage ?? false,
-                            title: const Text("Faction assist messages"),
-                            subtitle: const Text(
-                              "Receive attack assist messages manually triggered by your faction mates",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.factionAssistMessage = value;
-                              });
-                              FirestoreHelper().toggleFactionAssistMessage(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.retalsNotification ?? false,
-                            title: Row(
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.only(right: 5),
-                                  child: Text("Retaliation", style: TextStyle(fontSize: 15)),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 10),
-                                  child: GestureDetector(
-                                    child: Icon(
-                                      Icons.info_outline_rounded,
-                                      color: _factionApiAccess ? Colors.green : Colors.orange,
-                                    ),
-                                    // Quick update
-                                    onTap: () async {
-                                      await showDialog(
-                                        useRootNavigator: false,
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return _retalsGeneralExplanation();
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: const Text(
-                              "Get notified whenever it is possible to initiate a retaliation attack.",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (enabled) async {
-                              if (!enabled!) {
-                                setState(() {
-                                  _firebaseUserModel?.retalsNotification = enabled;
-                                });
-                                FirestoreHelper().toggleRetaliationNotification(enabled);
-                                return;
-                              }
-
-                              if (_factionApiAccess) {
-                                setState(() {
-                                  _firebaseUserModel?.retalsNotification = enabled;
-                                });
-                                FirestoreHelper().toggleRetaliationNotification(enabled);
-
-                                // Makes sure to scroll down so that the new 2 options are visible
-                                _scrollController.animateTo(
-                                  _scrollController.offset + 100,
-                                  duration: const Duration(milliseconds: 200),
-                                  curve: Curves.easeIn,
-                                );
-                              } else {
-                                String message = "";
-                                int seconds = 0;
-
-                                if (!_factionApiAccessCheckError) {
-                                  setState(() {
-                                    _firebaseUserModel?.retalsNotification = enabled;
-                                  });
-                                  FirestoreHelper().toggleRetaliationNotification(enabled, host: false);
-                                  message =
-                                      "You have no faction API permissions (talk to your leadership about it).\n\n"
-                                      "This alert has been activated, but it won't work unless someone with proper "
-                                      "permissions in your faction activates it as well.";
-                                  seconds = 10;
-                                } else {
-                                  message =
-                                      "It's not possible to activate this alert now (Torn PDA can't verify whether "
-                                      "you have proper Faction API permissions).\n\nPlease try again later!";
-                                  seconds = 6;
-                                }
-
-                                BotToast.showText(
-                                  clickClose: true,
-                                  text: message,
-                                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                  contentColor: Colors.orange[900]!,
-                                  duration: Duration(seconds: seconds),
-                                  contentPadding: const EdgeInsets.all(10),
-                                );
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.retalsNotification! && _factionApiAccess)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Flexible(
-                                child: Row(
-                                  children: [
-                                    const Flexible(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(left: 10, right: 5),
-                                        child: Text(
-                                          "Single target opens browser",
-                                          style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 10),
-                                      child: GestureDetector(
-                                        child: const Icon(Icons.info_outline_rounded),
-                                        onTap: () async {
-                                          await showDialog(
-                                            useRootNavigator: false,
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return _retalsNotificationExplanation();
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: _settingsProvider.singleRetaliationOpensBrowser,
-                                onChanged: (enabled) {
-                                  setState(() {
-                                    _settingsProvider.setSingleRetaliationOpensBrowser = enabled;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (_firebaseUserModel!.retalsNotification! && _factionApiAccess)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Flexible(
-                                child: Row(
-                                  children: [
-                                    const Flexible(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(left: 10, right: 5),
-                                        child: Text(
-                                          "Only as API permission donor",
-                                          style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 10),
-                                      child: GestureDetector(
-                                        child: const Icon(Icons.info_outline_rounded),
-                                        onTap: () async {
-                                          await showDialog(
-                                            useRootNavigator: false,
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return _retalsDonorExplanation();
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: _firebaseUserModel?.retalsNotificationDonor ?? false,
-                                onChanged: (enabled) {
-                                  if (enabled) {
-                                    BotToast.showText(
-                                      text:
-                                          "Please make sure that you understand the consequences of this setting "
-                                          "by reading the information dialog.\n\n"
-                                          "You will NOT receive relation alerts.",
-                                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                      contentColor: Colors.blue,
-                                      duration: const Duration(seconds: 6),
-                                      contentPadding: const EdgeInsets.all(10),
-                                    );
-                                  }
-                                  setState(() {
-                                    _firebaseUserModel?.retalsNotificationDonor = enabled;
-                                  });
-                                  FirestoreHelper().toggleRetaliationDonor(enabled);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      GetBuilder(
-                        init: SendbirdController(),
-                        builder: (sendbird) {
-                          if ((Platform.isAndroid && sendbird.sendBirdPushAndroidRemoteConfigEnabled) ||
-                              (Platform.isIOS && sendbird.sendBirdPushIOSRemoteConfigEnabled)) {
-                            return Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
-                                  child: Material(
-                                    type: MaterialType.transparency,
-                                    child: ListTile(
-                                      title: const Text("Torn chat messages", style: TextStyle(fontSize: 15)),
-                                      subtitle: const Text(
-                                        "Enable notifications for TORN chat messages",
-                                        style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                                      ),
-                                      trailing: _togglingSendbirdNotifications
-                                          ? const Padding(
-                                              padding: EdgeInsets.only(right: 14.0),
-                                              child: SizedBox(
-                                                width: 20,
-                                                height: 20,
-                                                child: CircularProgressIndicator(strokeWidth: 2),
-                                              ),
-                                            )
-                                          : Checkbox(
-                                              value: sendbird.sendBirdNotificationsEnabled,
-                                              activeColor: Colors.blueGrey,
-                                              checkColor: Colors.white,
-                                              onChanged: (enabled) async {
-                                                setState(() {
-                                                  _togglingSendbirdNotifications = true;
-                                                });
-                                                await sendbird.sendBirdNotificationsToggle(enabled: enabled!);
-                                                setState(() {
-                                                  _togglingSendbirdNotifications = false;
-                                                });
-                                              },
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                                if (sendbird.sendBirdNotificationsEnabled)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 30, right: 32),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Row(
-                                          children: [
-                                            Icon(Icons.keyboard_arrow_right_outlined),
-                                            Padding(
-                                              padding: EdgeInsets.only(left: 17),
-                                              child: Text(
-                                                "Do not disturb",
-                                                style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        GestureDetector(
-                                          child: const Icon(Icons.more_time_outlined),
-                                          onTap: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (BuildContext context) {
-                                                return SendbirdDoNotDisturbDialog();
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                if (sendbird.sendBirdNotificationsEnabled)
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 30,
-                                      right: 8,
-                                      top: 12, // Top padding for the first checkbox to compensate for the icon
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.keyboard_arrow_right_outlined),
-                                        Flexible(
-                                          child: Material(
-                                            type: MaterialType.transparency,
-                                            child: CheckboxListTile(
-                                              dense: true,
-                                              checkColor: Colors.white,
-                                              activeColor: Colors.red[900],
-                                              value: sendbird.excludeFactionMessages,
-                                              title: const Row(
-                                                children: [
-                                                  Text(
-                                                    "Exclude faction messages",
-                                                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                                                  ),
-                                                ],
-                                              ),
-                                              subtitle: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    "Faction messages won't be shown",
-                                                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                                                  ),
-                                                  if (sendbird.excludeFactionMessages)
-                                                    Text(
-                                                      "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
-                                                      "that you use with this player account",
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontStyle: FontStyle.italic,
-                                                        color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              onChanged: (enabled) async {
-                                                sendbird.excludeFactionMessages = enabled!;
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                if (sendbird.sendBirdNotificationsEnabled)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 30, right: 8),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.keyboard_arrow_right_outlined),
-                                        Flexible(
-                                          child: Material(
-                                            type: MaterialType.transparency,
-                                            child: CheckboxListTile(
-                                              dense: true,
-                                              checkColor: Colors.white,
-                                              activeColor: Colors.red[900],
-                                              value: sendbird.excludeCompanyMessages,
-                                              title: const Row(
-                                                children: [
-                                                  Text(
-                                                    "Exclude company messages",
-                                                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                                                  ),
-                                                ],
-                                              ),
-                                              subtitle: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    "Company messages won't be shown",
-                                                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                                                  ),
-                                                  if (sendbird.excludeCompanyMessages)
-                                                    Text(
-                                                      "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
-                                                      "that you use with this player account",
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontStyle: FontStyle.italic,
-                                                        color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              onChanged: (enabled) async {
-                                                sendbird.excludeCompanyMessages = enabled!;
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                if (sendbird.sendBirdNotificationsEnabled)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 30, right: 8),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.keyboard_arrow_right_outlined),
-                                        Flexible(
-                                          child: Material(
-                                            type: MaterialType.transparency,
-                                            child: CheckboxListTile(
-                                              dense: true,
-                                              checkColor: Colors.white,
-                                              activeColor: Colors.red[900],
-                                              value: sendbird.excludeEliminationMessages,
-                                              title: const Row(
-                                                children: [
-                                                  Text(
-                                                    "Exclude Elimination event messages",
-                                                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                                                  ),
-                                                ],
-                                              ),
-                                              subtitle: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    "Elimination event messages won't be shown",
-                                                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                                                  ),
-                                                  if (sendbird.excludeEliminationMessages)
-                                                    Text(
-                                                      "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
-                                                      "that you use with this player account",
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontStyle: FontStyle.italic,
-                                                        color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              onChanged: (enabled) async {
-                                                sendbird.excludeEliminationMessages = enabled!;
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            );
-                          } else {
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
-                                  child: Material(
-                                    type: MaterialType.transparency,
-                                    child: ListTile(
-                                      title: const Text("Torn chat messages", style: TextStyle(fontSize: 15)),
-                                      subtitle: Text(
-                                        "NOTE: notifications for Torn chat messages are temporarily disabled. "
-                                        "You can find more information in the forums or Discord. Apologies for the inconvenience.",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                          color: _themeProvider!.getTextColor(Colors.orange[900]!),
-                                        ),
-                                      ),
-                                      trailing: const Checkbox(
-                                        value: false,
-                                        activeColor: Colors.blueGrey,
-                                        checkColor: Colors.white,
-                                        onChanged: null,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                        },
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.forumsSubscription ?? false,
-                            title: const Text("Forums subscribed threads"),
-                            subtitle: const Text(
-                              "Get notifications for new posts in threads you are subscribed to. "
-                              "NOTE: checks will be performed every 15 minutes to avoid excessive API load",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) {
-                              setState(() {
-                                _firebaseUserModel?.forumsSubscription = value;
-                              });
-                              FirestoreHelper().subscribeToForumsSubcriptionsNotification(value);
-                            },
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: _firebaseUserModel!.workStatsNotification ?? false,
-                            title: const Text("Work stats targets"),
-                            subtitle: const Text(
-                              "Get notified once your manual labor, intelligence or endurance reach the values you "
-                              "choose. Each target is cleared as soon as it's reached, and the alert switches itself "
-                              "off when no targets are left",
-                              style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                            ),
-                            onChanged: (value) => _onWorkStatsToggled(value ?? false),
-                          ),
-                        ),
-                      ),
-                      if (_firebaseUserModel!.workStatsNotification ?? false) _workStatsTargets(),
+                      _summaryHeader(),
+                      if (_liveActivitiesSupported()) _liveActivitiesCard(),
+                      _barsCard(),
+                      _travelCard(),
+                      _factionCard(),
+                      _socialCard(),
+                      _otherCard(),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -1388,6 +163,275 @@ class AlertsSettingsState extends State<AlertsSettings> {
     );
   }
 
+  bool _liveActivitiesSupported() {
+    return (Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26);
+  }
+
+  bool get _sendbirdOn => Get.find<SendbirdController>().sendBirdNotificationsEnabled;
+
+  int _countOn(List<bool?> flags) => flags.where((f) => f == true).length;
+
+  List<bool?> _barsFlags() {
+    final m = _firebaseUserModel!;
+    return [
+      m.energyNotification,
+      m.nerveNotification,
+      m.lifeNotification,
+      m.drugsNotification,
+      m.medicalNotification,
+      m.boosterNotification,
+      m.hospitalNotification,
+      m.refillsNotification,
+    ];
+  }
+
+  List<bool?> _travelFlags() {
+    final m = _firebaseUserModel!;
+    return [
+      m.travelNotification,
+      m.foreignRestockNotification,
+      m.cityShopRestockNotification,
+      m.abroadStayNotification,
+    ];
+  }
+
+  List<bool?> _factionFlags() {
+    final m = _firebaseUserModel!;
+    return [
+      m.retalsNotification,
+      m.factionAssistMessage,
+      m.lootAlerts.isNotEmpty,
+      m.lootRangersAlerts,
+      m.racingNotification,
+    ];
+  }
+
+  List<bool?> _socialFlags() {
+    final m = _firebaseUserModel!;
+    return [m.messagesNotification, m.eventsNotification, _sendbirdOn, m.forumsSubscription];
+  }
+
+  List<bool?> _otherFlags() => [_firebaseUserModel!.workStatsNotification];
+
+  Widget _summaryHeader() {
+    final m = _firebaseUserModel!;
+    final all = [..._barsFlags(), ..._travelFlags(), ..._factionFlags(), ..._socialFlags(), ..._otherFlags()];
+    final on = _countOn(all);
+    final muted = _themeProvider!.mainText.withValues(alpha: 0.78);
+
+    final chips = <Widget>[];
+    if (m.cityShopMutedUntil > DateTime.now().millisecondsSinceEpoch) {
+      chips.add(const AlertChip("City shops paused until 00:00 TCT", kind: AlertChipKind.critical));
+    }
+    if ((m.retalsNotification ?? false) && !_factionApiAccess) {
+      chips.add(const AlertChip("Retaliation: no faction API access", kind: AlertChipKind.warning));
+    }
+    if (m.discreet) chips.add(const AlertChip("Discreet mode"));
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: "$on",
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600),
+                ),
+                TextSpan(text: on == 1 ? " alert on" : " alerts on", style: const TextStyle(fontSize: 16)),
+                TextSpan(
+                  text: "  of ${all.length}",
+                  style: TextStyle(fontSize: 13, color: muted),
+                ),
+              ],
+            ),
+          ),
+          if (chips.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(spacing: 6, runSpacing: 6, children: chips),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              "Alerts are automatic notifications that you only need to activate once. They usually arrive earlier "
+              "than manual notifications, but may be delayed by network status or device throttling.",
+              style: TextStyle(fontSize: 12, height: 1.35, color: muted),
+            ),
+          ),
+          Row(
+            children: [
+              const Text("Discreet alerts", style: TextStyle(fontSize: 14)),
+              IconButton(
+                icon: const Icon(Icons.info_outline, size: 20),
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  showDialog(
+                    useRootNavigator: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return DiscreetInfo();
+                    },
+                  );
+                },
+              ),
+              const Spacer(),
+              Switch(
+                value: m.discreet,
+                onChanged: (value) {
+                  setState(() {
+                    m.discreet = value;
+                  });
+                  FirestoreHelper().toggleDiscreet(value);
+                },
+                activeThumbColor: Colors.white,
+                activeTrackColor: Colors.green[600],
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  AlertGroupCard _card({
+    required IconData icon,
+    required String title,
+    List<bool?>? flags,
+    required List<Widget> children,
+  }) {
+    return AlertGroupCard(
+      icon: icon,
+      title: title,
+      on: flags == null ? null : _countOn(flags),
+      total: flags?.length,
+      children: children,
+      theme: _themeProvider!,
+    );
+  }
+
+  AlertSubRows _subRows(List<Widget> children) => AlertSubRows(theme: _themeProvider!, children: children);
+
+  Widget _chevron() =>
+      Icon(Icons.keyboard_arrow_right_outlined, color: _themeProvider!.mainText.withValues(alpha: 0.78));
+
+  // ##### BARS & COOLDOWNS #####
+
+  Widget _barsCard() {
+    final m = _firebaseUserModel!;
+    return _card(
+      icon: Icons.bolt_outlined,
+      title: "Bars & cooldowns",
+      flags: _barsFlags(),
+      children: [
+        AlertRow(
+          title: "Energy full",
+          subtitle: "Get notified once you reach full energy",
+          value: m.energyNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.energyNotification = value);
+            FirestoreHelper().subscribeToEnergyNotification(value);
+          },
+        ),
+        AlertRow(
+          title: "Nerve full",
+          subtitle: "Get notified once you reach full nerve",
+          value: m.nerveNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.nerveNotification = value);
+            FirestoreHelper().subscribeToNerveNotification(value);
+          },
+        ),
+        AlertRow(
+          title: "Life full",
+          subtitle: "Get notified once you reach full life",
+          value: m.lifeNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.lifeNotification = value);
+            FirestoreHelper().subscribeToLifeNotification(value);
+          },
+        ),
+        if (m.lifeNotification ?? false) _subRows([_lifeTapSelector()]),
+        AlertRow(
+          title: "Drugs cooldown",
+          subtitle: "Get notified when your drugs cooldown has expired",
+          value: m.drugsNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.drugsNotification = value);
+            FirestoreHelper().subscribeToDrugsNotification(value);
+          },
+        ),
+        if (m.drugsNotification ?? false) _subRows([_drugsTapSelector()]),
+        AlertRow(
+          title: "Medical cooldown",
+          subtitle: "Get notified when your medical cooldown has expired",
+          value: m.medicalNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.medicalNotification = value);
+            FirestoreHelper().subscribeToMedicalNotification(value);
+          },
+        ),
+        if (m.medicalNotification ?? false) _subRows([_medicalTapSelector()]),
+        AlertRow(
+          title: "Booster cooldown",
+          subtitle: "Get notified when your booster cooldown has expired",
+          value: m.boosterNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.boosterNotification = value);
+            FirestoreHelper().subscribeToBoosterNotification(value);
+          },
+        ),
+        if (m.boosterNotification ?? false) _subRows([_boosterTapSelector()]),
+        AlertRow(
+          title: "Hospital admission and release",
+          subtitle: "If you are offline, you'll be notified if you are hospitalized, revived or out of hospital",
+          value: m.hospitalNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.hospitalNotification = value);
+            FirestoreHelper().subscribeToHospitalNotification(value);
+          },
+        ),
+        AlertRow(
+          title: "Refills",
+          subtitle: "Get notified if you still have unused refills",
+          value: m.refillsNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.refillsNotification = value);
+            FirestoreHelper().subscribeToRefillsNotification(value);
+          },
+        ),
+        if (m.refillsNotification ?? false) _subRows([_refillsTimeSelector(), _refillsChooser()]),
+      ],
+    );
+  }
+
+  static const List<DropdownMenuItem<String>> _cooldownTapItems = [
+    DropdownMenuItem(
+      value: "app",
+      child: SizedBox(
+        width: 110,
+        child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
+      ),
+    ),
+    DropdownMenuItem(
+      value: "itemsOwn",
+      child: SizedBox(
+        width: 110,
+        child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
+      ),
+    ),
+    DropdownMenuItem(
+      value: "itemsFaction",
+      child: SizedBox(
+        width: 110,
+        child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
+      ),
+    ),
+  ];
+
   Widget _lifeTapSelector() {
     return _notificationDestinationSelector(
       value: _settingsProvider.lifeNotificationTapAction,
@@ -1397,27 +441,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
         });
       },
       items: const [
-        DropdownMenuItem(
-          value: "app",
-          child: SizedBox(
-            width: 110,
-            child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "itemsOwn",
-          child: SizedBox(
-            width: 110,
-            child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "itemsFaction",
-          child: SizedBox(
-            width: 110,
-            child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-          ),
-        ),
+        ..._cooldownTapItems,
         DropdownMenuItem(
           value: "factionMain",
           child: SizedBox(
@@ -1425,6 +449,149 @@ class AlertsSettingsState extends State<AlertsSettings> {
             child: Text("Faction page", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _drugsTapSelector() {
+    return _notificationDestinationSelector(
+      value: _settingsProvider.drugsNotificationTapAction,
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.drugsNotificationTapAction = value;
+        });
+      },
+      items: _cooldownTapItems,
+    );
+  }
+
+  Widget _medicalTapSelector() {
+    return _notificationDestinationSelector(
+      value: _settingsProvider.medicalNotificationTapAction,
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.medicalNotificationTapAction = value;
+        });
+      },
+      items: _cooldownTapItems,
+    );
+  }
+
+  Widget _boosterTapSelector() {
+    return _notificationDestinationSelector(
+      value: _settingsProvider.boosterNotificationTapAction,
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.boosterNotificationTapAction = value;
+        });
+      },
+      items: _cooldownTapItems,
+    );
+  }
+
+  Widget _refillsTimeSelector() {
+    return AlertRow(
+      sub: true,
+      title: "Reminder time",
+      trailing: DropdownButton<int>(
+        value: _firebaseUserModel?.refillsTime,
+        underline: const SizedBox.shrink(),
+        isDense: true,
+        items: [
+          for (int hour = 16; hour <= 23; hour++)
+            DropdownMenuItem(
+              value: hour,
+              child: SizedBox(
+                width: 80,
+                child: Text("$hour:00 TCT", textAlign: TextAlign.right, style: const TextStyle(fontSize: 14)),
+              ),
+            ),
+        ],
+        onChanged: (value) async {
+          setState(() {
+            _firebaseUserModel?.refillsTime = value;
+          });
+          FirestoreHelper().setRefillTime(value);
+        },
+      ),
+    );
+  }
+
+  Widget _refillsChooser() {
+    return AlertRow(
+      sub: true,
+      title: "Choose refills",
+      trailing: _chevron(),
+      onTap: () {
+        showDialog(
+          useRootNavigator: false,
+          context: context,
+          builder: (BuildContext context) {
+            return RefillsRequestedDialog(userModel: _firebaseUserModel);
+          },
+        );
+      },
+    );
+  }
+
+  // ##### TRAVEL & SHOPS #####
+
+  Widget _travelCard() {
+    final m = _firebaseUserModel!;
+    return _card(
+      icon: Icons.flight_takeoff_outlined,
+      title: "Travel & shops",
+      flags: _travelFlags(),
+      children: [
+        AlertRow(
+          title: "Travel",
+          subtitle: "Get notified just before you arrive",
+          value: m.travelNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.travelNotification = value);
+            FirestoreHelper().subscribeToTravelNotification(value);
+          },
+        ),
+        if (m.travelNotification ?? false) _subRows([_travelStocksSelector(), _travelNotificationTapSelector()]),
+        AlertRow(
+          title: "Foreign stocks",
+          subtitle:
+              "Get notified whenever new stocks are put in the market abroad. To follow specific items, "
+              "go to the stocks page (Travel section) and activate the ones you are interested in",
+          value: m.foreignRestockNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.foreignRestockNotification = value);
+            FirestoreHelper().subscribeToForeignRestockNotification(value);
+          },
+        ),
+        if (m.foreignRestockNotification ?? false) _foreignRestockOptions(),
+        AlertRow(
+          title: "City shops",
+          subtitle: "Get notified about restocks of city shop items you follow",
+          value: m.cityShopRestockNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.cityShopRestockNotification = value);
+            FirestoreHelper().subscribeToCityShopRestockNotification(value).then((success) {
+              if (!success && mounted) {
+                setState(() => m.cityShopRestockNotification = !value);
+                _cityShopUpdateFailedToast();
+              }
+            });
+          },
+        ),
+        if (m.cityShopRestockNotification ?? false) _cityShopOptions(),
+        AlertRow(
+          title: "Abroad stay reminders",
+          subtitle:
+              "Get reminded at the intervals you choose after landing abroad, so you don't forget you are "
+              "sitting there. Reminders restart on every trip and stop once you return to Torn",
+          value: m.abroadStayNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.abroadStayNotification = value);
+            FirestoreHelper().subscribeToAbroadStayNotification(value);
+          },
+        ),
+        if (m.abroadStayNotification ?? false) _abroadStayOptions(),
       ],
     );
   }
@@ -1443,154 +610,68 @@ class AlertsSettingsState extends State<AlertsSettings> {
   }
 
   Widget _travelStocksSelector() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 0, 8, 0),
-      child: Row(
-        children: [
-          const Icon(Icons.keyboard_arrow_right_outlined),
-          Flexible(
-            child: Material(
-              type: MaterialType.transparency,
-              child: CheckboxListTile(
-                checkColor: Colors.white,
-                activeColor: Colors.blueGrey,
-                value: _firebaseUserModel!.travelStocksInNotification,
-                title: const Text(
-                  "Include stocks at destination",
-                  style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                ),
-                subtitle: const Text(
-                  "If enabled, the landing notification will also tell you which of the items you have restock "
-                  "alerts for are in stock at your destination",
-                  style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                ),
-                onChanged: (value) {
-                  final include = value ?? false;
-                  setState(() {
-                    _firebaseUserModel!.travelStocksInNotification = include;
-                  });
-                  FirestoreHelper().changeTravelStocksInNotification(include);
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AlertRow(
+      sub: true,
+      title: "Include stocks at destination",
+      subtitle:
+          "The landing notification will also tell you which of the items you follow are in stock at "
+          "your destination",
+      value: _firebaseUserModel!.travelStocksInNotification,
+      onChanged: (include) {
+        setState(() {
+          _firebaseUserModel!.travelStocksInNotification = include;
+        });
+        FirestoreHelper().changeTravelStocksInNotification(include);
+      },
     );
   }
 
   Widget _foreignRestockOptions() {
-    final bool onlyCurrentCountry = _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry ?? false;
+    final m = _firebaseUserModel!;
+    final bool onlyCurrentCountry = m.foreignRestockNotificationOnlyCurrentCountry ?? false;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(25, 0, 8, 0),
-          child: Row(
-            children: [
-              const Icon(Icons.keyboard_arrow_right_outlined),
-              Flexible(
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: CheckboxListTile(
-                    checkColor: Colors.white,
-                    activeColor: Colors.blueGrey,
-                    value: onlyCurrentCountry,
-                    title: const Text(
-                      "Limit to current country",
-                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                    ),
-                    subtitle: const Text(
-                      "If enabled, limit foreign restock alerts to the items that get restocked in the "
-                      "country you are currently flying to or staying in",
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                    ),
-                    onChanged: (value) {
-                      final limit = value ?? false;
-                      setState(() {
-                        _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry = limit;
-                        if (!limit) _firebaseUserModel!.foreignRestockNotificationOnlyLanded = false;
-                      });
-                      FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(limit);
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
+    return _subRows([
+      AlertRow(
+        sub: true,
+        title: "Limit to current country",
+        subtitle: "Only items restocked in the country you are flying to or staying in",
+        value: onlyCurrentCountry,
+        onChanged: (limit) {
+          setState(() {
+            m.foreignRestockNotificationOnlyCurrentCountry = limit;
+            if (!limit) m.foreignRestockNotificationOnlyLanded = false;
+          });
+          FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(limit);
+        },
+      ),
+      if (onlyCurrentCountry)
+        AlertRow(
+          sub: true,
+          title: "Alert while still flying",
+          subtitle:
+              "If off, alerts start once you have landed, so you are not told about a restock you cannot "
+              "buy from while in the air",
+          value: !m.foreignRestockNotificationOnlyLanded,
+          onChanged: (whileFlying) {
+            setState(() {
+              m.foreignRestockNotificationOnlyLanded = !whileFlying;
+            });
+            FirestoreHelper().changeForeignRestockNotificationOnlyLanded(!whileFlying);
+          },
         ),
-        if (onlyCurrentCountry)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(45, 0, 8, 0),
-            child: Row(
-              children: [
-                const Icon(Icons.keyboard_arrow_right_outlined),
-                Flexible(
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: CheckboxListTile(
-                      checkColor: Colors.white,
-                      activeColor: Colors.blueGrey,
-                      value: !_firebaseUserModel!.foreignRestockNotificationOnlyLanded,
-                      title: const Text(
-                        "Alert while still flying",
-                        style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                      ),
-                      subtitle: const Text(
-                        "If disabled, alerts start once you have landed, so that you are not told about a restock "
-                        "you cannot buy from while in the air",
-                        style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                      ),
-                      onChanged: (value) {
-                        final onlyLanded = !(value ?? true);
-                        setState(() {
-                          _firebaseUserModel!.foreignRestockNotificationOnlyLanded = onlyLanded;
-                        });
-                        FirestoreHelper().changeForeignRestockNotificationOnlyLanded(onlyLanded);
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
-          child: Row(
-            children: [
-              const Icon(Icons.keyboard_arrow_right_outlined),
-              Flexible(
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: CheckboxListTile(
-                    checkColor: Colors.white,
-                    activeColor: Colors.blueGrey,
-                    value: _firebaseUserModel!.foreignRestockNotificationSellout,
-                    title: const Text(
-                      "Alert also when items sell out",
-                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                    ),
-                    subtitle: const Text(
-                      "If enabled, you will also get an alert when one of the items you are subscribed to runs out "
-                      "of stock, which is useful to estimate when the next restock is due",
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                    ),
-                    onChanged: (value) {
-                      final sellout = value ?? false;
-                      setState(() {
-                        _firebaseUserModel!.foreignRestockNotificationSellout = sellout;
-                      });
-                      FirestoreHelper().changeForeignRestockSellout(sellout);
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+      AlertRow(
+        sub: true,
+        title: "Alert also when items sell out",
+        subtitle: "Useful to estimate when the next restock is due",
+        value: m.foreignRestockNotificationSellout,
+        onChanged: (sellout) {
+          setState(() {
+            m.foreignRestockNotificationSellout = sellout;
+          });
+          FirestoreHelper().changeForeignRestockSellout(sellout);
+        },
+      ),
+    ]);
   }
 
   void _cityShopUpdateFailedToast() {
@@ -1604,82 +685,205 @@ class AlertsSettingsState extends State<AlertsSettings> {
     );
   }
 
-  Widget _cityShopOptions() {
+  String _cityShopHourLabel(int minutes) {
+    final h = (minutes ~/ 60).toString().padLeft(2, "0");
+    final m = (minutes % 60).toString().padLeft(2, "0");
+    return "$h:$m";
+  }
+
+  // TCT minutes of the day to the device's local time
+  String _cityShopLocalLabel(int tctMinutes) {
+    final local = (tctMinutes + DateTime.now().timeZoneOffset.inMinutes) % 1440;
+    return _cityShopHourLabel(local < 0 ? local + 1440 : local);
+  }
+
+  Widget _cityShopHoursExtra() {
+    final from = _firebaseUserModel!.cityShopHoursFrom;
+    final to = _firebaseUserModel!.cityShopHoursTo;
+    String hint = "${_cityShopLocalLabel(from)} to ${_cityShopLocalLabel(to)} in your local time";
+    if (from == to) {
+      hint = "Same start and end means the whole day";
+    } else if (from > to) {
+      hint += ", crossing midnight";
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(25, 0, 8, 0),
-          child: Row(
-            children: [
-              const Icon(Icons.keyboard_arrow_right_outlined),
-              Flexible(
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: CheckboxListTile(
-                    checkColor: Colors.white,
-                    activeColor: Colors.blueGrey,
-                    value: _firebaseUserModel!.cityShopOnlyConfirmed,
-                    title: const Text(
-                      "Only notify when in stock",
-                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                    ),
-                    subtitle: const Text(
-                      "Skip the early warning, notify only when the restock is seen",
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                    ),
-                    onChanged: (value) {
-                      final onlyConfirmed = value ?? false;
-                      setState(() {
-                        _firebaseUserModel?.cityShopOnlyConfirmed = onlyConfirmed;
-                      });
-                      FirestoreHelper().setCityShopOnlyConfirmed(onlyConfirmed).then((success) {
-                        if (!success && mounted) {
-                          setState(() {
-                            _firebaseUserModel?.cityShopOnlyConfirmed = !onlyConfirmed;
-                          });
-                          _cityShopUpdateFailedToast();
-                        }
-                      });
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
+        Row(
+          children: [
+            OutlinedButton(
+              onPressed: () => _pickCityShopHour(from: true),
+              style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+              child: Text("From ${_cityShopHourLabel(from)} TCT", style: const TextStyle(fontSize: 12)),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: () => _pickCityShopHour(from: false),
+              style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+              child: Text("To ${_cityShopHourLabel(to)} TCT", style: const TextStyle(fontSize: 12)),
+            ),
+          ],
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
-          child: Row(
-            children: [
-              const Icon(Icons.keyboard_arrow_right_outlined),
-              Flexible(
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: ListTile(
-                    title: const Text(
-                      "Choose the items to follow",
-                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                    ),
-                    subtitle: const Text(
-                      "Browse city shop items, filter by shop or mode, and pick the ones you want alerts for",
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                    ),
-                    trailing: const Icon(Icons.keyboard_arrow_right_outlined),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const CityShopsPage()),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(hint, style: TextStyle(fontSize: 11.5, color: _themeProvider!.mainText.withValues(alpha: 0.78))),
         ),
       ],
     );
+  }
+
+  Widget _cityShopMutedRow() {
+    final mutedUntil = _firebaseUserModel!.cityShopMutedUntil;
+    final muted = mutedUntil > DateTime.now().millisecondsSinceEpoch;
+    return AlertRow(
+      sub: true,
+      title: muted ? "Paused until 00:00 TCT" : "Done for today",
+      titleColor: muted ? Colors.red[400] : null,
+      boldTitle: muted,
+      subtitle: muted
+          ? "No city shop alerts until the daily purchase limit resets"
+          : "Pause all city shop alerts until the 100 items limit resets at 00:00 TCT",
+      trailing: TextButton(onPressed: () => _setCityShopMuted(!muted), child: Text(muted ? "Resume" : "Pause")),
+    );
+  }
+
+  void _setCityShopMuted(bool mute) {
+    final previous = _firebaseUserModel!.cityShopMutedUntil;
+    final until = mute ? CityShopDailyLimit.nextTctMidnightMs() : 0;
+    setState(() {
+      _firebaseUserModel!.cityShopMutedUntil = until;
+    });
+    FirestoreHelper().setCityShopMutedUntil(until).then((success) {
+      if (!success && mounted) {
+        setState(() {
+          _firebaseUserModel!.cityShopMutedUntil = previous;
+        });
+        _cityShopUpdateFailedToast();
+      }
+    });
+  }
+
+  Future<void> _pickCityShopHour({required bool from}) async {
+    final current = from ? _firebaseUserModel!.cityShopHoursFrom : _firebaseUserModel!.cityShopHoursTo;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: current ~/ 60, minute: current % 60),
+      initialEntryMode: TimePickerEntryMode.dial,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: Theme(
+            data: ThemeData.from(
+              colorScheme: _themeProvider!.currentTheme == AppTheme.light
+                  ? const ColorScheme.light()
+                  : const ColorScheme.dark(),
+            ),
+            child: child!,
+          ),
+        );
+      },
+    );
+    if (picked == null || !mounted) return;
+    final minutes = picked.hour * 60 + picked.minute;
+    final previous = current;
+    setState(() {
+      if (from) {
+        _firebaseUserModel!.cityShopHoursFrom = minutes;
+      } else {
+        _firebaseUserModel!.cityShopHoursTo = minutes;
+      }
+    });
+    _saveCityShopHours(revertFrom: from ? previous : null, revertTo: from ? null : previous);
+  }
+
+  // Writes the three hour fields together; on failure restores whichever value changed
+  void _saveCityShopHours({bool? revertEnabled, int? revertFrom, int? revertTo}) {
+    final model = _firebaseUserModel!;
+    FirestoreHelper()
+        .setCityShopHours(
+          enabled: model.cityShopHoursEnabled,
+          fromMin: model.cityShopHoursFrom,
+          toMin: model.cityShopHoursTo,
+        )
+        .then((success) {
+          if (success || !mounted) return;
+          setState(() {
+            if (revertEnabled != null) model.cityShopHoursEnabled = revertEnabled;
+            if (revertFrom != null) model.cityShopHoursFrom = revertFrom;
+            if (revertTo != null) model.cityShopHoursTo = revertTo;
+          });
+          _cityShopUpdateFailedToast();
+        });
+  }
+
+  Widget _cityShopOptions() {
+    final m = _firebaseUserModel!;
+    return _subRows([
+      AlertRow(
+        sub: true,
+        title: "Only notify when in stock",
+        subtitle: "Skip the early warning, notify only when the restock is seen",
+        value: m.cityShopOnlyConfirmed,
+        onChanged: (onlyConfirmed) {
+          setState(() => m.cityShopOnlyConfirmed = onlyConfirmed);
+          FirestoreHelper().setCityShopOnlyConfirmed(onlyConfirmed).then((success) {
+            if (!success && mounted) {
+              setState(() => m.cityShopOnlyConfirmed = !onlyConfirmed);
+              _cityShopUpdateFailedToast();
+            }
+          });
+        },
+      ),
+      AlertRow(
+        sub: true,
+        title: "Only when in Torn",
+        subtitle: "Skip alerts while flying or abroad",
+        value: m.cityShopOnlyInTorn,
+        onChanged: (onlyInTorn) {
+          setState(() => m.cityShopOnlyInTorn = onlyInTorn);
+          FirestoreHelper().setCityShopOnlyInTorn(onlyInTorn).then((success) {
+            if (!success && mounted) {
+              setState(() => m.cityShopOnlyInTorn = !onlyInTorn);
+              _cityShopUpdateFailedToast();
+            }
+          });
+        },
+      ),
+      AlertRow(
+        sub: true,
+        title: "Only between certain hours",
+        subtitle: "Torn City Time. Alerts outside the range are skipped, not delayed",
+        value: m.cityShopHoursEnabled,
+        onChanged: (enabled) {
+          setState(() => m.cityShopHoursEnabled = enabled);
+          _saveCityShopHours(revertEnabled: !enabled);
+        },
+        extra: m.cityShopHoursEnabled ? _cityShopHoursExtra() : null,
+      ),
+      _cityShopMutedRow(),
+      AlertRow(
+        sub: true,
+        title: "Auto-pause at the daily limit",
+        titleTrailing: const AlertChip("experimental", kind: AlertChipKind.warning),
+        subtitle:
+            "Counts what you buy in city shops from the browser and pauses alerts at 100 items, or as soon "
+            "as Torn reports the limit",
+        value: _cityShopAutoPause,
+        onChanged: (enabled) {
+          setState(() => _cityShopAutoPause = enabled);
+          Prefs().setCityShopAutoPauseEnabled(enabled);
+        },
+      ),
+      AlertRow(
+        sub: true,
+        title: "Choose the items to follow",
+        subtitle: "Browse city shop items, filter by shop or mode, and pick the ones you want alerts for",
+        trailing: _chevron(),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const CityShopsPage()));
+        },
+      ),
+    ]);
   }
 
   Widget _travelLiveActivityTapSelector() {
@@ -1730,87 +934,50 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   Widget _abroadStayOptions() {
     final selected = _firebaseUserModel!.abroadStayIntervals.toSet();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.keyboard_arrow_right_outlined),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  "Pick the intervals you want to be reminded at:",
-                  style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: _themeProvider!.mainText),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsets.only(left: 28),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: -4,
-              children: _abroadStayIntervalChoices.map((choice) {
-                final isSelected = selected.contains(choice.$1);
-                return FilterChip(
-                  label: Text(choice.$2),
-                  selected: isSelected,
-                  onSelected: (value) {
-                    setState(() {
-                      if (value) {
-                        selected.add(choice.$1);
-                      } else {
-                        selected.remove(choice.$1);
-                      }
-                      // Keep the list deterministic (ascending order) before persisting.
-                      final ordered = selected.toList()..sort();
-                      _firebaseUserModel!.abroadStayIntervals = ordered;
-                    });
-                    final ordered = selected.toList()..sort();
-                    FirestoreHelper().setAbroadStayIntervals(ordered);
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              const Icon(Icons.keyboard_arrow_right_outlined),
-              Flexible(
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: CheckboxListTile(
-                    checkColor: Colors.white,
-                    activeColor: Colors.blueGrey,
-                    value: _firebaseUserModel!.abroadStayIncludeHospital,
-                    title: const Text(
-                      "Include hospital stays",
-                      style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-                    ),
-                    subtitle: const Text(
-                      "If enabled, reminders keep firing while you are hospitalised abroad. If disabled, "
-                      "reminders pause during hospital stays and resume once you are out",
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                    ),
-                    onChanged: (value) {
-                      final include = value ?? false;
-                      setState(() {
-                        _firebaseUserModel!.abroadStayIncludeHospital = include;
-                      });
-                      FirestoreHelper().setAbroadStayIncludeHospital(include);
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+    return _subRows([
+      AlertRow(
+        sub: true,
+        title: "Remind me at",
+        extra: Wrap(
+          spacing: 6,
+          runSpacing: -4,
+          children: _abroadStayIntervalChoices.map((choice) {
+            final isSelected = selected.contains(choice.$1);
+            return FilterChip(
+              label: Text(choice.$2, style: const TextStyle(fontSize: 12)),
+              selected: isSelected,
+              visualDensity: VisualDensity.compact,
+              onSelected: (value) {
+                setState(() {
+                  if (value) {
+                    selected.add(choice.$1);
+                  } else {
+                    selected.remove(choice.$1);
+                  }
+                  // Keep the list deterministic (ascending order) before persisting.
+                  final ordered = selected.toList()..sort();
+                  _firebaseUserModel!.abroadStayIntervals = ordered;
+                });
+                final ordered = selected.toList()..sort();
+                FirestoreHelper().setAbroadStayIntervals(ordered);
+              },
+            );
+          }).toList(),
+        ),
       ),
-    );
+      AlertRow(
+        sub: true,
+        title: "Include hospital stays",
+        subtitle: "If off, reminders pause while you are hospitalised abroad and resume once you are out",
+        value: _firebaseUserModel!.abroadStayIncludeHospital,
+        onChanged: (include) {
+          setState(() {
+            _firebaseUserModel!.abroadStayIncludeHospital = include;
+          });
+          FirestoreHelper().setAbroadStayIncludeHospital(include);
+        },
+      ),
+    ]);
   }
 
   Widget _notificationDestinationSelector({
@@ -1820,168 +987,525 @@ class AlertsSettingsState extends State<AlertsSettings> {
     String label = "Notification tap opens",
     String? helperText,
   }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
-                child: Row(
-                  children: [
-                    const Icon(Icons.keyboard_arrow_right_outlined),
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10),
-                        child: Text(label, style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              DropdownButton<String>(value: value, items: items, onChanged: onChanged),
-            ],
-          ),
-          if (helperText != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(34, 0, 0, 8),
-              child: Text(helperText, style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic)),
-            ),
-        ],
+    return AlertRow(
+      sub: true,
+      title: label,
+      subtitle: helperText,
+      trailing: DropdownButton<String>(
+        value: value,
+        items: items,
+        onChanged: onChanged,
+        underline: const SizedBox.shrink(),
+        isDense: true,
       ),
     );
   }
 
-  Widget _liveActivities() {
-    if (!Platform.isIOS && !Platform.isAndroid) return const SizedBox.shrink();
-    if (Platform.isIOS && kSdkIos < 16.2) return const SizedBox.shrink();
-    if (Platform.isAndroid && kSdkAndroid < 26) return const SizedBox.shrink();
+  // ##### LIVE ACTIVITIES #####
 
+  Widget _liveActivitiesCard() {
     String laHeader =
         "Live activities will only start if you have Torn PDA open in the foreground when they take place. "
         "You'll see them in the lock screen and the dynamic island (if supported)";
 
     if (Platform.isIOS && kSdkIos >= 17.2) {
       laHeader =
-          "Live activities will start immediately if you have Torn PDA open in the foreground, or after a few minutes "
-          "when it's in the background or completely closed.\n\n"
-          "They'll show in the lock screen and dynamic island.";
+          "Live activities start immediately if you have Torn PDA open in the foreground, or after a few minutes "
+          "when it's in the background or completely closed. They show in the lock screen and dynamic island.";
     } else if (Platform.isAndroid) {
       laHeader =
-          "Live Updates will show a persistent notification with a countdown timer for your travel. "
-          "They are triggered when Torn PDA is in the foreground while you are already traveling.\n\n"
-          "If you have battery optimization enabled, the update might stop when the app is in the background.";
+          "Live Updates show a persistent notification with a countdown timer for your travel. They are triggered "
+          "when Torn PDA is in the foreground while you are already traveling. With battery optimization enabled, "
+          "the update might stop when the app is in the background.";
+    }
+
+    final bool travelOn = Platform.isAndroid
+        ? _settingsProvider.androidLiveActivityTravelEnabled
+        : _settingsProvider.iosLiveActivityTravelEnabled;
+    final bool racingOn = Platform.isAndroid
+        ? _settingsProvider.androidLiveActivityRacingEnabled
+        : _settingsProvider.iosLiveActivityRacingEnabled;
+
+    return _card(
+      icon: Icons.timelapse_outlined,
+      title: Platform.isAndroid ? "Live Updates" : "Live Activities",
+      flags: [travelOn, racingOn],
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+          child: Text(
+            laHeader,
+            style: TextStyle(fontSize: 11.5, height: 1.35, color: _themeProvider!.mainText.withValues(alpha: 0.78)),
+          ),
+        ),
+        AlertRow(
+          title: "Travel",
+          subtitle: "Countdown to your destination",
+          value: travelOn,
+          onChanged: (enabled) async {
+            if (Platform.isAndroid) {
+              setState(() {
+                _settingsProvider.androidLiveActivityTravelEnabled = enabled;
+              });
+            } else {
+              setState(() {
+                // This setter will eventually also get or delete token from Firestore
+                _settingsProvider.iosLiveActivityTravelEnabled = enabled;
+              });
+            }
+
+            final bool nowEnabled = Platform.isAndroid
+                ? _settingsProvider.androidLiveActivityTravelEnabled
+                : _settingsProvider.iosLiveActivityTravelEnabled;
+
+            if (nowEnabled) {
+              if (Platform.isAndroid) {
+                _checkAndroidBatteryOptimization();
+              }
+
+              await Get.find<LiveActivityTravelController>().activate();
+              Get.find<LiveActivityBridgeController>().initializeHandler();
+            } else {
+              Get.find<LiveActivityTravelController>().deactivate();
+            }
+          },
+        ),
+        if (travelOn) _subRows([_travelLiveActivityTapSelector()]),
+        AlertRow(
+          title: "Racing",
+          subtitle: "Progress of your current race",
+          value: racingOn,
+          onChanged: (enabled) async {
+            setState(() {
+              if (Platform.isAndroid) {
+                _settingsProvider.androidLiveActivityRacingEnabled = enabled;
+              } else {
+                _settingsProvider.iosLiveActivityRacingEnabled = enabled;
+              }
+            });
+
+            final bool racingEnabled = Platform.isAndroid
+                ? _settingsProvider.androidLiveActivityRacingEnabled
+                : _settingsProvider.iosLiveActivityRacingEnabled;
+
+            if (racingEnabled) {
+              if (Platform.isAndroid) {
+                _checkAndroidBatteryOptimization();
+              }
+              await Get.find<LiveActivityRacingController>().activate();
+              Get.find<LiveActivityBridgeController>().initializeHandler();
+            } else {
+              Get.find<LiveActivityRacingController>().deactivate();
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  // ##### FACTION & COMBAT #####
+
+  Widget _factionCard() {
+    final m = _firebaseUserModel!;
+    return _card(
+      icon: Icons.shield_outlined,
+      title: "Faction & combat",
+      flags: _factionFlags(),
+      children: [
+        AlertRow(
+          title: "Retaliation",
+          titleTrailing: GestureDetector(
+            child: Icon(Icons.info_outline_rounded, size: 20, color: _factionApiAccess ? Colors.green : Colors.orange),
+            onTap: () async {
+              await showDialog(
+                useRootNavigator: false,
+                context: context,
+                builder: (BuildContext context) {
+                  return _retalsGeneralExplanation();
+                },
+              );
+            },
+          ),
+          subtitle: "Get notified whenever it is possible to initiate a retaliation attack",
+          value: m.retalsNotification ?? false,
+          onChanged: _onRetalsToggled,
+        ),
+        if ((m.retalsNotification ?? false) && _factionApiAccess) _retalsOptions(),
+        AlertRow(
+          title: "Faction assist messages",
+          subtitle: "Receive attack assist messages manually triggered by your faction mates",
+          value: m.factionAssistMessage ?? false,
+          onChanged: (value) {
+            setState(() => m.factionAssistMessage = value);
+            FirestoreHelper().toggleFactionAssistMessage(value);
+          },
+        ),
+        AlertRow(
+          title: "Loot",
+          subtitle: "Get notified when an NPC is about to reach level 4 or 5",
+          value: m.lootAlerts.isNotEmpty,
+          onChanged: (value) async {
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              barrierDismissible: true,
+              builder: (BuildContext context) {
+                return LootAlertsDialog(userModel: _firebaseUserModel);
+              },
+            );
+            setState(() {
+              // Refresh lootAlerts (check or uncheck box)
+            });
+          },
+        ),
+        if (m.lootAlerts.isNotEmpty)
+          _subRows([AlertRow(sub: true, title: "Lead time", trailing: _lootAheadDropdown())]),
+        AlertRow(
+          title: "Loot Rangers attack",
+          titleTrailing: GestureDetector(
+            onTap: () async {
+              await showDialog(
+                useRootNavigator: false,
+                context: context,
+                builder: (BuildContext context) {
+                  return LootRangersExplanationDialog(themeProvider: _themeProvider);
+                },
+              );
+            },
+            child: const Icon(Icons.info_outline, size: 20),
+          ),
+          subtitle: "Get notified shortly before a Loot Ranger attack, including attack order",
+          value: m.lootRangersAlerts ?? false,
+          onChanged: (value) {
+            setState(() => m.lootRangersAlerts = value);
+            FirestoreHelper().subscribeToLootRangersNotification(value);
+          },
+        ),
+        if (m.lootRangersAlerts ?? false)
+          _subRows([AlertRow(sub: true, title: "Lead time", trailing: _lootRangersAheadDropdown())]),
+        AlertRow(
+          title: "Racing",
+          subtitle: "Get notified when you cross the finish line",
+          value: m.racingNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.racingNotification = value);
+            FirestoreHelper().subscribeToRacingNotification(value);
+          },
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onRetalsToggled(bool enabled) async {
+    if (!enabled) {
+      setState(() {
+        _firebaseUserModel?.retalsNotification = enabled;
+      });
+      FirestoreHelper().toggleRetaliationNotification(enabled);
+      return;
+    }
+
+    if (_factionApiAccess) {
+      setState(() {
+        _firebaseUserModel?.retalsNotification = enabled;
+      });
+      FirestoreHelper().toggleRetaliationNotification(enabled);
+
+      // Makes sure to scroll down so that the new 2 options are visible
+      _scrollController.animateTo(
+        _scrollController.offset + 100,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeIn,
+      );
+    } else {
+      String message = "";
+      int seconds = 0;
+
+      if (!_factionApiAccessCheckError) {
+        setState(() {
+          _firebaseUserModel?.retalsNotification = enabled;
+        });
+        FirestoreHelper().toggleRetaliationNotification(enabled, host: false);
+        message =
+            "You have no faction API permissions (talk to your leadership about it).\n\n"
+            "This alert has been activated, but it won't work unless someone with proper "
+            "permissions in your faction activates it as well.";
+        seconds = 10;
+      } else {
+        message =
+            "It's not possible to activate this alert now (Torn PDA can't verify whether "
+            "you have proper Faction API permissions).\n\nPlease try again later!";
+        seconds = 6;
+      }
+
+      BotToast.showText(
+        clickClose: true,
+        text: message,
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.orange[900]!,
+        duration: Duration(seconds: seconds),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+  }
+
+  Widget _retalsOptions() {
+    return _subRows([
+      AlertRow(
+        sub: true,
+        title: "Single target opens browser",
+        titleTrailing: GestureDetector(
+          child: const Icon(Icons.info_outline_rounded, size: 18),
+          onTap: () async {
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              builder: (BuildContext context) {
+                return _retalsNotificationExplanation();
+              },
+            );
+          },
+        ),
+        value: _settingsProvider.singleRetaliationOpensBrowser,
+        onChanged: (enabled) {
+          setState(() {
+            _settingsProvider.setSingleRetaliationOpensBrowser = enabled;
+          });
+        },
+      ),
+      AlertRow(
+        sub: true,
+        title: "Only as API permission donor",
+        titleTrailing: GestureDetector(
+          child: const Icon(Icons.info_outline_rounded, size: 18),
+          onTap: () async {
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              builder: (BuildContext context) {
+                return _retalsDonorExplanation();
+              },
+            );
+          },
+        ),
+        value: _firebaseUserModel?.retalsNotificationDonor ?? false,
+        onChanged: (enabled) {
+          if (enabled) {
+            BotToast.showText(
+              text:
+                  "Please make sure that you understand the consequences of this setting "
+                  "by reading the information dialog.\n\n"
+                  "You will NOT receive relation alerts.",
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.blue,
+              duration: const Duration(seconds: 6),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
+          setState(() {
+            _firebaseUserModel?.retalsNotificationDonor = enabled;
+          });
+          FirestoreHelper().toggleRetaliationDonor(enabled);
+        },
+      ),
+    ]);
+  }
+
+  // ##### SOCIAL #####
+
+  Widget _socialCard() {
+    final m = _firebaseUserModel!;
+    return _card(
+      icon: Icons.forum_outlined,
+      title: "Social",
+      flags: _socialFlags(),
+      children: [
+        AlertRow(
+          title: "Messages",
+          subtitle: "Get notified when you receive new messages",
+          value: m.messagesNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.messagesNotification = value);
+            FirestoreHelper().subscribeToMessagesNotification(value);
+          },
+        ),
+        AlertRow(
+          title: "Events",
+          subtitle: "Get notified when you receive new events",
+          value: m.eventsNotification ?? false,
+          onChanged: (value) {
+            setState(() => m.eventsNotification = value);
+            FirestoreHelper().subscribeToEventsNotification(value);
+          },
+        ),
+        if (m.eventsNotification ?? false)
+          _subRows([
+            AlertRow(
+              sub: true,
+              title: "Filter out events",
+              trailing: _chevron(),
+              onTap: () {
+                showDialog(
+                  useRootNavigator: false,
+                  context: context,
+                  builder: (BuildContext context) {
+                    return EventsFilterDialog(userModel: _firebaseUserModel);
+                  },
+                );
+              },
+            ),
+          ]),
+        GetBuilder(init: SendbirdController(), builder: (sendbird) => _tornChatRows(sendbird)),
+        AlertRow(
+          title: "Forums subscribed threads",
+          subtitle:
+              "Get notified about new posts in threads you are subscribed to. Checks run every 15 minutes "
+              "to avoid excessive API load",
+          value: m.forumsSubscription ?? false,
+          onChanged: (value) {
+            setState(() => m.forumsSubscription = value);
+            FirestoreHelper().subscribeToForumsSubcriptionsNotification(value);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _tornChatRows(SendbirdController sendbird) {
+    final bool available =
+        (Platform.isAndroid && sendbird.sendBirdPushAndroidRemoteConfigEnabled) ||
+        (Platform.isIOS && sendbird.sendBirdPushIOSRemoteConfigEnabled);
+
+    if (!available) {
+      return AlertRow(
+        title: "Torn chat messages",
+        subtitle:
+            "Notifications for Torn chat messages are temporarily disabled. You can find more information "
+            "in the forums or Discord. Apologies for the inconvenience.",
+        subtitleColor: _themeProvider!.getTextColor(Colors.orange[900]!),
+        value: false,
+      );
+    }
+
+    final String otherDevicesNote =
+        "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other "
+        "devices that you use with this player account";
+
+    AlertRow excludeRow({
+      required String title,
+      required String subtitle,
+      required bool value,
+      required ValueChanged<bool> onChanged,
+    }) {
+      return AlertRow(
+        sub: true,
+        title: title,
+        subtitle: value ? "$subtitle. $otherDevicesNote" : subtitle,
+        subtitleColor: value ? _themeProvider!.getTextColor(Colors.orange[900]!) : null,
+        value: value,
+        onChanged: onChanged,
+      );
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
-          padding: EdgeInsets.all(20),
-          child: Text("LIVE ACTIVITIES", style: TextStyle(fontSize: 9)),
+        AlertRow(
+          title: "Torn chat messages",
+          subtitle: "Enable notifications for Torn chat messages",
+          value: sendbird.sendBirdNotificationsEnabled,
+          trailing: _togglingSendbirdNotifications
+              ? const Padding(
+                  padding: EdgeInsets.only(right: 14.0),
+                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              : null,
+          onChanged: (enabled) async {
+            setState(() {
+              _togglingSendbirdNotifications = true;
+            });
+            await sendbird.sendBirdNotificationsToggle(enabled: enabled);
+            setState(() {
+              _togglingSendbirdNotifications = false;
+            });
+          },
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-          child: Text(laHeader, style: const TextStyle(fontSize: 12)),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-          child: Material(
-            type: MaterialType.transparency,
-            child: CheckboxListTile(
-              checkColor: Colors.white,
-              activeColor: Colors.blueGrey,
-              value: Platform.isAndroid
-                  ? _settingsProvider.androidLiveActivityTravelEnabled
-                  : _settingsProvider.iosLiveActivityTravelEnabled,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Travel"),
-                  Text(Platform.isAndroid ? "Live Update" : "Live Activity", style: const TextStyle(fontSize: 10)),
-                ],
-              ),
-              onChanged: (enabled) async {
-                if (enabled == null) return;
-
-                if (Platform.isAndroid) {
-                  setState(() {
-                    _settingsProvider.androidLiveActivityTravelEnabled = enabled;
-                  });
-                } else {
-                  setState(() {
-                    // This setter will eventually also get or delete token from Firestore
-                    _settingsProvider.iosLiveActivityTravelEnabled = enabled;
-                  });
-                }
-
-                final bool nowEnabled = Platform.isAndroid
-                    ? _settingsProvider.androidLiveActivityTravelEnabled
-                    : _settingsProvider.iosLiveActivityTravelEnabled;
-
-                if (nowEnabled) {
-                  if (Platform.isAndroid) {
-                    _checkAndroidBatteryOptimization();
-                  }
-
-                  await Get.find<LiveActivityTravelController>().activate();
-                  Get.find<LiveActivityBridgeController>().initializeHandler();
-                } else {
-                  Get.find<LiveActivityTravelController>().deactivate();
-                }
+        if (sendbird.sendBirdNotificationsEnabled)
+          _subRows([
+            AlertRow(
+              sub: true,
+              title: "Do not disturb",
+              trailing: Icon(Icons.more_time_outlined, color: _themeProvider!.mainText.withValues(alpha: 0.78)),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return SendbirdDoNotDisturbDialog();
+                  },
+                );
               },
             ),
-          ),
-        ),
-        _travelLiveActivityTapSelector(),
-        if (Platform.isIOS || Platform.isAndroid)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-            child: Material(
-              type: MaterialType.transparency,
-              child: CheckboxListTile(
-                checkColor: Colors.white,
-                activeColor: Colors.blueGrey,
-                value: Platform.isAndroid
-                    ? _settingsProvider.androidLiveActivityRacingEnabled
-                    : _settingsProvider.iosLiveActivityRacingEnabled,
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Racing"),
-                    Text(Platform.isAndroid ? "Live Update" : "Live Activity", style: const TextStyle(fontSize: 10)),
-                  ],
-                ),
-                onChanged: (enabled) async {
-                  if (enabled == null) return;
+            excludeRow(
+              title: "Exclude faction messages",
+              subtitle: "Faction messages won't be shown",
+              value: sendbird.excludeFactionMessages,
+              onChanged: (enabled) => sendbird.excludeFactionMessages = enabled,
+            ),
+            excludeRow(
+              title: "Exclude company messages",
+              subtitle: "Company messages won't be shown",
+              value: sendbird.excludeCompanyMessages,
+              onChanged: (enabled) => sendbird.excludeCompanyMessages = enabled,
+            ),
+            excludeRow(
+              title: "Exclude Elimination event messages",
+              subtitle: "Elimination event messages won't be shown",
+              value: sendbird.excludeEliminationMessages,
+              onChanged: (enabled) => sendbird.excludeEliminationMessages = enabled,
+            ),
+          ]),
+      ],
+    );
+  }
 
-                  setState(() {
-                    if (Platform.isAndroid) {
-                      _settingsProvider.androidLiveActivityRacingEnabled = enabled;
-                    } else {
-                      _settingsProvider.iosLiveActivityRacingEnabled = enabled;
-                    }
-                  });
+  // ##### OTHER #####
 
-                  final bool racingEnabled = Platform.isAndroid
-                      ? _settingsProvider.androidLiveActivityRacingEnabled
-                      : _settingsProvider.iosLiveActivityRacingEnabled;
-
-                  if (racingEnabled) {
-                    if (Platform.isAndroid) {
-                      _checkAndroidBatteryOptimization();
-                    }
-                    await Get.find<LiveActivityRacingController>().activate();
-                    Get.find<LiveActivityBridgeController>().initializeHandler();
-                  } else {
-                    Get.find<LiveActivityRacingController>().deactivate();
-                  }
+  Widget _otherCard() {
+    final m = _firebaseUserModel!;
+    return _card(
+      icon: Icons.tune_outlined,
+      title: "Other",
+      flags: _otherFlags(),
+      children: [
+        AlertRow(
+          title: "Stock market gain/loss",
+          subtitle: "Configure price gain/loss alerts for any traded company",
+          trailing: _chevron(),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return StockMarketAlertsPage(
+                    fbUser: _firebaseUserModel,
+                    calledFromMenu: false,
+                    stockMarketInMenuCallback: widget.stockMarketInMenuCallback,
+                  );
                 },
               ),
-            ),
-          ),
-        const Divider(),
+            );
+          },
+        ),
+        AlertRow(
+          title: "Work stats targets",
+          subtitle:
+              "Get notified once your manual labor, intelligence or endurance reach the values you choose. "
+              "Each target is cleared as soon as it's reached, and the alert switches itself off when no targets "
+              "are left",
+          value: m.workStatsNotification ?? false,
+          onChanged: (value) => _onWorkStatsToggled(value),
+        ),
+        if (m.workStatsNotification ?? false) _subRows([_workStatsTargets()]),
       ],
     );
   }
@@ -2014,171 +1538,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
     } catch (e) {
       // Ignore errors
     }
-  }
-
-  Widget _drugsTapSelector() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Flexible(
-            child: Row(
-              children: [
-                Icon(Icons.keyboard_arrow_right_outlined),
-                Flexible(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text("Notification tap opens", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          DropdownButton<String>(
-            value: _settingsProvider.drugsNotificationTapAction,
-            items: const [
-              DropdownMenuItem(
-                value: "app",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-              DropdownMenuItem(
-                value: "itemsOwn",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-              DropdownMenuItem(
-                value: "itemsFaction",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-            ],
-            onChanged: (value) async {
-              setState(() {
-                _settingsProvider.drugsNotificationTapAction = value;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _medicalTapSelector() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Flexible(
-            child: Row(
-              children: [
-                Icon(Icons.keyboard_arrow_right_outlined),
-                Flexible(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text("Notification tap opens", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          DropdownButton<String>(
-            value: _settingsProvider.medicalNotificationTapAction,
-            items: const [
-              DropdownMenuItem(
-                value: "app",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-              DropdownMenuItem(
-                value: "itemsOwn",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-              DropdownMenuItem(
-                value: "itemsFaction",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-            ],
-            onChanged: (value) async {
-              setState(() {
-                _settingsProvider.medicalNotificationTapAction = value;
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _boosterTapSelector() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          const Flexible(
-            child: Row(
-              children: [
-                Icon(Icons.keyboard_arrow_right_outlined),
-                Flexible(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text("Notification tap opens", style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          DropdownButton<String>(
-            value: _settingsProvider.boosterNotificationTapAction,
-            items: const [
-              DropdownMenuItem(
-                value: "app",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("App", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-              DropdownMenuItem(
-                value: "itemsOwn",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("Own items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-              DropdownMenuItem(
-                value: "itemsFaction",
-                child: SizedBox(
-                  width: 110,
-                  child: Text("Faction items", textAlign: TextAlign.right, style: TextStyle(fontSize: 14)),
-                ),
-              ),
-            ],
-            onChanged: (value) async {
-              setState(() {
-                _settingsProvider.boosterNotificationTapAction = value;
-              });
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   AppBar buildAppBar() {
@@ -2551,46 +1910,27 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
     String targetLabel(int target) => target > 0 ? formatter.format(target) : "not set";
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(25, 0, 20, 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Manual labor: ${targetLabel(_firebaseUserModel!.workStatsManualLaborTarget)}",
-                  style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-                ),
-                Text(
-                  "Intelligence: ${targetLabel(_firebaseUserModel!.workStatsIntelligenceTarget)}",
-                  style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-                ),
-                Text(
-                  "Endurance: ${targetLabel(_firebaseUserModel!.workStatsEnduranceTarget)}",
-                  style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () async {
-              final saved = await _showWorkStatsTargetsDialog();
-              if (!saved) return;
-              setState(() {});
-              if (!_anyWorkStatsTarget()) {
-                setState(() {
-                  _firebaseUserModel?.workStatsNotification = false;
-                });
-                FirestoreHelper().subscribeToWorkStatsNotification(false);
-                _workStatsToast("Work stats alert disabled, as you removed all targets");
-              }
-            },
-          ),
-        ],
+    return AlertRow(
+      sub: true,
+      title: "Targets",
+      subtitle:
+          "Manual labor: ${targetLabel(_firebaseUserModel!.workStatsManualLaborTarget)}\n"
+          "Intelligence: ${targetLabel(_firebaseUserModel!.workStatsIntelligenceTarget)}\n"
+          "Endurance: ${targetLabel(_firebaseUserModel!.workStatsEnduranceTarget)}",
+      trailing: IconButton(
+        icon: const Icon(Icons.edit_outlined),
+        onPressed: () async {
+          final saved = await _showWorkStatsTargetsDialog();
+          if (!saved) return;
+          setState(() {});
+          if (!_anyWorkStatsTarget()) {
+            setState(() {
+              _firebaseUserModel?.workStatsNotification = false;
+            });
+            FirestoreHelper().subscribeToWorkStatsNotification(false);
+            _workStatsToast("Work stats alert disabled, as you removed all targets");
+          }
+        },
       ),
     );
   }

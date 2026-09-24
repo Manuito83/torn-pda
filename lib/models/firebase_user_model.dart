@@ -13,6 +13,11 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool foreignRestockNotificationSellout = false;
   bool? cityShopRestockNotification = false;
   bool cityShopOnlyConfirmed = false;
+  bool cityShopOnlyInTorn = true;
+  bool cityShopHoursEnabled = false;
+  int cityShopHoursFrom = 0;
+  int cityShopHoursTo = 0;
+  int cityShopMutedUntil = 0;
   Map<String, dynamic> cityShopActiveAlerts = {};
   bool? abroadStayNotification = false;
   List<int> abroadStayIntervals = [];
@@ -83,6 +88,11 @@ class FirebaseUserModel extends OwnProfileExtended {
       "foreignRestockNotificationSellout": foreignRestockNotificationSellout,
       "cityShopRestockNotification": cityShopRestockNotification,
       "cityShopOnlyConfirmed": cityShopOnlyConfirmed,
+      "cityShopOnlyInTorn": cityShopOnlyInTorn,
+      "cityShopHoursEnabled": cityShopHoursEnabled,
+      "cityShopHoursFrom": cityShopHoursFrom,
+      "cityShopHoursTo": cityShopHoursTo,
+      "cityShopMutedUntil": cityShopMutedUntil,
       "cityShopActiveAlerts": cityShopActiveAlerts,
       "abroadStayNotification": abroadStayNotification,
       "abroadStayIntervals": abroadStayIntervals,
@@ -139,6 +149,11 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..foreignRestockNotificationSellout = data["foreignRestockNotificationSellout"] ?? false
       ..cityShopRestockNotification = data["cityShopRestockNotification"] ?? false
       ..cityShopOnlyConfirmed = data["cityShopOnlyConfirmed"] ?? false
+      ..cityShopOnlyInTorn = data["cityShopOnlyInTorn"] ?? true
+      ..cityShopHoursEnabled = data["cityShopHoursEnabled"] ?? false
+      ..cityShopHoursFrom = (data["cityShopHoursFrom"] ?? 0) as int
+      ..cityShopHoursTo = (data["cityShopHoursTo"] ?? 0) as int
+      ..cityShopMutedUntil = (data["cityShopMutedUntil"] ?? 0) as int
       ..cityShopActiveAlerts = Map<String, dynamic>.from(data["cityShopActiveAlerts"] ?? const <String, dynamic>{})
       ..abroadStayNotification = data["abroadStayNotification"] ?? false
       ..abroadStayIntervals = List<int>.from(data["abroadStayIntervals"] ?? const <int>[])

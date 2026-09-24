@@ -406,7 +406,7 @@ async function sendNotificationForProfile(
         checkResults.push(sendWorkStatsNotification(userStats, subscriber));
       }
       if (subscriber.cityShopRestockNotification === true) {
-        checkResults.push(sendCityShopRestockNotification(cityItems, subscriber, Date.now()));
+        checkResults.push(sendCityShopRestockNotification(cityItems, subscriber, Date.now(), userStats));
       }
 
       // 3. Process collected results, both notifications and Firestore updates

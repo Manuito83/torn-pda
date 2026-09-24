@@ -29,6 +29,7 @@ class RemoteSnippets {
 
   static const String cityItemsHighlight = 'city_items_highlight';
   static const String cityShopsMax = 'city_shops_max';
+  static const String cityShopsPurchase = 'city_shops_purchase';
   static const String travelRemovePlane = 'travel_remove_plane';
   static const String travelBuyMax = 'travel_buy_max';
   static const String barsDoubleClick = 'bars_double_click';
@@ -42,6 +43,11 @@ class RemoteSnippets {
       buildBase: _cityItemsHighlightBaseJS,
     ),
     cityShopsMax: const RemoteSnippet(id: cityShopsMax, version: '1.0.1', buildBase: _cityShopsMaxBaseJS),
+    cityShopsPurchase: const RemoteSnippet(
+      id: cityShopsPurchase,
+      version: '1.0.0',
+      buildBase: _cityShopsPurchaseBaseJS,
+    ),
     travelRemovePlane: const RemoteSnippet(
       id: travelRemovePlane,
       version: '1.0.0',
@@ -281,6 +287,45 @@ class RemoteSnippets {
           return "NOT_READY";
         }
       })();
+    ''';
+  }
+
+  // city_shops_purchase base: reports each buyShopItem response to PDA_cityShopPurchase
+  // RC keys: snippet_city_shops_purchase_js + snippet_city_shops_purchase_version
+  static String _cityShopsPurchaseBaseJS() {
+    return r'''
+    (function() {
+      if (window.__pdaCityShopPurchaseHook) return;
+      window.__pdaCityShopPurchaseHook = true;
+      var oOpen = XMLHttpRequest.prototype.open;
+      var oSend = XMLHttpRequest.prototype.send;
+      XMLHttpRequest.prototype.open = function(method, url) {
+        this.__pdaUrl = String(url);
+        return oOpen.apply(this, arguments);
+      };
+      XMLHttpRequest.prototype.send = function(body) {
+        var xhr = this;
+        try {
+          var url = xhr.__pdaUrl || '';
+          if (url.indexOf('shops.php') >= 0 && typeof body === 'string' && ('&' + body + '&').indexOf('&step=buyShopItem&') >= 0) {
+            var params = new URLSearchParams(body);
+            xhr.addEventListener('loadend', function() {
+              try {
+                var r = JSON.parse(xhr.responseText);
+                window.flutter_inappwebview.callHandler('PDA_cityShopPurchase', {
+                  success: !!r.success,
+                  text: String(r.text || '').slice(0, 200),
+                  itemId: params.get('ID'),
+                  shopId: params.get('shoparea'),
+                  amount: parseInt(params.get('amount'), 10) || 0
+                });
+              } catch (e) {}
+            });
+          }
+        } catch (e) {}
+        return oSend.apply(this, arguments);
+      };
+    })();
     ''';
   }
 
@@ -1025,6 +1070,9 @@ String highlightCityItemsJS() => RemoteSnippets.resolve(RemoteSnippets.cityItems
 
 // MAX buy/sell buttons inside city shops (RC-overridable)
 String cityShopsBuy100JS() => RemoteSnippets.resolve(RemoteSnippets.cityShopsMax);
+
+// Reports city shop purchases so the daily limit can mute restock alerts (RC-overridable)
+String cityShopsPurchaseHookJS() => RemoteSnippets.resolve(RemoteSnippets.cityShopsPurchase);
 
 // MAX buy buttons in foreign stock shops (RC-overridable)
 String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {

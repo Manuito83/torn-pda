@@ -314,11 +314,64 @@ export function minutesFromNow(ms: number, nowMs: number): number {
   return Math.max(1, Math.ceil((ms - nowMs) / 60000));
 }
 
-export function sendCityShopRestockNotification(items: Record<string, CityShopItem>, subscriber: any, nowMs: number) {
+const DAY_MIN = 1440;
+
+function tctMinuteOfDay(nowMs: number): number {
+  return Math.floor(nowMs / 60000) % DAY_MIN;
+}
+
+export function isInTorn(userStats: any): boolean {
+  const travel = userStats?.travel;
+  if (!travel) return true;
+  const inTransit = (travel.time_left ?? 0) > 0;
+  return !inTransit && (!travel.destination || travel.destination === "Torn");
+}
+
+// True when the player asked not to be alerted right now: away from Torn, or outside the chosen hours
+// A missing cityShopOnlyInTorn counts as enabled; from == to means the whole day
+export function cityShopAlertsMuted(subscriber: any, userStats: any, nowMs: number): boolean {
+  // Set by the app when the daily purchase limit is reached, expires at 00:00 TCT
+  if (nowMs < Number(subscriber.cityShopMutedUntil ?? 0)) return true;
+
+  if (subscriber.cityShopOnlyInTorn !== false && !isInTorn(userStats)) return true;
+
+  if (subscriber.cityShopHoursEnabled === true) {
+    const from = Number(subscriber.cityShopHoursFrom ?? 0);
+    const to = Number(subscriber.cityShopHoursTo ?? 0);
+    if (from !== to) {
+      const tct = tctMinuteOfDay(nowMs);
+      const inside = from < to ? tct >= from && tct < to : tct >= from || tct < to;
+      if (!inside) return true;
+    }
+  }
+
+  return false;
+}
+
+export function sendCityShopRestockNotification(
+  items: Record<string, CityShopItem>,
+  subscriber: any,
+  nowMs: number,
+  userStats: any = null,
+) {
   const result: NotificationCheckResult = {};
 
   try {
-    const toNotify = decideCityShopAlerts(items, subscriber, nowMs);
+    let toNotify = decideCityShopAlerts(items, subscriber, nowMs);
+
+    // Muted: restocks seen now are marked so they are not reported later
+    const muted = cityShopAlertsMuted(subscriber, userStats, nowMs);
+    if (muted) {
+      toNotify = toNotify.filter((a) => a.kind === "on_restock");
+      if (toNotify.length > 0) {
+        result.firestoreUpdate = {};
+        for (const alert of toNotify) {
+          result.firestoreUpdate[`cityShopActiveAlerts.${alert.key}`] = alert.mark;
+        }
+      }
+      return result;
+    }
+
     if (toNotify.length === 0) return result;
 
     const kinds = new Set(toNotify.map((a) => a.kind));
@@ -589,6 +642,9 @@ export const cityShopsTest = onCall(
       uid: doc.id,
       cityShopActiveAlerts: { "101-310": 0, "103-172": 0 },
       cityShopOnlyConfirmed: false,
+      cityShopOnlyInTorn: false,
+      cityShopHoursEnabled: false,
+      cityShopMutedUntil: 0,
     };
 
     const now = Date.now();
