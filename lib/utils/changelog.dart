@@ -222,6 +222,7 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem('Profile: fixed spacing in stats chart when there is data missing'),
           _MItem('Travel: expenditure warnings are no longer shown when you are abroad or traveling'),
+          _MItem('Alerts: foreign restock notifications now redirect correctly when tapped abroad'),
           _MItem('Fixed issue with back button not correctly closing some dialogs', androidOnly: true),
           _MItem('Fixed issues with company addiction refresh in Profile'),
           _MItem('Shortcuts: custom border color is now kept after restarting the app'),
