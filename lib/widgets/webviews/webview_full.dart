@@ -32,6 +32,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -563,6 +564,7 @@ class WebViewFullState extends State<WebViewFull>
           ? true
           : false,
       transparentBackground: true,
+      hardwareAcceleration: _webViewProvider.webViewHardwareLayerActive,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
       // Android: handle renderer-process death when OOM / crashed WebView
@@ -1403,6 +1405,8 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addScriptApiHandlers(webview: webViewController!);
 
+            WebviewHandlers.addTornChatCacheTrimHandler(webview: webViewController!, webViewProvider: _webViewProvider);
+
             WebviewHandlers.addToastHandler(webview: webViewController!);
 
             WebviewHandlers.addLaunchIntentHandler(webview: webViewController!);
@@ -2196,6 +2200,35 @@ class WebViewFullState extends State<WebViewFull>
               }
             } catch (_) {}
 
+            // One event per webview of the shared renderer
+            try {
+              if (!Platform.isWindows) {
+                analytics?.logEvent(
+                  name: "webview_renderer_gone",
+                  parameters: {
+                    "did_crash": detail.didCrash ? 1 : 0,
+                    "hw_layer": _webViewProvider.webViewHardwareLayerActiveForTelemetry ? "on" : "off",
+                    "chat_limit_mb": _webViewProvider.tornChatCacheLimitActiveMb,
+                    "source": "full",
+                    "is_window": widget.windowId != null ? 1 : 0,
+                    "tabs": _webViewProvider.tabList.length,
+                    "resumed": appResumed ? 1 : 0,
+                  },
+                );
+                if (rebuildNow) {
+                  analytics?.logEvent(
+                    name: "webview_renderer_gone_fg",
+                    parameters: {
+                      "did_crash": detail.didCrash ? 1 : 0,
+                      "hw_layer": _webViewProvider.webViewHardwareLayerActiveForTelemetry ? "on" : "off",
+                      "chat_limit_mb": _webViewProvider.tornChatCacheLimitActiveMb,
+                      "tabs": _webViewProvider.tabList.length,
+                    },
+                  );
+                }
+              }
+            } catch (_) {}
+
             logToUser(
               "💥 Android renderer gone (didCrash=${detail.didCrash}, resumed=$appResumed): "
               "${rebuildNow ? 'rebuilding this tab' : 'marked, will reload on focus'}",
@@ -2575,15 +2608,31 @@ class WebViewFullState extends State<WebViewFull>
     );
   }
 
+  // Independent from the userscripts switch, and useless after document start
+  List<UserScript> _tornChatCacheTrimScript() {
+    final int limitMb = _webViewProvider.tornChatCacheLimitActiveMb;
+    if (limitMb <= 0) return const <UserScript>[];
+    return [
+      UserScript(
+        groupName: "__TornPDA_ChatCacheTrim__",
+        injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+        source: handler_tornChatCacheTrim(limitMb),
+      ),
+    ];
+  }
+
   /// Registers the handler bundle (GM API, PDA API,...)
   /// These scripts never change, so unlike user scripts we must not remove them
   Future<void> _ensureHandlersInjected() async {
     if (webViewController == null || _handlersInjected) return;
-    final handlers = _userScriptsProvider.getHandlerSources(
-      apiKey: UserHelper.apiKey,
-      tabUid: _tabUid,
-      activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
-    );
+    final handlers = [
+      ..._userScriptsProvider.getHandlerSources(
+        apiKey: UserHelper.apiKey,
+        tabUid: _tabUid,
+        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+      ),
+      ..._tornChatCacheTrimScript(),
+    ];
     await webViewController!.addUserScripts(userScripts: handlers.map(_guardedOnce).toList());
     _handlersInjected = true;
   }
@@ -2663,6 +2712,7 @@ class WebViewFullState extends State<WebViewFull>
         tabUid: _tabUid,
         activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
       ),
+      ..._tornChatCacheTrimScript(),
       if (_initialUrl?.url != null)
         ..._userScriptsProvider.getCondSources(
           url: _initialUrl!.url.toString(),

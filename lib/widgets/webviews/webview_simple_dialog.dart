@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -105,6 +106,7 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
 
     _initialWebViewSettings = InAppWebViewSettings(
       transparentBackground: true,
+      hardwareAcceleration: context.read<WebViewProvider>().webViewHardwareLayerActive,
       useOnLoadResource: true,
       //javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,

@@ -710,11 +710,13 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.keyboard_arrow_right_outlined),
-                        Flexible(child: Text("Keep locked tabs loaded")),
-                      ],
+                    const Flexible(
+                      child: Row(
+                        children: [
+                          Icon(Icons.keyboard_arrow_right_outlined),
+                          Flexible(child: Text("Keep locked tabs loaded")),
+                        ],
+                      ),
                     ),
                     Switch(
                       value: _webViewProvider.keepLockedTabsActive,
@@ -3445,18 +3447,153 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Page graphics layer",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Page graphics layer")),
+                    _defaultOnOffDropdown(
+                      value: _webViewProvider.webViewHardwareLayerForced
+                          ? (_webViewProvider.webViewHardwareLayerDefaultRC ? "on" : "off")
+                          : _webViewProvider.webViewHardwareLayerOverride,
+                      defaultOn: _webViewProvider.webViewHardwareLayerDefaultRC,
+                      onChanged: _webViewProvider.webViewHardwareLayerForced
+                          ? null
+                          : (value) => _webViewProvider.webViewHardwareLayerOverride = value,
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    _webViewProvider.webViewHardwareLayerForced
+                        ? "Set to ${_webViewProvider.webViewHardwareLayerDefaultRC ? "on" : "off"} by Torn PDA for now"
+                        : "Draws each page into an extra graphics layer before showing it. Turning it off uses "
+                              "less graphics memory. Restart the app completely to apply.",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      SearchableRow(
+        label: "Torn chat cache limit",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Torn chat cache limit")),
+                  _tornChatCacheLimitDropdown(),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  _webViewProvider.tornChatCacheLimitRC < 0
+                      ? "This option is temporarily disabled from Torn PDA and can't be changed right now"
+                      : _webViewProvider.tornChatCacheLimitRC > 0
+                      ? "Set to ${_webViewProvider.tornChatCacheLimitActiveMb} MB by Torn PDA for now"
+                      : "EXPERIMENTAL: all Torn pages share a small storage space (about 5 MB) with Torn's chat "
+                            "and your userscripts. When it fills up, pages can load blank. If Torn's storage goes "
+                            "over this size, Torn PDA clears the chat's cached messages when a page loads (the "
+                            "chat loads them again, your chat settings are kept). Restart the app completely to apply.",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+              if (_webViewProvider.tornChatCacheLastTrimMs > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    _tornChatCacheLastTrimText(),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     ];
     if (rows.isEmpty) return const SizedBox.shrink();
     return buildSectionWithRows(title: 'MEMORY', rows: rows, searchText: _searchText);
   }
 
-  /// "Default" follows whatever Torn PDA recommends at any given moment
   Widget _parkBackgroundTabsDropdown({required bool enabled}) {
+    return _defaultOnOffDropdown(
+      value: _webViewProvider.parkBackgroundTabsOverride,
+      defaultOn: _webViewProvider.parkBackgroundTabsDefaultRC,
+      onChanged: enabled ? (value) => _webViewProvider.parkBackgroundTabsOverride = value : null,
+    );
+  }
+
+  String _tornChatCacheLastTrimText() {
+    final DateTime when = DateTime.fromMillisecondsSinceEpoch(_webViewProvider.tornChatCacheLastTrimMs);
+    final Duration ago = DateTime.now().difference(when);
+    final String whenText = ago.inMinutes < 1
+        ? "just now"
+        : ago.inHours < 1
+        ? "${ago.inMinutes} min ago"
+        : ago.inDays < 1
+        ? "${ago.inHours} h ago"
+        : ago.inDays == 1
+        ? "yesterday"
+        : "${ago.inDays} days ago";
+    final int freed = _webViewProvider.tornChatCacheLastTrimFreed;
+    final String freedText = freed >= 1024 * 1024
+        ? "${(freed / (1024 * 1024)).toStringAsFixed(2)} MB"
+        : "${(freed / 1024).round()} KB";
+    return "Last cleanup: $whenText, $freedText freed";
+  }
+
+  Widget _tornChatCacheLimitDropdown() {
+    final bool userCanChoose = _webViewProvider.tornChatCacheLimitRC == 0;
+    const List<int> options = WebViewProvider.tornChatCacheLimitOptions;
+    final int active = _webViewProvider.tornChatCacheLimitActiveMb;
+    final int current = options.contains(active) ? active : 0;
+
+    return DropdownButton<int>(
+      value: current,
+      items: [
+        for (final mb in options)
+          DropdownMenuItem(
+            value: mb,
+            child: SizedBox(
+              width: 90,
+              child: Text(mb == 0 ? "Off" : "$mb MB", textAlign: TextAlign.right, style: const TextStyle(fontSize: 12)),
+            ),
+          ),
+      ],
+      onChanged: !userCanChoose
+          ? null
+          : (value) {
+              if (value == null) return;
+              setState(() => _webViewProvider.tornChatCacheLimitUser = value);
+            },
+    );
+  }
+
+  /// "Default" follows whatever Torn PDA recommends at any given moment
+  Widget _defaultOnOffDropdown({
+    required String value,
+    required bool defaultOn,
+    required void Function(String)? onChanged,
+  }) {
     const List<String> options = WebViewProvider.parkOverrideOptions;
-    final String current = options.contains(_webViewProvider.parkBackgroundTabsOverride)
-        ? _webViewProvider.parkBackgroundTabsOverride
-        : "default";
-    final String defaultLabel = _webViewProvider.parkBackgroundTabsDefaultRC ? "Default (on)" : "Default (off)";
+    final String current = options.contains(value) ? value : "default";
+    final String defaultLabel = defaultOn ? "Default (on)" : "Default (off)";
 
     return DropdownButton<String>(
       value: current,
@@ -3483,13 +3620,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ],
-      onChanged: !enabled
+      onChanged: onChanged == null
           ? null
-          : (value) {
-              if (value == null) return;
-              setState(() {
-                _webViewProvider.parkBackgroundTabsOverride = value;
-              });
+          : (newValue) {
+              if (newValue == null) return;
+              setState(() => onChanged(newValue));
             },
     );
   }
