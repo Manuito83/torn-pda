@@ -29,6 +29,9 @@ import android.os.Debug;
 import java.util.Map;
 import java.util.HashMap;
 import android.app.ActivityManager.MemoryInfo;
+import android.app.ApplicationExitInfo;
+import android.content.SharedPreferences;
+import java.util.ArrayList;
 
 public class MainActivity extends FlutterActivity {
 
@@ -144,6 +147,14 @@ public class MainActivity extends FlutterActivity {
                             }
                             break;
 
+                        case "getProcessExitReasons":
+                            try {
+                                result.success(getProcessExitReasons());
+                            } catch (Exception e) {
+                                result.error("UNAVAILABLE", "Failed to get exit reasons: " + e.getMessage(), null);
+                            }
+                            break;
+
                         default:
                             result.notImplemented();
                     }
@@ -197,6 +208,46 @@ public class MainActivity extends FlutterActivity {
             return !powerManager.isIgnoringBatteryOptimizations(packageName);
         }
         return false; // Not restricted for versions below Marshmallow
+    }
+
+    // Main process exits not reported yet
+    private List<Map<String, Object>> getProcessExitReasons() throws Exception {
+        List<Map<String, Object>> exits = new ArrayList<>();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            return exits;
+        }
+
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (am == null) {
+            return exits;
+        }
+
+        String packageName = getPackageName();
+        SharedPreferences prefs = getSharedPreferences("tornpda_exit_info", MODE_PRIVATE);
+        long lastReported = prefs.getLong("lastReportedExitTimestamp", 0);
+        long installed = getPackageManager().getPackageInfo(packageName, 0).lastUpdateTime;
+        long threshold = Math.max(lastReported, installed);
+        long newest = lastReported;
+
+        List<ApplicationExitInfo> infos = am.getHistoricalProcessExitReasons(packageName, 0, 5);
+        for (ApplicationExitInfo info : infos) {
+            if (!packageName.equals(info.getProcessName()) || info.getTimestamp() <= threshold) {
+                continue;
+            }
+            Map<String, Object> exit = new HashMap<>();
+            exit.put("reason", info.getReason());
+            exit.put("status", info.getStatus());
+            exit.put("importance", info.getImportance());
+            exit.put("timestamp", info.getTimestamp());
+            exit.put("description", info.getDescription());
+            exits.add(exit);
+            newest = Math.max(newest, info.getTimestamp());
+        }
+
+        if (newest > lastReported) {
+            prefs.edit().putLong("lastReportedExitTimestamp", newest).apply();
+        }
+        return exits;
     }
 
     // Opens the battery optimization settings screen

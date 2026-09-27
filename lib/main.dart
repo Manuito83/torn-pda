@@ -73,6 +73,7 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/background_inbox.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/crashlytics_identity.dart';
+import 'package:torn_pda/utils/exit_info.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
@@ -206,6 +207,7 @@ Future<void> main() async {
   await _initializeBackupAndTheme(widgetsBinding);
   _startDebugWakelock();
   await _initializeFirebase();
+  if (_isFirebaseInitialized) unawaited(ExitInfo.reportPreviousExits());
   await _initializeWorkManager();
   await _initializeHomeWidget();
   await _initializeGetXControllers();

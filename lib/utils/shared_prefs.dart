@@ -27,6 +27,7 @@ class Prefs {
   final String _kPdaUpdateDialogDisabled = "pda_updateDialogDisabled";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  final String _kLastRendererGoneMs = "pda_lastRendererGoneMs";
   final String _kPdaConnectivityCheckRC = "pda_connectivityCheckRC";
   final String _kAuthRecoveryEnabledRC = "pda_authRecoveryEnabledRC";
 
@@ -722,6 +723,14 @@ class Prefs {
 
   Future setLastAppUse(int value) async {
     return await PrefsDatabase.setInt(_kLastAppUse, value);
+  }
+
+  Future<int> getLastRendererGoneMs() async {
+    return await PrefsDatabase.getInt(_kLastRendererGoneMs, 0);
+  }
+
+  Future setLastRendererGoneMs(int value) async {
+    return await PrefsDatabase.setInt(_kLastRendererGoneMs, value);
   }
 
   /// ----------------------------

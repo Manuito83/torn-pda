@@ -2176,6 +2176,7 @@ class WebViewFullState extends State<WebViewFull>
                 final DateTime now = DateTime.now();
                 if (_lastRendererGoneRecorded == null || now.difference(_lastRendererGoneRecorded!).inSeconds >= 2) {
                   _lastRendererGoneRecorded = now;
+                  Prefs().setLastRendererGoneMs(now.millisecondsSinceEpoch);
 
                   // Every tab reports the same death but only one report is saved, so describe the
                   // tab the user has open and not the one that was reported first
