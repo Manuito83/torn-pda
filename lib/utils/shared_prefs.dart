@@ -454,6 +454,12 @@ class Prefs {
   final String _kParkBackgroundTabsOverride = "pda_parkBackgroundTabsOverride";
   final String _kParkBackgroundTabsDefaultRC = "pda_parkBackgroundTabsDefaultRC";
   final String _kParkBackgroundTabsAllowedRC = "pda_parkBackgroundTabsAllowedRC";
+  final String _kWebViewHardwareLayerOverride = "pda_webViewHardwareLayerOverride";
+  final String _kWebViewHardwareLayerModeRC = "pda_webViewHardwareLayerModeRC";
+  final String _kTornChatCacheLimitUser = "pda_tornChatCacheLimitUser";
+  final String _kTornChatCacheLimitRC = "pda_tornChatCacheLimitRC";
+  final String _kTornChatCacheLastTrimMs = "pda_tornChatCacheLastTrimMs";
+  final String _kTornChatCacheLastTrimFreed = "pda_tornChatCacheLastTrimFreed";
   final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
@@ -4174,6 +4180,54 @@ class Prefs {
 
   Future setParkBackgroundTabsAllowedRC(bool value) async {
     return await PrefsDatabase.setBool(_kParkBackgroundTabsAllowedRC, value);
+  }
+
+  Future<String> getWebViewHardwareLayerOverride() async {
+    return await PrefsDatabase.getString(_kWebViewHardwareLayerOverride, "default");
+  }
+
+  Future setWebViewHardwareLayerOverride(String value) async {
+    return await PrefsDatabase.setString(_kWebViewHardwareLayerOverride, value);
+  }
+
+  Future<String> getWebViewHardwareLayerModeRC() async {
+    return await PrefsDatabase.getString(_kWebViewHardwareLayerModeRC, "default_on");
+  }
+
+  Future setWebViewHardwareLayerModeRC(String value) async {
+    return await PrefsDatabase.setString(_kWebViewHardwareLayerModeRC, value);
+  }
+
+  Future<int> getTornChatCacheLimitUser() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLimitUser, 0);
+  }
+
+  Future setTornChatCacheLimitUser(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLimitUser, value);
+  }
+
+  Future<int> getTornChatCacheLimitRC() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLimitRC, 0);
+  }
+
+  Future setTornChatCacheLimitRC(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLimitRC, value);
+  }
+
+  Future<int> getTornChatCacheLastTrimMs() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLastTrimMs, 0);
+  }
+
+  Future setTornChatCacheLastTrimMs(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLastTrimMs, value);
+  }
+
+  Future<int> getTornChatCacheLastTrimFreed() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLastTrimFreed, 0);
+  }
+
+  Future setTornChatCacheLastTrimFreed(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLastTrimFreed, value);
   }
 
   Future<bool> getAutomaticChangeToNewTabFromURL() async {

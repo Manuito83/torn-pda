@@ -57,6 +57,61 @@ String handler_activeTabFocus() {
 	''';
 }
 
+String handler_tornChatCacheTrim(int limitMb) {
+  // Runs before Torn's chat restores its persisted query cache, so the chat starts clean and refetches
+  return '''
+    (function() {
+      try {
+        if (location.hostname !== "www.torn.com") return;
+        var ls = window.localStorage;
+        if (!ls) return;
+        var limit = $limitMb * 1024 * 1024;
+        var total = 0, chatBytes = 0, chatKeys = [];
+        for (var i = 0; i < ls.length; i++) {
+          var k = ls.key(i);
+          var bytes = new Blob([k, ls.getItem(k) || ""]).size;
+          total += bytes;
+          if (k.indexOf("chat_query_cache") === 0) {
+            chatKeys.push(k);
+            chatBytes += bytes;
+          }
+        }
+        if (total < limit || chatBytes < 100 * 1024) return;
+        var freed = 0;
+        chatKeys.forEach(function(k) {
+          var before = ls.getItem(k) || "";
+          try {
+            // Only the channel queries (message history) are dropped, chat settings are kept
+            var d = JSON.parse(before);
+            var qs = d && d.clientState && d.clientState.queries;
+            if (Array.isArray(qs)) {
+              d.clientState.queries = qs.filter(function(q) {
+                return !(q && Array.isArray(q.queryKey) && q.queryKey[0] === "channel");
+              });
+              var after = JSON.stringify(d);
+              ls.setItem(k, after);
+              freed += new Blob([before]).size - new Blob([after]).size;
+              return;
+            }
+          } catch (_) {}
+          ls.removeItem(k);
+          freed += new Blob([k, before]).size;
+        });
+        var report = function() {
+          try {
+            window.flutter_inappwebview.callHandler("PDA_tornChatCacheTrimmed", total, freed, $limitMb);
+          } catch (_) {}
+        };
+        if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+          report();
+        } else {
+          window.addEventListener("flutterInAppWebViewPlatformReady", report, { once: true });
+        }
+      } catch (_) {}
+    })();
+  ''';
+}
+
 String handler_pdaAPI() {
   // PDA HTTP helpers (PDA_httpGet/Post/Put/Delete/Patch)
   return RemoteSnippets.resolve(RemoteSnippets.pdaApi);

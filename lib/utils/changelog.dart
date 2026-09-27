@@ -213,6 +213,15 @@ List<_MVersion> _modernChangelog() => [
                 'countdown of their remaining hospital time. The page automatically updates to "Start fight" when '
                 'they are released.',
           ),
+          _MItem('Browser: new option to limit the size of Torn\'s chat cache'),
+          _MItem(
+            'Browser: option to turn off the page graphics layer',
+            detail:
+                'Found in Advanced browser settings, under Memory. Pages are drawn into an extra graphics layer '
+                'before being shown; turning it off uses less graphics memory, which might help if black or empty '
+                'boxes appear over pages.',
+            androidOnly: true,
+          ),
         ],
       ),
       _MSection(

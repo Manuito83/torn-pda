@@ -515,6 +515,28 @@ class WebviewHandlers {
     );
   }
 
+  static void addTornChatCacheTrimHandler({
+    required InAppWebViewController webview,
+    required WebViewProvider webViewProvider,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_tornChatCacheTrimmed',
+      callback: (JavaScriptHandlerFunctionData data) {
+        final args = data.args;
+        final int totalBytes = args.isNotEmpty && args[0] is num ? (args[0] as num).toInt() : 0;
+        final int freedBytes = args.length > 1 && args[1] is num ? (args[1] as num).toInt() : 0;
+        final int limitMb = args.length > 2 && args[2] is num ? (args[2] as num).toInt() : 0;
+
+        webViewProvider.recordTornChatCacheTrim(freedBytes);
+
+        analytics?.logEvent(
+          name: 'torn_chat_cache_trimmed',
+          parameters: {'total_kb': totalBytes ~/ 1024, 'freed_kb': freedBytes ~/ 1024, 'limit_mb': limitMb},
+        );
+      },
+    );
+  }
+
   static DateTime? _lastQuotaToast;
 
   static void _showStorageQuotaToast(String sid, {required bool isGlobal}) {

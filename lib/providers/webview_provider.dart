@@ -138,11 +138,7 @@ class WebViewProvider extends ChangeNotifier {
   static const List<int> tabSleepMinutesOptions = [0, 30, 60, 360, 720];
   static const List<String> parkOverrideOptions = ["default", "on", "off"];
 
-  static const List<String> _recoveryRebuildReasons = [
-    "renderer_gone",
-    "disposed_controller",
-    "webview_never_created",
-  ];
+  static const List<String> _recoveryRebuildReasons = ["renderer_gone", "disposed_controller", "webview_never_created"];
 
   // Time for hibernating idle background tabs. Memory pressure hibernates immediately (below)
   // Remote Config sets the default; the user can override it
@@ -198,6 +194,108 @@ class WebViewProvider extends ChangeNotifier {
     if (_parkBackgroundTabsOverride == "on") return true;
     if (_parkBackgroundTabsOverride == "off") return false;
     return _parkBackgroundTabsDefaultRC;
+  }
+
+  // Android: each webview draws into its own hardware layer (plugin default)
+  // Remote Config: users choose with "default_on" / "default_off", or it is fixed with "force_on" / "force_off"
+  static const List<String> webViewHardwareLayerModes = ["default_on", "default_off", "force_on", "force_off"];
+
+  String _webViewHardwareLayerModeRC = "default_on";
+  String get webViewHardwareLayerModeRC => _webViewHardwareLayerModeRC;
+  set webViewHardwareLayerModeRC(String value) {
+    _webViewHardwareLayerModeRC = webViewHardwareLayerModes.contains(value) ? value : "default_on";
+    Prefs().setWebViewHardwareLayerModeRC(_webViewHardwareLayerModeRC);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  bool get webViewHardwareLayerForced => _webViewHardwareLayerModeRC.startsWith("force_");
+  bool get webViewHardwareLayerDefaultRC => _webViewHardwareLayerModeRC.endsWith("_on");
+
+  // "default" (follow Remote Config), "on" or "off"
+  String _webViewHardwareLayerOverride = "default";
+  String get webViewHardwareLayerOverride => _webViewHardwareLayerOverride;
+  set webViewHardwareLayerOverride(String value) {
+    _webViewHardwareLayerOverride = value;
+    Prefs().setWebViewHardwareLayerOverride(value);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  bool get webViewHardwareLayerActive {
+    if (webViewHardwareLayerForced) return webViewHardwareLayerDefaultRC;
+    if (_webViewHardwareLayerOverride == "on") return true;
+    if (_webViewHardwareLayerOverride == "off") return false;
+    return webViewHardwareLayerDefaultRC;
+  }
+
+  // iOS ignores the hardware layer setting
+  bool get webViewHardwareLayerActiveForTelemetry => Platform.isAndroid ? webViewHardwareLayerActive : true;
+
+  String get webViewHardwareLayerSourceForTelemetry {
+    if (!Platform.isAndroid) return "rc";
+    if (webViewHardwareLayerForced) return "rc";
+    return _webViewHardwareLayerOverride == "default" ? "rc" : "user";
+  }
+
+  // TORN's chat local storage allowance in MB
+  // -1 = off for everyone
+  // 0 = users choose
+  // 1-5 = forced to that many MB
+  static const List<int> tornChatCacheLimitOptions = [0, 1, 2, 3, 4, 5];
+
+  int _tornChatCacheLimitUser = 0;
+  int get tornChatCacheLimitUser => _tornChatCacheLimitUser;
+  set tornChatCacheLimitUser(int value) {
+    _tornChatCacheLimitUser = value;
+    Prefs().setTornChatCacheLimitUser(value);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  // Remote Config: -1 off for everyone, 0 users choose, 1-5 forced to that many MB
+  int _tornChatCacheLimitRC = 0;
+  int get tornChatCacheLimitRC => _tornChatCacheLimitRC;
+  set tornChatCacheLimitRC(int value) {
+    _tornChatCacheLimitRC = value;
+    Prefs().setTornChatCacheLimitRC(value);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  int _tornChatCacheLastTrimMs = 0;
+  int get tornChatCacheLastTrimMs => _tornChatCacheLastTrimMs;
+  int _tornChatCacheLastTrimFreed = 0;
+  int get tornChatCacheLastTrimFreed => _tornChatCacheLastTrimFreed;
+
+  void recordTornChatCacheTrim(int freedBytes) {
+    _tornChatCacheLastTrimMs = DateTime.now().millisecondsSinceEpoch;
+    _tornChatCacheLastTrimFreed = freedBytes;
+    Prefs().setTornChatCacheLastTrimMs(_tornChatCacheLastTrimMs);
+    Prefs().setTornChatCacheLastTrimFreed(freedBytes);
+    notifyListeners();
+  }
+
+  int get tornChatCacheLimitActiveMb {
+    if (_tornChatCacheLimitRC < 0) return 0;
+    if (_tornChatCacheLimitRC > 0) return _tornChatCacheLimitRC.clamp(1, 5);
+    return _tornChatCacheLimitUser;
+  }
+
+  void _reportExperimentUserProperties() {
+    if (Platform.isWindows) return;
+    final String hwLayer = webViewHardwareLayerActiveForTelemetry ? "on" : "off";
+    final String hwLayerSrc = webViewHardwareLayerSourceForTelemetry;
+    final String chatLimit = tornChatCacheLimitActiveMb.toString();
+
+    analytics?.setUserProperty(name: "wv_hw_layer", value: hwLayer);
+    analytics?.setUserProperty(name: "wv_hw_layer_src", value: hwLayerSrc);
+    analytics?.setUserProperty(name: "wv_chat_limit_mb", value: chatLimit);
+
+    final crashlytics = FirebaseCrashlytics.instance;
+    crashlytics.setCustomKey("wv_hw_layer", hwLayer);
+    crashlytics.setCustomKey("wv_hw_layer_src", hwLayerSrc);
+    crashlytics.setCustomKey("wv_chat_limit_mb", chatLimit);
   }
 
   // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
@@ -2446,6 +2544,19 @@ class WebViewProvider extends ChangeNotifier {
     _parkBackgroundTabsOverride = parkOverrideOptions.contains(parkOverride) ? parkOverride : "default";
     _parkBackgroundTabsDefaultRC = await Prefs().getParkBackgroundTabsDefaultRC();
     _parkBackgroundTabsRemoteConfigAllowed = await Prefs().getParkBackgroundTabsAllowedRC();
+    final String hardwareLayerOverride = await Prefs().getWebViewHardwareLayerOverride();
+    _webViewHardwareLayerOverride = parkOverrideOptions.contains(hardwareLayerOverride)
+        ? hardwareLayerOverride
+        : "default";
+    final String hardwareLayerModeRC = await Prefs().getWebViewHardwareLayerModeRC();
+    _webViewHardwareLayerModeRC = webViewHardwareLayerModes.contains(hardwareLayerModeRC)
+        ? hardwareLayerModeRC
+        : "default_on";
+    final int chatLimitUser = await Prefs().getTornChatCacheLimitUser();
+    _tornChatCacheLimitUser = tornChatCacheLimitOptions.contains(chatLimitUser) ? chatLimitUser : 0;
+    _tornChatCacheLimitRC = await Prefs().getTornChatCacheLimitRC();
+    _tornChatCacheLastTrimMs = await Prefs().getTornChatCacheLastTrimMs();
+    _tornChatCacheLastTrimFreed = await Prefs().getTornChatCacheLastTrimFreed();
     _automaticChangeToNewTabFromURL = await Prefs().getAutomaticChangeToNewTabFromURL();
 
     _fabEnabled = await Prefs().getWebviewFabEnabled();
@@ -2472,6 +2583,8 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     _splitScreenRevertsToApp = await Prefs().getSplitScreenRevertsToApp();
+
+    _reportExperimentUserProperties();
   }
 
   bool splitScreenAndBrowserLeft() {
