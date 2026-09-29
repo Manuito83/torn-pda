@@ -14,7 +14,9 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
@@ -39,6 +41,17 @@ class FirestoreHelper {
     _uid = userUID;
     if (!uidCompleter.isCompleted) {
       uidCompleter.complete();
+    }
+  }
+
+  Future<bool> _updateAlertField(String fieldName, Map<String, Object?> update) async {
+    if (_uid == null) return false;
+    try {
+      await _firestore.collection("players").doc(_uid).update(update);
+      return true;
+    } catch (e, s) {
+      logErrorToCrashlytics("Alert field update failed: $fieldName", e, s);
+      return false;
     }
   }
 
@@ -108,21 +121,47 @@ class FirestoreHelper {
     return _firebaseUserModel;
   }
 
-  Future<void> toggleDiscreet(bool discreet) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<FirebaseUserModel?> softReset() async {
+    try {
+      final savedKey = UserHelper.apiKey;
+
+      final dynamic myProfile = await ApiCallsV1.getOwnProfileBasic();
+      if (myProfile is! OwnProfileBasic) return null;
+
+      myProfile
+        ..userApiKey = savedKey
+        ..userApiKeyValid = true;
+
+      final fb = await uploadUsersProfileDetail(myProfile, userTriggered: true);
+      await uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
+
+      if (Platform.isAndroid) {
+        final alertsVibration = await Prefs().getVibrationPattern();
+        reconfigureNotificationChannels(mod: alertsVibration);
+        setVibrationPattern(alertsVibration);
+      }
+
+      return fb;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<bool> toggleDiscreet(bool discreet) {
+    return _updateAlertField("discrete", {
       "discrete": discreet, // Legacy field name (typo kept for compatibility)
     });
   }
 
-  Future<void> subscribeToTravelNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"travelNotification": subscribe});
+  Future<bool> subscribeToTravelNotification(bool? subscribe) {
+    return _updateAlertField("travelNotification", {"travelNotification": subscribe});
   }
 
-  Future<void> subscribeToEnergyNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"energyNotification": subscribe});
+  Future<bool> subscribeToEnergyNotification(bool? subscribe) {
+    return _updateAlertField("energyNotification", {"energyNotification": subscribe});
   }
 
-  Future<void> subscribeToForeignRestockNotification(bool? subscribe) async {
+  Future<bool> subscribeToForeignRestockNotification(bool? subscribe) async {
     // Reset existing stock alert timestamps to now so alerts are not
     // triggered on the first pass after enabling
     Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
@@ -131,28 +170,31 @@ class FirestoreHelper {
       previous[key] = now;
     });
 
-    _firestore
-        .collection("players")
-        .doc(_uid)
-        .update({"foreignRestockNotification": subscribe, "restockActiveAlerts": previous})
-        .then((value) {
-          Prefs().setRestocksNotificationEnabled(subscribe!);
-        });
+    final success = await _updateAlertField("foreignRestockNotification", {
+      "foreignRestockNotification": subscribe,
+      "restockActiveAlerts": previous,
+    });
+    if (success) {
+      Prefs().setRestocksNotificationEnabled(subscribe!);
+    }
+    return success;
   }
 
-  Future<void> changeForeignRestockNotificationOnlyCurrentCountry(bool enabled) async {
+  Future<bool> changeForeignRestockNotificationOnlyCurrentCountry(bool enabled) {
     // Waiting for the landing only makes sense while limited to the current country
-    await _firestore.collection("players").doc(_uid).update({
+    return _updateAlertField("foreignRestockNotificationOnlyCurrentCountry", {
       "foreignRestockNotificationOnlyCurrentCountry": enabled,
       if (!enabled) "foreignRestockNotificationOnlyLanded": false,
     });
   }
 
-  Future<void> changeForeignRestockNotificationOnlyLanded(bool enabled) async {
-    await _firestore.collection("players").doc(_uid).update({"foreignRestockNotificationOnlyLanded": enabled});
+  Future<bool> changeForeignRestockNotificationOnlyLanded(bool enabled) {
+    return _updateAlertField("foreignRestockNotificationOnlyLanded", {
+      "foreignRestockNotificationOnlyLanded": enabled,
+    });
   }
 
-  Future<void> changeForeignRestockSellout(bool enabled) async {
+  Future<bool> changeForeignRestockSellout(bool enabled) async {
     final Map<String, Object?> update = {"foreignRestockNotificationSellout": enabled};
 
     // Reset existing stock alert timestamps to now, so that old sellouts are not
@@ -168,14 +210,14 @@ class FirestoreHelper {
       }
     }
 
-    await _firestore.collection("players").doc(_uid).update(update);
+    return _updateAlertField("foreignRestockNotificationSellout", update);
   }
 
-  Future<void> changeTravelStocksInNotification(bool enabled) async {
-    await _firestore.collection("players").doc(_uid).update({"travelStocksInNotification": enabled});
+  Future<bool> changeTravelStocksInNotification(bool enabled) {
+    return _updateAlertField("travelStocksInNotification", {"travelStocksInNotification": enabled});
   }
 
-  Future<void> subscribeToAbroadStayNotification(bool? subscribe) async {
+  Future<bool> subscribeToAbroadStayNotification(bool? subscribe) {
     final Map<String, Object?> update = {"abroadStayNotification": subscribe};
     // When disabling, also clear the per-stay tracking so the next activation
     // starts fresh instead of resuming from a stale landing timestamp
@@ -183,11 +225,11 @@ class FirestoreHelper {
       update["abroadLandingTs"] = 0;
       update["abroadIntervalsSent"] = <int>[];
     }
-    await _firestore.collection("players").doc(_uid).update(update);
+    return _updateAlertField("abroadStayNotification", update);
   }
 
-  Future<void> setAbroadStayIntervals(List<int> intervalsMinutes) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> setAbroadStayIntervals(List<int> intervalsMinutes) {
+    return _updateAlertField("abroadStayIntervals", {
       "abroadStayIntervals": intervalsMinutes,
       // A change to the interval list invalidates any previously-sent flags
       // for the current stay so the user gets the new schedule from now on
@@ -195,8 +237,8 @@ class FirestoreHelper {
     });
   }
 
-  Future<void> setAbroadStayIncludeHospital(bool include) async {
-    await _firestore.collection("players").doc(_uid).update({"abroadStayIncludeHospital": include});
+  Future<bool> setAbroadStayIncludeHospital(bool include) {
+    return _updateAlertField("abroadStayIncludeHospital", {"abroadStayIncludeHospital": include});
   }
 
   Future<DocumentSnapshot> getStockInformation(String codeName) async {
@@ -220,76 +262,55 @@ class FirestoreHelper {
   Future<bool> subscribeToCityShopRestockNotification(bool? subscribe) async {
     final Map<String, Object?> update = {"cityShopRestockNotification": subscribe};
     if (subscribe == true) {
-      return _updateWithCityShopMarksNow(update);
+      return _updateWithCityShopMarksNow("cityShopRestockNotification", update);
     }
-    try {
-      await _firestore.collection("players").doc(_uid).update(update);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return _updateAlertField("cityShopRestockNotification", update);
   }
 
   // Returns false without writing anything if the update fails
   Future<bool> setCityShopOnlyConfirmed(bool enabled) async {
     final Map<String, Object?> update = {"cityShopOnlyConfirmed": enabled};
     if (enabled) {
-      return _updateWithCityShopMarksNow(update);
+      return _updateWithCityShopMarksNow("cityShopOnlyConfirmed", update);
     }
-    try {
-      await _firestore.collection("players").doc(_uid).update(update);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    return _updateAlertField("cityShopOnlyConfirmed", update);
   }
 
   // Returns false without writing anything if the update fails
-  Future<bool> setCityShopOnlyInTorn(bool enabled) async {
-    try {
-      await _firestore.collection("players").doc(_uid).update({"cityShopOnlyInTorn": enabled});
-      return true;
-    } catch (e) {
-      return false;
-    }
+  Future<bool> setCityShopOnlyInTorn(bool enabled) {
+    return _updateAlertField("cityShopOnlyInTorn", {"cityShopOnlyInTorn": enabled});
   }
 
   // ms until which the server skips city shop alerts; 0 clears it
   // Returns false without writing anything if the update fails
   Future<bool> setCityShopMutedUntil(int untilMs) async {
-    try {
-      await _firestore.collection("players").doc(_uid).update({"cityShopMutedUntil": untilMs});
+    final success = await _updateAlertField("cityShopMutedUntil", {"cityShopMutedUntil": untilMs});
+    if (success) {
       _firebaseUserModel?.cityShopMutedUntil = untilMs;
-      return true;
-    } catch (e) {
-      return false;
     }
+    return success;
   }
 
   // Hours are TCT minutes of the day
   // Returns false without writing anything if the update fails
-  Future<bool> setCityShopHours({required bool enabled, required int fromMin, required int toMin}) async {
-    try {
-      await _firestore.collection("players").doc(_uid).update({
-        "cityShopHoursEnabled": enabled,
-        "cityShopHoursFrom": fromMin,
-        "cityShopHoursTo": toMin,
-      });
-      return true;
-    } catch (e) {
-      return false;
-    }
+  Future<bool> setCityShopHours({required bool enabled, required int fromMin, required int toMin}) {
+    return _updateAlertField("cityShopHoursEnabled", {
+      "cityShopHoursEnabled": enabled,
+      "cityShopHoursFrom": fromMin,
+      "cityShopHoursTo": toMin,
+    });
   }
 
   // Sets every followed key to now, so restocks already seen are not notified
   // Returns false without writing anything if the current alerts can't be read
-  Future<bool> _updateWithCityShopMarksNow(Map<String, Object?> update) async {
+  Future<bool> _updateWithCityShopMarksNow(String fieldName, Map<String, Object?> update) async {
     Map<String, dynamic> alerts;
     try {
       final doc = await _firestore.collection("players").doc(_uid).get();
       final remote = doc.data()?["cityShopActiveAlerts"];
       alerts = remote is Map ? Map<String, dynamic>.from(remote) : <String, dynamic>{};
-    } catch (e) {
+    } catch (e, s) {
+      logErrorToCrashlytics("Alert field update failed: $fieldName", e, s);
       return false;
     }
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -297,13 +318,11 @@ class FirestoreHelper {
       alerts[key] = now;
       update["cityShopActiveAlerts.$key"] = FieldValue.serverTimestamp();
     }
-    try {
-      await _firestore.collection("players").doc(_uid).update(update);
-    } catch (e) {
-      return false;
+    final success = await _updateAlertField(fieldName, update);
+    if (success) {
+      _firebaseUserModel?.cityShopActiveAlerts = alerts;
     }
-    _firebaseUserModel?.cityShopActiveAlerts = alerts;
-    return true;
+    return success;
   }
 
   // Single key, the server writes the others
@@ -362,60 +381,60 @@ class FirestoreHelper {
     }
   }
 
-  Future<void> subscribeToNerveNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> subscribeToNerveNotification(bool? subscribe) {
+    return _updateAlertField("nerveNotification", {
       "nerveNotification": subscribe,
       // Initialize field for existing users who might not have nerve notifications
       "nerveLastCheckFull": true,
     });
   }
 
-  Future<void> subscribeToLifeNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> subscribeToLifeNotification(bool? subscribe) {
+    return _updateAlertField("lifeNotification", {
       "lifeNotification": subscribe,
       // Initialize field for existing users who predate life notifications
       "lifeLastCheckFull": true,
     });
   }
 
-  Future<void> subscribeToDrugsNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> subscribeToDrugsNotification(bool? subscribe) {
+    return _updateAlertField("drugsNotification", {
       "drugsNotification": subscribe,
       // Initialize field for existing users who predate drugs notifications
       "drugsInfluence": false,
     });
   }
 
-  Future<void> subscribeToMedicalNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> subscribeToMedicalNotification(bool? subscribe) {
+    return _updateAlertField("medicalNotification", {
       "medicalNotification": subscribe,
       // Initialize field for existing users who predate medical notifications
       "medicalInfluence": false,
     });
   }
 
-  Future<void> subscribeToBoosterNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> subscribeToBoosterNotification(bool? subscribe) {
+    return _updateAlertField("boosterNotification", {
       "boosterNotification": subscribe,
       // Initialize field for existing users who predate booster notifications
       "boosterInfluence": false,
     });
   }
 
-  Future<void> subscribeToRacingNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> subscribeToRacingNotification(bool? subscribe) {
+    return _updateAlertField("racingNotification", {
       "racingNotification": subscribe,
       // Initialize field for existing users who predate racing notifications
       "racingSent": true,
     });
   }
 
-  Future<void> subscribeToMessagesNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"messagesNotification": subscribe});
+  Future<bool> subscribeToMessagesNotification(bool? subscribe) {
+    return _updateAlertField("messagesNotification", {"messagesNotification": subscribe});
   }
 
-  Future<void> subscribeToEventsNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"eventsNotification": subscribe});
+  Future<bool> subscribeToEventsNotification(bool? subscribe) {
+    return _updateAlertField("eventsNotification", {"eventsNotification": subscribe});
   }
 
   Future<void> addToEventsFilter(String filter) async {
@@ -431,16 +450,16 @@ class FirestoreHelper {
     await _firestore.collection("players").doc(_uid).update({"eventsFilter": currentFilter});
   }
 
-  Future<void> subscribeToRefillsNotification(bool? subscribe) async {
+  Future<bool> subscribeToRefillsNotification(bool? subscribe) {
     int? currentRefillsTime = _firebaseUserModel!.refillsTime;
-    await _firestore.collection("players").doc(_uid).update({
+    return _updateAlertField("refillsNotification", {
       "refillsNotification": subscribe,
       "refillsTime": currentRefillsTime,
     });
   }
 
-  Future<void> setRefillTime(int? time) async {
-    await _firestore.collection("players").doc(_uid).update({"refillsTime": time});
+  Future<bool> setRefillTime(int? time) {
+    return _updateAlertField("refillsTime", {"refillsTime": time});
   }
 
   Future<void> addToRefillsRequested(String request) async {
@@ -458,8 +477,8 @@ class FirestoreHelper {
     await _firestore.collection("players").doc(_uid).update({"refillsRequested": currentRequests});
   }
 
-  Future<void> subscribeToHospitalNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"hospitalNotification": subscribe});
+  Future<bool> subscribeToHospitalNotification(bool? subscribe) {
+    return _updateAlertField("hospitalNotification", {"hospitalNotification": subscribe});
   }
 
   Future<bool> uploadLastActiveTimeAndTokensToFirebase(int timeStamp) async {
@@ -513,16 +532,26 @@ class FirestoreHelper {
   }
 
   // Init State in alerts
-  Future<FirebaseUserModel?> getUserProfile({bool force = false}) async {
+  Future<FirebaseUserModel?> getUserProfile({bool force = false, bool fromServer = false}) async {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
-    final userReceived = await _firestore.collection("players").doc(_uid).get();
+    final docRef = _firestore.collection("players").doc(_uid);
+    DocumentSnapshot<Map<String, dynamic>> userReceived;
+    if (fromServer) {
+      try {
+        userReceived = await docRef.get(const GetOptions(source: Source.server)).timeout(const Duration(seconds: 8));
+      } catch (e) {
+        userReceived = await docRef.get();
+      }
+    } else {
+      userReceived = await docRef.get();
+    }
     if (userReceived.data() == null) {
       // New user returns nothing, so use default model fields
       return FirebaseUserModel();
     }
     _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data()!);
     // Persist a local snapshot for auth-recovery fallback
-    _persistLocalSnapshot();
+    persistLocalSnapshot();
     return _firebaseUserModel;
   }
 
@@ -620,7 +649,7 @@ class FirestoreHelper {
   // --- Local Snapshot Logic ---
   static const String _kLocalUserSnapshot = "_local_user_model_snapshot";
 
-  Future<void> _persistLocalSnapshot() async {
+  Future<void> persistLocalSnapshot() async {
     if (_firebaseUserModel == null) return;
     try {
       final jsonStr = jsonEncode(
@@ -672,24 +701,24 @@ class FirestoreHelper {
         });
   }
 
-  Future<void> toggleFactionAssistMessage(bool? active) async {
-    await _firestore.collection("players").doc(_uid).update({"factionAssistMessage": active});
+  Future<bool> toggleFactionAssistMessage(bool? active) {
+    return _updateAlertField("factionAssistMessage", {"factionAssistMessage": active});
   }
 
   /// [host] stands for someone that does not have proper Faction API permissions
-  Future<void> toggleRetaliationNotification(bool active, {bool host = true}) async {
+  Future<bool> toggleRetaliationNotification(bool active, {bool host = true}) {
     bool isHost = host;
     if (!active) isHost = false;
 
-    await _firestore.collection("players").doc(_uid).update({
+    return _updateAlertField("retalsNotification", {
       "retalsNotification": active,
       "retalsNotificationHost": isHost,
     });
   }
 
   /// [host] stands for someone that does not have proper Faction API permissions
-  Future<void> toggleRetaliationDonor(bool donor) async {
-    await _firestore.collection("players").doc(_uid).update({"retalsNotificationDonor": donor});
+  Future<bool> toggleRetaliationDonor(bool donor) {
+    return _updateAlertField("retalsNotificationDonor", {"retalsNotificationDonor": donor});
   }
 
   Future<void> toggleNpcAlert({required String id, required int level, required bool active}) async {
@@ -704,20 +733,20 @@ class FirestoreHelper {
     }
   }
 
-  Future<void> subscribeToLootRangersNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"lootRangersNotification": subscribe});
+  Future<bool> subscribeToLootRangersNotification(bool? subscribe) {
+    return _updateAlertField("lootRangersNotification", {"lootRangersNotification": subscribe});
   }
 
-  Future<void> setLootAlertAheadSeconds(int seconds) async {
-    await _firestore.collection("players").doc(_uid).update({"lootAlertAheadSeconds": seconds});
+  Future<bool> setLootAlertAheadSeconds(int seconds) {
+    return _updateAlertField("lootAlertAheadSeconds", {"lootAlertAheadSeconds": seconds});
   }
 
-  Future<void> setLootRangersAheadSeconds(int seconds) async {
-    await _firestore.collection("players").doc(_uid).update({"lootRangersAheadSeconds": seconds});
+  Future<bool> setLootRangersAheadSeconds(int seconds) {
+    return _updateAlertField("lootRangersAheadSeconds", {"lootRangersAheadSeconds": seconds});
   }
 
-  Future<void> subscribeToForumsSubcriptionsNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> subscribeToForumsSubcriptionsNotification(bool? subscribe) {
+    return _updateAlertField("forumsSubscriptionsNotification", {
       "forumsSubscriptionsNotification": subscribe,
       "forumsSubscriptionsNotified": [],
     });
@@ -806,8 +835,8 @@ class FirestoreHelper {
     });
   }
 
-  Future<void> subscribeToWorkStatsNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"workStatsNotification": subscribe});
+  Future<bool> subscribeToWorkStatsNotification(bool? subscribe) {
+    return _updateAlertField("workStatsNotification", {"workStatsNotification": subscribe});
   }
 
   Future<void> setWorkStatsTargets({

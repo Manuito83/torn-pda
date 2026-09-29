@@ -741,6 +741,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_park_background_tabs_default": false,
         "browser_webview_hardware_layer_mode": "default_on",
         "browser_torn_chat_cache_limit_mb": 0,
+        "browser_localstorage_safety_mb": 3,
         "browser_tab_sleep_minutes_default": 720,
         "auth_recovery_enabled": true,
         // Revives
@@ -850,6 +851,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");
       _webViewProvider.webViewHardwareLayerModeRC = remoteConfig.getString("browser_webview_hardware_layer_mode");
       _webViewProvider.tornChatCacheLimitRC = remoteConfig.getInt("browser_torn_chat_cache_limit_mb");
+      _webViewProvider.localStorageSafetyMbRC = remoteConfig.getInt("browser_localstorage_safety_mb");
       final int tabSleepMinutesRC = remoteConfig.getInt("browser_tab_sleep_minutes_default");
       if (tabSleepMinutesRC > 0) {
         _webViewProvider.tabSleepMinutesDefaultRC = tabSleepMinutesRC;

@@ -461,6 +461,7 @@ class Prefs {
   final String _kTornChatCacheLimitRC = "pda_tornChatCacheLimitRC";
   final String _kTornChatCacheLastTrimMs = "pda_tornChatCacheLastTrimMs";
   final String _kTornChatCacheLastTrimFreed = "pda_tornChatCacheLastTrimFreed";
+  final String _kLocalStorageSafetyMbRC = "pda_localStorageSafetyMbRC";
   final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
@@ -4237,6 +4238,14 @@ class Prefs {
 
   Future setTornChatCacheLastTrimFreed(int value) async {
     return await PrefsDatabase.setInt(_kTornChatCacheLastTrimFreed, value);
+  }
+
+  Future<int> getLocalStorageSafetyMbRC() async {
+    return await PrefsDatabase.getInt(_kLocalStorageSafetyMbRC, 3);
+  }
+
+  Future setLocalStorageSafetyMbRC(int value) async {
+    return await PrefsDatabase.setInt(_kLocalStorageSafetyMbRC, value);
   }
 
   Future<bool> getAutomaticChangeToNewTabFromURL() async {

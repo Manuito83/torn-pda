@@ -526,12 +526,46 @@ class WebviewHandlers {
         final int totalBytes = args.isNotEmpty && args[0] is num ? (args[0] as num).toInt() : 0;
         final int freedBytes = args.length > 1 && args[1] is num ? (args[1] as num).toInt() : 0;
         final int limitMb = args.length > 2 && args[2] is num ? (args[2] as num).toInt() : 0;
+        final String reason = args.length > 3 ? (args[3]?.toString() ?? "") : "";
 
         webViewProvider.recordTornChatCacheTrim(freedBytes);
 
         analytics?.logEvent(
           name: 'torn_chat_cache_trimmed',
-          parameters: {'total_kb': totalBytes ~/ 1024, 'freed_kb': freedBytes ~/ 1024, 'limit_mb': limitMb},
+          parameters: {
+            'total_kb': totalBytes ~/ 1024,
+            'freed_kb': freedBytes ~/ 1024,
+            'limit_mb': limitMb,
+            'reason': reason,
+          },
+        );
+      },
+    );
+  }
+
+  static void addLocalStorageMeasuredHandler({
+    required InAppWebViewController webview,
+    required WebViewProvider webViewProvider,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_localStorageMeasured',
+      callback: (JavaScriptHandlerFunctionData data) {
+        final args = data.args;
+        final int totalBytes = args.isNotEmpty && args[0] is num ? (args[0] as num).toInt() : 0;
+        final int chatBytes = args.length > 1 && args[1] is num ? (args[1] as num).toInt() : 0;
+        final List<dynamic> topKeysRaw = args.length > 2 && args[2] is List ? args[2] as List : const [];
+
+        final String topKeysStr = topKeysRaw.map((e) {
+          final Map keyMap = e is Map ? e : const {};
+          final String name = (keyMap['n'] ?? '').toString();
+          final int bytes = keyMap['b'] is num ? (keyMap['b'] as num).toInt() : 0;
+          return '$name:${bytes ~/ 1024}';
+        }).join(', ');
+
+        webViewProvider.recordLocalStorageMeasurement(
+          totalBytes: totalBytes,
+          chatBytes: chatBytes,
+          topKeys: topKeysStr,
         );
       },
     );

@@ -36,6 +36,8 @@ export const onPlayerAdded = onDocumentCreated(
       promises.push(manageStats("la_racing_enabled", 1));
     }
 
+    promises.push(deactivateOtherDocsWithToken(event.params.uid, beforeStat.token, beforeStat.playerId));
+
     await Promise.all(promises);
   }
 );
@@ -179,6 +181,9 @@ export const onPlayerUpdated = onDocumentUpdated({
 
   if (beforeStat.active !== afterStat.active)
     promises.push(manageStats("activeUsers", afterStat.active ? 1 : -1));
+
+  if (afterStat.active !== false && (beforeStat.token !== afterStat.token || beforeStat.active !== afterStat.active))
+    promises.push(deactivateOtherDocsWithToken(event.params.uid, afterStat.token, afterStat.playerId));
 
   if (beforeStat.alertsEnabled !== afterStat.alertsEnabled)
     promises.push(
@@ -395,6 +400,24 @@ export const onPlayerUpdated = onDocumentUpdated({
 
   await Promise.all(promises);
 });
+
+async function deactivateOtherDocsWithToken(uid: string, token: any, playerId: any) {
+  if (typeof token !== "string" || !token || token === "windows" || token === "error") return;
+  if (!playerId) return;
+  try {
+    const snapshot = await admin.firestore().collection("players").where("token", "==", token).get();
+    const stale = snapshot.docs.filter(
+      (doc) => doc.id !== uid && doc.get("active") === true && doc.get("playerId") === playerId
+    );
+    if (stale.length === 0) return;
+    const batch = admin.firestore().batch();
+    stale.forEach((doc) => batch.update(doc.ref, { active: false }));
+    await batch.commit();
+    console.log(`Deactivated ${stale.length} duplicate doc(s) sharing the token of ${uid}`);
+  } catch (e) {
+    console.warn(`Failed to deactivate duplicate token docs for ${uid}: ${e}`);
+  }
+}
 
 async function manageStats(statName: string, changeInValue: number) {
   const totalUserRef = admin.database().ref().child("stats").child(statName);
