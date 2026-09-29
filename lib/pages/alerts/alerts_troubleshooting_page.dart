@@ -6,16 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/racing_live_activity_background.dart';
 import 'package:torn_pda/utils/live_activities/racing_live_activity_parser.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
-import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 
 enum _MockLiveUpdateDirection {
@@ -667,41 +663,22 @@ class _AlertsTroubleshootingPageState extends State<AlertsTroubleshootingPage> {
       _isResetting = true;
     });
 
-    try {
-      final savedKey = UserHelper.apiKey;
+    final fb = await FirestoreHelper().softReset();
+    if (fb != null) {
+      widget.reassignFirebaseUserModelCallback(fb);
 
-      final dynamic myProfile = await ApiCallsV1.getOwnProfileBasic();
+      BotToast.showText(
+        text: "Reset successful",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.green[800]!,
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
+      );
 
-      if (myProfile is OwnProfileBasic) {
-        myProfile
-          ..userApiKey = savedKey
-          ..userApiKeyValid = true;
-
-        FirebaseUserModel? fb = await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
-        widget.reassignFirebaseUserModelCallback(fb);
-        await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
-
-        if (Platform.isAndroid) {
-          final alertsVibration = await Prefs().getVibrationPattern();
-          reconfigureNotificationChannels(mod: alertsVibration);
-          FirestoreHelper().setVibrationPattern(alertsVibration);
-        }
-
-        BotToast.showText(
-          text: "Reset successful",
-          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-          contentColor: Colors.green[800]!,
-          duration: const Duration(seconds: 5),
-          contentPadding: const EdgeInsets.all(10),
-        );
-
-        setState(() {
-          _isResetting = false;
-        });
-        return;
-      }
-    } catch (e) {
-      // Fall through to error message
+      setState(() {
+        _isResetting = false;
+      });
+      return;
     }
 
     BotToast.showText(

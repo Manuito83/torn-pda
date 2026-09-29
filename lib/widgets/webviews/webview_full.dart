@@ -1407,6 +1407,8 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addTornChatCacheTrimHandler(webview: webViewController!, webViewProvider: _webViewProvider);
 
+            WebviewHandlers.addLocalStorageMeasuredHandler(webview: webViewController!, webViewProvider: _webViewProvider);
+
             WebviewHandlers.addToastHandler(webview: webViewController!);
 
             WebviewHandlers.addLaunchIntentHandler(webview: webViewController!);
@@ -2214,6 +2216,7 @@ class WebViewFullState extends State<WebViewFull>
                     "is_window": widget.windowId != null ? 1 : 0,
                     "tabs": _webViewProvider.tabList.length,
                     "resumed": appResumed ? 1 : 0,
+                    "ls_kb": _webViewProvider.lastLocalStorageMeasuredTotalKb,
                   },
                 );
                 if (rebuildNow) {
@@ -2224,6 +2227,7 @@ class WebViewFullState extends State<WebViewFull>
                       "hw_layer": _webViewProvider.webViewHardwareLayerActiveForTelemetry ? "on" : "off",
                       "chat_limit_mb": _webViewProvider.tornChatCacheLimitActiveMb,
                       "tabs": _webViewProvider.tabList.length,
+                      "ls_kb": _webViewProvider.lastLocalStorageMeasuredTotalKb,
                     },
                   );
                 }
@@ -2611,13 +2615,14 @@ class WebViewFullState extends State<WebViewFull>
 
   // Independent from the userscripts switch, and useless after document start
   List<UserScript> _tornChatCacheTrimScript() {
-    final int limitMb = _webViewProvider.tornChatCacheLimitActiveMb;
-    if (limitMb <= 0) return const <UserScript>[];
     return [
       UserScript(
         groupName: "__TornPDA_ChatCacheTrim__",
         injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-        source: handler_tornChatCacheTrim(limitMb),
+        source: handler_tornChatCacheTrim(
+          _webViewProvider.tornChatCacheLimitActiveMb,
+          _webViewProvider.localStorageSafetyMbRC,
+        ),
       ),
     ];
   }

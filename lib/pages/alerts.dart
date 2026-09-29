@@ -47,6 +47,10 @@ class AlertsSettings extends StatefulWidget {
 }
 
 class AlertsSettingsState extends State<AlertsSettings> {
+  static bool _autoResetUsed = false;
+  static bool _autoResetRunning = false;
+  static int _consecutiveRejections = 0;
+
   FirebaseUserModel? _firebaseUserModel;
 
   Future? _getFirebaseAndTornDetails;
@@ -77,7 +81,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
     final sbController = Get.find<SendbirdController>();
     _getFirebaseAndTornDetails = Future.wait([
-      FirestoreHelper().getUserProfile(),
+      FirestoreHelper().getUserProfile(force: true, fromServer: true),
       _getFactionApiAccess(),
       sbController.updateFactionAndCompanyPreferences(),
     ]);
@@ -94,6 +98,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   @override
   void dispose() {
+    FirestoreHelper().persistLocalSnapshot();
     _scrollController.dispose();
     _scrollControllerRetalsGeneral.dispose();
     _scrollControllerRetalsNotification.dispose();
@@ -284,7 +289,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                   setState(() {
                     m.discreet = value;
                   });
-                  FirestoreHelper().toggleDiscreet(value);
+                  _persistAlertChange(FirestoreHelper().toggleDiscreet(value), () => m.discreet = !value);
                 },
                 activeThumbColor: Colors.white,
                 activeTrackColor: Colors.green[600],
@@ -333,7 +338,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.energyNotification ?? false,
           onChanged: (value) {
             setState(() => m.energyNotification = value);
-            FirestoreHelper().subscribeToEnergyNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToEnergyNotification(value),
+              () => m.energyNotification = !value,
+            );
           },
         ),
         AlertRow(
@@ -342,7 +350,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.nerveNotification ?? false,
           onChanged: (value) {
             setState(() => m.nerveNotification = value);
-            FirestoreHelper().subscribeToNerveNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToNerveNotification(value),
+              () => m.nerveNotification = !value,
+            );
           },
         ),
         AlertRow(
@@ -351,7 +362,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.lifeNotification ?? false,
           onChanged: (value) {
             setState(() => m.lifeNotification = value);
-            FirestoreHelper().subscribeToLifeNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToLifeNotification(value),
+              () => m.lifeNotification = !value,
+            );
           },
         ),
         if (m.lifeNotification ?? false) _subRows([_lifeTapSelector()]),
@@ -361,7 +375,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.drugsNotification ?? false,
           onChanged: (value) {
             setState(() => m.drugsNotification = value);
-            FirestoreHelper().subscribeToDrugsNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToDrugsNotification(value),
+              () => m.drugsNotification = !value,
+            );
           },
         ),
         if (m.drugsNotification ?? false) _subRows([_drugsTapSelector()]),
@@ -371,7 +388,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.medicalNotification ?? false,
           onChanged: (value) {
             setState(() => m.medicalNotification = value);
-            FirestoreHelper().subscribeToMedicalNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToMedicalNotification(value),
+              () => m.medicalNotification = !value,
+            );
           },
         ),
         if (m.medicalNotification ?? false) _subRows([_medicalTapSelector()]),
@@ -381,7 +401,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.boosterNotification ?? false,
           onChanged: (value) {
             setState(() => m.boosterNotification = value);
-            FirestoreHelper().subscribeToBoosterNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToBoosterNotification(value),
+              () => m.boosterNotification = !value,
+            );
           },
         ),
         if (m.boosterNotification ?? false) _subRows([_boosterTapSelector()]),
@@ -391,7 +414,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.hospitalNotification ?? false,
           onChanged: (value) {
             setState(() => m.hospitalNotification = value);
-            FirestoreHelper().subscribeToHospitalNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToHospitalNotification(value),
+              () => m.hospitalNotification = !value,
+            );
           },
         ),
         AlertRow(
@@ -400,7 +426,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.refillsNotification ?? false,
           onChanged: (value) {
             setState(() => m.refillsNotification = value);
-            FirestoreHelper().subscribeToRefillsNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToRefillsNotification(value),
+              () => m.refillsNotification = !value,
+            );
           },
         ),
         if (m.refillsNotification ?? false) _subRows([_refillsTimeSelector(), _refillsChooser()]),
@@ -507,11 +536,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
               ),
             ),
         ],
-        onChanged: (value) async {
+        onChanged: (value) {
+          final previous = _firebaseUserModel?.refillsTime;
           setState(() {
             _firebaseUserModel?.refillsTime = value;
           });
-          FirestoreHelper().setRefillTime(value);
+          _persistAlertChange(FirestoreHelper().setRefillTime(value), () => _firebaseUserModel?.refillsTime = previous);
         },
       ),
     );
@@ -549,7 +579,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.travelNotification ?? false,
           onChanged: (value) {
             setState(() => m.travelNotification = value);
-            FirestoreHelper().subscribeToTravelNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToTravelNotification(value),
+              () => m.travelNotification = !value,
+            );
           },
         ),
         if (m.travelNotification ?? false) _subRows([_travelStocksSelector(), _travelNotificationTapSelector()]),
@@ -561,7 +594,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.foreignRestockNotification ?? false,
           onChanged: (value) {
             setState(() => m.foreignRestockNotification = value);
-            FirestoreHelper().subscribeToForeignRestockNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToForeignRestockNotification(value),
+              () => m.foreignRestockNotification = !value,
+            );
           },
         ),
         if (m.foreignRestockNotification ?? false) _foreignRestockOptions(),
@@ -571,12 +607,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.cityShopRestockNotification ?? false,
           onChanged: (value) {
             setState(() => m.cityShopRestockNotification = value);
-            FirestoreHelper().subscribeToCityShopRestockNotification(value).then((success) {
-              if (!success && mounted) {
-                setState(() => m.cityShopRestockNotification = !value);
-                _cityShopUpdateFailedToast();
-              }
-            });
+            _persistAlertChange(
+              FirestoreHelper().subscribeToCityShopRestockNotification(value),
+              () => m.cityShopRestockNotification = !value,
+            );
           },
         ),
         if (m.cityShopRestockNotification ?? false) _cityShopOptions(),
@@ -588,7 +622,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.abroadStayNotification ?? false,
           onChanged: (value) {
             setState(() => m.abroadStayNotification = value);
-            FirestoreHelper().subscribeToAbroadStayNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToAbroadStayNotification(value),
+              () => m.abroadStayNotification = !value,
+            );
           },
         ),
         if (m.abroadStayNotification ?? false) _abroadStayOptions(),
@@ -621,7 +658,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
         setState(() {
           _firebaseUserModel!.travelStocksInNotification = include;
         });
-        FirestoreHelper().changeTravelStocksInNotification(include);
+        _persistAlertChange(
+          FirestoreHelper().changeTravelStocksInNotification(include),
+          () => _firebaseUserModel!.travelStocksInNotification = !include,
+        );
       },
     );
   }
@@ -637,11 +677,15 @@ class AlertsSettingsState extends State<AlertsSettings> {
         subtitle: "Only items restocked in the country you are flying to or staying in",
         value: onlyCurrentCountry,
         onChanged: (limit) {
+          final previousLanded = m.foreignRestockNotificationOnlyLanded;
           setState(() {
             m.foreignRestockNotificationOnlyCurrentCountry = limit;
             if (!limit) m.foreignRestockNotificationOnlyLanded = false;
           });
-          FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(limit);
+          _persistAlertChange(FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(limit), () {
+            m.foreignRestockNotificationOnlyCurrentCountry = !limit;
+            if (!limit) m.foreignRestockNotificationOnlyLanded = previousLanded;
+          });
         },
       ),
       if (onlyCurrentCountry)
@@ -656,7 +700,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
             setState(() {
               m.foreignRestockNotificationOnlyLanded = !whileFlying;
             });
-            FirestoreHelper().changeForeignRestockNotificationOnlyLanded(!whileFlying);
+            _persistAlertChange(
+              FirestoreHelper().changeForeignRestockNotificationOnlyLanded(!whileFlying),
+              () => m.foreignRestockNotificationOnlyLanded = whileFlying,
+            );
           },
         ),
       AlertRow(
@@ -668,16 +715,56 @@ class AlertsSettingsState extends State<AlertsSettings> {
           setState(() {
             m.foreignRestockNotificationSellout = sellout;
           });
-          FirestoreHelper().changeForeignRestockSellout(sellout);
+          _persistAlertChange(
+            FirestoreHelper().changeForeignRestockSellout(sellout),
+            () => m.foreignRestockNotificationSellout = !sellout,
+          );
         },
       ),
     ]);
   }
 
-  void _cityShopUpdateFailedToast() {
+  void _persistAlertChange(Future<bool> write, VoidCallback revert) {
+    write.then((success) {
+      if (success) {
+        _consecutiveRejections = 0;
+        return;
+      }
+      if (!mounted) return;
+      setState(revert);
+      _consecutiveRejections++;
+      if (_consecutiveRejections >= 2 && !_autoResetUsed && !_autoResetRunning) {
+        _autoSoftReset();
+      } else {
+        _alertUpdateFailedToast();
+      }
+    });
+  }
+
+  Future<void> _autoSoftReset() async {
+    _autoResetUsed = true;
+    _autoResetRunning = true;
+    final fb = await FirestoreHelper().softReset();
+    _autoResetRunning = false;
+    final ok = fb != null;
+    logErrorToCrashlytics("AlertsAutoSoftReset success=$ok", "AlertsAutoSoftReset success=$ok", null);
+    if (ok && mounted) _reassignUserAfterTsm(fb);
     BotToast.showText(
       clickClose: true,
-      text: "Could not update, check your connection",
+      text: ok
+          ? "Alerts were resynced, please try again"
+          : "Could not resync alerts. If this persists, remove and add your API key again",
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: ok ? Colors.green[800]! : Colors.orange[900]!,
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  void _alertUpdateFailedToast() {
+    BotToast.showText(
+      clickClose: true,
+      text: "Could not save the change, please try again",
       textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.orange[900]!,
       duration: const Duration(seconds: 4),
@@ -753,14 +840,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
     setState(() {
       _firebaseUserModel!.cityShopMutedUntil = until;
     });
-    FirestoreHelper().setCityShopMutedUntil(until).then((success) {
-      if (!success && mounted) {
-        setState(() {
-          _firebaseUserModel!.cityShopMutedUntil = previous;
-        });
-        _cityShopUpdateFailedToast();
-      }
-    });
+    _persistAlertChange(
+      FirestoreHelper().setCityShopMutedUntil(until),
+      () => _firebaseUserModel!.cityShopMutedUntil = previous,
+    );
   }
 
   Future<void> _pickCityShopHour({required bool from}) async {
@@ -799,21 +882,18 @@ class AlertsSettingsState extends State<AlertsSettings> {
   // Writes the three hour fields together; on failure restores whichever value changed
   void _saveCityShopHours({bool? revertEnabled, int? revertFrom, int? revertTo}) {
     final model = _firebaseUserModel!;
-    FirestoreHelper()
-        .setCityShopHours(
-          enabled: model.cityShopHoursEnabled,
-          fromMin: model.cityShopHoursFrom,
-          toMin: model.cityShopHoursTo,
-        )
-        .then((success) {
-          if (success || !mounted) return;
-          setState(() {
-            if (revertEnabled != null) model.cityShopHoursEnabled = revertEnabled;
-            if (revertFrom != null) model.cityShopHoursFrom = revertFrom;
-            if (revertTo != null) model.cityShopHoursTo = revertTo;
-          });
-          _cityShopUpdateFailedToast();
-        });
+    _persistAlertChange(
+      FirestoreHelper().setCityShopHours(
+        enabled: model.cityShopHoursEnabled,
+        fromMin: model.cityShopHoursFrom,
+        toMin: model.cityShopHoursTo,
+      ),
+      () {
+        if (revertEnabled != null) model.cityShopHoursEnabled = revertEnabled;
+        if (revertFrom != null) model.cityShopHoursFrom = revertFrom;
+        if (revertTo != null) model.cityShopHoursTo = revertTo;
+      },
+    );
   }
 
   Widget _cityShopOptions() {
@@ -826,12 +906,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
         value: m.cityShopOnlyConfirmed,
         onChanged: (onlyConfirmed) {
           setState(() => m.cityShopOnlyConfirmed = onlyConfirmed);
-          FirestoreHelper().setCityShopOnlyConfirmed(onlyConfirmed).then((success) {
-            if (!success && mounted) {
-              setState(() => m.cityShopOnlyConfirmed = !onlyConfirmed);
-              _cityShopUpdateFailedToast();
-            }
-          });
+          _persistAlertChange(
+            FirestoreHelper().setCityShopOnlyConfirmed(onlyConfirmed),
+            () => m.cityShopOnlyConfirmed = !onlyConfirmed,
+          );
         },
       ),
       AlertRow(
@@ -841,12 +919,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
         value: m.cityShopOnlyInTorn,
         onChanged: (onlyInTorn) {
           setState(() => m.cityShopOnlyInTorn = onlyInTorn);
-          FirestoreHelper().setCityShopOnlyInTorn(onlyInTorn).then((success) {
-            if (!success && mounted) {
-              setState(() => m.cityShopOnlyInTorn = !onlyInTorn);
-              _cityShopUpdateFailedToast();
-            }
-          });
+          _persistAlertChange(
+            FirestoreHelper().setCityShopOnlyInTorn(onlyInTorn),
+            () => m.cityShopOnlyInTorn = !onlyInTorn,
+          );
         },
       ),
       AlertRow(
@@ -948,6 +1024,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
               selected: isSelected,
               visualDensity: VisualDensity.compact,
               onSelected: (value) {
+                final previous = _firebaseUserModel!.abroadStayIntervals;
                 setState(() {
                   if (value) {
                     selected.add(choice.$1);
@@ -959,7 +1036,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
                   _firebaseUserModel!.abroadStayIntervals = ordered;
                 });
                 final ordered = selected.toList()..sort();
-                FirestoreHelper().setAbroadStayIntervals(ordered);
+                _persistAlertChange(
+                  FirestoreHelper().setAbroadStayIntervals(ordered),
+                  () => _firebaseUserModel!.abroadStayIntervals = previous,
+                );
               },
             );
           }).toList(),
@@ -974,7 +1054,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           setState(() {
             _firebaseUserModel!.abroadStayIncludeHospital = include;
           });
-          FirestoreHelper().setAbroadStayIncludeHospital(include);
+          _persistAlertChange(
+            FirestoreHelper().setAbroadStayIncludeHospital(include),
+            () => _firebaseUserModel!.abroadStayIncludeHospital = !include,
+          );
         },
       ),
     ]);
@@ -1137,7 +1220,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.factionAssistMessage ?? false,
           onChanged: (value) {
             setState(() => m.factionAssistMessage = value);
-            FirestoreHelper().toggleFactionAssistMessage(value);
+            _persistAlertChange(
+              FirestoreHelper().toggleFactionAssistMessage(value),
+              () => m.factionAssistMessage = !value,
+            );
           },
         ),
         AlertRow(
@@ -1178,7 +1264,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.lootRangersAlerts ?? false,
           onChanged: (value) {
             setState(() => m.lootRangersAlerts = value);
-            FirestoreHelper().subscribeToLootRangersNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToLootRangersNotification(value),
+              () => m.lootRangersAlerts = !value,
+            );
           },
         ),
         if (m.lootRangersAlerts ?? false)
@@ -1189,7 +1278,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.racingNotification ?? false,
           onChanged: (value) {
             setState(() => m.racingNotification = value);
-            FirestoreHelper().subscribeToRacingNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToRacingNotification(value),
+              () => m.racingNotification = !value,
+            );
           },
         ),
       ],
@@ -1201,7 +1293,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
       setState(() {
         _firebaseUserModel?.retalsNotification = enabled;
       });
-      FirestoreHelper().toggleRetaliationNotification(enabled);
+      _persistAlertChange(
+        FirestoreHelper().toggleRetaliationNotification(enabled),
+        () => _firebaseUserModel?.retalsNotification = !enabled,
+      );
       return;
     }
 
@@ -1209,7 +1304,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
       setState(() {
         _firebaseUserModel?.retalsNotification = enabled;
       });
-      FirestoreHelper().toggleRetaliationNotification(enabled);
+      _persistAlertChange(
+        FirestoreHelper().toggleRetaliationNotification(enabled),
+        () => _firebaseUserModel?.retalsNotification = !enabled,
+      );
 
       // Makes sure to scroll down so that the new 2 options are visible
       _scrollController.animateTo(
@@ -1225,7 +1323,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
         setState(() {
           _firebaseUserModel?.retalsNotification = enabled;
         });
-        FirestoreHelper().toggleRetaliationNotification(enabled, host: false);
+        _persistAlertChange(
+          FirestoreHelper().toggleRetaliationNotification(enabled, host: false),
+          () => _firebaseUserModel?.retalsNotification = !enabled,
+        );
         message =
             "You have no faction API permissions (talk to your leadership about it).\n\n"
             "This alert has been activated, but it won't work unless someone with proper "
@@ -1305,7 +1406,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           setState(() {
             _firebaseUserModel?.retalsNotificationDonor = enabled;
           });
-          FirestoreHelper().toggleRetaliationDonor(enabled);
+          _persistAlertChange(
+            FirestoreHelper().toggleRetaliationDonor(enabled),
+            () => _firebaseUserModel?.retalsNotificationDonor = !enabled,
+          );
         },
       ),
     ]);
@@ -1326,7 +1430,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.messagesNotification ?? false,
           onChanged: (value) {
             setState(() => m.messagesNotification = value);
-            FirestoreHelper().subscribeToMessagesNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToMessagesNotification(value),
+              () => m.messagesNotification = !value,
+            );
           },
         ),
         AlertRow(
@@ -1335,7 +1442,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.eventsNotification ?? false,
           onChanged: (value) {
             setState(() => m.eventsNotification = value);
-            FirestoreHelper().subscribeToEventsNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToEventsNotification(value),
+              () => m.eventsNotification = !value,
+            );
           },
         ),
         if (m.eventsNotification ?? false)
@@ -1364,7 +1474,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
           value: m.forumsSubscription ?? false,
           onChanged: (value) {
             setState(() => m.forumsSubscription = value);
-            FirestoreHelper().subscribeToForumsSubcriptionsNotification(value);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToForumsSubcriptionsNotification(value),
+              () => m.forumsSubscription = !value,
+            );
           },
         ),
       ],
@@ -1822,11 +1935,16 @@ class AlertsSettingsState extends State<AlertsSettings> {
         if (value == null) return;
         final int? seconds = int.tryParse(value);
         if (seconds == null) return;
+        final previousSelection = _lootAheadSelection;
+        final previousSeconds = _firebaseUserModel?.lootAlertAheadSeconds;
         setState(() {
           _lootAheadSelection = value;
           _firebaseUserModel?.lootAlertAheadSeconds = seconds;
         });
-        FirestoreHelper().setLootAlertAheadSeconds(seconds);
+        _persistAlertChange(FirestoreHelper().setLootAlertAheadSeconds(seconds), () {
+          _lootAheadSelection = previousSelection;
+          _firebaseUserModel?.lootAlertAheadSeconds = previousSeconds;
+        });
       },
     );
   }
@@ -1845,11 +1963,16 @@ class AlertsSettingsState extends State<AlertsSettings> {
         if (value == null) return;
         final int? seconds = int.tryParse(value);
         if (seconds == null) return;
+        final previousSelection = _lootRangersAheadSelection;
+        final previousSeconds = _firebaseUserModel?.lootRangersAheadSeconds;
         setState(() {
           _lootRangersAheadSelection = value;
           _firebaseUserModel?.lootRangersAheadSeconds = seconds;
         });
-        FirestoreHelper().setLootRangersAheadSeconds(seconds);
+        _persistAlertChange(FirestoreHelper().setLootRangersAheadSeconds(seconds), () {
+          _lootRangersAheadSelection = previousSelection;
+          _firebaseUserModel?.lootRangersAheadSeconds = previousSeconds;
+        });
       },
     );
   }
@@ -1887,7 +2010,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
       setState(() {
         _firebaseUserModel?.workStatsNotification = false;
       });
-      FirestoreHelper().subscribeToWorkStatsNotification(false);
+      _persistAlertChange(
+        FirestoreHelper().subscribeToWorkStatsNotification(false),
+        () => _firebaseUserModel?.workStatsNotification = true,
+      );
       return;
     }
 
@@ -1902,7 +2028,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
     setState(() {
       _firebaseUserModel?.workStatsNotification = true;
     });
-    FirestoreHelper().subscribeToWorkStatsNotification(true);
+    _persistAlertChange(
+      FirestoreHelper().subscribeToWorkStatsNotification(true),
+      () => _firebaseUserModel?.workStatsNotification = false,
+    );
   }
 
   Widget _workStatsTargets() {
@@ -1927,7 +2056,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
             setState(() {
               _firebaseUserModel?.workStatsNotification = false;
             });
-            FirestoreHelper().subscribeToWorkStatsNotification(false);
+            _persistAlertChange(
+              FirestoreHelper().subscribeToWorkStatsNotification(false),
+              () => _firebaseUserModel?.workStatsNotification = true,
+            );
             _workStatsToast("Work stats alert disabled, as you removed all targets");
           }
         },

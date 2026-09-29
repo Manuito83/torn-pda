@@ -57,7 +57,7 @@ String handler_activeTabFocus() {
 	''';
 }
 
-String handler_tornChatCacheTrim(int limitMb) {
+String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
   // Runs before Torn's chat restores its persisted query cache, so the chat starts clean and refetches
   return '''
     (function() {
@@ -65,18 +65,50 @@ String handler_tornChatCacheTrim(int limitMb) {
         if (location.hostname !== "www.torn.com") return;
         var ls = window.localStorage;
         if (!ls) return;
-        var limit = $limitMb * 1024 * 1024;
-        var total = 0, chatBytes = 0, chatKeys = [];
+        var total = 0, chatBytes = 0, chatKeys = [], allKeys = [];
         for (var i = 0; i < ls.length; i++) {
           var k = ls.key(i);
-          var bytes = new Blob([k, ls.getItem(k) || ""]).size;
+          var bytes = k.length + (ls.getItem(k) || "").length;
           total += bytes;
+          allKeys.push({ n: k, b: bytes });
           if (k.indexOf("chat_query_cache") === 0) {
             chatKeys.push(k);
             chatBytes += bytes;
           }
         }
-        if (total < limit || chatBytes < 100 * 1024) return;
+        allKeys.sort(function(a, b) { return b.b - a.b; });
+        var topKeys = allKeys.slice(0, 3).map(function(e) {
+          return { n: e.n.slice(0, 40), b: e.b };
+        });
+
+        var reportMeasured = function() {
+          try {
+            window.flutter_inappwebview.callHandler("PDA_localStorageMeasured", total, chatBytes, topKeys);
+          } catch (_) {}
+        };
+
+        var chatLimit = $chatLimitMb * 1024 * 1024;
+        var safetyLimit = $safetyLimitMb > 0 ? $safetyLimitMb * 1024 * 1024 : -1;
+        var shouldTrim = false, reason = "";
+        if ($chatLimitMb > 0 && chatBytes >= 100 * 1024) {
+          if (chatBytes >= chatLimit) {
+            shouldTrim = true;
+            reason = "chat";
+          } else if (safetyLimit >= 0 && total >= safetyLimit) {
+            shouldTrim = true;
+            reason = "safety";
+          }
+        }
+
+        if (!shouldTrim) {
+          if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+            reportMeasured();
+          } else {
+            window.addEventListener("flutterInAppWebViewPlatformReady", reportMeasured, { once: true });
+          }
+          return;
+        }
+
         var freed = 0;
         chatKeys.forEach(function(k) {
           var before = ls.getItem(k) || "";
@@ -90,16 +122,17 @@ String handler_tornChatCacheTrim(int limitMb) {
               });
               var after = JSON.stringify(d);
               ls.setItem(k, after);
-              freed += new Blob([before]).size - new Blob([after]).size;
+              freed += before.length - after.length;
               return;
             }
           } catch (_) {}
           ls.removeItem(k);
-          freed += new Blob([k, before]).size;
+          freed += k.length + before.length;
         });
         var report = function() {
           try {
-            window.flutter_inappwebview.callHandler("PDA_tornChatCacheTrimmed", total, freed, $limitMb);
+            reportMeasured();
+            window.flutter_inappwebview.callHandler("PDA_tornChatCacheTrimmed", total, freed, $chatLimitMb, reason);
           } catch (_) {}
         };
         if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {

@@ -571,7 +571,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                           onTap: () => _openInBrowser(script.pageUrl),
                           behavior: HitTestBehavior.opaque,
                           child: Padding(
-                            padding: const EdgeInsets.only(left: 10),
+                            padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

@@ -282,6 +282,34 @@ class WebViewProvider extends ChangeNotifier {
     return _tornChatCacheLimitUser;
   }
 
+  int _localStorageSafetyMbRC = 3;
+  int get localStorageSafetyMbRC => _localStorageSafetyMbRC;
+  set localStorageSafetyMbRC(int value) {
+    _localStorageSafetyMbRC = value;
+    Prefs().setLocalStorageSafetyMbRC(value);
+    notifyListeners();
+  }
+
+  int _lastLocalStorageMeasuredTotalKb = -1;
+  int get lastLocalStorageMeasuredTotalKb => _lastLocalStorageMeasuredTotalKb;
+  String? _lastReportedLsTotalMb;
+
+  void recordLocalStorageMeasurement({required int totalBytes, required int chatBytes, required String topKeys}) {
+    _lastLocalStorageMeasuredTotalKb = totalBytes ~/ 1024;
+    if (Platform.isWindows) return;
+
+    final crashlytics = FirebaseCrashlytics.instance;
+    crashlytics.setCustomKey("ls_total_kb", _lastLocalStorageMeasuredTotalKb);
+    crashlytics.setCustomKey("ls_chat_kb", chatBytes ~/ 1024);
+    crashlytics.setCustomKey("ls_top_keys", topKeys);
+
+    final String totalMb = (((totalBytes * 2) ~/ (1024 * 1024)) / 2).toStringAsFixed(1);
+    if (totalMb != _lastReportedLsTotalMb) {
+      _lastReportedLsTotalMb = totalMb;
+      analytics?.setUserProperty(name: "ls_total_mb", value: totalMb);
+    }
+  }
+
   void _reportExperimentUserProperties() {
     if (Platform.isWindows) return;
     final String hwLayer = webViewHardwareLayerActiveForTelemetry ? "on" : "off";
@@ -2555,6 +2583,7 @@ class WebViewProvider extends ChangeNotifier {
     final int chatLimitUser = await Prefs().getTornChatCacheLimitUser();
     _tornChatCacheLimitUser = tornChatCacheLimitOptions.contains(chatLimitUser) ? chatLimitUser : 0;
     _tornChatCacheLimitRC = await Prefs().getTornChatCacheLimitRC();
+    _localStorageSafetyMbRC = await Prefs().getLocalStorageSafetyMbRC();
     _tornChatCacheLastTrimMs = await Prefs().getTornChatCacheLastTrimMs();
     _tornChatCacheLastTrimFreed = await Prefs().getTornChatCacheLastTrimFreed();
     _automaticChangeToNewTabFromURL = await Prefs().getAutomaticChangeToNewTabFromURL();
