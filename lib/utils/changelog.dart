@@ -236,6 +236,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Fixed issues with company addiction refresh in Profile'),
           _MItem('Shortcuts: custom border color is now kept after restarting the app'),
           _MItem('Browser: custom tab names are no longer split in the middle of a word'),
+          _MItem('Scripts: import overwrite mode no longer deletes other scripts'),
         ],
       ),
     ],
