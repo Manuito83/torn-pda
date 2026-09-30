@@ -1251,20 +1251,40 @@ class UserScriptsProvider extends ChangeNotifier {
 
   /// Import scripts from a list of models
   Future<void> importScriptsFromList({required List<UserScriptModel> scriptsToImport, required bool overwrite}) async {
-    if (overwrite) {
-      _userScriptList.clear();
-      for (final script in scriptsToImport) {
-        _addScript(_userScriptList, script, "importScriptsFromList-overwrite");
-      }
-    } else {
-      for (final script in scriptsToImport) {
-        // Check for name conflict
-        if (_userScriptList.any((s) => s.name.toLowerCase() == script.name.toLowerCase())) {
-          // Rename
-          final newName = _getUniqueScriptName(script.name);
-          script.name = newName;
-        }
-        _addScript(_userScriptList, script, "importScriptsFromList-append");
+    // A storageId already in use is never reused by a second script
+    UserScriptModel imported(UserScriptModel script, {UserScriptModel? replacing}) {
+      final idTaken = _userScriptList.any((s) => s.storageId == script.storageId);
+      return UserScriptModel(
+        enabled: replacing?.enabled ?? script.enabled,
+        warEnabled: replacing?.warEnabled ?? script.warEnabled,
+        installedAt: replacing?.installedAt ?? script.installedAt,
+        storageId: replacing?.storageId ?? (idTaken ? null : script.storageId),
+        customApiKey: script.customApiKey.isNotEmpty ? script.customApiKey : (replacing?.customApiKey ?? ""),
+        customApiKeyCandidate: script.customApiKeyCandidate || (replacing?.customApiKeyCandidate ?? false),
+        name: script.name,
+        version: script.version,
+        source: script.source,
+        matches: script.matches,
+        time: script.time,
+        url: script.url,
+        updateUrl: script.updateUrl,
+        updateStatus: script.updateStatus,
+        manuallyEdited: script.manuallyEdited,
+        isExample: script.isExample,
+        grants: script.grants,
+        requires: script.requires,
+      );
+    }
+
+    for (final script in scriptsToImport) {
+      final index = _userScriptList.indexWhere((s) => s.name.toLowerCase() == script.name.toLowerCase());
+      if (index == -1) {
+        _addScript(_userScriptList, imported(script), "importScriptsFromList-new");
+      } else if (overwrite) {
+        _userScriptList[index] = imported(script, replacing: _userScriptList[index]);
+      } else {
+        script.name = _getUniqueScriptName(script.name);
+        _addScript(_userScriptList, imported(script), "importScriptsFromList-append");
       }
     }
 

@@ -1293,7 +1293,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       const Padding(
                         padding: EdgeInsets.only(bottom: 10),
                         child: Text(
-                          "Warning: this will delete ALL your current scripts!",
+                          "Scripts with the same name will be replaced, keeping their saved data. "
+                          "Your other scripts are not affected",
                           style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -1327,20 +1328,18 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         itemCount: importedScripts.length,
                         itemBuilder: (context, index) {
                           final script = importedScripts[index];
-                          // Check for conflict (only relevant in Append mode)
-                          bool nameConflict = false;
-                          if (!overwriteMode) {
-                            nameConflict = _userScriptsProvider.userScriptList.any(
-                              (s) => s.name.toLowerCase() == script.name.toLowerCase(),
-                            );
-                          }
+                          final nameConflict = _userScriptsProvider.userScriptList.any(
+                            (s) => s.name.toLowerCase() == script.name.toLowerCase(),
+                          );
 
                           return SwitchListTile(
                             title: Text(script.name, style: const TextStyle(fontSize: 14)),
                             subtitle: nameConflict
-                                ? const Text(
-                                    "Name conflict: Will be renamed",
-                                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                                ? Text(
+                                    overwriteMode
+                                        ? "Already installed: will be replaced"
+                                        : "Name conflict: will be renamed",
+                                    style: TextStyle(color: overwriteMode ? Colors.red : Colors.orange, fontSize: 12),
                                   )
                                 : null,
                             value: selectedScripts.contains(script),
