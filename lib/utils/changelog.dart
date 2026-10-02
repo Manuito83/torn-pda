@@ -83,6 +83,20 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  const _MVersion(
+    version: 'v3.18.0',
+    date: '20 October 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [_MItem('Fixed alerts not loading or saving after the app recovers its session')],
+      ),
+    ],
+  ),
+
   // TODO: confirm the release date
   const _MVersion(
     version: 'v3.17.0',

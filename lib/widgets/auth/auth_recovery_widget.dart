@@ -116,6 +116,18 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     }
   }
 
+  // Paths that skip recovery still need the UID when Firebase already restored the session
+  void _setUidIfSessionRestored() {
+    if (Platform.isWindows) return;
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      _logStep('EARLY_EXIT_UID', details: {'uid': uid ?? 'none'});
+      if (uid != null) FirestoreHelper().setUID(uid);
+    } catch (e) {
+      _logStep('EARLY_EXIT_UID_ERROR', details: {'error': e.toString()});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -162,6 +174,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
             'app_updated': widget.appHasBeenUpdated.toString(),
           },
         );
+        _setUidIfSessionRestored();
         widget.onAuthCompleted?.call();
         return;
       }
@@ -170,12 +183,14 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     // Kill switch via Remote Config (checked AFTER preferences load)
     if (!widget.enabled) {
       _logStep('DISABLED_RC');
+      _setUidIfSessionRestored();
       widget.onAuthCompleted?.call();
       return;
     }
 
     if (Platform.isWindows || _drawerUserChecked) {
       _logStep('EARLY_RETURN', details: {'reason': Platform.isWindows ? 'windows' : 'already_checked'});
+      _setUidIfSessionRestored();
       widget.onAuthCompleted?.call();
       return;
     }
@@ -258,10 +273,10 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         },
       );
 
-      setState(() {
-        _userUid = user!.uid;
-        _hasAuthenticationError = false;
-      });
+      // May run after unmount
+      _userUid = user.uid;
+      _hasAuthenticationError = false;
+      if (mounted) setState(() {});
       await FirestoreHelper().setUID(_userUid);
       _drawerUserChecked = true;
       _totalRecoveryStopwatch.stop();
@@ -289,10 +304,9 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
             },
           );
 
-          setState(() {
-            _userUid = user!.uid;
-            _hasAuthenticationError = false;
-          });
+          _userUid = user.uid;
+          _hasAuthenticationError = false;
+          if (mounted) setState(() {});
           await FirestoreHelper().setUID(_userUid);
           _drawerUserChecked = true;
           _totalRecoveryStopwatch.stop();
@@ -718,9 +732,8 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     _logStep('FINALIZE_ORIGINAL_USER', details: {'uid': uid});
     _isOriginalUserRecovered = true;
 
-    if (mounted) {
-      setState(() => _userUid = uid);
-    }
+    _userUid = uid;
+    if (mounted) setState(() {});
 
     await FirestoreHelper().setUID(_userUid);
     await _syncProfileToFirebase();
@@ -754,9 +767,8 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     }
     _finalizationStarted = true;
 
-    if (mounted) {
-      setState(() => _userUid = uid);
-    }
+    _userUid = uid;
+    if (mounted) setState(() {});
 
     await FirestoreHelper().setUID(_userUid);
 
