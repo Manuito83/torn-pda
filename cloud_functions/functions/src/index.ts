@@ -37,6 +37,7 @@ import { sendForumsSubscription } from "./forums";
 import { registerActivityToken, registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
 import { recalculateStats } from "./stats_recalc";
 import { updateCityShops, cityShopsTest } from "./city_shops";
+import { countActives } from "./metrics";
 
 export const alerts = {
   checkIOS: checkIOS,
@@ -54,6 +55,10 @@ export const alertsTest = {
 export const loot = {
   updateNpcs: updateNpcs,
   lootAlerts: lootAlerts
+};
+
+export const metrics = {
+  countActives: countActives
 };
 
 export const stale = {
