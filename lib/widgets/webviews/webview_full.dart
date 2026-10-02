@@ -15,6 +15,7 @@ import 'package:dio/dio.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
@@ -31,6 +32,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -47,6 +49,7 @@ import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/config/webview_config.dart';
+import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
@@ -63,11 +66,13 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
@@ -93,6 +98,7 @@ import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
 import 'package:torn_pda/widgets/webviews/handlers/travel_handler.dart';
 import 'package:torn_pda/widgets/webviews/memory_widget_browser.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
+import 'package:torn_pda/widgets/webviews/webview_recovery.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_terminal.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
@@ -159,6 +165,9 @@ class WebViewFull extends StatefulWidget {
   final int? restoreScrollX;
   final int? restoreScrollY;
 
+  // Set when the tab is rebuilt after a failure: placeholder plus main frame retries (Android only)
+  final String? recoveryReason;
+
   const WebViewFull({
     required this.tabUid,
     this.windowId,
@@ -171,6 +180,7 @@ class WebViewFull extends StatefulWidget {
     this.key,
     this.restoreScrollX,
     this.restoreScrollY,
+    this.recoveryReason,
 
     // Chaining
     this.isChainingBrowser = false,
@@ -354,6 +364,11 @@ class WebViewFullState extends State<WebViewFull>
   /// The blank page must never reach the tab state (URL, title, history, scroll)
   bool _isParkingBlank(Uri? uri) => _parkedUrl != null && uri?.toString() == _blankUrl;
 
+  // Rebuild recovery (Android): placeholder over the new webview plus main frame retries
+  WebviewRecovery? _recovery;
+  bool _restoreScrollAfterRebuild = false;
+  bool _backgroundSnapshotRequested = false;
+
   bool _foundDisposedRotation = false;
   int _disposedScrollX = 0;
   int _disposedScrollY = 0;
@@ -469,6 +484,27 @@ class WebViewFullState extends State<WebViewFull>
       _scrollX = widget.restoreScrollX ?? 0;
       _scrollY = widget.restoreScrollY ?? 0;
       _scrollAfterLoad = true;
+      _restoreScrollAfterRebuild = widget.recoveryReason != null;
+    }
+
+    if (Platform.isAndroid && widget.recoveryReason != null) {
+      // Taken here even with the kill switch off, so no capture outlives the tab that owns it
+      final Uint8List? shot = _webViewProvider.getTabByUid(_tabUid)?.rendererGoneSnapshot;
+      _webViewProvider.clearTabSnapshot(_tabUid);
+
+      if (_settingsProvider.browserRecoveryOverlayActive) {
+        _recovery = WebviewRecovery(
+          reason: widget.recoveryReason!,
+          snapshot: shot,
+          urlToReload: () => (widget.customUrl?.isNotEmpty ?? false) ? widget.customUrl! : _currentUrl,
+          tabCount: () => _webViewProvider.tabList.length,
+          onReload: _reloadForRecovery,
+          onChanged: () {
+            if (mounted) setState(() {});
+          },
+          onLog: _logRecovery,
+        );
+      }
     }
 
     // We will later changed this for a listenable one in build()
@@ -528,12 +564,14 @@ class WebViewFullState extends State<WebViewFull>
           ? true
           : false,
       transparentBackground: true,
+      hardwareAcceleration: _webViewProvider.webViewHardwareLayerActive,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
       // Android: handle renderer-process death when OOM / crashed WebView
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
       javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
+      isInspectable: kDebugMode,
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
@@ -632,6 +670,9 @@ class WebViewFullState extends State<WebViewFull>
   @override
   void dispose() async {
     try {
+      // Before anything that can throw, so the snapshot never stays in the image cache
+      _recovery?.dispose();
+
       _webViewCreatedWatchdog?.cancel();
       _reloadWatchdog?.cancel();
       _blankTabCheckTimer?.cancel();
@@ -674,13 +715,20 @@ class WebViewFullState extends State<WebViewFull>
 
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+        if (!_backgroundSnapshotRequested) {
+          _backgroundSnapshotRequested = true;
+          _captureTabSnapshot();
+        }
         if (_webViewProvider.browserDoNotPauseWebview) return;
         webViewController?.pauseTimers();
       } else {
         webViewController?.resumeTimers();
         // A renderer killed while we were in background
         if (state == AppLifecycleState.resumed) {
+          _backgroundSnapshotRequested = false;
+          final bool willRebuild = _webViewProvider.getTabByUid(_tabUid)?.needsReloadAfterRendererGone ?? false;
           _webViewProvider.reloadActiveTabIfRendererGone();
+          if (!willRebuild) _webViewProvider.clearTabSnapshot(_tabUid);
         }
       }
     }
@@ -1338,6 +1386,8 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addPageReloadHandler(webview: webViewController!);
 
+            WebviewHandlers.addCityShopPurchaseHandler(webview: webViewController!);
+
             WebviewHandlers.addThemeChangeHandler(
               webview: webViewController!,
               setStateCallback: setState,
@@ -1354,6 +1404,10 @@ class WebViewFullState extends State<WebViewFull>
             WebviewHandlers.addLoadoutChangeHandler(webview: webViewController!);
 
             WebviewHandlers.addScriptApiHandlers(webview: webViewController!);
+
+            WebviewHandlers.addTornChatCacheTrimHandler(webview: webViewController!, webViewProvider: _webViewProvider);
+
+            WebviewHandlers.addLocalStorageMeasuredHandler(webview: webViewController!, webViewProvider: _webViewProvider);
 
             WebviewHandlers.addToastHandler(webview: webViewController!);
 
@@ -1526,6 +1580,7 @@ class WebViewFullState extends State<WebViewFull>
             // Ignore the parking placeholder; a real page taking over unparks the tab
             if (_isParkingBlank(uri)) return;
             if (_isParked && uri != null) _isParked = false;
+            _recovery?.onLoadStart();
 
             _heightExtendInjected = false;
 
@@ -1666,6 +1721,7 @@ class WebViewFullState extends State<WebViewFull>
             if (!mounted) return;
             _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
+            _recovery?.onLoadStopBegin();
             if (_isParked && uri != null) _isParked = false;
 
             // Consumed here: clearing it further down (past several awaits that throw) could
@@ -1795,9 +1851,16 @@ class WebViewFullState extends State<WebViewFull>
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
-              if (restoreScrollNow && _settingsProvider.restoreScrollAfterReload) {
+              // A recovery error page keeps the rebuild target for the retry that loads
+              final bool recoveryErrorPage = _recovery?.waitingRetry ?? false;
+              if (restoreScrollNow &&
+                  !recoveryErrorPage &&
+                  (_settingsProvider.restoreScrollAfterReload || _restoreScrollAfterRebuild)) {
+                _restoreScrollAfterRebuild = false;
                 webViewController!.scrollTo(x: _scrollX ?? 0, y: _scrollY ?? 0);
               }
+
+              _recovery?.onLoadStopEnd();
 
               // If we have a disposed rotation, we scroll to the last position
               if (_foundDisposedRotation) {
@@ -2034,6 +2097,9 @@ class WebViewFullState extends State<WebViewFull>
                 return;
               }
               if (!consoleMessage.message.contains("Refused to connect to ") &&
+                  !(consoleMessage.message.contains("TypeError: Load failed") &&
+                      (consoleMessage.message.contains("torn.com/js/debug/sentry") ||
+                          consoleMessage.message.contains("torn.com/builds/"))) &&
                   !consoleMessage.message.contains("Blocked a frame with origin") &&
                   !consoleMessage.message.contains("has been blocked by CORS policy") &&
                   !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
@@ -2112,6 +2178,7 @@ class WebViewFullState extends State<WebViewFull>
                 final DateTime now = DateTime.now();
                 if (_lastRendererGoneRecorded == null || now.difference(_lastRendererGoneRecorded!).inSeconds >= 2) {
                   _lastRendererGoneRecorded = now;
+                  Prefs().setLastRendererGoneMs(now.millisecondsSinceEpoch);
 
                   // Every tab reports the same death but only one report is saved, so describe the
                   // tab the user has open and not the one that was reported first
@@ -2136,6 +2203,37 @@ class WebViewFullState extends State<WebViewFull>
               }
             } catch (_) {}
 
+            // One event per webview of the shared renderer
+            try {
+              if (!Platform.isWindows) {
+                analytics?.logEvent(
+                  name: "webview_renderer_gone",
+                  parameters: {
+                    "did_crash": detail.didCrash ? 1 : 0,
+                    "hw_layer": _webViewProvider.webViewHardwareLayerActiveForTelemetry ? "on" : "off",
+                    "chat_limit_mb": _webViewProvider.tornChatCacheLimitActiveMb,
+                    "source": "full",
+                    "is_window": widget.windowId != null ? 1 : 0,
+                    "tabs": _webViewProvider.tabList.length,
+                    "resumed": appResumed ? 1 : 0,
+                    "ls_kb": _webViewProvider.lastLocalStorageMeasuredTotalKb,
+                  },
+                );
+                if (rebuildNow) {
+                  analytics?.logEvent(
+                    name: "webview_renderer_gone_fg",
+                    parameters: {
+                      "did_crash": detail.didCrash ? 1 : 0,
+                      "hw_layer": _webViewProvider.webViewHardwareLayerActiveForTelemetry ? "on" : "off",
+                      "chat_limit_mb": _webViewProvider.tornChatCacheLimitActiveMb,
+                      "tabs": _webViewProvider.tabList.length,
+                      "ls_kb": _webViewProvider.lastLocalStorageMeasuredTotalKb,
+                    },
+                  );
+                }
+              }
+            } catch (_) {}
+
             logToUser(
               "💥 Android renderer gone (didCrash=${detail.didCrash}, resumed=$appResumed): "
               "${rebuildNow ? 'rebuilding this tab' : 'marked, will reload on focus'}",
@@ -2155,6 +2253,7 @@ class WebViewFullState extends State<WebViewFull>
           onReceivedError: (c, request, error) {
             if (!(request.isForMainFrame ?? false)) return;
             _recordBrowserFailure("load_error", "${error.type}", url: request.url);
+            _recovery?.onLoadFailure("${error.type}");
           },
           onReceivedHttpError: (c, request, errorResponse) {
             if (!(request.isForMainFrame ?? false)) return;
@@ -2217,6 +2316,10 @@ class WebViewFullState extends State<WebViewFull>
             return HttpAuthResponse(action: HttpAuthResponseAction.CANCEL);
           },
         ),
+        if (_recovery?.visible ?? false)
+          Positioned.fill(
+            child: WebviewRecoveryOverlay(recovery: _recovery!, background: _themeProvider.canvas),
+          ),
       ],
     );
   }
@@ -2273,7 +2376,8 @@ class WebViewFullState extends State<WebViewFull>
           if (_webViewProvider.lastLockToastShown == null ||
               DateTime.now().difference(_webViewProvider.lastLockToastShown!).inSeconds > 2) {
             _webViewProvider.lastLockToastShown = DateTime.now();
-            toastification.show(
+            late final ToastificationItem lockToast;
+            lockToast = toastification.show(
               closeOnClick: true,
               alignment: Alignment.bottomCenter,
               margin: const EdgeInsets.only(bottom: 50),
@@ -2298,7 +2402,7 @@ class WebViewFullState extends State<WebViewFull>
                         ),
                       ),
                       onTap: () {
-                        toastification.dismissAll();
+                        toastification.dismiss(lockToast);
                         _forceAllowWhenLocked = true;
                         webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri.uri(incomingUrl)));
                         Future.delayed(const Duration(seconds: 2), () {
@@ -2509,15 +2613,32 @@ class WebViewFullState extends State<WebViewFull>
     );
   }
 
+  // Independent from the userscripts switch, and useless after document start
+  List<UserScript> _tornChatCacheTrimScript() {
+    return [
+      UserScript(
+        groupName: "__TornPDA_ChatCacheTrim__",
+        injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+        source: handler_tornChatCacheTrim(
+          _webViewProvider.tornChatCacheLimitActiveMb,
+          _webViewProvider.localStorageSafetyMbRC,
+        ),
+      ),
+    ];
+  }
+
   /// Registers the handler bundle (GM API, PDA API,...)
   /// These scripts never change, so unlike user scripts we must not remove them
   Future<void> _ensureHandlersInjected() async {
     if (webViewController == null || _handlersInjected) return;
-    final handlers = _userScriptsProvider.getHandlerSources(
-      apiKey: UserHelper.apiKey,
-      tabUid: _tabUid,
-      activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
-    );
+    final handlers = [
+      ..._userScriptsProvider.getHandlerSources(
+        apiKey: UserHelper.apiKey,
+        tabUid: _tabUid,
+        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+      ),
+      ..._tornChatCacheTrimScript(),
+    ];
     await webViewController!.addUserScripts(userScripts: handlers.map(_guardedOnce).toList());
     _handlersInjected = true;
   }
@@ -2597,6 +2718,7 @@ class WebViewFullState extends State<WebViewFull>
         tabUid: _tabUid,
         activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
       ),
+      ..._tornChatCacheTrimScript(),
       if (_initialUrl?.url != null)
         ..._userScriptsProvider.getCondSources(
           url: _initialUrl!.url.toString(),
@@ -3169,6 +3291,46 @@ class WebViewFullState extends State<WebViewFull>
         : const SizedBox.shrink();
   }
 
+  void _logRecovery(String message) {
+    if (Platform.isWindows) return;
+    try {
+      FirebaseCrashlytics.instance.log(message);
+    } catch (_) {}
+  }
+
+  void _reloadForRecovery(String url) {
+    if (_restoreScrollAfterRebuild) {
+      _scrollX = widget.restoreScrollX ?? 0;
+      _scrollY = widget.restoreScrollY ?? 0;
+      _scrollAfterLoad = true;
+    }
+    try {
+      webViewController?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
+    } catch (_) {
+      _recovery?.onLoadFailure("load_threw");
+    }
+  }
+
+  Future<void> _captureTabSnapshot() async {
+    if (!Platform.isAndroid || !_settingsProvider.browserRecoveryOverlayActive) return;
+    final InAppWebViewController? controller = webViewController;
+    if (controller == null || _isParked || (_recovery?.active ?? false)) return;
+    if (!_webViewProvider.isTabUidActive(_tabUid)) return;
+    // An off screen webview can return a blank frame
+    if (!_webViewProvider.browserShowInForeground && !_webViewProvider.webViewSplitActive) return;
+    if (_currentUrl.isEmpty || _currentUrl == _blankUrl) return;
+
+    try {
+      final Uint8List? shot = await controller.takeScreenshot(
+        screenshotConfiguration: ScreenshotConfiguration(compressFormat: CompressFormat.JPEG, quality: 60),
+      );
+      if (shot == null || shot.isEmpty) return;
+      // The app came back while the capture was running
+      if (!mounted || !_backgroundSnapshotRequested) return;
+      _webViewProvider.storeTabSnapshot(_tabUid, shot);
+    } catch (_) {}
+  }
+
   /// Armed as soon as the spinner shows, so a platform channel that never answers
   /// (dead renderer) can't leave the spinner running forever
   void _setReloadInProgress(bool value) {
@@ -3228,6 +3390,7 @@ class WebViewFullState extends State<WebViewFull>
           _webViewProvider.rebuildUnresponsiveWebView(
             isChainingBrowser: _isChainingBrowser,
             chainingPayload: _chainingPayload,
+            reason: "disposed_controller",
           );
           logToUser("Found crashed browser, trying to rebuild!", duration: 5);
           _setReloadInProgress(false);
@@ -3319,6 +3482,20 @@ class WebViewFullState extends State<WebViewFull>
     _assessBugReportsWarning();
     _assessOldLoaderRedirect(document);
     await _assessCityShopBuy100();
+    await _assessCityShopPurchaseHook();
+  }
+
+  // Only players with city shop alerts on and auto-pause enabled report purchases
+  Future _assessCityShopPurchaseHook() async {
+    if (!_currentUrl.contains('shops.php')) return;
+    if (!await Prefs().getCityShopAutoPauseEnabled()) return;
+    try {
+      final profile = await FirestoreHelper().getUserProfile();
+      if (profile?.cityShopRestockNotification != true) return;
+    } catch (e) {
+      return;
+    }
+    await webViewController?.evaluateJavascript(source: cityShopsPurchaseHookJS());
   }
 
   Future _assessCityShopBuy100() async {
@@ -4579,9 +4756,11 @@ class WebViewFullState extends State<WebViewFull>
                 apiKey: UserHelper.apiKey,
                 profileCheckType: ProfileCheckType.attack,
                 themeProvider: _themeProvider,
+                onStatusFetched: _onAttackTargetStatus,
               );
             } else {
               _profileAttackWidget = const SizedBox.shrink();
+              _fetchAttackTargetStatus(userId);
             }
           });
         } catch (e) {
@@ -4589,6 +4768,19 @@ class WebViewFullState extends State<WebViewFull>
         }
       }
     }
+  }
+
+  Future<void> _fetchAttackTargetStatus(int userId) async {
+    final result = await ApiCallsV1.getOtherProfileBasic(playerId: userId.toString());
+    if (result is BasicProfileModel) {
+      _onAttackTargetStatus(result.status?.state, result.status?.until);
+    }
+  }
+
+  void _onAttackTargetStatus(String? state, int? until) {
+    if (!mounted || state != "Hospital" || until == null) return;
+    if (!_currentUrl.contains("sid=attack&user2ID=") && !_currentUrl.contains("sid=getInAttack&user2ID=")) return;
+    webViewController?.evaluateJavascript(source: hospitalTimerJS(until: until));
   }
 
   Future _assessBarsRedirect(dom.Document document) async {
@@ -4884,6 +5076,14 @@ class WebViewFullState extends State<WebViewFull>
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
 
+      // Avoid then traveling or abroad
+      final playerState = stats.status?.state;
+      if (isTraveling(state: playerState) ||
+          countryCheck(state: playerState, description: stats.status?.description) != "Torn") {
+        return;
+      }
+
+      late final ToastificationItem wasteToast;
       final List<Widget> warnRows = [];
       final List<Widget> cooldownRows = [];
 
@@ -4926,7 +5126,7 @@ class WebViewFullState extends State<WebViewFull>
                     child: Image.asset('images/icons/map/gym.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
                       _loadUrl("https://www.torn.com/gym.php");
-                      toastification.dismissAll();
+                      toastification.dismiss(wasteToast);
                     },
                   ),
                 ],
@@ -4971,7 +5171,7 @@ class WebViewFullState extends State<WebViewFull>
                     child: Image.asset('images/icons/home/crimes.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
                       _loadUrl("https://www.torn.com/page.php?sid=crimes");
-                      toastification.dismissAll();
+                      toastification.dismiss(wasteToast);
                     },
                   ),
                 ],
@@ -5018,7 +5218,7 @@ class WebViewFullState extends State<WebViewFull>
                         child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
                         onTap: () {
                           _loadUrl("https://www.torn.com/item.php#medical-items");
-                          toastification.dismissAll();
+                          toastification.dismiss(wasteToast);
                         },
                       ),
                       if (stats.faction?.factionId != 0)
@@ -5031,7 +5231,7 @@ class WebViewFullState extends State<WebViewFull>
                                 _loadUrl(
                                   "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical",
                                 );
-                                toastification.dismissAll();
+                                toastification.dismiss(wasteToast);
                               },
                             ),
                           ],
@@ -5079,7 +5279,7 @@ class WebViewFullState extends State<WebViewFull>
                         child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
                         onTap: () {
                           _loadUrl("https://www.torn.com/item.php#drugs-items");
-                          toastification.dismissAll();
+                          toastification.dismiss(wasteToast);
                         },
                       ),
                       if (stats.faction?.factionId != 0)
@@ -5092,7 +5292,7 @@ class WebViewFullState extends State<WebViewFull>
                                 _loadUrl(
                                   "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs",
                                 );
-                                toastification.dismissAll();
+                                toastification.dismiss(wasteToast);
                               },
                             ),
                           ],
@@ -5140,7 +5340,7 @@ class WebViewFullState extends State<WebViewFull>
                         child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
                         onTap: () {
                           _loadUrl("https://www.torn.com/item.php");
-                          toastification.dismissAll();
+                          toastification.dismiss(wasteToast);
                         },
                       ),
                       if (stats.faction?.factionId != 0)
@@ -5151,7 +5351,7 @@ class WebViewFullState extends State<WebViewFull>
                               child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
                               onTap: () {
                                 _loadUrl("https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0");
-                                toastification.dismissAll();
+                                toastification.dismiss(wasteToast);
                               },
                             ),
                           ],
@@ -5191,7 +5391,7 @@ class WebViewFullState extends State<WebViewFull>
                       child: Icon(MdiIcons.safe, size: 24, color: _themeProvider.mainText),
                       onTap: () {
                         _loadUrl("https://www.torn.com/properties.php#/p=options&tab=vault");
-                        toastification.dismissAll();
+                        toastification.dismiss(wasteToast);
                       },
                     ),
                 ],
@@ -5202,7 +5402,7 @@ class WebViewFullState extends State<WebViewFull>
       }
 
       if (warnRows.isNotEmpty || cooldownRows.isNotEmpty) {
-        toastification.showCustom(
+        wasteToast = toastification.showCustom(
           autoCloseDuration: const Duration(seconds: 8),
           alignment: Alignment.center,
           builder: (BuildContext context, ToastificationItem holder) {
@@ -5933,6 +6133,7 @@ class WebViewFullState extends State<WebViewFull>
         _webViewProvider.rebuildUnresponsiveWebView(
           isChainingBrowser: _isChainingBrowser,
           chainingPayload: _chainingPayload,
+          reason: "webview_never_created",
         );
       }
     });

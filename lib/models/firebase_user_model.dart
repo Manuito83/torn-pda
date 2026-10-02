@@ -6,8 +6,19 @@ class FirebaseUserModel extends OwnProfileExtended {
   String? uid;
   bool discreet = false;
   bool? travelNotification = false;
+  bool travelStocksInNotification = false;
   bool? foreignRestockNotification = false;
   bool? foreignRestockNotificationOnlyCurrentCountry = false;
+  bool foreignRestockNotificationOnlyLanded = false;
+  bool foreignRestockNotificationSellout = false;
+  bool? cityShopRestockNotification = false;
+  bool cityShopOnlyConfirmed = false;
+  bool cityShopOnlyInTorn = true;
+  bool cityShopHoursEnabled = false;
+  int cityShopHoursFrom = 0;
+  int cityShopHoursTo = 0;
+  int cityShopMutedUntil = 0;
+  Map<String, dynamic> cityShopActiveAlerts = {};
   bool? abroadStayNotification = false;
   List<int> abroadStayIntervals = [];
   bool abroadStayIncludeHospital = false;
@@ -45,6 +56,10 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool? forumsSubscription = false;
   String? laTravelPushToken;
   String? laRacingPushToken;
+  bool? workStatsNotification = false;
+  int workStatsManualLaborTarget = 0;
+  int workStatsIntelligenceTarget = 0;
+  int workStatsEnduranceTarget = 0;
 
   FirebaseUserModel();
 
@@ -66,8 +81,19 @@ class FirebaseUserModel extends OwnProfileExtended {
       "status": status,
       "discrete": discreet, // We need to accept this typo (discreet)
       "travelNotification": travelNotification,
+      "travelStocksInNotification": travelStocksInNotification,
       "foreignRestockNotification": foreignRestockNotification,
       "foreignRestockNotificationOnlyCurrentCountry": foreignRestockNotificationOnlyCurrentCountry,
+      "foreignRestockNotificationOnlyLanded": foreignRestockNotificationOnlyLanded,
+      "foreignRestockNotificationSellout": foreignRestockNotificationSellout,
+      "cityShopRestockNotification": cityShopRestockNotification,
+      "cityShopOnlyConfirmed": cityShopOnlyConfirmed,
+      "cityShopOnlyInTorn": cityShopOnlyInTorn,
+      "cityShopHoursEnabled": cityShopHoursEnabled,
+      "cityShopHoursFrom": cityShopHoursFrom,
+      "cityShopHoursTo": cityShopHoursTo,
+      "cityShopMutedUntil": cityShopMutedUntil,
+      "cityShopActiveAlerts": cityShopActiveAlerts,
       "abroadStayNotification": abroadStayNotification,
       "abroadStayIntervals": abroadStayIntervals,
       "abroadStayIncludeHospital": abroadStayIncludeHospital,
@@ -105,6 +131,10 @@ class FirebaseUserModel extends OwnProfileExtended {
       "forumsSubscriptionsNotification": forumsSubscription,
       "la_travel_push_token": laTravelPushToken,
       "la_racing_push_token": laRacingPushToken,
+      "workStatsNotification": workStatsNotification,
+      "workStatsManualLaborTarget": workStatsManualLaborTarget,
+      "workStatsIntelligenceTarget": workStatsIntelligenceTarget,
+      "workStatsEnduranceTarget": workStatsEnduranceTarget,
     };
   }
 
@@ -112,8 +142,19 @@ class FirebaseUserModel extends OwnProfileExtended {
     return FirebaseUserModel()
       ..discreet = data["discrete"] ?? false // We need to accept this typo (discreet)
       ..travelNotification = data["travelNotification"] ?? false
+      ..travelStocksInNotification = data["travelStocksInNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
       ..foreignRestockNotificationOnlyCurrentCountry = data["foreignRestockNotificationOnlyCurrentCountry"] ?? false
+      ..foreignRestockNotificationOnlyLanded = data["foreignRestockNotificationOnlyLanded"] ?? false
+      ..foreignRestockNotificationSellout = data["foreignRestockNotificationSellout"] ?? false
+      ..cityShopRestockNotification = data["cityShopRestockNotification"] ?? false
+      ..cityShopOnlyConfirmed = data["cityShopOnlyConfirmed"] ?? false
+      ..cityShopOnlyInTorn = data["cityShopOnlyInTorn"] ?? true
+      ..cityShopHoursEnabled = data["cityShopHoursEnabled"] ?? false
+      ..cityShopHoursFrom = (data["cityShopHoursFrom"] ?? 0) as int
+      ..cityShopHoursTo = (data["cityShopHoursTo"] ?? 0) as int
+      ..cityShopMutedUntil = (data["cityShopMutedUntil"] ?? 0) as int
+      ..cityShopActiveAlerts = Map<String, dynamic>.from(data["cityShopActiveAlerts"] ?? const <String, dynamic>{})
       ..abroadStayNotification = data["abroadStayNotification"] ?? false
       ..abroadStayIntervals = List<int>.from(data["abroadStayIntervals"] ?? const <int>[])
       ..abroadStayIncludeHospital = data["abroadStayIncludeHospital"] ?? false
@@ -154,6 +195,10 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..retalsNotificationDonor = data["retalsNotificationDonor"] ?? false
       ..forumsSubscription = data["forumsSubscriptionsNotification"] ?? false
       ..laTravelPushToken = data["la_travel_push_token"]
-      ..laRacingPushToken = data["la_racing_push_token"];
+      ..laRacingPushToken = data["la_racing_push_token"]
+      ..workStatsNotification = data["workStatsNotification"] ?? false
+      ..workStatsManualLaborTarget = data["workStatsManualLaborTarget"] ?? 0
+      ..workStatsIntelligenceTarget = data["workStatsIntelligenceTarget"] ?? 0
+      ..workStatsEnduranceTarget = data["workStatsEnduranceTarget"] ?? 0;
   }
 }

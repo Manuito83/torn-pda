@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 /// player-flights response (premium)
 class FFScouterFlightsResponse {
   final int? playerId;
@@ -23,7 +21,11 @@ class FFScouterFlightsResponse {
   );
 }
 
-FFScouterFlightsResponse ffScouterFlightsFromJson(String str) => FFScouterFlightsResponse.fromJson(json.decode(str));
+List<FFScouterFlightsResponse> ffScouterFlightsBatchFromJson(dynamic decoded) {
+  final flights = decoded is Map ? decoded["flights"] : null;
+  if (flights is! List) return [];
+  return flights.whereType<Map>().map((e) => FFScouterFlightsResponse.fromJson(e.cast())).toList();
+}
 
 /// A single flight
 class FFScouterFlight {

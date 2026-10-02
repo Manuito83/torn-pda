@@ -56,6 +56,7 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _initialWebViewSettings = InAppWebViewSettings(
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
+      hardwareAcceleration: context.read<WebViewProvider>().webViewHardwareLayerActive,
     );
   }
 

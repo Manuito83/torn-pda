@@ -11,6 +11,7 @@ const booleanStats = [
   "lifeNotification",
   "travelNotification",
   "foreignRestockNotification",
+  "cityShopRestockNotification",
   "hospitalNotification",
   "drugsNotification",
   "medicalNotification",
@@ -23,6 +24,7 @@ const booleanStats = [
   "factionAssistMessage",
   "retalsNotification",
   "forumsSubscriptionsNotification",
+  "workStatsNotification",
 ];
 
 // The counters are kept by adding deltas from the player triggers, which drifts

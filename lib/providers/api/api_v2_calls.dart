@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.enums.swagger.dart' as enums;
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
+import 'package:torn_pda/models/inventory/inventory_v2_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
@@ -116,6 +117,66 @@ class ApiCallsV2 {
       log("Error converting V2 OwnProfileMisc: $e, $trace");
       return null;
     }
+  }
+
+  /// Get the user's inventory for a single category (see InventoryProvider.apiCategories)
+  /// [withDisplay] reads the whole display case in the same call, whatever the category
+  /// Returns [InventoryV2Category], [ApiError] or null
+  static Future<dynamic> getUserInventory_v2({required String cat, bool withDisplay = false}) async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final List<InventoryV2Item> items = [];
+    List<InventoryV2DisplayItem>? display;
+    int timestamp = 0;
+    int offset = 0;
+
+    // Torn pages at 250
+    while (true) {
+      final int currentOffset = offset;
+      final bool askDisplay = withDisplay && currentOffset == 0;
+      final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
+        apiSelection_v2: ApiSelection_v2.userInventory,
+        apiCall: (client, apiKey) {
+          return client.userGet(
+            selections: askDisplay ? "inventory,display" : "inventory",
+            cat: cat,
+            limit: 250,
+            offset: currentOffset,
+          );
+        },
+      );
+
+      if (apiResponse is ApiError) return apiResponse;
+
+      try {
+        final body = _deepCastJson(apiResponse) as Map<String, dynamic>;
+        final node = body["inventory"];
+        if (_isSelectionError(node) || node is! Map<String, dynamic>) return null;
+
+        final page = InventoryV2Category.fromJson(node);
+        items.addAll(page.items);
+        if (page.timestamp > 0) timestamp = page.timestamp;
+
+        final displayNode = body["display"];
+        if (askDisplay && displayNode is List) {
+          try {
+            display = displayNode.whereType<Map<String, dynamic>>().map(InventoryV2DisplayItem.fromJson).toList();
+          } catch (e, trace) {
+            log("Error converting V2 InventoryV2DisplayItem: $e, $trace");
+          }
+        }
+
+        final metadata = body["_metadata"];
+        final links = metadata is Map<String, dynamic> ? metadata["links"] : null;
+        final next = links is Map<String, dynamic> ? links["next"] : null;
+        if (next == null || page.items.isEmpty) break;
+        offset = currentOffset + page.items.length;
+      } catch (e, trace) {
+        log("Error converting V2 InventoryV2Category: $e, $trace");
+        return null;
+      }
+    }
+
+    return InventoryV2Category(items: items, timestamp: timestamp, display: display);
   }
 
   /// Get the current virus coding information (item being programmed and `until` timestamp).

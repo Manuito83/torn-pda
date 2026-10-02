@@ -36,6 +36,8 @@ export const onPlayerAdded = onDocumentCreated(
       promises.push(manageStats("la_racing_enabled", 1));
     }
 
+    promises.push(deactivateOtherDocsWithToken(event.params.uid, beforeStat.token, beforeStat.playerId));
+
     await Promise.all(promises);
   }
 );
@@ -86,6 +88,10 @@ export const onPlayerDeleted = onDocumentDeleted(
       promises.push(manageStats("foreignRestockNotification", -1));
     }
 
+    if (beforeStat.cityShopRestockNotification) {
+      promises.push(manageStats("cityShopRestockNotification", -1));
+    }
+
     if (beforeStat.hospitalNotification) {
       promises.push(manageStats("hospitalNotification", -1));
     }
@@ -134,6 +140,10 @@ export const onPlayerDeleted = onDocumentDeleted(
       promises.push(manageStats("forumsSubscriptionsNotification", -1));
     }
 
+    if (beforeStat.workStatsNotification) {
+      promises.push(manageStats("workStatsNotification", -1));
+    }
+
     if (beforeStat.la_travel_push_token) {
       promises.push(manageStats("la_travel_enabled", -1));
     }
@@ -172,6 +182,9 @@ export const onPlayerUpdated = onDocumentUpdated({
   if (beforeStat.active !== afterStat.active)
     promises.push(manageStats("activeUsers", afterStat.active ? 1 : -1));
 
+  if (afterStat.active !== false && (beforeStat.token !== afterStat.token || beforeStat.active !== afterStat.active))
+    promises.push(deactivateOtherDocsWithToken(event.params.uid, afterStat.token, afterStat.playerId));
+
   if (beforeStat.alertsEnabled !== afterStat.alertsEnabled)
     promises.push(
       manageStats("alertsEnabled", afterStat.alertsEnabled ? 1 : -1)
@@ -204,6 +217,12 @@ export const onPlayerUpdated = onDocumentUpdated({
   if (beforeStat.foreignRestockNotification !== afterStat.foreignRestockNotification)
     promises.push(
       manageStats("foreignRestockNotification", afterStat.foreignRestockNotification ? 1 : -1
+      )
+    );
+
+  if (beforeStat.cityShopRestockNotification !== afterStat.cityShopRestockNotification)
+    promises.push(
+      manageStats("cityShopRestockNotification", afterStat.cityShopRestockNotification ? 1 : -1
       )
     );
 
@@ -279,6 +298,12 @@ export const onPlayerUpdated = onDocumentUpdated({
       )
     );
 
+  if (beforeStat.workStatsNotification !== afterStat.workStatsNotification)
+    promises.push(
+      manageStats("workStatsNotification", afterStat.workStatsNotification ? 1 : -1
+      )
+    );
+
   const wasLaEnabled = beforeStat.la_travel_push_token ? true : false;
   const isLaEnabled = afterStat.la_travel_push_token ? true : false;
   if (wasLaEnabled !== isLaEnabled) {
@@ -301,6 +326,7 @@ export const onPlayerUpdated = onDocumentUpdated({
     !afterStat.lifeNotification &&
     !afterStat.travelNotification &&
     !afterStat.foreignRestockNotification &&
+    !afterStat.cityShopRestockNotification &&
     !afterStat.hospitalNotification &&
     !afterStat.drugsNotification &&
     !afterStat.medicalNotification &&
@@ -311,6 +337,7 @@ export const onPlayerUpdated = onDocumentUpdated({
     !afterStat.refillsNotification &&
     !afterStat.stockMarketNotification &&
     !afterStat.forumsSubscriptionsNotification &&
+    !afterStat.workStatsNotification &&
     // NOTE: do NOT include here notifications that are outside of the main notification loop
     // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
     // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
@@ -332,6 +359,7 @@ export const onPlayerUpdated = onDocumentUpdated({
       || afterStat.lifeNotification
       || afterStat.travelNotification
       || afterStat.foreignRestockNotification
+      || afterStat.cityShopRestockNotification
       || afterStat.hospitalNotification
       || afterStat.drugsNotification
       || afterStat.medicalNotification
@@ -342,6 +370,7 @@ export const onPlayerUpdated = onDocumentUpdated({
       || afterStat.refillsNotification
       || afterStat.stockMarketNotification
       || afterStat.forumsSubscriptionsNotification
+      || afterStat.workStatsNotification
       // NOTE: do NOT include here notifications that are outside of the main notification loop
       // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
       // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
@@ -362,7 +391,7 @@ export const onPlayerUpdated = onDocumentUpdated({
   if (afterStat.retalsNotification) {
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
-    db.ref(`retals/factions/${afterStat.faction}`).once("value", snapshot => {
+    db.ref(`retals/factions/${afterStat.faction}`).once("value", (snapshot: admin.database.DataSnapshot) => {
       if (!snapshot.exists()) {
         db.ref(`retals/factions/${afterStat.faction}`).set("");
       }
@@ -371,6 +400,24 @@ export const onPlayerUpdated = onDocumentUpdated({
 
   await Promise.all(promises);
 });
+
+async function deactivateOtherDocsWithToken(uid: string, token: any, playerId: any) {
+  if (typeof token !== "string" || !token || token === "windows" || token === "error") return;
+  if (!playerId) return;
+  try {
+    const snapshot = await admin.firestore().collection("players").where("token", "==", token).get();
+    const stale = snapshot.docs.filter(
+      (doc) => doc.id !== uid && doc.get("active") === true && doc.get("playerId") === playerId
+    );
+    if (stale.length === 0) return;
+    const batch = admin.firestore().batch();
+    stale.forEach((doc) => batch.update(doc.ref, { active: false }));
+    await batch.commit();
+    console.log(`Deactivated ${stale.length} duplicate doc(s) sharing the token of ${uid}`);
+  } catch (e) {
+    console.warn(`Failed to deactivate duplicate token docs for ${uid}: ${e}`);
+  }
+}
 
 async function manageStats(statName: string, changeInValue: number) {
   const totalUserRef = admin.database().ref().child("stats").child(statName);

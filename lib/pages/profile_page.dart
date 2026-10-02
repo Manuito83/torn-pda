@@ -430,6 +430,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     return RefreshIndicator(
                       onRefresh: () async {
                         _profileApi.resetApiTimer(initCall: true, trigger: "pull-refresh");
+                        _profileApi.refreshCompanyAddiction(trigger: "pull-refresh");
                         await Future.delayed(const Duration(seconds: 1));
                       },
                       child: SingleChildScrollView(
@@ -713,11 +714,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         ),
                       );
                     },
-                    child: ExcludeSemantics(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ExcludeSemantics(
+                          child: FittedBox(
                             fit: BoxFit.fitWidth,
                             child: Row(
                               children: [
@@ -734,12 +735,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               ],
                             ),
                           ),
-                          Text(
-                            "[${_user!.playerId}] - Level ${_user!.level}",
-                            style: const TextStyle(fontSize: 10, color: Colors.white),
+                        ),
+                        Semantics(
+                          button: true,
+                          label: "Open your profile",
+                          onTapHint: "Open profile page in the browser",
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              _launchBrowser(
+                                url: "https://www.torn.com/profiles.php?XID=${_user!.playerId}",
+                                shortTap: true,
+                              );
+                            },
+                            child: ExcludeSemantics(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    "[${_user!.playerId}] - Level ${_user!.level}",
+                                    style: const TextStyle(fontSize: 10, color: Colors.white),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.only(left: 4),
+                                    child: Icon(Icons.open_in_new, size: 10, color: Colors.white70),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 )

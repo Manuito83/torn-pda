@@ -27,6 +27,7 @@ class Prefs {
   final String _kPdaUpdateDialogDisabled = "pda_updateDialogDisabled";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  final String _kLastRendererGoneMs = "pda_lastRendererGoneMs";
   final String _kPdaConnectivityCheckRC = "pda_connectivityCheckRC";
   final String _kAuthRecoveryEnabledRC = "pda_authRecoveryEnabledRC";
 
@@ -89,6 +90,13 @@ class Prefs {
   final String _kFFScouterPremiumDistribution = "pda_ffScouterPremiumDistribution";
   final String _kFFScouterPremiumFlights = "pda_ffScouterPremiumFlights";
   final String _kFFScouterPremiumActivity = "pda_ffScouterPremiumActivity";
+  final String _kFFScouterHitCallingEnabled = "pda_ffScouterHitCallingEnabled";
+  final String _kFFScouterPolicyUpdateRequired = "pda_ffScouterPolicyUpdateRequired";
+  final String _kFFScouterNotesEnabled = "pda_ffScouterNotesEnabled";
+  final String _kFFScouterNotesPreferOnCards = "pda_ffScouterNotesPreferOnCards";
+  final String _kFFScouterFactionNoteWarned = "pda_ffScouterFactionNoteWarned";
+  final String _kFFScouterBountyOrders = "pda_ffScouterBountyOrders";
+  final String _kFFScouterBountiesEnabled = "pda_ffScouterBountiesEnabled";
   final String _kFactionAssistPrefs = "pda_factionAssistPrefs";
 
   // Other
@@ -134,6 +142,7 @@ class Prefs {
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kRestoreScrollAfterReload = "pda_restoreScrollAfterReload";
+  final String _kBrowserRecoveryOverlay = "pda_browserRecoveryOverlay";
   final String _kBrowserStyleBottomBarEnabled = "pda_browserStyleAlternativeEnabled";
   final String _kBrowserStyleBottomBarType = "pda_browserStyleAlternativeType";
   final String _kBrowserBottomBarStylePlaceTabsAtBottom = "pda_browserBottomBarStylePlaceTabsAtBottom";
@@ -189,6 +198,9 @@ class Prefs {
   final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
   final String _kPreventBasketKeyboard = "pda_preventBasketKeyboard";
   final String _kCityShopsBuyMaxEnabled = "pda_cityShopsBuyMaxEnabled";
+  final String _kCityShopAutoPauseEnabled = "pda_cityShopAutoPauseEnabled";
+  final String _kCityShopBoughtDay = "pda_cityShopBoughtDay";
+  final String _kCityShopBoughtCount = "pda_cityShopBoughtCount";
   final String _kForeignStocksBuyMaxEnabled = "pda_foreignStocksBuyMaxEnabled";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
@@ -202,6 +214,8 @@ class Prefs {
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
   final String _kShowForeignInventory = "pda_showForeignInventory";
+  final String _kInventoryAutoLoad = "pda_inventoryAutoLoad";
+  final String _kInventoryCache = "pda_inventoryCache";
   final String _kShowArrivalTime = "pda_showArrivalTime";
   final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
@@ -357,6 +371,11 @@ class Prefs {
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
+  final String _kUserScriptsBulkMode = "pda_userScriptsBulkMode";
+  final String _kUserScriptsSortOrder = "pda_userScriptsSortOrder";
+  final String _kUserScriptsUpdatesFirst = "pda_userScriptsUpdatesFirst";
+  final String _kUserScriptsSearchInSource = "pda_userScriptsSearchInSource";
+  final String _kUserScriptsWarShortcutsEnabled = "pda_userScriptsWarShortcutsEnabled";
   final String _kScriptCatalogCache = "pda_scriptCatalogCache";
   final String _kScriptCatalogEnabled = "pda_scriptCatalogEnabled";
   final String _kScriptCatalogApiKey = "pda_scriptCatalogApiKey";
@@ -428,6 +447,7 @@ class Prefs {
   final String _kRemoveUnusedTabsRangeDays = "pda_removeUnusedTabsRangeDays";
 
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
+  final String _kKeepLockedTabsActive = "pda_keepLockedTabsActive";
   // Browser memory settings: RC provides the default, the user can override it ("default"/"on"/"off",
   // and 0 = follow default for the sleep period). RC values are persisted to be known at cold start
   final String _kTabSleepMinutesOverride = "pda_tabSleepMinutesOverride";
@@ -435,6 +455,13 @@ class Prefs {
   final String _kParkBackgroundTabsOverride = "pda_parkBackgroundTabsOverride";
   final String _kParkBackgroundTabsDefaultRC = "pda_parkBackgroundTabsDefaultRC";
   final String _kParkBackgroundTabsAllowedRC = "pda_parkBackgroundTabsAllowedRC";
+  final String _kWebViewHardwareLayerOverride = "pda_webViewHardwareLayerOverride";
+  final String _kWebViewHardwareLayerModeRC = "pda_webViewHardwareLayerModeRC";
+  final String _kTornChatCacheLimitUser = "pda_tornChatCacheLimitUser";
+  final String _kTornChatCacheLimitRC = "pda_tornChatCacheLimitRC";
+  final String _kTornChatCacheLastTrimMs = "pda_tornChatCacheLastTrimMs";
+  final String _kTornChatCacheLastTrimFreed = "pda_tornChatCacheLastTrimFreed";
+  final String _kLocalStorageSafetyMbRC = "pda_localStorageSafetyMbRC";
   final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
@@ -526,6 +553,7 @@ class Prefs {
   final String _kTornStatsChartRange = "pda_tornStatsChartRange";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
   final String _kTornStatsChartShowBoth = "pda_tornStatsChartShowBoth";
+  final String _kTornStatsChartHiddenStats = "pda_tornStatsChartHiddenStats";
 
   // Torn education catalog cache (Profile)
   final String _kTornEducationCatalogSave = "pda_tornEducationCatalogSave";
@@ -696,6 +724,14 @@ class Prefs {
 
   Future setLastAppUse(int value) async {
     return await PrefsDatabase.setInt(_kLastAppUse, value);
+  }
+
+  Future<int> getLastRendererGoneMs() async {
+    return await PrefsDatabase.getInt(_kLastRendererGoneMs, 0);
+  }
+
+  Future setLastRendererGoneMs(int value) async {
+    return await PrefsDatabase.setInt(_kLastRendererGoneMs, value);
   }
 
   /// ----------------------------
@@ -1318,6 +1354,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kRestoreScrollAfterReload, value);
   }
 
+  Future<bool> getBrowserRecoveryOverlay() async {
+    return await PrefsDatabase.getBool(_kBrowserRecoveryOverlay, true);
+  }
+
+  Future setBrowserRecoveryOverlay(bool value) async {
+    return await PrefsDatabase.setBool(_kBrowserRecoveryOverlay, value);
+  }
+
   Future<String> getBrowserRefreshMethod() async {
     return await PrefsDatabase.getString(_kBrowserRefreshMethod2, "both");
   }
@@ -1861,6 +1905,29 @@ class Prefs {
     return await PrefsDatabase.setBool(_kCityShopsBuyMaxEnabled, value);
   }
 
+  // Experimental: pause city shop alerts by itself when the daily purchase limit is reached
+  Future<bool> getCityShopAutoPauseEnabled() async {
+    return await PrefsDatabase.getBool(_kCityShopAutoPauseEnabled, false);
+  }
+
+  Future setCityShopAutoPauseEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kCityShopAutoPauseEnabled, value);
+  }
+
+  // Items bought in city shops, with the TCT day (yyyy-MM-dd) the count belongs to
+  Future<String> getCityShopBoughtDay() async {
+    return await PrefsDatabase.getString(_kCityShopBoughtDay, "");
+  }
+
+  Future<int> getCityShopBoughtCount() async {
+    return await PrefsDatabase.getInt(_kCityShopBoughtCount, 0);
+  }
+
+  Future setCityShopBought({required String day, required int count}) async {
+    await PrefsDatabase.setString(_kCityShopBoughtDay, day);
+    await PrefsDatabase.setInt(_kCityShopBoughtCount, count);
+  }
+
   Future<bool> getForeignStocksBuyMaxEnabled() async {
     return await PrefsDatabase.getBool(_kForeignStocksBuyMaxEnabled, true);
   }
@@ -2055,6 +2122,22 @@ class Prefs {
 
   Future setShowForeignInventory(bool value) async {
     return await PrefsDatabase.setBool(_kShowForeignInventory, value);
+  }
+
+  Future<bool> getInventoryAutoLoad() async {
+    return await PrefsDatabase.getBool(_kInventoryAutoLoad, false);
+  }
+
+  Future setInventoryAutoLoad(bool value) async {
+    return await PrefsDatabase.setBool(_kInventoryAutoLoad, value);
+  }
+
+  Future<String> getInventoryCache() async {
+    return await PrefsDatabase.getString(_kInventoryCache, "");
+  }
+
+  Future setInventoryCache(String value) async {
+    return await PrefsDatabase.setString(_kInventoryCache, value);
   }
 
   Future<bool> getShowArrivalTime() async {
@@ -3479,6 +3562,62 @@ class Prefs {
     return await PrefsDatabase.setBool(_kFFScouterPremiumActivity, value);
   }
 
+  Future<bool> getFFScouterHitCallingEnabled() async {
+    return await PrefsDatabase.getBool(_kFFScouterHitCallingEnabled, true);
+  }
+
+  Future setFFScouterHitCallingEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterHitCallingEnabled, value);
+  }
+
+  Future<bool> getFFScouterPolicyUpdateRequired() async {
+    return await PrefsDatabase.getBool(_kFFScouterPolicyUpdateRequired, false);
+  }
+
+  Future setFFScouterPolicyUpdateRequired(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterPolicyUpdateRequired, value);
+  }
+
+  Future<bool> getFFScouterNotesEnabled() async {
+    return await PrefsDatabase.getBool(_kFFScouterNotesEnabled, true);
+  }
+
+  Future setFFScouterNotesEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterNotesEnabled, value);
+  }
+
+  Future<bool> getFFScouterNotesPreferOnCards() async {
+    return await PrefsDatabase.getBool(_kFFScouterNotesPreferOnCards, false);
+  }
+
+  Future setFFScouterNotesPreferOnCards(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterNotesPreferOnCards, value);
+  }
+
+  Future<bool> getFFScouterFactionNoteWarned() async {
+    return await PrefsDatabase.getBool(_kFFScouterFactionNoteWarned, false);
+  }
+
+  Future setFFScouterFactionNoteWarned(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterFactionNoteWarned, value);
+  }
+
+  Future<List<String>> getFFScouterBountyOrders() async {
+    return await PrefsDatabase.getStringList(_kFFScouterBountyOrders, []);
+  }
+
+  Future setFFScouterBountyOrders(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kFFScouterBountyOrders, value);
+  }
+
+  Future<bool> getFFScouterBountiesEnabled() async {
+    return await PrefsDatabase.getBool(_kFFScouterBountiesEnabled, true);
+  }
+
+  Future setFFScouterBountiesEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kFFScouterBountiesEnabled, value);
+  }
+
   /// 0 = Off (FFS never overrides spied). 1-12 = months threshold.
   /// When set, FFS replaces spied stats on cards if the spy is older than X months.
   Future<int> getFfsOverrideSpyMonths() async {
@@ -3547,6 +3686,14 @@ class Prefs {
 
   Future setTornStatsChartShowBoth(bool value) async {
     return await PrefsDatabase.setBool(_kTornStatsChartShowBoth, value);
+  }
+
+  Future<List<String>> getTornStatsChartHiddenStats() async {
+    return await PrefsDatabase.getStringList(_kTornStatsChartHiddenStats, <String>[]);
+  }
+
+  Future setTornStatsChartHiddenStats(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kTornStatsChartHiddenStats, value);
   }
 
   Future<String> getTornEducationCatalogSave() async {
@@ -3672,6 +3819,56 @@ class Prefs {
 
   Future setUserScriptsGlobalDisableState(String value) async {
     return await PrefsDatabase.setString(_kUserScriptsGlobalDisableState, value);
+  }
+
+  // --
+
+  Future<String> getUserScriptsBulkMode() async {
+    return await PrefsDatabase.getString(_kUserScriptsBulkMode, "none");
+  }
+
+  Future setUserScriptsBulkMode(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsBulkMode, value);
+  }
+
+  // --
+
+  Future<String> getUserScriptsSortOrder() async {
+    return await PrefsDatabase.getString(_kUserScriptsSortOrder, "name");
+  }
+
+  Future setUserScriptsSortOrder(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsSortOrder, value);
+  }
+
+  // --
+
+  Future<bool> getUserScriptsUpdatesFirst() async {
+    return await PrefsDatabase.getBool(_kUserScriptsUpdatesFirst, false);
+  }
+
+  Future setUserScriptsUpdatesFirst(bool value) async {
+    return await PrefsDatabase.setBool(_kUserScriptsUpdatesFirst, value);
+  }
+
+  // --
+
+  Future<bool> getUserScriptsSearchInSource() async {
+    return await PrefsDatabase.getBool(_kUserScriptsSearchInSource, false);
+  }
+
+  Future setUserScriptsSearchInSource(bool value) async {
+    return await PrefsDatabase.setBool(_kUserScriptsSearchInSource, value);
+  }
+
+  // --
+
+  Future<bool> getUserScriptsWarShortcutsEnabled() async {
+    return await PrefsDatabase.getBool(_kUserScriptsWarShortcutsEnabled, true);
+  }
+
+  Future setUserScriptsWarShortcutsEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kUserScriptsWarShortcutsEnabled, value);
   }
 
   Future<List<String>> getUserScriptsForcedVersions() async {
@@ -3942,6 +4139,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kOnlyLoadTabsWhenUsed, value);
   }
 
+  Future<bool> getKeepLockedTabsActive() async {
+    return await PrefsDatabase.getBool(_kKeepLockedTabsActive, false);
+  }
+
+  Future setKeepLockedTabsActive(bool value) async {
+    return await PrefsDatabase.setBool(_kKeepLockedTabsActive, value);
+  }
+
   /// 0 means "follow the Remote Config default"
   Future<int> getTabSleepMinutesOverride() async {
     return await PrefsDatabase.getInt(_kTabSleepMinutesOverride, 0);
@@ -3985,6 +4190,62 @@ class Prefs {
 
   Future setParkBackgroundTabsAllowedRC(bool value) async {
     return await PrefsDatabase.setBool(_kParkBackgroundTabsAllowedRC, value);
+  }
+
+  Future<String> getWebViewHardwareLayerOverride() async {
+    return await PrefsDatabase.getString(_kWebViewHardwareLayerOverride, "default");
+  }
+
+  Future setWebViewHardwareLayerOverride(String value) async {
+    return await PrefsDatabase.setString(_kWebViewHardwareLayerOverride, value);
+  }
+
+  Future<String> getWebViewHardwareLayerModeRC() async {
+    return await PrefsDatabase.getString(_kWebViewHardwareLayerModeRC, "default_on");
+  }
+
+  Future setWebViewHardwareLayerModeRC(String value) async {
+    return await PrefsDatabase.setString(_kWebViewHardwareLayerModeRC, value);
+  }
+
+  Future<int> getTornChatCacheLimitUser() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLimitUser, 0);
+  }
+
+  Future setTornChatCacheLimitUser(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLimitUser, value);
+  }
+
+  Future<int> getTornChatCacheLimitRC() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLimitRC, 0);
+  }
+
+  Future setTornChatCacheLimitRC(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLimitRC, value);
+  }
+
+  Future<int> getTornChatCacheLastTrimMs() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLastTrimMs, 0);
+  }
+
+  Future setTornChatCacheLastTrimMs(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLastTrimMs, value);
+  }
+
+  Future<int> getTornChatCacheLastTrimFreed() async {
+    return await PrefsDatabase.getInt(_kTornChatCacheLastTrimFreed, 0);
+  }
+
+  Future setTornChatCacheLastTrimFreed(int value) async {
+    return await PrefsDatabase.setInt(_kTornChatCacheLastTrimFreed, value);
+  }
+
+  Future<int> getLocalStorageSafetyMbRC() async {
+    return await PrefsDatabase.getInt(_kLocalStorageSafetyMbRC, 3);
+  }
+
+  Future setLocalStorageSafetyMbRC(int value) async {
+    return await PrefsDatabase.setInt(_kLocalStorageSafetyMbRC, value);
   }
 
   Future<bool> getAutomaticChangeToNewTabFromURL() async {

@@ -82,6 +82,8 @@ class TabDetails {
   // Last known scroll at renderer death, restored by the rebuilt webview
   int? rendererGoneScrollX;
   int? rendererGoneScrollY;
+  // Captured while the app is backgrounded (Android only)
+  Uint8List? rendererGoneSnapshot;
   // Kept so a deferred rebuild (on focus) can restore a chaining tab's payload
   ChainingPayload? chainingPayload;
 }
@@ -135,6 +137,8 @@ class WebViewProvider extends ChangeNotifier {
   // Valid user choices for the two browser memory settings (0 and "default" follow Remote Config)
   static const List<int> tabSleepMinutesOptions = [0, 30, 60, 360, 720];
   static const List<String> parkOverrideOptions = ["default", "on", "off"];
+
+  static const List<String> _recoveryRebuildReasons = ["renderer_gone", "disposed_controller", "webview_never_created"];
 
   // Time for hibernating idle background tabs. Memory pressure hibernates immediately (below)
   // Remote Config sets the default; the user can override it
@@ -190,6 +194,136 @@ class WebViewProvider extends ChangeNotifier {
     if (_parkBackgroundTabsOverride == "on") return true;
     if (_parkBackgroundTabsOverride == "off") return false;
     return _parkBackgroundTabsDefaultRC;
+  }
+
+  // Android: each webview draws into its own hardware layer (plugin default)
+  // Remote Config: users choose with "default_on" / "default_off", or it is fixed with "force_on" / "force_off"
+  static const List<String> webViewHardwareLayerModes = ["default_on", "default_off", "force_on", "force_off"];
+
+  String _webViewHardwareLayerModeRC = "default_on";
+  String get webViewHardwareLayerModeRC => _webViewHardwareLayerModeRC;
+  set webViewHardwareLayerModeRC(String value) {
+    _webViewHardwareLayerModeRC = webViewHardwareLayerModes.contains(value) ? value : "default_on";
+    Prefs().setWebViewHardwareLayerModeRC(_webViewHardwareLayerModeRC);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  bool get webViewHardwareLayerForced => _webViewHardwareLayerModeRC.startsWith("force_");
+  bool get webViewHardwareLayerDefaultRC => _webViewHardwareLayerModeRC.endsWith("_on");
+
+  // "default" (follow Remote Config), "on" or "off"
+  String _webViewHardwareLayerOverride = "default";
+  String get webViewHardwareLayerOverride => _webViewHardwareLayerOverride;
+  set webViewHardwareLayerOverride(String value) {
+    _webViewHardwareLayerOverride = value;
+    Prefs().setWebViewHardwareLayerOverride(value);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  bool get webViewHardwareLayerActive {
+    if (webViewHardwareLayerForced) return webViewHardwareLayerDefaultRC;
+    if (_webViewHardwareLayerOverride == "on") return true;
+    if (_webViewHardwareLayerOverride == "off") return false;
+    return webViewHardwareLayerDefaultRC;
+  }
+
+  // iOS ignores the hardware layer setting
+  bool get webViewHardwareLayerActiveForTelemetry => Platform.isAndroid ? webViewHardwareLayerActive : true;
+
+  String get webViewHardwareLayerSourceForTelemetry {
+    if (!Platform.isAndroid) return "rc";
+    if (webViewHardwareLayerForced) return "rc";
+    return _webViewHardwareLayerOverride == "default" ? "rc" : "user";
+  }
+
+  // TORN's chat local storage allowance in MB
+  // -1 = off for everyone
+  // 0 = users choose
+  // 1-5 = forced to that many MB
+  static const List<int> tornChatCacheLimitOptions = [0, 1, 2, 3, 4, 5];
+
+  int _tornChatCacheLimitUser = 0;
+  int get tornChatCacheLimitUser => _tornChatCacheLimitUser;
+  set tornChatCacheLimitUser(int value) {
+    _tornChatCacheLimitUser = value;
+    Prefs().setTornChatCacheLimitUser(value);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  // Remote Config: -1 off for everyone, 0 users choose, 1-5 forced to that many MB
+  int _tornChatCacheLimitRC = 0;
+  int get tornChatCacheLimitRC => _tornChatCacheLimitRC;
+  set tornChatCacheLimitRC(int value) {
+    _tornChatCacheLimitRC = value;
+    Prefs().setTornChatCacheLimitRC(value);
+    _reportExperimentUserProperties();
+    notifyListeners();
+  }
+
+  int _tornChatCacheLastTrimMs = 0;
+  int get tornChatCacheLastTrimMs => _tornChatCacheLastTrimMs;
+  int _tornChatCacheLastTrimFreed = 0;
+  int get tornChatCacheLastTrimFreed => _tornChatCacheLastTrimFreed;
+
+  void recordTornChatCacheTrim(int freedBytes) {
+    _tornChatCacheLastTrimMs = DateTime.now().millisecondsSinceEpoch;
+    _tornChatCacheLastTrimFreed = freedBytes;
+    Prefs().setTornChatCacheLastTrimMs(_tornChatCacheLastTrimMs);
+    Prefs().setTornChatCacheLastTrimFreed(freedBytes);
+    notifyListeners();
+  }
+
+  int get tornChatCacheLimitActiveMb {
+    if (_tornChatCacheLimitRC < 0) return 0;
+    if (_tornChatCacheLimitRC > 0) return _tornChatCacheLimitRC.clamp(1, 5);
+    return _tornChatCacheLimitUser;
+  }
+
+  int _localStorageSafetyMbRC = 3;
+  int get localStorageSafetyMbRC => _localStorageSafetyMbRC;
+  set localStorageSafetyMbRC(int value) {
+    _localStorageSafetyMbRC = value;
+    Prefs().setLocalStorageSafetyMbRC(value);
+    notifyListeners();
+  }
+
+  int _lastLocalStorageMeasuredTotalKb = -1;
+  int get lastLocalStorageMeasuredTotalKb => _lastLocalStorageMeasuredTotalKb;
+  String? _lastReportedLsTotalMb;
+
+  void recordLocalStorageMeasurement({required int totalBytes, required int chatBytes, required String topKeys}) {
+    _lastLocalStorageMeasuredTotalKb = totalBytes ~/ 1024;
+    if (Platform.isWindows) return;
+
+    final crashlytics = FirebaseCrashlytics.instance;
+    crashlytics.setCustomKey("ls_total_kb", _lastLocalStorageMeasuredTotalKb);
+    crashlytics.setCustomKey("ls_chat_kb", chatBytes ~/ 1024);
+    crashlytics.setCustomKey("ls_top_keys", topKeys);
+
+    final String totalMb = (((totalBytes * 2) ~/ (1024 * 1024)) / 2).toStringAsFixed(1);
+    if (totalMb != _lastReportedLsTotalMb) {
+      _lastReportedLsTotalMb = totalMb;
+      analytics?.setUserProperty(name: "ls_total_mb", value: totalMb);
+    }
+  }
+
+  void _reportExperimentUserProperties() {
+    if (Platform.isWindows) return;
+    final String hwLayer = webViewHardwareLayerActiveForTelemetry ? "on" : "off";
+    final String hwLayerSrc = webViewHardwareLayerSourceForTelemetry;
+    final String chatLimit = tornChatCacheLimitActiveMb.toString();
+
+    analytics?.setUserProperty(name: "wv_hw_layer", value: hwLayer);
+    analytics?.setUserProperty(name: "wv_hw_layer_src", value: hwLayerSrc);
+    analytics?.setUserProperty(name: "wv_chat_limit_mb", value: chatLimit);
+
+    final crashlytics = FirebaseCrashlytics.instance;
+    crashlytics.setCustomKey("wv_hw_layer", hwLayer);
+    crashlytics.setCustomKey("wv_hw_layer_src", hwLayerSrc);
+    crashlytics.setCustomKey("wv_chat_limit_mb", chatLimit);
   }
 
   // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
@@ -480,6 +614,24 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Locked tabs are exempt from lazy load, timed sleep and parking (not from memory pressure)
+  var _keepLockedTabsActive = false;
+  bool get keepLockedTabsActive => _keepLockedTabsActive;
+  set keepLockedTabsActive(bool value) {
+    _keepLockedTabsActive = value;
+    Prefs().setKeepLockedTabsActive(_keepLockedTabsActive);
+    if (value) _wakeSleepingLockedTabs();
+    notifyListeners();
+  }
+
+  void _wakeSleepingLockedTabs() {
+    for (final tab in _tabList) {
+      if (!tab.isLocked || !tab.sleepTab || tab.sleepingWebView == null) continue;
+      tab.sleepTab = false;
+      tab.webView = _buildRealWebViewFromSleeping(tab.sleepingWebView!);
+    }
+  }
+
   var _automaticChangeToNewTabFromURL = true;
   bool get automaticChangeToNewTabFromURL => _automaticChangeToNewTabFromURL;
   set automaticChangeToNewTabFromURL(bool value) {
@@ -707,6 +859,7 @@ class WebViewProvider extends ChangeNotifier {
     final savedJson = await Prefs().getWebViewSecondaryTabs();
     final savedWebViews = tabSaveModelFromJson(savedJson);
     final bool sleepTabsByDefault = await Prefs().getOnlyLoadTabsWhenUsed();
+    final bool keepLocked = await Prefs().getKeepLockedTabsActive();
 
     _secondaryInitialised = true;
 
@@ -714,7 +867,7 @@ class WebViewProvider extends ChangeNotifier {
       if (useTabs) {
         await addTab(
           tabKey: wv.tabKey,
-          sleepTab: sleepTabsByDefault,
+          sleepTab: sleepTabsByDefault && !(keepLocked && wv.isLocked),
           url: wv.url,
           pageTitle: wv.pageTitle,
           chatRemovalActive: wv.chatRemovalActive,
@@ -1025,6 +1178,7 @@ class WebViewProvider extends ChangeNotifier {
       // continue (not return): keep evaluating the rest of the list
       if (tab.webView == null || tab.sleepTab || tab.isChainingBrowser || i == currentTab) continue;
       if (!force) {
+        if (_keepLockedTabsActive && tab.isLocked) continue;
         if (tab.lastUsedTimeDT == null) continue;
         if (now.difference(tab.lastUsedTimeDT!) < Duration(minutes: tabSleepMinutesActive)) continue;
       }
@@ -1033,6 +1187,7 @@ class WebViewProvider extends ChangeNotifier {
       tab.needsReloadAfterRendererGone = false;
       tab.rendererGoneScrollX = null;
       tab.rendererGoneScrollY = null;
+      tab.rendererGoneSnapshot = null;
       tab.sleepTab = true;
       tab.webView = null;
       tab.sleepingWebView = SleepingWebView(
@@ -1067,6 +1222,7 @@ class WebViewProvider extends ChangeNotifier {
       final tab = _tabList[i];
       if (tab.webView == null || tab.sleepTab || tab.isChainingBrowser) continue;
       if (tab.needsReloadAfterRendererGone) continue;
+      if (_keepLockedTabsActive && tab.isLocked) continue;
       final WebViewFullState? state = tab.webViewKey?.currentState;
       if (state != null) targets.add(state);
     }
@@ -1118,10 +1274,29 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
-  void rebuildUnresponsiveWebView({String? tabUid, required bool isChainingBrowser, required dynamic chainingPayload}) {
+  void storeTabSnapshot(String tabUid, Uint8List? bytes) {
+    final int index = _tabList.indexWhere((t) => t.id == tabUid);
+    if (index < 0) return;
+    _tabList[index].rendererGoneSnapshot = bytes;
+  }
+
+  void clearTabSnapshot(String tabUid) {
+    final int index = _tabList.indexWhere((t) => t.id == tabUid);
+    if (index < 0) return;
+    _tabList[index].rendererGoneSnapshot = null;
+  }
+
+  void rebuildUnresponsiveWebView({
+    String? tabUid,
+    required bool isChainingBrowser,
+    required dynamic chainingPayload,
+    String reason = "renderer_gone",
+  }) {
     final int index = tabUid == null ? currentTab : _tabList.indexWhere((t) => t.id == tabUid);
     if (index < 0 || index >= _tabList.length) return;
     final crashedTab = _tabList[index];
+
+    final bool recovering = Platform.isAndroid && _recoveryRebuildReasons.contains(reason);
 
     // Reconnect the controller and widgets with a new key
     final newKey = GlobalKey<WebViewFullState>();
@@ -1137,6 +1312,7 @@ class WebViewProvider extends ChangeNotifier {
       allowDownloads: true,
       restoreScrollX: crashedTab.rendererGoneScrollX,
       restoreScrollY: crashedTab.rendererGoneScrollY,
+      recoveryReason: recovering ? reason : null,
     );
 
     _tabList[index].webView = crashedTab.webView;
@@ -1144,6 +1320,8 @@ class WebViewProvider extends ChangeNotifier {
     crashedTab.needsReloadAfterRendererGone = false;
     crashedTab.rendererGoneScrollX = null;
     crashedTab.rendererGoneScrollY = null;
+    // The rebuilt webview takes the snapshot and clears it
+    if (!recovering) crashedTab.rendererGoneSnapshot = null;
 
     _callAssessMethods();
     notifyListeners();
@@ -1375,6 +1553,8 @@ class WebViewProvider extends ChangeNotifier {
     tab.isLocked = forceLock || !tab.isLocked;
     tab.isLockFull = isLockFull;
 
+    if (tab.isLocked && _keepLockedTabsActive) _wakeSleepingLockedTabs();
+
     if (!wasLocked && tab.isLocked || wasLocked && !tab.isLocked) {
       final activeKey = _tabList[currentTab].webView?.key;
       _tabList.remove(tab);
@@ -1602,6 +1782,7 @@ class WebViewProvider extends ChangeNotifier {
         tabUid: tab.id,
         isChainingBrowser: tab.isChainingBrowser,
         chainingPayload: tab.chainingPayload,
+        reason: "external_url",
       );
     }
 
@@ -1620,7 +1801,12 @@ class WebViewProvider extends ChangeNotifier {
     if (state != null) {
       state.convertToChainingBrowser(chainingPayload: chainingPayload);
     } else {
-      rebuildUnresponsiveWebView(tabUid: tab.id, isChainingBrowser: true, chainingPayload: chainingPayload);
+      rebuildUnresponsiveWebView(
+        tabUid: tab.id,
+        isChainingBrowser: true,
+        chainingPayload: chainingPayload,
+        reason: "chaining",
+      );
     }
 
     if (currentTab != 0) {
@@ -2375,6 +2561,7 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
+    _keepLockedTabsActive = await Prefs().getKeepLockedTabsActive();
 
     // Values are normalised on load: a restored backup could carry anything
     final int sleepOverride = await Prefs().getTabSleepMinutesOverride();
@@ -2385,6 +2572,20 @@ class WebViewProvider extends ChangeNotifier {
     _parkBackgroundTabsOverride = parkOverrideOptions.contains(parkOverride) ? parkOverride : "default";
     _parkBackgroundTabsDefaultRC = await Prefs().getParkBackgroundTabsDefaultRC();
     _parkBackgroundTabsRemoteConfigAllowed = await Prefs().getParkBackgroundTabsAllowedRC();
+    final String hardwareLayerOverride = await Prefs().getWebViewHardwareLayerOverride();
+    _webViewHardwareLayerOverride = parkOverrideOptions.contains(hardwareLayerOverride)
+        ? hardwareLayerOverride
+        : "default";
+    final String hardwareLayerModeRC = await Prefs().getWebViewHardwareLayerModeRC();
+    _webViewHardwareLayerModeRC = webViewHardwareLayerModes.contains(hardwareLayerModeRC)
+        ? hardwareLayerModeRC
+        : "default_on";
+    final int chatLimitUser = await Prefs().getTornChatCacheLimitUser();
+    _tornChatCacheLimitUser = tornChatCacheLimitOptions.contains(chatLimitUser) ? chatLimitUser : 0;
+    _tornChatCacheLimitRC = await Prefs().getTornChatCacheLimitRC();
+    _localStorageSafetyMbRC = await Prefs().getLocalStorageSafetyMbRC();
+    _tornChatCacheLastTrimMs = await Prefs().getTornChatCacheLastTrimMs();
+    _tornChatCacheLastTrimFreed = await Prefs().getTornChatCacheLastTrimFreed();
     _automaticChangeToNewTabFromURL = await Prefs().getAutomaticChangeToNewTabFromURL();
 
     _fabEnabled = await Prefs().getWebviewFabEnabled();
@@ -2411,6 +2612,8 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     _splitScreenRevertsToApp = await Prefs().getSplitScreenRevertsToApp();
+
+    _reportExperimentUserProperties();
   }
 
   bool splitScreenAndBrowserLeft() {

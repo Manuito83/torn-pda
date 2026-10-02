@@ -17,6 +17,8 @@ class FFScouterCheckKeyResponse {
   /// Where premium comes from
   final String? premiumEntitlementSource;
 
+  final bool policyUpdateRequired;
+
   FFScouterCheckKeyResponse({
     this.key,
     required this.isRegistered,
@@ -27,6 +29,7 @@ class FFScouterCheckKeyResponse {
     this.factionId,
     this.factionPremiumExpiresAt,
     this.premiumEntitlementSource,
+    this.policyUpdateRequired = false,
   });
 
   factory FFScouterCheckKeyResponse.fromJson(Map<String, dynamic> json) => FFScouterCheckKeyResponse(
@@ -39,6 +42,7 @@ class FFScouterCheckKeyResponse {
     factionId: json["faction_id"],
     factionPremiumExpiresAt: json["faction_premium_expires_at"],
     premiumEntitlementSource: json["premium_entitlement_source"],
+    policyUpdateRequired: json["policy_update_required"] ?? false,
   );
 }
 

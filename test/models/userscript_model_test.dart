@@ -148,69 +148,69 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // shouldInject (exercises the @match pattern engine)
+  // matchesTarget (exercises the @match pattern engine)
   // -------------------------------------------------------------------------
-  group('shouldInject', () {
+  group('matchesTarget', () {
     test('wildcard "*" matches any URL', () {
       final m = _model(matches: ['*']);
-      expect(m.shouldInject('https://www.torn.com/anything'), isTrue);
-      expect(m.shouldInject('http://example.com'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/anything'), isTrue);
+      expect(m.matchesTarget('http://example.com'), isTrue);
     });
 
     test('standard Tampermonkey pattern with scheme wildcard', () {
       final m = _model(matches: ['*://www.torn.com/*']);
-      expect(m.shouldInject('https://www.torn.com/profiles.php'), isTrue);
-      expect(m.shouldInject('http://www.torn.com/page'), isTrue);
-      expect(m.shouldInject('https://www.example.com/page'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/profiles.php'), isTrue);
+      expect(m.matchesTarget('http://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('https://www.example.com/page'), isFalse);
     });
 
     test('explicit https scheme rejects http', () {
       final m = _model(matches: ['https://www.torn.com/*']);
-      expect(m.shouldInject('https://www.torn.com/page'), isTrue);
-      expect(m.shouldInject('http://www.torn.com/page'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('http://www.torn.com/page'), isFalse);
     });
 
     test('subdomain wildcard *.torn.com matches subdomains correctly', () {
       // PR #409 implemented proper regex-based matching for wildcard patterns.
       // *.torn.com should match any subdomain of torn.com (including bare torn.com).
       final m = _model(matches: ['*://*.torn.com/*']);
-      expect(m.shouldInject('https://www.torn.com/page'), isTrue);
-      expect(m.shouldInject('https://api.torn.com/user'), isTrue);
-      expect(m.shouldInject('https://torn.com/page'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('https://api.torn.com/user'), isTrue);
+      expect(m.matchesTarget('https://torn.com/page'), isTrue);
       // Should NOT match other domains
-      expect(m.shouldInject('https://nottorn.com/page'), isFalse);
+      expect(m.matchesTarget('https://nottorn.com/page'), isFalse);
     });
 
     test('path-specific pattern', () {
       final m = _model(matches: ['*://www.torn.com/profiles.php*']);
-      expect(m.shouldInject('https://www.torn.com/profiles.php?XID=123'), isTrue);
-      expect(m.shouldInject('https://www.torn.com/page.php'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/profiles.php?XID=123'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/page.php'), isFalse);
     });
 
     test('legacy pattern without protocol (backwards compat)', () {
       final m = _model(matches: ['www.torn.com/*']);
-      expect(m.shouldInject('https://www.torn.com/page'), isTrue);
-      expect(m.shouldInject('http://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('http://www.torn.com/page'), isTrue);
     });
 
-    test('disabled script never injects', () {
-      final m = _model(matches: ['*'], enabled: false);
-      expect(m.shouldInject('https://anything.com'), isFalse);
+    test('says nothing about the switches, which the active mode decides', () {
+      final m = _model(matches: ['*://www.torn.com/*'], enabled: false);
+      expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
     });
 
     test('respects injection time filter', () {
       final m = _model(matches: ['*'], time: UserScriptTime.end);
-      expect(m.shouldInject('https://torn.com', UserScriptTime.end), isTrue);
-      expect(m.shouldInject('https://torn.com', UserScriptTime.start), isFalse);
+      expect(m.matchesTarget('https://torn.com', UserScriptTime.end), isTrue);
+      expect(m.matchesTarget('https://torn.com', UserScriptTime.start), isFalse);
       // null time means "don't filter"
-      expect(m.shouldInject('https://torn.com', null), isTrue);
+      expect(m.matchesTarget('https://torn.com', null), isTrue);
     });
 
     test('multiple match patterns — any match suffices', () {
       final m = _model(matches: ['https://www.torn.com/*', 'https://api.torn.com/*']);
-      expect(m.shouldInject('https://www.torn.com/page'), isTrue);
-      expect(m.shouldInject('https://api.torn.com/user'), isTrue);
-      expect(m.shouldInject('https://example.com/'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('https://api.torn.com/user'), isTrue);
+      expect(m.matchesTarget('https://example.com/'), isFalse);
     });
   });
 
@@ -400,6 +400,106 @@ void main() {
       );
       final restored = UserScriptModel.fromJson(model.toJson());
       expect(restored.name, 'TORN: TornTools - City Items');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Install date
+  // -------------------------------------------------------------------------
+  group('installedAt', () {
+    test('defaults to 0 so that pre-existing scripts are not dated', () {
+      expect(_model().installedAt, 0);
+    });
+
+    test('survives a save and load round trip', () {
+      final model = UserScriptModel(name: 'Dated', source: '', isExample: false, installedAt: 1756800000000);
+      expect(UserScriptModel.fromJson(model.toJson()).installedAt, 1756800000000);
+    });
+
+    test('reads as 0 when the saved data predates the field', () {
+      final legacy = {
+        "enabled": true,
+        "matches": ["*"],
+        "name": "Old",
+        "version": "1.0.0",
+        "edited": false,
+        "source": "",
+        "url": null,
+        "updateStatus": "noRemote",
+        "isExample": false,
+        "time": "end",
+      };
+      expect(UserScriptModel.fromJson(legacy).installedAt, 0);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // matchesQuery (the search box on the scripts page)
+  // -------------------------------------------------------------------------
+  group('matchesQuery', () {
+    final m = UserScriptModel(
+      name: 'City Items',
+      source: 'function run() { console.log("hi"); }',
+      isExample: false,
+    );
+
+    test('empty query matches everything', () {
+      expect(m.matchesQuery(''), isTrue);
+      expect(m.matchesQuery('   '), isTrue);
+    });
+
+    test('matches the name, ignoring case', () {
+      expect(m.matchesQuery('city'), isTrue);
+      expect(m.matchesQuery('ITEMS'), isTrue);
+      expect(m.matchesQuery('bazaar'), isFalse);
+    });
+
+    test('only looks inside the code when asked to', () {
+      expect(m.matchesQuery('console.log'), isFalse);
+      expect(m.matchesQuery('console.log', inSource: true), isTrue);
+    });
+
+    test('code search is a plain substring, dots included', () {
+      expect(m.matchesQuery('CONSOLE.LOG', inSource: true), isTrue);
+      expect(m.matchesQuery('consolelog', inSource: true), isFalse);
+      expect(m.matchesQuery('function run', inSource: true), isTrue);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // War mode switch
+  // -------------------------------------------------------------------------
+  group('warEnabled', () {
+    test('defaults to false, so war mode starts as an empty selection', () {
+      expect(_model().warEnabled, isFalse);
+    });
+
+    test('is independent from the normal switch', () {
+      final m = _model(enabled: false);
+      m.warEnabled = true;
+      expect(m.enabled, isFalse);
+      expect(m.warEnabled, isTrue);
+    });
+
+    test('survives a save and load round trip', () {
+      final model = UserScriptModel(name: 'War', source: '', isExample: false, warEnabled: true);
+      expect(UserScriptModel.fromJson(model.toJson()).warEnabled, isTrue);
+    });
+
+    test('reads as false when the saved data predates the field', () {
+      final legacy = {
+        "enabled": true,
+        "matches": ["*"],
+        "name": "Old",
+        "version": "1.0.0",
+        "edited": false,
+        "source": "",
+        "url": null,
+        "updateStatus": "noRemote",
+        "isExample": false,
+        "time": "end",
+      };
+      expect(UserScriptModel.fromJson(legacy).warEnabled, isFalse);
     });
   });
 }

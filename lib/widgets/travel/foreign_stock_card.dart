@@ -90,13 +90,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   var _periodicMap = SplayTreeMap();
 
   var _averageTimeToRestock = 0;
+  var _averageTimeToSellout = 0;
   var _restockReliability = 0;
   var _projectedRestockDateTime = DateTime.now();
   var _hasProjectedRestockDateTime = false;
   var _restockExpectedSoon = false;
   var _depletionTrendPerSecond = 0.0;
-
-  int? _invQuantity = 0;
 
   var _delayedDepartureTime = DateTime.now();
   String _codeName = "";
@@ -516,6 +515,13 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                           fontSize: 12,
                         ),
                       ),
+                      if (_averageTimeToSellout > 0)
+                        Text(
+                          "Average time to sell out: ${_formatDuration(Duration(seconds: _averageTimeToSellout))}",
+                          style: const TextStyle(
+                            fontSize: 12,
+                          ),
+                        ),
                       if (widget.foreignStock.quantity == 0)
                         Row(
                           children: [
@@ -731,11 +737,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
               width: 100,
               child: Text(stock.name!),
             ),
-            if (widget.inventoryEnabled && _invQuantity != null)
+            if (widget.inventoryEnabled && stock.inventoryQuantity != null)
               SizedBox(
                 width: 100,
                 child: Text(
-                  "Inv: x$_invQuantity",
+                  "Inv: x${stock.inventoryQuantity}",
                   style: const TextStyle(fontSize: 11),
                 ),
               ),
@@ -1176,6 +1182,16 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         } else {
           _restockReliability = 0;
         }
+      }
+
+      // AVERAGE TIME TO SELL OUT (might not exist in stocks that have not been depleted yet)
+      final selloutList = (firestoreData.data() as Map<String, dynamic>?)?['selloutElapsed'];
+      if (selloutList is List && selloutList.isNotEmpty) {
+        var sum = 0;
+        for (final sellout in selloutList) {
+          if (sellout is int) sum += sellout;
+        }
+        _averageTimeToSellout = sum ~/ selloutList.length;
       }
 
       // TIMES TO RESTOCK
@@ -1697,9 +1713,6 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   void _calculateDetails() {
-    // INVENTORY
-    _invQuantity = widget.foreignStock.inventoryQuantity;
-
     // ARRIVAL TIMES
     _flyingToThisCountry = false;
     _flyingElsewhere = false;

@@ -10,13 +10,14 @@ export interface NotificationParams {
   body: string;
   icon?: string;
   color?: string;
-  channelId?: string;
+  channelId: string;
   tornMessageId?: string;
   tornTradeId?: string;
   assistId?: string;
   bulkDetails?: string;
   vibration: string;
   sound?: string;
+  extraData?: Record<string, string>;
 }
 
 export interface NotificationCheckResult {
@@ -652,7 +653,7 @@ export function sendEventsNotification(userStats: any, subscriber: any) {
     // Creates a set tornKeySet an array and filters knownEvents by checking
     // if its elements exist in the set, removing any that do not exist
     const tornKeySet = new Set(allTornKeys);
-    const filteredEvents = knownEvents.filter(event => tornKeySet.has(event));
+    const filteredEvents = knownEvents.filter((event: string) => tornKeySet.has(event));
     if (knownEvents.length !== filteredEvents.length) {
       changes = true;
       knownEvents = filteredEvents;
@@ -928,24 +929,40 @@ export function sendEventsNotification(userStats: any, subscriber: any) {
   return result;
 }
 
+/**
+ * Stock providers use the short country name, while the Torn API returns the long one
+ */
+export function normalizeStockCountry(name: any): string | null {
+  if (!name || typeof name !== "string") return null;
+  if (name === "United Kingdom") return "UK";
+  return name;
+}
+
 export function sendForeignRestockNotification(userStats: any, dbStocks: any, subscriber: any) {
   const result: NotificationCheckResult = {};
 
   try {
 
-    let updates = 0;
-    const stocksUpdated: any[] = [];
+    const stocksRestocked: string[] = [];
+    const stocksSoldOut: string[] = [];
+    const stocksRestockedAndGone: string[] = [];
 
     const userStocks = subscriber.restockActiveAlerts || {};
+    const alsoWhenSoldOut = subscriber.foreignRestockNotificationSellout === true;
+
+    // Country filter, with three possible states: all countries, the country the user is flying to or
+    // staying in, or only once the user has actually landed there
+    let allowedCountry: string | null = null;
+    if (subscriber.foreignRestockNotificationOnlyLanded === true) {
+      const { abroad, country } = detectAbroadPresence(userStats, true);
+      if (!abroad) return result;
+      allowedCountry = normalizeStockCountry(country);
+    } else if (subscriber.foreignRestockNotificationOnlyCurrentCountry === true) {
+      allowedCountry = normalizeStockCountry(userStats?.travel?.destination);
+      if (!allowedCountry || allowedCountry === "Torn") return result;
+    }
 
     for (const [userCodeName, userTime] of Object.entries(userStocks)) {
-
-      /*
-      console.log("User stocks: " + userCodeName + " - " + userStocks[userCodeName]);
-      console.log("Stock country: " + dbStocks[userCodeName].country);
-      console.log("User travel or destination: " + userStats.travel.destination);
-      console.log("Only current country alerts: " + subscriber.foreignRestockNotificationOnlyCurrentCountry);
-      */
 
       const stockEntry = dbStocks[userCodeName];
       if (!stockEntry) {
@@ -953,64 +970,62 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
       }
 
       const databaseCountryName = stockEntry.country;
-      let playerDestination = userStats?.travel?.destination;
-
-      // If the user has activated the option in Torn PDA only to be notified if the restock is happening
-      // in the country he is flying to / staying in, we need to check whether they match before proceeding
-      if (subscriber.foreignRestockNotificationOnlyCurrentCountry) {
-        // We are looking for the SPECIFIC country of the item here
-
-        if (!playerDestination || !databaseCountryName) {
-          continue;
-        }
-
-        if (playerDestination === "United Kingdom") {
-          // Standardize with values in the database and API
-          playerDestination = "UK";
-        }
-
-        if (playerDestination !== databaseCountryName) {
-          // No country coincidence, continue with the next stock
-          continue;
-        }
-
-        //console.log("Country matched, continue to notification!")
+      if (allowedCountry && databaseCountryName !== allowedCountry) {
+        continue;
       }
 
-      if (userCodeName in dbStocks) {
-        const dbTime = stockEntry.restock;
-        if (typeof dbTime !== "number") {
-          continue;
-        }
-        const timeDifference = <number>userTime - dbTime * 1000;
+      // Note: we already have a method in Torn PDA [subscribeToForeignRestockNotification()] that ensures that
+      // the timestamp values of Firestore's [restockActiveAlerts] are updated to DateTime.now() when this notifications
+      // are enabled after certain time, so that we avoid sending old and expiry notifications in a after activation
+      let lastNotified = <number>userTime;
+      const label = `${stockEntry.name} (${databaseCountryName})`;
 
-        if (timeDifference < 0) {
-          // Note: we already have a method in Torn PDA [subscribeToForeignRestockNotification()] that ensures that
-          //the timestamp values of Firestore's [restockActiveAlerts] are updated to DateTime.now() when this notifications 
-          // are enabled after certain time, so that we avoid sending old and expiry notifications in a after activation
+      const restockMs = typeof stockEntry.restock === "number" ? stockEntry.restock * 1000 : 0;
+      const selloutMs = typeof stockEntry.sellout === "number" ? stockEntry.sellout * 1000 : 0;
+      const newRestock = restockMs > lastNotified;
+      const newSellout = selloutMs > lastNotified;
 
-          updates++;
-          stocksUpdated.push(`${dbStocks[userCodeName].name} (${databaseCountryName})`)
-          userStocks[userCodeName] = dbTime * 1000;
-        }
+      if (newRestock && newSellout && selloutMs > restockMs) {
+        // Restocked and gone again since the last notice
+        stocksRestockedAndGone.push(label);
+        lastNotified = selloutMs;
+      } else if (newRestock) {
+        stocksRestocked.push(label);
+        lastNotified = restockMs;
+      } else if (alsoWhenSoldOut && newSellout) {
+        stocksSoldOut.push(label);
+        lastNotified = selloutMs;
       }
+
+      userStocks[userCodeName] = lastNotified;
     }
 
-    if (updates > 0) {
-      const notificationTitle = "Foreign items restocked!";
-      const notificationSubtitle = stocksUpdated.join(', ');
+    if (stocksRestocked.length > 0 || stocksSoldOut.length > 0 || stocksRestockedAndGone.length > 0) {
+      const segments: string[] = [];
+      if (stocksRestocked.length > 0) segments.push(`Restocked: ${stocksRestocked.join(", ")}`);
+      if (stocksRestockedAndGone.length > 0) {
+        segments.push(`Restocked and sold out again: ${stocksRestockedAndGone.join(", ")}`);
+      }
+      if (stocksSoldOut.length > 0) segments.push(`Sold out: ${stocksSoldOut.join(", ")}`);
+
+      let title = "Foreign stock changes!";
+      let body = segments.join(". ");
+      if (segments.length === 1 && stocksRestocked.length > 0) {
+        title = "Foreign items restocked!";
+        body = stocksRestocked.join(", ");
+      } else if (segments.length === 1 && stocksSoldOut.length > 0) {
+        title = "Foreign items sold out!";
+        body = stocksSoldOut.join(", ");
+      }
 
       result.firestoreUpdate = {
         restockActiveAlerts: userStocks,
       }
 
-      let title = notificationTitle;
-      let body = notificationSubtitle;
       if (subscriber.discrete) {
         title = `Stock`;
         body = ` `;
       }
-
 
       result.notification = {
         token: subscriber.token,
@@ -1160,7 +1175,7 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
       let alertLow = match[2];
 
       // Locate the share in Torn's stock market
-      for (const value of Object.values(tornStocks.stocks)) {
+      for (const value of Object.values<any>(tornStocks.stocks)) {
         if (value["acronym"] === acronym) {
 
           if (alertHigh !== "n") {
@@ -1233,6 +1248,85 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
   return result;
 }
 
+interface WorkStatDefinition {
+  label: string;
+  apiField: string;
+  targetField: string;
+}
+
+const workStatDefinitions: WorkStatDefinition[] = [
+  {
+    label: "Manual labor",
+    apiField: "manual_labor",
+    targetField: "workStatsManualLaborTarget",
+  },
+  {
+    label: "Intelligence",
+    apiField: "intelligence",
+    targetField: "workStatsIntelligenceTarget",
+  },
+  {
+    label: "Endurance",
+    apiField: "endurance",
+    targetField: "workStatsEnduranceTarget",
+  },
+];
+
+export function sendWorkStatsNotification(userStats: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
+
+  try {
+    const reached: string[] = [];
+    const updates: { [key: string]: any } = {};
+    let pendingTargets = 0;
+
+    for (const definition of workStatDefinitions) {
+      const target = Number(subscriber[definition.targetField]) || 0;
+      if (target <= 0) continue;
+
+      const current = Number(userStats[definition.apiField]);
+      if (!Number.isFinite(current) || current < target) {
+        pendingTargets++;
+        continue;
+      }
+
+      reached.push(`${definition.label}: ${target.toLocaleString("en-US")}`);
+      updates[definition.targetField] = 0;
+    }
+
+    if (reached.length === 0) return result;
+
+    if (pendingTargets === 0) {
+      updates.workStatsNotification = false;
+    }
+    result.firestoreUpdate = updates;
+
+    let title = reached.length > 1 ? `Work stats targets reached` : `Work stat target reached`;
+    let body = reached.join("\n");
+    if (pendingTargets === 0) {
+      body += `\nNo targets left, the alert has been disabled`;
+    }
+    if (subscriber.discrete) {
+      title = `W`;
+      body = ` `;
+    }
+
+    result.notification = {
+      token: subscriber.token,
+      title: title,
+      body: body,
+      icon: "notification_icon",
+      color: "#FFC107",
+      channelId: "Alerts work stats",
+      vibration: subscriber.vibration,
+    };
+  } catch (error) {
+    logger.warn(`ERROR WORK STATS \n${subscriber.uid} \n${error}`);
+  }
+
+  return result;
+}
+
 export async function sendNotificationToUser({
   token,
   title,
@@ -1246,6 +1340,7 @@ export async function sendNotificationToUser({
   bulkDetails = "",
   vibration,
   sound = "slow_spring_board.aiff",
+  extraData = {},
 }: NotificationParams): Promise<any> {
 
   // Guard: skip invalid tokens to avoid unnecessary FCM errors
@@ -1306,6 +1401,7 @@ export async function sendNotificationToUser({
       tornTradeId: tornTradeId,
       assistId: assistId,
       bulkDetails: bulkDetails,
+      ...extraData,
     },
   };
 

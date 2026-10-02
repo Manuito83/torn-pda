@@ -220,11 +220,39 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Unmounts the prewarm once its about:blank has loaded (RemoteConfig)
+  bool _browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed = false;
+  bool get browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed =>
+      _browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed;
+  set browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed(bool value) {
+    _browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   // #2843 watchdog auto-recovery kill-switch (RemoteConfig): rebuilds a webview whose onWebViewCreated never fired
   bool _browserWebViewRecoveryRemoteConfigAllowed = true;
   bool get browserWebViewRecoveryRemoteConfigAllowed => _browserWebViewRecoveryRemoteConfigAllowed;
   set browserWebViewRecoveryRemoteConfigAllowed(bool value) {
     _browserWebViewRecoveryRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
+  var _browserRecoveryOverlayEnabled = true;
+  bool get browserRecoveryOverlayEnabled => _browserRecoveryOverlayEnabled;
+  set browserRecoveryOverlayEnabled(bool value) {
+    _browserRecoveryOverlayEnabled = value;
+    Prefs().setBrowserRecoveryOverlay(_browserRecoveryOverlayEnabled);
+    notifyListeners();
+  }
+
+  bool get browserRecoveryOverlayActive =>
+      _browserRecoveryOverlayRemoteConfigAllowed && _browserRecoveryOverlayEnabled;
+
+  // Rebuild placeholder kill-switch (RemoteConfig): when off, a rebuilt tab shows no overlay at all
+  bool _browserRecoveryOverlayRemoteConfigAllowed = true;
+  bool get browserRecoveryOverlayRemoteConfigAllowed => _browserRecoveryOverlayRemoteConfigAllowed;
+  set browserRecoveryOverlayRemoteConfigAllowed(bool value) {
+    _browserRecoveryOverlayRemoteConfigAllowed = value;
     notifyListeners();
   }
 
@@ -741,6 +769,21 @@ class SettingsProvider extends ChangeNotifier {
   bool get ffScouterEnabledStatusRemoteConfig => _ffScouterEnabledStatusRemoteConfig;
   set ffScouterEnabledStatusRemoteConfig(bool value) {
     _ffScouterEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
+  bool _ffScouterBountiesEnabled = true;
+  bool get ffScouterBountiesEnabled => _ffScouterBountiesEnabled && _ffScouterBountiesEnabledRemoteConfig;
+  set ffScouterBountiesEnabled(bool value) {
+    _ffScouterBountiesEnabled = value;
+    Prefs().setFFScouterBountiesEnabled(value);
+    notifyListeners();
+  }
+
+  bool _ffScouterBountiesEnabledRemoteConfig = true;
+  bool get ffScouterBountiesEnabledRemoteConfig => _ffScouterBountiesEnabledRemoteConfig;
+  set ffScouterBountiesEnabledRemoteConfig(bool value) {
+    _ffScouterBountiesEnabledRemoteConfig = value;
     notifyListeners();
   }
 
@@ -1283,6 +1326,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _tornStatsChartHiddenStats = <String>[];
+  List<String> get tornStatsChartHiddenStats => _tornStatsChartHiddenStats;
+  set setTornStatsChartHiddenStats(List<String> value) {
+    _tornStatsChartHiddenStats = value;
+    Prefs().setTornStatsChartHiddenStats(tornStatsChartHiddenStats);
+    notifyListeners();
+  }
+
   var _retaliationSectionEnabled = true;
   bool get retaliationSectionEnabled => _retaliationSectionEnabled;
   set setRetaliationSectionEnabled(bool value) {
@@ -1697,6 +1748,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
     _restoreScrollAfterReload = await Prefs().getRestoreScrollAfterReload();
+    _browserRecoveryOverlayEnabled = await Prefs().getBrowserRecoveryOverlay();
     _highRefreshRateEnabled = await Prefs().getHighRefreshRateEnabled();
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
@@ -1767,6 +1819,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _ffScouterEnabledStatus = await Prefs().getFFScouterEnabledStatus();
     _preferFFScouterOverEstimated = await Prefs().getPreferFFScouterOverEstimated();
+    _ffScouterBountiesEnabled = await Prefs().getFFScouterBountiesEnabled();
     _ffsOverrideSpyMonths = await Prefs().getFfsOverrideSpyMonths();
     _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
 
@@ -1895,6 +1948,7 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartRange = await Prefs().getTornStatsChartRange();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
     _tornStatsChartShowBoth = await Prefs().getTornStatsChartShowBoth();
+    _tornStatsChartHiddenStats = await Prefs().getTornStatsChartHiddenStats();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _targetFinderSectionEnabled = await Prefs().getTargetFinderSectionEnabled();

@@ -30,11 +30,11 @@ export const updateNpcs = onSchedule(
             const db = firebaseAdmin.database();
             const refNpcs = db.ref("loot/npcs");
 
-            let activeNpcs = [];
-            await refNpcs.once("value", function (snapshot) {
+            let activeNpcs: string[] = [];
+            await refNpcs.once("value", function (snapshot: admin.database.DataSnapshot) {
                 const npcList = snapshot.val() || "";
                 if (npcList.length > 0) {
-                    activeNpcs = snapshot.val().split(',').map(item => item.trim());
+                    activeNpcs = snapshot.val().split(',').map((item: string) => item.trim());
                 }
 
             });
@@ -69,14 +69,14 @@ export const lootAlerts = onSchedule(
 
         try {
 
-            let npcHospitalJSON = "";
+            let npcHospitalJSON: any = "";
 
             // Get NPCs one by one together with hospitalization time
             const firebaseAdmin = require("firebase-admin");
             const db = firebaseAdmin.database();
 
             const refNpcs = db.ref("loot/hospital");
-            await refNpcs.once("value", function (snapshot) {
+            await refNpcs.once("value", function (snapshot: admin.database.DataSnapshot) {
                 const dbArray = snapshot.val() || [];
                 npcHospitalJSON = JSON.parse(JSON.stringify(dbArray))
             });
@@ -105,7 +105,7 @@ export const lootAlerts = onSchedule(
                         // This prevents re-sending the same bucket for the same level
                         const refTimestamp = db.ref(`loot/alertsTimestamp/${npcId}/${lvl.level}`);
                         let bucketMap: Record<string, number> = {};
-                        await refTimestamp.once("value", function (snapshot) {
+                        await refTimestamp.once("value", function (snapshot: admin.database.DataSnapshot) {
                             bucketMap = snapshot.val() ?? {};
                         });
 
@@ -154,7 +154,7 @@ export const lootAlerts = onSchedule(
 
                         const bucketMapRef = db.ref(`loot/alertsTimestamp/${npcId}/${warnLevel}`);
                         let bucketMap: Record<string, number> = {};
-                        await bucketMapRef.once("value", function (snapshot) {
+                        await bucketMapRef.once("value", function (snapshot: admin.database.DataSnapshot) {
                             bucketMap = snapshot.val() ?? {};
                         });
                         if (typeof bucketMap === "number") {

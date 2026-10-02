@@ -18,6 +18,49 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 enum TornStatsChartType { Line, Pie }
 
+enum StatSeries { strength, defense, speed, dexterity }
+
+extension StatSeriesDisplay on StatSeries {
+  String get shortLabel => switch (this) {
+        StatSeries.strength => 'STR',
+        StatSeries.defense => 'DEF',
+        StatSeries.speed => 'SPD',
+        StatSeries.dexterity => 'DEX',
+      };
+
+  String get fullLabel => switch (this) {
+        StatSeries.strength => 'Strength',
+        StatSeries.defense => 'Defense',
+        StatSeries.speed => 'Speed',
+        StatSeries.dexterity => 'Dexterity',
+      };
+
+  Color get color => switch (this) {
+        StatSeries.strength => Colors.blue,
+        StatSeries.defense => Colors.red,
+        StatSeries.speed => Colors.orange,
+        StatSeries.dexterity => Colors.green,
+      };
+}
+
+const Set<StatSeries> _allStatSeries = {
+  StatSeries.strength,
+  StatSeries.defense,
+  StatSeries.speed,
+  StatSeries.dexterity,
+};
+
+Set<StatSeries> statSeriesFromHiddenKeys(List<String> hiddenKeys) {
+  final hidden = <StatSeries>{};
+  for (final key in hiddenKeys) {
+    for (final stat in StatSeries.values) {
+      if (stat.name == key) hidden.add(stat);
+    }
+  }
+  if (hidden.length >= _allStatSeries.length) return {};
+  return hidden;
+}
+
 String formatTornStatsErrorMessage(
   String? message, {
   String prefix = '',
@@ -73,10 +116,69 @@ class StatsChart extends StatefulWidget {
 class _StatsChartState extends State<StatsChart> {
   bool _statsUpdating = false;
 
+  void _toggleStat(SettingsProvider settingsProvider, StatSeries stat) {
+    final hidden = statSeriesFromHiddenKeys(settingsProvider.tornStatsChartHiddenStats);
+    if (hidden.contains(stat)) {
+      hidden.remove(stat);
+    } else if (hidden.length < _allStatSeries.length - 1) {
+      hidden.add(stat);
+    } else {
+      return;
+    }
+    settingsProvider.setTornStatsChartHiddenStats = hidden.map((e) => e.name).toList();
+  }
+
+  Future<void> _showLegendDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Consumer<SettingsProvider>(
+          builder: (context, settingsProvider, _) {
+            final hidden = statSeriesFromHiddenKeys(settingsProvider.tornStatsChartHiddenStats);
+            return AlertDialog(
+              title: const Text('Chart stats', style: TextStyle(fontSize: 16)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final stat in StatSeries.values)
+                    SwitchListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      secondary: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(color: stat.color, shape: BoxShape.circle),
+                      ),
+                      title: Text(stat.fullLabel, style: const TextStyle(fontSize: 14)),
+                      value: !hidden.contains(stat),
+                      onChanged: (!hidden.contains(stat) && hidden.length >= _allStatSeries.length - 1)
+                          ? null
+                          : (_) => _toggleStat(settingsProvider, stat),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     bool showBoth = settingsProvider.tornStatsChartShowBoth;
+
+    final (List<String> hiddenKeys, int rangeMonths) = context.select<SettingsProvider, (List<String>, int)>(
+      (sp) => (sp.tornStatsChartHiddenStats, sp.tornStatsChartRange),
+    );
+    final Set<StatSeries> hidden = statSeriesFromHiddenKeys(hiddenKeys);
 
     bool isOldData = false;
     bool isStaleData = false;
@@ -145,17 +247,17 @@ class _StatsChartState extends State<StatsChart> {
       Widget secondChart;
 
       if (widget.chartType == TornStatsChartType.Line) {
-        firstChart = LineChart(_buildLineChartData());
-        secondChart = PieChart(_buildPieChartData());
+        firstChart = LineChart(_buildLineChartData(rangeMonths, hidden));
+        secondChart = PieChart(_buildPieChartData(hidden));
       } else {
-        firstChart = PieChart(_buildPieChartData());
-        secondChart = LineChart(_buildLineChartData());
+        firstChart = PieChart(_buildPieChartData(hidden));
+        secondChart = LineChart(_buildLineChartData(rangeMonths, hidden));
       }
 
       return Column(
         children: [
           if (warningWidget != null) warningWidget,
-          _legend(),
+          _legend(hidden),
           const SizedBox(height: 5),
           Flexible(child: firstChart),
           const SizedBox(height: 20),
@@ -166,15 +268,15 @@ class _StatsChartState extends State<StatsChart> {
 
     Widget chart;
     if (widget.chartType == TornStatsChartType.Line) {
-      chart = LineChart(_buildLineChartData());
+      chart = LineChart(_buildLineChartData(rangeMonths, hidden));
     } else {
-      chart = PieChart(_buildPieChartData());
+      chart = PieChart(_buildPieChartData(hidden));
     }
 
     return Column(
       children: [
         if (warningWidget != null) warningWidget,
-        _legend(),
+        _legend(hidden),
         const SizedBox(height: 5),
         Flexible(
           child: chart,
@@ -183,7 +285,7 @@ class _StatsChartState extends State<StatsChart> {
     );
   }
 
-  Row _legend() {
+  Row _legend(Set<StatSeries> hidden) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -275,7 +377,6 @@ class _StatsChartState extends State<StatsChart> {
                                 if (success)
                                   TextButton(
                                     onPressed: () {
-                                      toastification.dismiss(holder);
                                       const url = 'https://tornstats.com/';
                                       context.read<WebViewProvider>().openBrowserPreference(
                                             context: context,
@@ -302,7 +403,6 @@ class _StatsChartState extends State<StatsChart> {
                                   GestureDetector(
                                     onTap: () {
                                       Clipboard.setData(ClipboardData(text: message));
-                                      toastification.dismiss(holder);
                                       toastification.showCustom(
                                         autoCloseDuration: const Duration(seconds: 2),
                                         alignment: Alignment.center,
@@ -377,293 +477,54 @@ class _StatsChartState extends State<StatsChart> {
           },
         ),
         const SizedBox(width: 30),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.blue,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Text(' STR', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.red,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Text(' DEF', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.orange,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Text(' SPD', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.green,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const Text(' DEX', style: TextStyle(fontSize: 7)),
-        const SizedBox(width: 6),
-        const Text('', style: TextStyle(fontSize: 8)),
-      ],
-    );
-  }
-
-  LineChartData _buildLineChartData() {
-    double maxStat = 0;
-
-    final strengthSpots = <FlSpot>[];
-    final speedSpots = <FlSpot>[];
-    final defenseSpots = <FlSpot>[];
-    final dexteritySpots = <FlSpot>[];
-    final timestamps = <int?>[];
-
-    // Filter data based on range
-    var data = widget.statsData!.data!;
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    final int rangeMonths = settingsProvider.tornStatsChartRange;
-
-    if (rangeMonths > 0 && data.isNotEmpty) {
-      // Show the last X months of AVAILABLE data
-      int maxTimestamp = 0;
-      for (var element in data) {
-        if (element.timestamp != null && element.timestamp! > maxTimestamp) {
-          maxTimestamp = element.timestamp!;
-        }
-      }
-
-      if (maxTimestamp > 0) {
-        final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
-        final cutoffDate = latestDate.subtract(Duration(days: rangeMonths * 30));
-        data = data.where((element) {
-          if (element.timestamp == null) return false;
-          final date = DateTime.fromMillisecondsSinceEpoch(element.timestamp! * 1000);
-          return date.isAfter(cutoffDate);
-        }).toList();
-      }
-    }
-
-    for (int i = 0; i < data.length; i++) {
-      strengthSpots.add(FlSpot(i.toDouble(), data[i].strength!.toDouble()));
-      speedSpots.add(FlSpot(i.toDouble(), data[i].speed!.toDouble()));
-      defenseSpots.add(FlSpot(i.toDouble(), data[i].defense!.toDouble()));
-      dexteritySpots.add(FlSpot(i.toDouble(), data[i].dexterity!.toDouble()));
-      timestamps.add(data[i].timestamp);
-      final int thisMax = [
-        data[i].strength ?? 0,
-        data[i].speed ?? 0,
-        data[i].defense ?? 0,
-        data[i].dexterity ?? 0,
-      ].fold(0, max);
-      if (thisMax > maxStat) {
-        maxStat = thisMax.toDouble();
-      }
-    }
-
-    return LineChartData(
-      maxY: maxStat * 1.1,
-      lineBarsData: [
-        LineChartBarData(
-          spots: strengthSpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.blue,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-        LineChartBarData(
-          spots: speedSpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.orange,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-        LineChartBarData(
-          spots: defenseSpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.red,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-        LineChartBarData(
-          spots: dexteritySpots,
-          isCurved: false,
-          barWidth: 2,
-          color: Colors.green,
-          dotData: const FlDotData(
-            show: false,
-          ),
-        ),
-      ],
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: false,
-        getDrawingHorizontalLine: (value) {
-          return const FlLine(
-            strokeWidth: 0.2,
-            color: Colors.grey,
-          );
-        },
-      ),
-      lineTouchData: LineTouchData(
-        touchTooltipData: LineTouchTooltipData(
-          fitInsideHorizontally: true,
-          fitInsideVertically: false,
-          getTooltipColor: (touchedSpot) => Colors.blueGrey.withAlpha(255),
-          getTooltipItems: (value) {
-            final tooltips = <LineTooltipItem>[];
-            int thisX = value[0].x.toInt();
-
-            final NumberFormat f = NumberFormat("###,###", "en_US");
-
-            // Get time comparing position in x with timestamps
-            var ts = 0;
-            final timesList = [];
-            for (final e in timestamps) {
-              timesList.add("$e");
-            }
-            if (thisX > timesList.length) {
-              thisX = timesList.length;
-            }
-            ts = int.parse(timesList[thisX]);
-            final date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-            final DateFormat formatter = DateFormat('d LLL yyyy');
-
-            // The first line (STR) will be preceded by date
-            final String strLine = formatter.format(date);
-
-            // Configure the last line to show totals
-            double total = 0;
-            for (final stat in value) {
-              total += stat.y;
-            }
-            final String dexLine = "TOTAL ${f.format(total.toInt())}";
-
-            // Values come unsorted, we sort them here to our liking
-            tooltips.add(
-              LineTooltipItem(
-                "$strLine\n\nSTR: ${f.format(data[thisX].strength)}",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-            tooltips.add(
-              LineTooltipItem(
-                "DEF: ${f.format(data[thisX].defense)}",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-            tooltips.add(
-              LineTooltipItem(
-                "SPD: ${f.format(data[thisX].speed)}",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-            tooltips.add(
-              LineTooltipItem(
-                "DEX: ${f.format(data[thisX].dexterity)}\n\n$dexLine",
-                const TextStyle(fontSize: 10, color: Colors.white),
-              ),
-            );
-
-            return tooltips;
-          },
-        ),
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: (position, meta) {
-              if (position == 0 || position.toInt() >= timestamps.length) {
-                return const SizedBox.shrink();
-              }
-
-              final int ts = timestamps[position.toInt()]! * 1000;
-              final DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts);
-              final DateFormat formatter = DateFormat('d LLL');
-              final String date = formatter.format(dt);
-
-              const degrees = -50;
-              const radians = degrees * pi / 180;
-
-              // Color logic based on year
-              final int currentYear = DateTime.now().year;
-              Color yearColor;
-              if (dt.year == currentYear) {
-                yearColor = context.read<ThemeProvider>().mainText;
-              } else if (dt.year == currentYear - 1) {
-                yearColor = Colors.blue;
-              } else if (dt.year == currentYear - 2) {
-                yearColor = Colors.yellow[800]!;
-              } else {
-                yearColor = Colors.red;
-              }
-
-              return Transform.rotate(
-                angle: radians,
-                child: SizedBox(
-                  width: 60,
-                  child: Text(
-                    date,
-                    style: TextStyle(fontSize: 9, color: yearColor),
+        GestureDetector(
+          onTap: _showLegendDialog,
+          child: Row(
+            children: [
+              for (final stat in StatSeries.values) ...[
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: hidden.contains(stat) ? stat.color.withAlpha(70) : stat.color,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              );
-            },
+                Text(
+                  ' ${stat.shortLabel}',
+                  style: TextStyle(
+                    fontSize: 7,
+                    color: hidden.contains(stat) ? Colors.grey : null,
+                  ),
+                ),
+                if (stat != StatSeries.values.last) const SizedBox(width: 6),
+              ],
+            ],
           ),
         ),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            reservedSize: 50,
-            showTitles: true,
-            getTitlesWidget: (position, meta) {
-              if (position == 0) return const SizedBox.shrink();
-              return Text(
-                formatBigNumbers(position.toInt()),
-                style: const TextStyle(fontSize: 9),
-              );
-            },
-          ),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-      ),
+      ],
     );
   }
 
-  PieChartData _buildPieChartData() {
+  LineChartData _buildLineChartData(int rangeMonths, Set<StatSeries> hidden) {
+    return buildStatsLineChartData(
+      allData: widget.statsData!.data!,
+      rangeMonths: rangeMonths,
+      currentYearColor: context.read<ThemeProvider>().mainText,
+      visibleStats: _allStatSeries.difference(hidden),
+    );
+  }
+
+  PieChartData _buildPieChartData(Set<StatSeries> hidden) {
     List<PieChartSectionData> sections = [];
-    Map<String, double> sums = calculateSumOfStats();
+    Map<StatSeries, double> sums = calculateSumOfStats(hidden);
     double totalSum = sums.values.reduce((a, b) => a + b);
 
-    sums.forEach((label, value) {
+    sums.forEach((stat, value) {
       double percent = (value / totalSum) * 100;
       sections.add(
         PieChartSectionData(
-          color: getColorForLabel(label),
+          color: stat.color,
           value: value,
           title: '${percent.toStringAsFixed(0)}%',
           radius: 50,
@@ -677,27 +538,269 @@ class _StatsChartState extends State<StatsChart> {
     );
   }
 
-  Map<String, double> calculateSumOfStats() {
+  Map<StatSeries, double> calculateSumOfStats(Set<StatSeries> hidden) {
+    final values = {
+      StatSeries.strength: widget.statsData!.data!.last.strength!.toDouble(),
+      StatSeries.speed: widget.statsData!.data!.last.speed!.toDouble(),
+      StatSeries.defense: widget.statsData!.data!.last.defense!.toDouble(),
+      StatSeries.dexterity: widget.statsData!.data!.last.dexterity!.toDouble(),
+    };
     return {
-      'Strength': widget.statsData!.data!.last.strength!.toDouble(),
-      'Speed': widget.statsData!.data!.last.speed!.toDouble(),
-      'Defense': widget.statsData!.data!.last.defense!.toDouble(),
-      'Dexterity': widget.statsData!.data!.last.dexterity!.toDouble(),
+      for (final entry in values.entries)
+        if (!hidden.contains(entry.key)) entry.key: entry.value,
     };
   }
+}
 
-  Color getColorForLabel(String label) {
-    switch (label) {
-      case 'Strength':
-        return Colors.blue;
-      case 'Speed':
-        return Colors.orange;
-      case 'Defense':
-        return Colors.red;
-      case 'Dexterity':
-        return Colors.green;
-      default:
-        return Colors.grey;
+const double _gapBreakMinDays = 7;
+const double _gapBreakMedianFactor = 6;
+
+double statsChartGapLimitInDays(List<double> xValues) {
+  if (xValues.length < 3) return double.infinity;
+  final gaps = <double>[];
+  for (int i = 1; i < xValues.length; i++) {
+    gaps.add(xValues[i] - xValues[i - 1]);
+  }
+  gaps.sort();
+  final double median = gaps[gaps.length ~/ 2];
+  return max(_gapBreakMinDays, median * _gapBreakMedianFactor);
+}
+
+LineChartData buildStatsLineChartData({
+  required List<Datum> allData,
+  required int rangeMonths,
+  required Color currentYearColor,
+  Set<StatSeries> visibleStats = _allStatSeries,
+}) {
+  final List<StatSeries> orderedVisible =
+      [StatSeries.strength, StatSeries.defense, StatSeries.speed, StatSeries.dexterity]
+          .where(visibleStats.contains)
+          .toList();
+
+  var data = allData.where((e) => e.timestamp != null && e.timestamp! > 0).toList();
+
+  if (rangeMonths > 0 && data.isNotEmpty) {
+    // Show the last X months of AVAILABLE data
+    final int maxTimestamp = data.map((e) => e.timestamp!).reduce(max);
+    final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
+    final cutoffDate = latestDate.subtract(Duration(days: rangeMonths * 30));
+    data = data.where((e) {
+      return DateTime.fromMillisecondsSinceEpoch(e.timestamp! * 1000).isAfter(cutoffDate);
+    }).toList();
+  }
+
+  final xValues = <double>[];
+  final indexByX = <double, int>{};
+  double maxStat = 0;
+
+  for (int i = 0; i < data.length; i++) {
+    final double x = data[i].timestamp! / 86400;
+    xValues.add(x);
+    indexByX[x] = i;
+    final int thisMax = [
+      if (visibleStats.contains(StatSeries.strength)) data[i].strength ?? 0,
+      if (visibleStats.contains(StatSeries.speed)) data[i].speed ?? 0,
+      if (visibleStats.contains(StatSeries.defense)) data[i].defense ?? 0,
+      if (visibleStats.contains(StatSeries.dexterity)) data[i].dexterity ?? 0,
+    ].fold(0, max);
+    if (thisMax > maxStat) {
+      maxStat = thisMax.toDouble();
     }
   }
+
+  final double gapLimit = statsChartGapLimitInDays(xValues);
+
+  List<FlSpot> spotsOf(int? Function(Datum d) stat) {
+    final spots = <FlSpot>[];
+    for (int i = 0; i < data.length; i++) {
+      if (i > 0 && xValues[i] - xValues[i - 1] > gapLimit) {
+        spots.add(FlSpot.nullSpot);
+      }
+      spots.add(FlSpot(xValues[i], (stat(data[i]) ?? 0).toDouble()));
+    }
+    return spots;
+  }
+
+  final gapBands = <VerticalRangeAnnotation>[];
+  for (int i = 1; i < xValues.length; i++) {
+    if (xValues[i] - xValues[i - 1] > gapLimit) {
+      gapBands.add(
+        VerticalRangeAnnotation(
+          x1: xValues[i - 1],
+          x2: xValues[i],
+          color: Colors.grey.withAlpha(38),
+        ),
+      );
+    }
+  }
+
+  final double minX = xValues.isEmpty ? 0 : xValues.reduce(min);
+  final double maxX = xValues.isEmpty ? 1 : xValues.reduce(max);
+  final double labelInterval = maxX > minX ? (maxX - minX) / 5 : 1;
+
+  return LineChartData(
+    minX: minX,
+    maxX: maxX,
+    maxY: maxStat * 1.1,
+    rangeAnnotations: RangeAnnotations(verticalRangeAnnotations: gapBands),
+    lineBarsData: [
+      if (visibleStats.contains(StatSeries.strength))
+        LineChartBarData(
+          spots: spotsOf((d) => d.strength),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.blue,
+          dotData: const FlDotData(
+            show: false,
+          ),
+        ),
+      if (visibleStats.contains(StatSeries.speed))
+        LineChartBarData(
+          spots: spotsOf((d) => d.speed),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.orange,
+          dotData: const FlDotData(
+            show: false,
+          ),
+        ),
+      if (visibleStats.contains(StatSeries.defense))
+        LineChartBarData(
+          spots: spotsOf((d) => d.defense),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.red,
+          dotData: const FlDotData(
+            show: false,
+          ),
+        ),
+      if (visibleStats.contains(StatSeries.dexterity))
+        LineChartBarData(
+          spots: spotsOf((d) => d.dexterity),
+          isCurved: false,
+          barWidth: 2,
+          color: Colors.green,
+          dotData: const FlDotData(
+            show: false,
+          ),
+        ),
+    ],
+    gridData: FlGridData(
+      show: true,
+      drawVerticalLine: false,
+      getDrawingHorizontalLine: (value) {
+        return const FlLine(
+          strokeWidth: 0.2,
+          color: Colors.grey,
+        );
+      },
+    ),
+    lineTouchData: LineTouchData(
+      touchTooltipData: LineTouchTooltipData(
+        fitInsideHorizontally: true,
+        fitInsideVertically: false,
+        getTooltipColor: (touchedSpot) => Colors.blueGrey.withAlpha(255),
+        getTooltipItems: (touchedSpots) {
+          final int? index = touchedSpots.isEmpty ? null : indexByX[touchedSpots.first.x];
+          if (index == null || touchedSpots.length != orderedVisible.length) {
+            return List<LineTooltipItem?>.filled(touchedSpots.length, null);
+          }
+
+          final Datum touched = data[index];
+          final NumberFormat f = NumberFormat("###,###", "en_US");
+          final DateTime date = DateTime.fromMillisecondsSinceEpoch(touched.timestamp! * 1000);
+          final String header = DateFormat('d LLL yyyy').format(date);
+          final int total =
+              (touched.strength ?? 0) + (touched.defense ?? 0) + (touched.speed ?? 0) + (touched.dexterity ?? 0);
+          const style = TextStyle(fontSize: 10, color: Colors.white);
+
+          int valueOf(StatSeries stat) => switch (stat) {
+                StatSeries.strength => touched.strength ?? 0,
+                StatSeries.defense => touched.defense ?? 0,
+                StatSeries.speed => touched.speed ?? 0,
+                StatSeries.dexterity => touched.dexterity ?? 0,
+              };
+
+          return [
+            for (int i = 0; i < orderedVisible.length; i++)
+              LineTooltipItem(
+                [
+                  if (i == 0) "$header\n\n",
+                  "${orderedVisible[i].shortLabel}: ${f.format(valueOf(orderedVisible[i]))}",
+                  if (i == orderedVisible.length - 1) "\n\nTOTAL ${f.format(total)}",
+                ].join(),
+                style,
+              ),
+          ];
+        },
+      ),
+    ),
+    titlesData: FlTitlesData(
+      show: true,
+      bottomTitles: AxisTitles(
+        sideTitles: SideTitles(
+          showTitles: true,
+          interval: labelInterval,
+          getTitlesWidget: (position, meta) {
+            if (meta.appliedInterval > 0 && position != meta.min && position != meta.max) {
+              final double edge = meta.appliedInterval * 0.5;
+              if (position - meta.min < edge || meta.max - position < edge) {
+                return const SizedBox.shrink();
+              }
+            }
+
+            final DateTime dt = DateTime.fromMillisecondsSinceEpoch((position * 86400 * 1000).round());
+            final DateFormat formatter = DateFormat('d LLL');
+            final String date = formatter.format(dt);
+
+            const degrees = -50;
+            const radians = degrees * pi / 180;
+
+            // Color logic based on year
+            final int currentYear = DateTime.now().year;
+            Color yearColor;
+            if (dt.year == currentYear) {
+              yearColor = currentYearColor;
+            } else if (dt.year == currentYear - 1) {
+              yearColor = Colors.blue;
+            } else if (dt.year == currentYear - 2) {
+              yearColor = Colors.yellow[800]!;
+            } else {
+              yearColor = Colors.red;
+            }
+
+            return Transform.rotate(
+              angle: radians,
+              child: SizedBox(
+                width: 60,
+                child: Text(
+                  date,
+                  style: TextStyle(fontSize: 9, color: yearColor),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      leftTitles: AxisTitles(
+        sideTitles: SideTitles(
+          reservedSize: 50,
+          showTitles: true,
+          getTitlesWidget: (position, meta) {
+            if (position == 0) return const SizedBox.shrink();
+            return Text(
+              formatBigNumbers(position.toInt()),
+              style: const TextStyle(fontSize: 9),
+            );
+          },
+        ),
+      ),
+      topTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+      rightTitles: const AxisTitles(
+        sideTitles: SideTitles(showTitles: false),
+      ),
+    ),
+  );
 }

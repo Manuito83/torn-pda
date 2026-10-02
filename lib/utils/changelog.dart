@@ -83,6 +83,165 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  // TODO: confirm the release date
+  const _MVersion(
+    version: 'v3.17.0',
+    date: '01 October 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Alerts: get notified when city shop items restock',
+            detail:
+                'Choose the items you want to follow in Alerts, under City Shops. Items whose restock can be '
+                'predicted warn you a few minutes in advance; the rest notify you as soon as the restock is seen. '
+                'You can also ask to be notified only once the item is confirmed in stock.',
+          ),
+          _MItem(
+            'Foreign stocks: restock alerts can now wait until you have landed',
+            detail:
+                'The option that limits restock alerts to your current country has a new setting under it. Turn '
+                'off "alert while still flying" and you will only hear about a restock once you have landed and '
+                'can actually buy, instead of while you are in the air.',
+          ),
+          _MItem(
+            'Foreign stocks: get alerted when an item sells out',
+            detail:
+                'A new option in the foreign stocks alerts sends you a notification when one of the items you '
+                'are subscribed to runs out, which helps to know when the next restock is due.',
+          ),
+          _MItem(
+            'Travel: the landing notification can list what is in stock at your destination',
+            detail:
+                'Enable it under the travel alert options. The notification will tell you which of the items you '
+                'have restock alerts for are in stock in the country you are landing in.',
+          ),
+          _MItem(
+            'Scripts: added war mode',
+            detail:
+                'Keep only the scripts you need during a war or a chain. Enter it from the options menu of the '
+                'scripts section, from the browser three-dotted icon or from a FAB button, then use the switches in the '
+                'list to choose what runs in war mode. Your normal setup is kept untouched, so leaving it changes '
+                'nothing else.',
+          ),
+          _MItem(
+            'Alerts: set a target for your work stats',
+            detail:
+                'A new alert lets you choose a value for your manual labor, intelligence and endurance, and '
+                'notifies you as soon as you reach it.',
+          ),
+          _MItem(
+            'Items and foreign stocks: inventory quantities are back',
+            detail:
+                'Torn removed inventory from API v1 in 2023 and it is now available again in API v2, one call per '
+                'item category. To keep API usage under your control, inventory is only loaded when you tap the new '
+                'box icon in Items or Foreign stocks (or pick an inventory filter or sort). Items then shows how many '
+                'of each item you own (display case included) and their total value. If you would rather have it '
+                'loaded on entering those sections, enable "Load inventory automatically" in Settings, under API '
+                'call rate. Torn caches inventory for an hour, so recent purchases can take up to an hour to show.',
+          ),
+          _MItem(
+            'FFScouter: shared notes',
+            detail:
+                'The notes dialog of any player now has an FFScouter tab with the notes stored in FFScouter: your '
+                'personal ones, the ones written by your faction and those from the FFScouter team. You can write '
+                'new personal or faction notes there, and copy notes between FFScouter and your Torn PDA note.\n\n'
+                'War, target and profile cards show how many FFScouter notes a player has: tap the counter to open '
+                'them, or the notebook icon for your Torn PDA note. Notes are stored by FFScouter, so they follow you '
+                'to any device and to the FFScouter scripts. In Settings, under FFScouter, you can choose which note '
+                'the cards show when there are both, or turn them off.',
+          ),
+          _MItem(
+            'FFScouter: hit calling in the war section',
+            detail:
+                'If you have FFScouter premium, tap the hand icon of a war card to call that target for your faction. '
+                'Everyone in your faction using Torn PDA or the FFScouter scripts sees who called what, and calls '
+                'expire on their own after a while. It can be disabled in the FFScouter premium features.',
+          ),
+          _MItem(
+            'FFScouter: new Bounty Board tab',
+            detail:
+                'The FFScouter section in Chaining has a Bounty Board tab next to the Target '
+                'Finder. It lists the players with bounties placed through FFScouter and what each hit pays: attack '
+                'one from there, hospitalize them and claim the hit, and FFScouter checks your attack log and pays '
+                'you. You can also place your own bounties, paid with Xanax, and follow them from the same tab.\n\n'
+                'The first time you open it you are asked to accept the Bounty Board rules and data policy, and the '
+                'tab can be hidden from Settings if you are not interested.',
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [
+          _MItem(
+            'FFScouter: stats dialog shows every estimate with its date, spies when available and a history chart',
+          ),
+          _MItem('FFScouter: travel timers for all the players in a list are now loaded in a single call'),
+          _MItem('Foreign stocks: item details now include the average time an item takes to sell out'),
+          _MItem(
+            'Browser: option to keep locked tabs loaded',
+            detail:
+                'When "only load tabs when used" is active, you can now exempt locked tabs. They load with the browser and '
+                'are never put to sleep or rested while you are away (except for memory pressure request from the OS).',
+          ),
+          _MItem(
+            'Scripts: the list can now be searched and sorted',
+            detail:
+                'Search by name (or inside the code, if you enable it in the options menu) and sort the list '
+                'alphabetically or by install date. You can also keep the scripts with a pending update at the top.',
+          ),
+          _MItem(
+            'Profile: choose which stats are shown in the Torn Stats chart',
+            detail:
+                'Tap the legend under the chart to open a dialog where you can hide any of strength, defense, '
+                'speed and dexterity.',
+          ),
+          _MItem(
+            'Profile: tap your ID in the header to open your own profile in the browser',
+            detail: 'Tapping your name still shows your online status, and a long press still copies your ID.',
+          ),
+          _MItem(
+            'Browser: added hospital timer on the attack page',
+            detail:
+                'The "This person is currently in hospital and cannot be attacked" message is replaced with a '
+                'countdown of their remaining hospital time. The page automatically updates to "Start fight" when '
+                'they are released.',
+          ),
+          _MItem('Browser: new option to limit the size of Torn\'s chat cache'),
+          _MItem(
+            'Browser: option to turn off the page graphics layer',
+            detail:
+                'Found in Advanced browser settings, under Memory. Pages are drawn into an extra graphics layer '
+                'before being shown; turning it off uses less graphics memory, which might help if black or empty '
+                'boxes appear over pages.',
+            androidOnly: true,
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Profile: fixed spacing in stats chart when there is data missing'),
+          _MItem('Travel: expenditure warnings are no longer shown when you are abroad or traveling'),
+          _MItem('Alerts: foreign restock notifications now redirect correctly when tapped abroad'),
+          _MItem('Fixed issue with back button not correctly closing some dialogs', androidOnly: true),
+          _MItem('Fixed issues with company addiction refresh in Profile'),
+          _MItem('Shortcuts: custom border color is now kept after restarting the app'),
+          _MItem('Browser: custom tab names are no longer split in the middle of a word'),
+          _MItem('Scripts: import overwrite mode no longer deletes other scripts'),
+        ],
+      ),
+    ],
+  ),
+
   const _MVersion(
     version: 'v3.16.0',
     date: '28 August 2026',

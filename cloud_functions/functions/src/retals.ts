@@ -20,7 +20,7 @@ export const evaluateRetals = onSchedule(
         const refFactions = db.ref("retals/factions");
 
         let factionsList;
-        await refFactions.once("value", async function (snapshot) {
+        await refFactions.once("value", async function (snapshot: admin.database.DataSnapshot) {
             factionsList = snapshot.val() || "";
         });
 
@@ -60,7 +60,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         const currentDateInMillis = Math.floor(Date.now() / 1000);
         const factionTimeUpdated = factionsList[id].timestamp;
 
-        let subscribers = [];
+        let subscribers: any[] = [];
 
         // Is any API key available?
         let apiKey = factionsList[id].api ?? "";
@@ -230,7 +230,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         let lastRetalName = "";
         let lastRetalTargetId = 0;
         const allRetalNames = [];
-        const allRetalNamesTrimmed = [];
+        const allRetalNamesTrimmed: string[] = [];
         let retalMinutesRemaining = 0;
         let totalRetalsAbroad = 0;
 

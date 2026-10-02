@@ -2,6 +2,8 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
+import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
@@ -260,6 +262,44 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
                       "battle score estimate, the FFS value will replace the spied stats on the card. "
                       "A small clock icon indicates the override. Sorting, filters, and SmartScore also use the "
                       "FFS value in that case. Set to 'Off' to always keep spied stats regardless of age.",
+                      style: TextStyle(fontSize: 12, color: textColor),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Shared notes",
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "The notes dialog of any player also shows the notes stored in FFScouter: your personal ones, "
+                      "the ones from your faction and those from the FFScouter team. Notes you write there are stored "
+                      "by FFScouter (personal notes are only visible to you, faction notes to your whole faction). "
+                      "They can be disabled in Settings.",
+                      style: TextStyle(fontSize: 12, color: textColor),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Hit calling (premium)",
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "In the war section, tap the hand icon of a card to call that target for your faction. Calls "
+                      "are shared with the FFScouter scripts and website and expire on their own after a while.",
+                      style: TextStyle(fontSize: 12, color: textColor),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Bounty Board",
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "The FFScouter section in Chaining has a Bounty Board tab with the bounties placed through "
+                      "FFScouter. You have to hospitalize the target yourself and claim the hit right after, and "
+                      "FFScouter checks your attack log to credit and pay it. Placing a bounty is paid with Xanax. "
+                      "The Bounty Board has its own rules and data policy, which you accept from the tab itself, and "
+                      "it can be hidden from Settings.",
                       style: TextStyle(fontSize: 12, color: textColor),
                     ),
                     const SizedBox(height: 16),
@@ -773,6 +813,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
     setState(() {
       _isRegistering = false;
       if (result.success) {
+        Get.find<FFScouterNotesController>().resetKeyProblem();
         _keyIsRegistered = true;
         _keyRegisteredJustNow = true;
         _registerSuccess = result.data?.message ?? "Key registered successfully!";
@@ -780,6 +821,7 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
       } else {
         if (result.errorCode == 8) {
           // Already registered
+          Get.find<FFScouterNotesController>().resetKeyProblem();
           _keyIsRegistered = true;
           _registerSuccess = "Key was already registered.";
           if (!_isSameAsMainKey) _persistAlternativeKey(auto: true);
@@ -941,6 +983,44 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class FFScouterPolicyNotice extends StatelessWidget {
+  final EdgeInsets padding;
+
+  const FFScouterPolicyNotice({super.key, this.padding = EdgeInsets.zero});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<FFScouterPremiumController>(
+      builder: (premium) {
+        if (!premium.policyUpdateRequired) return const SizedBox.shrink();
+        return Padding(
+          padding: padding,
+          child: Row(
+            children: [
+              const Icon(Icons.warning_amber, color: Colors.orange, size: 16),
+              const SizedBox(width: 6),
+              const Flexible(
+                child: Text(
+                  "FFScouter has updated its data policy",
+                  style: TextStyle(color: Colors.orange, fontSize: 12),
+                ),
+              ),
+              TextButton(
+                onPressed: () => openSimpleWebViewDialog(
+                  context: context,
+                  url: 'https://ffscouter.com/privacy',
+                  title: 'FFScouter Policy',
+                ),
+                child: const Text("Review", style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

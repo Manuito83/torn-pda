@@ -29,6 +29,7 @@ import 'package:receive_intent/receive_intent.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -60,6 +61,8 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
+import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -713,6 +716,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Remote Config defaults
       remoteConfig.setDefaults(const {
         "ffscouter_enabled": true,
+        "ffscouter_notes_enabled": true,
+        "ffscouter_hitcalling_enabled": true,
+        "ffscouter_bounties_enabled": true,
         "yata_stats_enabled": true,
         "yata_upload_enabled": true,
         "prometheus_upload_enabled": true,
@@ -726,11 +732,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_extend_height_for_keyboard_allowed": true,
         "browser_restore_webview_focus_allowed": true,
         "browser_engine_prewarm_allowed": true,
+        "browser_engine_prewarm_unmount_after_load": false,
         "browser_webview_recovery_allowed": true,
         "browser_render_process_gone_allowed": true,
+        "browser_recovery_overlay_allowed": true,
         "browser_park_background_tabs_allowed": true,
         // Default for the browser memory settings (can be overriden)
         "browser_park_background_tabs_default": false,
+        "browser_webview_hardware_layer_mode": "default_on",
+        "browser_torn_chat_cache_limit_mb": 0,
+        "browser_localstorage_safety_mb": 3,
         "browser_tab_sleep_minutes_default": 720,
         "auth_recovery_enabled": true,
         // Revives
@@ -794,6 +805,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     try {
       _settingsProvider.ffScouterEnabledStatusRemoteConfig = remoteConfig.getBool("ffscouter_enabled");
       Get.find<FFScouterCacheController>().remoteConfigEnabled = _settingsProvider.ffScouterEnabledStatusRemoteConfig;
+      Get.find<FFScouterNotesController>().remoteConfigEnabled = remoteConfig.getBool("ffscouter_notes_enabled");
+      Get.find<FFScouterHitCallingController>().remoteConfigEnabled = remoteConfig.getBool(
+        "ffscouter_hitcalling_enabled",
+      );
+      _settingsProvider.ffScouterBountiesEnabledRemoteConfig = remoteConfig.getBool("ffscouter_bounties_enabled");
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
       _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");
@@ -815,11 +831,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.browserEnginePrewarmRemoteConfigAllowed = remoteConfig.getBool(
         "browser_engine_prewarm_allowed",
       );
+      _settingsProvider.browserEnginePrewarmUnmountAfterLoadRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_engine_prewarm_unmount_after_load",
+      );
       _settingsProvider.browserWebViewRecoveryRemoteConfigAllowed = remoteConfig.getBool(
         "browser_webview_recovery_allowed",
       );
       _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed = remoteConfig.getBool(
         "browser_render_process_gone_allowed",
+      );
+      _settingsProvider.browserRecoveryOverlayRemoteConfigAllowed = remoteConfig.getBool(
+        "browser_recovery_overlay_allowed",
       );
       _webViewProvider.parkBackgroundTabsRemoteConfigAllowed = remoteConfig.getBool(
         "browser_park_background_tabs_allowed",
@@ -827,6 +849,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Browser memory defaults (also persisted, so they are known before the fetch on next launch)
       _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");
+      _webViewProvider.webViewHardwareLayerModeRC = remoteConfig.getString("browser_webview_hardware_layer_mode");
+      _webViewProvider.tornChatCacheLimitRC = remoteConfig.getInt("browser_torn_chat_cache_limit_mb");
+      _webViewProvider.localStorageSafetyMbRC = remoteConfig.getInt("browser_localstorage_safety_mb");
       final int tabSleepMinutesRC = remoteConfig.getInt("browser_tab_sleep_minutes_default");
       if (tabSleepMinutesRC > 0) {
         _webViewProvider.tabSleepMinutesDefaultRC = tabSleepMinutesRC;
@@ -1312,6 +1337,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool travel = false;
     bool hospital = false;
     bool restocks = false;
+    bool cityShops = false;
     bool abroadStay = false;
     bool racing = false;
     bool messages = false;
@@ -1330,12 +1356,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool retals = false;
     bool sendbird = false;
     bool forums = false;
+    bool workStats = false;
 
     String? channel = '';
     String? messageId = '';
     String? tradeId = '';
     String? assistId = '';
     String? bulkDetails = '';
+    String? cityShopId = '';
 
     if (Platform.isIOS) {
       channel = message["channelId"] as String?;
@@ -1343,12 +1371,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       tradeId = message["tornTradeId"] as String?;
       assistId = message["assistId"] as String?;
       bulkDetails = message["bulkDetails"] as String?;
+      cityShopId = message["shopId"] as String?;
     } else if (Platform.isAndroid) {
       channel = message["channelId"] as String?;
       messageId = message["tornMessageId"] as String?;
       tradeId = message["tornTradeId"] as String?;
       assistId = message["assistId"] as String?;
       bulkDetails = message["bulkDetails"] as String?;
+      cityShopId = message["shopId"] as String?;
     }
 
     if (channel!.contains("Alerts travel")) {
@@ -1359,6 +1389,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       hospital = true;
     } else if (channel.contains("Alerts restocks")) {
       restocks = true;
+    } else if (channel.contains("Alerts city shops")) {
+      cityShops = true;
     } else if (channel.contains("Alerts racing")) {
       racing = true;
     } else if (channel.contains("Alerts messages")) {
@@ -1393,6 +1425,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       sendbird = true;
     } else if (channel.contains("Alerts forums")) {
       forums = true;
+    } else if (channel.contains("Alerts work stats")) {
+      workStats = true;
     }
 
     if (travel) {
@@ -1406,7 +1440,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       browserUrl = "https://www.torn.com";
     } else if (restocks) {
       launchBrowserWithUrl = true;
-      browserUrl = "https://www.torn.com/travelagency.php";
+      browserUrl = await _restockTapUrl();
+    } else if (cityShops) {
+      launchBrowserWithUrl = true;
+      final firstShopId = int.tryParse((cityShopId ?? "").split(",").first);
+      browserUrl = CityShopSlugs.urlForShop(firstShopId);
     } else if (abroadStay) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com";
@@ -1649,6 +1687,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         launchBrowserWithUrl = true;
         browserUrl = bulkDetails;
       }
+    } else if (workStats) {
+      launchBrowserWithUrl = true;
+      browserUrl = "https://www.torn.com/jobs.php";
     }
 
     if (launchBrowserWithUrl) {
@@ -1702,7 +1743,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com';
       } else if (payload == 'restocks') {
         launchBrowserWithUrl = true;
-        browserUrl = 'https://www.torn.com/travelagency.php';
+        browserUrl = await _restockTapUrl();
+      } else if (payload.startsWith('cityShops:')) {
+        launchBrowserWithUrl = true;
+        final cityShopId = payload.substring('cityShops:'.length);
+        final firstShopId = int.tryParse(cityShopId.split(",").first);
+        browserUrl = CityShopSlugs.urlForShop(firstShopId);
       } else if (payload == 'abroadStay') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com';
@@ -3057,6 +3103,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     return true;
   }
 
+  // Travel agency is blocked abroad
+  Future<String> _restockTapUrl() async {
+    final destination = await _getCurrentTravelDestination();
+    if (destination != null && destination != "Torn") return "https://www.torn.com";
+    return "https://www.torn.com/travelagency.php";
+  }
+
   Future<String?> _getCurrentTravelDestination() async {
     final profileResponse = await ApiCallsV1.getOwnProfileExtended(limit: 3);
     if (profileResponse is OwnProfileExtended) {
@@ -3098,6 +3151,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _openDrawer() {
     if (routeWithDrawer) {
+      // Dialogs sit on top of this route and the back button never reaches them
+      final ModalRoute<dynamic>? route = ModalRoute.of(context);
+      if (route != null && !route.isCurrent) {
+        Navigator.of(context).maybePop();
+        return;
+      }
+
       if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
         _scaffoldKey.currentState!.openEndDrawer();
       } else {

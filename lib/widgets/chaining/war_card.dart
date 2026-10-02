@@ -20,6 +20,7 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -27,6 +28,8 @@ import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_activity_badge.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_hit_call_chip.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_notes_badge.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -62,7 +65,7 @@ class _WarMemberNoteSection extends StatelessWidget {
   final String memberId;
   final String? memberName;
   final ThemeProvider themeProvider;
-  final Future<void> Function() onOpenDialog;
+  final Future<void> Function({bool openFFScouter}) onOpenDialog;
 
   const _WarMemberNoteSection({
     required this.memberId,
@@ -74,41 +77,84 @@ class _WarMemberNoteSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<PlayerNotesController>(
-      builder: (ctrl) {
-        final note = ctrl.getNoteForPlayer(memberId);
-        final rawColor = note?.color;
-        final text = note?.note ?? '';
-        final hasColorOnly = note?.hasColorOnly ?? false;
-        final effectiveColor = PlayerNoteColor.isNone(rawColor)
-            ? themeProvider.mainText
-            : PlayerNoteColor.toTextColor(code: rawColor, fallback: themeProvider.mainText);
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 30,
-              height: 20,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                iconSize: 20,
-                icon: Icon(MdiIcons.notebookEditOutline, color: effectiveColor, size: 18),
-                onPressed: () {
-                  onOpenDialog();
-                },
-              ),
-            ),
-            const SizedBox(width: 5),
-            const Text('Notes: ', style: TextStyle(fontSize: 12)),
-            Flexible(
-              child: Text(
-                hasColorOnly ? '' : text,
-                style: TextStyle(color: effectiveColor, fontSize: 12),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        );
-      },
+      builder: (ctrl) => GetBuilder<FFScouterNotesController>(
+        builder: (_) {
+          final note = ctrl.getNoteForPlayer(memberId);
+          final rawColor = note?.color;
+          final playerId = int.tryParse(memberId);
+          final shown = cardNote(context, playerId: playerId, pdaText: note?.effectiveDisplayText ?? '');
+          final style = shown != null && shown.fromFFScouter
+              ? TextStyle(color: Colors.grey[500], fontSize: 12, fontStyle: FontStyle.italic)
+              : TextStyle(
+                  color: PlayerNoteColor.isNone(rawColor)
+                      ? themeProvider.mainText
+                      : PlayerNoteColor.toTextColor(code: rawColor, fallback: themeProvider.mainText),
+                  fontSize: 12,
+                );
+
+          final counter = playerId == null
+              ? const SizedBox.shrink()
+              : FFScouterNotesBadge(
+                  playerId: playerId,
+                  padding: const EdgeInsets.only(left: 5),
+                  onTap: () => onOpenDialog(openFFScouter: true),
+                );
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              // What the icon, the label and the counter take on the same line
+              const reserved = 128.0;
+              final fits = shown == null || noteFitsInline(shown.text, style, constraints.maxWidth - reserved);
+
+              final row = Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 30,
+                    height: 20,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      iconSize: 20,
+                      icon: Icon(
+                        MdiIcons.notebookEditOutline,
+                        color: PlayerNoteColor.isNone(rawColor)
+                            ? themeProvider.mainText
+                            : PlayerNoteColor.toTextColor(code: rawColor, fallback: themeProvider.mainText),
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        onOpenDialog();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  const Text('Notes: ', style: TextStyle(fontSize: 12)),
+                  if (shown != null && fits)
+                    Flexible(
+                      child: Text(shown.text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                  counter,
+                ],
+              );
+
+              if (fits) return row;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  row,
+                  GestureDetector(
+                    onTap: () => onOpenDialog(openFFScouter: shown.fromFFScouter),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 35, top: 2),
+                      child: Text(shown.text, style: style, maxLines: 2, overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -308,17 +354,11 @@ class WarCardState extends State<WarCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Flexible(
-                        child: Row(
-                          children: <Widget>[
-                            GetBuilder<PlayerNotesController>(
-                              builder: (ctrl) => _WarMemberNoteSection(
-                                memberId: _member.memberId.toString(),
-                                memberName: _member.name,
-                                themeProvider: _themeProvider,
-                                onOpenDialog: _showNotesDialog,
-                              ),
-                            ),
-                          ],
+                        child: _WarMemberNoteSection(
+                          memberId: _member.memberId.toString(),
+                          memberName: _member.name,
+                          themeProvider: _themeProvider,
+                          onOpenDialog: _showNotesDialog,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -343,6 +383,7 @@ class WarCardState extends State<WarCard> {
                             ),
                           ),
                         ),
+                      FFScouterHitCallChip(targetId: _member.memberId!, targetName: _member.name),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15.0),
                         child: GestureDetector(
@@ -1097,12 +1138,13 @@ class WarCardState extends State<WarCard> {
     }
   }
 
-  Future<void> _showNotesDialog() {
+  Future<void> _showNotesDialog({bool openFFScouter = false}) {
     return showPlayerNotesDialog(
       context: context,
       barrierDismissible: false,
       playerId: _member.memberId.toString(),
       playerName: _member.name ?? '',
+      openFFScouter: openFFScouter,
     );
   }
 

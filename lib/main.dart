@@ -43,6 +43,7 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
@@ -61,6 +62,8 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/ffscouter_activity_controller.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/ffscouter_flights_controller.dart';
+import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -70,6 +73,7 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/background_inbox.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/crashlytics_identity.dart';
+import 'package:torn_pda/utils/exit_info.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
@@ -82,9 +86,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.16.0';
-const String androidCompilation = '677';
-const String iosCompilation = '677';
+const String appVersion = '3.17.0';
+const String androidCompilation = '689';
+const String iosCompilation = '689';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -93,8 +97,20 @@ const List<String> kAlertFirestoreFields = [
   "discrete",
   "vibration",
   "travelNotification",
+  "travelStocksInNotification",
   "foreignRestockNotification",
   "foreignRestockNotificationOnlyCurrentCountry",
+  "foreignRestockNotificationOnlyLanded",
+  "foreignRestockNotificationSellout",
+  "cityShopRestockNotification",
+  "cityShopOnlyConfirmed",
+  "cityShopOnlyInTorn",
+  "cityShopHoursEnabled",
+  "cityShopHoursFrom",
+  "cityShopHoursTo",
+  "abroadStayNotification",
+  "abroadStayIntervals",
+  "abroadStayIncludeHospital",
   "energyNotification",
   "nerveNotification",
   "lifeNotification",
@@ -120,6 +136,10 @@ const List<String> kAlertFirestoreFields = [
   "lootRangersNotification",
   "lootAlertAheadSeconds",
   "lootRangersAheadSeconds",
+  "workStatsNotification",
+  "workStatsManualLaborTarget",
+  "workStatsIntelligenceTarget",
+  "workStatsEnduranceTarget",
 ];
 
 bool appHasBeenUpdated = false;
@@ -187,6 +207,7 @@ Future<void> main() async {
   await _initializeBackupAndTheme(widgetsBinding);
   _startDebugWakelock();
   await _initializeFirebase();
+  if (_isFirebaseInitialized) unawaited(ExitInfo.reportPreviousExits());
   await _initializeWorkManager();
   await _initializeHomeWidget();
   await _initializeGetXControllers();
@@ -205,6 +226,7 @@ Future<void> main() async {
         ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
         ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
+        ChangeNotifierProvider<InventoryProvider>(create: (context) => InventoryProvider()),
         ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
         ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
         ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
@@ -712,6 +734,8 @@ Future<void> _initializeGetXControllers() async {
     Get.put(FFScouterPremiumController(), permanent: true);
     Get.put(FFScouterFlightsController(), permanent: true);
     Get.put(FFScouterActivityController(), permanent: true);
+    Get.put(FFScouterNotesController(), permanent: true);
+    Get.put(FFScouterHitCallingController(), permanent: true);
     Get.put(StakeoutsController(), permanent: true);
     Get.put(PlayerNotesController(), permanent: true);
     Get.put(PeriodicExecutionController(), permanent: true);

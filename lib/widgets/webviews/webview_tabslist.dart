@@ -29,6 +29,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
   List<GlobalKey<CircularMenuTabsState>> _circularMenuKeys = <GlobalKey<CircularMenuTabsState>>[];
 
+  ToastificationItem? _lockToast;
+
   @override
   void initState() {
     super.initState();
@@ -122,15 +124,17 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                   // Using custom names
                                   tabCustomNameShown
                                   ? Container(
-                                      width: 30,
+                                      constraints: const BoxConstraints(minWidth: 30, maxWidth: 70),
                                       height: 32,
-                                      child: Center(
+                                      child: Align(
+                                        widthFactor: 1,
                                         child: ResponsiveText(
                                           text: _webViewProvider!.tabList[i].customName,
                                           maxLines: 3,
                                           maxFontSize: 11,
                                           minFontSize: 8,
                                           textAlign: TextAlign.center,
+                                          avoidWordBreak: true,
                                           style: const TextStyle(height: 0.9, fontWeight: FontWeight.bold),
                                         ),
                                       ),
@@ -231,8 +235,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
                             if (!_webViewProvider!.tabList[i].isLocked &&
                                 context.read<SettingsProvider>().showTabLockWarnings) {
-                              toastification.dismissAll();
-                              toastification.show(
+                              if (_lockToast != null) toastification.dismiss(_lockToast!);
+                              _lockToast = toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
                                 margin: const EdgeInsets.only(bottom: 50),
@@ -275,8 +279,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                             }
 
                             if (context.read<SettingsProvider>().showTabLockWarnings) {
-                              toastification.dismissAll();
-                              toastification.show(
+                              if (_lockToast != null) toastification.dismiss(_lockToast!);
+                              _lockToast = toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
                                 margin: const EdgeInsets.only(bottom: 50),

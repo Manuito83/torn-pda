@@ -9,6 +9,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_targets_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -17,6 +18,8 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/ffscouter_comm.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_bounty_board.dart';
+import 'package:torn_pda/widgets/ffscouter/ffscouter_notes_badge.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
@@ -31,7 +34,12 @@ class FFScouterPage extends StatefulWidget {
   FFScouterPageState createState() => FFScouterPageState();
 }
 
-class FFScouterPageState extends State<FFScouterPage> {
+class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderStateMixin {
+  late final TabController _tabController = TabController(length: 2, vsync: this)
+    ..addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
+
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late WebViewProvider _webViewProvider;
@@ -75,6 +83,7 @@ class FFScouterPageState extends State<FFScouterPage> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _minLevelCtrl.dispose();
     _maxLevelCtrl.dispose();
     _minFfCtrl.dispose();
@@ -163,23 +172,48 @@ class FFScouterPageState extends State<FFScouterPage> {
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
           : null,
       body: Container(
         color: _themeProvider.canvas,
         child: !_settingsProvider.ffScouterEnabledStatusRemoteConfig
             ? _buildRemoteDisabledScreen()
             : _settingsProvider.ffScouterEnabledStatus != 1
-                ? _buildConsentScreen()
-                : Column(
-                    children: [
-                      _buildFiltersSection(),
-                      Expanded(child: _buildResultsSection()),
+            ? _buildConsentScreen()
+            : !_settingsProvider.ffScouterBountiesEnabled
+            ? Column(
+                children: [
+                  _buildFiltersSection(),
+                  Expanded(child: _buildResultsSection()),
+                ],
+              )
+            : Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    labelColor: _themeProvider.mainText,
+                    unselectedLabelColor: Colors.grey[500],
+                    tabs: const [
+                      Tab(height: 36, text: "Target Finder"),
+                      Tab(height: 36, text: "Bounty Board"),
                     ],
                   ),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        Column(
+                          children: [
+                            _buildFiltersSection(),
+                            Expanded(child: _buildResultsSection()),
+                          ],
+                        ),
+                        const FFScouterBountyBoardView(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -210,7 +244,7 @@ class FFScouterPageState extends State<FFScouterPage> {
         ],
       ),
       actions: [
-        if (_targets.isNotEmpty)
+        if (_targets.isNotEmpty && _tabController.index == 0)
           _isRefreshingAll
               ? const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
@@ -233,10 +267,7 @@ class FFScouterPageState extends State<FFScouterPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => FFScouterInfoPage(
-                  settingsProvider: _settingsProvider,
-                  themeProvider: _themeProvider,
-                ),
+                builder: (_) => FFScouterInfoPage(settingsProvider: _settingsProvider, themeProvider: _themeProvider),
               ),
             );
           },
@@ -271,10 +302,8 @@ class FFScouterPageState extends State<FFScouterPage> {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => FFScouterInfoPage(
-                      settingsProvider: _settingsProvider,
-                      themeProvider: _themeProvider,
-                    ),
+                    builder: (_) =>
+                        FFScouterInfoPage(settingsProvider: _settingsProvider, themeProvider: _themeProvider),
                   ),
                 );
                 if (mounted) setState(() {});
@@ -330,14 +359,8 @@ class FFScouterPageState extends State<FFScouterPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    "Filters",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  Icon(
-                    _filtersExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 20,
-                  ),
+                  const Text("Filters", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Icon(_filtersExpanded ? Icons.expand_less : Icons.expand_more, size: 20),
                 ],
               ),
             ),
@@ -454,10 +477,7 @@ class FFScouterPageState extends State<FFScouterPage> {
             },
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Text("-"),
-        ),
+        const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("-")),
         SizedBox(
           width: 50,
           child: TextFormField(
@@ -510,10 +530,7 @@ class FFScouterPageState extends State<FFScouterPage> {
             },
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          child: Text("-"),
-        ),
+        const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("-")),
         SizedBox(
           width: 55,
           child: TextFormField(
@@ -756,10 +773,7 @@ class FFScouterPageState extends State<FFScouterPage> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          "[${target.playerId}]",
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                        ),
+                        Text("[${target.playerId}]", style: TextStyle(fontSize: 11, color: Colors.grey[600])),
                         const SizedBox(width: 4),
                         _buildFactionIcon(target),
                       ],
@@ -773,11 +787,7 @@ class FFScouterPageState extends State<FFScouterPage> {
                     ),
                     child: Text(
                       "Lv ${target.level ?? '?'}",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: _themeProvider.mainText,
-                      ),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _themeProvider.mainText),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -786,10 +796,7 @@ class FFScouterPageState extends State<FFScouterPage> {
                     width: 32,
                     height: 32,
                     child: _refreshingStatus.contains(pid)
-                        ? const Padding(
-                            padding: EdgeInsets.all(7),
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? const Padding(padding: EdgeInsets.all(7), child: CircularProgressIndicator(strokeWidth: 2))
                         : IconButton(
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -820,10 +827,7 @@ class FFScouterPageState extends State<FFScouterPage> {
                   _statChip("FF", ffText, _ffColor(target.fairFight)),
                   const Spacer(),
                   if (lastActionText != null)
-                    Text(
-                      lastActionText,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-                    ),
+                    Text(lastActionText, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
                 ],
               ),
               // Row 3: Live status (if has been refreshed)
@@ -857,11 +861,7 @@ class FFScouterPageState extends State<FFScouterPage> {
               shape: BoxShape.circle,
             ),
             padding: const EdgeInsets.all(2),
-            child: ImageIcon(
-              const AssetImage('images/icons/faction.png'),
-              size: 12,
-              color: iconColor,
-            ),
+            child: ImageIcon(const AssetImage('images/icons/faction.png'), size: 12, color: iconColor),
           ),
         ),
       );
@@ -921,32 +921,62 @@ class FFScouterPageState extends State<FFScouterPage> {
 
   Widget _buildNoteRow(FFScouterTarget target) {
     return GetBuilder<PlayerNotesController>(
-      builder: (ctrl) {
-        final note = ctrl.getNoteForPlayer(target.playerId.toString());
-        if (note == null || (note.note.isEmpty && PlayerNoteColor.isNone(note.color))) {
-          return const SizedBox.shrink();
-        }
-        return Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Row(
-            children: [
-              if (!PlayerNoteColor.isNone(note.color))
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: Icon(Icons.circle, size: 8, color: PlayerNoteColor.toColor(note.color)),
+      builder: (ctrl) => GetBuilder<FFScouterNotesController>(
+        builder: (ffsCtrl) {
+          final note = ctrl.getNoteForPlayer(target.playerId.toString());
+          final hasPdaNote = note != null && (note.note.isNotEmpty || !PlayerNoteColor.isNone(note.color));
+          final hasFFScouterNotes = target.playerId != null && ffsCtrl.notesFor(target.playerId!).isNotEmpty;
+          if (!hasPdaNote && !hasFFScouterNotes) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                if (hasPdaNote && !PlayerNoteColor.isNone(note.color))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(Icons.circle, size: 8, color: PlayerNoteColor.toColor(note.color)),
+                  ),
+                if (hasPdaNote)
+                  Flexible(
+                    child: PdaNoteUnlessFFScouter(
+                      playerId: target.playerId,
+                      child: Text(
+                        note.effectiveDisplayText,
+                        style: TextStyle(fontSize: 11, color: Colors.grey[500], fontStyle: FontStyle.italic),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                Flexible(
+                  child: FFScouterLatestNote(
+                    playerId: target.playerId,
+                    fontSize: 11,
+                    padding: EdgeInsets.only(left: hasPdaNote ? 5 : 0),
+                    onTap: () => _openNotes(target),
+                  ),
                 ),
-              Flexible(
-                child: Text(
-                  note.effectiveDisplayText,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[500], fontStyle: FontStyle.italic),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+                if (target.playerId != null)
+                  FFScouterNotesBadge(
+                    playerId: target.playerId!,
+                    fontSize: 11,
+                    padding: const EdgeInsets.only(left: 5),
+                    onTap: () => _openNotes(target),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _openNotes(FFScouterTarget target) {
+    return showPlayerNotesDialog(
+      context: context,
+      playerId: target.playerId.toString(),
+      playerName: target.name ?? '',
+      openFFScouter: true,
     );
   }
 
@@ -1024,10 +1054,7 @@ class FFScouterPageState extends State<FFScouterPage> {
         children: [
           onlineIcon,
           const SizedBox(width: 4),
-          Text(
-            lastActionStatus,
-            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-          ),
+          Text(lastActionStatus, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
           const SizedBox(width: 8),
           Icon(Icons.circle, size: 8, color: stateColor),
           const SizedBox(width: 3),
@@ -1040,10 +1067,7 @@ class FFScouterPageState extends State<FFScouterPage> {
           ),
           if (updatedAgo.isNotEmpty) ...[
             const SizedBox(width: 6),
-            Text(
-              updatedAgo,
-              style: TextStyle(fontSize: 10, color: Colors.grey[500]),
-            ),
+            Text(updatedAgo, style: TextStyle(fontSize: 10, color: Colors.grey[500])),
           ],
         ],
       ),
@@ -1054,10 +1078,7 @@ class FFScouterPageState extends State<FFScouterPage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          "$label: ",
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
+        Text("$label: ", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         Text(
           value,
           style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
