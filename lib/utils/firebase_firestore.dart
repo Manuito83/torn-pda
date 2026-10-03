@@ -55,6 +55,12 @@ class FirestoreHelper {
     return _firestore.collection("players").doc(_uid);
   }
 
+  String get _platform => Platform.isAndroid
+      ? "android"
+      : Platform.isIOS
+      ? "ios"
+      : "windows";
+
   Future<bool> _updateAlertField(String fieldName, Map<String, Object?> update) async {
     final playerDoc = _playerDoc;
     if (playerDoc == null) return false;
@@ -73,12 +79,6 @@ class FirestoreHelper {
     final playerDoc = _playerDoc;
     if (playerDoc == null) return null;
     _alreadyUploaded = true;
-
-    final platform = Platform.isAndroid
-        ? "android"
-        : Platform.isIOS
-        ? "ios"
-        : "windows";
 
     // Generate or replace token if it already exists
     String token = "";
@@ -109,7 +109,7 @@ class FirestoreHelper {
       "medicalInfluence": _firebaseUserModel!.medicalInfluence, // Defaults
       "boosterInfluence": _firebaseUserModel!.boosterInfluence, // Defaults
       "racingSent": _firebaseUserModel!.racingSent, // Defaults
-      "platform": platform,
+      "platform": _platform,
       "version": appVersion,
       "faction": profile.faction!.factionId,
       // Ensure all users have a refill time set
@@ -511,11 +511,23 @@ class FirestoreHelper {
     if (playerDoc == null) return false;
 
     try {
-      final Map<String, dynamic> updatePayload = {"lastActive": timeStamp, "active": true};
+      final Map<String, dynamic> updatePayload = {
+        "uid": playerDoc.id,
+        "lastActive": timeStamp,
+        "active": true,
+        "platform": _platform,
+        "version": appVersion,
+      };
 
       final apiKey = UserHelper.apiKey;
       if (apiKey.isNotEmpty) {
         updatePayload["apiKey"] = apiKey;
+      }
+
+      // Keeps a token-recreated doc identifiable even when the profile call fails
+      final playerId = UserHelper.playerId;
+      if (playerId > 0) {
+        updatePayload["playerId"] = playerId;
       }
 
       if (Platform.isIOS && kSdkIos >= 17.2) {
