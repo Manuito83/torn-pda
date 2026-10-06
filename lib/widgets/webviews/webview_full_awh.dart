@@ -3,6 +3,7 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -55,6 +56,7 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
     _pageTitle = widget.customTitle;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _initialWebViewSettings = InAppWebViewSettings(
+      isInspectable: kDebugMode || _settingsProvider.browserRemoteDebugging,
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
       hardwareAcceleration: context.read<WebViewProvider>().webViewHardwareLayerActive,
     );

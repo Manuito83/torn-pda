@@ -201,6 +201,12 @@ Future<void> main() async {
   // Sync background-safe preferences
   await Prefs().syncBackgroundPrefs();
 
+  if (Platform.isAndroid && await Prefs().getBrowserRemoteDebugging()) {
+    try {
+      await InAppWebViewController.setWebContentsDebuggingEnabled(true);
+    } catch (_) {}
+  }
+
   // Core initialization
   await _initializeAppCompilation();
   await _initializePlatformSpecifics();

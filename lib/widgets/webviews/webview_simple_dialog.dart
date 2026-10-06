@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:developer';
 
 // Flutter imports:
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -117,6 +118,7 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
       disableLongPressContextMenuOnLinks: true,
       ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
+      isInspectable: kDebugMode || _settingsProvider.browserRemoteDebugging,
       // Shared renderer death must be handled here too or Android kills the whole app
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
     );

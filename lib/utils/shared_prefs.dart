@@ -172,6 +172,7 @@ class Prefs {
 
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
+  final String _kBrowserRemoteDebugging = "pda_browserRemoteDebugging";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
   final String _kBrowserCenterEditingTextField = "pda_browserCenterEditingTextField";
@@ -1614,6 +1615,14 @@ class Prefs {
 
   Future setIosBrowserPinch(bool value) async {
     return await PrefsDatabase.setBool(_kIosBrowserPinch, value);
+  }
+
+  Future<bool> getBrowserRemoteDebugging() async {
+    return await PrefsDatabase.getBool(_kBrowserRemoteDebugging, false);
+  }
+
+  Future setBrowserRemoteDebugging(bool value) async {
+    return await PrefsDatabase.setBool(_kBrowserRemoteDebugging, value);
   }
 
   Future<bool> getIosDisallowOverscroll() async {

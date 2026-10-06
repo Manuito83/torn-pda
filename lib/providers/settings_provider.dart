@@ -9,6 +9,7 @@ import 'dart:io';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart' show InAppWebViewController;
 import 'package:flutter_refresh_rate_control/flutter_refresh_rate_control.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/config/webview_config.dart';
@@ -157,6 +158,14 @@ class SettingsProvider extends ChangeNotifier {
   set setIosBrowserPinch(bool pinch) {
     _iosBrowserPinch = pinch;
     Prefs().setIosBrowserPinch(_iosBrowserPinch);
+  }
+
+  var _browserRemoteDebugging = false;
+  bool get browserRemoteDebugging => _browserRemoteDebugging;
+  set setBrowserRemoteDebugging(bool value) {
+    _browserRemoteDebugging = value;
+    Prefs().setBrowserRemoteDebugging(value);
+    if (Platform.isAndroid) InAppWebViewController.setWebContentsDebuggingEnabled(value);
   }
 
   var _iosDisallowOverscroll = false;
@@ -2006,6 +2015,8 @@ class SettingsProvider extends ChangeNotifier {
     _iosLiveActivitiesRacingEnabled = await Prefs().getIosLiveActivityRacingEnabled();
 
     _joblessWarningEnabled = await Prefs().getJoblessWarningEnabled();
+
+    _browserRemoteDebugging = await Prefs().getBrowserRemoteDebugging();
 
     notifyListeners();
   }

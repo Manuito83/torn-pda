@@ -89,6 +89,20 @@ List<_MVersion> _modernChangelog() => [
     hotfixes: [],
     sections: [
       _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            'Browser: option to allow remote debugging',
+            detail:
+                'Found in Advanced browser settings, under Maintenance. Lets you inspect the browser '
+                'from a computer: chrome://inspect on Android, Safari Web Inspector on iOS. '
+                'While enabled, Google sign-in inside the browser may not work. Restart the app to apply.',
+          ),
+        ],
+      ),
+      _MSection(
         icon: Icons.handyman,
         title: 'Fixed',
         color: Color(0xFF2E7D32),

@@ -234,6 +234,7 @@ class WebViewFullState extends State<WebViewFull>
   // Shared across tabs: one renderer death hits every webview, record ONE Crashlytics event per death
   static DateTime? _lastRendererGoneRecorded;
   static final Set<String> _failuresReported = <String>{};
+  DateTime? _loadStartedAt;
   static bool _blankTabReported = false;
 
   // Scripts registered at webview construction (before the first load), computed once
@@ -571,7 +572,7 @@ class WebViewFullState extends State<WebViewFull>
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
       javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
-      isInspectable: kDebugMode,
+      isInspectable: kDebugMode || _settingsProvider.browserRemoteDebugging,
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
@@ -1576,6 +1577,7 @@ class WebViewFullState extends State<WebViewFull>
           },
           onLoadStart: (c, uri) async {
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
+            _loadStartedAt = DateTime.now();
 
             // Ignore the parking placeholder; a real page taking over unparks the tab
             if (_isParkingBlank(uri)) return;
@@ -6044,9 +6046,11 @@ class WebViewFullState extends State<WebViewFull>
   void _recordBrowserFailure(String kind, String detail, {WebUri? url}) {
     if (Platform.isWindows) return;
     if (!_failuresReported.add("$kind:$detail")) return;
+    final int ms = _loadStartedAt == null ? -1 : DateTime.now().difference(_loadStartedAt!).inMilliseconds;
     try {
       FirebaseCrashlytics.instance.recordError(
-        "Browser $kind ($detail) host=${url?.host ?? "none"} tabs=${_webViewProvider.tabList.length}",
+        "Browser $kind ($detail) host=${url?.host ?? "none"} path=${url?.path ?? ""} ms=$ms "
+        "tabs=${_webViewProvider.tabList.length}",
         null,
         reason: "Browser failure",
         fatal: false,

@@ -709,7 +709,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       remoteConfig.setConfigSettings(
         RemoteConfigSettings(
           fetchTimeout: const Duration(minutes: 30),
-          minimumFetchInterval: const Duration(minutes: kDebugMode ? 0 : 1440),
+          minimumFetchInterval: const Duration(minutes: kDebugMode ? 0 : 60),
         ),
       );
 

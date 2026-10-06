@@ -98,8 +98,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       _profile(),
       if (Platform.isIOS) _linkPreview(),
       _gestures(),
-      _maintenance(),
       _memory(),
+      _maintenance(),
     ];
 
     // Filter out empty sections
@@ -3324,6 +3324,39 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   "Prevents the browser from resizing when the keyboard appears, which can improve keyboard speed on some devices. The keyboard will overlay the bottom of the page instead",
                   style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Allow remote debugging",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Allow remote debugging")),
+                  Switch(
+                    value: _settingsProvider.browserRemoteDebugging,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.setBrowserRemoteDebugging = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Lets you inspect the browser from a computer (chrome://inspect on Android, Safari Web Inspector "
+                "on iOS). While enabled, Google sign-in inside the browser may not work. Restart the app to apply.",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
           ),
