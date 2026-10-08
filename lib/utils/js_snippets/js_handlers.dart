@@ -71,7 +71,7 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
           var bytes = k.length + (ls.getItem(k) || "").length;
           total += bytes;
           allKeys.push({ n: k, b: bytes });
-          if (k.indexOf("chat_query_cache") === 0) {
+          if (k.indexOf("chat_query_cache") === 0 || k.indexOf("tchat_query_cache") === 0) {
             chatKeys.push(k);
             chatBytes += bytes;
           }
@@ -118,16 +118,16 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
             var qs = d && d.clientState && d.clientState.queries;
             if (Array.isArray(qs)) {
               d.clientState.queries = qs.filter(function(q) {
-                return !(q && Array.isArray(q.queryKey) && q.queryKey[0] === "channel");
+                if (q && Array.isArray(q.queryKey) && q.queryKey[0] === "channel") return false;
+                return JSON.stringify(q).length < 20 * 1024;
               });
               var after = JSON.stringify(d);
-              ls.setItem(k, after);
-              freed += before.length - after.length;
-              return;
+              if (after.length < before.length) {
+                ls.setItem(k, after);
+                freed += before.length - after.length;
+              }
             }
           } catch (_) {}
-          ls.removeItem(k);
-          freed += k.length + before.length;
         });
         var report = function() {
           try {
