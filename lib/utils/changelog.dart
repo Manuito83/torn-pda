@@ -100,6 +100,12 @@ List<_MVersion> _modernChangelog() => [
                 'from a computer: chrome://inspect on Android, Safari Web Inspector on iOS. '
                 'While enabled, Google sign-in inside the browser may not work. Restart the app to apply.',
           ),
+          _MItem(
+            'Quick items: support for items loaned by your faction',
+            detail:
+                'Loaned medical items, drugs, energy drinks, alcohol, candy and boosters can be added to quick items '
+                'as their own entry, marked with the faction shield. Using it spends the loaned item instead of your own.',
+          ),
         ],
       ),
       _MSection(

@@ -572,6 +572,8 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           ],
                                         ),
                                       ),
+                                      if (item.loaned == true)
+                                        Text("Loaned", style: TextStyle(fontSize: 10, color: Colors.teal[300])),
                                       if (!item.isLoadout! && item.inventory != null)
                                         Text("(inv: x${item.inventory})", style: const TextStyle(fontSize: 10)),
                                       if (_statLine(item) != null) _statLine(item)!,

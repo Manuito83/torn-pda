@@ -817,6 +817,7 @@ class WebviewHandlers {
           defense: payload['defense'] is num ? (payload['defense'] as num).toDouble() : null,
           armoryId: payload['armoryId']?.toString(),
           rowKey: payload['rowKey']?.toString(),
+          loaned: payload['loaned'] == true,
         );
 
         final result = quickItemsProvider.addPickedItem(itemNumber: itemNumber, data: equipData);
@@ -895,7 +896,12 @@ class WebviewHandlers {
 
         if (originalName != null && foundName != null) {
           if (originalName.trim().toLowerCase() == foundName.trim().toLowerCase()) {
-            quickItemsProvider.updateItemFromMassCheck(originalName: originalName, qty: qty, isGrouped: isGrouped);
+            quickItemsProvider.updateItemFromMassCheck(
+              originalName: originalName,
+              qty: qty,
+              isGrouped: isGrouped,
+              loaned: payload['loaned'] == true,
+            );
           }
         }
       },

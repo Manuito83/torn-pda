@@ -284,6 +284,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       }
 
       final chipWidget = ActionChip(
+        avatarBoxConstraints: item.loaned == true ? const BoxConstraints(minWidth: 32, minHeight: 32) : null,
         elevation: 3,
         padding: const EdgeInsets.all(4),
         visualDensity: VisualDensity.compact,
@@ -297,7 +298,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                 // Personal inventory was removed from the API, so add a check until it's restored
                 // https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
                 ||
-                (!item.isLoadout! && !widget.faction && itemQty == null)
+                (!item.isLoadout! && !widget.faction && itemQty == null && item.loaned != true)
             ? null
             : widget.faction
                 ? item.isEnergyPoints! || item.isNervePoints!
@@ -312,15 +313,39 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                           color: Colors.white,
                         ),
                       )
-                : CircleAvatar(
-                    child: Text(
-                      itemQty!,
-                      style: TextStyle(
-                        fontSize: qtyFontSize,
-                        color: qtyColor,
+                : item.loaned == true
+                    ? Builder(builder: (context) {
+                        final theme = Theme.of(context);
+                        final pillColor = theme.useMaterial3
+                            ? theme.colorScheme.primaryContainer
+                            : ThemeData.estimateBrightnessForColor(theme.primaryTextTheme.titleMedium!.color!) ==
+                                    Brightness.dark
+                                ? theme.primaryColorLight
+                                : theme.primaryColorDark;
+                        return Container(
+                          height: 32,
+                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                          decoration: ShapeDecoration(shape: const StadiumBorder(), color: pillColor),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset('images/icons/faction.png', width: 10, color: qtyColor),
+                              if (itemQty != null) const SizedBox(width: 3),
+                              if (itemQty != null)
+                                Text(itemQty, style: TextStyle(fontSize: qtyFontSize, color: qtyColor)),
+                            ],
+                          ),
+                        );
+                      })
+                    : CircleAvatar(
+                        child: Text(
+                          itemQty!,
+                          style: TextStyle(
+                            fontSize: qtyFontSize,
+                            color: qtyColor,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
         label: item.isLoadout!
             ? Text(
                 item.loadoutName ?? "",
@@ -361,6 +386,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                     instanceId: item.instanceId,
                     isEquip: isEquip,
                     isTemporary: item.itemType == ItemType.TEMPORARY,
+                    loaned: item.loaned ?? false,
                     kDebugMode: kDebugMode,
                   );
                   await widget.inAppWebViewController!.evaluateJavascript(source: js);

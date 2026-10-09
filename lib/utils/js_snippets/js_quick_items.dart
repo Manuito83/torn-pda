@@ -9,6 +9,7 @@ String runQuickItemJS({
   String? instanceId,
   bool isEquip = false,
   bool isTemporary = false,
+  bool loaned = false,
   bool kDebugMode = false,
 }) {
   const String timeRegex =
@@ -680,6 +681,9 @@ String runQuickItemJS({
           ajaxData = { step: "useItem", itemID: itemId, item: itemId };
           if (extraData && extraData.fac) {
             ajaxData.fac = extraData.fac;
+          }
+          if ($loaned && !(extraData && extraData.fac)) {
+            ajaxData.loaned = 1;
           }
         }
         
@@ -1432,6 +1436,7 @@ String quickItemPickerJS({required bool enable}) {
               window.flutter_inappwebview.callHandler('quickItemPicker', {
                 item: itemNum,
                 rowKey: rKey,
+                loaned: (/f([0-9]+)/.test(rKey) && parseInt(/f([0-9]+)/.exec(rKey)[1], 10) > 0) || !!li.querySelector('button.option-return-to-faction'),
                 instanceId: isTemporary ? '' : id,
                 name: name,
                 category: category,
@@ -1690,30 +1695,35 @@ String quickItemsMassCheckJS(List<String> itemNames) {
 
                  // console.log("PDA Mass Check DEBUG: Found " + dName + ", Qty: " + dQty + ", RowKey: " + dRowKey);
 
-                 if (!results[dName]) {
-                    results[dName] = { qty: 0, rowKey: dRowKey };
+                 var isLoaned = (/f([0-9]+)/.test(dRowKey || '') && parseInt(/f([0-9]+)/.exec(dRowKey)[1], 10) > 0) || !!li.querySelector('button.option-return-to-faction');
+                 var rKey = (isLoaned ? 'L:' : 'O:') + dName;
+
+                 if (!results[rKey]) {
+                    results[rKey] = { name: dName, loaned: isLoaned, qty: 0, rowKey: dRowKey };
                  }
-                 results[dName].qty += dQty;
+                 results[rKey].qty += dQty;
                  if (dRowKey && dRowKey.startsWith('g')) {
-                     results[dName].rowKey = dRowKey;
+                     results[rKey].rowKey = dRowKey;
                  }
               }
               
               // Now send the aggregated results
                 var wanted = (itemName || '').toString().trim().toLowerCase();
                 var foundExact = false;
+                var foundExactLoaned = false;
               for (var key in results) {
                  var res = results[key];
-                  if (wanted && key.toString().trim().toLowerCase() === wanted) {
-                   foundExact = true;
+                  if (wanted && res.name.toString().trim().toLowerCase() === wanted) {
+                   if (res.loaned) foundExactLoaned = true; else foundExact = true;
                   }
                  // console.log("PDA Mass Check DEBUG: Sending " + key + " -> Qty: " + res.qty + ", RowKey: " + res.rowKey);
                  if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
                     window.flutter_inappwebview.callHandler('quickItemMassUpdate', {
                        originalName: itemName,
-                       foundName: key,
+                       foundName: res.name,
                        qty: res.qty,
-                       rowKey: res.rowKey
+                       rowKey: res.rowKey,
+                       loaned: res.loaned
                     });
                  }
               }
@@ -1725,7 +1735,19 @@ String quickItemsMassCheckJS(List<String> itemNames) {
                     originalName: itemName,
                     foundName: itemName,
                     qty: 0,
-                    rowKey: null
+                    rowKey: null,
+                    loaned: false
+                  });
+                 }
+                }
+                if (!foundExactLoaned) {
+                 if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                  window.flutter_inappwebview.callHandler('quickItemMassUpdate', {
+                    originalName: itemName,
+                    foundName: itemName,
+                    qty: 0,
+                    rowKey: null,
+                    loaned: true
                   });
                  }
                 }

@@ -229,6 +229,7 @@ class QuickItemsProvider extends ChangeNotifier {
     final existingSameItem = _activeQuickItemsList.firstWhereOrNull(
       (i) {
         if (i.number != itemNumber || i.isLoadout == true) return false;
+        if ((i.loaned ?? false) != data.loaned) return false;
 
         if (isGrouped) return true;
 
@@ -253,7 +254,8 @@ class QuickItemsProvider extends ChangeNotifier {
         ..damage = data.damage ?? target.damage
         ..accuracy = data.accuracy ?? target.accuracy
         ..defense = data.defense ?? target.defense
-        ..isGrouped = isGrouped;
+        ..isGrouped = isGrouped
+        ..loaned = data.loaned;
       _activeQuickItemsList.add(newItem);
       added = true;
     } else {
@@ -280,12 +282,13 @@ class QuickItemsProvider extends ChangeNotifier {
     required String originalName,
     required int? qty,
     required bool? isGrouped,
+    bool loaned = false,
   }) {
     log('[QuickItemsProvider] updateItemFromMassCheck: $originalName, qty: $qty, isGrouped: $isGrouped');
 
     // Update all active items with this name
     // We check partial matches if needed, but originalName comes from our own list, so exact match is expected
-    final items = _activeQuickItemsList.where((i) => i.name == originalName).toList();
+    final items = _activeQuickItemsList.where((i) => i.name == originalName && (i.loaned ?? false) == loaned).toList();
     if (items.isEmpty) return;
 
     bool changed = false;
@@ -508,6 +511,7 @@ class QuickItemEquipScanData {
   final double? defense;
   final String? armoryId;
   final String? rowKey;
+  final bool loaned;
 
   const QuickItemEquipScanData({
     required this.instanceId,
@@ -520,5 +524,6 @@ class QuickItemEquipScanData {
     this.defense,
     this.armoryId,
     this.rowKey,
+    this.loaned = false,
   });
 }
