@@ -61,7 +61,7 @@ There are many more features available, but listing them all would be too long. 
 
 ## Download
 
-[![Play Store](https://i.imgur.com/R12sw2i.png?2)](https://play.google.com/store/apps/details?id=com.manuito.tornpda "Play Store")  
+[![Play Store](https://i.imgur.com/R12sw2i.png?2)](https://plhttps://github.com/Manuito83/torn-pda.gitay.google.com/store/apps/details?id=com.manuito.tornpda "Play Store")  
 [![App Store](https://i.imgur.com/6k02rJZ.png?1)](https://apps.apple.com/us/app/torn-pda/id1510138514 "App Store")
 
 <br />
