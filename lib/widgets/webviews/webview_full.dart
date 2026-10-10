@@ -233,6 +233,7 @@ class WebViewFullState extends State<WebViewFull>
   bool _handlersInjected = false;
   // Shared across tabs: one renderer death hits every webview, record ONE Crashlytics event per death
   static DateTime? _lastRendererGoneRecorded;
+  static DateTime? _lastRendererGoneFgLogged;
   static final Set<String> _failuresReported = <String>{};
   DateTime? _loadStartedAt;
   static bool _blankTabReported = false;
@@ -357,9 +358,47 @@ class WebViewFullState extends State<WebViewFull>
   static const String _blankUrl = "about:blank";
 
   Timer? _blankTabCheckTimer;
+  bool? _publishedOnScreen;
   bool _isParked = false;
   bool _wakingFromPark = false;
   String? _parkedUrl;
+
+  // Android delays the initial load until the view is shown, then overwrites earlier loads
+  bool _initialLoadStarted = false;
+  String? _urlBeforeInitialLoad;
+  Timer? _initialLoadTimer;
+  bool get initialLoadPending => Platform.isAndroid && widget.windowId == null && !_initialLoadStarted;
+
+  bool _markInitialLoadStarted() {
+    if (_initialLoadStarted) return false;
+    _initialLoadStarted = true;
+    _initialLoadTimer?.cancel();
+    final String? pendingUrl = _urlBeforeInitialLoad;
+    _urlBeforeInitialLoad = null;
+    if (pendingUrl == null) return false;
+    _loadUrl(pendingUrl);
+    return true;
+  }
+
+  void discardUrlBeforeInitialLoad() => _urlBeforeInitialLoad = null;
+
+  // Downloads never report the initial load
+  void _watchInitialLoad() {
+    if (_initialLoadTimer != null || _urlBeforeInitialLoad == null || !initialLoadPending) return;
+    if (!_webViewProvider.browserShowInForeground || !_webViewProvider.isTabUidVisible(_tabUid)) return;
+    var shownTicks = 0;
+    _initialLoadTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      final bool shown =
+          mounted && _webViewProvider.browserShowInForeground && _webViewProvider.isTabUidVisible(_tabUid);
+      if (!shown || !initialLoadPending) {
+        timer.cancel();
+        _initialLoadTimer = null;
+        return;
+      }
+      if (++shownTicks >= 2) _markInitialLoadStarted();
+    });
+  }
+
   bool get isParked => _isParked;
 
   /// The blank page must never reach the tab state (URL, title, history, scroll)
@@ -457,7 +496,9 @@ class WebViewFullState extends State<WebViewFull>
     for (var disposedTab in _webViewProvider.rotatedTabDetails) {
       if (disposedTab.key == widget.key) {
         _foundDisposedRotation = true;
-        _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
+        final String? disposedUrl = disposedTab.currentUrl;
+        final bool noDisposedUrl = disposedUrl == null || disposedUrl.isEmpty || disposedUrl == _blankUrl;
+        _initialUrl = URLRequest(url: WebUri(noDisposedUrl ? widget.customUrl! : disposedUrl));
         _disposedScrollX = disposedTab.scrollX ?? 0;
         _disposedScrollY = disposedTab.scrollY ?? 0;
         log(
@@ -676,6 +717,7 @@ class WebViewFullState extends State<WebViewFull>
 
       _webViewCreatedWatchdog?.cancel();
       _reloadWatchdog?.cancel();
+      _initialLoadTimer?.cancel();
       _blankTabCheckTimer?.cancel();
 
       // Send details to provider in case we are rotating
@@ -701,12 +743,12 @@ class WebViewFullState extends State<WebViewFull>
       _progressController.dispose();
 
       webViewController?.dispose();
-
-      super.dispose();
     } catch (e, t) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
       if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
       logToUser("PDA Crash at WebviewFull dispose: $e, $t");
+    } finally {
+      super.dispose();
     }
   }
 
@@ -795,7 +837,7 @@ class WebViewFullState extends State<WebViewFull>
 
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
+          ? MediaQueryData.fromView(View.of(context)).orientation == Orientation.portrait
                 ? Colors.blueGrey
                 : Colors.grey[900]
           : _themeProvider.currentTheme == AppTheme.dark
@@ -879,11 +921,11 @@ class WebViewFullState extends State<WebViewFull>
   bool assessSafeAreaSide(bool dialog, String safeSide) {
     if (safeSide == "left" &&
         _webViewProvider.webViewSplitActive &&
-        _webViewProvider.splitScreenPosition == WebViewSplitPosition.right) {
+        _webViewProvider.splitLeftSlot == SplitSlotContent.app) {
       return false;
     } else if (safeSide == "right" &&
         _webViewProvider.webViewSplitActive &&
-        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+        _webViewProvider.splitRightSlot == SplitSlotContent.app) {
       return false;
     } else {
       if (!dialog) {
@@ -1106,11 +1148,7 @@ class WebViewFullState extends State<WebViewFull>
                         return;
                       }
 
-                      if (!_webViewProvider.webViewSplitActive) {
-                        _webViewProvider.browserShowInForeground = false;
-                      }
-
-                      _checkIfTargetsAttackedAndRevertChaining();
+                      if (_exitBrowserToApp()) _checkIfTargetsAttackedAndRevertChaining();
                     },
                   ),
                 ),
@@ -1573,10 +1611,12 @@ class WebViewFullState extends State<WebViewFull>
           },
           onCloseWindow: (controller) async {
             await Future.delayed(const Duration(seconds: 2));
-            _webViewProvider.removeTab(calledFromTab: true);
+            final int closedIndex = _webViewProvider.tabList.indexWhere((t) => t.id == _tabUid);
+            if (closedIndex > 0) _webViewProvider.removeTab(position: closedIndex);
           },
           onLoadStart: (c, uri) async {
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
+            if (_markInitialLoadStarted()) return;
             _loadStartedAt = DateTime.now();
 
             // Ignore the parking placeholder; a real page taking over unparks the tab
@@ -1720,6 +1760,7 @@ class WebViewFullState extends State<WebViewFull>
           },
           onLoadStop: (c, uri) async {
             log("🏁 onLoadStop: $uri", name: 'WEBVIEW FULL');
+            _markInitialLoadStarted();
             if (!mounted) return;
             _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
@@ -2121,6 +2162,7 @@ class WebViewFullState extends State<WebViewFull>
             await _assessLongPressOptions(result, controller);
           },
           onDownloadStarting: (controller, request) async {
+            _markInitialLoadStarted();
             if (request.mimeType != null && request.mimeType!.contains("image/")) {
               // We don't want to download images automatically
               final String u = request.url.toString().replaceAll("http:", "https:");
@@ -2135,7 +2177,7 @@ class WebViewFullState extends State<WebViewFull>
                 return;
               }
 
-              _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
+              _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true, openerTabUid: _tabUid);
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
             } else if (request.url.toString().startsWith("blob:")) {
@@ -2163,11 +2205,11 @@ class WebViewFullState extends State<WebViewFull>
             _handlersInjected = false;
 
             // Renderer deaths occur mostly on background (OOM kills)
-            // Rebuild now only if the app is foreground AND this is the active tab
+            // Rebuild now only if the app is foreground AND this is a visible tab
             // ... otherwise, we will rebuild when the user focuses this tab again
             final bool appResumed = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
-            final bool renderGoneActive = _webViewProvider.isTabUidActive(_tabUid);
-            final bool rebuildNow = appResumed && renderGoneActive;
+            final bool renderGoneVisible = _webViewProvider.isTabUidVisible(_tabUid);
+            final bool rebuildNow = appResumed && renderGoneVisible;
 
             // Preserve the last known scroll so the rebuilt tab can restore the position
             final goneTab = _webViewProvider.getTabByUid(_tabUid);
@@ -2221,7 +2263,10 @@ class WebViewFullState extends State<WebViewFull>
                     "ls_kb": _webViewProvider.lastLocalStorageMeasuredTotalKb,
                   },
                 );
-                if (rebuildNow) {
+                final DateTime now = DateTime.now();
+                if (rebuildNow &&
+                    (_lastRendererGoneFgLogged == null || now.difference(_lastRendererGoneFgLogged!).inSeconds >= 2)) {
+                  _lastRendererGoneFgLogged = now;
                   analytics?.logEvent(
                     name: "webview_renderer_gone_fg",
                     parameters: {
@@ -2254,6 +2299,7 @@ class WebViewFullState extends State<WebViewFull>
           },
           onReceivedError: (c, request, error) {
             if (!(request.isForMainFrame ?? false)) return;
+            _markInitialLoadStarted();
             _recordBrowserFailure("load_error", "${error.type}", url: request.url);
             _recovery?.onLoadFailure("${error.type}");
           },
@@ -2327,7 +2373,7 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   void _openNewTabFromWindowRequest(String url, int? windowId) {
-    _webViewProvider.addTab(url: url, windowId: windowId);
+    _webViewProvider.addTab(url: url, windowId: windowId, openerTabUid: _tabUid);
     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
   }
 
@@ -2348,8 +2394,8 @@ class WebViewFullState extends State<WebViewFull>
 
     if (!_firstLoadCompleted) return false;
 
-    if (_webViewProvider.tabList[_webViewProvider.currentTab].isLocked &&
-        _webViewProvider.tabList[_webViewProvider.currentTab].isLockFull) {
+    final TabDetails? ownTab = _webViewProvider.getTabByUid(_tabUid);
+    if (ownTab != null && ownTab.isLocked && ownTab.isLockFull) {
       // Let it load the first page (_currentUrl will be empty)
       if (_currentUrl.isNotEmpty) {
         // Check navigation exceptions
@@ -2433,7 +2479,7 @@ class WebViewFullState extends State<WebViewFull>
         if (_settingsProvider.fullLockNavigationAttemptOpensNewTab) {
           if (_lastFullLockBackgroundTabOpen == null ||
               DateTime.now().difference(_lastFullLockBackgroundTabOpen!).inSeconds > 2) {
-            _webViewProvider.addTab(url: incomingUrl.toString());
+            _webViewProvider.addTab(url: incomingUrl.toString(), openerTabUid: _tabUid);
             _lastFullLockBackgroundTabOpen = DateTime.now();
           }
         }
@@ -2544,7 +2590,7 @@ class WebViewFullState extends State<WebViewFull>
       final document = parse(html);
       final miniProfile = document.querySelector("[class*='profile-mini-_wrapper_']");
       if (miniProfile != null) {
-        _webViewProvider.addTab(url: request.request.url.toString());
+        _webViewProvider.addTab(url: request.request.url.toString(), openerTabUid: _tabUid);
         if (_settingsProvider.hitInMiniProfileOpensNewTabAndChangeTab) {
           _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
         }
@@ -3064,13 +3110,9 @@ class WebViewFullState extends State<WebViewFull>
                         onTap: () async {
                           // Normal behavior is just to pop and go to previous page
                           if (_backButtonPopsContext) {
-                            _webViewProvider.setCurrentUiMode(UiMode.window, context);
+                            if (!_browserExitRefused) _webViewProvider.setCurrentUiMode(UiMode.window, context);
                             if (mounted) {
-                              if (!_webViewProvider.webViewSplitActive) {
-                                _webViewProvider.browserShowInForeground = false;
-                              }
-
-                              _checkIfTargetsAttackedAndRevertChaining();
+                              if (_exitBrowserToApp()) _checkIfTargetsAttackedAndRevertChaining();
                             }
                           } else {
                             // But we can change and go back to previous page in certain
@@ -3116,6 +3158,7 @@ class WebViewFullState extends State<WebViewFull>
             builder: (context, constraints) {
               // Layout builder to check the width of the app bar
               // and assess whether to show back/forward navigation buttons
+              final TabDetails? ownTab = _webViewProvider.getTabByUid(_tabUid);
               return Container(
                 width: constraints.maxWidth,
                 child: Row(
@@ -3153,15 +3196,13 @@ class WebViewFullState extends State<WebViewFull>
                               tooltipBackgroundColor: _themeProvider.secondBackground,
                               descTextStyle: const TextStyle(fontSize: 13),
                               tooltipPadding: const EdgeInsets.all(20),
-                              child:
-                                  _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
-                                      _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
+                              child: ownTab != null && ownTab.customName.isNotEmpty && ownTab.customNameInTitle
                                   ? Row(
                                       children: [
                                         const Icon(MdiIcons.text, size: 14, color: Colors.lime),
                                         const SizedBox(width: 6),
                                         Text(
-                                          _webViewProvider.tabList[_webViewProvider.currentTab].customName,
+                                          ownTab.customName,
                                           overflow: TextOverflow.fade,
                                           style: const TextStyle(
                                             fontSize: 14,
@@ -3317,7 +3358,7 @@ class WebViewFullState extends State<WebViewFull>
     if (!Platform.isAndroid || !_settingsProvider.browserRecoveryOverlayActive) return;
     final InAppWebViewController? controller = webViewController;
     if (controller == null || _isParked || (_recovery?.active ?? false)) return;
-    if (!_webViewProvider.isTabUidActive(_tabUid)) return;
+    if (!_webViewProvider.isTabUidVisible(_tabUid)) return;
     // An off screen webview can return a blank frame
     if (!_webViewProvider.browserShowInForeground && !_webViewProvider.webViewSplitActive) return;
     if (_currentUrl.isEmpty || _currentUrl == _blankUrl) return;
@@ -4095,11 +4136,14 @@ class WebViewFullState extends State<WebViewFull>
       case "Company vault":
         _loadUrl("https://www.torn.com/companies.php#/option=funds");
       case "Personal vault (new tab)":
-        _webViewProvider.addTab(url: "https://www.torn.com/properties.php#/p=options&tab=vault");
+        _webViewProvider.addTab(url: "https://www.torn.com/properties.php#/p=options&tab=vault", openerTabUid: _tabUid);
       case "Faction vault (new tab)":
-        _webViewProvider.addTab(url: "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
+        _webViewProvider.addTab(
+          url: "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate",
+          openerTabUid: _tabUid,
+        );
       case "Company vault (new tab)":
-        _webViewProvider.addTab(url: "https://www.torn.com/companies.php#/option=funds");
+        _webViewProvider.addTab(url: "https://www.torn.com/companies.php#/option=funds", openerTabUid: _tabUid);
     }
   }
 
@@ -4813,7 +4857,7 @@ class WebViewFullState extends State<WebViewFull>
           ),
           onTap: () async {
             webViewController!.evaluateJavascript(source: removeChatJS());
-            _webViewProvider.reportChatRemovalChange(true, false);
+            _webViewProvider.reportChatRemovalChange(_tabUid, true, false);
             setState(() {
               _localChatRemovalActive = true;
             });
@@ -4821,7 +4865,7 @@ class WebViewFullState extends State<WebViewFull>
           },
           onLongPress: () async {
             webViewController!.evaluateJavascript(source: removeChatJS());
-            _webViewProvider.reportChatRemovalChange(true, true);
+            _webViewProvider.reportChatRemovalChange(_tabUid, true, true);
             setState(() {
               _localChatRemovalActive = true;
             });
@@ -4845,7 +4889,7 @@ class WebViewFullState extends State<WebViewFull>
           child: Icon(MdiIcons.chatRemoveOutline, color: Colors.orange[500]),
           onTap: () async {
             webViewController!.evaluateJavascript(source: restoreChatJS());
-            _webViewProvider.reportChatRemovalChange(false, false);
+            _webViewProvider.reportChatRemovalChange(_tabUid, false, false);
             setState(() {
               _localChatRemovalActive = false;
             });
@@ -4853,7 +4897,7 @@ class WebViewFullState extends State<WebViewFull>
           },
           onLongPress: () async {
             webViewController!.evaluateJavascript(source: restoreChatJS());
-            _webViewProvider.reportChatRemovalChange(false, true);
+            _webViewProvider.reportChatRemovalChange(_tabUid, false, true);
             setState(() {
               _localChatRemovalActive = false;
             });
@@ -5756,7 +5800,7 @@ class WebViewFullState extends State<WebViewFull>
     }
 
     // The user might have come back and opened this very tab while the blank page was loading
-    if (!mounted || _webViewProvider.isTabUidActive(_tabUid)) {
+    if (!mounted || _webViewProvider.isTabUidVisible(_tabUid)) {
       await wakeFromPark();
       return false;
     }
@@ -5830,14 +5874,16 @@ class WebViewFullState extends State<WebViewFull>
     }
 
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
-    try {
-      Uri? resumedUrl = await webViewController?.getUrl();
-      if (resumedUrl == null) {
-        log("Reviving webView!");
+    if (!initialLoadPending) {
+      try {
+        Uri? resumedUrl = await webViewController?.getUrl();
+        if (resumedUrl == null) {
+          log("Reviving webView!");
+          _webViewProvider.reviveUrl();
+        }
+      } catch (e) {
         _webViewProvider.reviveUrl();
       }
-    } catch (e) {
-      _webViewProvider.reviveUrl();
     }
 
     if (publish) {
@@ -5883,13 +5929,20 @@ class WebViewFullState extends State<WebViewFull>
     });
   }
 
+  void publishTabStateIfOnScreenChanged() {
+    if (_publishedOnScreen != null && _publishedOnScreen != _webViewProvider.isTabUidOnScreen(_tabUid)) {
+      publishTabState();
+    }
+  }
+
   Future<void> publishTabState({bool? isActiveTab, bool? isWebViewVisible}) async {
     if (!mounted) return;
 
     // Recover a black or blank tab when it becomes visible without a tab switch, which is the only
     // case activateTab misses (foreground, split screen, rotation)
     final bool showingThisTab =
-        (isActiveTab ?? _webViewProvider.isTabUidActive(_tabUid)) &&
+        ((isActiveTab ?? _webViewProvider.isTabUidActive(_tabUid)) ||
+            (_webViewProvider.splitBrowsersActive && _webViewProvider.isTabUidVisible(_tabUid))) &&
         (isWebViewVisible ?? (_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive));
     if (showingThisTab) {
       final TabDetails? shownTab = _webViewProvider.getTabByUid(_tabUid);
@@ -5903,14 +5956,18 @@ class WebViewFullState extends State<WebViewFull>
       }
       if (_isParked) wakeFromPark();
       _scheduleBlankTabCheck();
+      _watchInitialLoad();
     }
 
     if (webViewController == null) return;
 
+    final bool webViewVisible = isWebViewVisible ?? _webViewProvider.browserShowInForeground;
+    _publishedOnScreen = webViewVisible && _webViewProvider.isTabUidVisible(_tabUid);
     final payload = {
       'uid': _tabUid,
       'isActiveTab': isActiveTab ?? _webViewProvider.isTabUidActive(_tabUid),
-      'isWebViewVisible': isWebViewVisible ?? _webViewProvider.browserShowInForeground,
+      'isWebViewVisible': webViewVisible,
+      'isOnScreen': _publishedOnScreen,
     };
 
     final payloadJson = jsonEncode(payload);
@@ -5947,6 +6004,9 @@ class WebViewFullState extends State<WebViewFull>
         ''',
       );
     } catch (_) {}
+
+    // Focus changes don't go through resumeThisWebview
+    if (isActiveTab == true && _webViewProvider.splitBrowsersActive) await _restoreNativeWebViewFocus();
   }
 
   /// Checks if [url] is a userscript (.user.js) and, if so, opens the add/edit dialog.
@@ -6007,6 +6067,12 @@ class WebViewFullState extends State<WebViewFull>
 
     inputUrl.replaceAll("http://", "https://");
 
+    if (initialLoadPending) {
+      _urlBeforeInitialLoad = inputUrl;
+      _watchInitialLoad();
+      return;
+    }
+
     if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
       // Loads userscripts that are not triggered in shouldOverrideUrlLoading
       // (e.g.: when reloading a page or navigating back/forward)
@@ -6063,7 +6129,7 @@ class WebViewFullState extends State<WebViewFull>
     _blankTabCheckTimer?.cancel();
     _blankTabCheckTimer = Timer(const Duration(seconds: 5), () {
       if (!mounted || _blankTabReported || _isParked) return;
-      if (!_webViewProvider.isTabUidActive(_tabUid)) return;
+      if (!_webViewProvider.isTabUidVisible(_tabUid)) return;
       final String current = _currentUrl.trim();
       final bool dead = current.isEmpty || current == _blankUrl || current == "null";
       if (!dead) return;
@@ -6122,7 +6188,7 @@ class WebViewFullState extends State<WebViewFull>
       final bool canRebuild =
           _settingsProvider.browserWebViewRecoveryRemoteConfigAllowed &&
           tab != null &&
-          _webViewProvider.isTabUidActive(_tabUid) &&
+          _webViewProvider.isTabUidVisible(_tabUid) &&
           retries < 2;
 
       logToUser(
@@ -6135,6 +6201,7 @@ class WebViewFullState extends State<WebViewFull>
       if (canRebuild) {
         tab.webviewCreationRetries = retries + 1;
         _webViewProvider.rebuildUnresponsiveWebView(
+          tabUid: _tabUid,
           isChainingBrowser: _isChainingBrowser,
           chainingPayload: _chainingPayload,
           reason: "webview_never_created",
@@ -6172,160 +6239,147 @@ class WebViewFullState extends State<WebViewFull>
     webViewController!.setSettings(settings: newSettings);
   }
 
+  Rect? get _splitPanelRect {
+    if (_webViewProvider.splitRightSlot == null) return null;
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
   void _showLongPressCard(String? src, Uri? url) {
+    final Rect? panelRect = _splitPanelRect;
+
     BotToast.showCustomText(
       clickClose: true,
       crossPage: false,
+      align: null,
+      useSafeArea: panelRect == null,
       duration: const Duration(seconds: 5),
-      toastBuilder: (textCancel) => Align(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+      toastBuilder: (textCancel) {
+        Widget option(String text, EdgeInsets padding, GestureTapCallback onTap) => GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Padding(
+            padding: padding.add(const EdgeInsets.symmetric(horizontal: 20)),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: Colors.white),
+            ),
+          ),
+        );
+        const Widget divider = Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: SizedBox(width: 150, child: Divider(color: Colors.white)),
+        );
+
+        final Widget card = Card(
+          color: Colors.grey[700],
+          child: IntrinsicWidth(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                option("Copy link", const EdgeInsets.fromLTRB(0, 20, 0, 5), () {
+                  final open = url?.toString() ?? src;
+                  if (open == null) return;
+                  Clipboard.setData(ClipboardData(text: open));
+                  BotToast.showText(
+                    text: "Link copied to the clipboard: $open",
+                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                    contentColor: Colors.grey[700]!,
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                }),
+                if (src != null) ...[
+                  divider,
+                  option("Open image in new tab", const EdgeInsets.fromLTRB(0, 5, 0, 5), () async {
+                    // If we are using tabs, add a tab
+                    final String u = src.replaceAll("http:", "https:");
+                    _webViewProvider.addTab(
+                      url: u,
+                      allowDownloads: Platform.isIOS ? false : true,
+                      openerTabUid: _tabUid,
+                    );
+                    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                    textCancel();
+                  }),
+                  divider,
+                  option("Download image", const EdgeInsets.fromLTRB(0, 5, 0, 5), () async {
+                    await _downloadRequest(dialogCancel: textCancel, manualSource: src);
+                  }),
+                ],
+                if (_settingsProvider.useTabsFullBrowser) ...[
+                  divider,
+                  option("Open link in new tab", const EdgeInsets.fromLTRB(0, 5, 0, 5), () {
+                    // If we are using tabs, add a tab
+                    final String u = url.toString().replaceAll("http:", "https:");
+                    _webViewProvider.addTab(url: u, allowDownloads: false, openerTabUid: _tabUid);
+                    if (_webViewProvider.automaticChangeToNewTabFromURL) {
+                      _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                    }
+
+                    textCancel();
+                  }),
+                ],
+                divider,
+                option("Add as shortcut", const EdgeInsets.fromLTRB(0, 5, 0, 5), () async {
+                  String? open = url?.toString() ?? src;
+
+                  bool error = false;
+                  if (open == null) error = true;
+                  if (open != null) {
+                    if (!open.contains("http")) {
+                      error = true;
+                    }
+                  }
+
+                  if (!error) {
+                    final String u = open!.replaceAll("http:", "https:");
+                    return showWebviewDialog<void>(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (BuildContext context) {
+                        return CustomShortcutDialog(themeProvider: _themeProvider, title: "", url: u);
+                      },
+                    );
+                  } else {
+                    BotToast.showText(
+                      text: "URL error!",
+                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                      contentColor: Colors.orange[800]!,
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  }
+                  textCancel();
+                }),
+                divider,
+                option("External browser", const EdgeInsets.fromLTRB(0, 5, 0, 20), () async {
+                  String? open = url?.toString() ?? src;
+                  if (open != null) {
+                    if (await canLaunchUrl(Uri.parse(open))) {
+                      await launchUrl(Uri.parse(open), mode: LaunchMode.externalApplication);
+                    }
+                  }
+                }),
+              ],
+            ),
+          ),
+        );
+
+        if (panelRect == null) return Center(child: card);
+        return Stack(
           children: [
-            Card(
-              color: Colors.grey[700],
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
-                      child: GestureDetector(
-                        child: const Text("Copy link", style: TextStyle(fontSize: 12, color: Colors.white)),
-                        onTap: () {
-                          final open = url?.toString() ?? src;
-                          if (open == null) return;
-                          Clipboard.setData(ClipboardData(text: open));
-                          BotToast.showText(
-                            text: "Link copied to the clipboard: $open",
-                            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                            contentColor: Colors.grey[700]!,
-                            contentPadding: const EdgeInsets.all(10),
-                          );
-                        },
-                      ),
-                    ),
-                    if (src != null)
-                      Column(
-                        children: [
-                          const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                            child: GestureDetector(
-                              child: const Text(
-                                "Open image in new tab",
-                                style: TextStyle(fontSize: 12, color: Colors.white),
-                              ),
-                              onTap: () async {
-                                // If we are using tabs, add a tab
-                                final String u = src.replaceAll("http:", "https:");
-                                _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
-                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                                textCancel();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (src != null)
-                      Column(
-                        children: [
-                          const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                            child: GestureDetector(
-                              child: const Text("Download image", style: TextStyle(fontSize: 12, color: Colors.white)),
-                              onTap: () async {
-                                await _downloadRequest(dialogCancel: textCancel, manualSource: src);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (_settingsProvider.useTabsFullBrowser)
-                      Column(
-                        children: [
-                          const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                            child: GestureDetector(
-                              child: const Text(
-                                "Open link in new tab",
-                                style: TextStyle(fontSize: 12, color: Colors.white),
-                              ),
-                              onTap: () {
-                                // If we are using tabs, add a tab
-                                final String u = url.toString().replaceAll("http:", "https:");
-                                _webViewProvider.addTab(url: u, allowDownloads: false);
-                                if (_webViewProvider.automaticChangeToNewTabFromURL) {
-                                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                                }
-
-                                textCancel();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-                      child: GestureDetector(
-                        child: const Text("Add as shortcut", style: TextStyle(fontSize: 12, color: Colors.white)),
-                        onTap: () async {
-                          String? open = url?.toString() ?? src;
-
-                          bool error = false;
-                          if (open == null) error = true;
-                          if (open != null) {
-                            if (!open.contains("http")) {
-                              error = true;
-                            }
-                          }
-
-                          if (!error) {
-                            final String u = open!.replaceAll("http:", "https:");
-                            return showWebviewDialog<void>(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (BuildContext context) {
-                                return CustomShortcutDialog(themeProvider: _themeProvider, title: "", url: u);
-                              },
-                            );
-                          } else {
-                            BotToast.showText(
-                              text: "URL error!",
-                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                              contentColor: Colors.orange[800]!,
-                              contentPadding: const EdgeInsets.all(10),
-                            );
-                          }
-                          textCancel();
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 150, child: Divider(color: Colors.white)),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 5, 0, 20),
-                      child: GestureDetector(
-                        child: const Text("External browser", style: TextStyle(fontSize: 12, color: Colors.white)),
-                        onTap: () async {
-                          String? open = url?.toString() ?? src;
-                          if (open != null) {
-                            if (await canLaunchUrl(Uri.parse(open))) {
-                              await launchUrl(Uri.parse(open), mode: LaunchMode.externalApplication);
-                            }
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            Positioned.fill(
+              child: Listener(behavior: HitTestBehavior.opaque, onPointerDown: (_) => textCancel()),
+            ),
+            Positioned.fromRect(
+              rect: panelRect,
+              child: Center(child: card),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -6900,12 +6954,15 @@ class WebViewFullState extends State<WebViewFull>
       return;
     }
 
+    final Rect? panelRect = _splitPanelRect;
     BotToast.showCustomText(
       clickClose: true,
       ignoreContentClick: true,
+      align: null,
+      useSafeArea: panelRect == null,
       duration: const Duration(seconds: 8),
-      toastBuilder: (textCancel) => Align(
-        child: Padding(
+      toastBuilder: (textCancel) {
+        final Widget note = Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Card(
             color: cardColor,
@@ -6944,8 +7001,17 @@ class WebViewFullState extends State<WebViewFull>
               ),
             ),
           ),
-        ),
-      ),
+        );
+        if (panelRect == null) return Align(child: note);
+        return Stack(
+          children: [
+            Positioned.fromRect(
+              rect: panelRect,
+              child: Center(child: note),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -6989,14 +7055,42 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   Future<void> closeBrowserFromOutside() async {
+    if (_browserExitRefused) {
+      _exitBrowserToApp();
+      return;
+    }
     _webViewProvider.setCurrentUiMode(UiMode.window, context);
     await Future.delayed(const Duration(milliseconds: 150));
     if (mounted) {
-      if (!_webViewProvider.webViewSplitActive) {
-        _webViewProvider.browserShowInForeground = false;
-      }
-      _checkIfTargetsAttackedAndRevertChaining();
+      if (_exitBrowserToApp() || _webViewProvider.webViewSplitActive) _checkIfTargetsAttackedAndRevertChaining();
     }
+  }
+
+  bool get _browserExitRefused =>
+      _webViewProvider.splitBrowsersActive &&
+      !_webViewProvider.webViewSplitActive &&
+      !_webViewProvider.splitBrowserCanExitToApp;
+
+  bool _exitBrowserToApp() {
+    if (_webViewProvider.webViewSplitActive) return false;
+    if (_browserExitRefused) {
+      BotToast.showText(
+        text: "Close the empty panel first",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.grey[800]!,
+        duration: const Duration(seconds: 2),
+        contentPadding: const EdgeInsets.all(10),
+      );
+      return false;
+    }
+    if (!_webViewProvider.splitBrowsersActive) {
+      _webViewProvider.browserShowInForeground = false;
+      return true;
+    }
+    final bool apart = _webViewProvider.getTabByUid(_tabUid)?.splitApart ?? false;
+    return _webViewProvider.exitBrowserSlotToApp(
+      _webViewProvider.slotOfGroup(apart ? SplitGroup.apart : SplitGroup.main),
+    );
   }
 
   void _exitFullScreenFromJS() {

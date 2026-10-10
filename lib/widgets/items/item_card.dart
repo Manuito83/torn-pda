@@ -130,7 +130,7 @@ class ItemCardState extends State<ItemCard> {
                                     widget.item.name!,
                                     style: const TextStyle(fontSize: 12),
                                   ),
-                                  Row(
+                                  Wrap(
                                     children: [
                                       Text(
                                         "Value: \$${decimalFormat.format(widget.item.marketValue)}",

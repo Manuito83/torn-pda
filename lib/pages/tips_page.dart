@@ -290,7 +290,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -306,7 +306,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       title: const Text('Torn PDA - Tips', style: TextStyle(color: Colors.white)),
@@ -833,6 +833,19 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
             "to the page title (which is shown in the default browser style).\n\n"
             "Please note that this name will be lost if you close the tab. This could be particularly useful, however, "
             "in combination with the tab locking feature (explained above), so that you can organize your tabs better.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Two groups of tabs side by side",
+        expandedValue: "On wide screens (tablets, unfolded foldables or large Android windows) you can show "
+            "two groups of browser tabs at once.\n\n"
+            "First choose 'Browser left' or 'Browser right' in Settings / Split screen. On phones and foldables, "
+            "also enable 'Allow auto rotation'.\n\n"
+            "Then double-tap a tab and use the split icon to open it in a second panel, where the app was. "
+            "Each panel has its own tabs and its own + button, and the same icon moves a tab to the other panel.\n\n"
+            "To close an empty panel, tap its X and the app comes back.\n\n"
+            "To resize the panels, press and hold the divider, then drag it.",
       ),
     );
     return tips;

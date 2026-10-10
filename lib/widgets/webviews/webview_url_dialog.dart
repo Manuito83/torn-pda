@@ -34,6 +34,7 @@ import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_open_button.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:torn_pda/widgets/webviews/faction_assist_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -344,6 +345,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           if (widget.inAppWebview != null) {
+                            _discardSavedUrl();
                             widget.inAppWebview!.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
                           }
                           if (widget.stockWebView != null) {
@@ -710,6 +712,11 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
     );
   }
 
+  void _discardSavedUrl() {
+    final Key? key = widget.webviewKey;
+    if (key is GlobalKey<WebViewFullState>) key.currentState?.discardUrlBeforeInitialLoad();
+  }
+
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState!.validate()) {
       String url = _customURLController.text.replaceAll(" ", "");
@@ -720,6 +727,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
       }
 
       if (widget.inAppWebview != null) {
+        _discardSavedUrl();
         widget.inAppWebview!.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
       } else {
         widget.stockWebView!.loadRequest(Uri.parse(url));

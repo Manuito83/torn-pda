@@ -1663,8 +1663,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
         onPressed: () {
           final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
           if (scaffoldState != null) {
-            if (_webViewProvider.webViewSplitActive &&
-                _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+            if (_webViewProvider.splitAppSide == SplitSide.right) {
               scaffoldState.openEndDrawer();
             } else {
               scaffoldState.openDrawer();

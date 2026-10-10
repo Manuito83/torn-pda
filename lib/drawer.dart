@@ -737,6 +737,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_render_process_gone_allowed": true,
         "browser_recovery_overlay_allowed": true,
         "browser_park_background_tabs_allowed": true,
+        "browser_split_browsers_allowed": true,
         // Default for the browser memory settings (can be overriden)
         "browser_park_background_tabs_default": false,
         "browser_webview_hardware_layer_mode": "default_on",
@@ -846,6 +847,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _webViewProvider.parkBackgroundTabsRemoteConfigAllowed = remoteConfig.getBool(
         "browser_park_background_tabs_allowed",
       );
+      _webViewProvider.splitBrowsersAllowedRC = remoteConfig.getBool("browser_split_browsers_allowed");
 
       // Browser memory defaults (also persisted, so they are known before the fetch on next launch)
       _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");
@@ -2137,18 +2139,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                       : _themeProvider!.canvas
                 : _themeProvider!.statusBar,
             child: SafeArea(
-              right:
-                  _webViewProvider.webViewSplitActive &&
-                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-              left:
-                  _webViewProvider.webViewSplitActive &&
-                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+              right: _webViewProvider.splitAppSide == SplitSide.right,
+              left: _webViewProvider.splitAppSide == SplitSide.left,
               child: Scaffold(
                 key: _scaffoldKey,
                 body: _getPages(),
-                endDrawer:
-                    _webViewProvider.webViewSplitActive &&
-                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                endDrawer: _webViewProvider.splitAppSide == SplitSide.right
                     ? Drawer(
                         backgroundColor: _themeProvider!.canvas,
                         surfaceTintColor: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : null,
@@ -2166,9 +2162,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         ),
                       )
                     : null,
-                drawer:
-                    _webViewProvider.webViewSplitActive &&
-                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                drawer: _webViewProvider.splitAppSide == SplitSide.right
                     ? null
                     : Drawer(
                         backgroundColor: _themeProvider!.canvas,
@@ -2543,9 +2537,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
     _willPopShouldOpenDrawer = _settingsProvider.willPopShouldOpenDrawerStream.stream;
-    _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
-      _openDrawer();
-    });
+    if (mounted) {
+      _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
+        _openDrawer();
+      });
+    }
 
     // Set up UserController. If key is empty, redirect to the Settings page.
     // Else, open the default
@@ -3150,6 +3146,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   void _openDrawer() {
+    if (!mounted) return;
     if (routeWithDrawer) {
       // Dialogs sit on top of this route and the back button never reaches them
       final ModalRoute<dynamic>? route = ModalRoute.of(context);
@@ -3158,7 +3155,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return;
       }
 
-      if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+      if (_webViewProvider.splitAppSide == SplitSide.right) {
         _scaffoldKey.currentState!.openEndDrawer();
       } else {
         _scaffoldKey.currentState!.openDrawer();

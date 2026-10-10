@@ -15,9 +15,9 @@ import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override
@@ -59,13 +59,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                 ? _themeProvider!.statusBar
                 : _themeProvider!.canvas
           : _themeProvider!.canvas,
-      child: SafeArea(
-        right:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider!.canvas,
           appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,

@@ -193,7 +193,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     return AppBar(
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -209,7 +209,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       title: const Text('Items', style: TextStyle(color: Colors.white)),
@@ -341,96 +341,103 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
-                  SizedBox(
-                    width: 150,
-                    height: 40,
-                    child: Column(
-                      children: [
-                        if (_ownedItemsFilter == 1)
-                          const Text("ONLY OWNED ITEMS", style: TextStyle(fontSize: 10))
-                        else if (_ownedItemsFilter == 2)
-                          const Text("ONLY ITEMS NOT OWNED", style: TextStyle(fontSize: 10))
-                        else
-                          const SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 5),
-                          child: SizedBox(
-                            height: 25,
-                            child: ToggleSwitch(
-                              customWidths: const [35, 35],
-                              iconSize: 15,
-                              borderWidth: 1,
-                              cornerRadius: 5,
-                              doubleTapDisable: true,
-                              borderColor: _themeProvider!.currentTheme == AppTheme.light
-                                  ? [Colors.blueGrey]
-                                  : [Colors.grey[900]!],
-                              initialLabelIndex: _ownedItemsFilter == 0
-                                  ? null
-                                  : _ownedItemsFilter == 1
-                                  ? 0
-                                  : 1,
-                              activeBgColor: _themeProvider!.currentTheme == AppTheme.light
-                                  ? [Colors.blueGrey]
-                                  : _themeProvider!.currentTheme == AppTheme.dark
-                                  ? [Colors.blueGrey]
-                                  : [Colors.blueGrey[900]!],
-                              activeFgColor: _themeProvider!.currentTheme == AppTheme.light
-                                  ? Colors.black
-                                  : Colors.white,
-                              inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-                                  ? Colors.white
-                                  : _themeProvider!.currentTheme == AppTheme.dark
-                                  ? Colors.grey[800]
-                                  : Colors.black,
-                              inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light
-                                  ? Colors.black
-                                  : Colors.white,
-                              totalSwitches: 2,
-                              animate: true,
-                              animationDuration: 500,
-                              icons: const [Icons.check, Icons.close],
-                              onToggle: (index) async {
-                                if (index == null) {
-                                  _ownedItemsFilter = 0;
-                                } else if (index == 0) {
-                                  _ownedItemsFilter = 1;
-                                } else if (index == 1) {
-                                  _ownedItemsFilter = 2;
-                                }
-                                if (index != null) _requestInventory();
-                                _rebuildItemsCards();
-                                Prefs().setOnlyOwnedItemsFilter(_ownedItemsFilter);
-                              },
+                  Flexible(
+                    child: SizedBox(
+                      width: 150,
+                      height: 40,
+                      child: Column(
+                        children: [
+                          if (_ownedItemsFilter == 1)
+                            const Text("ONLY OWNED ITEMS", style: TextStyle(fontSize: 10))
+                          else if (_ownedItemsFilter == 2)
+                            const Text("ONLY ITEMS NOT OWNED", style: TextStyle(fontSize: 10))
+                          else
+                            const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 5),
+                            child: SizedBox(
+                              height: 25,
+                              child: ToggleSwitch(
+                                customWidths: const [35, 35],
+                                iconSize: 15,
+                                borderWidth: 1,
+                                cornerRadius: 5,
+                                doubleTapDisable: true,
+                                borderColor: _themeProvider!.currentTheme == AppTheme.light
+                                    ? [Colors.blueGrey]
+                                    : [Colors.grey[900]!],
+                                initialLabelIndex: _ownedItemsFilter == 0
+                                    ? null
+                                    : _ownedItemsFilter == 1
+                                    ? 0
+                                    : 1,
+                                activeBgColor: _themeProvider!.currentTheme == AppTheme.light
+                                    ? [Colors.blueGrey]
+                                    : _themeProvider!.currentTheme == AppTheme.dark
+                                    ? [Colors.blueGrey]
+                                    : [Colors.blueGrey[900]!],
+                                activeFgColor: _themeProvider!.currentTheme == AppTheme.light
+                                    ? Colors.black
+                                    : Colors.white,
+                                inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
+                                    ? Colors.white
+                                    : _themeProvider!.currentTheme == AppTheme.dark
+                                    ? Colors.grey[800]
+                                    : Colors.black,
+                                inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light
+                                    ? Colors.black
+                                    : Colors.white,
+                                totalSwitches: 2,
+                                animate: true,
+                                animationDuration: 500,
+                                icons: const [Icons.check, Icons.close],
+                                onToggle: (index) async {
+                                  if (index == null) {
+                                    _ownedItemsFilter = 0;
+                                  } else if (index == 0) {
+                                    _ownedItemsFilter = 1;
+                                  } else if (index == 1) {
+                                    _ownedItemsFilter = 2;
+                                  }
+                                  if (index != null) _requestInventory();
+                                  _rebuildItemsCards();
+                                  Prefs().setOnlyOwnedItemsFilter(_ownedItemsFilter);
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                  SizedBox(
-                    width: 150,
-                    child: RawChip(
-                      selected: _hiddenCategories.isEmpty ? true : false,
-                      side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600]!, width: 1.5),
-                      avatar: CircleAvatar(backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey),
-                      label: const Text("ALL", style: TextStyle(fontSize: 12)),
-                      selectedColor: Colors.transparent,
-                      disabledColor: Colors.grey,
-                      onSelected: (bool isSelected) {
-                        if (isSelected) {
-                          _hiddenCategories.clear();
-                        } else {
-                          final fullList = [];
-                          for (final cat in _allCategories.keys) {
-                            fullList.add(cat);
+                  Flexible(
+                    child: SizedBox(
+                      width: 150,
+                      child: RawChip(
+                        selected: _hiddenCategories.isEmpty ? true : false,
+                        side: BorderSide(
+                          color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600]!,
+                          width: 1.5,
+                        ),
+                        avatar: CircleAvatar(backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey),
+                        label: const Text("ALL", style: TextStyle(fontSize: 12)),
+                        selectedColor: Colors.transparent,
+                        disabledColor: Colors.grey,
+                        onSelected: (bool isSelected) {
+                          if (isSelected) {
+                            _hiddenCategories.clear();
+                          } else {
+                            final fullList = [];
+                            for (final cat in _allCategories.keys) {
+                              fullList.add(cat);
+                            }
+                            _hiddenCategories = List<String>.from(fullList);
                           }
-                          _hiddenCategories = List<String>.from(fullList);
-                        }
-                        Prefs().setHiddenItemsCategories(_hiddenCategories);
-                        _rebuildItemsCards();
-                        _loadInventory();
-                      },
+                          Prefs().setHiddenItemsCategories(_hiddenCategories);
+                          _rebuildItemsCards();
+                          _loadInventory();
+                        },
+                      ),
                     ),
                   ),
                 ],

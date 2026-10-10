@@ -258,7 +258,7 @@ class LootPageState extends State<LootPage> {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Loot', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -274,7 +274,7 @@ class LootPageState extends State<LootPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -778,9 +778,12 @@ class LootPageState extends State<LootPage> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Row(
                               children: [
-                                Text(
-                                  '${npcDetails.name} [$npcId]',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                Flexible(
+                                  child: Text(
+                                    '${npcDetails.name} [$npcId]',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 hospitalized,

@@ -41,6 +41,7 @@ class WebviewHandlers {
           'uid': tabUid,
           'isActiveTab': webViewProvider.isTabUidActive(tabUid),
           'isWebViewVisible': webViewProvider.browserShowInForeground,
+          'isOnScreen': webViewProvider.isTabUidOnScreen(tabUid),
         };
       },
     );

@@ -129,7 +129,9 @@ class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerPro
             indicatorColor: Colors.pink[700],
             tabs: [
               const Tab(text: "Sorting"),
-              const Tab(text: "Smart Score"),
+              const Tab(
+                child: FittedBox(fit: BoxFit.scaleDown, child: Text("Smart Score")),
+              ),
               const Tab(text: "Filters"),
             ],
           ),

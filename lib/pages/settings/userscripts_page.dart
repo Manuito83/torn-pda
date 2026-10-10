@@ -27,6 +27,7 @@ import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_bulk_update_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 
 class UserScriptsPage extends StatefulWidget {
   final bool? fromWebview;
@@ -129,9 +130,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ? _themeProvider.statusBar
                 : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           floatingActionButton: _showWarFab
@@ -731,7 +730,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               style: const TextStyle(color: Colors.white, fontSize: 16),
             )
           : const Text('User scripts', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -740,7 +739,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          if (!_webViewProvider.webViewSplitActive && widget.fromWebview != true)
+          if (_webViewProvider.appCanOpenBrowser && widget.fromWebview != true)
             const PdaBrowserIcon()
           else
             Container(),

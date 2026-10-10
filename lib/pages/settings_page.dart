@@ -224,7 +224,7 @@ class SettingsPageState extends State<SettingsPage> {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      leadingWidth: _isSearching ? 56 : (_webViewProvider.webViewSplitActive ? 50 : 88),
+      leadingWidth: _isSearching ? 56 : (_webViewProvider.appCanOpenBrowser ? 88 : 50),
       leading: !_isSearching
           ? Row(
               children: [
@@ -241,7 +241,7 @@ class SettingsPageState extends State<SettingsPage> {
                     }
                   },
                 ),
-                if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+                if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
               ],
             )
           : IconButton(
@@ -707,7 +707,7 @@ class SettingsPageState extends State<SettingsPage> {
               Flexible(
                 child: Row(
                   children: [
-                    const Text("Discreet local notifications"),
+                    const Flexible(child: Text("Discreet local notifications")),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
@@ -2144,6 +2144,16 @@ class SettingsPageState extends State<SettingsPage> {
                   fontStyle: FontStyle.italic,
                 ),
               ),
+              if (!_settingsProvider.allowScreenRotation &&
+                  _webViewProvider.splitScreenPosition != WebViewSplitPosition.off)
+                Text(
+                  'Allow auto rotation to use split screen on phones and foldables',
+                  style: TextStyle(
+                    color: Colors.orange[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
             ],
           ),
         ),
@@ -2497,7 +2507,7 @@ class SettingsPageState extends State<SettingsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Flexible(child: Text("Override icon")),
+                    const Text("Override icon"),
                     Flexible(child: _manualAppIconDropdown()),
                   ],
                 ),
@@ -3501,7 +3511,7 @@ class SettingsPageState extends State<SettingsPage> {
           if (value == WebViewSplitPosition.off) {
             _webViewProvider.browserShowInForeground = false;
           } else {
-            if (MediaQuery.sizeOf(context).width > 800) {
+            if (MediaQuery.sizeOf(context).width >= kSplitScreenMinWidth) {
               _webViewProvider.webViewSplitActive = true;
 
               // Force stackview convertion from Container if it still hasn't happened

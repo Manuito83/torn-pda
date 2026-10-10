@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/script_catalog_service.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ScriptsCatalogPage extends StatefulWidget {
@@ -107,9 +108,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                 ? _themeProvider.statusBar
                 : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? _buildAppBar() : null,

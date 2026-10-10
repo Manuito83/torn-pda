@@ -11,9 +11,9 @@ import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 
 class LootNotificationsIOS extends StatefulWidget {
   final Function callback;
@@ -71,11 +71,7 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
                   ? _themeProvider.statusBar
                   : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -173,9 +169,7 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              const Flexible(
-                child: Text('Loot'),
-              ),
+              const Text('Loot'),
               const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),

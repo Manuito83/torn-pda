@@ -308,11 +308,13 @@ class WarCardState extends State<WarCard> {
                 // LINE 3
                 Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(14, 5, 15, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: <Widget>[
-                      _statsWidget(),
+                      FittedBox(fit: BoxFit.scaleDown, child: _statsWidget()),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           FFScouterFlightInfo(
                             playerId: _member.memberId!,

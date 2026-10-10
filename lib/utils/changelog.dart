@@ -94,17 +94,24 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF1565C0),
         items: [
           _MItem(
+            'Quick items: support for items loaned by your faction',
+            detail:
+                'Loaned medical items, drugs, energy drinks, alcohol, candy and boosters can be added to quick items '
+                'as their own entry, marked with the faction shield. Using it spends the loaned item instead of your own.',
+          ),
+          _MItem(
+            'Browser: added support for two groups of tabs side by side',
+            detail:
+                'On wide screens with split screen enabled in Settings, double-tap a tab and use "open in split panel" '
+                'icon to see two groups of tabs at once. Press and hold the divider, then '
+                'drag it, to resize the panels.\n\nMore details in the Tips section.',
+          ),
+          _MItem(
             'Browser: option to allow remote debugging',
             detail:
                 'Found in Advanced browser settings, under Maintenance. Lets you inspect the browser '
                 'from a computer: chrome://inspect on Android, Safari Web Inspector on iOS. '
                 'While enabled, Google sign-in inside the browser may not work. Restart the app to apply.',
-          ),
-          _MItem(
-            'Quick items: support for items loaned by your faction',
-            detail:
-                'Loaned medical items, drugs, energy drinks, alcohol, candy and boosters can be added to quick items '
-                'as their own entry, marked with the faction shield. Using it spends the loaned item instead of your own.',
           ),
         ],
       ),
@@ -112,7 +119,11 @@ List<_MVersion> _modernChangelog() => [
         icon: Icons.handyman,
         title: 'Fixed',
         color: Color(0xFF2E7D32),
-        items: [_MItem('Fixed alerts not loading or saving after the app recovers its session')],
+        items: [
+          _MItem('Fixed alerts not loading or saving after the app recovers its session'),
+          _MItem('Browser: rotating or resizing the screen no longer reloads your tabs'),
+          _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
+        ],
       ),
     ],
   ),

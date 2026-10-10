@@ -749,18 +749,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               );
                             },
                             child: ExcludeSemantics(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "[${_user!.playerId}] - Level ${_user!.level}",
-                                    style: const TextStyle(fontSize: 10, color: Colors.white),
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 4),
-                                    child: Icon(Icons.open_in_new, size: 10, color: Colors.white70),
-                                  ),
-                                ],
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      "[${_user!.playerId}] - Level ${_user!.level}",
+                                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 4),
+                                      child: Icon(Icons.open_in_new, size: 10, color: Colors.white70),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -775,7 +778,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
         ],
       ),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -791,7 +794,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive)
+          if (_webViewProvider.appCanOpenBrowser)
             Showcase(
               key: _showcasePdaBrowserButton,
               title: 'Direct Torn access!',
@@ -2045,64 +2048,72 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          const SizedBox(width: 60, child: Text('Energy')),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            key: _showOne,
-                            onLongPress: () {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
-                            },
-                            onTap: () async {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
-                            },
-                            child: Showcase(
-                              key: _showcaseProfileBars,
-                              title: 'Did you know?',
-                              description:
-                                  '\nTap any of the bars to launch a browser '
-                                  'straight to the gym, crimes or items sections!',
-                              targetPadding: const EdgeInsets.all(10),
-                              disableMovingAnimation: true,
-                              textColor: _themeProvider!.mainText,
-                              tooltipBackgroundColor: _themeProvider!.secondBackground,
-                              descTextStyle: const TextStyle(fontSize: 13),
-                              tooltipPadding: const EdgeInsets.all(20),
-                              child: LinearPercentIndicator(
-                                padding: const EdgeInsets.all(0),
-                                barRadius: const Radius.circular(10),
-                                width: 150,
-                                lineHeight: 20,
-                                progressColor: Colors.green,
-                                backgroundColor: Colors.grey,
-                                center: FittedBox(
-                                  fit: BoxFit.fitWidth,
-                                  child: Text(
-                                    '${_user!.energy!.current}/${_user!.energy!.maximum}',
-                                    style: const TextStyle(color: Colors.black),
+                      Flexible(
+                        child: Row(
+                          children: <Widget>[
+                            const SizedBox(width: 60, child: Text('Energy')),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 150),
+                                child: GestureDetector(
+                                  key: _showOne,
+                                  onLongPress: () {
+                                    _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
+                                  },
+                                  onTap: () async {
+                                    _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
+                                  },
+                                  child: Showcase(
+                                    key: _showcaseProfileBars,
+                                    title: 'Did you know?',
+                                    description:
+                                        '\nTap any of the bars to launch a browser '
+                                        'straight to the gym, crimes or items sections!',
+                                    targetPadding: const EdgeInsets.all(10),
+                                    disableMovingAnimation: true,
+                                    textColor: _themeProvider!.mainText,
+                                    tooltipBackgroundColor: _themeProvider!.secondBackground,
+                                    descTextStyle: const TextStyle(fontSize: 13),
+                                    tooltipPadding: const EdgeInsets.all(20),
+                                    child: LinearPercentIndicator(
+                                      padding: const EdgeInsets.all(0),
+                                      barRadius: const Radius.circular(10),
+                                      lineHeight: 20,
+                                      progressColor: Colors.green,
+                                      backgroundColor: Colors.grey,
+                                      center: FittedBox(
+                                        fit: BoxFit.fitWidth,
+                                        child: Text(
+                                          '${_user!.energy!.current}/${_user!.energy!.maximum}',
+                                          style: const TextStyle(color: Colors.black),
+                                        ),
+                                      ),
+                                      percent: _user!.energy!.current! / _user!.energy!.maximum! > 1.0
+                                          ? 1.0
+                                          : _user!.energy!.current! / _user!.energy!.maximum!,
+                                    ),
                                   ),
                                 ),
-                                percent: _user!.energy!.current! / _user!.energy!.maximum! > 1.0
-                                    ? 1.0
-                                    : _user!.energy!.current! / _user!.energy!.maximum!,
                               ),
                             ),
-                          ),
-                          if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 5),
-                              child: GestureDetector(
-                                onTap: () {
-                                  // Open chaining section
-                                  widget.callBackSection(DrawerSection.chaining);
-                                },
-                                child: const Icon(MdiIcons.linkVariant, color: Colors.blue, size: 22),
-                              ),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                        ],
+                            if (_warnAboutChains &&
+                                _chainModel.chain!.current! > 10 &&
+                                _chainModel.chain!.cooldown == 0)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // Open chaining section
+                                    widget.callBackSection(DrawerSection.chaining);
+                                  },
+                                  child: const Icon(MdiIcons.linkVariant, color: Colors.blue, size: 22),
+                                ),
+                              )
+                            else
+                              const SizedBox.shrink(),
+                          ],
+                        ),
                       ),
                       _notificationIcon(ProfileNotification.energy),
                     ],

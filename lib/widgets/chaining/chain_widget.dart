@@ -132,143 +132,155 @@ class ChainWidgetState extends State<ChainWidget> {
                           : const SizedBox.shrink(),
                     ),
                   const SizedBox(width: 10),
-                  Column(
-                    children: <Widget>[
-                      FutureBuilder(
-                        future: _finishedLoadingChain,
-                        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done) {
-                            if (!chainP.modelError) {
-                              return Column(
-                                children: <Widget>[
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 4),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: <Widget>[
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        children: <Widget>[
+                          FutureBuilder(
+                            future: _finishedLoadingChain,
+                            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done) {
+                                if (!chainP.modelError) {
+                                  return Column(
+                                    children: <Widget>[
+                                      Padding(
+                                        padding: const EdgeInsets.only(bottom: 4),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: <Widget>[
+                                            Text(
+                                              chainP.chainModel!.chain!.cooldown! > 0 ? 'Cooldown ' : 'Chain ',
+                                              style: TextStyle(color: titleColor),
+                                            ),
+                                            Text(
+                                              chainP.currentChainTimeString,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: chainP.currentSecondsCounter > 0 &&
+                                                        chainP.currentSecondsCounter < 60 &&
+                                                        chainP.chainModel!.chain!.cooldown == 0
+                                                    ? Colors.red
+                                                    : titleColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      LinearPercentIndicator(
+                                        padding: const EdgeInsets.all(0),
+                                        barRadius: const Radius.circular(10),
+                                        alignment: MainAxisAlignment.center,
+                                        width: 150,
+                                        lineHeight: 16,
+                                        backgroundColor: Colors.grey,
+                                        progressColor: chainP.chainModel!.chain!.cooldown! > 0
+                                            ? Colors.green[200]
+                                            : Colors.blue[200],
+                                        center: Text(
+                                          chainP.chainModel!.chain!.cooldown! > 0
+                                              ? '${chainP.chainModel!.chain!.current} hits'
+                                              : '${chainP.chainModel!.chain!.current}/${chainP.chainModel!.chain!.max}',
+                                          style: const TextStyle(color: Colors.black),
+                                        ),
+                                        percent: chainP.chainModel!.chain!.cooldown! > 0
+                                            ? 1.0
+                                            : chainP.chainModel!.chain!.current! / chainP.chainModel!.chain!.max!,
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  if (chainP.watcherActive && chainP.chainWatcherDefcon == WatchDefcon.apiFail) {
+                                    return Column(
+                                      children: [
                                         Text(
-                                          chainP.chainModel!.chain!.cooldown! > 0 ? 'Cooldown ' : 'Chain ',
-                                          style: TextStyle(color: titleColor),
+                                          'API FAILED UNDER WATCH!',
+                                          style: TextStyle(
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.purple[600],
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                         Text(
-                                          chainP.currentChainTimeString,
+                                          'Last check @${chainP.currentChainTimeString}',
                                           style: TextStyle(
+                                            fontStyle: FontStyle.italic,
+                                            color: Colors.purple[600],
+                                            fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: chainP.currentSecondsCounter > 0 &&
-                                                    chainP.currentSecondsCounter < 60 &&
-                                                    chainP.chainModel!.chain!.cooldown == 0
-                                                ? Colors.red
-                                                : titleColor,
                                           ),
                                         ),
                                       ],
-                                    ),
-                                  ),
-                                  LinearPercentIndicator(
-                                    padding: const EdgeInsets.all(0),
-                                    barRadius: const Radius.circular(10),
-                                    alignment: MainAxisAlignment.center,
-                                    width: 150,
-                                    lineHeight: 16,
-                                    backgroundColor: Colors.grey,
-                                    progressColor:
-                                        chainP.chainModel!.chain!.cooldown! > 0 ? Colors.green[200] : Colors.blue[200],
-                                    center: Text(
-                                      chainP.chainModel!.chain!.cooldown! > 0
-                                          ? '${chainP.chainModel!.chain!.current} hits'
-                                          : '${chainP.chainModel!.chain!.current}/${chainP.chainModel!.chain!.max}',
-                                      style: const TextStyle(color: Colors.black),
-                                    ),
-                                    percent: chainP.chainModel!.chain!.cooldown! > 0
-                                        ? 1.0
-                                        : chainP.chainModel!.chain!.current! / chainP.chainModel!.chain!.max!,
-                                  ),
-                                ],
-                              );
-                            } else {
-                              if (chainP.watcherActive && chainP.chainWatcherDefcon == WatchDefcon.apiFail) {
-                                return Column(
-                                  children: [
-                                    Text(
-                                      'API FAILED UNDER WATCH!',
-                                      style: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.purple[600],
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Last check @${chainP.currentChainTimeString}',
-                                      style: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.purple[600],
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                );
+                                    );
+                                  }
+                                  return Text(
+                                    'Cannot retrieve chain details!',
+                                    style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange[800]),
+                                  );
+                                }
+                              } else {
+                                return const SizedBox(height: 30);
                               }
-                              return Text(
-                                'Cannot retrieve chain details!',
-                                style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange[800]),
-                              );
-                            }
-                          } else {
-                            return const SizedBox(height: 30);
-                          }
-                        },
+                            },
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 2),
+                          ),
+                          FutureBuilder(
+                            future: _finishedGettingBars,
+                            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done) {
+                                if (chainP.barsAndStatusModel is BarsStatusCooldownsModel) {
+                                  final bars = chainP.barsAndStatusModel;
+                                  return Column(
+                                    children: <Widget>[
+                                      LinearPercentIndicator(
+                                        padding: const EdgeInsets.all(0),
+                                        barRadius: const Radius.circular(10),
+                                        alignment: MainAxisAlignment.center,
+                                        width: 150,
+                                        lineHeight: 16,
+                                        backgroundColor: Colors.green[100],
+                                        progressColor: Colors.green,
+                                        center: Text(
+                                          _formatEnergyText(bars?.energy?.current, bars?.energy?.maximum),
+                                          style: const TextStyle(color: Colors.black),
+                                        ),
+                                        percent: _calculateEnergyPercentage(
+                                          bars?.energy?.current,
+                                          bars?.energy?.maximum,
+                                        ),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 2),
+                                      ),
+                                      LinearPercentIndicator(
+                                        padding: const EdgeInsets.all(0),
+                                        barRadius: const Radius.circular(10),
+                                        alignment: MainAxisAlignment.center,
+                                        width: 150,
+                                        lineHeight: 3,
+                                        backgroundColor: Colors.green[100],
+                                        progressColor: Colors.green,
+                                        percent: _calculateTickPercentage(
+                                          bars?.energy?.ticktime,
+                                          bars?.energy?.interval,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return const SizedBox.shrink();
+                                }
+                              } else {
+                                return const SizedBox.shrink();
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 2),
-                      ),
-                      FutureBuilder(
-                        future: _finishedGettingBars,
-                        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done) {
-                            if (chainP.barsAndStatusModel is BarsStatusCooldownsModel) {
-                              final bars = chainP.barsAndStatusModel;
-                              return Column(
-                                children: <Widget>[
-                                  LinearPercentIndicator(
-                                    padding: const EdgeInsets.all(0),
-                                    barRadius: const Radius.circular(10),
-                                    alignment: MainAxisAlignment.center,
-                                    width: 150,
-                                    lineHeight: 16,
-                                    backgroundColor: Colors.green[100],
-                                    progressColor: Colors.green,
-                                    center: Text(
-                                      _formatEnergyText(bars?.energy?.current, bars?.energy?.maximum),
-                                      style: const TextStyle(color: Colors.black),
-                                    ),
-                                    percent: _calculateEnergyPercentage(bars?.energy?.current, bars?.energy?.maximum),
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 2),
-                                  ),
-                                  LinearPercentIndicator(
-                                    padding: const EdgeInsets.all(0),
-                                    barRadius: const Radius.circular(10),
-                                    alignment: MainAxisAlignment.center,
-                                    width: 150,
-                                    lineHeight: 3,
-                                    backgroundColor: Colors.green[100],
-                                    progressColor: Colors.green,
-                                    percent: _calculateTickPercentage(bars?.energy?.ticktime, bars?.energy?.interval),
-                                  ),
-                                ],
-                              );
-                            } else {
-                              return const SizedBox.shrink();
-                            }
-                          } else {
-                            return const SizedBox.shrink();
-                          }
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                   const SizedBox(width: 10),
                   SizedBox(

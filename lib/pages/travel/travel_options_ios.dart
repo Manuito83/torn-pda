@@ -171,9 +171,7 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Flexible(
-                child: Text('Alarm'),
-              ),
+              const Text('Alarm'),
               const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),

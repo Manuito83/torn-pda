@@ -591,6 +591,9 @@ class Prefs {
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
   final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
+  final String _kSplitBrowsersLayout = "pda_splitBrowsersLayout";
+  final String _kSplitScreenRatio = "pda_splitScreenRatio";
+  final String _kSplitBrowsersAllowedRC = "pda_splitBrowsersAllowedRC";
 
   // FCM token
   final String _kFCMToken = "pda_fcmToken";
@@ -4818,6 +4821,30 @@ class Prefs {
 
   Future setSplitScreenRevertsToApp(bool value) async {
     return await PrefsDatabase.setBool(_kSplitScreenRevertsToApp, value);
+  }
+
+  Future<String> getSplitBrowsersLayout() async {
+    return await PrefsDatabase.getString(_kSplitBrowsersLayout, '');
+  }
+
+  Future setSplitBrowsersLayout(String value) async {
+    return await PrefsDatabase.setString(_kSplitBrowsersLayout, value);
+  }
+
+  Future<double> getSplitScreenRatio() async {
+    return await PrefsDatabase.getDouble(_kSplitScreenRatio, 0.5);
+  }
+
+  Future setSplitScreenRatio(double value) async {
+    return await PrefsDatabase.setDouble(_kSplitScreenRatio, value);
+  }
+
+  Future<bool> getSplitBrowsersAllowedRC() async {
+    return await PrefsDatabase.getBool(_kSplitBrowsersAllowedRC, true);
+  }
+
+  Future setSplitBrowsersAllowedRC(bool value) async {
+    return await PrefsDatabase.setBool(_kSplitBrowsersAllowedRC, value);
   }
 
   /// ----------------------------

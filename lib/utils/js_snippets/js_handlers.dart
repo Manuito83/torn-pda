@@ -32,7 +32,7 @@ String handler_tabContext(String tabUid) {
 			}
 
 			if (!root.tab.state) {
-				root.tab.state = { uid: '$tabUid', isActiveTab: false, isWebViewVisible: false };
+				root.tab.state = { uid: '$tabUid', isActiveTab: false, isWebViewVisible: false, isOnScreen: false };
 			}
 		})();
 	''';

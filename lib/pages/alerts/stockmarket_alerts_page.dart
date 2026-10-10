@@ -21,6 +21,7 @@ import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
@@ -92,9 +93,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                   ? _themeProvider!.statusBar
                   : _themeProvider!.canvas
           : _themeProvider!.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider!.canvas,
           appBar: _settingsP!.appBarTop ? buildAppBar() : null,
@@ -213,7 +212,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       title: Platform.isWindows
           ? const Text("Stock market", style: TextStyle(color: Colors.white))
           : const Text("Stock market alerts", style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -222,8 +221,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
               if (widget.calledFromMenu) {
                 final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
                 if (scaffoldState != null) {
-                  if (_webViewProvider.webViewSplitActive &&
-                      _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                  if (_webViewProvider.splitAppSide == SplitSide.right) {
                     scaffoldState.openEndDrawer();
                   } else {
                     scaffoldState.openDrawer();
@@ -235,7 +233,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: [

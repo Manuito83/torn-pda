@@ -28,6 +28,7 @@ import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 import 'package:torn_pda/widgets/webviews/browser_text_live_panel.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/fullscreen_header_doubletap_warning.dart';
@@ -156,9 +157,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ? _themeProvider.statusBar
                 : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -2314,42 +2313,47 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Range", style: TextStyle(fontSize: 12)),
-                Row(
-                  children: [
-                    Text(
-                      _settingsProvider.travelEnergyRangeWarningThreshold.end >= 110
-                          ? "> ${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}%"
-                          : "${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}% to ${_settingsProvider.travelEnergyRangeWarningThreshold.end.round()}%",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    RangeSlider(
-                      min: 0,
-                      max: 110,
-                      divisions: 11,
-                      values: _settingsProvider.travelEnergyRangeWarningThreshold,
-                      labels: RangeLabels(
-                        _buildRangeLabel(
-                          _settingsProvider.travelEnergyRangeWarningThreshold.start,
-                          currentEnergyMax,
-                          "E",
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      children: [
+                        Text(
+                          _settingsProvider.travelEnergyRangeWarningThreshold.end >= 110
+                              ? "> ${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}%"
+                              : "${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}% to ${_settingsProvider.travelEnergyRangeWarningThreshold.end.round()}%",
+                          style: const TextStyle(fontSize: 12),
                         ),
-                        _buildRangeLabel(
-                          _settingsProvider.travelEnergyRangeWarningThreshold.end,
-                          currentEnergyMax,
-                          "E",
+                        RangeSlider(
+                          min: 0,
+                          max: 110,
+                          divisions: 11,
+                          values: _settingsProvider.travelEnergyRangeWarningThreshold,
+                          labels: RangeLabels(
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.start,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.end,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                          ),
+                          onChanged: (RangeValues values) {
+                            setState(() {
+                              double startValue = values.start.roundToDouble();
+                              double endValue = values.end.roundToDouble();
+                              if (endValue - startValue >= 10) {
+                                _settingsProvider.travelEnergyRangeWarningThreshold = RangeValues(startValue, endValue);
+                              }
+                            });
+                          },
                         ),
-                      ),
-                      onChanged: (RangeValues values) {
-                        setState(() {
-                          double startValue = values.start.roundToDouble();
-                          double endValue = values.end.roundToDouble();
-                          if (endValue - startValue >= 10) {
-                            _settingsProvider.travelEnergyRangeWarningThreshold = RangeValues(startValue, endValue);
-                          }
-                        });
-                      },
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -4044,7 +4048,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
-      leadingWidth: _isSearching ? 56 : (_webViewProvider.webViewSplitActive ? 50 : 88),
+      leadingWidth: _isSearching ? 56 : (_webViewProvider.appCanOpenBrowser ? 88 : 50),
       leading: !_isSearching
           ? Row(
               children: [
@@ -4054,7 +4058,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     _goBack();
                   },
                 ),
-                if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+                if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
               ],
             )
           : IconButton(

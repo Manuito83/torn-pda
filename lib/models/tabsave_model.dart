@@ -42,6 +42,7 @@ class TabsSave {
     this.customNameInTitle = false,
     this.customNameInTab = true,
     this.lastUsedTime = 0,
+    this.splitApart = false,
   });
 
   String? tabUid;
@@ -57,6 +58,7 @@ class TabsSave {
   bool customNameInTitle;
   bool customNameInTab;
   int lastUsedTime;
+  bool splitApart;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
         tabUid: json["tabUid"],
@@ -72,6 +74,7 @@ class TabsSave {
         customNameInTitle: json["customNameInTitle"] ?? false,
         customNameInTab: json["customNameInTab"] ?? true,
         lastUsedTime: json["lastUsedTime"] ?? 0,
+        splitApart: json["splitApart"] ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -88,5 +91,6 @@ class TabsSave {
         "customNameInTitle": customNameInTitle,
         "customNameInTab": customNameInTab,
         "lastUsedTime": lastUsedTime,
+        "splitApart": splitApart,
       };
 }

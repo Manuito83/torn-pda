@@ -14,6 +14,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ScriptsGuidePage extends StatefulWidget {
@@ -74,9 +75,7 @@ class ScriptsGuidePageState extends State<ScriptsGuidePage> {
                 ? _themeProvider.statusBar
                 : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? _buildAppBar() : null,

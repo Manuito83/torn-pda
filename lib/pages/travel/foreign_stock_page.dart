@@ -30,6 +30,7 @@ import 'package:torn_pda/utils/inventory_feedback.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
@@ -244,13 +245,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                 ? _themeProvider!.statusBar
                 : _themeProvider!.canvas
           : _themeProvider!.canvas,
-      child: SafeArea(
-        right:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider!.canvas,
           appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
@@ -370,12 +365,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   AppBar buildAppBar() {
-    final bool webViewSplitActive = context.read<WebViewProvider>().webViewSplitActive;
+    final bool appCanOpenBrowser = context.select<WebViewProvider, bool>((w) => w.appCanOpenBrowser);
 
     return AppBar(
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: webViewSplitActive ? 56 : 88,
+      leadingWidth: appCanOpenBrowser ? 88 : 56,
       title: const Text("Foreign Stock", style: TextStyle(color: Colors.white)),
       leading: Row(
         children: [
@@ -385,7 +380,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               _goBack(false, false);
             },
           ),
-          if (!webViewSplitActive) const PdaBrowserIcon(),
+          if (appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -482,7 +477,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(width: 40),
-                SizedBox(height: 90, width: 220, child: _toggleFlagsFilterWidget()),
+                Flexible(child: SizedBox(height: 90, width: 220, child: _toggleFlagsFilterWidget())),
                 SizedBox(
                   width: 40,
                   child: Padding(

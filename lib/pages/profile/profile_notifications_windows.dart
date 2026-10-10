@@ -20,9 +20,9 @@ import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_windows.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/profile/energy_trigger_dialog.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 
 class ProfileNotificationsWindows extends StatefulWidget {
   final Function callback;
@@ -85,11 +85,7 @@ class ProfileNotificationsWindowsState extends State<ProfileNotificationsWindows
                   ? _themeProvider.statusBar
                   : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

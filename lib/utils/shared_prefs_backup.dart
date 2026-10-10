@@ -53,6 +53,7 @@ class PrefsBackupService {
     'pda_webViewLastActiveTab',
     'pda_webViewMainTab',
     'pda_webViewTabs',
+    'pda_splitBrowsersLayout',
     'pda_fcmToken',
     'pda_sendbirdSessionToken',
     'pda_sendbirdTimestamp',

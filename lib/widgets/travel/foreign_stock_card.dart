@@ -761,7 +761,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           ),
         ),
         const SizedBox(width: 10),
-        _returnLastUpdated(),
+        Flexible(
+          child: FittedBox(fit: BoxFit.scaleDown, child: _returnLastUpdated()),
+        ),
         const SizedBox(width: 10),
       ],
     );

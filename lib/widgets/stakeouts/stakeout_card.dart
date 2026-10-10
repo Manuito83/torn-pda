@@ -158,38 +158,43 @@ class StakeoutCardState extends State<StakeoutCard> {
                   ),
                 ],
               ),
-              Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-                child: Row(
-                  children: <Widget>[
-                    // If last fetch was more than 10 minutes ago, we don't update status details
-                    if (DateTime.now().millisecondsSinceEpoch - _stakeout!.lastFetch! < 600000)
-                      Row(
-                        children: <Widget>[
-                          _travelIcon(),
-                          Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: _returnStatusColor(_stakeout!.lastAction!.status),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 13),
-                            child: Text(
-                              _stakeout!.lastAction!.relative == "0 minutes ago"
-                                  ? 'now'
-                                  : _stakeout!.lastAction!.relative!.replaceAll(' ago', ''),
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      const Text("no recent update", style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
-                  ],
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      children: <Widget>[
+                        // If last fetch was more than 10 minutes ago, we don't update status details
+                        if (DateTime.now().millisecondsSinceEpoch - _stakeout!.lastFetch! < 600000)
+                          Row(
+                            children: <Widget>[
+                              _travelIcon(),
+                              Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  color: _returnStatusColor(_stakeout!.lastAction!.status),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 13),
+                                child: Text(
+                                  _stakeout!.lastAction!.relative == "0 minutes ago"
+                                      ? 'now'
+                                      : _stakeout!.lastAction!.relative!.replaceAll(' ago', ''),
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          const Text("no recent update", style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                      ],
+                    ),
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ),

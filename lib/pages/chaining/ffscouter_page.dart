@@ -224,7 +224,7 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text('FFScouter', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -240,7 +240,7 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: [
@@ -424,9 +424,18 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
                   }),
                 ),
                 segments: const [
-                  ButtonSegment(value: null, label: Text("Custom")),
-                  ButtonSegment(value: "respect", label: Text("Respect")),
-                  ButtonSegment(value: "level", label: Text("Level")),
+                  ButtonSegment(
+                    value: null,
+                    label: FittedBox(fit: BoxFit.scaleDown, child: Text("Custom")),
+                  ),
+                  ButtonSegment(
+                    value: "respect",
+                    label: FittedBox(fit: BoxFit.scaleDown, child: Text("Respect")),
+                  ),
+                  ButtonSegment(
+                    value: "level",
+                    label: FittedBox(fit: BoxFit.scaleDown, child: Text("Level")),
+                  ),
                 ],
                 selected: {_preset},
                 onSelectionChanged: (selection) {

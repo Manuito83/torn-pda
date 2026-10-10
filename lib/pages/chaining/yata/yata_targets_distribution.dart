@@ -10,6 +10,7 @@ import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 
 class YataTargetsDistribution extends StatefulWidget {
   final List<TargetsOnlyYata> onlyYata;
@@ -52,11 +53,7 @@ class YataTargetsDistributionState extends State<YataTargetsDistribution> {
           : _themeProvider.currentTheme == AppTheme.dark
               ? Colors.grey[900]
               : Colors.black,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,

@@ -192,12 +192,12 @@ class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
         }
 
         if (widget.inAppWebView != null) {
-          _webViewProvider.addTab(url: url);
+          _webViewProvider.addTab(url: url, openerTabUid: _webViewProvider.tabList[_webViewProvider.currentTab].id);
           _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
         } else if (widget.stockWebview != null) {
           widget.stockWebview!.loadRequest(Uri.parse(url!));
         } else if (widget.fromShortcut!) {
-          _webViewProvider.addTab(url: url);
+          _webViewProvider.addTab(url: url, openerTabUid: _webViewProvider.tabList[_webViewProvider.currentTab].id);
           _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
         }
 

@@ -15,7 +15,7 @@ import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 
 class TargetsBackupPage extends StatefulWidget {
   @override
@@ -77,11 +77,7 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
           : _themeProvider.currentTheme == AppTheme.dark
               ? Colors.grey[900]
               : Colors.black,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

@@ -82,6 +82,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
+import 'package:torn_pda/widgets/webviews/split_divider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -89,6 +90,8 @@ import 'package:workmanager/workmanager.dart';
 const String appVersion = '3.18.0';
 const String androidCompilation = '690';
 const String iosCompilation = '690';
+
+const double kSplitScreenMinWidth = 800;
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -260,6 +263,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late Future _mainBrowserPreferencesLoaded;
 
   late Widget _mainBrowser;
+  final GlobalKey _mainBrowserKey = GlobalKey();
+  final GlobalKey _homeDrawerKey = GlobalKey();
 
   @override
   void initState() {
@@ -276,7 +281,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
     });
 
+    // Key so layout changes don't rebuild the webviews
     _mainBrowser = Consumer<WebViewProvider>(
+      key: _mainBrowserKey,
       builder: (context, w, child) {
         return Visibility(
           maintainState: true,
@@ -318,7 +325,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
 
     // https://github.com/flutter/flutter/issues/126585
     MediaQuery.viewInsetsOf(context).bottom;
@@ -350,7 +356,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Inside of Navigator so that even if DrawerPage is replaced (we push another route), the
     // reference to this widget is not lost. Key prevents unnecessary rebuilds.
     final homeDrawer = Navigator(
-      key: const ValueKey('main_drawer_navigator'),
+      key: _homeDrawerKey,
       onGenerateRoute: (_) {
         return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
       },
@@ -426,26 +432,43 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   );
                 } else {
                   // Split screen mode: normal rendering (both widgets visible)
-                  if (wProvider.splitScreenPosition == WebViewSplitPosition.right && screenIsWide) {
+                  final bool appLeft =
+                      wProvider.splitRightSlot != null && wProvider.splitLeftSlot == SplitSlotContent.app;
+                  final bool appRight = wProvider.splitRightSlot == SplitSlotContent.app;
+                  final Widget appInSlot = MediaQuery.removePadding(
+                    context: context,
+                    removeLeft: appRight,
+                    removeRight: appLeft,
+                    child: homeDrawerWidget,
+                  );
+                  if (appLeft || appRight) {
+                    final EdgeInsets screenPadding = MediaQuery.paddingOf(context);
                     home = Stack(
                       children: [
-                        Row(
-                          children: [
-                            Flexible(child: homeDrawerWidget),
-                            Flexible(child: _mainBrowser),
-                          ],
-                        ),
-                        const AppBorder(),
-                      ],
-                    );
-                  } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left && screenIsWide) {
-                    home = Stack(
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(child: _mainBrowser),
-                            Flexible(child: homeDrawerWidget),
-                          ],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Row(
+                              children: [
+                                SizedBox(
+                                  width: splitLeftSlotWidth(
+                                    constraints.maxWidth,
+                                    wProvider.splitScreenRatio,
+                                    leftInset: screenPadding.left,
+                                    rightInset: screenPadding.right,
+                                  ),
+                                  child: appLeft ? appInSlot : _mainBrowser,
+                                ),
+                                SplitDivider(
+                                  width: constraints.maxWidth,
+                                  ratio: wProvider.splitScreenRatio,
+                                  onRatioChanged: (ratio) => wProvider.splitScreenRatio = ratio,
+                                  leftInset: screenPadding.left,
+                                  rightInset: screenPadding.right,
+                                ),
+                                Expanded(child: appLeft ? _mainBrowser : appInSlot),
+                              ],
+                            );
+                          },
                         ),
                         const AppBorder(),
                       ],
@@ -492,42 +515,20 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void _setSplitScreenPosition() {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      final bool splitNowActive = _webViewProvider.webViewSplitActive;
-      final bool splitUserEnabled = _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
-      final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
+    // Not post-frame, to avoid a frame with the old split state
+    _webViewProvider.updateSplitScreenWidth(MediaQueryData.fromView(View.of(context)).size.width);
 
-      if (!splitNowActive && splitUserEnabled && screenIsWide) {
-        _webViewProvider.webViewSplitActive = true;
-        _webViewProvider.browserForegroundWithSplitTransition();
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: _themeProvider.statusBar,
+        systemNavigationBarColor: _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.light,
 
-        // Chat notifications should be omitted when switching into splitview
-        //   (note: the case where we are no longer in splitiew is handled below,
-        //    by notifying the webviewProvider with true/false which in turns
-        //    will update the Sendbird Controller with the right value)
-        SendbirdController sb = Get.find<SendbirdController>();
-        sb.webviewInForeground = true;
-      } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
-        _webViewProvider.webViewSplitActive = false;
-        if (_webViewProvider.splitScreenRevertsToApp) {
-          _webViewProvider.browserShowInForeground = false;
-        } else {
-          _webViewProvider.browserShowInForeground = true;
-        }
-      }
-
-      SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(
-          statusBarColor: _themeProvider.statusBar,
-          systemNavigationBarColor: _themeProvider.statusBar,
-          systemNavigationBarIconBrightness: Brightness.light,
-          statusBarIconBrightness: Brightness.light,
-
-          // iOS
-          statusBarBrightness: Brightness.dark,
-        ),
-      );
-    });
+        // iOS
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
   }
 
   /// This is mostly needed in case we start the app with split screen or directly with the browser as main view

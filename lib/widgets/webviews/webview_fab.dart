@@ -143,7 +143,9 @@ class FabSettings {
 }
 
 class WebviewFab extends StatelessWidget {
-  const WebviewFab({super.key});
+  final (double, double)? allowedX;
+
+  const WebviewFab({super.key, this.allowedX});
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +168,7 @@ class WebviewFab extends StatelessWidget {
 
     return ExpandableFab(
       distance: fanDistance,
+      allowedX: allowedX,
       children: _buildActionButtons(context, webviewProvider),
     );
   }
@@ -237,10 +240,12 @@ class ExpandableFab extends StatefulWidget {
     this.initialOpen,
     required this.distance,
     required this.children,
+    this.allowedX,
   });
 
   final bool? initialOpen;
   final double distance;
+  final (double, double)? allowedX;
   final List<Widget> children;
 
   @override
@@ -390,13 +395,19 @@ class _ExpandableFabState extends State<ExpandableFab>
       }
     }
 
+    final shownBounds = _calculateFabBounds(MediaQuery.sizeOf(context).width, MediaQuery.sizeOf(context).height);
+    final Offset shownPosition = Offset(
+      _fabPosition.dx.clamp(shownBounds['minX']!, math.max(shownBounds['minX']!, shownBounds['maxX']!)),
+      _fabPosition.dy,
+    );
+
     return Positioned(
-      left: _open ? _fabPosition.dx - widget.distance : _fabPosition.dx,
-      top: _open ? _fabPosition.dy - widget.distance : _fabPosition.dy,
+      left: _open ? shownPosition.dx - widget.distance : shownPosition.dx,
+      top: _open ? shownPosition.dy - widget.distance : shownPosition.dy,
       child: GestureDetector(
         onPanStart: (details) {
           _dragStartPos = details.globalPosition;
-          _initialFabPos = _fabPosition;
+          _initialFabPos = shownPosition;
         },
         onPanUpdate: (details) {
           setState(() {
@@ -597,9 +608,9 @@ class _ExpandableFabState extends State<ExpandableFab>
   Map<String, double> _calculateFabBounds(double screenWidth, double screenHeight) {
     double minX, maxX, minY, maxY;
 
-    if (_webviewProvider.webViewSplitActive) {
-      minX = 0;
-      maxX = screenWidth / 2 - _fabSize * 2;
+    if (widget.allowedX != null) {
+      minX = widget.allowedX!.$1;
+      maxX = widget.allowedX!.$2 - (_webviewProvider.webViewSplitActive ? _fabSize * 2 : _fabSize);
     } else {
       minX = 0;
       maxX = screenWidth - _fabSize;

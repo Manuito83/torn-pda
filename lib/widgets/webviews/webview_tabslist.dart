@@ -13,8 +13,20 @@ import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart'
 import 'package:torn_pda/widgets/webviews/tabs_lock_dialog.dart';
 import 'package:torn_pda/widgets/webviews/tabs_name_dialog.dart';
 
+// Indexes are global: the other group's tabs are hidden children
+(int, int)? splitGroupReorderIndexes(List<int> groupTabs, int start, int dropBefore, {bool firstIsFixed = false}) {
+  final int oldGroupIndex = groupTabs.indexOf(start);
+  if (oldGroupIndex < 0) return null;
+  final int dropGroupIndex = groupTabs.where((t) => t < dropBefore).length;
+  final int newGroupIndex = dropGroupIndex > oldGroupIndex ? dropGroupIndex - 1 : dropGroupIndex;
+  if (newGroupIndex == oldGroupIndex || (firstIsFixed && (oldGroupIndex == 0 || newGroupIndex == 0))) return null;
+  return (oldGroupIndex, newGroupIndex);
+}
+
 class TabsList extends StatefulWidget {
-  const TabsList({super.key});
+  final SplitGroup group;
+
+  const TabsList({super.key, this.group = SplitGroup.main});
 
   @override
   State<TabsList> createState() => TabsListState();
@@ -52,6 +64,11 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     final tabs = <Widget>[];
+    final List<int> groupTabs = _webViewProvider!.tabIndexesForGroup(widget.group);
+    final bool bothBrowsersShown =
+        _webViewProvider!.splitBrowsersActive &&
+        _webViewProvider!.splitLeftSlot != SplitSlotContent.app &&
+        _webViewProvider!.splitRightSlot != SplitSlotContent.app;
 
     // Assign GlobalKeys as long as the tab number does not change so that state is kept when using setState
     if (_circularMenuKeys.isEmpty || _circularMenuKeys.length != _webViewProvider!.tabList.length) {
@@ -78,10 +95,223 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
       bool tabCustomNameShown =
           _webViewProvider!.tabList[i].customName.isNotEmpty && _webViewProvider!.tabList[i].customNameInTab;
 
+      final List<Widget> menuOptions = [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: CircularMenuItem(
+            icon: _webViewProvider!.tabList[i].isLocked ? Icons.lock : Icons.lock_open,
+            onTap: () async {
+              final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
+              if (!tabLockAlerted) {
+                Prefs().setFirstTabLockAlerted(true);
+                showWebviewDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const TabsLockDialog();
+                  },
+                );
+              }
+
+              if (!_webViewProvider!.tabList[i].isLocked && context.read<SettingsProvider>().showTabLockWarnings) {
+                if (_lockToast != null) toastification.dismiss(_lockToast!);
+                _lockToast = toastification.show(
+                  closeOnClick: true,
+                  alignment: Alignment.bottomCenter,
+                  margin: const EdgeInsets.only(bottom: 50),
+                  title: Column(
+                    children: [
+                      const Icon(Icons.lock, color: Colors.orange),
+                      const SizedBox(height: 10),
+                      Text("Positional Lock", style: TextStyle(color: _themeProvider.mainText)),
+                    ],
+                  ),
+                  autoCloseDuration: const Duration(milliseconds: 1500),
+                  backgroundColor: _themeProvider.canvas,
+                  closeButton: ToastCloseButton(
+                    buttonBuilder: (context, onClose) {
+                      return Icon(Icons.close, color: _themeProvider.mainText);
+                    },
+                  ),
+                  animationDuration: const Duration(milliseconds: 0),
+                  type: ToastificationType.info,
+                  style: ToastificationStyle.simple,
+                  borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+                );
+              }
+
+              // Make the change after alerting, so that we take the correct index (before changing it)
+              _webViewProvider!.toggleTabLock(tab: _webViewProvider!.tabList[i]);
+              _webViewProvider!.verticalMenuClose();
+            },
+            onLongPress: () async {
+              final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
+              if (!tabLockAlerted) {
+                Prefs().setFirstTabLockAlerted(true);
+                showWebviewDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const TabsLockDialog();
+                  },
+                );
+              }
+
+              if (context.read<SettingsProvider>().showTabLockWarnings) {
+                if (_lockToast != null) toastification.dismiss(_lockToast!);
+                _lockToast = toastification.show(
+                  closeOnClick: true,
+                  alignment: Alignment.bottomCenter,
+                  margin: const EdgeInsets.only(bottom: 50),
+                  title: Column(
+                    children: [
+                      Icon(Icons.lock, color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red),
+                      const SizedBox(height: 10),
+                      Text(
+                        _webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock",
+                        style: TextStyle(color: _themeProvider.mainText),
+                      ),
+                    ],
+                  ),
+                  autoCloseDuration: const Duration(milliseconds: 1500),
+                  animationDuration: const Duration(milliseconds: 0),
+                  backgroundColor: _themeProvider.canvas,
+                  closeButton: ToastCloseButton(
+                    buttonBuilder: (context, onClose) {
+                      return Icon(Icons.close, color: _themeProvider.mainText);
+                    },
+                  ),
+                  type: ToastificationType.info,
+                  style: ToastificationStyle.simple,
+                  borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+                );
+              }
+
+              // Make the change after alerting, so that we take the correct index (before changing it)
+              _webViewProvider!.toggleTabLock(
+                tab: _webViewProvider!.tabList[i],
+                forceLock: true, // Long press always locks full
+                isLockFull: !_webViewProvider!.tabList[i].isLockFull,
+              );
+              _webViewProvider!.verticalMenuClose();
+            },
+            color: _webViewProvider!.tabList[i].isLockFull ? Colors.red[700] : null,
+            iconColor: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
+                ? Colors.orange
+                : null,
+            boxShadow: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
+                ? [const BoxShadow(color: Colors.orange, blurRadius: 4)]
+                : null,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: CircularMenuItem(
+            icon: MdiIcons.text,
+            onTap: () async {
+              _webViewProvider!.verticalMenuClose();
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return EditTabDialog(
+                    tabDetails: _webViewProvider!.tabList[i],
+                    onSave: (customName, customNameInTitle, customNameInTab) {
+                      _webViewProvider!.setTabCustomName(
+                        tab: _webViewProvider!.tabList[i],
+                        customName: customName,
+                        customNameInTitle: customNameInTitle,
+                        customNameInTab: customNameInTab,
+                      );
+                    },
+                  );
+                },
+              );
+            },
+            iconColor: _webViewProvider!.tabList[i].customName.isNotEmpty ? Colors.lime : null,
+            boxShadow: _webViewProvider!.tabList[i].customName.isNotEmpty
+                ? [const BoxShadow(color: Colors.lime, blurRadius: 4)]
+                : null,
+          ),
+        ),
+        if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              icon: Icons.home_outlined,
+              onTap: () {
+                _webViewProvider!.verticalMenuClose();
+                _webViewProvider!.loadCurrentTabUrl("https://www.torn.com");
+              },
+            ),
+          ),
+        if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              icon: Icons.arrow_back,
+              onTap: () {
+                _webViewProvider!.tryGoBack();
+                _webViewProvider!.verticalMenuClose();
+              },
+            ),
+          ),
+        if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              icon: Icons.arrow_forward,
+              onTap: () {
+                _webViewProvider!.tryGoForward();
+                _webViewProvider!.verticalMenuClose();
+              },
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: CircularMenuItem(
+            icon: Icons.copy_all_outlined,
+            onTap: () {
+              _webViewProvider!.duplicateTab(i);
+            },
+          ),
+        ),
+        if (_webViewProvider!.splitScreenWide && _webViewProvider!.splitBrowsersAllowed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Tooltip(
+              message: bothBrowsersShown ? "Move to other panel" : "Open in split panel",
+              child: CircularMenuItem(
+                icon: bothBrowsersShown ? MdiIcons.swapHorizontal : MdiIcons.viewSplitVertical,
+                onTap: () {
+                  _webViewProvider!.verticalMenuClose();
+                  _webViewProvider!.moveTabToOtherGroup(i);
+                },
+              ),
+            ),
+          ),
+        if (!_webViewProvider!.tabList[i].isLocked)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              onTap: () {
+                _webViewProvider!.verticalMenuClose();
+                _webViewProvider!.removeTab(position: i);
+              },
+              icon: Icons.delete_forever_outlined,
+              color: Colors.red[700],
+              iconColor: Colors.white,
+            ),
+          ),
+      ];
+      if (i != 0 && _webViewProvider!.verticalMenuIsOpen && _webViewProvider!.verticalMenuCurrentIndex == i) {
+        _webViewProvider!.reportVerticalMenuItems(menuOptions.length);
+      }
+
       tabs.add(
         Visibility(
           key: ValueKey(_webViewProvider!.tabList[i].id),
-          visible: i == 0 ? false : true, // Do not repeat tab #0 in the tabs list
+          visible:
+              i != 0 && groupTabs.contains(i), // Do not repeat tab #0 in the tabs list
           child: FadeTransition(
             opacity: _tabsOpacity,
             child: CircularMenuTabs(
@@ -98,7 +328,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
-                    color: _webViewProvider!.currentTab == i
+                    color: _webViewProvider!.isTabVisible(i)
                         ? _themeProvider.navSelected
                         : _themeProvider.currentTheme == AppTheme.extraDark
                         ? Colors.black
@@ -213,207 +443,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
               items: [
                 SingleChildScrollView(
                   reverse: true,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: CircularMenuItem(
-                          icon: _webViewProvider!.tabList[i].isLocked ? Icons.lock : Icons.lock_open,
-                          onTap: () async {
-                            final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
-                            if (!tabLockAlerted) {
-                              Prefs().setFirstTabLockAlerted(true);
-                              showWebviewDialog<void>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return const TabsLockDialog();
-                                },
-                              );
-                            }
-
-                            if (!_webViewProvider!.tabList[i].isLocked &&
-                                context.read<SettingsProvider>().showTabLockWarnings) {
-                              if (_lockToast != null) toastification.dismiss(_lockToast!);
-                              _lockToast = toastification.show(
-                                closeOnClick: true,
-                                alignment: Alignment.bottomCenter,
-                                margin: const EdgeInsets.only(bottom: 50),
-                                title: Column(
-                                  children: [
-                                    const Icon(Icons.lock, color: Colors.orange),
-                                    const SizedBox(height: 10),
-                                    Text("Positional Lock", style: TextStyle(color: _themeProvider.mainText)),
-                                  ],
-                                ),
-                                autoCloseDuration: const Duration(milliseconds: 1500),
-                                backgroundColor: _themeProvider.canvas,
-                                closeButton: ToastCloseButton(
-                                  buttonBuilder: (context, onClose) {
-                                    return Icon(Icons.close, color: _themeProvider.mainText);
-                                  },
-                                ),
-                                animationDuration: const Duration(milliseconds: 0),
-                                type: ToastificationType.info,
-                                style: ToastificationStyle.simple,
-                                borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-                              );
-                            }
-
-                            // Make the change after alerting, so that we take the correct index (before changing it)
-                            _webViewProvider!.toggleTabLock(tab: _webViewProvider!.tabList[i]);
-                            _webViewProvider!.verticalMenuClose();
-                          },
-                          onLongPress: () async {
-                            final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
-                            if (!tabLockAlerted) {
-                              Prefs().setFirstTabLockAlerted(true);
-                              showWebviewDialog<void>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return const TabsLockDialog();
-                                },
-                              );
-                            }
-
-                            if (context.read<SettingsProvider>().showTabLockWarnings) {
-                              if (_lockToast != null) toastification.dismiss(_lockToast!);
-                              _lockToast = toastification.show(
-                                closeOnClick: true,
-                                alignment: Alignment.bottomCenter,
-                                margin: const EdgeInsets.only(bottom: 50),
-                                title: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.lock,
-                                      color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      _webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock",
-                                      style: TextStyle(color: _themeProvider.mainText),
-                                    ),
-                                  ],
-                                ),
-                                autoCloseDuration: const Duration(milliseconds: 1500),
-                                animationDuration: const Duration(milliseconds: 0),
-                                backgroundColor: _themeProvider.canvas,
-                                closeButton: ToastCloseButton(
-                                  buttonBuilder: (context, onClose) {
-                                    return Icon(Icons.close, color: _themeProvider.mainText);
-                                  },
-                                ),
-                                type: ToastificationType.info,
-                                style: ToastificationStyle.simple,
-                                borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-                              );
-                            }
-
-                            // Make the change after alerting, so that we take the correct index (before changing it)
-                            _webViewProvider!.toggleTabLock(
-                              tab: _webViewProvider!.tabList[i],
-                              forceLock: true, // Long press always locks full
-                              isLockFull: !_webViewProvider!.tabList[i].isLockFull,
-                            );
-                            _webViewProvider!.verticalMenuClose();
-                          },
-                          color: _webViewProvider!.tabList[i].isLockFull ? Colors.red[700] : null,
-                          iconColor: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
-                              ? Colors.orange
-                              : null,
-                          boxShadow: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
-                              ? [const BoxShadow(color: Colors.orange, blurRadius: 4)]
-                              : null,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: CircularMenuItem(
-                          icon: MdiIcons.text,
-                          onTap: () async {
-                            _webViewProvider!.verticalMenuClose();
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return EditTabDialog(
-                                  tabDetails: _webViewProvider!.tabList[i],
-                                  onSave: (customName, customNameInTitle, customNameInTab) {
-                                    _webViewProvider!.setTabCustomName(
-                                      tab: _webViewProvider!.tabList[i],
-                                      customName: customName,
-                                      customNameInTitle: customNameInTitle,
-                                      customNameInTab: customNameInTab,
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                          iconColor: _webViewProvider!.tabList[i].customName.isNotEmpty ? Colors.lime : null,
-                          boxShadow: _webViewProvider!.tabList[i].customName.isNotEmpty
-                              ? [const BoxShadow(color: Colors.lime, blurRadius: 4)]
-                              : null,
-                        ),
-                      ),
-                      if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            icon: Icons.home_outlined,
-                            onTap: () {
-                              _webViewProvider!.verticalMenuClose();
-                              _webViewProvider!.loadCurrentTabUrl("https://www.torn.com");
-                            },
-                          ),
-                        ),
-                      if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            icon: Icons.arrow_back,
-                            onTap: () {
-                              _webViewProvider!.tryGoBack();
-                              _webViewProvider!.verticalMenuClose();
-                            },
-                          ),
-                        ),
-                      if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            icon: Icons.arrow_forward,
-                            onTap: () {
-                              _webViewProvider!.tryGoForward();
-                              _webViewProvider!.verticalMenuClose();
-                            },
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: CircularMenuItem(
-                          icon: Icons.copy_all_outlined,
-                          onTap: () {
-                            _webViewProvider!.duplicateTab(i);
-                          },
-                        ),
-                      ),
-                      if (!_webViewProvider!.tabList[i].isLocked)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            onTap: () {
-                              _webViewProvider!.verticalMenuClose();
-                              _webViewProvider!.removeTab(position: i);
-                            },
-                            icon: Icons.delete_forever_outlined,
-                            color: Colors.red[700],
-                            iconColor: Colors.white,
-                          ),
-                        ),
-                    ],
-                  ),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.end, children: menuOptions),
                 ),
               ],
             ),
@@ -434,6 +464,24 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
         // drop target, then `end` is re-decremented before use).
         if (start < end) end += 1;
 
+        if (_webViewProvider!.splitBrowsersActive) {
+          final move = splitGroupReorderIndexes(groupTabs, start, end, firstIsFixed: widget.group == SplitGroup.main);
+          if (move == null) return;
+          final (oldGroupIndex, newGroupIndex) = move;
+          if (_webViewProvider!.tabList[start].isLocked !=
+                  _webViewProvider!.tabList[groupTabs[newGroupIndex]].isLocked &&
+              context.read<SettingsProvider>().showTabLockWarnings) {
+            _showLockedExchangeWarning(start, groupTabs[newGroupIndex]);
+            return;
+          }
+          final String movedUid = _webViewProvider!.tabList[start].id;
+          _webViewProvider!.reorderTabsInGroup(widget.group, oldGroupIndex, newGroupIndex);
+          if (_webViewProvider!.verticalMenuIsOpen && _webViewProvider!.verticalMenuCurrentIndex == start) {
+            _webViewProvider!.verticalMenuCurrentIndex = _webViewProvider!.tabList.indexWhere((t) => t.id == movedUid);
+          }
+          return;
+        }
+
         if (start == 0 || end == 0) return;
 
         // Save where the current active tab is
@@ -445,42 +493,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
         // (but allow two locked tabs to exchange positions)
         if (_webViewProvider!.tabList[start].isLocked != _webViewProvider!.tabList[end].isLocked &&
             context.read<SettingsProvider>().showTabLockWarnings) {
-          toastification.show(
-            closeOnClick: true,
-            alignment: Alignment.bottomCenter,
-            margin: const EdgeInsets.only(bottom: 50),
-            title: SizedBox(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.lock,
-                    color: _webViewProvider!.tabList[start].isLockFull || _webViewProvider!.tabList[end].isLockFull
-                        ? Colors.red
-                        : Colors.orange,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "A locked tab cannot be exchanged with an unlocked one!",
-                    maxLines: 5,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: _themeProvider.mainText),
-                  ),
-                ],
-              ),
-            ),
-            autoCloseDuration: const Duration(seconds: 3),
-            animationDuration: const Duration(milliseconds: 0),
-            backgroundColor: _themeProvider.canvas,
-            closeButton: ToastCloseButton(
-              buttonBuilder: (context, onClose) {
-                return Icon(Icons.close, color: _themeProvider.mainText);
-              },
-            ),
-            type: ToastificationType.info,
-            style: ToastificationStyle.simple,
-            borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-          );
-
+          _showLockedExchangeWarning(start, end);
           return;
         }
 
@@ -501,6 +514,44 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
           }
         }
       },
+    );
+  }
+
+  void _showLockedExchangeWarning(int first, int second) {
+    toastification.show(
+      closeOnClick: true,
+      alignment: Alignment.bottomCenter,
+      margin: const EdgeInsets.only(bottom: 50),
+      title: SizedBox(
+        child: Column(
+          children: [
+            Icon(
+              Icons.lock,
+              color: _webViewProvider!.tabList[first].isLockFull || _webViewProvider!.tabList[second].isLockFull
+                  ? Colors.red
+                  : Colors.orange,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "A locked tab cannot be exchanged with an unlocked one!",
+              maxLines: 5,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _themeProvider.mainText),
+            ),
+          ],
+        ),
+      ),
+      autoCloseDuration: const Duration(seconds: 3),
+      animationDuration: const Duration(milliseconds: 0),
+      backgroundColor: _themeProvider.canvas,
+      closeButton: ToastCloseButton(
+        buttonBuilder: (context, onClose) {
+          return Icon(Icons.close, color: _themeProvider.mainText);
+        },
+      ),
+      type: ToastificationType.info,
+      style: ToastificationStyle.simple,
+      borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
     );
   }
 

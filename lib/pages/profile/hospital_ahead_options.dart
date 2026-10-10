@@ -13,8 +13,8 @@ import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 
 class HospitalAheadOptions extends StatefulWidget {
   final Function? callback;
@@ -69,11 +69,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                   ? _themeProvider.statusBar
                   : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -160,9 +156,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Flexible(
-                child: Text('Alarm'),
-              ),
+              const Text('Alarm'),
               const Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
