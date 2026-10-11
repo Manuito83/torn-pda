@@ -30,6 +30,7 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
+import 'package:torn_pda/widgets/webviews/browser_zoom_live_panel.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
@@ -501,70 +502,22 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         child: Column(
                           children: [
                             const Divider(),
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [Text('ZOOM', style: TextStyle(fontSize: 8))],
-                            ),
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5),
-                                  child: ElevatedButton(
-                                    child: const Icon(MdiIcons.minus),
-                                    onPressed: () async {
-                                      if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newOptions = (await widget.inAppWebview!
-                                            .getSettings())!;
-                                        if (newOptions.initialScale == 0) {
-                                          newOptions.initialScale = 350;
-                                        } else if (newOptions.initialScale != null) {
-                                          if (newOptions.initialScale! > 100) {
-                                            newOptions.initialScale = newOptions.initialScale! - 5;
-                                          }
-                                        }
-                                        widget.inAppWebview!.setSettings(settings: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = newOptions.initialScale ?? 0;
-                                      }
-                                    },
+                            ElevatedButton(
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.zoom_in, size: 20),
+                                  SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text('Zoom', style: TextStyle(fontSize: 12), textAlign: TextAlign.center),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5),
-                                  child: ElevatedButton(
-                                    child: const Icon(MdiIcons.refresh),
-                                    onPressed: () async {
-                                      if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newOptions = (await widget.inAppWebview!
-                                            .getSettings())!;
-                                        newOptions.initialScale = 0;
-                                        widget.inAppWebview!.setSettings(settings: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = 0;
-                                      }
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5),
-                                  child: ElevatedButton(
-                                    child: const Icon(MdiIcons.plus),
-                                    onPressed: () async {
-                                      if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newSettings = (await widget.inAppWebview!
-                                            .getSettings())!;
-                                        if (newSettings.initialScale == 0) {
-                                          newSettings.initialScale = 100;
-                                        } else if (newSettings.initialScale! < 350) {
-                                          newSettings.initialScale = newSettings.initialScale! + 5;
-                                        }
-                                        widget.inAppWebview!.setSettings(settings: newSettings);
-                                        _settingsProvider.setAndroidBrowserScale = newSettings.initialScale!;
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              onPressed: () {
+                                final OverlayState overlay = Overlay.of(context, rootOverlay: true);
+                                Navigator.of(context).pop();
+                                BrowserZoomLivePanel.show(overlay);
+                              },
                             ),
                           ],
                         ),

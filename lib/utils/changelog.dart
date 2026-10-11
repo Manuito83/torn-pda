@@ -123,6 +123,10 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Fixed alerts not loading or saving after the app recovers its session'),
           _MItem('Browser: rotating or resizing the screen no longer reloads your tabs'),
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
+          _MItem(
+            'Browser: zoom is now adjusted live with a slider, from the Zoom button in the URL options',
+            androidOnly: true,
+          ),
         ],
       ),
     ],
