@@ -392,13 +392,18 @@ class ScriptsGuidePageState extends State<ScriptsGuidePage> {
         ),
         _p(
           "You can enter and leave it from the button at the bottom of the user scripts page, from the three-dotted "
-          "icon of the browser, or from a FAB button if you assign it one. If you do not use war mode, the "
+          "icon of the browser, or from a FAB button if you assign it one. If you do not use modes, the "
           "options menu of the scripts page lets you hide those shortcuts.",
         ),
         _p(
           "While war mode is on, the switches in the scripts list choose what runs in it, and that selection "
           "is remembered for the next time. The first time nothing is selected yet, so nothing runs until "
           "you switch on the scripts you want.",
+        ),
+        _p(
+          "You can also create your own modes, for example one for the casino, from the options menu of the "
+          "scripts page. Each mode remembers its own selection, and a script marked with the pin icon runs in "
+          "every mode.",
         ),
       ],
     ),

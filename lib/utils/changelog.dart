@@ -153,6 +153,13 @@ List<_MVersion> _modernChangelog() => [
                 'from a computer: chrome://inspect on Android, Safari Web Inspector on iOS. '
                 'While enabled, Google sign-in inside the browser may not work. Restart the app to apply.',
           ),
+          _MItem(
+            'Scripts: create your own modes besides war mode',
+            detail:
+                'Create modes such as "Casino" or "Trader" from the options menu of the scripts section. While a mode '
+                'is on, the switches in the list choose which scripts run in it, and scripts marked as always active '
+                'run in every mode. The war mode shortcuts now let you pick the mode.',
+          ),
         ],
       ),
       _MSection(

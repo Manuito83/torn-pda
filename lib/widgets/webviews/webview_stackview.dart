@@ -21,6 +21,7 @@ import 'package:torn_pda/widgets/status_color_counter.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_fixed.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
+import 'package:torn_pda/widgets/settings/userscripts_modes_dialogs.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
@@ -947,12 +948,10 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                   if (context.read<UserScriptsProvider>().warShortcutsEnabled)
                                     CircularMenuItem(
                                       icon: MdiIcons.swordCross,
-                                      color: context.read<UserScriptsProvider>().isWarModeActive
-                                          ? Colors.orange[800]
-                                          : null,
+                                      color: context.read<UserScriptsProvider>().activeMode?.color,
                                       onTap: () {
                                         _webViewProvider.verticalMenuClose();
-                                        context.read<UserScriptsProvider>().toggleWarMode();
+                                        scriptModeShortcut(context);
                                       },
                                     ),
                                   if (_webViewProvider.fabEnabled)

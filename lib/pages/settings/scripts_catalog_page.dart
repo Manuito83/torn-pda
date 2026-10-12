@@ -672,8 +672,9 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
   /// Reason why a script with its own switch on is still not running, when a bulk mode is active
   String? _modeBlockReason(UserScriptModel model) {
     if (!model.enabled || _userScriptsProvider.isActive(model)) return null;
-    return _userScriptsProvider.isWarModeActive
-        ? "war mode is on and this script is not in your war selection"
+    final mode = _userScriptsProvider.activeMode;
+    return mode != null
+        ? "${mode.isWar ? "war mode" : mode.name} is on and this script is not selected for it"
         : "all scripts are temporarily disabled";
   }
 

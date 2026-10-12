@@ -7,9 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/multitab_detector.dart';
+import 'package:torn_pda/widgets/settings/userscripts_modes_dialogs.dart';
 
 enum WebviewFabAction {
   home,
@@ -40,7 +40,7 @@ extension FabActionExtension on WebviewFabAction {
       case WebviewFabAction.closeBrowser:
         return 'Close browser';
       case WebviewFabAction.warMode:
-        return 'Scripts war mode';
+        return 'Scripts mode';
     }
   }
 
@@ -93,7 +93,7 @@ class FabSettings {
         }
         return webviewProvider.closeWebViewFromOutside;
       case WebviewFabAction.warMode:
-        return () => context.read<UserScriptsProvider>().toggleWarMode();
+        return () => scriptModeShortcut(context);
     }
   }
 

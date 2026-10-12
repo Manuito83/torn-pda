@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:torn_pda/main.dart';
 
@@ -22,9 +23,25 @@ import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
+import 'package:uuid/uuid.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
 
-enum ScriptsBulkMode { none, globalDisable, warMode }
+enum ScriptsBulkMode { none, globalDisable, scriptMode }
+
+class UserScriptMode {
+  const UserScriptMode({required this.id, required this.name});
+
+  static const war = UserScriptMode(id: warModeId, name: "War mode");
+
+  final String id;
+  final String name;
+
+  bool get isWar => id == warModeId;
+  IconData get icon => isWar ? MdiIcons.swordCross : Icons.tune;
+  Color get color => isWar ? Colors.orange[800]! : Colors.indigo[600]!;
+
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
+}
 
 /// Reviewable entry for the bulk update dialog
 class BulkUpdateReviewItem {
@@ -151,14 +168,22 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   ScriptsBulkMode _bulkMode = ScriptsBulkMode.none;
+  String _activeModeId = warModeId;
+  List<UserScriptMode> _customModes = [];
 
   bool get isGlobalDisableActive => _bulkMode == ScriptsBulkMode.globalDisable;
-  bool get isWarModeActive => _bulkMode == ScriptsBulkMode.warMode;
+  List<UserScriptMode> get customModes => _customModes;
+  List<UserScriptMode> get allModes => [UserScriptMode.war, ..._customModes];
+
+  UserScriptMode? get activeMode {
+    if (_bulkMode != ScriptsBulkMode.scriptMode) return null;
+    return allModes.where((m) => m.id == _activeModeId).firstOrNull;
+  }
 
   // Old disable settings by script name, used after the scripts are loaded
   Map<String, bool>? _legacyGlobalDisableByName;
 
-  int get warEnabledCount => _userScriptList.where((s) => s.warEnabled).length;
+  int modeScriptCount(UserScriptMode mode) => _userScriptList.where((s) => s.alwaysActive || s.modes.contains(mode.id)).length;
 
   /// Whether a script runs right now, which depends on the active mode and not only on its own switch
   bool isActive(UserScriptModel script) {
@@ -167,39 +192,99 @@ class UserScriptsProvider extends ChangeNotifier {
         return script.enabled;
       case ScriptsBulkMode.globalDisable:
         return false;
-      case ScriptsBulkMode.warMode:
-        return script.warEnabled;
+      case ScriptsBulkMode.scriptMode:
+        return script.alwaysActive || script.modes.contains(_activeModeId);
     }
   }
 
-  void toggleGlobalDisable() => _setBulkMode(ScriptsBulkMode.globalDisable);
+  void toggleGlobalDisable() {
+    _bulkMode = isGlobalDisableActive ? ScriptsBulkMode.none : ScriptsBulkMode.globalDisable;
+    _saveBulkMode();
+  }
 
-  void toggleWarMode() {
-    _setBulkMode(ScriptsBulkMode.warMode);
-    final int count = warEnabledCount;
-    final String text = !isWarModeActive
-        ? "Scripts war mode off"
+  // Null leaves any mode
+  void setMode(String? id) {
+    final UserScriptMode? previous = activeMode;
+    final UserScriptMode? mode = allModes.where((m) => m.id == id).firstOrNull;
+    _bulkMode = mode == null ? ScriptsBulkMode.none : ScriptsBulkMode.scriptMode;
+    if (mode != null) _activeModeId = mode.id;
+    _saveBulkMode();
+
+    final int count = _userScriptList.where(isActive).length;
+    final String name = (mode ?? previous)?.name ?? "Scripts mode";
+    final String text = mode == null
+        ? "$name off"
         : count == 0
-        ? "Scripts war mode on, but no script is selected for it yet. Switch on the ones you want in the scripts "
-              "section: they will stay selected every time you enter war mode"
-        : "Scripts war mode on: $count script${count == 1 ? "" : "s"} running";
+        ? "$name on, but no script is selected for it yet. Switch on the ones you want in the scripts section: they "
+              "will stay selected every time you enter this mode"
+        : "$name on: $count script${count == 1 ? "" : "s"} running";
     BotToast.showText(
       text: text,
       textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-      contentColor: Colors.orange[800]!,
-      duration: Duration(seconds: count == 0 && isWarModeActive ? 6 : 3),
+      contentColor: (mode ?? previous)?.color ?? Colors.orange[800]!,
+      duration: Duration(seconds: count == 0 && mode != null ? 6 : 3),
       contentPadding: const EdgeInsets.all(10),
     );
   }
 
-  void _setBulkMode(ScriptsBulkMode mode) {
-    _bulkMode = _bulkMode == mode ? ScriptsBulkMode.none : mode;
-    Prefs().setUserScriptsBulkMode(_bulkMode.name);
+  void _saveBulkMode() {
+    final String saved = switch (_bulkMode) {
+      ScriptsBulkMode.none => "none",
+      ScriptsBulkMode.globalDisable => "globalDisable",
+      ScriptsBulkMode.scriptMode => _activeModeId == warModeId ? "warMode" : "mode:$_activeModeId",
+    };
+    Prefs().setUserScriptsBulkMode(saved);
     notifyListeners();
   }
 
-  void changeUserScriptWarEnabled(UserScriptModel changedModel, bool enabled) {
-    changedModel.warEnabled = enabled;
+  UserScriptMode addMode(String name) {
+    final mode = UserScriptMode(id: const Uuid().v4(), name: name.trim());
+    _customModes = [..._customModes, mode];
+    _saveModes();
+    return mode;
+  }
+
+  void renameMode(UserScriptMode mode, String name) {
+    _customModes = [for (final m in _customModes) m.id == mode.id ? UserScriptMode(id: m.id, name: name.trim()) : m];
+    _saveModes();
+  }
+
+  void deleteMode(UserScriptMode mode) {
+    if (_activeModeId == mode.id && _bulkMode == ScriptsBulkMode.scriptMode) {
+      _bulkMode = ScriptsBulkMode.none;
+      _saveBulkMode();
+    }
+    _customModes = _customModes.where((m) => m.id != mode.id).toList();
+    for (final script in _userScriptList) {
+      script.modes.remove(mode.id);
+    }
+    _saveModes();
+    _saveUserScriptsToStorage();
+  }
+
+  List<UserScriptMode> _modesFromJson(String encoded) {
+    try {
+      return [for (final m in json.decode(encoded) as List) UserScriptMode(id: m["id"], name: m["name"])];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  void _saveModes() {
+    Prefs().setUserScriptsModes(getUserScriptModesAsJsonString());
+    notifyListeners();
+  }
+
+  String getUserScriptModesAsJsonString() => json.encode(_customModes);
+
+  void changeUserScriptInActiveMode(UserScriptModel changedModel, bool included) {
+    included ? changedModel.modes.add(_activeModeId) : changedModel.modes.remove(_activeModeId);
+    notifyListeners();
+    _saveUserScriptsToStorage();
+  }
+
+  void changeUserScriptAlwaysActive(UserScriptModel changedModel, bool alwaysActive) {
+    changedModel.alwaysActive = alwaysActive;
     notifyListeners();
     _saveUserScriptsToStorage();
   }
@@ -480,6 +565,7 @@ class UserScriptsProvider extends ChangeNotifier {
     required bool overwrite,
     required String scriptsList,
     bool defaultToDisabled = false,
+    String? modesList,
   }) async {
     // If we are restoring from a backup, we assume the data is valid and we can exit Safe Mode
     _isSafeToSave = true;
@@ -487,6 +573,16 @@ class UserScriptsProvider extends ChangeNotifier {
     if (overwrite) {
       _userScriptList.clear();
       final List<dynamic> decoded = json.decode(scriptsList);
+
+      // Old backups keep the local modes
+      if (modesList != null) {
+        _customModes = _modesFromJson(modesList);
+        await Prefs().setUserScriptsModes(getUserScriptModesAsJsonString());
+        if (_bulkMode == ScriptsBulkMode.scriptMode && activeMode == null) {
+          _bulkMode = ScriptsBulkMode.none;
+          _saveBulkMode();
+        }
+      }
 
       for (final dec in decoded) {
         try {
@@ -507,7 +603,8 @@ class UserScriptsProvider extends ChangeNotifier {
         for (final script in _userScriptList) {
           script.enabled = false;
           // Avoid that scripts run as soon as war mode is on when restoring
-          script.warEnabled = false;
+          script.modes.clear();
+          script.alwaysActive = false;
         }
       }
     } else {
@@ -801,9 +898,15 @@ class UserScriptsProvider extends ChangeNotifier {
     }
     _isSafeToSave = false; // Reset safety lock
 
+    _customModes = _modesFromJson(await Prefs().getUserScriptsModes());
+
     // Active bulk mode (global disable or war mode)
     final savedMode = await Prefs().getUserScriptsBulkMode();
-    _bulkMode = ScriptsBulkMode.values.firstWhere((m) => m.name == savedMode, orElse: () => ScriptsBulkMode.none);
+    _bulkMode = savedMode == "globalDisable" ? ScriptsBulkMode.globalDisable : ScriptsBulkMode.none;
+    if (savedMode == "warMode" || savedMode.startsWith("mode:")) {
+      _activeModeId = savedMode == "warMode" ? warModeId : savedMode.substring(5);
+      if (allModes.any((m) => m.id == _activeModeId)) _bulkMode = ScriptsBulkMode.scriptMode;
+    }
 
     // Installs coming from the version where global disable really turned every script off:
     // the switches have to be put back, which needs the list loaded
@@ -1256,7 +1359,8 @@ class UserScriptsProvider extends ChangeNotifier {
       final idTaken = _userScriptList.any((s) => s.storageId == script.storageId);
       return UserScriptModel(
         enabled: replacing?.enabled ?? script.enabled,
-        warEnabled: replacing?.warEnabled ?? script.warEnabled,
+        modes: {...(replacing?.modes ?? script.modes)},
+        alwaysActive: replacing?.alwaysActive ?? script.alwaysActive,
         installedAt: replacing?.installedAt ?? script.installedAt,
         storageId: replacing?.storageId ?? (idTaken ? null : script.storageId),
         customApiKey: script.customApiKey.isNotEmpty ? script.customApiKey : (replacing?.customApiKey ?? ""),

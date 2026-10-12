@@ -373,6 +373,7 @@ class Prefs {
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
   final String _kUserScriptsBulkMode = "pda_userScriptsBulkMode";
+  final String _kUserScriptsModes = "pda_userScriptsModes";
   final String _kUserScriptsSortOrder = "pda_userScriptsSortOrder";
   final String _kUserScriptsUpdatesFirst = "pda_userScriptsUpdatesFirst";
   final String _kUserScriptsSearchInSource = "pda_userScriptsSearchInSource";
@@ -3849,6 +3850,16 @@ class Prefs {
 
   Future setUserScriptsBulkMode(String value) async {
     return await PrefsDatabase.setString(_kUserScriptsBulkMode, value);
+  }
+
+  // --
+
+  Future<String> getUserScriptsModes() async {
+    return await PrefsDatabase.getString(_kUserScriptsModes, "");
+  }
+
+  Future setUserScriptsModes(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsModes, value);
   }
 
   // --

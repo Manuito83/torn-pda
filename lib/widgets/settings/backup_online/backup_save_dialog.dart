@@ -254,6 +254,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
         final activeUserscriptsList = await context.read<UserScriptsProvider>().getUserScriptsAsJsonString();
         prefs.addEntries([
           MapEntry("pda_userScriptsList", activeUserscriptsList),
+          MapEntry("pda_userScriptsModes", context.read<UserScriptsProvider>().getUserScriptModesAsJsonString()),
         ]);
       }
 

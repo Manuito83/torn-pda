@@ -24,6 +24,7 @@ import 'package:torn_pda/widgets/settings/gold_storage_icon.dart';
 import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_bulk_update_dialog.dart';
+import 'package:torn_pda/widgets/settings/userscripts_modes_dialogs.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/pda_scaffold.dart';
@@ -125,14 +126,14 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       appBar: buildAppBar(),
       floatingActionButton: _showWarFab
           ? FloatingActionButton.extended(
-              icon: const Icon(MdiIcons.swordCross, color: Colors.white),
+              icon: Icon(_userScriptsProvider.activeMode?.icon ?? MdiIcons.swordCross, color: Colors.white),
               label: Text(
-                _userScriptsProvider.isWarModeActive ? "Exit war mode" : "War mode",
+                _userScriptsProvider.activeMode?.name ?? "Modes",
                 style: const TextStyle(color: Colors.white),
               ),
               elevation: 4,
-              backgroundColor: _userScriptsProvider.isWarModeActive ? Colors.orange[800] : Colors.blueGrey,
-              onPressed: _userScriptsProvider.toggleWarMode,
+              backgroundColor: _userScriptsProvider.activeMode?.color ?? Colors.blueGrey,
+              onPressed: () => showScriptModePicker(context),
             )
           : null,
       body: Container(
@@ -271,7 +272,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                   ),
                 ],
               ),
-              if (_userScriptsProvider.isWarModeActive || _userScriptsProvider.isGlobalDisableActive) _bulkModeBanner(),
+              if (_userScriptsProvider.activeMode != null || _userScriptsProvider.isGlobalDisableActive)
+                _bulkModeBanner(),
               if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
               if (_userScriptsProvider.scriptCatalogEnabled) _catalogBanner(),
               const SizedBox(height: 10),
@@ -347,7 +349,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   Widget _bulkModeBanner() {
     final bool light = _themeProvider.currentTheme == AppTheme.light;
-    final bool warMode = _userScriptsProvider.isWarModeActive;
+    final mode = _userScriptsProvider.activeMode;
     return Padding(
       padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
       child: Card(
@@ -362,15 +364,15 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           child: Row(
             children: [
               Icon(
-                warMode ? MdiIcons.swordCross : Icons.remove_circle_outline,
+                mode?.icon ?? Icons.remove_circle_outline,
                 size: 18,
                 color: Colors.orange[light ? 800 : 300],
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  warMode
-                      ? "War mode is on: the switches below select which scripts run during a war"
+                  mode != null
+                      ? "${mode.name} is on: the switches below select which scripts run in it"
                       : "All scripts are temporarily disabled",
                   style: const TextStyle(fontSize: 12),
                 ),
@@ -378,8 +380,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               TextButton(
                 child: const Text("EXIT", style: TextStyle(fontSize: 12)),
                 onPressed: () {
-                  if (warMode) {
-                    _userScriptsProvider.toggleWarMode();
+                  if (mode != null) {
+                    _userScriptsProvider.setMode(null);
                   } else {
                     _userScriptsProvider.toggleGlobalDisable();
                   }
@@ -443,7 +445,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   ListView scriptsCards() {
     final scriptList = <Widget>[];
     final visible = _visibleScripts();
-    final bool warMode = _userScriptsProvider.isWarModeActive;
+    final mode = _userScriptsProvider.activeMode;
 
     if (visible.isEmpty && _userScriptsProvider.userScriptList.isNotEmpty) {
       final bool inSource = _userScriptsProvider.searchInSource;
@@ -492,14 +494,14 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         height: 20,
                         width: 60,
                         child: Switch(
-                          value: warMode ? script.warEnabled : script.enabled,
-                          activeTrackColor: warMode ? Colors.orange[100] : Colors.green[100],
-                          activeThumbColor: warMode ? Colors.orange[800] : Colors.green,
+                          value: mode != null ? script.modes.contains(mode.id) : script.enabled,
+                          activeTrackColor: mode != null ? mode.color.withValues(alpha: 0.3) : Colors.green[100],
+                          activeThumbColor: mode?.color ?? Colors.green,
                           inactiveThumbColor: Colors.grey,
                           inactiveTrackColor: Colors.grey[300],
                           onChanged: (value) {
-                            if (warMode) {
-                              _userScriptsProvider.changeUserScriptWarEnabled(script, value);
+                            if (mode != null) {
+                              _userScriptsProvider.changeUserScriptInActiveMode(script, value);
                             } else {
                               _userScriptsProvider.changeUserScriptEnabled(script, value);
                             }
@@ -665,6 +667,25 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                     const SizedBox(width: 12),
                     GestureDetector(
+                      child: Icon(
+                        script.alwaysActive ? Icons.push_pin : Icons.push_pin_outlined,
+                        color: script.alwaysActive ? Colors.blue : Colors.grey,
+                        size: 20,
+                      ),
+                      onTap: () {
+                        _userScriptsProvider.changeUserScriptAlwaysActive(script, !script.alwaysActive);
+                        BotToast.showText(
+                          text: script.alwaysActive
+                              ? "Always active: this script runs in every mode"
+                              : "No longer always active: this script only runs in the modes you select",
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                          contentColor: Colors.grey[800]!,
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
                       child: const Icon(Icons.edit, size: 20),
                       onTap: () {
                         showDialog<void>(
@@ -767,30 +788,49 @@ class UserScriptsPageState extends State<UserScriptsPage> {
             } else if (value == 'search_source') {
               _userScriptsProvider.setSearchInSource = !_userScriptsProvider.searchInSource;
               _onSearchInputChange();
-            } else if (value == 'war_mode') {
-              _userScriptsProvider.toggleWarMode();
+            } else if (value == 'mode') {
+              showScriptModePicker(context);
+            } else if (value == 'modes') {
+              showScriptModesManager(context);
             } else if (value == 'toggle_war_shortcuts') {
               _userScriptsProvider.setWarShortcutsEnabled = !_userScriptsProvider.warShortcutsEnabled;
             }
           },
           itemBuilder: (BuildContext context) {
             final bool byName = _userScriptsProvider.sortOrder == UserScriptSort.name;
-            final bool warMode = _userScriptsProvider.isWarModeActive;
             const selected = TextStyle(fontWeight: FontWeight.bold);
             return [
               if (!_showWarFab) ...[
                 PopupMenuItem<String>(
-                  value: 'war_mode',
+                  value: 'mode',
                   child: Row(
                     children: [
-                      Icon(MdiIcons.swordCross, color: warMode ? Colors.orange[800] : Colors.grey),
+                      Icon(
+                        _userScriptsProvider.activeMode?.icon ?? MdiIcons.swordCross,
+                        color: _userScriptsProvider.activeMode?.color ?? Colors.grey,
+                      ),
                       const SizedBox(width: 10),
-                      Text(warMode ? 'Exit war mode' : 'Enter war mode'),
+                      Text(
+                        _userScriptsProvider.activeMode != null
+                            ? 'Mode: ${_userScriptsProvider.activeMode!.name}'
+                            : 'Select a mode',
+                      ),
                     ],
                   ),
                 ),
                 const PopupMenuDivider(),
               ],
+              const PopupMenuItem<String>(
+                value: 'modes',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_note, color: Colors.grey),
+                    SizedBox(width: 10),
+                    Text('Manage modes'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
               PopupMenuItem<String>(
                 value: 'sort_name',
                 child: Row(
@@ -893,7 +933,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       color: Colors.grey,
                     ),
                     const SizedBox(width: 10),
-                    Text(_userScriptsProvider.warShortcutsEnabled ? 'Hide war mode shortcuts' : 'Show war mode shortcuts'),
+                    Text(_userScriptsProvider.warShortcutsEnabled ? 'Hide mode shortcuts' : 'Show mode shortcuts'),
                   ],
                 ),
               ),

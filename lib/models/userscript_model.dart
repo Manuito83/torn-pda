@@ -21,6 +21,8 @@ enum UserScriptUpdateStatus { upToDate, updateAvailable, localModified, noRemote
 
 enum UserScriptSort { name, dateNewest }
 
+const String warModeId = "war";
+
 class UserScriptModel {
   UserScriptModel({
     this.enabled = true,
@@ -39,9 +41,11 @@ class UserScriptModel {
     this.grants = const [],
     this.requires = const [],
     this.installedAt = 0,
-    this.warEnabled = false,
+    this.alwaysActive = false,
+    Set<String>? modes,
     String? storageId,
-  }) : storageId = (storageId != null && storageId.isNotEmpty) ? storageId : const Uuid().v4();
+  }) : modes = modes ?? <String>{},
+       storageId = (storageId != null && storageId.isNotEmpty) ? storageId : const Uuid().v4();
 
   bool enabled;
   List<String> matches;
@@ -66,7 +70,10 @@ class UserScriptModel {
   // 0 for those installed before this existed
   int installedAt;
 
-  bool warEnabled;
+  final Set<String> modes;
+
+  // Runs in every mode
+  bool alwaysActive;
 
   // Immutable namespace for PDA_storage; survives rename/update, wiped on delete. Quota lives in ScriptStorage.
   final String storageId;
@@ -113,7 +120,8 @@ class UserScriptModel {
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
         installedAt: json["installedAt"] is int ? json["installedAt"] : 0,
-        warEnabled: json["warEnabled"] is bool ? json["warEnabled"] : false,
+        alwaysActive: json["alwaysActive"] is bool ? json["alwaysActive"] : false,
+        modes: _modesFromJson(json),
         storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     } else {
@@ -134,11 +142,18 @@ class UserScriptModel {
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
         installedAt: json["installedAt"] is int ? json["installedAt"] : 0,
-        warEnabled: json["warEnabled"] is bool ? json["warEnabled"] : false,
+        alwaysActive: json["alwaysActive"] is bool ? json["alwaysActive"] : false,
+        modes: _modesFromJson(json),
         storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     }
   }
+
+  // Old backups only carry the war flag
+  static Set<String> _modesFromJson(Map<String, dynamic> json) => {
+    if (json["modes"] is List) ...(json["modes"] as List).whereType<String>(),
+    if (json["warEnabled"] == true) warModeId,
+  };
 
   factory UserScriptModel.fromMetaMap(
     Map<String, dynamic> metaMap, {
@@ -241,7 +256,9 @@ class UserScriptModel {
     "grants": grants,
     "requires": requires,
     "installedAt": installedAt,
-    "warEnabled": warEnabled,
+    "modes": modes.toList(),
+    "warEnabled": modes.contains(warModeId),
+    "alwaysActive": alwaysActive,
     "storageId": storageId,
   };
 

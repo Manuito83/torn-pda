@@ -467,39 +467,64 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // War mode switch
+  // Modes
   // -------------------------------------------------------------------------
-  group('warEnabled', () {
-    test('defaults to false, so war mode starts as an empty selection', () {
-      expect(_model().warEnabled, isFalse);
+  group('modes', () {
+    final legacy = {
+      "enabled": true,
+      "matches": ["*"],
+      "name": "Old",
+      "version": "1.0.0",
+      "edited": false,
+      "source": "",
+      "url": null,
+      "updateStatus": "noRemote",
+      "isExample": false,
+      "time": "end",
+    };
+
+    test('start empty and not always active', () {
+      expect(_model().modes, isEmpty);
+      expect(_model().alwaysActive, isFalse);
     });
 
-    test('is independent from the normal switch', () {
+    test('are independent from the normal switch', () {
       final m = _model(enabled: false);
-      m.warEnabled = true;
+      m.modes.add(warModeId);
       expect(m.enabled, isFalse);
-      expect(m.warEnabled, isTrue);
+      expect(m.modes, {warModeId});
     });
 
-    test('survives a save and load round trip', () {
-      final model = UserScriptModel(name: 'War', source: '', isExample: false, warEnabled: true);
-      expect(UserScriptModel.fromJson(model.toJson()).warEnabled, isTrue);
+    test('survive a save and load round trip', () {
+      final model = UserScriptModel(
+        name: 'Modes',
+        source: '',
+        isExample: false,
+        modes: {warModeId, 'casino'},
+        alwaysActive: true,
+      );
+      final loaded = UserScriptModel.fromJson(model.toJson());
+      expect(loaded.modes, {warModeId, 'casino'});
+      expect(loaded.alwaysActive, isTrue);
     });
 
-    test('reads as false when the saved data predates the field', () {
-      final legacy = {
-        "enabled": true,
-        "matches": ["*"],
-        "name": "Old",
-        "version": "1.0.0",
-        "edited": false,
-        "source": "",
-        "url": null,
-        "updateStatus": "noRemote",
-        "isExample": false,
-        "time": "end",
-      };
-      expect(UserScriptModel.fromJson(legacy).warEnabled, isFalse);
+    test('a saved warEnabled true keeps the script inside war mode', () {
+      expect(UserScriptModel.fromJson({...legacy, "warEnabled": true}).modes, {warModeId});
+    });
+
+    test('a saved warEnabled true is merged with the new list', () {
+      final loaded = UserScriptModel.fromJson({
+        ...legacy,
+        "warEnabled": true,
+        "modes": ['casino'],
+      });
+      expect(loaded.modes, {warModeId, 'casino'});
+    });
+
+    test('read as empty when the saved data predates the fields', () {
+      final loaded = UserScriptModel.fromJson(legacy);
+      expect(loaded.modes, isEmpty);
+      expect(loaded.alwaysActive, isFalse);
     });
   });
 }

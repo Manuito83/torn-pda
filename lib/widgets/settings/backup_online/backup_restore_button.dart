@@ -116,6 +116,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
         userscriptsProvider.restoreScriptsFromServerSave(
           overwrite: widget.overwritteUserscripts,
           scriptsList: userscripts,
+          modesList: result["prefs"]["pda_userScriptsModes"],
         );
       }
 
