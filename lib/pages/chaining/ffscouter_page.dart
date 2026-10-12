@@ -73,6 +73,8 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
   late final TextEditingController _maxFfCtrl = TextEditingController(text: _maxFf.toStringAsFixed(1));
   late final TextEditingController _limitCtrl = TextEditingController(text: _limit.toString());
 
+  final _pipSelection = PipSelection();
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +92,7 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
     _minFfCtrl.dispose();
     _maxFfCtrl.dispose();
     _limitCtrl.dispose();
+    _pipSelection.dispose();
     super.dispose();
   }
 
@@ -171,9 +174,12 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      appBar: _settingsProvider.appBarTop ? PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar) : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar),
+            )
           : null,
       body: Container(
         color: _themeProvider.canvas,
@@ -246,16 +252,10 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
       ),
       actions: [
         PipPlayersButton(
-          candidates: () => [
-            for (final target in _targets)
-              if (target.playerId != null)
-                PipCandidate(
-                  id: target.playerId!,
-                  name: target.name ?? '',
-                  state: target.statusState,
-                  until: target.statusUntil ?? 0,
-                ),
-          ],
+          onPressed: () {
+            if (_targets.isNotEmpty) _tabController.animateTo(0);
+            _pipSelection.start(empty: _targets.isEmpty);
+          },
         ),
         if (_targets.isNotEmpty && _tabController.index == 0)
           _isRefreshingAll
@@ -751,9 +751,17 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
       );
     }
 
-    return ListView.builder(
-      itemCount: _targets.length,
-      itemBuilder: (context, index) => _buildTargetCard(_targets[index]),
+    return PipSelectionScope(
+      selection: _pipSelection,
+      child: ListView.builder(
+        itemCount: _targets.length,
+        itemBuilder: (context, index) {
+          final target = _targets[index];
+          final card = _buildTargetCard(target);
+          if (target.playerId == null) return card;
+          return PipSelectable(id: target.playerId!, name: target.name ?? '', child: card);
+        },
+      ),
     );
   }
 

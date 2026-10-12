@@ -23,7 +23,7 @@ const Map<FeatureDiagramScene, String> featureDiagramCaptions = {
   FeatureDiagramScene.linkTabBehindApp: "Open a link from the app in the tab behind it",
   FeatureDiagramScene.linkNewTabAppSide: "Open a link from the app in a new tab on its side",
   FeatureDiagramScene.pipChain: "Tap the window icon to watch the chain over other apps",
-  FeatureDiagramScene.pipPlayer: "Tap the window icon in the bar and pick up to 4 players",
+  FeatureDiagramScene.pipPlayer: "Choose Watch players in the options and tap up to 4 cards",
 };
 
 typedef _Palette = ({Color frame, Color panel, Color appBar, Color ink});
@@ -353,15 +353,20 @@ class _FeatureDiagramPainter extends CustomPainter {
       case FeatureDiagramScene.pipPlayer:
         final Rect full = Rect.fromLTWH(u * 3, u * 3, u * 94, u * 56);
         final Rect small = Rect.fromLTWH(u * 56, u * 34, u * 38, u * 22.6);
-        final Offset icon = Offset(u * 90, u * 7);
-        final double tapIcon = _seg(t, 0.12, 0.17);
-        final double sheetIn = _seg(t, 0.18, 0.26) * (1 - _seg(t, 0.56, 0.62));
-        final Rect sheet = Rect.fromLTWH(full.left, full.bottom - u * 38 * sheetIn, full.width, u * 38);
-        Offset rowAt(int i) => Offset(sheet.left + u * 6, sheet.top + u * (9 + i * 6));
-        final Offset button = Offset(sheet.center.dx, sheet.top + u * 33);
-        final List<double> checks = [_seg(t, 0.32, 0.35), 0, _seg(t, 0.41, 0.44), 0];
-        final double tapButton = _seg(t, 0.5, 0.55);
-        final double shrink = _seg(t, 0.62, 0.76);
+        final Offset gear = Offset(u * 90, u * 7);
+        final Rect menu = Rect.fromLTWH(full.right - u * 38, full.top + u * 6, u * 36, u * 21);
+        final Offset item = Offset(menu.left + u * 18, menu.top + u * 16.5);
+        final Offset watch = Offset(full.right - u * 10, full.top + u * 4);
+        Rect card(int i) =>
+            Rect.fromLTWH(full.left + u * 3, full.top + u * 11 + i * u * 9.5, full.width - u * 6, u * 7);
+        Offset box(int i) => Offset(card(i).left + u * 3.5, card(i).center.dy);
+        final double tapGear = _seg(t, 0.12, 0.17);
+        final double menuIn = _seg(t, 0.18, 0.22) * (1 - _seg(t, 0.3, 0.33));
+        final double tapItem = _seg(t, 0.26, 0.3);
+        final double selecting = _seg(t, 0.31, 0.35);
+        final List<double> checks = [_seg(t, 0.4, 0.43), 0, _seg(t, 0.48, 0.51), 0];
+        final double tapWatch = _seg(t, 0.56, 0.6);
+        final double shrink = _seg(t, 0.64, 0.76);
         final double swap = _seg(t, 0.7, 0.78);
         final Rect now = Rect.lerp(full, small, shrink)!;
 
@@ -381,64 +386,90 @@ class _FeatureDiagramPainter extends CustomPainter {
           canvas.translate(-full.left, -full.top);
           canvas.saveLayer(full.inflate(u * 3), Paint()..color = Color.fromRGBO(0, 0, 0, 1 - swap));
           _drawApp(canvas, full);
-          _drawIcon(canvas, Icons.picture_in_picture_alt, icon, u * 5, Colors.white);
-          if (sheetIn > 0) {
-            canvas.save();
-            canvas.clipRRect(RRect.fromRectAndRadius(full, Radius.circular(u * 1.5)));
-            canvas.drawRect(full, Paint()..color = Colors.black.withValues(alpha: 0.3 * sheetIn));
-            final sheetShape = RRect.fromRectAndCorners(
-              sheet,
-              topLeft: Radius.circular(u * 2.5),
-              topRight: Radius.circular(u * 2.5),
+          _drawIcon(canvas, Icons.settings, gear, u * 5, Colors.white.withValues(alpha: 1 - selecting));
+          canvas.save();
+          canvas.clipRRect(RRect.fromRectAndRadius(full, Radius.circular(u * 1.5)));
+          if (selecting > 0) {
+            canvas.drawRect(
+              Rect.fromLTWH(full.left, full.top, full.width, u * 8),
+              Paint()..color = palette.appBar.withValues(alpha: selecting),
             );
-            canvas.drawRRect(sheetShape, Paint()..color = palette.panel);
-            canvas.drawRRect(
-              RRect.fromRectAndRadius(
-                Rect.fromLTWH(sheet.left + u * 4, sheet.top + u * 3, u * 30, u * 2),
-                Radius.circular(u),
-              ),
-              Paint()..color = palette.ink.withValues(alpha: 0.35),
+            _drawIcon(canvas, Icons.close, Offset(full.left + u * 5, full.top + u * 4), u * 5, Colors.white);
+            final int picked = checks.where((c) => c >= 1).length;
+            _drawLabel(
+              canvas,
+              picked == 0 ? "Watch" : "Watch $picked",
+              watch,
+              u * 3.4,
+              Colors.white.withValues(alpha: (picked == 0 ? 0.5 : 1) * selecting),
             );
             for (var i = 0; i < 4; i++) {
-              final box = Rect.fromCenter(center: rowAt(i), width: u * 3.4, height: u * 3.4);
+              if (checks[i] > 0) {
+                canvas.drawRRect(
+                  RRect.fromRectAndRadius(card(i), Radius.circular(u)),
+                  Paint()..color = _blue.withValues(alpha: 0.25 * checks[i]),
+                );
+              }
+              final square = Rect.fromCenter(center: box(i), width: u * 3.4, height: u * 3.4);
               canvas.drawRRect(
-                RRect.fromRectAndRadius(box, Radius.circular(u * 0.6)),
+                RRect.fromRectAndRadius(square, Radius.circular(u * 0.6)),
+                Paint()..color = palette.panel.withValues(alpha: selecting),
+              );
+              canvas.drawRRect(
+                RRect.fromRectAndRadius(square, Radius.circular(u * 0.6)),
                 Paint()
                   ..style = PaintingStyle.stroke
                   ..strokeWidth = u * 0.5
-                  ..color = palette.ink.withValues(alpha: 0.5),
+                  ..color = palette.ink.withValues(alpha: 0.5 * selecting),
               );
               if (checks[i] > 0) {
                 canvas.drawRRect(
-                  RRect.fromRectAndRadius(box, Radius.circular(u * 0.6)),
+                  RRect.fromRectAndRadius(square, Radius.circular(u * 0.6)),
                   Paint()..color = _blue.withValues(alpha: checks[i]),
                 );
               }
-              canvas.drawRRect(
-                RRect.fromRectAndRadius(
-                  Rect.fromLTWH(box.right + u * 3, box.center.dy - u, u * (i.isEven ? 30 : 24), u * 2),
-                  Radius.circular(u),
-                ),
-                Paint()..color = palette.ink.withValues(alpha: 0.25),
-              );
-              canvas.drawRRect(
-                RRect.fromRectAndRadius(
-                  Rect.fromLTWH(sheet.right - u * 18, box.center.dy - u, u * 12, u * 2),
-                  Radius.circular(u),
-                ),
-                Paint()..color = (i == 3 ? Colors.green[400]! : Colors.red[300]!).withValues(alpha: 0.7),
-              );
             }
-            canvas.drawRRect(
-              RRect.fromRectAndRadius(
-                Rect.fromCenter(center: button, width: u * 40, height: u * 5),
-                Radius.circular(u * 2.5),
-              ),
-              Paint()..color = Color.lerp(_blue, Colors.white, tapButton > 0 && tapButton < 1 ? 0.3 : 0)!,
-            );
-            _drawLabel(canvas, "Watch 2", button, u * 3, Colors.white);
-            canvas.restore();
           }
+          if (menuIn > 0) {
+            final shape = RRect.fromRectAndRadius(menu, Radius.circular(u));
+            canvas.drawShadow(Path()..addRRect(shape), Colors.black, u * menuIn, false);
+            canvas.drawRRect(shape, Paint()..color = palette.panel.withValues(alpha: menuIn));
+            for (var i = 0; i < 3; i++) {
+              final double y = menu.top + u * (4 + i * 6.25);
+              final bool pip = i == 2;
+              if (pip && tapItem > 0) {
+                canvas.drawRect(
+                  Rect.fromLTWH(menu.left, y - u * 3, menu.width, u * 6),
+                  Paint()..color = _blue.withValues(alpha: 0.3 * menuIn),
+                );
+              }
+              _drawIcon(
+                canvas,
+                pip ? Icons.picture_in_picture_alt : Icons.circle,
+                Offset(menu.left + u * 4, y),
+                u * (pip ? 3.6 : 2),
+                palette.ink.withValues(alpha: (pip ? 0.9 : 0.3) * menuIn),
+              );
+              if (pip) {
+                _drawLabel(
+                  canvas,
+                  "Watch players",
+                  Offset(menu.left + u * 20, y),
+                  u * 3,
+                  palette.ink.withValues(alpha: menuIn),
+                );
+              } else {
+                canvas.drawRRect(
+                  RRect.fromRectAndRadius(
+                    Rect.fromLTWH(menu.left + u * 8, y - u, u * (i == 0 ? 20 : 16), u * 2),
+                    Radius.circular(u),
+                  ),
+                  Paint()..color = palette.ink.withValues(alpha: 0.25 * menuIn),
+                );
+              }
+            }
+          }
+          canvas.restore();
           canvas.restore();
           canvas.restore();
         }
@@ -451,22 +482,25 @@ class _FeatureDiagramPainter extends CustomPainter {
         }
 
         final Offset finger;
-        if (t < 0.28) {
-          finger = Offset.lerp(Offset(full.right - u * 2, size.height + u * 4), icon, _seg(t, 0.04, 0.12))!;
-        } else if (t < 0.38) {
-          finger = Offset.lerp(icon, rowAt(0), _seg(t, 0.26, 0.31))!;
-        } else if (t < 0.47) {
-          finger = Offset.lerp(rowAt(0), rowAt(2), _seg(t, 0.36, 0.4))!;
+        if (t < 0.18) {
+          finger = Offset.lerp(Offset(full.right - u * 2, size.height + u * 4), gear, _seg(t, 0.04, 0.12))!;
+        } else if (t < 0.31) {
+          finger = Offset.lerp(gear, item, _seg(t, 0.19, 0.25))!;
+        } else if (t < 0.44) {
+          finger = Offset.lerp(item, card(0).center, _seg(t, 0.34, 0.39))!;
+        } else if (t < 0.52) {
+          finger = Offset.lerp(card(0).center, card(2).center, _seg(t, 0.43, 0.47))!;
         } else {
-          finger = Offset.lerp(rowAt(2), button, _seg(t, 0.45, 0.49))!;
+          finger = Offset.lerp(card(2).center, watch, _seg(t, 0.51, 0.55))!;
         }
         final double ring = [
-          tapIcon,
+          tapGear,
+          tapItem,
           checks[0],
           checks[2],
-          tapButton,
+          tapWatch,
         ].firstWhere((v) => v > 0 && v < 1, orElse: () => 0);
-        _drawFinger(canvas, finger, alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.56, 0.6)), ring: ring);
+        _drawFinger(canvas, finger, alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.6, 0.64)), ring: ring);
     }
     canvas.restore();
   }

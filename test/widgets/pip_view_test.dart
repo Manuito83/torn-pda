@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,6 +40,14 @@ class PanicChain extends ChainStatusController {
 
   @override
   Future<void> launchPanicAttack() async => panicLaunched = true;
+}
+
+class WatchingChain extends ChainStatusController {
+  @override
+  bool get watcherActive => true;
+
+  @override
+  Color get borderColor => Colors.orange;
 }
 
 class RecordingWebView extends WebViewProvider {
@@ -104,32 +113,28 @@ void main() {
   }
 
   group('player lists button', () {
-    final candidates = [
-      for (var i = 1; i <= 6; i++) PipCandidate(id: i, name: 'Player $i', state: i.isEven ? 'Okay' : 'Traveling'),
-    ];
+    var pressed = 0;
 
-    Future<void> pumpButton(WidgetTester tester, {List<PipCandidate>? list}) {
+    Future<void> pumpButton(WidgetTester tester) {
+      pressed = 0;
       return tester.pumpWidget(
         ChangeNotifierProvider<SettingsProvider>.value(
           value: settings,
           child: MaterialApp(
             home: Scaffold(
-              appBar: AppBar(actions: [PipPlayersButton(candidates: () => list ?? candidates)]),
+              appBar: AppBar(actions: [PipPlayersButton(onPressed: () => pressed++)]),
             ),
           ),
         ),
       );
     }
 
-    Future<void> openSheet(WidgetTester tester) async {
-      await tester.tap(find.byIcon(pipIcon));
-      await tester.pumpAndSettle();
-    }
-
     testWidgets('44 dp icon in the bar', (tester) async {
       await pumpButton(tester);
       expect(find.byIcon(pipIcon), findsOneWidget);
       expect(tester.getSize(find.byType(IconButton)), const Size(44, 44));
+      await tester.tap(find.byIcon(pipIcon));
+      expect(pressed, 1);
     });
 
     testWidgets('general switch off hides it', (tester) async {
@@ -167,55 +172,321 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 2));
     });
+  });
 
-    testWidgets('the sheet lists the players of the page', (tester) async {
-      await pumpButton(tester);
-      await openSheet(tester);
-      expect(find.text('Watch in floating window'), findsOneWidget);
-      expect(find.text('Up to 4 players'), findsOneWidget);
-      expect(find.byType(CheckboxListTile), findsNWidgets(6));
-      expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNull);
+  group('options menu entry', () {
+    Future<bool> allowed(WidgetTester tester) async {
+      late bool result;
+      await tester.pumpWidget(
+        ChangeNotifierProvider<SettingsProvider>.value(
+          value: settings,
+          child: Builder(
+            builder: (context) {
+              result = PipSelection.allowed(context);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      return result;
+    }
+
+    testWidgets('shown by default', (tester) async {
+      expect(await allowed(tester), isTrue);
     });
 
-    testWidgets('a fifth player cannot be picked', (tester) async {
-      await pumpButton(tester);
-      await openSheet(tester);
-      for (var i = 1; i <= 5; i++) {
-        await tester.tap(find.text('Player $i'));
-        await tester.pump();
-      }
-      final boxes = tester.widgetList<CheckboxListTile>(find.byType(CheckboxListTile)).toList();
-      expect(boxes.where((b) => b.value!).length, 4);
-      expect(boxes[4].value, isFalse);
-      expect(boxes[4].onChanged, isNull);
-      expect(boxes[0].onChanged, isNotNull);
-      expect(find.text('Watch 4 players'), findsOneWidget);
+    testWidgets('general switch off hides it', (tester) async {
+      settings.pipEnabled = false;
+      expect(await allowed(tester), isFalse);
     });
 
-    testWidgets('the button watches the picked players', (tester) async {
-      await pumpButton(tester);
-      await openSheet(tester);
-      await tester.tap(find.text('Player 3'));
+    testWidgets('its own switch hides it', (tester) async {
+      settings.pipPlayerButtons = false;
+      expect(await allowed(tester), isFalse);
+    });
+
+    testWidgets('hidden without picture-in-picture', (tester) async {
+      pip.supported = false;
+      expect(await allowed(tester), isFalse);
+    });
+  });
+
+  group('selection mode', () {
+    const checked = Icons.check_box;
+    const unchecked = Icons.check_box_outline_blank;
+    late PipSelection selection;
+    late List<String> cardTaps;
+    late int pageBuilds;
+
+    Future<void> pumpList(WidgetTester tester) async {
+      selection = PipSelection();
+      cardTaps = [];
+      pageBuilds = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: BotToastInit(),
+          navigatorObservers: [BotToastNavigatorObserver()],
+          home: Scaffold(
+            appBar: PipSelectionAppBar(
+              selection: selection,
+              appBar: () => AppBar(title: const Text('Targets')),
+            ),
+            body: PipSelectionScope(
+              selection: selection,
+              child: Builder(
+                builder: (context) {
+                  pageBuilds++;
+                  return ListView(
+                    children: [
+                      for (var i = 1; i <= 6; i++)
+                        PipSelectable(
+                          id: i,
+                          name: 'Player $i',
+                          child: Card(
+                            child: ListTile(title: Text('Player $i'), onTap: () => cardTaps.add('Player $i')),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Future<void> tapCard(WidgetTester tester, String name) async {
+      await tester.tap(find.text(name));
       await tester.pump();
+    }
+
+    Future<void> clearToasts(WidgetTester tester) async {
+      BotToast.cleanAll();
+      await tester.pump(const Duration(seconds: 3));
+    }
+
+    testWidgets('outside the mode the cards are as before', (tester) async {
+      await pumpList(tester);
+      expect(find.byIcon(unchecked), findsNothing);
+      expect(find.byIcon(checked), findsNothing);
+      await tapCard(tester, 'Player 2');
+      expect(cardTaps, ['Player 2']);
+      expect(tester.getSize(find.byType(Card).first).width, 800);
+    });
+
+    testWidgets('entering shows a box on every card and the bar', (tester) async {
+      await pumpList(tester);
+      selection.start(empty: false);
+      await tester.pump();
+      expect(find.byIcon(unchecked), findsNWidgets(6));
+      expect(tester.getSize(find.byType(Card).first).width, 800 - 34);
+      expect(find.text('Tap up to 4'), findsOneWidget);
+      expect(find.text('Watch players'), findsOneWidget);
+      expect(tester.widget<TextButton>(find.byType(TextButton)).onPressed, isNull);
+    });
+
+    testWidgets('the cards keep their state when the mode changes', (tester) async {
+      await pumpList(tester);
+      final before = tester.element(find.byType(ListTile).first);
+      selection.start(empty: false);
+      await tester.pump();
+      expect(tester.element(find.byType(ListTile).first), same(before));
+      selection.cancel();
+      await tester.pump();
+      expect(tester.element(find.byType(ListTile).first), same(before));
+    });
+
+    testWidgets('tapping a card marks it and tapping again unmarks it', (tester) async {
+      await pumpList(tester);
+      selection.start(empty: false);
+      await tester.pump();
+      await tapCard(tester, 'Player 3');
+      expect(find.byIcon(checked), findsOneWidget);
+      expect(find.text('1 selected'), findsOneWidget);
       expect(find.text('Watch 1 player'), findsOneWidget);
-      await tester.tap(find.text('Player 1'));
+      await tapCard(tester, 'Player 3');
+      expect(find.byIcon(checked), findsNothing);
+      expect(cardTaps, isEmpty);
+      expect(pageBuilds, 1);
+    });
+
+    testWidgets('a fifth player is not marked and a toast says why', (tester) async {
+      await pumpList(tester);
+      selection.start(empty: false);
       await tester.pump();
+      for (var i = 1; i <= 5; i++) {
+        await tapCard(tester, 'Player $i');
+      }
+      expect(find.byIcon(checked), findsNWidgets(4));
+      expect(selection.isPicked(5), isFalse);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Up to 4 players'), findsOneWidget);
+      expect(find.text('Watch 4 players'), findsOneWidget);
+      await clearToasts(tester);
+    });
+
+    testWidgets('cancel leaves the mode without watching', (tester) async {
+      await pumpList(tester);
+      selection.start(empty: false);
+      await tester.pump();
+      await tapCard(tester, 'Player 1');
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pump();
+      expect(selection.active, isFalse);
+      expect(find.byIcon(unchecked), findsNothing);
+      expect(find.text('Targets'), findsOneWidget);
+      expect(pip.players, isEmpty);
+      expect(pip.mode, isNot(PipMode.player));
+    });
+
+    testWidgets('back leaves the mode without watching', (tester) async {
+      await pumpList(tester);
+      selection.start(empty: false);
+      await tester.pump();
+      await tapCard(tester, 'Player 1');
+      expect(PipSelection.cancelActive(), isTrue);
+      await tester.pump();
+      expect(selection.active, isFalse);
+      expect(find.byIcon(checked), findsNothing);
+      expect(PipSelection.cancelActive(), isFalse);
+      expect(pip.players, isEmpty);
+    });
+
+    testWidgets('Watch opens the window with the marked players in order', (tester) async {
+      await pumpList(tester);
+      selection.start(empty: false);
+      await tester.pump();
+      await tapCard(tester, 'Player 3');
+      await tapCard(tester, 'Player 1');
       await tester.tap(find.text('Watch 2 players'));
-      await tester.pumpAndSettle();
-      expect(find.text('Watch in floating window'), findsNothing);
+      await tester.pump();
+      expect(selection.active, isFalse);
+      expect(find.byIcon(checked), findsNothing);
       expect(pip.mode, PipMode.player);
       expect(pip.players.map((p) => p.id), [3, 1]);
+      expect(pip.players.map((p) => p.name), ['Player 3', 'Player 1']);
       await finish(tester);
     });
 
-    testWidgets('confined players show their time', (tester) async {
-      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      await pumpButton(
-        tester,
-        list: [PipCandidate(id: 1, name: 'A', state: 'Hospital', until: now + 754)],
+    testWidgets('nothing to pick stays out of the mode', (tester) async {
+      await pumpList(tester);
+      selection.start(empty: true);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(selection.active, isFalse);
+      expect(find.text('No players to watch here'), findsOneWidget);
+      await clearToasts(tester);
+    });
+  });
+
+  group('back button', () {
+    late PipSelection selection;
+    late int drawerOpened;
+    late int appClosed;
+
+    // Same shape as the root PopScope in main
+    Future<void> pumpApp(WidgetTester tester, {required bool exitOnBack}) async {
+      selection = PipSelection();
+      drawerOpened = 0;
+      appClosed = 0;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+        if (call.method == 'SystemNavigator.pop') appClosed++;
+        return null;
+      });
+      addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(SystemChannels.platform, null));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: PopScope(
+            canPop: exitOnBack,
+            onPopInvokedWithResult: (didPop, _) {
+              if (didPop) return;
+              if (!PipSelection.cancelActive()) drawerOpened++;
+            },
+            child: PipSelectionBackGuard(
+              child: Scaffold(
+                appBar: PipSelectionAppBar(selection: selection, appBar: AppBar.new),
+              ),
+            ),
+          ),
+        ),
       );
-      await openSheet(tester);
-      expect(find.textContaining(RegExp(r'^Hospital 12:3\d$')), findsOneWidget);
+    }
+
+    Future<void> back(WidgetTester tester) async {
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+    }
+
+    testWidgets('with exit on back, back leaves the selection and keeps the app', (tester) async {
+      await pumpApp(tester, exitOnBack: true);
+      selection.start(empty: false);
+      await tester.pump();
+      await back(tester);
+      expect(selection.active, isFalse);
+      expect(appClosed, 0);
+      expect(drawerOpened, 0);
+      await back(tester);
+      expect(appClosed, 1);
+    });
+
+    testWidgets('with exit on back and no selection, back closes the app as before', (tester) async {
+      await pumpApp(tester, exitOnBack: true);
+      await back(tester);
+      expect(appClosed, 1);
+    });
+
+    testWidgets('without exit on back, back leaves the selection before opening the drawer', (tester) async {
+      await pumpApp(tester, exitOnBack: false);
+      selection.start(empty: false);
+      await tester.pump();
+      await back(tester);
+      expect(selection.active, isFalse);
+      expect(drawerOpened, 0);
+      await back(tester);
+      expect(drawerOpened, 1);
+      expect(appClosed, 0);
+    });
+  });
+
+  group('window border', () {
+    Future<BoxDecoration?> chainFrame(WidgetTester tester, String text) async {
+      pip.mode = PipMode.chain;
+      await tester.pumpWidget(const MaterialApp(home: PipView()));
+      final frame = tester.widget<Container>(
+        find.ancestor(of: find.text(text), matching: find.byType(Container)).first,
+      );
+      expect(frame.margin, const EdgeInsets.all(4));
+      return frame.decoration as BoxDecoration?;
+    }
+
+    testWidgets('chain colour, rounded and inset', (tester) async {
+      await chain.activateChainWidgetStatusRequests();
+      final decoration = (await chainFrame(tester, 'CHAIN 5/10'))!;
+      expect((decoration.border! as Border).top, const BorderSide(color: Colors.green, width: 4));
+      expect(decoration.borderRadius, BorderRadius.circular(16));
+      await finish(tester);
+    });
+
+    testWidgets('watcher colour, rounded and inset', (tester) async {
+      Get.delete<ChainStatusController>(force: true);
+      chain = Get.put<ChainStatusController>(WatchingChain());
+      await chain.activateChainWidgetStatusRequests();
+      final decoration = (await chainFrame(tester, 'CHAIN 5/10'))!;
+      // Test font is wider than Roboto
+      tester.takeException();
+      expect((decoration.border! as Border).top, const BorderSide(color: Colors.orange, width: 12));
+      expect(decoration.borderRadius, BorderRadius.circular(16));
+      await finish(tester);
+    });
+
+    testWidgets('watcher colour without chain data', (tester) async {
+      Get.delete<ChainStatusController>(force: true);
+      chain = Get.put<ChainStatusController>(WatchingChain());
+      final decoration = (await chainFrame(tester, 'No chain data'))!;
+      expect((decoration.border! as Border).top, const BorderSide(color: Colors.orange, width: 12));
+      expect(decoration.borderRadius, BorderRadius.circular(16));
+      await finish(tester);
     });
   });
 

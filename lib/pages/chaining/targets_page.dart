@@ -40,6 +40,8 @@ class TargetsOptions {
         iconData = Icons.save;
       case "Wipe":
         iconData = Icons.delete_forever_outlined;
+      case "Watch players":
+        iconData = Icons.picture_in_picture_alt_outlined;
     }
   }
 }
@@ -86,7 +88,10 @@ class TargetsPageState extends State<TargetsPage> {
     TargetsOptions(description: "Filter Color"),
     TargetsOptions(description: "Backup"),
     TargetsOptions(description: "Wipe"),
+    TargetsOptions(description: "Watch players"),
   ];
+
+  final _pipSelection = PipSelection();
 
   @override
   void initState() {
@@ -111,9 +116,12 @@ class TargetsPageState extends State<TargetsPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      appBar: _settingsProvider.appBarTop ? PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar) : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar),
+            )
           : null,
       body: Container(
         color: _themeProvider.canvas,
@@ -207,10 +215,13 @@ class TargetsPageState extends State<TargetsPage> {
               style: TextStyle(color: Colors.orange[800], fontSize: 12),
             ),
           ),
-        Consumer<TargetsProvider>(
-          builder: (context, targetsModel, child) => MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
-              : TargetsList(targets: targetsModel.allTargets),
+        PipSelectionScope(
+          selection: _pipSelection,
+          child: Consumer<TargetsProvider>(
+            builder: (context, targetsModel, child) => MediaQuery.orientationOf(context) == Orientation.portrait
+                ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
+                : TargetsList(targets: targetsModel.allTargets),
+          ),
         ),
       ],
     );
@@ -242,18 +253,6 @@ class TargetsPageState extends State<TargetsPage> {
         ],
       ),
       actions: <Widget>[
-        PipPlayersButton(
-          candidates: () => [
-            for (final target in _targetsProvider.allTargets)
-              if (target.playerId != null)
-                PipCandidate(
-                  id: target.playerId!,
-                  name: target.name ?? '',
-                  state: target.status?.state,
-                  until: target.status?.until ?? 0,
-                ),
-          ],
-        ),
         IconButton(
           icon: _searchIcon,
           onPressed: () {
@@ -351,6 +350,7 @@ class TargetsPageState extends State<TargetsPage> {
   Future dispose() async {
     _addIdController.dispose();
     _searchController.dispose();
+    _pipSelection.dispose();
     super.dispose();
   }
 
@@ -512,18 +512,21 @@ class TargetsPageState extends State<TargetsPage> {
       icon: const Icon(Icons.settings),
       onSelected: _openOption,
       itemBuilder: (BuildContext context) {
-        return _popupOptionsChoices.map((TargetsOptions choice) {
-          return PopupMenuItem<TargetsOptions>(
-            value: choice,
-            child: Row(
-              children: [
-                Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
-                const SizedBox(width: 10),
-                Text(choice.description!),
-              ],
-            ),
-          );
-        }).toList();
+        return _popupOptionsChoices
+            .where((choice) => choice.description != "Watch players" || PipSelection.allowed(context))
+            .map((TargetsOptions choice) {
+              return PopupMenuItem<TargetsOptions>(
+                value: choice,
+                child: Row(
+                  children: [
+                    Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
+                    const SizedBox(width: 10),
+                    Text(choice.description!),
+                  ],
+                ),
+              );
+            })
+            .toList();
       },
     );
   }
@@ -552,6 +555,8 @@ class TargetsPageState extends State<TargetsPage> {
         Navigator.push(context, MaterialPageRoute(builder: (context) => TargetsBackupPage()));
       case "Wipe":
         _openWipeDialog();
+      case "Watch players":
+        _pipSelection.start(empty: _targetsProvider.allTargets.isEmpty);
     }
   }
 

@@ -44,6 +44,8 @@ class AttacksPageState extends State<AttacksPage> {
     AttackSort(type: AttackSortType.dateAsc),
   ];
 
+  final _pipSelection = PipSelection();
+
   @override
   void initState() {
     super.initState();
@@ -63,11 +65,11 @@ class AttacksPageState extends State<AttacksPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      appBar: _settingsProvider.appBarTop ? PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar) : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
-              child: buildAppBar(),
+              child: PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar),
             )
           : null,
       body: FutureBuilder(
@@ -118,9 +120,12 @@ class AttacksPageState extends State<AttacksPage> {
                       child: _filterText,
                     ),
                     Flexible(
-                      child: Consumer<AttacksProvider>(
-                        builder: (context, attacksProvider, child) => AttacksList(
-                          attacks: attacksProvider.allAttacks,
+                      child: PipSelectionScope(
+                        selection: _pipSelection,
+                        child: Consumer<AttacksProvider>(
+                          builder: (context, attacksProvider, child) => AttacksList(
+                            attacks: attacksProvider.allAttacks,
+                          ),
                         ),
                       ),
                     ),
@@ -163,18 +168,7 @@ class AttacksPageState extends State<AttacksPage> {
         ],
       ),
       actions: <Widget>[
-        PipPlayersButton(
-          candidates: () {
-            final seen = <int>{};
-            return [
-              for (final attack in _attacksProvider.allAttacks)
-                if ((attack.targetName ?? '').isNotEmpty &&
-                    int.tryParse(attack.targetId ?? '') != null &&
-                    seen.add(int.parse(attack.targetId!)))
-                  PipCandidate(id: int.parse(attack.targetId!), name: attack.targetName!),
-            ];
-          },
-        ),
+        PipPlayersButton(onPressed: () => _pipSelection.start(empty: _attacksProvider.allAttacks.isEmpty)),
         IconButton(
           icon: Icon(
             Icons.refresh,
@@ -259,6 +253,7 @@ class AttacksPageState extends State<AttacksPage> {
   @override
   Future dispose() async {
     _searchController.dispose();
+    _pipSelection.dispose();
     super.dispose();
   }
 

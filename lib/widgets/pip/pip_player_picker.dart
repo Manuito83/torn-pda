@@ -5,20 +5,188 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 
-class PipCandidate {
-  const PipCandidate({required this.id, required this.name, this.state, this.until = 0, this.faction});
+class PipSelection extends ChangeNotifier {
+  static final _active = ValueNotifier<PipSelection?>(null);
 
+  List<PipPlayer>? _picked;
+
+  bool get active => _picked != null;
+  int get count => _picked?.length ?? 0;
+  bool isPicked(int id) => _picked?.any((p) => p.id == id) ?? false;
+
+  static bool allowed(BuildContext context) {
+    final settings = context.read<SettingsProvider>();
+    return settings.pipEnabled && settings.pipPlayerButtons && Get.find<PipController>().supported;
+  }
+
+  // Back button handler in main
+  static bool cancelActive() {
+    final selection = _active.value;
+    if (selection == null) return false;
+    selection.cancel();
+    return true;
+  }
+
+  void start({required bool empty}) {
+    if (empty) {
+      _toast('No players to watch here');
+      return;
+    }
+    _active.value?.cancel();
+    _active.value = this;
+    _picked = [];
+    notifyListeners();
+  }
+
+  void cancel() {
+    if (_active.value == this) _active.value = null;
+    if (_picked == null) return;
+    _picked = null;
+    notifyListeners();
+  }
+
+  void toggle(int id, String name) {
+    final picked = _picked;
+    if (picked == null) return;
+    if (isPicked(id)) {
+      picked.removeWhere((p) => p.id == id);
+    } else if (picked.length >= PipController.maxPlayers) {
+      _toast('Up to ${PipController.maxPlayers} players');
+      return;
+    } else {
+      picked.add(PipPlayer(id: id, name: name.isEmpty ? '#$id' : name));
+    }
+    notifyListeners();
+  }
+
+  void watch() {
+    final picked = _picked;
+    if (picked == null || picked.isEmpty) return;
+    cancel();
+    Get.find<PipController>().watchPlayers(picked);
+  }
+
+  void _toast(String text) {
+    BotToast.showText(
+      text: text,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.grey[800]!,
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  @override
+  void dispose() {
+    if (_active.value == this) _active.value = null;
+    super.dispose();
+  }
+}
+
+class PipSelectionBackGuard extends StatelessWidget {
+  final Widget child;
+
+  const PipSelectionBackGuard({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<PipSelection?>(
+      valueListenable: PipSelection._active,
+      builder: (context, selection, child) => PopScope(canPop: selection == null, child: child!),
+      child: child,
+    );
+  }
+}
+
+class PipSelectionAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final PipSelection selection;
+  final AppBar Function() appBar;
+
+  const PipSelectionAppBar({super.key, required this.selection, required this.appBar});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: selection,
+      builder: (context, _) {
+        if (!selection.active) return appBar();
+        final count = selection.count;
+        return AppBar(
+          iconTheme: const IconThemeData(color: Colors.white),
+          leading: IconButton(icon: const Icon(Icons.close), tooltip: 'Cancel', onPressed: selection.cancel),
+          title: Text(
+            count == 0 ? 'Tap up to ${PipController.maxPlayers}' : '$count selected',
+            style: const TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.white, disabledForegroundColor: Colors.white38),
+              onPressed: count == 0 ? null : selection.watch,
+              child: Text(count == 1 ? 'Watch 1 player' : 'Watch ${count == 0 ? '' : '$count '}players'),
+            ),
+            const SizedBox(width: 6),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class PipSelectionScope extends InheritedNotifier<PipSelection> {
+  const PipSelectionScope({super.key, required PipSelection selection, required super.child})
+    : super(notifier: selection);
+
+  static PipSelection? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<PipSelectionScope>()?.notifier;
+}
+
+class PipSelectable extends StatelessWidget {
   final int id;
   final String name;
-  final String? state;
-  final int until;
-  final String? faction;
+  final Widget child;
+
+  const PipSelectable({super.key, required this.id, required this.name, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final selection = PipSelectionScope.of(context);
+    if (selection == null) return child;
+    final selecting = selection.active;
+    final picked = selection.isPicked(id);
+    return Stack(
+      children: [
+        Row(
+          children: [
+            if (selecting)
+              SizedBox(
+                width: 34,
+                child: Icon(
+                  picked ? Icons.check_box : Icons.check_box_outline_blank,
+                  size: 22,
+                  color: picked ? Colors.blue : Colors.grey,
+                ),
+              ),
+            Expanded(key: const ValueKey('card'), child: child),
+          ],
+        ),
+        if (selecting)
+          Positioned.fill(
+            child: Material(
+              color: picked ? Colors.blue.withValues(alpha: 0.12) : Colors.transparent,
+              child: InkWell(onTap: () => selection.toggle(id, name)),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class PipPlayersButton extends StatelessWidget {
-  final List<PipCandidate> Function() candidates;
+  final VoidCallback onPressed;
 
-  const PipPlayersButton({super.key, required this.candidates});
+  const PipPlayersButton({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -30,128 +198,7 @@ class PipPlayersButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
       icon: const Icon(Icons.picture_in_picture_alt_outlined, color: Colors.white),
-      onPressed: () {
-        final list = candidates();
-        if (list.isEmpty) {
-          BotToast.showText(
-            text: 'No players to watch here',
-            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-            contentColor: Colors.grey[800]!,
-            contentPadding: const EdgeInsets.all(10),
-          );
-          return;
-        }
-        showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => PipPlayerPicker(candidates: list),
-        );
-      },
-    );
-  }
-}
-
-class PipPlayerPicker extends StatefulWidget {
-  final List<PipCandidate> candidates;
-
-  const PipPlayerPicker({super.key, required this.candidates});
-
-  @override
-  State<PipPlayerPicker> createState() => _PipPlayerPickerState();
-}
-
-class _PipPlayerPickerState extends State<PipPlayerPicker> {
-  final _picked = <PipCandidate>[];
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final full = _picked.length >= PipController.maxPlayers;
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.75),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text('Watch in floating window', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              Text(
-                'Up to ${PipController.maxPlayers} players',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 6),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: widget.candidates.length,
-                  itemBuilder: (context, index) {
-                    final candidate = widget.candidates[index];
-                    final picked = _picked.contains(candidate);
-                    final remaining = candidate.until - now;
-                    final confined = const ['Hospital', 'Jail', 'Federal'].contains(candidate.state);
-                    var state = candidate.state ?? '';
-                    if (confined && remaining > 0) {
-                      final d = Duration(seconds: remaining);
-                      final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-                      final secs = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-                      state = '$state ${d.inHours > 0 ? '${d.inHours}:$minutes:$secs' : '$minutes:$secs'}';
-                    }
-                    Color? stateColor = Colors.grey[600];
-                    if (candidate.state == 'Hospital') {
-                      stateColor = Colors.red[300];
-                    } else if (confined) {
-                      stateColor = Colors.brown[300];
-                    } else if (candidate.state == 'Okay') {
-                      stateColor = Colors.green[400];
-                    }
-                    return CheckboxListTile(
-                      value: picked,
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: Text(
-                        candidate.name.isEmpty ? '#${candidate.id}' : candidate.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: candidate.faction == null
-                          ? null
-                          : Text(candidate.faction!, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      secondary: Text(state, style: TextStyle(fontSize: 13, color: stateColor)),
-                      onChanged: !picked && full
-                          ? null
-                          : (on) => setState(() => on! ? _picked.add(candidate) : _picked.remove(candidate)),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-              FilledButton(
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
-                onPressed: _picked.isEmpty
-                    ? null
-                    : () {
-                        Navigator.of(context).pop();
-                        Get.find<PipController>().watchPlayers([
-                          for (final candidate in _picked)
-                            PipPlayer(
-                              id: candidate.id,
-                              name: candidate.name.isEmpty ? '#${candidate.id}' : candidate.name,
-                            ),
-                        ]);
-                      },
-                child: Text(
-                  _picked.length == 1
-                      ? 'Watch 1 player'
-                      : 'Watch ${_picked.isEmpty ? '' : '${_picked.length} '}players',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      onPressed: onPressed,
     );
   }
 }

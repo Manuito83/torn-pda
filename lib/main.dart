@@ -82,6 +82,7 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 import 'package:torn_pda/widgets/pip/pip_view.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
@@ -536,11 +537,11 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     if (w.browserShowInForeground) {
                       // Browser is in front, delegate the call
                       w.tryGoBack();
-                    } else {
+                    } else if (!PipSelection.cancelActive()) {
                       _openDrawerIfPossible();
                     }
                   },
-                  child: home,
+                  child: PipSelectionBackGuard(child: home),
                 );
               },
               child: homeDrawer,

@@ -125,8 +125,12 @@ class _PipViewState extends State<PipView> {
         final model = chain.chainModel?.chain;
         if (chain.modelError || model == null) {
           return Container(
+            margin: const EdgeInsets.all(4),
             decoration: chain.watcherActive
-                ? BoxDecoration(border: Border.all(color: chain.borderColor, width: 12))
+                ? BoxDecoration(
+                    border: Border.all(color: chain.borderColor, width: 12),
+                    borderRadius: BorderRadius.circular(16),
+                  )
                 : null,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -155,8 +159,9 @@ class _PipViewState extends State<PipView> {
             ? Border.all(color: chain.borderColor, width: 12)
             : Border.all(color: accent, width: 4);
         return Container(
-          decoration: BoxDecoration(border: border),
-          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(border: border, borderRadius: BorderRadius.circular(16)),
+          padding: const EdgeInsets.all(8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

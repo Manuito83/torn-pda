@@ -88,6 +88,8 @@ class WarOptions {
       case "Asclepius revive":
         // Own icon in widget
         break;
+      case "Watch players":
+        iconData = Icons.picture_in_picture_alt_outlined;
     }
   }
 }
@@ -136,7 +138,10 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "The Wolverines revive"),
     WarOptions(description: "Combat Ready revive"),
     WarOptions(description: "Asclepius revive"),
+    WarOptions(description: "Watch players"),
   ];
+
+  final _pipSelection = PipSelection();
 
   @override
   void initState() {
@@ -158,6 +163,7 @@ class WarPageState extends State<WarPage> {
     _updatedTicker?.cancel();
     _w.stopUpdate();
     Get.delete<WarController>();
+    _pipSelection.dispose();
     super.dispose();
   }
 
@@ -178,18 +184,26 @@ class WarPageState extends State<WarPage> {
         return Scaffold(
           backgroundColor: _themeProvider!.canvas,
           drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-          appBar: _settingsProvider!.appBarTop ? buildAppBar(ctx) : null,
+          appBar: _settingsProvider!.appBarTop
+              ? PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(ctx))
+              : null,
           bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar(ctx))
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(ctx)),
+                )
               : null,
           body: Container(
             color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: MediaQuery.orientationOf(context) == Orientation.portrait
-                  ? _mainColumn()
-                  : SingleChildScrollView(child: _mainColumn()),
+              child: PipSelectionScope(
+                selection: _pipSelection,
+                child: MediaQuery.orientationOf(context) == Orientation.portrait
+                    ? _mainColumn()
+                    : SingleChildScrollView(child: _mainColumn()),
+              ),
             ),
           ),
         );
@@ -588,27 +602,6 @@ class WarPageState extends State<WarPage> {
         ],
       ),
       actions: <Widget>[
-        PipPlayersButton(
-          candidates: () {
-            final members = {
-              for (final faction in _w.factions)
-                if (faction.hidden != true)
-                  for (final member in (faction.members ?? {}).values)
-                    if (member?.memberId != null) member!.memberId!: (member, faction.name),
-            };
-            return [
-              for (final card in _w.orderedCardsDetails)
-                if (members[card.memberId] != null)
-                  PipCandidate(
-                    id: card.memberId!,
-                    name: card.name ?? '',
-                    state: members[card.memberId]!.$1.status?.state,
-                    until: members[card.memberId]!.$1.status?.until ?? 0,
-                    faction: members[card.memberId]!.$2,
-                  ),
-            ];
-          },
-        ),
         Showcase(
           disableMovingAnimation: true,
           key: _showCaseAddFaction,
@@ -822,6 +815,8 @@ class WarPageState extends State<WarPage> {
                 openCombatReadyReviveDialog(context, _themeProvider!, null);
               case "Asclepius revive":
                 openAsclepiusReviveDialog(context, _themeProvider!, null);
+              case "Watch players":
+                _pipSelection.start(empty: _w.orderedCardsDetails.isEmpty);
             }
           },
           itemBuilder: (BuildContext context) {
@@ -879,6 +874,9 @@ class WarPageState extends State<WarPage> {
                     return false;
                   }
                   if (choice.description!.contains("Asclepius") && !_w.asclepiusReviveActive) {
+                    return false;
+                  }
+                  if (choice.description == "Watch players" && !PipSelection.allowed(context)) {
                     return false;
                   }
                   return true;
@@ -1802,7 +1800,7 @@ class WarTargetsListState extends State<WarTargetsList> {
   }
 
   Widget slidableCard(WarCard filteredCard) {
-    return Slidable(
+    final slidable = Slidable(
       key: ValueKey(filteredCard.memberModel.memberId),
       closeOnScroll: false,
       startActionPane: ActionPane(
@@ -1901,5 +1899,8 @@ class WarTargetsListState extends State<WarTargetsList> {
       ),
       child: filteredCard,
     );
+    final id = filteredCard.memberModel.memberId;
+    if (id == null) return slidable;
+    return PipSelectable(key: ValueKey(id), id: id, name: filteredCard.memberModel.name ?? '', child: slidable);
   }
 }

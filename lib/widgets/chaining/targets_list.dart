@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/widgets/chaining/target_card.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class TargetsList extends StatefulWidget {
   final List<TargetModel> targets;
@@ -68,7 +69,7 @@ class TargetsListState extends State<TargetsList> {
       return const SizedBox.shrink();
     }
 
-    return Slidable(
+    final slidable = Slidable(
       key: ValueKey(widget.targets[index].playerId),
       closeOnScroll: false,
       startActionPane: ActionPane(
@@ -206,6 +207,14 @@ class TargetsListState extends State<TargetsList> {
         key: ValueKey(widget.targets[index].playerId),
         targetModel: widget.targets[index],
       ),
+    );
+    final id = widget.targets[index].playerId;
+    if (id == null) return slidable;
+    return PipSelectable(
+      key: ValueKey(id),
+      id: id,
+      name: widget.targets[index].name ?? '',
+      child: slidable,
     );
   }
 }

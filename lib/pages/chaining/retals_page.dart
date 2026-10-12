@@ -30,6 +30,8 @@ class RetalsOptions {
     switch (description) {
       case "Manage Spies":
         iconData = MdiIcons.incognito;
+      case "Watch players":
+        iconData = Icons.picture_in_picture_alt_outlined;
     }
   }
 }
@@ -56,7 +58,10 @@ class RetalsPageState extends State<RetalsPage> {
 
   final _popupOptionsChoices = <RetalsOptions>[
     RetalsOptions(description: "Manage Spies"),
+    RetalsOptions(description: "Watch players"),
   ];
+
+  final _pipSelection = PipSelection();
 
   final _scrollController = ScrollController();
 
@@ -73,6 +78,7 @@ class RetalsPageState extends State<RetalsPage> {
   Future dispose() async {
     Get.delete<RetalsController>();
     _scrollController.dispose();
+    _pipSelection.dispose();
     super.dispose();
   }
 
@@ -86,11 +92,13 @@ class RetalsPageState extends State<RetalsPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      appBar: _settingsProvider.appBarTop ? buildAppBar(context) : null,
+      appBar: _settingsProvider.appBarTop
+          ? PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(context))
+          : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
-              child: buildAppBar(context),
+              child: PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(context)),
             )
           : null,
       body: GetBuilder<RetalsController>(
@@ -173,15 +181,18 @@ class RetalsPageState extends State<RetalsPage> {
             ),
           )
         else
-          context.orientation == Orientation.portrait
-              ? Flexible(
-                  child: RetalsTargetsList(
+          PipSelectionScope(
+            selection: _pipSelection,
+            child: context.orientation == Orientation.portrait
+                ? Flexible(
+                    child: RetalsTargetsList(
+                      retalsController: r,
+                    ),
+                  )
+                : RetalsTargetsList(
                     retalsController: r,
                   ),
-                )
-              : RetalsTargetsList(
-                  retalsController: r,
-                ),
+          ),
         if (_settingsProvider.appBarTop) const SizedBox(height: 50),
       ],
     );
@@ -213,18 +224,6 @@ class RetalsPageState extends State<RetalsPage> {
         ],
       ),
       actions: <Widget>[
-        PipPlayersButton(
-          candidates: () => [
-            for (final retal in Get.find<RetalsController>().retaliationList)
-              if (retal.retalId != null)
-                PipCandidate(
-                  id: retal.retalId!,
-                  name: retal.name ?? '',
-                  state: retal.status.state,
-                  until: retal.status.until ?? 0,
-                ),
-          ],
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 10),
           child: GetBuilder<RetalsController>(
@@ -277,6 +276,8 @@ class RetalsPageState extends State<RetalsPage> {
                   },
                 );
                 break;
+              case "Watch players":
+                _pipSelection.start(empty: Get.find<RetalsController>().retaliationList.isEmpty);
             }
           },
           itemBuilder: (BuildContext context) {
@@ -297,7 +298,7 @@ class RetalsPageState extends State<RetalsPage> {
             final spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : _themeProvider.mainText;
 
             return _popupOptionsChoices.where((RetalsOptions choice) {
-              return true;
+              return choice.description != "Watch players" || PipSelection.allowed(context);
             }).map((RetalsOptions choice) {
               // Spies
               if (choice.description!.contains("Manage Spies")) {
@@ -501,6 +502,17 @@ class RetalsTargetsList extends StatelessWidget {
       retalsController.orderedCardsDetails.add(details);
     }
 
-    return filteredCards;
+    return [
+      for (final card in filteredCards)
+        if (card.retalModel.retalId == null)
+          card
+        else
+          PipSelectable(
+            key: ValueKey(card.retalModel.retalId),
+            id: card.retalModel.retalId!,
+            name: card.retalModel.name ?? '',
+            child: card,
+          ),
+    ];
   }
 }
