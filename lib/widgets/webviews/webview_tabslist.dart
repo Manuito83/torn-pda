@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
@@ -23,16 +27,74 @@ import 'package:torn_pda/widgets/webviews/tabs_name_dialog.dart';
   return (oldGroupIndex, newGroupIndex);
 }
 
+class TabDropZone extends StatefulWidget {
+  final String label;
+
+  const TabDropZone({super.key, required this.label});
+
+  @override
+  State<TabDropZone> createState() => _TabDropZoneState();
+}
+
+class _TabDropZoneState extends State<TabDropZone> {
+  static final Set<_TabDropZoneState> _zones = {};
+  static final ValueNotifier<_TabDropZoneState?> _hovered = ValueNotifier(null);
+  static final ValueNotifier<bool> _labelAtBottom = ValueNotifier(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _zones.add(this);
+  }
+
+  @override
+  void dispose() {
+    _zones.remove(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_hovered, _labelAtBottom]),
+        builder: (context, _) {
+          if (_hovered.value != this) return const SizedBox.expand();
+          return Container(
+            alignment: Alignment(0, _labelAtBottom.value ? 0.5 : -0.5),
+            decoration: BoxDecoration(
+              color: Colors.blue[400]!.withValues(alpha: 0.25),
+              border: Border.all(color: Colors.blue[400]!, width: 2),
+            ),
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Text(
+                  TabsListState._mainTabGhost.value != null ? "Copy here" : widget.label,
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class TabsList extends StatefulWidget {
   final SplitGroup group;
+  final Widget? leading;
 
-  const TabsList({super.key, this.group = SplitGroup.main});
+  const TabsList({super.key, this.group = SplitGroup.main, this.leading});
 
   @override
   State<TabsList> createState() => TabsListState();
 }
 
-class TabsListState extends State<TabsList> with TickerProviderStateMixin {
+class TabsListState extends State<TabsList> with TickerProviderStateMixin, WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   WebViewProvider? _webViewProvider;
 
@@ -43,6 +105,26 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
   ToastificationItem? _lockToast;
 
+  static const double _dragOutMargin = 72;
+
+  final Set<int> _pointersDown = {};
+  String? _dragUid;
+  int? _dragPointer;
+  Offset _dragStart = Offset.zero;
+  final ValueNotifier<double?> _ghostShift = ValueNotifier(null);
+  bool _dragOut = false;
+  Size? _reorderScreen;
+
+  static final ValueNotifier<Offset?> _mainTabGhost = ValueNotifier(null);
+  final OverlayPortalController _mainTabGhostPortal = OverlayPortalController()..show();
+  Offset _mainTabOrigin = Offset.zero;
+  Size _mainTabSize = Size.zero;
+  late final AnimationController _mainTabDrop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+  );
+  Offset _mainTabDropFrom = Offset.zero;
+
   @override
   void initState() {
     super.initState();
@@ -50,11 +132,51 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
 
     _tabsOpacity = CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
+
+    _ghostShift.addListener(() {
+      if ((_ghostShift.value != null) != _dragOut) setState(() => _dragOut = !_dragOut);
+    });
+
+    _mainTabDrop
+      ..addListener(() {
+        _mainTabGhost.value = Offset.lerp(
+          _mainTabOrigin,
+          _mainTabDropFrom,
+          Curves.easeOut.transform(_mainTabDrop.value),
+        );
+      })
+      ..addStatusListener((status) {
+        if (status.isDismissed) _mainTabGhost.value = null;
+      });
+
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  // Rotating mid-reorder breaks the SDK reorder
+  @override
+  void didChangeMetrics() {
+    if (_reorderScreen == null) return;
+    if (View.of(context).physicalSize == _reorderScreen) return;
+    _dragUid = null;
+    _dragPointer = null;
+    _TabDropZoneState._hovered.value = null;
+    _ghostShift.value = null;
+    _mainTabGhost.value = null;
+    _cancelReorder();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
+    _ghostShift.dispose();
+    if (_dragPointer != null || _mainTabDrop.isAnimating) {
+      scheduleMicrotask(() {
+        _TabDropZoneState._hovered.value = null;
+        _mainTabGhost.value = null;
+      });
+    }
+    _mainTabDrop.dispose();
     super.dispose();
   }
 
@@ -284,6 +406,10 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                 icon: bothBrowsersShown ? MdiIcons.swapHorizontal : MdiIcons.viewSplitVertical,
                 onTap: () {
                   _webViewProvider!.verticalMenuClose();
+                  if (_webViewProvider!.tabList[i].isLocked && context.read<SettingsProvider>().showTabLockWarnings) {
+                    _showLockedExchangeWarning(i, i, message: "A locked tab cannot be moved to the other panel!");
+                    return;
+                  }
                   _webViewProvider!.moveTabToOtherGroup(i);
                 },
               ),
@@ -452,11 +578,22 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
       );
     }
 
-    return ReorderableListView(
+    final reorderableList = ReorderableListView(
       proxyDecorator: _proxyDecorator,
       buildDefaultDragHandles: false,
       scrollDirection: Axis.horizontal,
+      // No auto scroll while dragging out
+      physics: _dragOut ? const NeverScrollableScrollPhysics() : null,
       children: tabs,
+      onReorderStart: (index) {
+        _reorderScreen = View.of(context).physicalSize;
+        _dragPointer = _pointersDown.length == 1 ? _pointersDown.first : null;
+        _dragUid = _dragPointer == null ? null : _webViewProvider!.tabList[index].id;
+      },
+      onReorderEnd: (_) {
+        _reorderScreen = null;
+        _dragUid = null;
+      },
       onReorderItem: (start, end) {
         // Flutter 3.44: onReorderItem already corrects `end` for the shortening
         // caused by removing oldIndex. Reverse it so the rest of this function
@@ -515,9 +652,188 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
         }
       },
     );
+
+    return Listener(
+      onPointerDown: (event) {
+        _pointersDown.add(event.pointer);
+        _dragStart = event.position;
+        if (_dragPointer == null) return;
+        if (_mainTabGhost.value != null) _reorderScreen = null;
+        _dragPointer = null;
+        _dragUid = null;
+        _TabDropZoneState._hovered.value = null;
+        _ghostShift.value = null;
+        _mainTabGhost.value = null;
+      },
+      onPointerMove: (event) {
+        if (!mounted || _dragUid == null || event.pointer != _dragPointer) return;
+        if (_mainTabGhost.value != null) {
+          _mainTabGhost.value = _mainTabOrigin.translate(event.position.dx - _dragStart.dx, 0);
+        }
+        if (!_webViewProvider!.splitScreenWide || !_webViewProvider!.splitBrowsersAllowed) {
+          _TabDropZoneState._hovered.value = null;
+          _ghostShift.value = null;
+          return;
+        }
+        final RenderBox bar = context.findRenderObject() as RenderBox;
+        final Rect barRect = bar.localToGlobal(Offset.zero) & bar.size;
+        _TabDropZoneState? zone;
+        for (final candidate in _TabDropZoneState._zones) {
+          final RenderBox? box = candidate.context.findRenderObject() as RenderBox?;
+          if (box == null || !box.attached || !box.hasSize) continue;
+          final Rect rect = box.localToGlobal(Offset.zero) & box.size;
+          if (rect.contains(event.position) && !rect.contains(barRect.center)) {
+            zone = candidate;
+            _TabDropZoneState._labelAtBottom.value = event.position.dy < rect.center.dy;
+            break;
+          }
+        }
+        final bool out =
+            zone != null || (event.position.dy - barRect.center.dy).abs() > barRect.height / 2 + _dragOutMargin;
+        final bool wasOut = _ghostShift.value != null;
+        if ((out && !wasOut) || (zone != null && zone != _TabDropZoneState._hovered.value)) {
+          if (Platform.isAndroid || Platform.isIOS) HapticFeedback.selectionClick();
+        }
+        _TabDropZoneState._hovered.value = zone;
+        _ghostShift.value = out ? event.position.dy - _dragStart.dy : null;
+      },
+      onPointerUp: (event) {
+        _pointersDown.remove(event.pointer);
+        if (!mounted || event.pointer != _dragPointer) return;
+        final String? uid = _dragUid;
+        final _TabDropZoneState? zone = _TabDropZoneState._hovered.value;
+        final bool out = _ghostShift.value != null;
+        final Offset? mainTabGhost = _mainTabGhost.value;
+        if (mainTabGhost != null) _reorderScreen = null;
+        _dragUid = null;
+        _dragPointer = null;
+        _TabDropZoneState._hovered.value = null;
+        _ghostShift.value = null;
+        if (mainTabGhost != null && !out) {
+          _mainTabDropFrom = mainTabGhost;
+          _mainTabDrop.reverse(from: 1);
+        } else {
+          _mainTabGhost.value = null;
+        }
+        if (uid == null || !out) return;
+        // Before the list changes
+        _cancelReorder();
+        if (zone == null || !zone.mounted) return;
+        if (!_webViewProvider!.splitScreenWide || !_webViewProvider!.splitBrowsersAllowed) return;
+        _webViewProvider!.verticalMenuClose();
+        final int index = _webViewProvider!.tabList.indexWhere((t) => t.id == uid);
+        if (index == 0) {
+          final int tabsBefore = _webViewProvider!.tabList.length;
+          _webViewProvider!.duplicateTab(0);
+          if (_webViewProvider!.tabList.length > tabsBefore) {
+            _webViewProvider!.moveTabToOtherGroup(_webViewProvider!.tabList.length - 1);
+          }
+          return;
+        }
+        if (_webViewProvider!.tabList[index].isLocked && context.read<SettingsProvider>().showTabLockWarnings) {
+          _showLockedExchangeWarning(index, index, message: "A locked tab cannot be moved to the other panel!");
+          return;
+        }
+        _webViewProvider!.moveTabToOtherGroup(index);
+      },
+      onPointerCancel: (event) {
+        _pointersDown.remove(event.pointer);
+        if (!mounted || event.pointer != _dragPointer) return;
+        _reorderScreen = null;
+        _dragUid = null;
+        _dragPointer = null;
+        _TabDropZoneState._hovered.value = null;
+        _ghostShift.value = null;
+        _mainTabGhost.value = null;
+      },
+      child: widget.leading == null
+          ? reorderableList
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Builder(
+                  builder: (leadingContext) => GestureDetector(
+                    onLongPressStart: _webViewProvider!.splitScreenWide && _webViewProvider!.splitBrowsersAllowed
+                        ? (details) {
+                            if (_pointersDown.length != 1) return;
+                            // Same press area as the other tabs
+                            Rect? dragArea;
+                            void findDragArea(Element element) {
+                              if (dragArea != null) return;
+                              if (element.widget is ReorderableDelayedDragStartListener) {
+                                final RenderBox area = element.renderObject! as RenderBox;
+                                dragArea = area.localToGlobal(Offset.zero) & area.size;
+                              } else {
+                                element.visitChildren(findDragArea);
+                              }
+                            }
+
+                            leadingContext.visitChildElements(findDragArea);
+                            if (dragArea == null || !dragArea!.contains(_dragStart)) return;
+                            final RenderBox box = leadingContext.findRenderObject() as RenderBox;
+                            _mainTabDrop.stop();
+                            _reorderScreen = View.of(context).physicalSize;
+                            _dragPointer = _pointersDown.first;
+                            _dragUid = _webViewProvider!.tabList[0].id;
+                            _mainTabOrigin = box.localToGlobal(Offset.zero);
+                            _mainTabSize = box.size;
+                            _mainTabGhost.value = _mainTabOrigin.translate(
+                              details.globalPosition.dx - _dragStart.dx,
+                              0,
+                            );
+                          }
+                        : null,
+                    child: OverlayPortal(
+                      controller: _mainTabGhostPortal,
+                      overlayChildBuilder: (overlayContext) => ValueListenableBuilder<Offset?>(
+                        valueListenable: _mainTabGhost,
+                        builder: (_, ghost, _) {
+                          if (ghost == null || (_dragUid == null && !_mainTabDrop.isAnimating)) {
+                            return const SizedBox.shrink();
+                          }
+                          final RenderBox overlay = Overlay.of(overlayContext).context.findRenderObject() as RenderBox;
+                          final Offset topLeft = overlay.globalToLocal(ghost);
+                          return Positioned(
+                            left: topLeft.dx,
+                            top: topLeft.dy,
+                            child: IgnorePointer(
+                              child: SizedBox.fromSize(
+                                size: _mainTabSize,
+                                child: _proxyDecorator(widget.leading!, 0, kAlwaysCompleteAnimation),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      child: widget.leading,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 40, child: VerticalDivider(width: 2, thickness: 2, color: _themeProvider.mainText)),
+                Flexible(child: reorderableList),
+              ],
+            ),
+    );
   }
 
-  void _showLockedExchangeWarning(int first, int second) {
+  void _cancelReorder() {
+    _reorderScreen = null;
+    void cancel(Element element) {
+      if (element is StatefulElement && element.state is SliverReorderableListState) {
+        (element.state as SliverReorderableListState).cancelReorder();
+      } else {
+        element.visitChildren(cancel);
+      }
+    }
+
+    context.visitChildElements(cancel);
+  }
+
+  void _showLockedExchangeWarning(
+    int first,
+    int second, {
+    String message = "A locked tab cannot be exchanged with an unlocked one!",
+  }) {
     toastification.show(
       closeOnClick: true,
       alignment: Alignment.bottomCenter,
@@ -533,7 +849,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 10),
             Text(
-              "A locked tab cannot be exchanged with an unlocked one!",
+              message,
               maxLines: 5,
               textAlign: TextAlign.center,
               style: TextStyle(color: _themeProvider.mainText),
@@ -557,9 +873,12 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
   Widget _proxyDecorator(Widget child, int index, Animation<double> animation) {
     return AnimatedBuilder(
-      animation: animation,
+      animation: Listenable.merge([animation, _ghostShift]),
       builder: (BuildContext context, Widget? child) {
-        return Material(color: Colors.transparent, child: child);
+        return Transform.translate(
+          offset: Offset(0, _ghostShift.value ?? 0),
+          child: Material(color: Colors.transparent, child: child),
+        );
       },
       child: child,
     );

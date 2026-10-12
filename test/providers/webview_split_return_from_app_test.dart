@@ -54,6 +54,8 @@ void main() {
 
   List<SplitSlotContent?> slots(WebViewProvider p) => [p.splitLeftSlot, p.splitRightSlot];
 
+  int at(WebViewProvider p, String uid) => p.tabList.indexWhere((t) => t.id == uid);
+
   Future<WebViewProvider> appLeftApartRight() async {
     final p = await build(position: WebViewSplitPosition.left);
     p.moveTabToOtherGroup(2);
@@ -94,13 +96,13 @@ void main() {
 
     test('the focus stays in the apart group', () async {
       final p = await appLeftApartRight();
-      expect(p.currentTab, 2);
+      expect(p.tabList[p.currentTab].id, 'tab2');
 
       p.browserShowInForeground = true;
 
-      expect(p.currentTab, 2);
+      expect(p.tabList[p.currentTab].id, 'tab2');
       expect(p.isTabVisible(0), isTrue);
-      expect(p.isTabVisible(2), isTrue);
+      expect(p.isTabVisible(at(p, 'tab2')), isTrue);
       await settle();
     });
 
@@ -112,7 +114,7 @@ void main() {
 
       expect(slots(p), [SplitSlotContent.mainBrowser, SplitSlotContent.apartBrowser]);
       expect(p.currentTab, 0);
-      expect(p.visibleTabIndexForGroup(SplitGroup.apart), 2);
+      expect(p.visibleTabIndexForGroup(SplitGroup.apart), at(p, 'tab2'));
       await settle();
     });
 

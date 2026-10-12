@@ -16,7 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
 class WebViewFullAwh extends StatefulWidget {
@@ -81,27 +81,13 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
   }
 
   Widget buildScaffold(BuildContext context) {
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : Colors.grey[900]
-          : _themeProvider.currentTheme == AppTheme.dark
-          ? Colors.grey[900]
-          : Colors.black,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildCustomAppBar())
-              : null,
-          body: Container(
-            // Background color for all browser widgets
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
-            child: mainWebViewColumn(),
-          ),
-        ),
+    return PdaScaffold(
+      appBar: buildCustomAppBar(),
+      margin: PdaScaffoldMargin.grey,
+      body: Container(
+        // Background color for all browser widgets
+        color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+        child: mainWebViewColumn(),
       ),
     );
   }

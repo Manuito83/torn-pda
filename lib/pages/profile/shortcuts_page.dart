@@ -9,14 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class ShortcutsPage extends StatefulWidget {
   @override
@@ -57,76 +56,61 @@ class ShortcutsPageState extends State<ShortcutsPage> {
   Widget build(BuildContext context) {
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider.statusBar
-                : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-              : null,
-          body: Container(
-            color: _themeProvider.canvas,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const SizedBox(height: 20),
-                  const SizedBox(height: 20),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text("ACTIVE SHORTCUTS"),
-                        Row(
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const SizedBox(height: 20),
+              const SizedBox(height: 20),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text("ACTIVE SHORTCUTS"),
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.info_outline, size: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.only(left: 10),
-                                  child: Text('SWIPE RIGHT TO REMOVE, LEFT TO EDIT', style: TextStyle(fontSize: 10)),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(left: 10),
-                                  child: Text('LONG-PRESS TO SORT', style: TextStyle(fontSize: 10)),
-                                ),
-                              ],
+                            Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text('SWIPE RIGHT TO REMOVE, LEFT TO EDIT', style: TextStyle(fontSize: 10)),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text('LONG-PRESS TO SORT', style: TextStyle(fontSize: 10)),
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  if (_shortcutsProvider.activeShortcuts.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
-                      child: Text(
-                        'No active shortcuts, add some below!',
-                        style: TextStyle(color: Colors.orange[800], fontStyle: FontStyle.italic, fontSize: 13),
-                      ),
-                    )
-                  else
-                    _activeCardsList(),
-                  const SizedBox(height: 40),
-                  const Padding(padding: EdgeInsets.symmetric(horizontal: 15), child: Text("ALL SHORTCUTS")),
-                  const SizedBox(height: 10),
-                  _customCard(),
-                  _allCardsList(),
-                  const SizedBox(height: 40),
-                ],
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(height: 10),
+              if (_shortcutsProvider.activeShortcuts.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                  child: Text(
+                    'No active shortcuts, add some below!',
+                    style: TextStyle(color: Colors.orange[800], fontStyle: FontStyle.italic, fontSize: 13),
+                  ),
+                )
+              else
+                _activeCardsList(),
+              const SizedBox(height: 40),
+              const Padding(padding: EdgeInsets.symmetric(horizontal: 15), child: Text("ALL SHORTCUTS")),
+              const SizedBox(height: 10),
+              _customCard(),
+              _allCardsList(),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),

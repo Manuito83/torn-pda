@@ -11,6 +11,8 @@ import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: useful?
@@ -548,6 +550,21 @@ class StakeoutsController extends GetxController {
     required List<Widget> icon,
     required Stakeout stakeout,
   }) {
+    final pip = Get.find<PipController>();
+    pip.stakeoutAlert(id: int.tryParse(stakeout.id ?? ''), name: stakeout.name ?? '', lines: text);
+
+    // Toasts are hidden in PiP
+    if (pip.inPip.value) {
+      Get.find<ChainStatusController>().showNotification(
+        int.tryParse(stakeout.id ?? '') ?? 0,
+        '',
+        'Stakeout alert',
+        text.join('\n'),
+        tag: 'stakeout',
+      );
+      return;
+    }
+
     BotToast.showCustomNotification(
       animationDuration: const Duration(milliseconds: 200),
       animationReverseDuration: const Duration(milliseconds: 200),

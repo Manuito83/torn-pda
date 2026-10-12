@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
+import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
 
 // Tabs never change parent, so their webviews survive
 class WebViewPanelsStack extends StatefulWidget {
@@ -166,6 +167,16 @@ class WebViewPanelsStackState extends State<WebViewPanelsStack> with SingleTicke
                     height: 2,
                     child: IgnorePointer(child: ColoredBox(color: Colors.blue[400]!)),
                   ),
+                if (panelTabs.length > 1)
+                  for (var panel = 0; panel < panelTabs.length; panel++)
+                    Positioned(
+                      key: ValueKey("dropZone$panel"),
+                      left: panelLeft[panel],
+                      top: 0,
+                      bottom: 0,
+                      width: panelWidth[panel],
+                      child: TabDropZone(label: panelTabs[panel] == null ? "Open here" : "Move here"),
+                    ),
               ],
             ),
           );

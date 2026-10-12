@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/faction/faction_model.dart';
@@ -17,7 +16,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/user_helper.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override
@@ -51,88 +50,71 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider!.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider!.statusBar
-                : _themeProvider!.canvas
-          : _themeProvider!.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider!.canvas,
-          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-              : null,
-          body: Container(
-            color: _themeProvider!.canvas,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: Column(
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Container(
+        color: _themeProvider!.canvas,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          child: Column(
+            children: <Widget>[
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider!.secondBackground),
-                            shape: WidgetStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: const BorderSide(width: 2, color: Colors.blueGrey),
-                              ),
-                            ),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider!.secondBackground),
+                        shape: WidgetStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: const BorderSide(width: 2, color: Colors.blueGrey),
                           ),
-                          child: Icon(Icons.add, size: 20, color: _themeProvider!.mainText),
-                          onPressed: () {
-                            _showAddDialog(context);
-                          },
                         ),
                       ),
-                      const SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider!.secondBackground),
-                            shape: WidgetStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: const BorderSide(width: 2, color: Colors.blueGrey),
-                              ),
-                            ),
-                          ),
-                          child: Icon(Icons.delete_outline, size: 20, color: _themeProvider!.mainText),
-                          onPressed: () {
-                            _openWipeDialog();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      "Use the '+' button to add new friendly factions to the list. "
-                      'Players in said factions will be flagged as allied when you visit their '
-                      'profiles or try to attack them.',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                      child: Icon(Icons.add, size: 20, color: _themeProvider!.mainText),
+                      onPressed: () {
+                        _showAddDialog(context);
+                      },
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Flexible(
-                    child: Consumer<SettingsProvider>(builder: (context, settingsProvider, child) => factions()),
+                  const SizedBox(width: 15),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider!.secondBackground),
+                        shape: WidgetStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: const BorderSide(width: 2, color: Colors.blueGrey),
+                          ),
+                        ),
+                      ),
+                      child: Icon(Icons.delete_outline, size: 20, color: _themeProvider!.mainText),
+                      onPressed: () {
+                        _openWipeDialog();
+                      },
+                    ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "Use the '+' button to add new friendly factions to the list. "
+                  'Players in said factions will be flagged as allied when you visit their '
+                  'profiles or try to attack them.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Flexible(child: Consumer<SettingsProvider>(builder: (context, settingsProvider, child) => factions())),
+            ],
           ),
         ),
       ),

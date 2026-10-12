@@ -17,7 +17,7 @@ import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class ProfileOptionsPage extends StatefulWidget {
   const ProfileOptionsPage({required this.apiValid, required this.user, required this.callBackTimings, this.statsData});
@@ -80,823 +80,123 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
         routeWithDrawer = true;
         routeName = "profile_page";
       },
-      child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.orientationOf(context) == Orientation.portrait
-                  ? Colors.blueGrey
-                  : _themeProvider.canvas
-            : _themeProvider.canvas,
-        child: SplitAppSafeArea(
-          child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-                : null,
-            body: Builder(
-              builder: (BuildContext context) {
-                return Container(
-                  color: _themeProvider.canvas,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                    child: FutureBuilder(
-                      future: _preferencesLoaded,
-                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          return SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                const SizedBox(height: 15),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('MANUAL NOTIFICATIONS', style: TextStyle(fontSize: 10))],
-                                ),
-                                const SizedBox(height: 10),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      Text(
-                                        "Timings and triggers",
-                                        style: TextStyle(
-                                          color: widget.apiValid ? _themeProvider.mainText : Colors.grey,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                                        onPressed: widget.apiValid
-                                            ? () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) {
-                                                      if (Platform.isAndroid) {
-                                                        return ProfileNotificationsAndroid(
-                                                          energyMax: widget.user!.energy!.maximum,
-                                                          nerveMax: widget.user!.nerve!.maximum,
-                                                          callback: widget.callBackTimings,
-                                                        );
-                                                      } else {
-                                                        return ProfileNotificationsIOS(
-                                                          energyMax: widget.user!.energy!.maximum,
-                                                          nerveMax: widget.user!.nerve!.maximum,
-                                                          callback: widget.callBackTimings,
-                                                        );
-                                                      }
-                                                    },
-                                                  ),
-                                                );
-                                              }
-                                            : null,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('HEADER', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Show wallet"),
-                                      Switch(
-                                        value: _showHeaderWallet,
-                                        onChanged: (value) {
-                                          Prefs().setShowHeaderWallet(value);
-                                          setState(() {
-                                            _showHeaderWallet = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'Show your current wallet cash at the top',
+      child: PdaScaffold(
+        appBar: buildAppBar(),
+        margin: PdaScaffoldMargin.canvas,
+        body: Builder(
+          builder: (BuildContext context) {
+            return Container(
+              color: _themeProvider.canvas,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+                child: FutureBuilder(
+                  future: _preferencesLoaded,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const SizedBox(height: 15),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('MANUAL NOTIFICATIONS', style: TextStyle(fontSize: 10))],
+                            ),
+                            const SizedBox(height: 10),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(
+                                    "Timings and triggers",
                                     style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
+                                      color: widget.apiValid ? _themeProvider.mainText : Colors.grey,
                                     ),
                                   ),
-                                ),
-                                Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          const Text("Show main icons"),
-                                          Switch(
-                                            value: _showHeaderIcons,
-                                            onChanged: (value) {
-                                              Prefs().setShowHeaderIcons(value);
-                                              setState(() {
-                                                _showHeaderIcons = value;
-                                              });
-                                            },
-                                            activeTrackColor: Colors.lightGreenAccent,
-                                            activeThumbColor: Colors.green,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                                      child: Text(
-                                        'Show main game icons at the top. Bear in mind not all of them are represented '
-                                        'and some information will already be shown in other tabs in the Profile section',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ),
-                                    if (_showHeaderIcons)
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            const Text("Filter icons"),
-                                            IconButton(
-                                              icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                                              onPressed: () {
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (BuildContext context) {
-                                                      return IconsFilterPage(settingsProvider: _settingsProvider);
-                                                    },
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('COOLDOWNS', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Show education"),
-                                      Switch(
-                                        value: _settingsProvider.educationBarEnabled,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _settingsProvider.educationBarEnabled = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'This information is also available in MISC, but you can choose to have it shown in the cool downs section '
-                                    'with dedicated manual notifications or alarms.',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Show virus coding"),
-                                      Switch(
-                                        value: _settingsProvider.virusBarEnabled,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _settingsProvider.virusBarEnabled = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'This information is also available in MISC, but you can choose to have it shown in the cool downs section '
-                                    'with dedicated manual notifications or alarms.',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('STATUS CARD', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Colored status card"),
-                                      Switch(
-                                        value: _settingsProvider.colorCodedStatusCard,
-                                        onChanged: (value) {
-                                          Prefs().setColorCodedStatusCard(value);
-                                          setState(() {
-                                            _settingsProvider.colorCodedStatusCard = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    "If active, you'll see a colored shadow under the status card depending on the "
-                                    "actual player status color in Torn",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('TRAVEL', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Dedicated Travel card"),
-                                      Switch(
-                                        value: _dedicatedTravelCard,
-                                        onChanged: (value) {
-                                          Prefs().setDedicatedTravelCard(value);
-                                          setState(() {
-                                            _dedicatedTravelCard = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    "If active, you'll get an extra card for travel information, "
-                                    'access to foreign stocks and notifications (reduced version of the '
-                                    "Travel section). If inactive, you'll still have basic travel information "
-                                    'in the Status card',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('RANKED WAR WIDGET', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Show next Ranked War"),
-                                      Switch(
-                                        value: _settingsProvider.rankedWarsInProfile,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _settingsProvider.changeRankedWarsInProfile = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'Show a mini widget in the Status card with information regarding the approaching '
-                                    'Ranked War, including notifications. When the Ranked War is active, a scoreboard '
-                                    'is shown. It can be clicked to access the war in Torn.',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                if (_settingsProvider.rankedWarsInProfile)
-                                  Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            const Text("Show total hours (hide days)"),
-                                            Switch(
-                                              value: _settingsProvider.rankedWarsInProfileShowTotalHours,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _settingsProvider.changeRankedWarsInProfileShowTotalHours = value;
-                                                });
-                                              },
-                                              activeTrackColor: Colors.lightGreenAccent,
-                                              activeThumbColor: Colors.green,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                                        child: Text(
-                                          'This will hide the days from the countdown to the ranked war and show '
-                                          'total remaining hours instead (e.g.: you will be shown 75 hours instead of '
-                                          '3 days and 2 hours)',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('BARS BEHAVIOR', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 20, right: 20),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Flexible(child: Text("Life bar")),
-                                      const Padding(padding: EdgeInsets.only(left: 20)),
-                                      Flexible(flex: 2, child: _lifeBarDropdown()),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: Text(
-                                    "Choose which medical section to open when tapping on the life bar. "
-                                    "If 'ask' is chosen a dialog will appear every time",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('ORGANIZED CRIMES', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Show organized crimes"),
-                                      Switch(
-                                        value: _settingsProvider.oCrimesEnabled,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _settingsProvider.changeOCrimesEnabled = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'Shown in the miscellaneous card and in status when the time approaches. '
-                                    'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
-                                    "the participants' status. Otherwise, it will be calculated based on received events",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('PROPERTIES RENTAL', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Flexible(child: Text("Show also rented out properties")),
-                                      Switch(
-                                        value: _settingsProvider.showAllRentedOutProperties,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _settingsProvider.showAllRentedOutProperties = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'If active, you will see all the properties you rent out to other players in the '
-                                    'Rented Properties section in the Miscellaneous card. If inactive, you will only '
-                                    'see the properties you rent (the ones you pay rent for)',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('TORNSTATS CHART', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Show stats chart"),
-                                      Switch(
-                                        value: _settingsProvider.tornStatsChartEnabled,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _settingsProvider.setTornStatsChartEnabled = value;
-                                            if (!value) {
-                                              _settingsProvider.setTornStatsChartDateTime = 0;
-                                            }
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    "Show Torn Stats's stats chart in the Basic Info card. Stats are updated every "
-                                    "24 hours, but you can force a manual update request by tapping the Torn Stats logo "
-                                    "in the chart legend. If there is an issue, you can try to force a manual update by "
-                                    "switching this option off and back to on.",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                if (_settingsProvider.tornStatsChartEnabled)
-                                  Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            const Flexible(child: Text("Chart type")),
-                                            const Padding(padding: EdgeInsets.only(left: 20)),
-                                            Flexible(child: _chartTypeDropdown()),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            const Text("Show both charts"),
-                                            Switch(
-                                              value: _settingsProvider.tornStatsChartShowBoth,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _settingsProvider.setTornStatsChartShowBoth = value;
-                                                });
-                                              },
-                                              activeTrackColor: Colors.lightGreenAccent,
-                                              activeThumbColor: Colors.green,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            const Flexible(child: Text("Chart range")),
-                                            const Padding(padding: EdgeInsets.only(left: 20)),
-                                            Flexible(child: _chartRangeDropdown()),
-                                          ],
-                                        ),
-                                      ),
-                                      if (widget.statsData != null &&
-                                          widget.statsData!.data != null &&
-                                          widget.statsData!.data!.isNotEmpty)
-                                        Row(
-                                          children: [
-                                            Flexible(
-                                              child: Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                                child: Text(
-                                                  "The available range options depend on the data provided by Torn Stats",
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
-                                                ),
+                                  IconButton(
+                                    icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                                    onPressed: widget.apiValid
+                                        ? () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) {
+                                                  if (Platform.isAndroid) {
+                                                    return ProfileNotificationsAndroid(
+                                                      energyMax: widget.user!.energy!.maximum,
+                                                      nerveMax: widget.user!.nerve!.maximum,
+                                                      callback: widget.callBackTimings,
+                                                    );
+                                                  } else {
+                                                    return ProfileNotificationsIOS(
+                                                      energyMax: widget.user!.energy!.maximum,
+                                                      nerveMax: widget.user!.nerve!.maximum,
+                                                      callback: widget.callBackTimings,
+                                                    );
+                                                  }
+                                                },
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: <Widget>[
-                                            const Text("Show with card collapsed"),
-                                            Switch(
-                                              value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
-                                                });
-                                              },
-                                              activeTrackColor: Colors.lightGreenAccent,
-                                              activeThumbColor: Colors.green,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                                        child: Text(
-                                          "Show stats chart also when the Basic Info card is collapsed (it will be "
-                                          "always available with the card expanded",
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 12,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                            );
+                                          }
+                                        : null,
                                   ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('EXPANDABLE PANELS', style: TextStyle(fontSize: 10))],
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'Choose whether you want to automatically expand '
-                                    'or collapse certain sections. You can always '
-                                    'toggle manually by tapping',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('HEADER', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Show wallet"),
+                                  Switch(
+                                    value: _showHeaderWallet,
+                                    onChanged: (value) {
+                                      Prefs().setShowHeaderWallet(value);
+                                      setState(() {
+                                        _showHeaderWallet = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
                                   ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Show your current wallet cash at the top',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Expand events"),
-                                      Switch(
-                                        value: _expandEvents,
-                                        onChanged: (value) {
-                                          Prefs().setExpandEvents(value);
-                                          setState(() {
-                                            _expandEvents = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Flexible(child: Text("Events to show")),
-                                      const Padding(padding: EdgeInsets.only(left: 20)),
-                                      Flexible(child: _eventsNumberDropdown()),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Expand messages"),
-                                      Switch(
-                                        value: _expandMessages,
-                                        onChanged: (value) {
-                                          Prefs().setExpandMessages(value);
-                                          setState(() {
-                                            _expandMessages = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Flexible(child: Text("Messages to show")),
-                                      const Padding(padding: EdgeInsets.only(left: 20)),
-                                      Flexible(child: _messagesNumberDropdown()),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Expand basic info"),
-                                      Switch(
-                                        value: _expandBasicInfo,
-                                        onChanged: (value) {
-                                          Prefs().setExpandBasicInfo(value);
-                                          setState(() {
-                                            _expandBasicInfo = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Expand networth"),
-                                      Switch(
-                                        value: _expandNetworth,
-                                        onChanged: (value) {
-                                          Prefs().setExpandNetworth(value);
-                                          setState(() {
-                                            _expandNetworth = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('MISC', style: TextStyle(fontSize: 10))],
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Text("Show jobless warning"),
-                                      Switch(
-                                        value: _settingsProvider.joblessWarningEnabled,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _settingsProvider.changeJoblessWarningEnabled = value;
-                                          });
-                                        },
-                                        activeTrackColor: Colors.lightGreenAccent,
-                                        activeThumbColor: Colors.green,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    "If active, a warning will be shown in the Misc card if you don't have a job",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
+                              ),
+                            ),
+                            Column(
+                              children: [
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      const Text("Hide navigation FAB"),
+                                      const Text("Show main icons"),
                                       Switch(
-                                        value: _hideProfileFab,
+                                        value: _showHeaderIcons,
                                         onChanged: (value) {
-                                          Prefs().setHideProfileFab(value);
+                                          Prefs().setShowHeaderIcons(value);
                                           setState(() {
-                                            _hideProfileFab = value;
+                                            _showHeaderIcons = value;
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
@@ -908,8 +208,8 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Text(
-                                    'Hides the floating action button in the Profile page that provides '
-                                    'quick navigation to City, Trades, Items, Crimes, Gym and Home',
+                                    'Show main game icons at the top. Bear in mind not all of them are represented '
+                                    'and some information will already be shown in other tabs in the Profile section',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -917,61 +217,749 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 5),
-                                const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Text('CARDS ORDER', style: TextStyle(fontSize: 10))],
-                                ),
-                                const SizedBox(height: 5),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: SizedBox(
-                                    height: _sectionList!.length * 40.0 + 40,
-                                    child: ReorderableListView(
-                                      shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      onReorderItem: (int oldIndex, int newIndex) {
-                                        // newIndex is already corrected by the framework as of Flutter 3.44
-                                        final oldItem = _sectionList![oldIndex];
-                                        setState(() {
-                                          _sectionList!.removeAt(oldIndex);
-                                          _sectionList!.insert(newIndex, oldItem);
-                                        });
-                                        Prefs().setProfileSectionOrder(_sectionList!);
-                                      },
-                                      children: _currentSectionSort(),
+                                if (_showHeaderIcons)
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        const Text("Filter icons"),
+                                        IconButton(
+                                          icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (BuildContext context) {
+                                                  return IconsFilterPage(settingsProvider: _settingsProvider);
+                                                },
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 5),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    'Drag card names to sort them accordingly in the '
-                                    'Profile section',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 50),
                               ],
                             ),
-                          );
-                        } else {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('COOLDOWNS', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Show education"),
+                                  Switch(
+                                    value: _settingsProvider.educationBarEnabled,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _settingsProvider.educationBarEnabled = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'This information is also available in MISC, but you can choose to have it shown in the cool downs section '
+                                'with dedicated manual notifications or alarms.',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Show virus coding"),
+                                  Switch(
+                                    value: _settingsProvider.virusBarEnabled,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _settingsProvider.virusBarEnabled = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'This information is also available in MISC, but you can choose to have it shown in the cool downs section '
+                                'with dedicated manual notifications or alarms.',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('STATUS CARD', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Colored status card"),
+                                  Switch(
+                                    value: _settingsProvider.colorCodedStatusCard,
+                                    onChanged: (value) {
+                                      Prefs().setColorCodedStatusCard(value);
+                                      setState(() {
+                                        _settingsProvider.colorCodedStatusCard = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                "If active, you'll see a colored shadow under the status card depending on the "
+                                "actual player status color in Torn",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('TRAVEL', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Dedicated Travel card"),
+                                  Switch(
+                                    value: _dedicatedTravelCard,
+                                    onChanged: (value) {
+                                      Prefs().setDedicatedTravelCard(value);
+                                      setState(() {
+                                        _dedicatedTravelCard = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                "If active, you'll get an extra card for travel information, "
+                                'access to foreign stocks and notifications (reduced version of the '
+                                "Travel section). If inactive, you'll still have basic travel information "
+                                'in the Status card',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('RANKED WAR WIDGET', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Show next Ranked War"),
+                                  Switch(
+                                    value: _settingsProvider.rankedWarsInProfile,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _settingsProvider.changeRankedWarsInProfile = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Show a mini widget in the Status card with information regarding the approaching '
+                                'Ranked War, including notifications. When the Ranked War is active, a scoreboard '
+                                'is shown. It can be clicked to access the war in Torn.',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            if (_settingsProvider.rankedWarsInProfile)
+                              Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        const Text("Show total hours (hide days)"),
+                                        Switch(
+                                          value: _settingsProvider.rankedWarsInProfileShowTotalHours,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _settingsProvider.changeRankedWarsInProfileShowTotalHours = value;
+                                            });
+                                          },
+                                          activeTrackColor: Colors.lightGreenAccent,
+                                          activeThumbColor: Colors.green,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Text(
+                                      'This will hide the days from the countdown to the ranked war and show '
+                                      'total remaining hours instead (e.g.: you will be shown 75 hours instead of '
+                                      '3 days and 2 hours)',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('BARS BEHAVIOR', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 20, right: 20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Flexible(child: Text("Life bar")),
+                                  const Padding(padding: EdgeInsets.only(left: 20)),
+                                  Flexible(flex: 2, child: _lifeBarDropdown()),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                "Choose which medical section to open when tapping on the life bar. "
+                                "If 'ask' is chosen a dialog will appear every time",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('ORGANIZED CRIMES', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Show organized crimes"),
+                                  Switch(
+                                    value: _settingsProvider.oCrimesEnabled,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _settingsProvider.changeOCrimesEnabled = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Shown in the miscellaneous card and in status when the time approaches. '
+                                'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
+                                "the participants' status. Otherwise, it will be calculated based on received events",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('PROPERTIES RENTAL', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Flexible(child: Text("Show also rented out properties")),
+                                  Switch(
+                                    value: _settingsProvider.showAllRentedOutProperties,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _settingsProvider.showAllRentedOutProperties = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'If active, you will see all the properties you rent out to other players in the '
+                                'Rented Properties section in the Miscellaneous card. If inactive, you will only '
+                                'see the properties you rent (the ones you pay rent for)',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('TORNSTATS CHART', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Show stats chart"),
+                                  Switch(
+                                    value: _settingsProvider.tornStatsChartEnabled,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _settingsProvider.setTornStatsChartEnabled = value;
+                                        if (!value) {
+                                          _settingsProvider.setTornStatsChartDateTime = 0;
+                                        }
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                "Show Torn Stats's stats chart in the Basic Info card. Stats are updated every "
+                                "24 hours, but you can force a manual update request by tapping the Torn Stats logo "
+                                "in the chart legend. If there is an issue, you can try to force a manual update by "
+                                "switching this option off and back to on.",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            if (_settingsProvider.tornStatsChartEnabled)
+                              Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        const Flexible(child: Text("Chart type")),
+                                        const Padding(padding: EdgeInsets.only(left: 20)),
+                                        Flexible(child: _chartTypeDropdown()),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        const Text("Show both charts"),
+                                        Switch(
+                                          value: _settingsProvider.tornStatsChartShowBoth,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _settingsProvider.setTornStatsChartShowBoth = value;
+                                            });
+                                          },
+                                          activeTrackColor: Colors.lightGreenAccent,
+                                          activeThumbColor: Colors.green,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        const Flexible(child: Text("Chart range")),
+                                        const Padding(padding: EdgeInsets.only(left: 20)),
+                                        Flexible(child: _chartRangeDropdown()),
+                                      ],
+                                    ),
+                                  ),
+                                  if (widget.statsData != null &&
+                                      widget.statsData!.data != null &&
+                                      widget.statsData!.data!.isNotEmpty)
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                                            child: Text(
+                                              "The available range options depend on the data provided by Torn Stats",
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        const Text("Show with card collapsed"),
+                                        Switch(
+                                          value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
+                                            });
+                                          },
+                                          activeTrackColor: Colors.lightGreenAccent,
+                                          activeThumbColor: Colors.green,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Text(
+                                      "Show stats chart also when the Basic Info card is collapsed (it will be "
+                                      "always available with the card expanded",
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('EXPANDABLE PANELS', style: TextStyle(fontSize: 10))],
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Choose whether you want to automatically expand '
+                                'or collapse certain sections. You can always '
+                                'toggle manually by tapping',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Expand events"),
+                                  Switch(
+                                    value: _expandEvents,
+                                    onChanged: (value) {
+                                      Prefs().setExpandEvents(value);
+                                      setState(() {
+                                        _expandEvents = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Flexible(child: Text("Events to show")),
+                                  const Padding(padding: EdgeInsets.only(left: 20)),
+                                  Flexible(child: _eventsNumberDropdown()),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Expand messages"),
+                                  Switch(
+                                    value: _expandMessages,
+                                    onChanged: (value) {
+                                      Prefs().setExpandMessages(value);
+                                      setState(() {
+                                        _expandMessages = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Flexible(child: Text("Messages to show")),
+                                  const Padding(padding: EdgeInsets.only(left: 20)),
+                                  Flexible(child: _messagesNumberDropdown()),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Expand basic info"),
+                                  Switch(
+                                    value: _expandBasicInfo,
+                                    onChanged: (value) {
+                                      Prefs().setExpandBasicInfo(value);
+                                      setState(() {
+                                        _expandBasicInfo = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Expand networth"),
+                                  Switch(
+                                    value: _expandNetworth,
+                                    onChanged: (value) {
+                                      Prefs().setExpandNetworth(value);
+                                      setState(() {
+                                        _expandNetworth = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('MISC', style: TextStyle(fontSize: 10))],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Show jobless warning"),
+                                  Switch(
+                                    value: _settingsProvider.joblessWarningEnabled,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _settingsProvider.changeJoblessWarningEnabled = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                "If active, a warning will be shown in the Misc card if you don't have a job",
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  const Text("Hide navigation FAB"),
+                                  Switch(
+                                    value: _hideProfileFab,
+                                    onChanged: (value) {
+                                      Prefs().setHideProfileFab(value);
+                                      setState(() {
+                                        _hideProfileFab = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeThumbColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Hides the floating action button in the Profile page that provides '
+                                'quick navigation to City, Trades, Items, Crimes, Gym and Home',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Text('CARDS ORDER', style: TextStyle(fontSize: 10))],
+                            ),
+                            const SizedBox(height: 5),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: SizedBox(
+                                height: _sectionList!.length * 40.0 + 40,
+                                child: ReorderableListView(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  onReorderItem: (int oldIndex, int newIndex) {
+                                    // newIndex is already corrected by the framework as of Flutter 3.44
+                                    final oldItem = _sectionList![oldIndex];
+                                    setState(() {
+                                      _sectionList!.removeAt(oldIndex);
+                                      _sectionList!.insert(newIndex, oldItem);
+                                    });
+                                    Prefs().setProfileSectionOrder(_sectionList!);
+                                  },
+                                  children: _currentSectionSort(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Drag card names to sort them accordingly in the '
+                                'Profile section',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 50),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

@@ -21,14 +21,13 @@ import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_storage.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_terminal.dart'; // Asegúrate de que esta ruta sea correcta
 
 class DevToolsMainPage extends StatefulWidget {
-  final InAppWebViewController? webViewController;
-  final Key? webviewKey;
+  // Null in split screen: follows the focused tab
+  final String? tabUid;
   final int initialIndex;
 
   const DevToolsMainPage({
     super.key,
-    required this.webViewController,
-    required this.webviewKey,
+    this.tabUid,
     this.initialIndex = 0,
   });
 
@@ -56,6 +55,38 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
+    final WebViewProvider webViewProvider = Provider.of<WebViewProvider>(context);
+    final bool inSlot = widget.tabUid == null;
+    final TabDetails? tab = inSlot
+        ? (webViewProvider.currentTab < webViewProvider.tabList.length
+              ? webViewProvider.tabList[webViewProvider.currentTab]
+              : null)
+        : webViewProvider.getTabByUid(widget.tabUid!);
+    final webviewKey = tab?.webViewKey;
+    final InAppWebViewController? webViewController = webviewKey?.currentState?.webViewController;
+    final SplitSide? slot = inSlot ? webViewProvider.splitDevToolsSlot : null;
+    final page = (webViewController, tab?.currentUrl);
+
+    final Widget scaffold = Scaffold(
+      backgroundColor: _themeProvider.canvas,
+      appBar: _settingsProvider.appBarTop ? buildAppBar(context, inSlot ? tab : null) : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height + kTextTabBarHeight,
+              child: buildAppBar(context, inSlot ? tab : null),
+            )
+          : null,
+      body: TabBarView(
+        controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          DevToolsTerminalTab(webViewController: webViewController, webviewKey: webviewKey),
+          DevToolsNetworkTab(key: ValueKey(("network", page)), webViewController: webViewController),
+          DevToolsStorageTab(key: ValueKey(("storage", page)), webViewController: webViewController),
+          DevToolsScriptsTab(key: ValueKey(("scripts", page)), webViewController: webViewController),
+        ],
+      ),
+    );
 
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
@@ -63,42 +94,24 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
               ? Colors.blueGrey
               : _themeProvider.canvas
           : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar(context) : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height + kTextTabBarHeight,
-                  child: buildAppBar(context),
-                )
-              : null,
-          body: TabBarView(
-            controller: _tabController,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              DevToolsTerminalTab(
-                webViewController: widget.webViewController,
-                webviewKey: widget.webviewKey,
-              ),
-              DevToolsNetworkTab(webViewController: widget.webViewController),
-              DevToolsStorageTab(webViewController: widget.webViewController),
-              DevToolsScriptsTab(webViewController: widget.webViewController),
-            ],
-          ),
-        ),
-      ),
+      child: inSlot
+          ? SafeArea(left: slot == SplitSide.left, right: slot == SplitSide.right, child: scaffold)
+          : SplitAppSafeArea(child: scaffold),
     );
   }
 
-  AppBar buildAppBar(BuildContext context) {
+  AppBar buildAppBar(BuildContext context, TabDetails? slotTab) {
+    final bool inSlot = widget.tabUid == null;
     return AppBar(
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: const Text("Dev Tools", style: TextStyle(color: Colors.white)),
+      title: Text(
+        slotTab == null || (slotTab.pageTitle ?? "").isEmpty ? "Dev Tools" : "Dev Tools · ${slotTab.pageTitle}",
+        style: const TextStyle(color: Colors.white),
+      ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () => inSlot ? context.read<WebViewProvider>().closeSplitDevTools() : Navigator.of(context).pop(),
       ),
       bottom: TabBar(
         controller: _tabController,
@@ -107,6 +120,7 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
         indicatorColor: Colors.lightGreenAccent,
         onTap: (value) {
           FocusScope.of(context).unfocus();
+          if (inSlot) context.read<WebViewProvider>().splitDevToolsTabIndex = value;
         },
         tabs: const [
           Tab(
@@ -128,40 +142,41 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
         ],
       ),
       actions: [
-        PopupMenuButton<int>(
-          icon: const Icon(Icons.timer_outlined),
-          tooltip: "Interact with WebView",
-          onSelected: (int seconds) async {
-            final currentIndex = _tabController.index;
+        if (!inSlot)
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.timer_outlined),
+            tooltip: "Interact with WebView",
+            onSelected: (int seconds) async {
+              final currentIndex = _tabController.index;
 
-            await Future.delayed(const Duration(milliseconds: 300));
+              await Future.delayed(const Duration(milliseconds: 300));
 
-            final webViewProvider = context.read<WebViewProvider>();
-            webViewProvider.startDevToolsCooldown(seconds);
+              final webViewProvider = context.read<WebViewProvider>();
+              webViewProvider.startDevToolsCooldown(seconds);
 
-            if (mounted) {
-              Navigator.of(context).pop([seconds, currentIndex]);
-            }
-          },
-          itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
-            const PopupMenuItem<int>(
-              value: 5,
-              child: Text('Show browser for 5 seconds'),
-            ),
-            const PopupMenuItem<int>(
-              value: 15,
-              child: Text('Show browser for 15 seconds'),
-            ),
-            const PopupMenuItem<int>(
-              value: 30,
-              child: Text('Show browser for 30 seconds'),
-            ),
-            const PopupMenuItem<int>(
-              value: 60,
-              child: Text('Show browser for 60 seconds'),
-            ),
-          ],
-        ),
+              if (mounted) {
+                Navigator.of(context).pop([seconds, currentIndex]);
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+              const PopupMenuItem<int>(
+                value: 5,
+                child: Text('Show browser for 5 seconds'),
+              ),
+              const PopupMenuItem<int>(
+                value: 15,
+                child: Text('Show browser for 15 seconds'),
+              ),
+              const PopupMenuItem<int>(
+                value: 30,
+                child: Text('Show browser for 30 seconds'),
+              ),
+              const PopupMenuItem<int>(
+                value: 60,
+                child: Text('Show browser for 60 seconds'),
+              ),
+            ],
+          ),
       ],
     );
   }

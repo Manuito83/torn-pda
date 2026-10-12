@@ -14,6 +14,8 @@ import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/notification.dart';
 
 // Project imports:
@@ -174,6 +176,7 @@ class ChainStatusController extends GetxController {
   }
 
   bool widgetVisible = false;
+  bool pipVisible = false;
 
   // MARK: - Chain State & Timers
   int _lastChainCount = 0;
@@ -421,6 +424,11 @@ class ChainStatusController extends GetxController {
     if (statusUpdateSource != "provider") {
       myBars = externalStatusModel;
     } else {
+      // Live updates still need it
+      if (Get.find<PipController>().inPip.value && Get.isRegistered<LiveActivityBridgeController>()) {
+        final bridge = Get.find<LiveActivityBridgeController>();
+        if (!await bridge.isAnyActivityActive() && !await bridge.isAnyRacingActivityActive()) return;
+      }
       myBars = await ApiCallsV1.getBarsAndPlayerStatus();
     }
 
@@ -584,7 +592,7 @@ class ChainStatusController extends GetxController {
             );
           }
           if (_panicModeActive && _apiFailurePanic) {
-            _tryLaunchPanicAttack();
+            launchPanicAttack();
           }
           update();
           return;
@@ -629,7 +637,7 @@ class ChainStatusController extends GetxController {
             if (_notificationsEnabled) {
               showNotification(555, "", "CHAIN PANIC ALERT!", "Less than $_currentChainTimeString remaining!");
             }
-            _tryLaunchPanicAttack();
+            launchPanicAttack();
           } else {
             _borderColor == Colors.black ? _borderColor = Colors.yellow : _borderColor = Colors.black;
           }
@@ -730,7 +738,7 @@ class ChainStatusController extends GetxController {
   }
 
   // MARK: - Panic Attack WebView
-  Future<void> _tryLaunchPanicAttack() async {
+  Future<void> launchPanicAttack() async {
     if (panicTargets.isNotEmpty) {
       List<String> attacksIds = <String>[];
       List<String?> attacksNames = <String?>[];
@@ -763,6 +771,9 @@ class ChainStatusController extends GetxController {
           },
         ),
       );
+
+      final pip = Get.find<PipController>();
+      if (pip.inPip.value) pip.expand();
     }
   }
 
@@ -830,10 +841,11 @@ class ChainStatusController extends GetxController {
   }
 
   // MARK: - Notifications
-  Future<void> showNotification(int id, String payload, String title, String subtitle) async {
-    const String channelTitle = 'Manual chain';
-    const String channelSubtitle = 'Manual chain';
-    const String channelDescription = 'Manual notifications for chain';
+  Future<void> showNotification(int id, String payload, String title, String subtitle, {String? tag}) async {
+    final bool stakeout = tag == 'stakeout';
+    final String channelTitle = stakeout ? 'Stakeouts' : 'Manual chain';
+    final String channelSubtitle = channelTitle;
+    final String channelDescription = stakeout ? 'Stakeout alerts' : 'Manual notifications for chain';
     final String notificationTitle = title;
     final String notificationSubtitle = subtitle;
     final int notificationId = id;
@@ -847,6 +859,7 @@ class ChainStatusController extends GetxController {
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_chain',
+      tag: tag,
       color: Colors.red,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
       ledOnMs: 1000,
@@ -2037,6 +2050,7 @@ class ChainStatusController extends GetxController {
   void tryToDeactivateStatus() {
     if (chainModel == null ||
         (!widgetVisible &&
+            !pipVisible &&
             !watcherActive &&
             ((chainModel!.chain!.current == 0 && chainModel!.chain!.timeout == 0) ||
                 _chainModel!.chain!.cooldown! > 0))) {

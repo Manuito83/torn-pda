@@ -6,13 +6,12 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class TargetsOptionsReturn {
   bool? yataEnabled;
@@ -69,372 +68,354 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider.statusBar
-                  : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Builder(
-            builder: (BuildContext context) {
-              return Container(
-                color: _themeProvider.canvas,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                  child: FutureBuilder(
-                    future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              const SizedBox(height: 15),
-                              const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'CHAINING',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Builder(
+        builder: (BuildContext context) {
+          return Container(
+            color: _themeProvider.canvas,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: FutureBuilder(
+                future: _preferencesLoaded,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          const SizedBox(height: 15),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'CHAINING',
+                                style: TextStyle(fontSize: 10),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    const Text("Show targets notes"),
-                                    Switch(
-                                      value: _showTargetsNotes,
-                                      onChanged: (value) {
-                                        Prefs().setShowTargetsNotes(value);
-                                        setState(() {
-                                          _showTargetsNotes = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeThumbColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'If enabled, you will be shown the note you have saved for every '
-                                  'target and its color as you progress with the chain. Applies only '
-                                  'for standard targets.',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              if (_showTargetsNotes)
-                                Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          const Text("Show blank notes"),
-                                          Switch(
-                                            value: _showBlankTargetsNotes,
-                                            onChanged: (value) {
-                                              Prefs().setShowBlankTargetsNotes(value);
-                                              setState(() {
-                                                _showBlankTargetsNotes = value;
-                                              });
-                                            },
-                                            activeTrackColor: Colors.lightGreenAccent,
-                                            activeThumbColor: Colors.green,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                                      child: Text(
-                                        "If enabled, you will be shown a colored square even if your target's note is empty, "
-                                        'so that you are aware of the color even if no details have been entered.',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 15),
-                                  ],
-                                ),
-                              if (_showTargetsNotes)
-                                Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          const Text("Last online & faction warning"),
-                                          Switch(
-                                            value: _showOnlineFactionWarning,
-                                            onChanged: (value) {
-                                              Prefs().setShowOnlineFactionWarning(value);
-                                              setState(() {
-                                                _showOnlineFactionWarning = value;
-                                              });
-                                            },
-                                            activeTrackColor: Colors.lightGreenAccent,
-                                            activeThumbColor: Colors.green,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                                      child: Text(
-                                        "If enabled, in addition to the target's note (if any) you'll be shown if the "
-                                        'target has been online in the last 7 days. If so, a faction check will also be performed. '
-                                        'This is to avoid attacking active targets, if desired.',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 15),
-                                  ],
-                                ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    const Text("Skip red/blue targets"),
-                                    Switch(
-                                      value: _settingsProvider.targetSkippingAll,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _settingsProvider.changeTargetSkippingAll = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeThumbColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'If enabled, targets that are in hospital, jail or in another '
-                                  'country will be skipped (max 3 at a time, to avoid delays). '
-                                  'This does NOT affect Panic Mode.',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              if (_settingsProvider.targetSkippingAll)
-                                Column(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          const Text("Also skip first target"),
-                                          Switch(
-                                            value: _settingsProvider.targetSkippingFirst,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                _settingsProvider.changeTargetSkippingFirst = value;
-                                              });
-                                            },
-                                            activeTrackColor: Colors.lightGreenAccent,
-                                            activeThumbColor: Colors.green,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                                      child: Text(
-                                        "If enabled, your first, manually selected target will be skipped as well if it's "
-                                        'red/blue. This might be useful if your list is not updated and the target you '
-                                        'select is not available. This does NOT affect Panic Mode.',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              const SizedBox(height: 15),
-                              const Divider(),
-                              const SizedBox(height: 5),
-                              const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'RETALIATION SECTION',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    const Text("Section enabled"),
-                                    Switch(
-                                      value: _retaliationEnabled,
-                                      onChanged: (value) {
-                                        Prefs().setRetaliationSectionEnabled(value);
-                                        _settingsProvider.setRetaliationSectionEnabled = value;
-                                        setState(() {
-                                          // We use this for the callback as well to Chaining
-                                          _retaliationEnabled = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeThumbColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              const Divider(),
-                              const SizedBox(height: 5),
-                              const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'YATA',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    const Text("Show YATA icon"),
-                                    Switch(
-                                      value: _yataTargetsEnabled,
-                                      onChanged: (value) {
-                                        Prefs().setYataTargetsEnabled(value);
-                                        setState(() {
-                                          _yataTargetsEnabled = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeThumbColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  "If enabled, you'll have access to a 'Y' icon in the top bar from "
-                                  'where you can import and export to YATA. Please note that deletions '
-                                  'are not propagated between YATA and Torn PDA, but notes are '
-                                  'overwritten in either direction.',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              const Divider(),
-                              const SizedBox(height: 5),
-                              const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'FFSCOUTER',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    const Text("Section enabled"),
-                                    Switch(
-                                      value: _targetFinderEnabled,
-                                      onChanged: (value) {
-                                        Prefs().setTargetFinderSectionEnabled(value);
-                                        _settingsProvider.setTargetFinderSectionEnabled = value;
-                                        setState(() {
-                                          _targetFinderEnabled = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeThumbColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'If enabled, you\'ll have access to the FFScouter tab '
-                                  'in the Chaining section, which allows you to find targets '
-                                  'powered by FFScouter.',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 50),
                             ],
                           ),
-                        );
-                      } else {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                const Text("Show targets notes"),
+                                Switch(
+                                  value: _showTargetsNotes,
+                                  onChanged: (value) {
+                                    Prefs().setShowTargetsNotes(value);
+                                    setState(() {
+                                      _showTargetsNotes = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeThumbColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If enabled, you will be shown the note you have saved for every '
+                              'target and its color as you progress with the chain. Applies only '
+                              'for standard targets.',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          if (_showTargetsNotes)
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      const Text("Show blank notes"),
+                                      Switch(
+                                        value: _showBlankTargetsNotes,
+                                        onChanged: (value) {
+                                          Prefs().setShowBlankTargetsNotes(value);
+                                          setState(() {
+                                            _showBlankTargetsNotes = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeThumbColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    "If enabled, you will be shown a colored square even if your target's note is empty, "
+                                    'so that you are aware of the color even if no details have been entered.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 15),
+                              ],
+                            ),
+                          if (_showTargetsNotes)
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      const Text("Last online & faction warning"),
+                                      Switch(
+                                        value: _showOnlineFactionWarning,
+                                        onChanged: (value) {
+                                          Prefs().setShowOnlineFactionWarning(value);
+                                          setState(() {
+                                            _showOnlineFactionWarning = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeThumbColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    "If enabled, in addition to the target's note (if any) you'll be shown if the "
+                                    'target has been online in the last 7 days. If so, a faction check will also be performed. '
+                                    'This is to avoid attacking active targets, if desired.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 15),
+                              ],
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                const Text("Skip red/blue targets"),
+                                Switch(
+                                  value: _settingsProvider.targetSkippingAll,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _settingsProvider.changeTargetSkippingAll = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeThumbColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If enabled, targets that are in hospital, jail or in another '
+                              'country will be skipped (max 3 at a time, to avoid delays). '
+                              'This does NOT affect Panic Mode.',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          if (_settingsProvider.targetSkippingAll)
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      const Text("Also skip first target"),
+                                      Switch(
+                                        value: _settingsProvider.targetSkippingFirst,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.changeTargetSkippingFirst = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeThumbColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    "If enabled, your first, manually selected target will be skipped as well if it's "
+                                    'red/blue. This might be useful if your list is not updated and the target you '
+                                    'select is not available. This does NOT affect Panic Mode.',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'RETALIATION SECTION',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                const Text("Section enabled"),
+                                Switch(
+                                  value: _retaliationEnabled,
+                                  onChanged: (value) {
+                                    Prefs().setRetaliationSectionEnabled(value);
+                                    _settingsProvider.setRetaliationSectionEnabled = value;
+                                    setState(() {
+                                      // We use this for the callback as well to Chaining
+                                      _retaliationEnabled = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeThumbColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'YATA',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                const Text("Show YATA icon"),
+                                Switch(
+                                  value: _yataTargetsEnabled,
+                                  onChanged: (value) {
+                                    Prefs().setYataTargetsEnabled(value);
+                                    setState(() {
+                                      _yataTargetsEnabled = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeThumbColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              "If enabled, you'll have access to a 'Y' icon in the top bar from "
+                              'where you can import and export to YATA. Please note that deletions '
+                              'are not propagated between YATA and Torn PDA, but notes are '
+                              'overwritten in either direction.',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'FFSCOUTER',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                const Text("Section enabled"),
+                                Switch(
+                                  value: _targetFinderEnabled,
+                                  onChanged: (value) {
+                                    Prefs().setTargetFinderSectionEnabled(value);
+                                    _settingsProvider.setTargetFinderSectionEnabled = value;
+                                    setState(() {
+                                      _targetFinderEnabled = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeThumbColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If enabled, you\'ll have access to the FFScouter tab '
+                              'in the Chaining section, which allows you to find targets '
+                              'powered by FFScouter.',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 50),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -23,6 +23,7 @@ class DevToolsNetworkTab extends StatefulWidget {
 class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
   SortColumn _currentSortColumn = SortColumn.start;
   bool _isAscending = true;
+  late Future<List<dynamic>> _entries = _fetchPerformanceEntries();
 
   @override
   void initState() {
@@ -88,7 +89,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
     }
 
     return FutureBuilder<List<dynamic>>(
-      future: _fetchPerformanceEntries(),
+      future: _entries,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -103,7 +104,9 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.refresh),
                   label: const Text("Refresh"),
-                  onPressed: () => setState(() {}),
+                  onPressed: () => setState(() {
+                    _entries = _fetchPerformanceEntries();
+                  }),
                 )
               ],
             ),
@@ -152,7 +155,9 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
             const Divider(height: 1, thickness: 1),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () async => setState(() {}),
+                onRefresh: () async => setState(() {
+                  _entries = _fetchPerformanceEntries();
+                }),
                 child: ListView.separated(
                   itemCount: resources.length,
                   separatorBuilder: (context, index) => const Divider(height: 1),

@@ -10,13 +10,12 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class FriendsBackupPage extends StatefulWidget {
   @override
@@ -70,212 +69,194 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _importHintStyle = _themeProvider.mainText;
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider.statusBar
-                  : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Builder(
-            builder: (BuildContext context) {
-              return Container(
-                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                  child: SingleChildScrollView(
-                    child: Column(
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Builder(
+        builder: (BuildContext context) {
+          return Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
+                      child: Text(
+                        "HOW TO EXPORT friends",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(30, 10, 30, 15),
+                      child: Text(
+                        _exportInfo,
+                        style: const TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Wrap(
+                      alignment: WrapAlignment.center,
                       children: <Widget>[
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
-                          child: Text(
-                            "HOW TO EXPORT friends",
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.share),
+                            label: const Text("Export"),
+                            onPressed: () async {
+                              final export = _friendsProvider.exportFriends();
+                              if (export == '') {
+                                BotToast.showText(
+                                  text: 'No friends to export!',
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.red,
+                                  duration: const Duration(seconds: 3),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              } else {
+                                SharePlus.instance.share(
+                                  ShareParams(
+                                    text: export,
+                                    sharePositionOrigin: Rect.fromLTWH(
+                                      0,
+                                      0,
+                                      MediaQuery.of(context).size.width,
+                                      MediaQuery.of(context).size.height / 2,
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(30, 10, 30, 15),
-                          child: Text(
-                            _exportInfo,
-                            style: const TextStyle(
-                              fontSize: 12,
-                            ),
+                          padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.content_copy),
+                            label: const Text("Clipboard"),
+                            onPressed: () async {
+                              final export = _friendsProvider.exportFriends();
+                              if (export == '') {
+                                BotToast.showText(
+                                  text: 'No friends to export!',
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.red,
+                                  duration: const Duration(seconds: 3),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              } else {
+                                Clipboard.setData(ClipboardData(text: export));
+                                BotToast.showText(
+                                  text: "${_friendsProvider.getFriendNumber()} "
+                                      "Friends copied to clipboard!",
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.green,
+                                  duration: const Duration(seconds: 3),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              }
+                            },
                           ),
                         ),
-                        Wrap(
-                          alignment: WrapAlignment.center,
+                      ],
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
+                      child: Divider(),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
+                      child: Text(
+                        "HOW TO IMPORT friends",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(30, 10, 30, 15),
+                      child: Text(
+                        _importInfo,
+                        style: const TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    _importProgressWidget(),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                      child: Form(
+                        key: _importFormKey,
+                        child: Column(
                           children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                              child: ElevatedButton.icon(
-                                icon: const Icon(Icons.share),
-                                label: const Text("Export"),
-                                onPressed: () async {
-                                  final export = _friendsProvider.exportFriends();
-                                  if (export == '') {
-                                    BotToast.showText(
-                                      text: 'No friends to export!',
-                                      textStyle: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.red,
-                                      duration: const Duration(seconds: 3),
-                                      contentPadding: const EdgeInsets.all(10),
-                                    );
-                                  } else {
-                                    SharePlus.instance.share(
-                                      ShareParams(
-                                        text: export,
-                                        sharePositionOrigin: Rect.fromLTWH(
-                                          0,
-                                          0,
-                                          MediaQuery.of(context).size.width,
-                                          MediaQuery.of(context).size.height / 2,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
+                            TextFormField(
+                              controller: _importInputController,
+                              maxLines: 6,
+                              style: const TextStyle(fontSize: 12),
+                              decoration: InputDecoration(
+                                counterText: "",
+                                border: const OutlineInputBorder(),
+                                hintText: _importHintText,
+                                hintStyle: TextStyle(
+                                  color: _importHintStyle,
+                                  fontWeight: _importHintWeight,
+                                ),
                               ),
+                              validator: (value) {
+                                if (value!.isEmpty) {
+                                  return "Cannot be empty!";
+                                }
+                                return null;
+                              },
                             ),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                               child: ElevatedButton.icon(
-                                icon: const Icon(Icons.content_copy),
-                                label: const Text("Clipboard"),
-                                onPressed: () async {
-                                  final export = _friendsProvider.exportFriends();
-                                  if (export == '') {
-                                    BotToast.showText(
-                                      text: 'No friends to export!',
-                                      textStyle: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.red,
-                                      duration: const Duration(seconds: 3),
-                                      contentPadding: const EdgeInsets.all(10),
-                                    );
-                                  } else {
-                                    Clipboard.setData(ClipboardData(text: export));
-                                    BotToast.showText(
-                                      text: "${_friendsProvider.getFriendNumber()} "
-                                          "Friends copied to clipboard!",
-                                      textStyle: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.green,
-                                      duration: const Duration(seconds: 3),
-                                      contentPadding: const EdgeInsets.all(10),
-                                    );
+                                icon: const Icon(Icons.file_download),
+                                label: const Text("Import"),
+                                onPressed: () {
+                                  if (_importFormKey.currentState!.validate()) {
+                                    final numberImported = _importChecker();
+                                    if (numberImported == 0) {
+                                      BotToast.showText(
+                                        text: 'No friends to import! '
+                                            'Is the file structure correct?',
+                                        textStyle: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                        contentColor: Colors.red,
+                                        duration: const Duration(seconds: 3),
+                                        contentPadding: const EdgeInsets.all(10),
+                                      );
+                                    } else {
+                                      FocusScope.of(context).requestFocus(FocusNode());
+                                      _showImportDialog();
+                                    }
                                   }
                                 },
                               ),
                             ),
                           ],
                         ),
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
-                          child: Divider(),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
-                          child: Text(
-                            "HOW TO IMPORT friends",
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(30, 10, 30, 15),
-                          child: Text(
-                            _importInfo,
-                            style: const TextStyle(
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        _importProgressWidget(),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                          child: Form(
-                            key: _importFormKey,
-                            child: Column(
-                              children: <Widget>[
-                                TextFormField(
-                                  controller: _importInputController,
-                                  maxLines: 6,
-                                  style: const TextStyle(fontSize: 12),
-                                  decoration: InputDecoration(
-                                    counterText: "",
-                                    border: const OutlineInputBorder(),
-                                    hintText: _importHintText,
-                                    hintStyle: TextStyle(
-                                      color: _importHintStyle,
-                                      fontWeight: _importHintWeight,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value!.isEmpty) {
-                                      return "Cannot be empty!";
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                  child: ElevatedButton.icon(
-                                    icon: const Icon(Icons.file_download),
-                                    label: const Text("Import"),
-                                    onPressed: () {
-                                      if (_importFormKey.currentState!.validate()) {
-                                        final numberImported = _importChecker();
-                                        if (numberImported == 0) {
-                                          BotToast.showText(
-                                            text: 'No friends to import! '
-                                                'Is the file structure correct?',
-                                            textStyle: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.white,
-                                            ),
-                                            contentColor: Colors.red,
-                                            duration: const Duration(seconds: 3),
-                                            contentPadding: const EdgeInsets.all(10),
-                                          );
-                                        } else {
-                                          FocusScope.of(context).requestFocus(FocusNode());
-                                          _showImportDialog();
-                                        }
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 50),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 50),
+                  ],
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

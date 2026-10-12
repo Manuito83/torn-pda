@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class TargetDetailsPage extends StatefulWidget {
   final TargetModel? target;
@@ -54,96 +54,79 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : Colors.grey[900]
-          : _themeProvider.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Colors.black,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-            child: SingleChildScrollView(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: <Widget>[
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${widget.target!.name} [${widget.target!.playerId}]',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 5),
-                            child: SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: IconButton(
-                                icon: const Icon(Icons.content_copy),
-                                iconSize: 20,
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: widget.target!.playerId.toString()));
-                                  BotToast.showText(
-                                    text: "Your target's ID [${widget.target!.playerId}] has been "
-                                        "copied to the clipboard!",
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.green,
-                                    duration: const Duration(seconds: 5),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      margin: PdaScaffoldMargin.grey,
+      body: Container(
+        color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+        child: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${widget.target!.name} [${widget.target!.playerId}]',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      Text('${widget.target!.rank}'),
-                      const SizedBox(height: 20),
-                      Text('Level: ${widget.target!.level}'),
-                      Text('Gender: ${widget.target!.gender}'),
-                      Text('Age: ${widget.target!.age} days'),
-                      const SizedBox(height: 20),
-                      _returnLife(),
-                      const SizedBox(height: 5),
-                      _returnLastAction(),
-                      const SizedBox(height: 5),
-                      _returnStatus(),
-                      const SizedBox(height: 20),
-                      Text('Awards: ${widget.target!.awards} '
-                          '(you have ${UserHelper.awards})'),
-                      const SizedBox(height: 20),
-                      Text('Donator: ${widget.target!.donator == 0 ? 'NO' : 'YES'}'),
-                      Text('Friends/Enemies: ${widget.target!.friends}'
-                          '/${widget.target!.enemies}'),
-                      const SizedBox(height: 20),
-                      _returnFaction(),
-                      _returnJob(),
-                      _returnDiscord(),
-                      _returnCompetition(),
-                      const SizedBox(height: 50),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: IconButton(
+                            icon: const Icon(Icons.content_copy),
+                            iconSize: 20,
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: widget.target!.playerId.toString()));
+                              BotToast.showText(
+                                text: "Your target's ID [${widget.target!.playerId}] has been "
+                                    "copied to the clipboard!",
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.green,
+                                duration: const Duration(seconds: 5),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                  Text('${widget.target!.rank}'),
+                  const SizedBox(height: 20),
+                  Text('Level: ${widget.target!.level}'),
+                  Text('Gender: ${widget.target!.gender}'),
+                  Text('Age: ${widget.target!.age} days'),
+                  const SizedBox(height: 20),
+                  _returnLife(),
+                  const SizedBox(height: 5),
+                  _returnLastAction(),
+                  const SizedBox(height: 5),
+                  _returnStatus(),
+                  const SizedBox(height: 20),
+                  Text('Awards: ${widget.target!.awards} '
+                      '(you have ${UserHelper.awards})'),
+                  const SizedBox(height: 20),
+                  Text('Donator: ${widget.target!.donator == 0 ? 'NO' : 'YES'}'),
+                  Text('Friends/Enemies: ${widget.target!.friends}'
+                      '/${widget.target!.enemies}'),
+                  const SizedBox(height: 20),
+                  _returnFaction(),
+                  _returnJob(),
+                  _returnDiscord(),
+                  _returnCompetition(),
+                  const SizedBox(height: 50),
+                ],
               ),
             ),
           ),

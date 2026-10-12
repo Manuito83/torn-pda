@@ -8,14 +8,13 @@ import 'package:get/get.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class AlternativeKeysPage extends StatefulWidget {
   const AlternativeKeysPage({super.key});
@@ -60,46 +59,28 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider.statusBar
-                  : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider.canvas,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: <Widget>[
-                    const SizedBox(height: 15),
-                    _yataKey(),
-                    const SizedBox(height: 15),
-                    const Divider(),
-                    const SizedBox(height: 15),
-                    _tornStatsKey(),
-                    const Divider(),
-                    const SizedBox(height: 15),
-                    _ffScouterKey(),
-                    const SizedBox(height: 15),
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          child: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                const SizedBox(height: 15),
+                _yataKey(),
+                const SizedBox(height: 15),
+                const Divider(),
+                const SizedBox(height: 15),
+                _tornStatsKey(),
+                const Divider(),
+                const SizedBox(height: 15),
+                _ffScouterKey(),
+                const SizedBox(height: 15),
+                const SizedBox(height: 40),
+              ],
             ),
           ),
         ),

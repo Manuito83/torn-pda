@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
+import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -124,6 +125,27 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                     Column(children: [const Text("Alerts silenced until"), Text(sleepString!)]),
                     ElevatedButton(onPressed: () => s.disableSleepStakeouts(), child: const Text("Deactivate")),
                   ],
+                ),
+              ),
+            if (s.stakeouts.any((stakeout) => s.isAnyOptionActive(stakeout: stakeout)) &&
+                s.stakeoutsEnabled! &&
+                Get.find<PipController>().supported &&
+                _settingsProvider.pipEnabled &&
+                _settingsProvider.pipStakeoutsButton)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Tooltip(
+                    message: 'Watch your stakeouts in a floating window',
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.picture_in_picture_alt_outlined, size: 18),
+                      label: const Text('Floating window'),
+                      onPressed: () => Get.find<PipController>().openStakeouts(
+                        players: s.stakeouts.where((stakeout) => s.isAnyOptionActive(stakeout: stakeout)).length,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             if (_s.stakeouts.isEmpty)

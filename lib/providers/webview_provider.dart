@@ -21,6 +21,7 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
@@ -48,7 +49,7 @@ enum SplitSide { left, right }
 
 enum SplitGroup { main, apart }
 
-enum SplitSlotContent { app, browser, mainBrowser, apartBrowser }
+enum SplitSlotContent { app, browser, mainBrowser, apartBrowser, devTools }
 
 class RotatedDisposedTabDetails {
   GlobalKey<WebViewFullState>? key;
@@ -374,6 +375,7 @@ class WebViewProvider extends ChangeNotifier {
   bool _isBrowserForeground = false;
   bool get browserShowInForeground => _isBrowserForeground;
   set browserShowInForeground(bool bringToForeground) {
+    if (!bringToForeground && _splitScreenWide && !_webViewSplitActive) closeSplitDevTools();
     if (_splitScreenWide && _splitBrowsersInUse) {
       if (bringToForeground) {
         returnBrowserFromApp();
@@ -517,6 +519,7 @@ class WebViewProvider extends ChangeNotifier {
     final bool wasInUse = _splitBrowsersInUse;
     final before = (splitLeftSlot, splitRightSlot);
     _webViewSplitPosition = value;
+    if (value == WebViewSplitPosition.off) _splitDevToolsOpen = false;
     switch (value) {
       case WebViewSplitPosition.off:
         Prefs().setSplitScreenWebview("off");
@@ -555,6 +558,7 @@ class WebViewProvider extends ChangeNotifier {
     final bool wasInUse = _splitBrowsersInUse;
     final before = (splitLeftSlot, splitRightSlot);
     _splitBrowsersAllowedRC = value;
+    if (!value) _splitDevToolsOpen = false;
     Prefs().setSplitBrowsersAllowedRC(value);
     if (wasInUse || _splitBrowsersInUse) {
       _applySplitLayout(before, singleViewShowsBrowser: true);
@@ -571,6 +575,9 @@ class WebViewProvider extends ChangeNotifier {
   SplitSide _splitMainSlot = SplitSide.left;
 
   SplitSide? _splitAppSlot;
+
+  bool _splitDevToolsOpen = false;
+  int splitDevToolsTabIndex = 0;
 
   String? _splitMainVisibleUid;
   String? _splitApartVisibleUid;
@@ -623,6 +630,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   SplitSlotContent _splitSlotContent(SplitSide slot, SplitSide? appSlot) {
+    if (slot == splitDevToolsSlot) return SplitSlotContent.devTools;
     if (appSlot == slot) return SplitSlotContent.app;
     if (!splitBrowsersActive) return SplitSlotContent.browser;
     return slot == _splitMainSlot ? SplitSlotContent.mainBrowser : SplitSlotContent.apartBrowser;
@@ -633,6 +641,13 @@ class WebViewProvider extends ChangeNotifier {
       : SplitGroup.main;
 
   bool get splitBrowserCanExitToApp => splitBrowsersActive && _splitAppSlot == null && !splitApartEmpty;
+
+  SplitSide? get splitDevToolsSlot {
+    if (!_splitDevToolsOpen || !_splitScreenWide || !splitBrowsersAllowed) return null;
+    return splitBrowsersActive ? _otherSplitSlot(slotOfGroup(focusedGroup)) : _splitAppSlot;
+  }
+
+  bool get _splitDevToolsOverApp => splitDevToolsSlot != null && splitDevToolsSlot == _effectiveSplitAppSlot;
 
   bool get appCanOpenBrowser => !_webViewSplitActive || (splitBrowsersActive && _splitAppSlot != null);
 
@@ -667,8 +682,10 @@ class WebViewProvider extends ChangeNotifier {
     if (index < 0) return false;
     if (index == currentTab) return true;
     if (!splitBrowsersActive) return false;
+    final SplitSide? devToolsSlot = splitDevToolsSlot;
     for (final group in SplitGroup.values) {
-      if (_splitAppSlot != slotOfGroup(group) && visibleTabIndexForGroup(group) == index) return true;
+      final SplitSide slot = slotOfGroup(group);
+      if (_splitAppSlot != slot && devToolsSlot != slot && visibleTabIndexForGroup(group) == index) return true;
     }
     return false;
   }
@@ -696,7 +713,8 @@ class WebViewProvider extends ChangeNotifier {
     // Called on every keyboard frame
     if (wide == _splitScreenWide) {
       final SplitSlotContent? right = splitRightSlot;
-      final bool appShown = splitLeftSlot == SplitSlotContent.app || right == SplitSlotContent.app;
+      final bool appShown =
+          splitLeftSlot == SplitSlotContent.app || right == SplitSlotContent.app || _splitDevToolsOverApp;
       final bool inSync = right == null
           ? !_webViewSplitActive
           : appShown
@@ -733,7 +751,7 @@ class WebViewProvider extends ChangeNotifier {
         browserShowInForeground = singleViewShowsBrowser;
       }
     } else {
-      if (left == SplitSlotContent.app || right == SplitSlotContent.app) {
+      if (left == SplitSlotContent.app || right == SplitSlotContent.app || _splitDevToolsOverApp) {
         if (!_webViewSplitActive) {
           _webViewSplitActive = true;
           browserForegroundWithSplitTransition();
@@ -751,11 +769,13 @@ class WebViewProvider extends ChangeNotifier {
 
   bool moveTabToOtherGroup(int index) {
     if (!splitBrowsersAllowed || index <= 0 || index >= _tabList.length) return false;
+    closeSplitDevTools();
     final before = (splitLeftSlot, splitRightSlot);
     final TabDetails tab = _tabList[index];
     final bool toApart = !tab.splitApart;
     final SplitGroup toGroup = toApart ? SplitGroup.apart : SplitGroup.main;
-    final int? replaced = splitBrowsersActive ? visibleTabIndexForGroup(toGroup) : null;
+    final int? shownInTarget = splitBrowsersActive ? visibleTabIndexForGroup(toGroup) : null;
+    final TabDetails? replaced = shownInTarget == null ? null : _tabList[shownInTarget];
 
     if ((toApart ? _splitMainVisibleUid : _splitApartVisibleUid) == tab.id) {
       final List<int> sameGroup = [
@@ -782,12 +802,17 @@ class WebViewProvider extends ChangeNotifier {
     } else {
       _splitMainVisibleUid = tab.id;
     }
+    final String focusedUid = _tabList[currentTab].id;
+    _tabList
+      ..remove(tab)
+      ..add(tab);
+    _currentTab = _tabList.indexWhere((t) => t.id == focusedUid);
 
     if (_splitScreenWide) {
-      if (replaced != null && replaced != index) _tabList[replaced].webViewKey?.currentState?.pauseThisWebview();
+      if (replaced != null && replaced != tab) replaced.webViewKey?.currentState?.pauseThisWebview();
       if (_splitAppSlot == slotOfGroup(toGroup)) _splitAppSlot = null;
       _applySplitLayout(before, singleViewShowsBrowser: true, refreshShownTabs: true);
-      focusTab(index);
+      focusTab(_tabList.length - 1);
     }
 
     notifyListeners();
@@ -815,6 +840,7 @@ class WebViewProvider extends ChangeNotifier {
 
   bool exitBrowserSlotToApp(SplitSide slot) {
     if (!splitBrowserCanExitToApp) return false;
+    closeSplitDevTools();
     final before = (splitLeftSlot, splitRightSlot);
     final SplitGroup staying = slot == _splitMainSlot ? SplitGroup.apart : SplitGroup.main;
     final int? stayingShown = visibleTabIndexForGroup(staying);
@@ -844,6 +870,31 @@ class WebViewProvider extends ChangeNotifier {
     _applySplitLayout(before, singleViewShowsBrowser: true);
     _saveSplitLayout();
     return true;
+  }
+
+  bool openSplitDevTools(String tabUid) {
+    final int index = _tabList.indexWhere((t) => t.id == tabUid);
+    if (index < 0 || !_isBrowserForeground || !splitBrowsersAllowed || splitRightSlot == null) {
+      _splitDevToolsOpen = false;
+      return false;
+    }
+    focusTab(index);
+    final before = (splitLeftSlot, splitRightSlot);
+    final int? covered = splitBrowsersActive
+        ? visibleTabIndexForGroup(focusedGroup == SplitGroup.main ? SplitGroup.apart : SplitGroup.main)
+        : null;
+    if (!_splitDevToolsOpen) splitDevToolsTabIndex = 0;
+    _splitDevToolsOpen = true;
+    if (covered != null && !isTabVisible(covered)) _tabList[covered].webViewKey?.currentState?.pauseThisWebview();
+    _applySplitLayout(before, singleViewShowsBrowser: true);
+    return true;
+  }
+
+  void closeSplitDevTools() {
+    if (!_splitDevToolsOpen) return;
+    final before = (splitLeftSlot, splitRightSlot);
+    _splitDevToolsOpen = false;
+    _applySplitLayout(before, singleViewShowsBrowser: true);
   }
 
   void reorderTabsInGroup(SplitGroup group, int oldGroupIndex, int newGroupIndex) {
@@ -1488,6 +1539,7 @@ class WebViewProvider extends ChangeNotifier {
     if (splitBrowsersActive) {
       final TabDetails removed = _tabList[position];
       final SplitGroup group = removed.splitApart ? SplitGroup.apart : SplitGroup.main;
+      if (tabIndexesForGroup(group).length == 1) closeSplitDevTools();
       final bool focusChanges = position == currentTab;
       if (visibleTabIndexForGroup(group) == position) {
         final List<int> groupTabs = tabIndexesForGroup(group)..remove(position);
@@ -1562,6 +1614,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void wipeTabs({required bool includeLockedTabs, required TabsWipeTimeRange timeRange}) {
     final bool hadApartTabs = _tabList.any((t) => t.splitApart);
+    if (hadApartTabs) closeSplitDevTools();
     DateTime now = DateTime.now();
     Duration thresholdDuration = timeRange.duration;
     DateTime thresholdTime = now.subtract(thresholdDuration);
@@ -1616,6 +1669,11 @@ class WebViewProvider extends ChangeNotifier {
 
     // Avoid activating the same tab again (pause/resume could cause issues if call on iOS)
     if (newActiveTab == currentTab) return;
+
+    if (splitBrowsersActive &&
+        splitDevToolsSlot == slotOfGroup(_tabList[newActiveTab].splitApart ? SplitGroup.apart : SplitGroup.main)) {
+      closeSplitDevTools();
+    }
 
     final previousIndex = currentTab;
     final deactivated = _tabList[previousIndex];
@@ -2295,16 +2353,18 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  void loadMainTabUrl(String? url) {
-    if (_tabList.isEmpty) return;
-    final tab = _tabList[0];
+  void loadTabUrl(String? url, {int index = 0}) {
+    if (index >= _tabList.length) return;
+    final tab = _tabList[index];
 
     final WebViewFullState? state = tab.webViewKey?.currentState;
     if (state != null && !tab.needsReloadAfterRendererGone) {
       state.loadFromExterior(url: url, omitHistory: false);
     } else {
       if (url != null && url.isNotEmpty) tab.currentUrl = url;
-      if (!Platform.isWindows) {
+      // Otherwise it wakes with the old URL
+      tab.sleepTab = false;
+      if (!Platform.isWindows && index == 0) {
         FirebaseCrashlytics.instance.recordError(
           "Main tab could not receive an external URL and was rebuilt "
           "(state=${state == null ? "null" : "alive"}, rendererGone=${tab.needsReloadAfterRendererGone})",
@@ -2321,14 +2381,14 @@ class WebViewProvider extends ChangeNotifier {
       );
     }
 
-    if (currentTab != 0) {
-      activateTab(0);
+    if (currentTab != index) {
+      activateTab(index);
     }
   }
 
-  void convertToChainingBrowser({ChainingPayload? chainingPayload}) {
-    if (_tabList.isEmpty || chainingPayload == null) return;
-    final tab = _tabList[0];
+  void convertToChainingBrowser({ChainingPayload? chainingPayload, int index = 0}) {
+    if (index >= _tabList.length || chainingPayload == null) return;
+    final tab = _tabList[index];
     tab.isChainingBrowser = true;
     tab.chainingPayload = chainingPayload;
 
@@ -2344,15 +2404,16 @@ class WebViewProvider extends ChangeNotifier {
       );
     }
 
-    if (currentTab != 0) {
-      activateTab(0);
+    if (currentTab != index) {
+      activateTab(index);
     }
     _saveTabs();
   }
 
-  void cancelChainingBrowser() {
+  void cancelChainingBrowser({String? tabUid}) {
     if (_tabList.isEmpty) return;
-    final tab = _tabList[0];
+    final TabDetails? tab = tabUid == null ? _tabList[0] : getTabByUid(tabUid);
+    if (tab == null) return;
     tab.isChainingBrowser = false;
     tab.webViewKey?.currentState?.cancelChainingBrowser();
     notifyListeners();
@@ -2522,6 +2583,7 @@ class WebViewProvider extends ChangeNotifier {
     required String? url,
     required BrowserTapType browserTapType,
     bool recallLastSession = false,
+    bool fromNotification = false,
     // Chaining
     final bool isChainingBrowser = false,
     final ChainingPayload? chainingPayload,
@@ -2557,18 +2619,28 @@ class WebViewProvider extends ChangeNotifier {
         chainingPayload: chainingPayload,
       );
 
-      if (browserTapType == BrowserTapType.deeplink && settingsProvider.newTabByDeepLinkTap) {
-        await addTab(url: authUrl, splitApart: splitBrowsersActive && focusedGroup == SplitGroup.apart);
-        activateTab(_tabList.length - 1);
-      } else {
-        loadMainTabUrl(authUrl);
-      }
+      final bool openedBesideApp = await openLinkBesideApp(
+        url: authUrl,
+        tapType: browserTapType,
+        fromNotification: fromNotification,
+        settings: settingsProvider,
+        isChainingBrowser: isChainingBrowser,
+        chainingPayload: chainingPayload,
+      );
+      if (!openedBesideApp) {
+        if (browserTapType == BrowserTapType.deeplink && settingsProvider.newTabByDeepLinkTap) {
+          await addTab(url: authUrl, splitApart: splitBrowsersActive && focusedGroup == SplitGroup.apart);
+          activateTab(_tabList.length - 1);
+        } else {
+          loadTabUrl(authUrl);
+        }
 
-      if (isChainingBrowser) {
-        convertToChainingBrowser(chainingPayload: chainingPayload);
-      }
+        if (isChainingBrowser) {
+          convertToChainingBrowser(chainingPayload: chainingPayload);
+        }
 
-      w.browserShowInForeground = true;
+        w.browserShowInForeground = true;
+      }
 
       if (currentUiMode == UiMode.fullScreen && settingsProvider.fullScreenRemovesChat) {
         removeAllChatsFullScreen();
@@ -2578,6 +2650,55 @@ class WebViewProvider extends ChangeNotifier {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       }
     }
+  }
+
+  Future<bool> openLinkBesideApp({
+    required String? url,
+    required BrowserTapType tapType,
+    required SettingsProvider settings,
+    bool fromNotification = false,
+    bool isChainingBrowser = false,
+    ChainingPayload? chainingPayload,
+  }) async {
+    if (fromNotification || tapType == BrowserTapType.notification || tapType == BrowserTapType.deeplink) {
+      return false;
+    }
+    if (!splitBrowsersAllowed || !_splitScreenWide || _tabList.isEmpty || !settings.useTabsFullBrowser) return false;
+    if (splitAppSide == null) return false;
+
+    final SplitGroup besideGroup = focusedGroup;
+    final SplitGroup? coveredGroup = splitBrowsersActive
+        ? (besideGroup == SplitGroup.main ? SplitGroup.apart : SplitGroup.main)
+        : null;
+    final int? coveredTab = coveredGroup == null ? null : visibleTabIndexForGroup(coveredGroup);
+    final SplitAppLinkTarget target = settings.splitAppLinkTarget;
+    final int? shownTab = switch (target) {
+      SplitAppLinkTarget.browserTab => currentTab,
+      SplitAppLinkTarget.appSideTab => coveredTab,
+      _ => null,
+    };
+    if (shownTab != null && !_tabList[shownTab].isLockFull) {
+      loadTabUrl(url, index: shownTab);
+      if (isChainingBrowser) {
+        convertToChainingBrowser(chainingPayload: chainingPayload, index: shownTab);
+      }
+      return true;
+    }
+
+    final bool besideSide = target == SplitAppLinkTarget.browserTab || target == SplitAppLinkTarget.browserNewTab;
+    final SplitGroup? group = besideSide ? besideGroup : coveredGroup;
+    await addTab(
+      url: url,
+      splitApart: group == SplitGroup.apart,
+      isChainingBrowser: isChainingBrowser,
+      chainingPayload: chainingPayload,
+    );
+    if (group == null) {
+      moveTabToOtherGroup(_tabList.length - 1);
+    } else {
+      activateTab(_tabList.length - 1);
+    }
+    return true;
   }
 
   UiMode _decideBrowserScreenMode({required BrowserTapType tapType, required BuildContext context}) {
@@ -2817,6 +2938,16 @@ class WebViewProvider extends ChangeNotifier {
   bool isTabUidActive(String tabUid) {
     if (_tabList.isEmpty) return false;
     return _tabList[currentTab].id == tabUid;
+  }
+
+  // DevTools need the new controller
+  void reportWebViewCreated() => notifyListeners();
+
+  void releaseTabConsole(TerminalProvider terminal, {required String tabUid, required Key? disposedKey}) {
+    final Key? tabKey = getTabByUid(tabUid)?.webViewKey;
+    if (tabKey == disposedKey) return;
+    if (tabKey != null) terminal.setTerminal(tabKey, terminal.getTerminal(tabKey) + terminal.getTerminal(disposedKey));
+    terminal.removeTerminal(disposedKey);
   }
 
   TabDetails? getTabByUid(String tabUid) {
@@ -3167,6 +3298,7 @@ class WebViewProvider extends ChangeNotifier {
 
   SplitSide? get splitAppSide {
     if (!webViewSplitActive) return null;
+    if (_splitDevToolsOverApp) return splitDevToolsSlot;
     final SplitSlotContent? right = splitRightSlot;
     if (right == SplitSlotContent.app) return SplitSide.right;
     if (right != null && splitLeftSlot == SplitSlotContent.app) return SplitSide.left;

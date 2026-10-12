@@ -41,6 +41,7 @@ import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
@@ -81,8 +82,11 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
+import 'package:torn_pda/widgets/pip/pip_view.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
+import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
+import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -265,6 +269,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late Widget _mainBrowser;
   final GlobalKey _mainBrowserKey = GlobalKey();
   final GlobalKey _homeDrawerKey = GlobalKey();
+  final GlobalKey _devToolsKey = GlobalKey();
+  final FocusNode _devToolsFocusNode = FocusNode(canRequestFocus: false, skipTraversal: true);
 
   @override
   void initState() {
@@ -272,6 +278,14 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
+
+    ever(Get.find<PipController>().inPip, (bool active) {
+      // Skipped in background, after the X
+      final state = WidgetsBinding.instance.lifecycleState;
+      if (!active && mounted && state != AppLifecycleState.paused && state != AppLifecycleState.hidden) {
+        _setSplitScreenPosition();
+      }
+    });
 
     // Callback to force the browser back to full screen if there is a system request to revert
     // Might happen when app is on the background or when only the top is being extended
@@ -297,7 +311,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() async {
     // Assess the split screen condition after the device or window metrics change
-    _setSplitScreenPosition();
+    if (!Get.find<PipController>().inPip.value) _setSplitScreenPosition();
 
     isStatusBarShown = MediaQuery.of(context).padding.top > 0;
   }
@@ -319,6 +333,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _devToolsFocusNode.dispose();
     super.dispose();
   }
 
@@ -393,7 +408,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
           // Warm the Android WebView engine offstage (1x1, behind content, non-blocking) to avoid the
           // #2843 cold-start onWebViewCreated drop. Can be changed via RC
-          return Stack(alignment: Alignment.topLeft, children: [const BrowserEnginePrewarm(), content]);
+          return Stack(
+            alignment: Alignment.topLeft,
+            children: [
+              const BrowserEnginePrewarm(),
+              PipHost(child: content),
+            ],
+          );
         },
         navigatorObservers: [BotToastNavigatorObserver()],
         scrollBehavior: !Platform.isWindows
@@ -419,7 +440,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 Widget home;
 
                 // Use IndexedStack for normal mode (non-split screen)
-                if (!wProvider.webViewSplitActive) {
+                if (!wProvider.webViewSplitActive && wProvider.splitDevToolsSlot == null) {
                   // IndexedStack: drawer at index 0, browser placeholder at index 1
                   home = IndexedStack(
                     index: wProvider.browserShowInForeground ? 1 : 0,
@@ -435,13 +456,39 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   final bool appLeft =
                       wProvider.splitRightSlot != null && wProvider.splitLeftSlot == SplitSlotContent.app;
                   final bool appRight = wProvider.splitRightSlot == SplitSlotContent.app;
-                  final Widget appInSlot = MediaQuery.removePadding(
-                    context: context,
-                    removeLeft: appRight,
-                    removeRight: appLeft,
-                    child: homeDrawerWidget,
+                  final bool devToolsLeft = wProvider.splitLeftSlot == SplitSlotContent.devTools;
+                  final bool devToolsRight = wProvider.splitRightSlot == SplitSlotContent.devTools;
+                  final Widget appInSlot = Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Offstage(
+                        offstage: devToolsLeft || devToolsRight,
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeLeft: appRight,
+                          removeRight: appLeft,
+                          child: homeDrawerWidget,
+                        ),
+                      ),
+                      if (devToolsLeft || devToolsRight)
+                        Focus(
+                          focusNode: _devToolsFocusNode,
+                          child: DevToolsMainPage(key: _devToolsKey, initialIndex: wProvider.splitDevToolsTabIndex),
+                        ),
+                      const Positioned.fill(child: TabDropZone(label: "Open here")),
+                    ],
                   );
-                  if (appLeft || appRight) {
+                  // Keyboard only shrinks the DevTools
+                  final Widget browserInSlot = ListenableBuilder(
+                    listenable: _devToolsFocusNode,
+                    builder: (context, child) => MediaQuery.removeViewInsets(
+                      context: context,
+                      removeBottom: (devToolsLeft || devToolsRight) && _devToolsFocusNode.hasFocus,
+                      child: child!,
+                    ),
+                    child: _mainBrowser,
+                  );
+                  if (appLeft || appRight || devToolsLeft || devToolsRight) {
                     final EdgeInsets screenPadding = MediaQuery.paddingOf(context);
                     home = Stack(
                       children: [
@@ -456,7 +503,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                                     leftInset: screenPadding.left,
                                     rightInset: screenPadding.right,
                                   ),
-                                  child: appLeft ? appInSlot : _mainBrowser,
+                                  child: appLeft || devToolsLeft ? appInSlot : browserInSlot,
                                 ),
                                 SplitDivider(
                                   width: constraints.maxWidth,
@@ -465,7 +512,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                                   leftInset: screenPadding.left,
                                   rightInset: screenPadding.right,
                                 ),
-                                Expanded(child: appLeft ? _mainBrowser : appInSlot),
+                                Expanded(child: appLeft || devToolsLeft ? browserInSlot : appInSlot),
                               ],
                             );
                           },
@@ -748,6 +795,7 @@ Future<void> _initializeGetXControllers() async {
     Get.put(PeriodicExecutionController(), permanent: true);
     Get.put(ChainStatusController(), permanent: true);
     Get.put(ProfileApiCallsController(), permanent: true);
+    Get.put(PipController(), permanent: true);
 
     final bool enableLiveUpdateBridge = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
     if (enableLiveUpdateBridge) {

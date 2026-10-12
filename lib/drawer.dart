@@ -1204,6 +1204,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final highlight = uri.queryParameters['highlight'];
 
         _preferencesCompleter.future.whenComplete(() {
+          _webViewProvider.closeSplitDevTools();
           // Close browser if it's in foreground
           if (!_webViewProvider.webViewSplitActive) {
             _webViewProvider.browserShowInForeground = false;
@@ -1671,6 +1672,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           context: context,
           url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
           browserTapType: BrowserTapType.chainShort,
+          fromNotification: true,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..attackIdList = ids
@@ -1843,6 +1845,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           context: context,
           url: "https://www.torn.com/page.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
           browserTapType: BrowserTapType.chainShort,
+          fromNotification: true,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..attackIdList = lootRangersNpcsIds
@@ -2032,6 +2035,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             context: context,
             url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
             browserTapType: BrowserTapType.chainShort,
+            fromNotification: true,
             isChainingBrowser: true,
             chainingPayload: ChainingPayload()
               ..attackIdList = ids
@@ -3078,6 +3082,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   void _callSectionFromOutside(DrawerSection section) {
+    _webViewProvider.closeSplitDevTools();
     setState(() {
       if (!_webViewProvider.webViewSplitActive) {
         _webViewProvider.browserShowInForeground = false;
@@ -3122,6 +3127,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     _openingForeignStocksExternally = true;
 
+    _webViewProvider.closeSplitDevTools();
     if (!_webViewProvider.webViewSplitActive) {
       _webViewProvider.browserShowInForeground = false;
     }

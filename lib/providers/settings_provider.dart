@@ -33,6 +33,8 @@ enum TimeZoneSetting { localTime, tornTime }
 
 enum BrowserRefreshSetting { icon, pull, both }
 
+enum SplitAppLinkTarget { browserTab, browserNewTab, appSideTab, appSideNewTab }
+
 class PdaUpdateDetails {
   final int latestVersionCode;
   final String latestVersionName;
@@ -624,6 +626,14 @@ class SettingsProvider extends ChangeNotifier {
   set newTabByDeepLinkTap(bool value) {
     _newTabByDeepLinkTap = value;
     Prefs().setNewTabByDeepLinkTap(_newTabByDeepLinkTap);
+    notifyListeners();
+  }
+
+  var _splitAppLinkTarget = SplitAppLinkTarget.browserTab;
+  SplitAppLinkTarget get splitAppLinkTarget => _splitAppLinkTarget;
+  set splitAppLinkTarget(SplitAppLinkTarget value) {
+    _splitAppLinkTarget = value;
+    Prefs().setSplitAppLinkTarget(value.name);
     notifyListeners();
   }
 
@@ -1535,6 +1545,46 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _pipEnabled = true;
+  bool get pipEnabled => _pipEnabled;
+  set pipEnabled(bool value) {
+    _pipEnabled = value;
+    Prefs().setPipEnabled(value);
+    notifyListeners();
+  }
+
+  var _pipChainButton = true;
+  bool get pipChainButton => _pipChainButton;
+  set pipChainButton(bool value) {
+    _pipChainButton = value;
+    Prefs().setPipChainButton(value);
+    notifyListeners();
+  }
+
+  var _pipPlayerButtons = true;
+  bool get pipPlayerButtons => _pipPlayerButtons;
+  set pipPlayerButtons(bool value) {
+    _pipPlayerButtons = value;
+    Prefs().setPipPlayerButtons(value);
+    notifyListeners();
+  }
+
+  var _pipStakeoutsButton = true;
+  bool get pipStakeoutsButton => _pipStakeoutsButton;
+  set pipStakeoutsButton(bool value) {
+    _pipStakeoutsButton = value;
+    Prefs().setPipStakeoutsButton(value);
+    notifyListeners();
+  }
+
+  var _pipAutoEnter = false;
+  bool get pipAutoEnter => _pipAutoEnter;
+  set pipAutoEnter(bool value) {
+    _pipAutoEnter = value;
+    Prefs().setPipAutoEnter(value);
+    notifyListeners();
+  }
+
   int _exactPermissionDialogShownAndroid = 0;
   int get exactPermissionDialogShownAndroid => _exactPermissionDialogShownAndroid;
   set exactPermissionDialogShownAndroid(int value) {
@@ -1784,6 +1834,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByLongChainingTap = await Prefs().getFullScreenByLongChainingTap();
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
     _newTabByDeepLinkTap = await Prefs().getNewTabByDeepLinkTap();
+    _splitAppLinkTarget =
+        SplitAppLinkTarget.values.asNameMap()[await Prefs().getSplitAppLinkTarget()] ?? SplitAppLinkTarget.browserTab;
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
@@ -1986,6 +2038,12 @@ class SettingsProvider extends ChangeNotifier {
     _appwidgetCooldownTapOpenBrowser = await Prefs().getAppwidgetCooldownTapOpensBrowser();
     _appwidgetCooldownTapOpenBrowserDestination = await Prefs().getAppwidgetCooldownTapOpensBrowserDestination();
     _appwidgetRacingTapOpenBrowser = await Prefs().getAppwidgetRacingTapOpensBrowser();
+
+    _pipEnabled = await Prefs().getPipEnabled();
+    _pipChainButton = await Prefs().getPipChainButton();
+    _pipPlayerButtons = await Prefs().getPipPlayerButtons();
+    _pipStakeoutsButton = await Prefs().getPipStakeoutsButton();
+    _pipAutoEnter = await Prefs().getPipAutoEnter();
 
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 

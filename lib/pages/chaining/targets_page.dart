@@ -24,6 +24,7 @@ import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/targets_sync_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_sort_sheet.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class TargetsOptions {
   String? description;
@@ -241,6 +242,18 @@ class TargetsPageState extends State<TargetsPage> {
         ],
       ),
       actions: <Widget>[
+        PipPlayersButton(
+          candidates: () => [
+            for (final target in _targetsProvider.allTargets)
+              if (target.playerId != null)
+                PipCandidate(
+                  id: target.playerId!,
+                  name: target.name ?? '',
+                  state: target.status?.state,
+                  until: target.status?.until ?? 0,
+                ),
+          ],
+        ),
         IconButton(
           icon: _searchIcon,
           onPressed: () {

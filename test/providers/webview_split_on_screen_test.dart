@@ -49,6 +49,13 @@ void main() {
 
   List<bool> onScreen(WebViewProvider p) => [for (final t in p.tabList) p.isTabUidOnScreen(t.id)];
 
+  int at(WebViewProvider p, String uid) => p.tabList.indexWhere((t) => t.id == uid);
+
+  List<String> onScreenIds(WebViewProvider p) => [
+    for (final t in p.tabList)
+      if (p.isTabUidOnScreen(t.id)) t.id,
+  ];
+
   group('isTabUidOnScreen', () {
     test('a single view only shows the focused tab, and only with the browser in front', () async {
       final p = await build(position: WebViewSplitPosition.off);
@@ -68,11 +75,11 @@ void main() {
       p.browserShowInForeground = true;
       p.moveTabToOtherGroup(2);
       expect(p.splitBrowsersActive, isTrue);
-      expect(p.currentTab, 2);
-      expect(onScreen(p), [true, false, true, false, false]);
+      expect(p.tabList[p.currentTab].id, 'tab2');
+      expect(onScreenIds(p), unorderedEquals(['tab0', 'tab2']));
 
-      p.activateTab(3);
-      expect(onScreen(p), [false, false, true, true, false]);
+      p.activateTab(at(p, 'tab3'));
+      expect(onScreenIds(p), unorderedEquals(['tab3', 'tab2']));
     });
 
     test('a group covered by the app is not on screen', () async {
@@ -81,10 +88,10 @@ void main() {
       p.moveTabToOtherGroup(2);
 
       expect(p.exitBrowserSlotToApp(p.slotOfGroup(SplitGroup.main)), isTrue);
-      expect(onScreen(p), [false, false, true, false, false]);
+      expect(onScreenIds(p), ['tab2']);
 
       p.returnBrowserFromApp();
-      expect(onScreen(p), [true, false, true, false, false]);
+      expect(onScreenIds(p), unorderedEquals(['tab0', 'tab2']));
     });
   });
 
@@ -93,18 +100,22 @@ void main() {
       final p = await build();
       p.browserShowInForeground = true;
       p.moveTabToOtherGroup(2);
-      expect(p.currentTab, 2);
+      expect(p.tabList[p.currentTab].id, 'tab2');
+      List<String> removing() => [
+        for (final t in p.tabList)
+          if (t.chatRemovalActiveTab) t.id,
+      ];
 
       p.reportChatRemovalChange('tab0', true, false);
-      expect([for (final t in p.tabList) t.chatRemovalActiveTab], [true, false, false, false, false]);
+      expect(removing(), ['tab0']);
       expect(p.chatRemovalActiveGlobal, isFalse);
 
       p.reportChatRemovalChange('tab4', true, true);
-      expect([for (final t in p.tabList) t.chatRemovalActiveTab], [true, false, false, false, true]);
+      expect(removing(), unorderedEquals(['tab0', 'tab4']));
       expect(p.chatRemovalActiveGlobal, isTrue);
 
       p.reportChatRemovalChange('missing', false, false);
-      expect([for (final t in p.tabList) t.chatRemovalActiveTab], [true, false, false, false, true]);
+      expect(removing(), unorderedEquals(['tab0', 'tab4']));
     });
   });
 
@@ -128,13 +139,13 @@ void main() {
       expect(assessed, [0]);
 
       assessed.clear();
-      p.activateTab(3);
-      expect(assessed, [3]);
+      p.activateTab(at(p, 'tab3'));
+      expect(assessed, [at(p, 'tab3')]);
 
       p.exitBrowserSlotToApp(p.slotOfGroup(SplitGroup.apart));
       assessed.clear();
       p.returnBrowserFromApp();
-      expect(assessed, [2]);
+      expect(assessed, [at(p, 'tab2')]);
     });
   });
 }

@@ -10,7 +10,7 @@ import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class YataTargetsDistribution extends StatefulWidget {
   final List<TargetsOnlyYata> onlyYata;
@@ -45,95 +45,78 @@ class YataTargetsDistributionState extends State<YataTargetsDistribution> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : Colors.grey[900]
-          : _themeProvider.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Colors.black,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-            child: SingleChildScrollView(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: <Widget>[
-                      const Text(
-                        'TARGETS ONLY IN YATA',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        '(CAN BE IMPORTED)',
-                        style: TextStyle(
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        children: _returnTargetsOnlyInYata(),
-                      ),
-                      const SizedBox(height: 10),
-                      const Divider(),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'COMMON TARGETS',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        '(ONLY NOTES UPDATED)',
-                        style: TextStyle(
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        children: _returnTargetsBothSides(),
-                      ),
-                      const SizedBox(height: 10),
-                      const Divider(),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'TARGETS ONLY IN TORN PDA',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        '(CAN BE EXPORTED)',
-                        style: TextStyle(
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Column(
-                        children: _returnTargetsOnlyInTornPDA(),
-                      ),
-                      const SizedBox(height: 10),
-                      const SizedBox(height: 50),
-                    ],
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      margin: PdaScaffoldMargin.grey,
+      drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
+      body: Container(
+        color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+        child: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: <Widget>[
+                  const Text(
+                    'TARGETS ONLY IN YATA',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                  const Text(
+                    '(CAN BE IMPORTED)',
+                    style: TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Column(
+                    children: _returnTargetsOnlyInYata(),
+                  ),
+                  const SizedBox(height: 10),
+                  const Divider(),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'COMMON TARGETS',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    '(ONLY NOTES UPDATED)',
+                    style: TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Column(
+                    children: _returnTargetsBothSides(),
+                  ),
+                  const SizedBox(height: 10),
+                  const Divider(),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'TARGETS ONLY IN TORN PDA',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    '(CAN BE EXPORTED)',
+                    style: TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Column(
+                    children: _returnTargetsOnlyInTornPDA(),
+                  ),
+                  const SizedBox(height: 10),
+                  const SizedBox(height: 50),
+                ],
               ),
             ),
           ),

@@ -29,11 +29,13 @@ import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
 import 'package:torn_pda/widgets/player_notes_list_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
+import 'package:torn_pda/pages/settings/split_links_examples_page.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -148,6 +150,7 @@ class SettingsPageState extends State<SettingsPage> {
       _timeSection(),
       _notificationsSection(),
       if (Platform.isAndroid) _appWidgetSection(),
+      if (Platform.isAndroid && Get.find<PipController>().supported) _floatingWindowSection(),
       _spiesSection(),
       _playerNotesSection(),
       _ffScouterSection(),
@@ -1193,6 +1196,85 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Widget _floatingWindowSection() {
+    SearchableRow row(String label, String hint, bool value, void Function(bool)? onChanged, {double indent = 20}) {
+      return SearchableRow(
+        label: label,
+        searchText: _searchText,
+        child: Padding(
+          padding: EdgeInsets.only(left: indent, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: Text(label)),
+                  Switch(
+                    value: value,
+                    onChanged: onChanged == null
+                        ? null
+                        : (on) {
+                            setState(() => onChanged(on));
+                            Get.find<PipController>().syncAutoEnter();
+                          },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              if (hint.isNotEmpty)
+                Text(hint, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final enabled = _settingsProvider.pipEnabled;
+    List<SearchableRow> rows = [
+      row(
+        "Floating window",
+        "Off hides every floating window button",
+        enabled,
+        (value) => _settingsProvider.pipEnabled = value,
+      ),
+      row(
+        "Chain widget button",
+        "",
+        _settingsProvider.pipChainButton,
+        enabled ? (value) => _settingsProvider.pipChainButton = value : null,
+        indent: 40,
+      ),
+      row(
+        "Player lists button",
+        "Targets, war, retals, attacks, FFScouter",
+        _settingsProvider.pipPlayerButtons,
+        enabled ? (value) => _settingsProvider.pipPlayerButtons = value : null,
+        indent: 40,
+      ),
+      row(
+        "Stakeouts button",
+        "",
+        _settingsProvider.pipStakeoutsButton,
+        enabled ? (value) => _settingsProvider.pipStakeoutsButton = value : null,
+        indent: 40,
+      ),
+      row(
+        "Open when leaving the app with the chain watcher on",
+        "No button needed",
+        _settingsProvider.pipAutoEnter,
+        enabled ? (value) => _settingsProvider.pipAutoEnter = value : null,
+        indent: 40,
+      ),
+    ];
+    return buildSectionWithRows(
+      title: "FLOATING WINDOW",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
   Widget _spiesSection() {
     List<SearchableRow> rows = [
       SearchableRow(
@@ -2185,6 +2267,70 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+      if (_settingsProvider.useTabsFullBrowser &&
+          _webViewProvider.splitBrowsersAllowedRC &&
+          _webViewProvider.splitScreenPosition != WebViewSplitPosition.off)
+        SearchableRow(
+          label: "Links from the app in split screen",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Links from the app in split screen")),
+                    DropdownButton<SplitAppLinkTarget>(
+                      value: _settingsProvider.splitAppLinkTarget,
+                      items: [
+                        for (final (target, label) in [
+                          (SplitAppLinkTarget.browserTab, "Current tab"),
+                          (SplitAppLinkTarget.browserNewTab, "New tab"),
+                          (SplitAppLinkTarget.appSideTab, "Tab behind app"),
+                          (SplitAppLinkTarget.appSideNewTab, "New tab, app side"),
+                        ])
+                          DropdownMenuItem(
+                            value: target,
+                            child: SizedBox(
+                              width: 110,
+                              child: Text(label, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _settingsProvider.splitAppLinkTarget = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "When the app and a browser are side by side, links tapped in the app open in the current tab or a new tab of the browser next to it, or on the app's side, which then shows the tab it was covering or a new one",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.play_circle_outline, size: 18),
+                    label: const Text("See examples"),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (BuildContext context) => const SplitLinksExamplesPage()),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       SearchableRow(
         label: "High refresh rate",
         searchText: _searchText,

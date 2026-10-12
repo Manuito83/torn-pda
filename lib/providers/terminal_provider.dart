@@ -43,4 +43,10 @@ class TerminalProvider extends ChangeNotifier {
     _terminals[webviewKey] = "";
     notifyListeners();
   }
+
+  void removeTerminal(Key? webviewKey) {
+    if (_terminals.remove(webviewKey) != null) notifyListeners();
+  }
+
+  bool hasTerminal(Key? webviewKey) => _terminals.containsKey(webviewKey);
 }

@@ -8,13 +8,12 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class RaceStartAheadOptions extends StatefulWidget {
   final Function? callback;
@@ -61,60 +60,42 @@ class RaceStartAheadOptionsState extends State<RaceStartAheadOptions> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider.statusBar
-                  : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Builder(
-            builder: (BuildContext context) {
-              return Container(
-                color: _themeProvider.canvas,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                  child: FutureBuilder(
-                    future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return SingleChildScrollView(
-                          child: Column(
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.all(20.0),
-                                child: Text('Here you can specify your preferred notification '
-                                    'trigger time before a races starts'),
-                              ),
-                              _rowsWithTypes(),
-                              const SizedBox(height: 50),
-                            ],
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Builder(
+        builder: (BuildContext context) {
+          return Container(
+            color: _themeProvider.canvas,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: FutureBuilder(
+                future: _preferencesLoaded,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Text('Here you can specify your preferred notification '
+                                'trigger time before a races starts'),
                           ),
-                        );
-                      } else {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+                          _rowsWithTypes(),
+                          const SizedBox(height: 50),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

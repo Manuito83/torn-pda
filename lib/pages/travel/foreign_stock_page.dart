@@ -30,7 +30,7 @@ import 'package:torn_pda/utils/inventory_feedback.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
@@ -237,121 +237,106 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider!.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider!.statusBar
-                : _themeProvider!.canvas
-          : _themeProvider!.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider!.canvas,
-          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-              : null,
-          body: Container(
-            color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-            child: FutureBuilder(
-              future: _apiCalled,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (_apiSuccess) {
-                    return Stack(
-                      children: [
-                        // Main list
-                        RefreshIndicator(
-                          onRefresh: _onRefresh,
-                          child: Builder(
-                            builder: (context) {
-                              final visibleStocks = _visibleStocks;
-                              final itemCount = visibleStocks.length + 2;
-
-                              return ListView.builder(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                itemCount: itemCount,
-                                itemBuilder: (context, index) => _buildStockListItem(index, visibleStocks),
-                              );
-                            },
-                          ),
-                        ),
-                        if (!_temporaryDestinationFilterActive)
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut,
-                            left: 0,
-                            right: 0,
-                            bottom: _isFilterSheetOpen ? 0 : -200,
-                            child: _filterSheetContent(),
-                          ),
-                        if (!_temporaryDestinationFilterActive)
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut,
-                            right: 35.0,
-                            bottom: _isFilterSheetOpen ? 215.0 : 25.0,
-                            child: FloatingActionButton.extended(
-                              icon: Icon(_isFilterSheetOpen ? Icons.close : Icons.filter_list),
-                              label: Text(_isFilterSheetOpen ? "Close" : "Filter"),
-                              elevation: 4,
-                              onPressed: _toggleFilterSheet,
-                              backgroundColor: Colors.orange,
-                            ),
-                          ),
-                      ],
-                    );
-                  } else {
-                    // Error case handling
-                    final errorTiles = <Widget>[];
-                    errorTiles.add(
-                      Center(
-                        child: Column(
-                          children: [
-                            Image.asset('images/icons/airplane.png', height: 100),
-                            const SizedBox(height: 15),
-                            const Text(
-                              'OOPS!',
-                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                              child: Text(
-                                'There was an error getting the information, please '
-                                'try again later or pull to refresh!',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-
-                    return RefreshIndicator(
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Container(
+        color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+        child: FutureBuilder(
+          future: _apiCalled,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (_apiSuccess) {
+                return Stack(
+                  children: [
+                    // Main list
+                    RefreshIndicator(
                       onRefresh: _onRefresh,
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(
-                            height: MediaQuery.sizeOf(context).height / 2,
-                            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: errorTiles),
-                          ),
-                        ],
+                      child: Builder(
+                        builder: (context) {
+                          final visibleStocks = _visibleStocks;
+                          final itemCount = visibleStocks.length + 2;
+
+                          return ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: itemCount,
+                            itemBuilder: (context, index) => _buildStockListItem(index, visibleStocks),
+                          );
+                        },
                       ),
-                    );
-                  }
-                } else {
-                  // Loading case
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[Text('Fetching data...'), SizedBox(height: 30), CircularProgressIndicator()],
                     ),
-                  );
-                }
-              },
-            ),
-          ),
+                    if (!_temporaryDestinationFilterActive)
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                        left: 0,
+                        right: 0,
+                        bottom: _isFilterSheetOpen ? 0 : -200,
+                        child: _filterSheetContent(),
+                      ),
+                    if (!_temporaryDestinationFilterActive)
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                        right: 35.0,
+                        bottom: _isFilterSheetOpen ? 215.0 : 25.0,
+                        child: FloatingActionButton.extended(
+                          icon: Icon(_isFilterSheetOpen ? Icons.close : Icons.filter_list),
+                          label: Text(_isFilterSheetOpen ? "Close" : "Filter"),
+                          elevation: 4,
+                          onPressed: _toggleFilterSheet,
+                          backgroundColor: Colors.orange,
+                        ),
+                      ),
+                  ],
+                );
+              } else {
+                // Error case handling
+                final errorTiles = <Widget>[];
+                errorTiles.add(
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset('images/icons/airplane.png', height: 100),
+                        const SizedBox(height: 15),
+                        const Text(
+                          'OOPS!',
+                          style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                          child: Text(
+                            'There was an error getting the information, please '
+                            'try again later or pull to refresh!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+
+                return RefreshIndicator(
+                  onRefresh: _onRefresh,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.sizeOf(context).height / 2,
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: errorTiles),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            } else {
+              // Loading case
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[Text('Fetching data...'), SizedBox(height: 30), CircularProgressIndicator()],
+                ),
+              );
+            }
+          },
         ),
       ),
     );

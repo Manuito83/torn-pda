@@ -9,9 +9,12 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
@@ -39,6 +42,8 @@ class ChainWidgetState extends State<ChainWidget> {
 
   bool _initialised = false;
 
+  final GlobalKey _showcasePip = GlobalKey();
+
   @override
   void dispose() {
     if (!_chainStatusProvider.watcherActive) {
@@ -61,8 +66,12 @@ class ChainWidgetState extends State<ChainWidget> {
       titleColor = _themeProvider.mainText;
     }
 
+    final settings = Provider.of<SettingsProvider>(context);
+
     return GetBuilder(
       builder: (ChainStatusController chainP) {
+        final pipButton =
+            Get.find<PipController>().supported && settings.pipEnabled && settings.pipChainButton && !chainP.modelError;
         return Padding(
           padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
           child: Container(
@@ -301,8 +310,50 @@ class ChainWidgetState extends State<ChainWidget> {
                       },
                     ),
                   ),
-                  const SizedBox(
+                  SizedBox(
                     width: 35,
+                    child: pipButton
+                        ? ShowCaseWidget(
+                            builder: (showcaseContext) {
+                              if (!widget.alwaysDarkBackground &&
+                                  Visibility.of(showcaseContext) &&
+                                  !settings.showCases.contains("pip_chain")) {
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  if (!showcaseContext.mounted ||
+                                      !Visibility.of(showcaseContext) ||
+                                      settings.showCases.contains("pip_chain") ||
+                                      !(context.findAncestorStateOfType<ShowCaseWidgetState>()?.isShowCaseCompleted ??
+                                          true)) {
+                                    return;
+                                  }
+                                  settings.addShowCase = "pip_chain";
+                                  ShowCaseWidget.of(showcaseContext).startShowCase([_showcasePip]);
+                                });
+                              }
+                              return Showcase(
+                                key: _showcasePip,
+                                title: 'Floating window',
+                                description: '\nTap to keep the chain in a small window while you use other apps. '
+                                    'You can hide these buttons in Settings',
+                                disableMovingAnimation: true,
+                                textColor: _themeProvider.mainText,
+                                tooltipBackgroundColor: _themeProvider.secondBackground,
+                                descTextStyle: const TextStyle(fontSize: 13),
+                                tooltipPadding: const EdgeInsets.all(20),
+                                child: Tooltip(
+                                  message: 'Open the chain in a floating window',
+                                  child: GestureDetector(
+                                    child: Icon(
+                                      Icons.picture_in_picture_alt_outlined,
+                                      color: widget.alwaysDarkBackground ? Colors.grey : _themeProvider.mainText,
+                                    ),
+                                    onTap: () => Get.find<PipController>().openChain(),
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : null,
                   ),
                 ],
               ),

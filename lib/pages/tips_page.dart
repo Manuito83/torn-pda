@@ -844,6 +844,9 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
             "also enable 'Allow auto rotation'.\n\n"
             "Then double-tap a tab and use the split icon to open it in a second panel, where the app was. "
             "Each panel has its own tabs and its own + button, and the same icon moves a tab to the other panel.\n\n"
+            "You can also press and hold a tab and drag it onto the app or the other panel. "
+            "Dragging the main tab opens a copy of it.\n\n"
+            "Where links tapped in the app open is chosen in Settings, next to Split screen.\n\n"
             "To close an empty panel, tap its X and the app comes back.\n\n"
             "To resize the panels, press and hold the divider, then drag it.",
       ),
@@ -1141,6 +1144,30 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
             "main app bar when in the Targets section.",
       ),
     );
+    if (Platform.isAndroid) {
+      tips.add(
+        ExpandableTip(
+          headerValue: "Floating window",
+          expandedValue: "On Android, the floating window shrinks the app into a small window that stays on top of "
+              "other apps, so you can keep an eye on the chain or on a player while you do something else.\n\n"
+              "Tap the window icon in the chain widget to watch the chain: you get the counter, the chain watcher "
+              "colors, a border that blinks when time is running out and, with panic mode on and panic targets "
+              "set, a Panic attack button.\n\n"
+              "In Targets, War, Retaliation, Attacks and FFScouter, tap the window icon in the top bar and pick up "
+              "to 4 players from that page. With one player the window shows their name and counts down their "
+              "hospital or jail time; with several, one row each, whoever gets out first on top. A player turns "
+              "green for 30 seconds when their status changes, and Profile opens that player.\n\n"
+              "Tap the Floating window button in the Stakeouts page to watch all your stakeouts at once and "
+              "highlight the latest alert.\n\n"
+              "While any floating window is open, stakeout alerts show as a banner for a few seconds and as a phone "
+              "notification (type 'Stakeouts', which you can mute separately).\n\n"
+              "In Settings you can turn the floating window on or off, globally and for each place, and choose to "
+              "open the chain window automatically when you leave the app with the chain watcher on (off by "
+              "default). Closing it with the system X is like leaving the app: the chain watcher stops alerting.\n\n"
+              "Press and hold the window icon for a short explanation.",
+        ),
+      );
+    }
     /*
     tips.add(
       ExpandableTip(

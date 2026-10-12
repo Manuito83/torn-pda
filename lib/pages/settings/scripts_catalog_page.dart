@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/models/userscripts/script_catalog_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -22,7 +21,7 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/script_catalog_service.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ScriptsCatalogPage extends StatefulWidget {
@@ -100,24 +99,9 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context);
 
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider.statusBar
-                : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? _buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: _buildAppBar())
-              : null,
-          body: Container(color: _themeProvider.canvas, child: _buildBody()),
-        ),
-      ),
+    return PdaScaffold(
+      appBar: _buildAppBar(),
+      body: Container(color: _themeProvider.canvas, child: _buildBody()),
     );
   }
 

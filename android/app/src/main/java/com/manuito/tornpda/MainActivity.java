@@ -32,10 +32,29 @@ import android.app.ActivityManager.MemoryInfo;
 import android.app.ApplicationExitInfo;
 import android.content.SharedPreferences;
 import java.util.ArrayList;
+import android.app.PendingIntent;
+import android.app.PictureInPictureParams;
+import android.app.RemoteAction;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.drawable.Icon;
+import android.util.Rational;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends FlutterActivity {
 
     private static final String CHANNEL = "tornpda.channel";
+    private static final String PIP_CHANNEL = "tornpda.pip";
+    private static final String PIP_ACTION = "com.manuito.tornpda.PIP_ACTION";
+
+    private MethodChannel pipChannel;
+    private BroadcastReceiver pipReceiver;
+    private boolean pipAutoEnter;
+    private boolean pipAutoPending;
+    private boolean pipOwnLaunch;
+    private List<Map<String, String>> pipAutoActions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,7 +179,159 @@ public class MainActivity extends FlutterActivity {
                     }
                 });
 
+        pipChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), PIP_CHANNEL);
+        pipChannel.setMethodCallHandler((call, result) -> {
+            switch (call.method) {
+                case "isSupported":
+                    result.success(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                            && getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE));
+                    break;
+
+                case "enter":
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        result.success(false);
+                        break;
+                    }
+                    try {
+                        PictureInPictureParams params = buildPipParams(call.argument("actions"), false);
+                        boolean entered;
+                        if (isInPictureInPictureMode()) {
+                            setPictureInPictureParams(params);
+                            entered = true;
+                        } else {
+                            entered = enterPictureInPictureMode(params);
+                        }
+                        result.success(entered);
+                    } catch (Exception e) {
+                        result.error("PIP", e.getMessage(), null);
+                    }
+                    break;
+
+                case "autoEnter":
+                    pipAutoEnter = Boolean.TRUE.equals(call.argument("enabled"));
+                    pipAutoActions = call.argument("actions");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !isInPictureInPictureMode()) {
+                        setPictureInPictureParams(buildPipParams(pipAutoActions, pipAutoEnter));
+                    }
+                    result.success(null);
+                    break;
+
+                case "expand":
+                    startActivity(new Intent(this, MainActivity.class));
+                    result.success(null);
+                    break;
+
+                default:
+                    result.notImplemented();
+            }
+        });
+
         LiveUpdatePlugin.register(flutterEngine, this);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private PictureInPictureParams buildPipParams(List<Map<String, String>> actions, boolean autoEnter) {
+        List<RemoteAction> remoteActions = new ArrayList<>();
+        if (actions != null) {
+            for (Map<String, String> action : actions) {
+                String id = action.get("id");
+                int requestCode;
+                int icon;
+                if ("profile".equals(id)) {
+                    requestCode = 2;
+                    icon = R.drawable.ic_pip_profile;
+                } else if ("panic".equals(id)) {
+                    requestCode = 3;
+                    icon = R.drawable.ic_pip_panic;
+                } else {
+                    requestCode = 1;
+                    icon = R.drawable.ic_pip_open;
+                }
+                Intent intent = new Intent(PIP_ACTION).setPackage(getPackageName()).putExtra("id", id);
+                PendingIntent pending = PendingIntent.getBroadcast(this, requestCode, intent,
+                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                String title = action.get("title");
+                remoteActions.add(new RemoteAction(Icon.createWithResource(this, icon), title, title, pending));
+            }
+        }
+        PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
+                .setAspectRatio(new Rational(4, 3))
+                .setActions(remoteActions);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setSeamlessResizeEnabled(false);
+            builder.setAutoEnterEnabled(autoEnter);
+        }
+        return builder.build();
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode, Bundle options) {
+        pipOwnLaunch = true;
+        super.startActivityForResult(intent, requestCode, options);
+    }
+
+    // Android 12+ enters by itself
+    @Override
+    public void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (!pipAutoEnter || pipOwnLaunch || Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+                || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || isInPictureInPictureMode() || pipChannel == null) {
+            return;
+        }
+        pipAutoPending = true;
+        pipChannel.invokeMethod("autoEntering", null);
+        try {
+            enterPictureInPictureMode(buildPipParams(pipAutoActions, false));
+        } catch (Exception e) {
+            pipAutoPending = false;
+            pipChannel.invokeMethod("changed", false);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        pipOwnLaunch = false;
+        if (pipAutoPending && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isInPictureInPictureMode()
+                && pipChannel != null) {
+            pipChannel.invokeMethod("changed", false);
+        }
+        pipAutoPending = false;
+    }
+
+    private void unregisterPipReceiver() {
+        if (pipReceiver == null) return;
+        unregisterReceiver(pipReceiver);
+        pipReceiver = null;
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+        pipAutoPending = false;
+        if (!isInPictureInPictureMode) {
+            unregisterPipReceiver();
+        } else if (pipReceiver == null) {
+            pipReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent received) {
+                    if (pipChannel != null) {
+                        pipChannel.invokeMethod("action", received.getStringExtra("id"));
+                    }
+                }
+            };
+            ContextCompat.registerReceiver(this, pipReceiver, new IntentFilter(PIP_ACTION),
+                    ContextCompat.RECEIVER_NOT_EXPORTED);
+        }
+        if (pipChannel != null) {
+            pipChannel.invokeMethod("changed", isInPictureInPictureMode);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterPipReceiver();
+        super.onDestroy();
     }
 
     // This cancels Firebase notifications upon request from the Flutter app, as the

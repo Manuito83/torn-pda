@@ -181,6 +181,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
 
     final bool twoPanels =
         _webViewProvider.splitBrowsersActive &&
+        _webViewProvider.splitDevToolsSlot == null &&
         _webViewProvider.splitLeftSlot != SplitSlotContent.app &&
         _webViewProvider.splitRightSlot != SplitSlotContent.app;
 
@@ -472,12 +473,12 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
 
   bool assessSafeAreaSide(bool dialog, String safeSide) {
     if (safeSide == "left" &&
-        _webViewProvider.webViewSplitActive &&
-        _webViewProvider.splitLeftSlot == SplitSlotContent.app) {
+        (_webViewProvider.webViewSplitActive && _webViewProvider.splitLeftSlot == SplitSlotContent.app ||
+            _webViewProvider.splitLeftSlot == SplitSlotContent.devTools)) {
       return false;
     } else if (safeSide == "right" &&
-        _webViewProvider.webViewSplitActive &&
-        _webViewProvider.splitRightSlot == SplitSlotContent.app) {
+        (_webViewProvider.webViewSplitActive && _webViewProvider.splitRightSlot == SplitSlotContent.app ||
+            _webViewProvider.splitRightSlot == SplitSlotContent.devTools)) {
       return false;
     } else {
       if (!dialog) {
@@ -675,7 +676,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
         if (_webViewProvider.tabList[0].isChainingBrowser)
           CircularMenuItem(
             icon: MdiIcons.playPause,
-            onLongPress: () => _webViewProvider.cancelChainingBrowser(),
+            onLongPress: () => _webViewProvider.cancelChainingBrowser(tabUid: _webViewProvider.tabList[0].id),
             onTap: () {
               _webViewProvider.passNextChainAttackFromOutside();
             },
@@ -775,17 +776,15 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (group == SplitGroup.main) mainTab,
-                        if (group == SplitGroup.main)
-                          SizedBox(
-                            height: 40,
-                            child: VerticalDivider(width: 2, thickness: 2, color: _themeProvider.mainText),
-                          ),
                         // Main tabs widget
                         Flexible(
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [Flexible(child: TabsList(group: group))],
+                            children: [
+                              Flexible(
+                                child: TabsList(group: group, leading: group == SplitGroup.main ? mainTab : null),
+                              ),
+                            ],
                           ),
                         ),
                       ],

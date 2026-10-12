@@ -488,6 +488,7 @@ class Prefs {
   final String _kFullScreenByLongChainingTap = "pda_fullScreenByLongChainingTap";
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
   final String _kNewTabByDeepLinkTap = "pda_newTabByDeepLinkTap";
+  final String _kSplitAppLinkTarget = "pda_splitAppLinkTarget";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
 
@@ -569,6 +570,13 @@ class Prefs {
   final String _kAppwidgetCooldownTapOpensBrowser = "pda__appwidgetCooldownTapOpensBrowser";
   final String _kAppwidgetCooldownTapOpensBrowserDestination = "pda__appwidgetCooldownTapOpensBrowserDestination";
   final String _kAppwidgetRacingTapOpensBrowser = "pda__appwidgetRacingTapOpensBrowser";
+
+  // Floating window
+  final String _kPipEnabled = "pda_pipEnabled";
+  final String _kPipChainButton = "pda_pipChainButton";
+  final String _kPipPlayerButtons = "pda_pipPlayerButtons";
+  final String _kPipStakeoutsButton = "pda_pipStakeoutsButton";
+  final String _kPipAutoEnter = "pda_pipAutoEnter";
 
   // Permissions
   final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
@@ -4486,6 +4494,16 @@ class Prefs {
 
   //--
 
+  Future<String> getSplitAppLinkTarget() async {
+    return await PrefsDatabase.getString(_kSplitAppLinkTarget, "browserTab");
+  }
+
+  Future setSplitAppLinkTarget(String value) async {
+    return await PrefsDatabase.setString(_kSplitAppLinkTarget, value);
+  }
+
+  //--
+
   Future<bool> getFullScreenByQuickItemTap() async {
     return await PrefsDatabase.getBool(_kFullScreenByQuickItemTap, false);
   }
@@ -4707,6 +4725,56 @@ class Prefs {
 
   Future setAppwidgetRacingTapOpensBrowser(bool value) async {
     return await PrefsDatabase.setBool(_kAppwidgetRacingTapOpensBrowser, value);
+  }
+
+  // ---
+
+  Future<bool> getPipEnabled() async {
+    return await PrefsDatabase.getBool(_kPipEnabled, true);
+  }
+
+  Future setPipEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kPipEnabled, value);
+  }
+
+  // ---
+
+  Future<bool> getPipChainButton() async {
+    return await PrefsDatabase.getBool(_kPipChainButton, true);
+  }
+
+  Future setPipChainButton(bool value) async {
+    return await PrefsDatabase.setBool(_kPipChainButton, value);
+  }
+
+  // ---
+
+  Future<bool> getPipPlayerButtons() async {
+    return await PrefsDatabase.getBool(_kPipPlayerButtons, true);
+  }
+
+  Future setPipPlayerButtons(bool value) async {
+    return await PrefsDatabase.setBool(_kPipPlayerButtons, value);
+  }
+
+  // ---
+
+  Future<bool> getPipStakeoutsButton() async {
+    return await PrefsDatabase.getBool(_kPipStakeoutsButton, true);
+  }
+
+  Future setPipStakeoutsButton(bool value) async {
+    return await PrefsDatabase.setBool(_kPipStakeoutsButton, value);
+  }
+
+  // ---
+
+  Future<bool> getPipAutoEnter() async {
+    return await PrefsDatabase.getBool(_kPipAutoEnter, false);
+  }
+
+  Future setPipAutoEnter(bool value) async {
+    return await PrefsDatabase.setBool(_kPipAutoEnter, value);
   }
 
   // ---

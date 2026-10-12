@@ -60,12 +60,16 @@ void main() {
 
   List<SplitSlotContent?> slots(WebViewProvider p) => [p.splitLeftSlot, p.splitRightSlot];
 
+  int at(WebViewProvider p, String uid) => p.tabList.indexWhere((t) => t.id == uid);
+
+  bool send(WebViewProvider p, String uid) => p.moveTabToOtherGroup(at(p, uid));
+
   Future<WebViewProvider> buildAppOverMain() async {
     final p = await build();
-    p.moveTabToOtherGroup(3);
+    send(p, 'tab3');
     p.exitBrowserSlotToApp(p.slotOfGroup(SplitGroup.main));
     expect(slots(p), [SplitSlotContent.apartBrowser, SplitSlotContent.app]);
-    expect(p.currentTab, 3);
+    expect(p.tabList[p.currentTab].id, 'tab3');
     return p;
   }
 
@@ -103,7 +107,7 @@ void main() {
     test('closing the last apart tab with the app over the main group leaves no blank panel', () async {
       final p = await buildAppOverMain();
       p.updateSplitScreenWidth(narrow);
-      await p.removeTab(position: 3);
+      await p.removeTab(position: at(p, 'tab3'));
 
       p.updateSplitScreenWidth(wide);
 
@@ -117,15 +121,15 @@ void main() {
 
     test('a tab activated in the group that stays on screen keeps the app where it was', () async {
       final p = await build();
-      p.moveTabToOtherGroup(3);
-      p.moveTabToOtherGroup(4);
+      send(p, 'tab3');
+      send(p, 'tab4');
       p.exitBrowserSlotToApp(p.slotOfGroup(SplitGroup.main));
       p.updateSplitScreenWidth(narrow);
-      p.activateTab(3);
+      p.activateTab(at(p, 'tab3'));
 
       p.updateSplitScreenWidth(wide);
 
-      expect(p.currentTab, 3);
+      expect(p.tabList[p.currentTab].id, 'tab3');
       expect(slots(p), [SplitSlotContent.apartBrowser, SplitSlotContent.app]);
       await settle();
     });
@@ -148,7 +152,7 @@ void main() {
     test('closing the last apart tab with the app over the main group leaves no blank panel', () async {
       final p = await buildAppOverMain();
       p.splitBrowsersAllowedRC = false;
-      await p.removeTab(position: 3);
+      await p.removeTab(position: at(p, 'tab3'));
 
       p.splitBrowsersAllowedRC = true;
 
@@ -199,16 +203,16 @@ void main() {
 
     test('switching it on again brings back both groups with the app in its slot', () async {
       final p = await build();
-      p.moveTabToOtherGroup(3);
+      send(p, 'tab3');
       expect(slots(p), [SplitSlotContent.apartBrowser, SplitSlotContent.mainBrowser]);
       p.splitScreenPosition = WebViewSplitPosition.off;
 
       p.splitScreenPosition = WebViewSplitPosition.right;
 
-      expect(p.tabList[3].splitApart, isTrue);
+      expect(p.tabList[at(p, 'tab3')].splitApart, isTrue);
       expect(p.splitBrowsersActive, isTrue);
       expect(slots(p), [SplitSlotContent.app, SplitSlotContent.mainBrowser]);
-      expect(p.currentTab, isNot(3));
+      expect(p.tabList[p.currentTab].id, isNot('tab3'));
       expect(p.isTabVisible(p.currentTab), isTrue);
       await settle();
     });

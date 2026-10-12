@@ -720,6 +720,12 @@ class WebViewFullState extends State<WebViewFull>
       _initialLoadTimer?.cancel();
       _blankTabCheckTimer?.cancel();
 
+      final Key? key = widget.key;
+      final TerminalProvider terminal = _terminalProvider;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _webViewProvider.releaseTabConsole(terminal, tabUid: _tabUid, disposedKey: key),
+      );
+
       // Send details to provider in case we are rotating
       _webViewProvider.rotatedTabDetails.add(
         RotatedDisposedTabDetails(key: widget.key, currentUrl: _currentUrl, scrollY: _scrollY, scrollX: _scrollX),
@@ -1346,6 +1352,7 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
+            _webViewProvider.reportWebViewCreated();
 
             // #2843 watchdog: creation succeeded
             _webViewCreatedFired = true;
@@ -4984,14 +4991,11 @@ class WebViewFullState extends State<WebViewFull>
     do {
       if (!mounted) return;
       if (!_webViewProvider.browserShowInForeground) return;
+      if (_webViewProvider.openSplitDevTools(_tabUid)) return;
 
       final result = await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => DevToolsMainPage(
-            webViewController: webViewController,
-            webviewKey: widget.key,
-            initialIndex: initialTabIndex,
-          ),
+          builder: (context) => DevToolsMainPage(tabUid: _tabUid, initialIndex: initialTabIndex),
         ),
       );
 
@@ -6600,7 +6604,7 @@ class WebViewFullState extends State<WebViewFull>
             splashColor: Colors.orange,
             child: const Icon(MdiIcons.playPause, color: Colors.white),
             onTap: _nextButtonPressed ? null : nextChainAttack,
-            onLongPress: () => _webViewProvider.cancelChainingBrowser(),
+            onLongPress: () => _webViewProvider.cancelChainingBrowser(tabUid: _tabUid),
           ),
         ),
       ),
@@ -6611,7 +6615,7 @@ class WebViewFullState extends State<WebViewFull>
     return IconButton(
       icon: const Icon(MdiIcons.stop, color: Colors.white),
       onPressed: () {
-        _webViewProvider.cancelChainingBrowser();
+        _webViewProvider.cancelChainingBrowser(tabUid: _tabUid);
       },
     );
   }
@@ -7074,6 +7078,7 @@ class WebViewFullState extends State<WebViewFull>
   bool _exitBrowserToApp() {
     if (_webViewProvider.webViewSplitActive) return false;
     if (_browserExitRefused) {
+      _webViewProvider.closeSplitDevTools();
       BotToast.showText(
         text: "Close the empty panel first",
         textStyle: const TextStyle(fontSize: 14, color: Colors.white),

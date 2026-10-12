@@ -48,6 +48,7 @@ import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/revive/combat_ready_revive_button.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class WarOptions {
   String? description;
@@ -587,6 +588,27 @@ class WarPageState extends State<WarPage> {
         ],
       ),
       actions: <Widget>[
+        PipPlayersButton(
+          candidates: () {
+            final members = {
+              for (final faction in _w.factions)
+                if (faction.hidden != true)
+                  for (final member in (faction.members ?? {}).values)
+                    if (member?.memberId != null) member!.memberId!: (member, faction.name),
+            };
+            return [
+              for (final card in _w.orderedCardsDetails)
+                if (members[card.memberId] != null)
+                  PipCandidate(
+                    id: card.memberId!,
+                    name: card.name ?? '',
+                    state: members[card.memberId]!.$1.status?.state,
+                    until: members[card.memberId]!.$1.status?.until ?? 0,
+                    faction: members[card.memberId]!.$2,
+                  ),
+            ];
+          },
+        ),
         Showcase(
           disableMovingAnimation: true,
           key: _showCaseAddFaction,

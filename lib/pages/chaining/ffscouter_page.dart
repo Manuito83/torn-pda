@@ -25,6 +25,7 @@ import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:torn_pda/widgets/stats/ffscouter_info.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class FFScouterPage extends StatefulWidget {
@@ -244,6 +245,18 @@ class FFScouterPageState extends State<FFScouterPage> with SingleTickerProviderS
         ],
       ),
       actions: [
+        PipPlayersButton(
+          candidates: () => [
+            for (final target in _targets)
+              if (target.playerId != null)
+                PipCandidate(
+                  id: target.playerId!,
+                  name: target.name ?? '',
+                  state: target.statusState,
+                  until: target.statusUntil ?? 0,
+                ),
+          ],
+        ),
         if (_targets.isNotEmpty && _tabController.index == 0)
           _isRefreshingAll
               ? const Padding(

@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/pages/settings/scripts_doc_viewer_page.dart';
 import 'package:torn_pda/pages/settings/scripts_guide_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -18,7 +17,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/script_docs_service.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ScriptsDocsPage extends StatefulWidget {
@@ -85,24 +84,9 @@ class ScriptsDocsPageState extends State<ScriptsDocsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider.statusBar
-                : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? _buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: _buildAppBar())
-              : null,
-          body: Container(color: _themeProvider.canvas, child: _buildBody()),
-        ),
-      ),
+    return PdaScaffold(
+      appBar: _buildAppBar(),
+      body: Container(color: _themeProvider.canvas, child: _buildBody()),
     );
   }
 

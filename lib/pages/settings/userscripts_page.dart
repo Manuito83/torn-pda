@@ -12,7 +12,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/settings/scripts_catalog_page.dart';
@@ -27,7 +26,7 @@ import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_bulk_update_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class UserScriptsPage extends StatefulWidget {
   final bool? fromWebview;
@@ -122,190 +121,174 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider.statusBar
-                : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          floatingActionButton: _showWarFab
-              ? FloatingActionButton.extended(
-                  icon: const Icon(MdiIcons.swordCross, color: Colors.white),
-                  label: Text(
-                    _userScriptsProvider.isWarModeActive ? "Exit war mode" : "War mode",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  elevation: 4,
-                  backgroundColor: _userScriptsProvider.isWarModeActive ? Colors.orange[800] : Colors.blueGrey,
-                  onPressed: _userScriptsProvider.toggleWarMode,
-                )
-              : null,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-              : null,
-          body: Container(
-            color: _themeProvider.canvas,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: Column(
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      floatingActionButton: _showWarFab
+          ? FloatingActionButton.extended(
+              icon: const Icon(MdiIcons.swordCross, color: Colors.white),
+              label: Text(
+                _userScriptsProvider.isWarModeActive ? "Exit war mode" : "War mode",
+                style: const TextStyle(color: Colors.white),
+              ),
+              elevation: 4,
+              backgroundColor: _userScriptsProvider.isWarModeActive ? Colors.orange[800] : Colors.blueGrey,
+              onPressed: _userScriptsProvider.toggleWarMode,
+            )
+          : null,
+      body: Container(
+        color: _themeProvider.canvas,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          child: Column(
+            children: <Widget>[
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
-                            shape: WidgetStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: const BorderSide(width: 2, color: Colors.blueGrey),
-                              ),
-                            ),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
+                        shape: WidgetStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: const BorderSide(width: 2, color: Colors.blueGrey),
                           ),
-                          child: Icon(Icons.add, size: 20, color: _themeProvider.mainText),
-                          onPressed: () {
-                            _showAddDialog(context);
-                          },
                         ),
                       ),
-                      const SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                              if (states.contains(WidgetState.disabled)) {
-                                return Colors.grey;
-                              }
-                              return _themeProvider.secondBackground;
-                            }),
-                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
-                              return RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
-                                ),
-                              );
-                            }),
-                          ),
-                          onPressed: _userScriptsProvider.userScriptList.isEmpty
-                              ? null
-                              : () => _userScriptsProvider.checkForUpdates().then((i) {
-                                  _userScriptsProvider.resetBulkUpdateBannerDismiss();
-                                  BotToast.showText(
-                                    text: i > 0
-                                        ? "$i script${i == 1 ? " is" : "s are"} ready to update"
-                                        : "No updates found",
-                                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                    contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                }),
-                          child: Icon(Icons.refresh, size: 20, color: _themeProvider.mainText),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                              if (states.contains(WidgetState.disabled)) {
-                                return Colors.grey;
-                              }
-                              return _userScriptsProvider.isGlobalDisableActive
-                                  ? Colors.orange[700]
-                                  : _themeProvider.secondBackground;
-                            }),
-                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
-                              return RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: states.contains(WidgetState.disabled)
-                                      ? Colors.grey
-                                      : _userScriptsProvider.isGlobalDisableActive
-                                      ? Colors.orange[900]!
-                                      : Colors.blueGrey,
-                                ),
-                              );
-                            }),
-                          ),
-                          onPressed: _userScriptsProvider.userScriptList.isEmpty
-                              ? null
-                              : () {
-                                  if (_userScriptsProvider.isGlobalDisableActive) {
-                                    _userScriptsProvider.toggleGlobalDisable();
-                                  } else {
-                                    _showGlobalDisableDialog(context);
-                                  }
-                                },
-                          child: Icon(Icons.remove_circle_outline, size: 20, color: _themeProvider.mainText),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                              if (states.contains(WidgetState.disabled)) {
-                                return Colors.grey;
-                              }
-                              return _themeProvider.secondBackground;
-                            }),
-                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
-                              return RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
-                                ),
-                              );
-                            }),
-                          ),
-                          onPressed: _userScriptsProvider.userScriptList.isEmpty
-                              ? null
-                              : () {
-                                  _openWipeDialog();
-                                },
-                          child: Icon(Icons.delete_outline, size: 20, color: _themeProvider.mainText),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_userScriptsProvider.isWarModeActive || _userScriptsProvider.isGlobalDisableActive)
-                    _bulkModeBanner(),
-                  if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
-                  if (_userScriptsProvider.scriptCatalogEnabled) _catalogBanner(),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Preexisting scripts might require modifications to work with Torn PDA. '
-                      'Please ensure that you use scripts responsibly and '
-                      'understand the hazards. Tap the exclamation mark for more information.',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                      child: Icon(Icons.add, size: 20, color: _themeProvider.mainText),
+                      onPressed: () {
+                        _showAddDialog(context);
+                      },
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Flexible(
-                    child: Consumer<UserScriptsProvider>(builder: (context, settingsProvider, child) => scriptsCards()),
+                  const SizedBox(width: 15),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return Colors.grey;
+                          }
+                          return _themeProvider.secondBackground;
+                        }),
+                        shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
+                          return RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              width: 2,
+                              color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
+                            ),
+                          );
+                        }),
+                      ),
+                      onPressed: _userScriptsProvider.userScriptList.isEmpty
+                          ? null
+                          : () => _userScriptsProvider.checkForUpdates().then((i) {
+                              _userScriptsProvider.resetBulkUpdateBannerDismiss();
+                              BotToast.showText(
+                                text: i > 0
+                                    ? "$i script${i == 1 ? " is" : "s are"} ready to update"
+                                    : "No updates found",
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            }),
+                      child: Icon(Icons.refresh, size: 20, color: _themeProvider.mainText),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return Colors.grey;
+                          }
+                          return _userScriptsProvider.isGlobalDisableActive
+                              ? Colors.orange[700]
+                              : _themeProvider.secondBackground;
+                        }),
+                        shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
+                          return RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              width: 2,
+                              color: states.contains(WidgetState.disabled)
+                                  ? Colors.grey
+                                  : _userScriptsProvider.isGlobalDisableActive
+                                  ? Colors.orange[900]!
+                                  : Colors.blueGrey,
+                            ),
+                          );
+                        }),
+                      ),
+                      onPressed: _userScriptsProvider.userScriptList.isEmpty
+                          ? null
+                          : () {
+                              if (_userScriptsProvider.isGlobalDisableActive) {
+                                _userScriptsProvider.toggleGlobalDisable();
+                              } else {
+                                _showGlobalDisableDialog(context);
+                              }
+                            },
+                      child: Icon(Icons.remove_circle_outline, size: 20, color: _themeProvider.mainText),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return Colors.grey;
+                          }
+                          return _themeProvider.secondBackground;
+                        }),
+                        shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
+                          return RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              width: 2,
+                              color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
+                            ),
+                          );
+                        }),
+                      ),
+                      onPressed: _userScriptsProvider.userScriptList.isEmpty
+                          ? null
+                          : () {
+                              _openWipeDialog();
+                            },
+                      child: Icon(Icons.delete_outline, size: 20, color: _themeProvider.mainText),
+                    ),
                   ),
                 ],
               ),
-            ),
+              if (_userScriptsProvider.isWarModeActive || _userScriptsProvider.isGlobalDisableActive) _bulkModeBanner(),
+              if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
+              if (_userScriptsProvider.scriptCatalogEnabled) _catalogBanner(),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Preexisting scripts might require modifications to work with Torn PDA. '
+                  'Please ensure that you use scripts responsibly and '
+                  'understand the hazards. Tap the exclamation mark for more information.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: Consumer<UserScriptsProvider>(builder: (context, settingsProvider, child) => scriptsCards()),
+              ),
+            ],
           ),
         ),
       ),

@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ChangeLogItem {
@@ -39,8 +40,17 @@ class _MItem {
   final String? detail;
   final bool androidOnly;
   final String? docUrl;
+  final List<FeatureDiagramScene> diagrams;
+  final bool Function(BuildContext)? pinOpenWhen;
 
-  const _MItem(this.text, {this.detail, this.androidOnly = false, this.docUrl});
+  const _MItem(
+    this.text, {
+    this.detail,
+    this.androidOnly = false,
+    this.docUrl,
+    this.diagrams = const [],
+    this.pinOpenWhen,
+  });
 
   bool get visibleOnThisPlatform => !androidOnly || Platform.isAndroid;
 
@@ -48,6 +58,8 @@ class _MItem {
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
   String get description => text.replaceAll(_creditTag, '').trim();
 }
+
+bool _always(BuildContext context) => true;
 
 class _MSection {
   final IconData icon;
@@ -102,9 +114,37 @@ List<_MVersion> _modernChangelog() => [
           _MItem(
             'Browser: added support for two groups of tabs side by side',
             detail:
-                'On wide screens with split screen enabled in Settings, double-tap a tab and use "open in split panel" '
-                'icon to see two groups of tabs at once. Press and hold the divider, then '
-                'drag it, to resize the panels.\n\nMore details in the Tips section.',
+                'On wide screens with split screen enabled in Settings, press and hold a tab and drag it onto the app '
+                'or the other panel to move it there, or double-tap it and use the "open in split panel" icon. '
+                'Dragging the main tab opens a copy of it. Locked tabs stay in their group while tab lock warnings '
+                'are enabled.\n\nPress and hold the divider, then drag it, to resize the panels. You can also choose '
+                'where links tapped in the app open, in Settings next to Split screen. Dev Tools open in the other panel, '
+                'next to the page.\n\nMore details in the Tips section.',
+            diagrams: [
+              FeatureDiagramScene.dragToApp,
+              FeatureDiagramScene.dragToOtherPanel,
+              FeatureDiagramScene.copyMainTab,
+              FeatureDiagramScene.linkCurrentTab,
+            ],
+            pinOpenWhen: _always,
+          ),
+          _MItem(
+            'Floating window: keep watching the chain or up to 4 players over other apps',
+            androidOnly: true,
+            pinOpenWhen: _always,
+            detail:
+                'The app shrinks into a small window that stays on top of other apps. Tap the window icon in the chain '
+                'widget to watch the chain (counter, chain watcher colors, blinking border and, in panic mode, a '
+                'Panic attack button), '
+                'in the top bar of Targets, War, Retaliation, Attacks or FFScouter to pick up to 4 players '
+                '(hospital or jail countdown, green when their status changes), or in Stakeouts to watch all of them '
+                'at once.\n\n'
+                'While a floating window is open, '
+                'stakeout alerts appear as a banner and as a phone notification. Settings let you turn it on or off '
+                'for each place, and optionally open the chain window when you leave the app. Closing it with the '
+                'system X is like leaving the app: the chain watcher stops alerting.\n\nMore details in the Tips '
+                'section.',
+            diagrams: [FeatureDiagramScene.pipChain, FeatureDiagramScene.pipPlayer],
           ),
           _MItem(
             'Browser: option to allow remote debugging',
@@ -3691,31 +3731,34 @@ class ChangeLogState extends State<ChangeLog> {
     itemList.add(
       Padding(
         padding: const EdgeInsets.only(bottom: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset('images/icons/torn_pda.png', width: 42, height: 42),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TORN PDA',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.5,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset('images/icons/torn_pda.png', width: 42, height: 42),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TORN PDA',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2.5,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
-                ),
-                const _AnimatedChangelogWordmark(),
-              ],
-            ),
-          ],
+                  const _AnimatedChangelogWordmark(),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -4011,6 +4054,12 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
+    if (widget.item.pinOpenWhen?.call(context) ?? false) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [_front(pinned: true), const SizedBox(height: 8), _back(pinned: true)],
+      );
+    }
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       alignment: Alignment.topCenter,
@@ -4034,28 +4083,29 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
     );
   }
 
-  Widget _front() {
+  Widget _front({bool pinned = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _AuthorDot(author: widget.item.author, contributors: widget.contributors),
         Expanded(child: Text(widget.item.description, style: const TextStyle(fontSize: 15, height: 1.4))),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: _flip,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Icon(Icons.info_outline, size: 22, color: widget.accent),
+        if (!pinned)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _flip,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Icon(Icons.info_outline, size: 22, color: widget.accent),
+            ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _back() {
+  Widget _back({bool pinned = false}) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _flip,
+      onTap: pinned ? null : _flip,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(12),
@@ -4099,11 +4149,17 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
                       ),
                     ),
                   ],
+                  if (widget.item.diagrams.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    FeatureDiagram(scenes: widget.item.diagrams),
+                  ],
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.close, size: 18, color: widget.accent),
+            if (!pinned) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.close, size: 18, color: widget.accent),
+            ],
           ],
         ),
       ),

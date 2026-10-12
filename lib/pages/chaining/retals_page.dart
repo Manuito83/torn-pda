@@ -20,6 +20,7 @@ import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class RetalsOptions {
   String? description;
@@ -212,6 +213,18 @@ class RetalsPageState extends State<RetalsPage> {
         ],
       ),
       actions: <Widget>[
+        PipPlayersButton(
+          candidates: () => [
+            for (final retal in Get.find<RetalsController>().retaliationList)
+              if (retal.retalId != null)
+                PipCandidate(
+                  id: retal.retalId!,
+                  name: retal.name ?? '',
+                  state: retal.status.state,
+                  until: retal.status.until ?? 0,
+                ),
+          ],
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 10),
           child: GetBuilder<RetalsController>(

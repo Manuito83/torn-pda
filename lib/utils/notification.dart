@@ -866,6 +866,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
+      'Stakeouts ${modifier.channelIdModifier}',
+      'Stakeouts ${modifier.channelIdModifier}',
+      description: 'Stakeout alerts',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
       'Manual scripts ${modifier.channelIdModifier}',
       'Manual scripts ${modifier.channelIdModifier}',
       description: 'Manual notifications for scripts',

@@ -21,7 +21,7 @@ import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
-import 'package:torn_pda/widgets/split_app_safe_area.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
@@ -85,120 +85,102 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
-    return Container(
-      color: _themeProvider!.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider!.statusBar
-                  : _themeProvider!.canvas
-          : _themeProvider!.canvas,
-      child: SplitAppSafeArea(
-        child: Scaffold(
-          backgroundColor: _themeProvider!.canvas,
-          appBar: _settingsP!.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsP!.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider!.canvas,
-            child: Builder(
-              builder: (BuildContext context) {
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                  child: FutureBuilder(
-                    future: _stocksInitialised,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        if (!_errorInitializing) {
-                          return RefreshIndicator(
-                            onRefresh: () async {
-                              await _initialiseStocks();
-                              setState(() {});
-                              await Future.delayed(const Duration(seconds: 1));
-                            },
-                            child: SingleChildScrollView(
-                              child: Column(
-                                children: <Widget>[
-                                  if (!Platform.isWindows)
-                                    Column(
-                                      children: [
-                                        _alertActivator(),
-                                        const Divider(),
-                                      ],
-                                    ),
-                                  const Text("Traded Companies"),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Text(
-                                        "Value: ",
-                                        style: TextStyle(fontSize: 10),
-                                      ),
-                                      Text(
-                                        formatProfit(inputDouble: _totalValue),
-                                        style: const TextStyle(fontSize: 10),
-                                      ),
-                                      Text(
-                                        " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
-                                        style: const TextStyle(fontSize: 10),
-                                      ),
-                                      Text(
-                                        formatProfit(inputDouble: _totalProfit),
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          color: _totalProfit >= 0 ? Colors.green : Colors.red,
-                                        ),
-                                      ),
-                                    ],
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Container(
+        color: _themeProvider!.canvas,
+        child: Builder(
+          builder: (BuildContext context) {
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: FutureBuilder(
+                future: _stocksInitialised,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (!_errorInitializing) {
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          await _initialiseStocks();
+                          setState(() {});
+                          await Future.delayed(const Duration(seconds: 1));
+                        },
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: <Widget>[
+                              if (!Platform.isWindows)
+                                Column(
+                                  children: [
+                                    _alertActivator(),
+                                    const Divider(),
+                                  ],
+                                ),
+                              const Text("Traded Companies"),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    "Value: ",
+                                    style: TextStyle(fontSize: 10),
                                   ),
-                                  const SizedBox(height: 10),
-                                  _allStocksList(),
-                                  const SizedBox(height: 50),
+                                  Text(
+                                    formatProfit(inputDouble: _totalValue),
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                  Text(
+                                    " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
+                                  Text(
+                                    formatProfit(inputDouble: _totalProfit),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: _totalProfit >= 0 ? Colors.green : Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              _allStocksList(),
+                              const SizedBox(height: 50),
+                            ],
+                          ),
+                        ),
+                      );
+                    } else {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              'OOPS!',
+                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'There was an error retrieving market share or alerts information.'
+                                    '\n\nPlease try again in a few minutes!',
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ],
                               ),
                             ),
-                          );
-                        } else {
-                          return const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Text(
-                                  'OOPS!',
-                                  style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        'There was an error retrieving market share or alerts information.'
-                                        '\n\nPlease try again in a few minutes!',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      } else {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
+                          ],
+                        ),
+                      );
+                    }
+                  } else {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              ),
+            );
+          },
         ),
       ),
     );

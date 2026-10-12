@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/attacks_list.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class AttacksPage extends StatefulWidget {
   const AttacksPage({super.key});
@@ -162,6 +163,18 @@ class AttacksPageState extends State<AttacksPage> {
         ],
       ),
       actions: <Widget>[
+        PipPlayersButton(
+          candidates: () {
+            final seen = <int>{};
+            return [
+              for (final attack in _attacksProvider.allAttacks)
+                if ((attack.targetName ?? '').isNotEmpty &&
+                    int.tryParse(attack.targetId ?? '') != null &&
+                    seen.add(int.parse(attack.targetId!)))
+                  PipCandidate(id: int.parse(attack.targetId!), name: attack.targetName!),
+            ];
+          },
+        ),
         IconButton(
           icon: Icon(
             Icons.refresh,
