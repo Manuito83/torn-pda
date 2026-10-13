@@ -10,6 +10,74 @@ const staleMaxPerRun = 10000;
 // Parallel FCM sends to avoid ECONNRESET
 const staleNotifyConcurrency = 50;
 
+// One day window, so sent once
+async function remindInactive(now: number) {
+  const batchSize = 500;
+  let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+  let totalProcessed = 0;
+  let sent = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  try {
+    while (totalProcessed < staleMaxPerRun) {
+      let query = admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("lastActive", ">", now - aDayInMilliseconds * 7)
+        .where("lastActive", "<=", now - aDayInMilliseconds * 6)
+        .orderBy("lastActive")
+        .limit(batchSize);
+
+      if (lastDoc) {
+        query = query.startAfter(lastDoc);
+      }
+
+      const snapshot = await query.get();
+      if (snapshot.empty) {
+        break;
+      }
+
+      totalProcessed += snapshot.size;
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      const toNotify = snapshot.docs
+        .map((doc) => doc.data())
+        .filter((user) => user.token);
+
+      for (let i = 0; i < toNotify.length; i += staleNotifyConcurrency) {
+        const results = await Promise.allSettled(
+          toNotify.slice(i, i + staleNotifyConcurrency).map((user) =>
+            sendNotificationToUser({
+              token: user.token,
+              title: "Your alerts will be turned off soon",
+              body: "You haven't opened Torn PDA in 6 days. Open it in the next 4 days to keep your automatic alerts active.",
+              icon: "notification_icon",
+              color: "#FFFFFF",
+              channelId: "Alerts stale user",
+              vibration: "medium",
+            })
+          )
+        );
+        // A fulfilled null means the token was dead
+        sent += results.filter((r) => r.status === "fulfilled" && r.value !== null).length;
+        skipped += results.filter((r) => r.status === "fulfilled" && r.value === null).length;
+        failed += results.filter((r) => r.status === "rejected").length;
+      }
+    }
+  } catch (error) {
+    logger.error("Stale reminder aborted", error);
+  }
+
+  const capped = totalProcessed >= staleMaxPerRun;
+  logger.info(
+    `Stale reminders completed: ${totalProcessed} ` +
+    `(sent ${sent}, dead token ${skipped}, failed ${failed}` +
+    `${capped ? `, hit the ${staleMaxPerRun} cap` : ""})`
+  );
+}
+
 export const deactivateStale = onSchedule(
   {
     schedule: "0 0 * * *",
@@ -26,13 +94,15 @@ export const deactivateStale = onSchedule(
     let notifySkipped = 0;
     let notifyFailed = 0;
 
+    await remindInactive(currentDateInMillis);
+
     // This pull the users who haven't open the app for 10 days
     while (totalProcessed < staleMaxPerRun) {
       let query = admin
         .firestore()
         .collection("players")
         .where("active", "==", true)
-        .where("lastActive", "<=", currentDateInMillis - aDayInMilliseconds * 9)
+        .where("lastActive", "<=", currentDateInMillis - aDayInMilliseconds * 10)
         .orderBy("lastActive")
         .limit(batchSize);
 
