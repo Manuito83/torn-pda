@@ -744,6 +744,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_torn_chat_cache_limit_mb": 0,
         "browser_localstorage_safety_mb": 3,
         "browser_tab_sleep_minutes_default": 720,
+        "browser_max_live_tabs_default": 0,
+        "browser_blank_detector_mode": 2,
         "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
@@ -858,6 +860,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (tabSleepMinutesRC > 0) {
         _webViewProvider.tabSleepMinutesDefaultRC = tabSleepMinutesRC;
       }
+      final int maxLiveTabsRC = remoteConfig.getInt("browser_max_live_tabs_default");
+      _webViewProvider.maxLiveTabsDefaultRC = maxLiveTabsRC > 0 ? math.max(maxLiveTabsRC, 4) : 0;
+      final int blankDetectorModeRC = remoteConfig.getInt("browser_blank_detector_mode");
+      _webViewProvider.blankDetectorModeRC =
+          blankDetectorModeRC >= 0 && blankDetectorModeRC <= 2 ? blankDetectorModeRC : 2;
 
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");

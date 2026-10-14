@@ -4,7 +4,18 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class TabsExcessDialog extends StatelessWidget {
-  const TabsExcessDialog({super.key});
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const TabsExcessDialog({
+    super.key,
+    this.actionLabel,
+    this.onAction,
+    this.title = "Too many tabs?",
+    this.message = "Remember you can close tabs by double or triple tapping them!\n\nSee Tips for more information!",
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,16 +51,20 @@ class TabsExcessDialog extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Text("Too many tabs?\n"),
-                    const Text(
-                      "Remember you can close tabs by double or triple tapping them!"
-                      "\n\nSee Tips for more information!",
-                      style: TextStyle(fontSize: 14),
-                    ),
+                    Text("$title\n"),
+                    Text(message, style: const TextStyle(fontSize: 14)),
                     const SizedBox(height: 16.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        if (actionLabel != null && onAction != null)
+                          TextButton(
+                            child: Text(actionLabel!),
+                            onPressed: () {
+                              onAction!();
+                              Navigator.of(context).pop();
+                            },
+                          ),
                         TextButton(
                           child: const Text("Close"),
                           onPressed: () {

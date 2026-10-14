@@ -415,6 +415,10 @@ class WebViewFullState extends State<WebViewFull>
 
   double _progress = 0;
 
+  final GlobalKey _webViewAreaKey = GlobalKey();
+  DateTime? _loadStopTime;
+  static const MethodChannel _nativeChannel = MethodChannel('tornpda.channel');
+
   // Animation variables for smooth progress bar
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
@@ -778,6 +782,7 @@ class WebViewFullState extends State<WebViewFull>
           final bool willRebuild = _webViewProvider.getTabByUid(_tabUid)?.needsReloadAfterRendererGone ?? false;
           _webViewProvider.reloadActiveTabIfRendererGone();
           if (!willRebuild) _webViewProvider.clearTabSnapshot(_tabUid);
+          _webViewProvider.scheduleBlankCheck();
         }
       }
     }
@@ -1338,6 +1343,7 @@ class WebViewFullState extends State<WebViewFull>
 
   Stack _mainWebViewStack() {
     return Stack(
+      key: _webViewAreaKey,
       children: [
         InAppWebView(
           windowId: widget.windowId,
@@ -1625,6 +1631,7 @@ class WebViewFullState extends State<WebViewFull>
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
             if (_markInitialLoadStarted()) return;
             _loadStartedAt = DateTime.now();
+            _loadStopTime = null;
 
             // Ignore the parking placeholder; a real page taking over unparks the tab
             if (_isParkingBlank(uri)) return;
@@ -1771,6 +1778,8 @@ class WebViewFullState extends State<WebViewFull>
             if (!mounted) return;
             _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
+            _loadStopTime = DateTime.now();
+            if (_webViewProvider.isTabUidVisible(_tabUid)) _webViewProvider.scheduleBlankCheck();
             _recovery?.onLoadStopBegin();
             if (_isParked && uri != null) _isParked = false;
 
@@ -3380,6 +3389,110 @@ class WebViewFullState extends State<WebViewFull>
       _webViewProvider.storeTabSnapshot(_tabUid, shot);
     } catch (_) {}
   }
+
+  // Null when it can't be checked
+  Future<Map<String, dynamic>?> probeBlankPage() async {
+    final InAppWebViewController? controller = webViewController;
+    if (!Platform.isAndroid || !mounted || controller == null || _isParked || (_recovery?.active ?? false)) {
+      return null;
+    }
+    if (!_webViewProvider.isTabUidVisible(_tabUid)) return null;
+    if (_loadStopTime == null || DateTime.now().difference(_loadStopTime!).inSeconds < 3) return null;
+    final String host = Uri.tryParse(_currentUrl)?.host ?? "";
+    if (host != "www.torn.com") return null;
+    // Skip under dialogs or sheets
+    if (ModalRoute.of(context)?.isCurrent == false) return null;
+    final RenderObject? box = _webViewAreaKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return null;
+    final double ratio = MediaQuery.devicePixelRatioOf(context);
+    final Offset origin = box.localToGlobal(Offset.zero) * ratio;
+    final Size size = box.size * ratio;
+
+    try {
+      final dynamic raw =
+          await controller.evaluateJavascript(source: _blankProbeJs).timeout(const Duration(seconds: 3));
+      if (raw is! String || !mounted || !_webViewProvider.isTabUidVisible(_tabUid)) return null;
+      final Map<String, dynamic> page = jsonDecode(raw);
+      if (page["ready"] != "complete") return null;
+      final List points = page["points"];
+      final Map? native = await _nativeChannel.invokeMethod<Map>("probeWebViewPixels", {
+        "left": origin.dx.round(),
+        "top": origin.dy.round(),
+        "width": size.width.round(),
+        "height": size.height.round(),
+        "points": [
+          for (final point in points) ...[(point[0] as num).toDouble(), (point[1] as num).toDouble()],
+        ],
+      }).timeout(const Duration(seconds: 3));
+      final List? pixels = native?["pixels"];
+      if (native == null || pixels == null || pixels.length != points.length) return null;
+
+      // Debug: __pdaSimulateBlank = N inverts pixels
+      final bool simulate = kDebugMode && (page["sim"] ?? 0) > 0;
+      var valid = 0;
+      var failed = 0;
+      final List<String> detail = [];
+      for (var i = 0; i < points.length; i++) {
+        final List? color = points[i][2];
+        final List pixel = pixels[i];
+        detail.add("${color ?? "-"}>$pixel");
+        if (color == null) continue;
+        valid++;
+        final bool pageWhite = color.every((c) => (c as num) >= 248);
+        final bool pixelWhite = pixel.every((c) => (c as num) > 252);
+        if (!pageWhite && pixelWhite != simulate) failed++;
+      }
+      final int text = page["text"] ?? 0;
+      return {
+        "blank": text > 500 && valid >= 4 && failed >= (valid < 10 ? (valid / 2).ceil() : 5),
+        "failed": failed,
+        "valid": valid,
+        "text": text,
+        "graphicsMb": native["graphicsMb"] ?? -1,
+        "host": host,
+        "points": detail.join(" "),
+        "simulated": simulate,
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static const String _blankProbeJs = r"""
+(function () {
+  var style = document.createElement('style');
+  style.textContent = '* { pointer-events: auto !important; }';
+  document.documentElement.appendChild(style);
+  var vv = window.visualViewport;
+  var w = vv ? vv.width : window.innerWidth, h = vv ? vv.height : window.innerHeight;
+  var ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
+  var xs = [0.25, 0.75], ys = [0.1, 0.3, 0.5, 0.7, 0.9], points = [];
+  for (var j = 0; j < ys.length; j++) {
+    for (var i = 0; i < xs.length; i++) {
+      var el = document.elementsFromPoint(ox + xs[i] * w, oy + ys[j] * h)[0], color = null;
+      if (el && !/^(img|canvas|video|iframe|svg)$/i.test(el.tagName)) {
+        for (var e = el; e; e = e.parentElement) {
+          var m = getComputedStyle(e).backgroundColor.match(/[\d.]+/g);
+          if (m && (m.length < 4 || parseFloat(m[3]) > 0)) {
+            color = [+m[0], +m[1], +m[2]];
+            break;
+          }
+        }
+      }
+      points.push([xs[i], ys[j], color]);
+    }
+  }
+  style.remove();
+  var sim = window.__pdaSimulateBlank | 0;
+  if (sim > 0) window.__pdaSimulateBlank = sim - 1;
+  return JSON.stringify({
+    ready: document.readyState,
+    text: document.body ? document.body.textContent.length : 0,
+    points: points,
+    sim: sim
+  });
+})();
+""";
 
   /// Armed as soon as the spinner shows, so a platform channel that never answers
   /// (dead renderer) can't leave the spinner running forever

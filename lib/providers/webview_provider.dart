@@ -146,6 +146,8 @@ class WebViewProvider extends ChangeNotifier {
   // Valid user choices for the two browser memory settings (0 and "default" follow Remote Config)
   static const List<int> tabSleepMinutesOptions = [0, 30, 60, 360, 720];
   static const List<String> parkOverrideOptions = ["default", "on", "off"];
+  // -1 is "No limit"
+  static const List<int> maxLiveTabsOptions = [0, 4, 6, 8, 10, 12, 16, 24, -1];
 
   static const List<String> _recoveryRebuildReasons = ["renderer_gone", "disposed_controller", "webview_never_created"];
 
@@ -169,6 +171,64 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   int get tabSleepMinutesActive => _tabSleepMinutesOverride > 0 ? _tabSleepMinutesOverride : _tabSleepMinutesDefaultRC;
+
+  // 0 means no limit
+  int _maxLiveTabsDefaultRC = 0;
+  int get maxLiveTabsDefaultRC => _maxLiveTabsDefaultRC;
+  set maxLiveTabsDefaultRC(int value) {
+    _maxLiveTabsDefaultRC = value;
+    Prefs().setMaxLiveTabsDefaultRC(value);
+    _sleepTabsAboveMax();
+    notifyListeners();
+  }
+
+  // 0 follows Remote Config, -1 is no limit
+  int _maxLiveTabsOverride = 0;
+  int get maxLiveTabsOverride => _maxLiveTabsOverride;
+  set maxLiveTabsOverride(int value) {
+    _maxLiveTabsOverride = value;
+    Prefs().setMaxLiveTabsOverride(value);
+    _sleepTabsAboveMax();
+    notifyListeners();
+  }
+
+  int get maxLiveTabsActive => _maxLiveTabsOverride == 0
+      ? _maxLiveTabsDefaultRC
+      : _maxLiveTabsOverride < 0
+          ? 0
+          : _maxLiveTabsOverride;
+
+  // 0 off, 1 measure, 2 recover
+  int _blankDetectorModeRC = 2;
+  int get blankDetectorModeRC => _blankDetectorModeRC;
+  set blankDetectorModeRC(int value) {
+    _blankDetectorModeRC = value;
+    Prefs().setBlankDetectorModeRC(value);
+  }
+
+  Timer? _blankCheckTimer;
+  bool _blankCheckRunning = false;
+  DateTime? _lastBlankReported;
+  final Map<String, DateTime> _lastBlankRecovery = {};
+  final Map<String, (DateTime, String?)> _blankRecoveryFailed = {};
+
+  bool _blankRecoveryEnabled = true;
+  bool get blankRecoveryEnabled => _blankRecoveryEnabled;
+  set blankRecoveryEnabled(bool value) {
+    _blankRecoveryEnabled = value;
+    Prefs().setBlankRecoveryEnabled(value);
+    notifyListeners();
+  }
+
+  static const List<int> tabNumbersFromOptions = [0, 5, 10, 15, 20];
+  // 0 is "Off"
+  int _tabNumbersFrom = 10;
+  int get tabNumbersFrom => _tabNumbersFrom;
+  set tabNumbersFrom(int value) {
+    _tabNumbersFrom = value;
+    Prefs().setTabNumbersFrom(value);
+    notifyListeners();
+  }
 
   // Park background tabs (about:blank) after the app spends a few minutes minimized, so the
   // shared renderer shrinks and Android does not kill it; the user can override it
@@ -408,6 +468,7 @@ class WebViewProvider extends ChangeNotifier {
       resumeAllWebviews();
       broadcastTabState();
       reloadActiveTabIfRendererGone();
+      scheduleBlankCheck();
     } else {
       // Dismiss keyboard before hiding the browser
       if (_dismissKeyboardOnBrowserClose) {
@@ -442,6 +503,7 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
     resumeAllWebviews();
     broadcastTabState();
+    scheduleBlankCheck();
   }
 
   void pdaIconActivation({required bool shortTap, required BuildContext context, required bool automaticLogin}) {
@@ -1412,6 +1474,7 @@ class WebViewProvider extends ChangeNotifier {
 
     _moveFocusOutOfCoveredGroup();
     _bringSplitTabsOnScreen();
+    _sleepTabsAboveMax();
   }
 
   // TODO: old references to [windowId] can theoretically be removed since we are no longer using the windowId to open new tabs
@@ -1489,6 +1552,7 @@ class WebViewProvider extends ChangeNotifier {
         ..customNameInTab = customNameInTab
         ..lastUsedTimeDT = DateTime.fromMillisecondsSinceEpoch(lastUsedTime),
     );
+    _sleepTabsAboveMax(keep: tab);
     notifyListeners();
     _callAssessMethods(currentTab);
   }
@@ -1664,6 +1728,15 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
+  void closeAllTabsButMain() {
+    if (_tabList.isEmpty) {
+      // Browser not opened yet
+      Prefs().setWebViewSecondaryTabs('{"tabsSave": []}');
+      return;
+    }
+    wipeTabs(includeLockedTabs: true, timeRange: TabsWipeTimeRange.any);
+  }
+
   void activateTab(int newActiveTab) {
     if (_tabList.isEmpty || _tabList.length - 1 < newActiveTab) return;
 
@@ -1711,13 +1784,14 @@ class WebViewProvider extends ChangeNotifier {
     _callAssessMethods(currentTab);
     notifyListeners();
     _saveCurrentActiveTabPosition();
+    scheduleBlankCheck();
   }
 
   /// Turns idle background tabs into sleeping tabs (frees their native WebView) to save resources
   /// [force] ignores the time threshold; used under memory pressure
   /// A slept tab reloads fresh when the user next opens it
-  Future<void> _sleepOldTabs({bool force = false}) async {
-    if (!await Prefs().getOnlyLoadTabsWhenUsed()) return;
+  Future<void> _sleepOldTabs({bool force = false, bool ignoreOnlyLoadWhenUsed = false}) async {
+    if (!ignoreOnlyLoadWhenUsed && !await Prefs().getOnlyLoadTabsWhenUsed()) return;
     if (_tabList.isEmpty) return;
 
     final DateTime now = DateTime.now();
@@ -1753,7 +1827,154 @@ class WebViewProvider extends ChangeNotifier {
     if (sleptAny) notifyListeners();
   }
 
+  void _sleepTabsAboveMax({TabDetails? keep}) {
+    final int maxLive = maxLiveTabsActive;
+    if (maxLive <= 0) return;
+
+    final List<int> live = [
+      for (var i = 0; i < _tabList.length; i++)
+        if (_tabList[i].webView != null && !_tabList[i].sleepTab) i,
+    ];
+    if (live.length <= maxLive) return;
+
+    final List<int> candidates = live.where((i) {
+      final TabDetails tab = _tabList[i];
+      if (i == 0 || tab == keep || tab.isChainingBrowser || isTabVisible(i)) return false;
+      return !(_keepLockedTabsActive && tab.isLocked);
+    }).toList();
+    final DateTime never = DateTime.fromMillisecondsSinceEpoch(0);
+    candidates.sort(
+      (a, b) => (_tabList[a].lastUsedTimeDT ?? never).compareTo(_tabList[b].lastUsedTimeDT ?? never),
+    );
+
+    final List<int> slept = candidates.take(live.length - maxLive).toList();
+    if (slept.isEmpty) return;
+    for (final i in slept) {
+      final TabDetails tab = _tabList[i];
+      tab.needsReloadAfterRendererGone = false;
+      tab.rendererGoneScrollX = null;
+      tab.rendererGoneScrollY = null;
+      tab.rendererGoneSnapshot = null;
+      tab.sleepTab = true;
+      tab.webView = null;
+      tab.sleepingWebView = SleepingWebView(
+        tabUid: tab.id,
+        customUrl: tab.currentUrl,
+        key: tab.webViewKey,
+        useTabs: true,
+        chatRemovalActive: tab.chatRemovalActiveTab,
+      );
+    }
+    log("Slept tabs $slept above the maximum of $maxLive loaded tabs");
+    notifyListeners();
+  }
+
   Future<void> hibernateInactiveTabs() => _sleepOldTabs(force: true);
+
+  void scheduleBlankCheck({int seconds = 4}) {
+    if (!Platform.isAndroid || _blankDetectorModeRC <= 0) return;
+    _blankCheckTimer?.cancel();
+    _blankCheckTimer = Timer(Duration(seconds: seconds), () async {
+      if (_blankCheckRunning || _tabList.isEmpty) return;
+      if (!_isBrowserForeground && !_webViewSplitActive) return;
+      if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return;
+
+      _blankCheckRunning = true;
+      try {
+        for (final tab in [
+          for (var i = 0; i < _tabList.length; i++)
+            if (isTabVisible(i)) _tabList[i],
+        ]) {
+          final WebViewFullState? state = tab.webViewKey?.currentState;
+          final Map<String, dynamic>? probe = await state?.probeBlankPage();
+          if (state == null || probe == null) continue;
+
+          final int liveTabs = _tabList.where((t) => t.webView != null && !t.sleepTab).length;
+          final int graphicsMb = probe["graphicsMb"];
+          FirebaseCrashlytics.instance.setCustomKey("wv_live_tabs", liveTabs);
+          FirebaseCrashlytics.instance.setCustomKey("wv_graphics_mb", graphicsMb);
+          log("Blank check: ${probe["failed"]}/${probe["valid"]} failed, text ${probe["text"]}, "
+              "live tabs $liveTabs, graphics $graphicsMb MB, points ${probe["points"]}");
+          if (probe["blank"] != true) continue;
+
+          await Future.delayed(const Duration(seconds: 2));
+          final Map<String, dynamic>? confirm = await state.probeBlankPage();
+          log("Blank confirm: ${confirm?["failed"]}/${confirm?["valid"]} failed");
+          if (confirm?["blank"] != true) continue;
+
+          final DateTime now = DateTime.now();
+          final int mode = _blankDetectorModeRC;
+          if (_lastBlankReported == null || now.difference(_lastBlankReported!).inMinutes >= 10) {
+            _lastBlankReported = now;
+            analytics?.logEvent(
+              name: "webview_blank_detected",
+              parameters: {
+                "live_tabs": liveTabs,
+                "graphics_mb": graphicsMb,
+                "points_failed": probe["failed"],
+                "mode": mode,
+              },
+            );
+            FirebaseCrashlytics.instance.recordError(
+              "Browser blank page detected (tiles)",
+              null,
+              reason: "live_tabs: $liveTabs, graphics_mb: $graphicsMb, host: ${probe["host"]}",
+            );
+          }
+          log("Blank page detected (mode $mode, recovery ${_blankRecoveryEnabled ? "on" : "off"})");
+          if (mode < 2 || !_blankRecoveryEnabled) continue;
+
+          final DateTime? lastRecovery = _lastBlankRecovery[tab.id];
+          if (lastRecovery != null && now.difference(lastRecovery).inSeconds < 60) continue;
+          final (DateTime, String?)? failed = _blankRecoveryFailed[tab.id];
+          if (failed != null && now.difference(failed.$1).inMinutes < 10 && failed.$2 == tab.currentUrl) continue;
+          _lastBlankRecovery[tab.id] = now;
+
+          await _sleepOldTabs(force: true, ignoreOnlyLoadWhenUsed: true);
+          await Future.delayed(const Duration(seconds: 3));
+          String method = "hibernate";
+          Map<String, dynamic>? recheck = await state.probeBlankPage();
+          if (recheck?["blank"] == true) {
+            method = "reload";
+            try {
+              await state.webViewController?.reload().timeout(const Duration(seconds: 3));
+            } catch (_) {}
+            recheck = null;
+            for (var attempt = 0; attempt < 10 && recheck == null; attempt++) {
+              await Future.delayed(const Duration(seconds: 2));
+              recheck = await state.probeBlankPage();
+            }
+          }
+          log("Blank page recheck after $method: ${recheck?["failed"]}/${recheck?["valid"]} failed");
+          if (recheck == null || recheck["blank"] == true) {
+            _blankRecoveryFailed[tab.id] = (DateTime.now(), tab.currentUrl);
+          } else {
+            _blankRecoveryFailed.remove(tab.id);
+            BotToast.showText(
+              text: "Page redrawn: too many tabs were using the browser memory",
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.blue,
+              duration: const Duration(seconds: 4),
+              contentPadding: const EdgeInsets.all(10),
+              clickClose: true,
+            );
+            analytics?.logEvent(
+              name: "webview_blank_recovered",
+              parameters: {
+                "method": method,
+                "live_tabs": _tabList.where((t) => t.webView != null && !t.sleepTab).length,
+              },
+            );
+          }
+        }
+      } catch (e) {
+        log("Blank check error: $e");
+      } finally {
+        _blankCheckRunning = false;
+      }
+      scheduleBlankCheck(seconds: 45);
+    });
+  }
 
   /// Parks background tabs the moment the app is minimized. It has to happen here: Android
   /// freezes the process shortly after, and a delayed timer would simply never run
@@ -1796,6 +2017,7 @@ class WebViewProvider extends ChangeNotifier {
     } else {
       _wakeTabIfParked(tab);
     }
+    _sleepTabsAboveMax();
 
     final WebViewFullState? state = tab.webViewKey?.currentState;
     if (state == null) return;
@@ -3238,6 +3460,15 @@ class WebViewProvider extends ChangeNotifier {
     _tabSleepMinutesOverride = tabSleepMinutesOptions.contains(sleepOverride) ? sleepOverride : 0;
     final int sleepDefaultRC = await Prefs().getTabSleepMinutesDefaultRC();
     _tabSleepMinutesDefaultRC = sleepDefaultRC > 0 ? sleepDefaultRC : 720;
+    final int maxLiveOverride = await Prefs().getMaxLiveTabsOverride();
+    _maxLiveTabsOverride = maxLiveTabsOptions.contains(maxLiveOverride) ? maxLiveOverride : 0;
+    final int maxLiveDefaultRC = await Prefs().getMaxLiveTabsDefaultRC();
+    _maxLiveTabsDefaultRC = maxLiveDefaultRC > 0 ? (maxLiveDefaultRC < 4 ? 4 : maxLiveDefaultRC) : 0;
+    final int blankMode = await Prefs().getBlankDetectorModeRC();
+    _blankDetectorModeRC = blankMode >= 0 && blankMode <= 2 ? blankMode : 2;
+    _blankRecoveryEnabled = await Prefs().getBlankRecoveryEnabled();
+    final int tabNumbers = await Prefs().getTabNumbersFrom();
+    _tabNumbersFrom = tabNumbersFromOptions.contains(tabNumbers) ? tabNumbers : 10;
     final String parkOverride = await Prefs().getParkBackgroundTabsOverride();
     _parkBackgroundTabsOverride = parkOverrideOptions.contains(parkOverride) ? parkOverride : "default";
     _parkBackgroundTabsDefaultRC = await Prefs().getParkBackgroundTabsDefaultRC();

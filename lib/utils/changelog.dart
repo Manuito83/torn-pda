@@ -160,6 +160,38 @@ List<_MVersion> _modernChangelog() => [
                 'is on, the switches in the list choose which scripts run in it, and scripts marked as always active '
                 'run in every mode. The war mode shortcuts now let you pick the mode.',
           ),
+          _MItem(
+            'Browser: tab counter on the new tab button',
+            detail:
+                'From 10 open tabs, the + button shows how many there are. Tabs can also show their own number '
+                '(Advanced browser settings, Tabs).',
+          ),
+          _MItem(
+            'Browser: close all tabs at once',
+            detail:
+                'New button in Advanced browser settings, Maintenance. It keeps the main tab, the cache and your '
+                'Torn session.',
+          ),
+          _MItem(
+            'Browser: limit how many tabs stay loaded',
+            detail:
+                'Maximum loaded tabs, in Advanced browser settings, Memory. Tabs above the limit go to sleep and '
+                'load again when you tap them, which avoids blank pages with many tabs open.',
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [
+          _MItem(
+            'Browser: blank pages are now redrawn automatically',
+            androidOnly: true,
+            detail:
+                'With many tabs open, the page you were looking at could stop drawing. Torn PDA now detects it, puts '
+                'the other tabs to sleep and redraws it.',
+          ),
         ],
       ),
       _MSection(
@@ -4163,10 +4195,7 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
                 ],
               ),
             ),
-            if (!pinned) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.close, size: 18, color: widget.accent),
-            ],
+            if (!pinned) ...[const SizedBox(width: 8), Icon(Icons.close, size: 18, color: widget.accent)],
           ],
         ),
       ),

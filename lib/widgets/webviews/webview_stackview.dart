@@ -1124,6 +1124,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
   }
 
   Widget _newTabButton(BuildContext ctx, SplitGroup group) {
+    final int tabCount = _webViewProvider.tabList.length;
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -1135,7 +1136,34 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                 color: _themeProvider.navSelected,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(width: 24, child: Icon(Icons.add_circle_outline, color: _themeProvider.mainText)),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: tabCount < 10
+                        ? Icon(Icons.add_circle_outline, color: _themeProvider.mainText)
+                        : Center(
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: _themeProvider.mainText, width: 2),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  "$tabCount",
+                                  style: TextStyle(
+                                    color: tabCount > 20 ? Colors.orange[700] : _themeProvider.mainText,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
                 ),
               ),
               onTap: () async {
@@ -1147,6 +1175,30 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                   //_settingsProvider.addShowCase = "tabs_general2";
                 }
 
+                if (_webViewProvider.tabList.length >= 20 && !await Prefs().getManyTabsAlerted()) {
+                  Prefs().setManyTabsAlerted(true);
+                  final bool offerLimit = _webViewProvider.maxLiveTabsActive <= 0;
+                  return showWebviewDialog<void>(
+                    context: ctx,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return TabsExcessDialog(
+                        title: "Lots of tabs open",
+                        message: offerLimit
+                            ? "Many open tabs make the browser heavier: pages can turn blank, or the browser "
+                                  "can even close.\n\nLimiting loaded tabs to 8 puts the ones you have not used "
+                                  "for the longest to sleep (they load again when you tap them), so the page you "
+                                  "are looking at keeps enough memory to draw. You can change it later in Advanced "
+                                  "browser settings, Memory section."
+                            : "Many open tabs make the browser heavier: pages can turn blank, or the browser "
+                                  "can even close.\n\nYou can limit how many tabs stay loaded in Advanced browser "
+                                  "settings, Memory section.",
+                        actionLabel: offerLimit ? "Limit to 8" : null,
+                        onAction: offerLimit ? () => _webViewProvider.maxLiveTabsOverride = 8 : null,
+                      );
+                    },
+                  );
+                }
                 if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
                   Prefs().setExcessTabsAlerted(true);
                   return showWebviewDialog<void>(

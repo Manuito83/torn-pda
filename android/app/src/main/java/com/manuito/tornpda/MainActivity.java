@@ -42,6 +42,16 @@ import android.content.res.Configuration;
 import android.graphics.drawable.Icon;
 import android.util.Rational;
 import androidx.core.content.ContextCompat;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.view.PixelCopy;
+import android.view.View;
+import java.util.Arrays;
+import io.flutter.plugin.common.MethodCall;
 
 public class MainActivity extends FlutterActivity {
 
@@ -55,6 +65,7 @@ public class MainActivity extends FlutterActivity {
     private boolean pipAutoPending;
     private boolean pipOwnLaunch;
     private List<Map<String, String>> pipAutoActions;
+    private HandlerThread pixelProbeThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,6 +175,10 @@ public class MainActivity extends FlutterActivity {
                                         null
                                 );
                             }
+                            break;
+
+                        case "probeWebViewPixels":
+                            probeWebViewPixels(call, result);
                             break;
 
                         case "getProcessExitReasons":
@@ -331,6 +346,10 @@ public class MainActivity extends FlutterActivity {
     @Override
     protected void onDestroy() {
         unregisterPipReceiver();
+        if (pixelProbeThread != null) {
+            pixelProbeThread.quitSafely();
+            pixelProbeThread = null;
+        }
         super.onDestroy();
     }
 
@@ -419,6 +438,73 @@ public class MainActivity extends FlutterActivity {
             prefs.edit().putLong("lastReportedExitTimestamp", newest).apply();
         }
         return exits;
+    }
+
+    // On-screen pixels at 1/8 scale
+    private void probeWebViewPixels(MethodCall call, MethodChannel.Result result) {
+        Integer left = call.argument("left");
+        Integer top = call.argument("top");
+        Integer width = call.argument("width");
+        Integer height = call.argument("height");
+        List<Double> points = call.argument("points");
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || left == null || top == null || width == null
+                || height == null || points == null) {
+            result.success(null);
+            return;
+        }
+
+        int[] origin = new int[2];
+        View flutterView = findViewById(FLUTTER_VIEW_ID);
+        if (flutterView != null) flutterView.getLocationInWindow(origin);
+        View decor = getWindow().getDecorView();
+        Rect source = new Rect(left + origin[0], top + origin[1], left + origin[0] + width, top + origin[1] + height);
+        if (!source.intersect(0, 0, decor.getWidth(), decor.getHeight())) {
+            result.success(null);
+            return;
+        }
+
+        int bitmapWidth = Math.max(1, source.width() / 8);
+        int bitmapHeight = Math.max(1, source.height() / 8);
+        Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
+        if (pixelProbeThread == null) {
+            pixelProbeThread = new HandlerThread("tornpda-pixel-probe");
+            pixelProbeThread.start();
+        }
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        try {
+            PixelCopy.request(getWindow(), source, bitmap, copyResult -> {
+                Map<String, Object> out = new HashMap<>();
+                out.put("copyResult", copyResult);
+                if (copyResult == PixelCopy.SUCCESS) {
+                    List<List<Integer>> pixels = new ArrayList<>();
+                    for (int i = 0; i + 1 < points.size(); i += 2) {
+                        int x = Math.min(bitmapWidth - 1, Math.max(0, (int) (points.get(i) * bitmapWidth)));
+                        int y = Math.min(bitmapHeight - 1, Math.max(0, (int) (points.get(i + 1) * bitmapHeight)));
+                        int color = bitmap.getPixel(x, y);
+                        pixels.add(Arrays.asList(Color.red(color), Color.green(color), Color.blue(color)));
+                    }
+                    out.put("pixels", pixels);
+                }
+                bitmap.recycle();
+
+                long graphicsMb = -1;
+                try {
+                    Debug.MemoryInfo memoryInfo = new Debug.MemoryInfo();
+                    Debug.getMemoryInfo(memoryInfo);
+                    String graphics = memoryInfo.getMemoryStat("summary.graphics");
+                    // Reported in KB
+                    if (graphics != null) graphicsMb = Long.parseLong(graphics) / 1024;
+                } catch (Exception ignored) {
+                }
+                out.put("graphicsMb", graphicsMb);
+
+                mainHandler.post(() -> result.success(out));
+            }, new Handler(pixelProbeThread.getLooper()));
+        } catch (IllegalArgumentException e) {
+            bitmap.recycle();
+            result.success(null);
+        }
     }
 
     // Opens the battery optimization settings screen

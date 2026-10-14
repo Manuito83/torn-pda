@@ -655,69 +655,51 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       if (_settingsProvider.useTabsFullBrowser)
         SearchableRow(
-          label: "Only load tabs when used",
+          label: "Show tab numbers",
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Flexible(child: Text("Only load tabs when used")),
-                    Switch(
-                      value: _webViewProvider.onlyLoadTabsWhenUsed,
+                    const Flexible(child: Text("Show tab numbers")),
+                    DropdownButton<int>(
+                      value: WebViewProvider.tabNumbersFromOptions.contains(_webViewProvider.tabNumbersFrom)
+                          ? _webViewProvider.tabNumbersFrom
+                          : 10,
+                      items: [
+                        for (final from in WebViewProvider.tabNumbersFromOptions)
+                          DropdownMenuItem(
+                            value: from,
+                            child: SizedBox(
+                              width: 130,
+                              child: Text(
+                                from == 0 ? "Off" : "From $from tabs",
+                                textAlign: TextAlign.right,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                      ],
                       onChanged: (value) {
-                        _webViewProvider.onlyLoadTabsWhenUsed = value;
+                        if (value == null) return;
+                        setState(() {
+                          _webViewProvider.tabNumbersFrom = value;
+                        });
                       },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
-                Text(
-                  'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, they will retrieve the web content when first used (tapped). This could add a small delay when the tab is pressed the first time, but should improve overall browser performance. Also, tabs that have not been used for a while will be deactivated to reduce memory consumption, and will be reactivated when you switch back to them (you can change how long in the Memory section, at the bottom of this page).',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-                ),
-              ],
-            ),
-          ),
-        ),
-      if (_settingsProvider.useTabsFullBrowser && _webViewProvider.onlyLoadTabsWhenUsed)
-        SearchableRow(
-          label: "Keep locked tabs loaded",
-          searchText: _searchText,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Flexible(
-                      child: Row(
-                        children: [
-                          Icon(Icons.keyboard_arrow_right_outlined),
-                          Flexible(child: Text("Keep locked tabs loaded")),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _webViewProvider.keepLockedTabsActive,
-                      onChanged: (value) {
-                        _webViewProvider.keepLockedTabsActive = value;
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeThumbColor: Colors.green,
-                    ),
-                  ],
-                ),
-                Text(
-                  'Locked tabs are loaded as soon as the browser starts and are never put to sleep or rested '
-                  'while you are away, so they are always ready when you switch to them. Only the tabs you lock '
-                  'are exempt; the rest keep behaving as above. Under memory pressure they can still be '
-                  'deactivated to keep the app alive.',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "Once you have this many tabs open, each tab shows its position number in a corner",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
                 ),
               ],
             ),
@@ -730,6 +712,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -886,6 +869,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -977,6 +961,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1131,6 +1116,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2350,6 +2336,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2421,6 +2408,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2554,6 +2542,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2620,6 +2609,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3007,6 +2997,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3156,6 +3147,59 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Close all tabs",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Close all tabs"),
+                  ElevatedButton(
+                    child: const Text("Close"),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text("Close all tabs?"),
+                          content: const Text(
+                            "Every tab except the main one will be closed, locked tabs included. "
+                            "The browser cache and your Torn session are kept.",
+                          ),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text("Cancel")),
+                            TextButton(onPressed: () => Navigator.of(c).pop(true), child: const Text("Close")),
+                          ],
+                        ),
+                      );
+                      if (confirm != true) return;
+                      _webViewProvider.closeAllTabsButMain();
+                      BotToast.showText(
+                        text: "All tabs closed except the main one",
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                        contentColor: Colors.grey[600]!,
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  "Closes every tab except the main one, without clearing the browser cache or logging you out",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -3360,6 +3404,85 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     final bool recoveryNoticeAllowed = _settingsProvider.browserRecoveryOverlayRemoteConfigAllowed;
 
     List<SearchableRow> rows = [
+      if (_settingsProvider.useTabsFullBrowser)
+        SearchableRow(
+          label: "Only load tabs when used",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Only load tabs when used")),
+                    Switch(
+                      value: _webViewProvider.onlyLoadTabsWhenUsed,
+                      onChanged: (value) {
+                        _webViewProvider.onlyLoadTabsWhenUsed = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                if (!_webViewProvider.onlyLoadTabsWhenUsed)
+                  const Text(
+                    "Every tab stays loaded in memory. With many tabs open, pages can turn blank or reload on "
+                    "their own; turning this on is recommended",
+                    style: TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
+                  )
+                else
+                  Text(
+                    'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, they will retrieve the web content when first used (tapped). This could add a small delay when the tab is pressed the first time, but should improve overall browser performance. Also, tabs that have not been used for a while will be deactivated to reduce memory consumption, and will be reactivated when you switch back to them (you can change how long below).',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      if (_settingsProvider.useTabsFullBrowser && _webViewProvider.onlyLoadTabsWhenUsed)
+        SearchableRow(
+          label: "Keep locked tabs loaded",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Row(
+                        children: [
+                          Icon(Icons.keyboard_arrow_right_outlined),
+                          Flexible(child: Text("Keep locked tabs loaded")),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _webViewProvider.keepLockedTabsActive,
+                      onChanged: (value) {
+                        _webViewProvider.keepLockedTabsActive = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'Locked tabs are loaded as soon as the browser starts and are never put to sleep or rested '
+                  'while you are away, so they are always ready when you switch to them. Only the tabs you lock '
+                  'are exempt; the rest keep behaving as above. Under memory pressure they can still be '
+                  'deactivated to keep the app alive.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+        ),
       if (Platform.isAndroid)
         SearchableRow(
           label: "Rest tabs while you are away",
@@ -3418,6 +3541,84 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     "again next time you tap them. Needs \"Only load tabs when used\" to be enabled",
                     style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (_settingsProvider.useTabsFullBrowser)
+        SearchableRow(
+          label: "Maximum loaded tabs",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Maximum loaded tabs")),
+                    _maxLiveTabsDropdown(),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: _webViewProvider.maxLiveTabsActive <= 0
+                      ? const Text(
+                          "Every open tab can stay loaded. With many tabs open, pages can turn blank or reload on "
+                          "their own",
+                          style: TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
+                        )
+                      : Text(
+                          "Tabs above this number are put to sleep, starting with the one you have not used for "
+                          "the longest, and load again when you tap them. This helps if pages turn blank when many "
+                          "tabs are open",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Recover blank pages automatically",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Recover blank pages automatically")),
+                    Switch(
+                      value: _webViewProvider.blankRecoveryEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _webViewProvider.blankRecoveryEnabled = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: _webViewProvider.blankRecoveryEnabled
+                      ? Text(
+                          "If the page you are looking at stops drawing (blank areas) because too many tabs are "
+                          "using the browser memory, Torn PDA puts the other tabs to sleep and redraws it",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        )
+                      : const Text(
+                          "With many tabs open, pages that stop drawing will stay blank until you reload them or "
+                          "close some tabs",
+                          style: TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
                 ),
               ],
             ),
@@ -3700,6 +3901,52 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         if (value == null) return;
         setState(() {
           _webViewProvider.tabSleepMinutesOverride = value;
+        });
+      },
+    );
+  }
+
+  Widget _maxLiveTabsDropdown() {
+    const List<int> options = WebViewProvider.maxLiveTabsOptions;
+    final int current = options.contains(_webViewProvider.maxLiveTabsOverride)
+        ? _webViewProvider.maxLiveTabsOverride
+        : 0;
+
+    String label(int tabs) => tabs <= 0 ? "No limit" : "$tabs";
+
+    return DropdownButton<int>(
+      value: current,
+      items: [
+        DropdownMenuItem(
+          value: 0,
+          child: SizedBox(
+            width: 130,
+            child: Text(
+              "Default (${label(_webViewProvider.maxLiveTabsDefaultRC)})",
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
+        for (final tabs in options.skip(1))
+          DropdownMenuItem(
+            value: tabs,
+            child: SizedBox(
+              width: 130,
+              child: Text(
+                label(tabs),
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _webViewProvider.maxLiveTabsOverride = value;
         });
       },
     );

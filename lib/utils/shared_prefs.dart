@@ -137,6 +137,7 @@ class Prefs {
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
+  final String _kManyTabsAlerted = "pda_manyTabsAlerted";
   final String _kFirstTabLockAlerted = "pda_firstTabLockAlerted";
   final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
@@ -454,6 +455,11 @@ class Prefs {
   // and 0 = follow default for the sleep period). RC values are persisted to be known at cold start
   final String _kTabSleepMinutesOverride = "pda_tabSleepMinutesOverride";
   final String _kTabSleepMinutesDefaultRC = "pda_tabSleepMinutesDefaultRC";
+  final String _kMaxLiveTabsOverride = "pda_maxLiveTabsOverride";
+  final String _kMaxLiveTabsDefaultRC = "pda_maxLiveTabsDefaultRC";
+  final String _kBlankDetectorModeRC = "pda_blankDetectorModeRC";
+  final String _kBlankRecoveryEnabled = "pda_blankRecoveryEnabled";
+  final String _kTabNumbersFrom = "pda_tabNumbersFrom";
   final String _kParkBackgroundTabsOverride = "pda_parkBackgroundTabsOverride";
   final String _kParkBackgroundTabsDefaultRC = "pda_parkBackgroundTabsDefaultRC";
   final String _kParkBackgroundTabsAllowedRC = "pda_parkBackgroundTabsAllowedRC";
@@ -1837,6 +1843,14 @@ class Prefs {
 
   Future setExcessTabsAlerted(bool value) async {
     return await PrefsDatabase.setBool(_kExcessTabsAlerted, value);
+  }
+
+  Future<bool> getManyTabsAlerted() async {
+    return await PrefsDatabase.getBool(_kManyTabsAlerted, false);
+  }
+
+  Future setManyTabsAlerted(bool value) async {
+    return await PrefsDatabase.setBool(_kManyTabsAlerted, value);
   }
 
   /// ----------------------------
@@ -4194,6 +4208,49 @@ class Prefs {
 
   Future setTabSleepMinutesDefaultRC(int value) async {
     return await PrefsDatabase.setInt(_kTabSleepMinutesDefaultRC, value);
+  }
+
+  /// 0 follows Remote Config, -1 is no limit
+  Future<int> getMaxLiveTabsOverride() async {
+    return await PrefsDatabase.getInt(_kMaxLiveTabsOverride, 0);
+  }
+
+  Future setMaxLiveTabsOverride(int value) async {
+    return await PrefsDatabase.setInt(_kMaxLiveTabsOverride, value);
+  }
+
+  Future<int> getMaxLiveTabsDefaultRC() async {
+    return await PrefsDatabase.getInt(_kMaxLiveTabsDefaultRC, 0);
+  }
+
+  Future setMaxLiveTabsDefaultRC(int value) async {
+    return await PrefsDatabase.setInt(_kMaxLiveTabsDefaultRC, value);
+  }
+
+  /// 0 off, 1 measure, 2 recover
+  Future<int> getBlankDetectorModeRC() async {
+    return await PrefsDatabase.getInt(_kBlankDetectorModeRC, 2);
+  }
+
+  Future setBlankDetectorModeRC(int value) async {
+    return await PrefsDatabase.setInt(_kBlankDetectorModeRC, value);
+  }
+
+  Future<bool> getBlankRecoveryEnabled() async {
+    return await PrefsDatabase.getBool(_kBlankRecoveryEnabled, true);
+  }
+
+  Future setBlankRecoveryEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kBlankRecoveryEnabled, value);
+  }
+
+  /// 0 is off
+  Future<int> getTabNumbersFrom() async {
+    return await PrefsDatabase.getInt(_kTabNumbersFrom, 10);
+  }
+
+  Future setTabNumbersFrom(int value) async {
+    return await PrefsDatabase.setInt(_kTabNumbersFrom, value);
   }
 
   /// "default" (follow Remote Config), "on" or "off"

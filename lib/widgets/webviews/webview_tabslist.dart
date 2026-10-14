@@ -558,6 +558,22 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin, Widge
                                   size: 9,
                                 ),
                               ),
+                            if (_webViewProvider!.tabNumbersFrom > 0 &&
+                                _webViewProvider!.tabList.length >= _webViewProvider!.tabNumbersFrom)
+                              Positioned(
+                                bottom: 0,
+                                left: _webViewProvider!.tabList[i].customName.isNotEmpty ? 11 : 2,
+                                child: IgnorePointer(
+                                  child: Text(
+                                    "${i + 1}",
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      height: 1,
+                                      color: _themeProvider.mainText.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                         SizedBox(height: 40, child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey[400])),
