@@ -2782,7 +2782,6 @@ class WebViewProvider extends ChangeNotifier {
 
     try {
       final String originalInitUrl = inputUrl!;
-      String authUrlToLoad;
       if (!originalInitUrl.contains("torn.com")) return inputUrl;
       // Auth redirects to attack pages might fail
       if (originalInitUrl.contains("page.php?sid=attack&user")) return inputUrl;
@@ -2803,9 +2802,7 @@ class WebViewProvider extends ChangeNotifier {
           );
 
           if (loginResponse.success) {
-            // Join the standard Auth URL and the original URL requested as part of the redirect parameter
-            authUrlToLoad = loginResponse.authUrl + originalInitUrl;
-            log("Auth URL: $authUrlToLoad");
+            log("Auth URL ready for $originalInitUrl");
           } else {
             error = true;
             log("Auth URL failed: ${loginResponse.message}");
