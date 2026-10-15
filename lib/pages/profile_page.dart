@@ -5816,7 +5816,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (notification.id == 109) {
           war = true;
         }
-        if (notification.id == 201) {
+        if (notification.id == 110) {
           raceStart = true;
         }
         if (notification.id == 113) {
