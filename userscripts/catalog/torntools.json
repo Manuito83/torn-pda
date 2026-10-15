@@ -840,6 +840,18 @@
       "matches": [
         "https://*.torn.com/personalstats.php*"
       ]
+    },
+    {
+      "id": "torntools.race-car-selector",
+      "greasyforkId": 600218,
+      "name": "Race Car Selector",
+      "description": "Recommend a car to use when entering a race.",
+      "category": "racing",
+      "downloadUrl": "https://update.greasyfork.org/scripts/600218/TORN%3A%20TornTools%20-%20Race%20Car%20Selector.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/600218-torn-torntools-race-car-selector",
+      "matches": [
+        "https://*.torn.com/page.php?sid=racing*"
+      ]
     }
   ]
 }
