@@ -221,6 +221,7 @@ class Prefs {
   final String _kShowArrivalTime = "pda_showArrivalTime";
   final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
+  final String _kTravelTimeReduction = "pda_travelTimeReduction";
   final String _kForeignStocksDataProvider = "pda_foreignStocksDataProvider";
   final String _kActiveRestocks = "pda_activeRestocks";
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
@@ -2197,6 +2198,14 @@ class Prefs {
 
   Future setTravelTicket(String value) async {
     return await PrefsDatabase.setString(_kTravelTicket, value);
+  }
+
+  Future<double> getTravelTimeReduction() async {
+    return await PrefsDatabase.getDouble(_kTravelTimeReduction, 0);
+  }
+
+  Future setTravelTimeReduction(double value) async {
+    return await PrefsDatabase.setDouble(_kTravelTimeReduction, value);
   }
 
   Future<String> getForeignStocksDataProvider() async {

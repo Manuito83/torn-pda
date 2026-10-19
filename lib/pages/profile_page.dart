@@ -1696,6 +1696,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   destination: _user!.travel!.destination,
                   settingsProvider: _settingsProvider,
                   dateTimeArrival: dateTimeArrival,
+                  departed: _user!.travel!.departed,
+                  timestamp: _user!.travel!.timestamp,
                 ),
               ],
             ),
@@ -1774,6 +1776,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             destination: _user!.travel!.destination,
             settingsProvider: _settingsProvider,
             dateTimeArrival: DateTime.now(),
+            departed: _user!.travel!.departed,
+            timestamp: _user!.travel!.timestamp,
           ),
         ],
       );

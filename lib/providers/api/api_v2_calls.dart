@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:get/get.dart';
@@ -10,6 +11,8 @@ import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.da
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
 
 String apiV2LegacyRequests = "";
 
@@ -52,7 +55,7 @@ class ApiCallsV2 {
       apiCall: (client, apiKey) {
         return client.userGet(
           selections:
-              "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket"
+              "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket,perks"
               "${includeOrganizedCrime ? ",organizedcrime" : ""}"
               "${includeVirus ? ",virus" : ""}",
         );
@@ -109,6 +112,18 @@ class ApiCallsV2 {
         if (!_isSelectionError(node)) {
           virusResolved = true;
           if (node != null) virus = UserVirus.fromJson(_deepCastJson(node) as Map<String, dynamic>);
+        }
+      }
+
+      final perksNode = _deepCastJson(apiResponse["perks"]);
+      if (perksNode is Map && perksNode.values.any((list) => list is List)) {
+        final reduction = TravelTimes.parseReduction([
+          for (final list in perksNode.values)
+            if (list is List) ...list,
+        ]);
+        if (reduction != TravelTimes.reductionPercent) {
+          TravelTimes.reductionPercent = reduction;
+          unawaited(Prefs().setTravelTimeReduction(reduction));
         }
       }
 

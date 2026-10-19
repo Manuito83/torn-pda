@@ -624,6 +624,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             destination: _travelModel.destination,
             settingsProvider: _settingsProvider,
             dateTimeArrival: _travelModel.timeArrival,
+            departed: _travelModel.departed,
+            timestamp: _travelModel.timeStamp,
           ),
           Padding(
             padding: const EdgeInsets.only(top: 20),
@@ -672,6 +674,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               destination: _travelModel.destination,
               settingsProvider: _settingsProvider,
               dateTimeArrival: _travelModel.timeArrival,
+              departed: _travelModel.departed,
+              timestamp: _travelModel.timeStamp,
             ),
           ),
           ElevatedButton(
@@ -801,6 +805,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               destination: _travelModel.destination,
               settingsProvider: _settingsProvider,
               dateTimeArrival: _travelModel.timeArrival,
+              departed: _travelModel.departed,
+              timestamp: _travelModel.timeStamp,
             ),
           ),
         ];

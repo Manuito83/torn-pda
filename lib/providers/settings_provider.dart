@@ -1997,6 +1997,7 @@ class SettingsProvider extends ChangeNotifier {
       case "business":
         _travelTicket = TravelTicket.business;
     }
+    TravelTimes.reductionPercent = await Prefs().getTravelTimeReduction();
 
     _foreignStocksDataProvider = await Prefs().getForeignStocksDataProvider();
 

@@ -192,6 +192,15 @@ void main() {
       );
     });
 
+    test('a book-shortened flight matches once the reduction is known', () {
+      TravelTimes.reductionPercent = 25;
+      addTearDown(() => TravelTimes.reductionPercent = 0);
+      expect(
+        TravelTimes.inferOriginCountry(durationSeconds: 6795, apiMethod: 'Standard'),
+        'United Kingdom',
+      );
+    });
+
     test('unknown method or bad duration stays anonymous', () {
       expect(
         TravelTimes.inferOriginCountry(durationSeconds: minutes(213), apiMethod: null),
@@ -201,6 +210,31 @@ void main() {
         TravelTimes.inferOriginCountry(durationSeconds: 0, apiMethod: 'Standard'),
         isNull,
       );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // travel time reduction
+  // -------------------------------------------------------------------------
+  group('travel time reduction', () {
+    test('parseReduction sums matching perks and ignores the rest', () {
+      expect(
+        TravelTimes.parseReduction([
+          '+ 25% travel time reduction',
+          '+ 10.5% Travel Time Reduction',
+          '+ 10% gym gains',
+        ]),
+        35.5,
+      );
+      expect(TravelTimes.parseReduction(['+ 10% gym gains']), 0);
+    });
+
+    test('a 25% reduction shortens the table time', () {
+      TravelTimes.reductionPercent = 25;
+      addTearDown(() => TravelTimes.reductionPercent = 0);
+      expect(TravelTimes.travelTimeMinutesOneWay(countryName: 'Argentina', ticket: TravelTicket.standard), 119);
+      expect(TravelTimes.travelTimeMinutesOneWay(countryName: 'Japan', ticket: TravelTicket.private), 112);
+      expect(TravelTimes.travelTimeMinutesOneWay(countryName: 'Torn', ticket: TravelTicket.standard), 0);
     });
   });
 }

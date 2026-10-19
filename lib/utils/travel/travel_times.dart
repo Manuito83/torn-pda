@@ -4,6 +4,18 @@ import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 enum TravelTicket { standard, private, wlt, business }
 
 class TravelTimes {
+  static double reductionPercent = 0;
+
+  static double parseReduction(Iterable<dynamic> perks) {
+    final reg = RegExp(r'(\d+(?:\.\d+)?)\s*%\s*travel time reduction', caseSensitive: false);
+    double total = 0;
+    for (final perk in perks) {
+      final match = reg.firstMatch(perk.toString());
+      if (match != null) total += double.parse(match.group(1)!);
+    }
+    return total.clamp(0, 100).toDouble();
+  }
+
   static const Map<CountryName, String> _apiNames = {
     CountryName.ARGENTINA: 'Argentina',
     CountryName.CANADA: 'Canada',
@@ -133,34 +145,35 @@ class TravelTimes {
         tripCanada = 12;
     }
 
+    final int tableMinutes;
     switch (code!) {
       case CountryName.ARGENTINA:
-        return tripArgentina;
+        tableMinutes = tripArgentina;
       case CountryName.CANADA:
-        return tripCanada;
+        tableMinutes = tripCanada;
       case CountryName.CAYMAN_ISLANDS:
-        return tripCayman;
+        tableMinutes = tripCayman;
       case CountryName.CHINA:
-        return tripChina;
+        tableMinutes = tripChina;
       case CountryName.HAWAII:
-        return tripHawaii;
+        tableMinutes = tripHawaii;
       case CountryName.JAPAN:
-        return tripJapan;
+        tableMinutes = tripJapan;
       case CountryName.MEXICO:
-        return tripMexico;
+        tableMinutes = tripMexico;
       case CountryName.SOUTH_AFRICA:
-        return tripSouthAfrica;
+        tableMinutes = tripSouthAfrica;
       case CountryName.SWITZERLAND:
-        return tripSwitzerland;
+        tableMinutes = tripSwitzerland;
       case CountryName.UAE:
-        return tripUAE;
+        tableMinutes = tripUAE;
       case CountryName.UNITED_KINGDOM:
-        return tripUK;
+        tableMinutes = tripUK;
       case CountryName.TORN:
         // no travel time
-        break;
+        tableMinutes = 0;
     }
 
-    return 0;
+    return (tableMinutes * (100 - reductionPercent) / 100).round();
   }
 }

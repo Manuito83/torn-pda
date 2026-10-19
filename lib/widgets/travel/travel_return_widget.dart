@@ -9,11 +9,15 @@ class TravelReturnWidget extends StatelessWidget {
     required this.destination,
     required this.settingsProvider,
     required this.dateTimeArrival,
+    this.departed,
+    this.timestamp,
   });
 
   final String? destination;
   final SettingsProvider? settingsProvider;
   final DateTime? dateTimeArrival;
+  final int? departed;
+  final int? timestamp;
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +25,16 @@ class TravelReturnWidget extends StatelessWidget {
     String? formattedReturn = "";
     Widget returnWidget = const SizedBox.shrink();
     if (destination != "Torn") {
-      final int tornBackMinutes = TravelTimes.travelTimeMinutesOneWay(
-        countryName: destination!,
-        ticket: settingsProvider!.travelTicket,
-      );
-      final DateTime returnTime = dateTimeArrival!.add(Duration(minutes: tornBackMinutes));
+      // Return lasts as long as outbound
+      int tornBackSeconds = (timestamp ?? 0) - (departed ?? 0);
+      if ((departed ?? 0) <= 0 || tornBackSeconds <= 0) {
+        tornBackSeconds = TravelTimes.travelTimeMinutesOneWay(
+              countryName: destination!,
+              ticket: settingsProvider!.travelTicket,
+            ) *
+            60;
+      }
+      final DateTime returnTime = dateTimeArrival!.add(Duration(seconds: tornBackSeconds));
       formattedReturn = TimeFormatter(
         inputTime: returnTime,
         timeFormatSetting: settingsProvider!.currentTimeFormat,
