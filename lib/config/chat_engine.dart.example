@@ -1,0 +1,36 @@
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
+// Disabled bundle blocker, matches nothing
+final ContentBlocker tchatBundleBlocker = ContentBlocker(
+  trigger: ContentBlockerTrigger(urlFilter: "^pda-chat-disabled\$"),
+  action: ContentBlockerAction(type: ContentBlockerActionType.BLOCK),
+);
+
+// No-op guard script
+final UserScript tchatGuardScript = UserScript(
+  groupName: 'pda_tchatGuard',
+  injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+  source: "",
+);
+
+// Native chat not configured in public builds
+class ChatEngine {
+  ChatEngine._();
+  static final ChatEngine instance = ChatEngine._();
+
+  static const bool enabled = false;
+
+  Stream<Map> get data => Stream<Map>.empty();
+
+  bool get active => false;
+
+  void start() {}
+
+  Future<void> stop({bool quiet = false}) async {}
+
+  Future<void> reconnect() async {}
+
+  Future<void> switchAccount() async {}
+
+  Future<bool> call(String method, [List<dynamic> args = const []]) async => false;
+}

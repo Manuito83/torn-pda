@@ -15,10 +15,10 @@ import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/pages/alerts/alerts_troubleshooting_page.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/pages/cityshops/city_shops_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -33,8 +33,8 @@ import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
-import 'package:torn_pda/widgets/alerts/sendbird_dnd_dialog.dart';
 import 'package:torn_pda/widgets/alerts/work_stats_targets_dialog.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 
 class AlertsSettings extends StatefulWidget {
@@ -67,8 +67,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
   final _scrollControllerRetalsNotification = ScrollController();
   final _scrollControllerRetalsDonor = ScrollController();
 
-  bool _togglingSendbirdNotifications = false;
-
   String? _lootAheadSelection;
   String? _lootRangersAheadSelection;
   bool _aheadSelectionsInitialised = false;
@@ -79,11 +77,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-    final sbController = Get.find<SendbirdController>();
     _getFirebaseAndTornDetails = Future.wait([
       FirestoreHelper().getUserProfile(force: true, fromServer: true),
       _getFactionApiAccess(),
-      sbController.updateFactionAndCompanyPreferences(),
     ]);
 
     analytics?.logScreenView(screenName: 'alerts');
@@ -172,7 +168,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
     return (Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26);
   }
 
-  bool get _sendbirdOn => Get.find<SendbirdController>().sendBirdNotificationsEnabled;
+  bool get _dmPushOn => NativeChat.compiled && NativeChat.prefs.dmPush;
 
   int _countOn(List<bool?> flags) => flags.where((f) => f == true).length;
 
@@ -213,7 +209,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   List<bool?> _socialFlags() {
     final m = _firebaseUserModel!;
-    return [m.messagesNotification, m.eventsNotification, _sendbirdOn, m.forumsSubscription];
+    return [m.messagesNotification, m.eventsNotification, _dmPushOn, m.forumsSubscription];
   }
 
   List<bool?> _otherFlags() => [_firebaseUserModel!.workStatsNotification];
@@ -1465,7 +1461,25 @@ class AlertsSettingsState extends State<AlertsSettings> {
               },
             ),
           ]),
-        GetBuilder(init: SendbirdController(), builder: (sendbird) => _tornChatRows(sendbird)),
+        if (NativeChat.compiled)
+          ListenableBuilder(
+            listenable: NativeChat.prefs,
+            builder: (context, _) => AlertRow(
+              title: "DM notifications",
+              subtitle:
+                  "$alertDmPushText. Sound, vibration and glow while the chat is open are in the chat settings",
+              extra: Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+                  onPressed: () => showChatSettings(Navigator.of(context), alerts: true),
+                  child: const Text("Chat settings"),
+                ),
+              ),
+              value: NativeChat.prefs.dmPush,
+              onChanged: (enabled) => setState(() => NativeChat.prefs.setDmPush(enabled)),
+            ),
+          ),
         AlertRow(
           title: "Forums subscribed threads",
           subtitle:
@@ -1480,103 +1494,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
             );
           },
         ),
-      ],
-    );
-  }
-
-  Widget _tornChatRows(SendbirdController sendbird) {
-    final bool available =
-        (Platform.isAndroid && sendbird.sendBirdPushAndroidRemoteConfigEnabled) ||
-        (Platform.isIOS && sendbird.sendBirdPushIOSRemoteConfigEnabled);
-
-    if (!available) {
-      return AlertRow(
-        title: "Torn chat messages",
-        subtitle:
-            "Notifications for Torn chat messages are temporarily disabled. You can find more information "
-            "in the forums or Discord. Apologies for the inconvenience.",
-        subtitleColor: _themeProvider!.getTextColor(Colors.orange[900]!),
-        value: false,
-      );
-    }
-
-    final String otherDevicesNote =
-        "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other "
-        "devices that you use with this player account";
-
-    AlertRow excludeRow({
-      required String title,
-      required String subtitle,
-      required bool value,
-      required ValueChanged<bool> onChanged,
-    }) {
-      return AlertRow(
-        sub: true,
-        title: title,
-        subtitle: value ? "$subtitle. $otherDevicesNote" : subtitle,
-        subtitleColor: value ? _themeProvider!.getTextColor(Colors.orange[900]!) : null,
-        value: value,
-        onChanged: onChanged,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AlertRow(
-          title: "Torn chat messages",
-          subtitle: "Enable notifications for Torn chat messages",
-          value: sendbird.sendBirdNotificationsEnabled,
-          trailing: _togglingSendbirdNotifications
-              ? const Padding(
-                  padding: EdgeInsets.only(right: 14.0),
-                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                )
-              : null,
-          onChanged: (enabled) async {
-            setState(() {
-              _togglingSendbirdNotifications = true;
-            });
-            await sendbird.sendBirdNotificationsToggle(enabled: enabled);
-            setState(() {
-              _togglingSendbirdNotifications = false;
-            });
-          },
-        ),
-        if (sendbird.sendBirdNotificationsEnabled)
-          _subRows([
-            AlertRow(
-              sub: true,
-              title: "Do not disturb",
-              trailing: Icon(Icons.more_time_outlined, color: _themeProvider!.mainText.withValues(alpha: 0.78)),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return SendbirdDoNotDisturbDialog();
-                  },
-                );
-              },
-            ),
-            excludeRow(
-              title: "Exclude faction messages",
-              subtitle: "Faction messages won't be shown",
-              value: sendbird.excludeFactionMessages,
-              onChanged: (enabled) => sendbird.excludeFactionMessages = enabled,
-            ),
-            excludeRow(
-              title: "Exclude company messages",
-              subtitle: "Company messages won't be shown",
-              value: sendbird.excludeCompanyMessages,
-              onChanged: (enabled) => sendbird.excludeCompanyMessages = enabled,
-            ),
-            excludeRow(
-              title: "Exclude Elimination event messages",
-              subtitle: "Elimination event messages won't be shown",
-              value: sendbird.excludeEliminationMessages,
-              onChanged: (enabled) => sendbird.excludeEliminationMessages = enabled,
-            ),
-          ]),
       ],
     );
   }

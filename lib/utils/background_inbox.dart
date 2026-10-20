@@ -1,14 +1,12 @@
-import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:torn_pda/providers/chat/chat_telemetry.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 const String _kPendingStockUpdateInboxKey = 'pda_pending_stock_updates';
 const String _kStockChannelSubstring = 'Alerts stocks';
-const String _kSendbirdKey = 'sendbird';
-const String _kMessageBodyKey = 'message';
 const String _kChannelIdKey = 'channelId';
 
 /// Background entry point for FCM messages in a headless isolate
@@ -28,9 +26,9 @@ Future<void> messagingBackgroundHandler(RemoteMessage message) async {
   }
 
   try {
-    await _handleSendbirdAlert(data);
-  } catch (e) {
-    debugPrint('FCM sendbird alert error: $e');
+    await showTornChatNotification(data);
+  } catch (_) {
+    await ChatTelemetry.push('error');
   }
 }
 
@@ -73,21 +71,4 @@ Future<void> _handleStockAlert(Map<String, dynamic> data, RemoteNotification? no
   } catch (e) {
     debugPrint('Handle stock alert error: $e');
   }
-}
-
-Future<void> _handleSendbirdAlert(Map<String, dynamic> data) async {
-  final rawSendbird = data[_kSendbirdKey];
-  if (rawSendbird == null) return;
-
-  final sendbirdData = jsonDecode(rawSendbird);
-  final channelUrl = sendbirdData['channel']['channel_url'];
-
-  final rawMessage = data[_kMessageBodyKey];
-  if (rawMessage is! String || rawMessage.isEmpty) return;
-
-  final parts = rawMessage.split(":");
-  final sender = parts.isNotEmpty ? parts[0].trim() : "";
-  final msg = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
-
-  await showSendbirdNotification(sender, msg, channelUrl, fromBackground: true);
 }

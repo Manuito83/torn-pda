@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class UserHelper {
   static UserController get _uc => Get.find<UserController>();
@@ -27,7 +28,10 @@ class UserHelper {
   static String get spouseName => _uc.basic?.married?.spouseName ?? "";
 
   // User management methods
-  static void removeUser() => _uc.removeUser();
+  static void removeUser() {
+    _uc.removeUser();
+    NativeChat.forgetAccount();
+  }
   static void setUserDetails({required OwnProfileBasic userDetails}) => _uc.setUserDetails(userDetails: userDetails);
 
   // Direct access to basic profile when needed

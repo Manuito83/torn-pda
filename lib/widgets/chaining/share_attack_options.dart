@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/external/ffscouter_comm.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
-import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import '../../models/faction/faction_model.dart';
 
@@ -295,67 +295,67 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
-            Row(
-              children: [
-                ElevatedButton(
-                  style: buttonStyle,
-                  onPressed: () {
-                    _saveSettings();
-                    Clipboard.setData(ClipboardData(text: _buildShareText()));
-                    Navigator.of(context).pop();
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.copy),
-                        SizedBox(height: 2),
-                        Text(
-                          'COPY',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+            Flexible(
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (NativeChat.canShare) ...[
+                    ElevatedButton(
+                      style: buttonStyle,
+                      onPressed: () {
+                        _saveSettings();
+                        Navigator.of(context).pop();
+                        ChatShareIn.shareText(_buildShareText());
+                      },
+                      child: _buttonLabel(Icons.chat_bubble_outline, 'SHARE TO\nCHAT'),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: buttonStyle,
-                  onPressed: () {
-                    _saveSettings();
-                    final text = _buildShareText();
-                    final sb = Get.find<SendbirdController>();
-                    final faction = UserHelper.factionId;
-                    if (faction != 0) {
-                      sb.sendMessage(channelUrl: 'faction-$faction', message: text);
-                      debugPrint(text);
-                    }
-                    Navigator.of(context).pop();
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.chat),
-                        SizedBox(height: 2),
-                        Text(
-                          'FACTION\nCHAT',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                  ],
+                  if (NativeChat.canShareToFaction) ...[
+                    ElevatedButton(
+                      style: buttonStyle,
+                      onPressed: () {
+                        _saveSettings();
+                        Navigator.of(context).pop();
+                        NativeChat.shareToFaction(_buildShareText());
+                      },
+                      child: _buttonLabel(Icons.forum_outlined, 'FACTION\nCHAT'),
                     ),
+                  ],
+                  ElevatedButton(
+                    style: buttonStyle,
+                    onPressed: () {
+                      _saveSettings();
+                      Clipboard.setData(ClipboardData(text: _buildShareText()));
+                      Navigator.of(context).pop();
+                    },
+                    child: _buttonLabel(Icons.copy, 'COPY'),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buttonLabel(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon),
+          const SizedBox(height: 2),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
 }

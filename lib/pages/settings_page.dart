@@ -36,7 +36,6 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -4477,10 +4476,6 @@ class SettingsPageState extends State<SettingsPage> {
               if (Platform.isAndroid) {
                 FirestoreHelper().setVibrationPattern(_vibrationValue);
               }
-
-              // Sendbird notifications
-              final sbController = Get.find<SendbirdController>();
-              sbController.register();
             } catch (firebaseError) {
               log("Settings: Firebase/Firestore operations failed, continuing: $firebaseError");
             }
@@ -4517,13 +4512,11 @@ class SettingsPageState extends State<SettingsPage> {
       }
     } catch (e, stack) {
       if (!Platform.isWindows) {
-        String currentKey = _apiKeyInputController.text.trim();
-        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $currentKey. "
-            "Error: $e. Stack: $stack");
+        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. Error: $e. Stack: $stack");
         FirebaseCrashlytics.instance.recordError(
           e,
           stack,
-          information: ['API Key: $currentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser?.uid}'],
+          information: ['ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser?.uid}'],
         );
       }
     }

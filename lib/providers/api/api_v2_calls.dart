@@ -246,6 +246,28 @@ class ApiCallsV2 {
     }
   }
 
+  static Future<FactionBasic?> getOwnFactionBasic_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.factionBasic,
+      apiCall: (client, apiKey) {
+        return client.factionBasicGet();
+      },
+    );
+    return apiResponse is FactionBasicResponse ? apiResponse.basic : null;
+  }
+
+  /// Response or ApiError
+  static Future<Object?> getOwnFactionNews_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    return apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.factionNews,
+      apiCall: (client, apiKey) {
+        return client.factionNewsGet(cat: enums.FactionNewsCategory.main, limit: 50);
+      },
+    );
+  }
+
   static Future<dynamic> getTornCalendar_v2() async {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
@@ -307,6 +329,17 @@ class ApiCallsV2 {
     );
 
     return apiResponse;
+  }
+
+  static Future<UserListResponse?> getUserFriendsList_v2({int offset = 0}) async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.userFriendsList,
+      apiCall: (client, apiKey) {
+        return client.userListGet(cat: enums.UserListEnum.friends, limit: 50, offset: offset);
+      },
+    );
+    return apiResponse is UserListResponse ? apiResponse : null;
   }
 }
 

@@ -16,6 +16,9 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/chat/chat_help.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
 import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -25,6 +28,7 @@ enum TipClass {
   browserGeneral,
   browserTabs,
   browserFAB,
+  chat,
   appwidget,
   travel,
   profile,
@@ -60,17 +64,23 @@ abstract class TipTextBuilder {
 }
 
 class ExpandableTip extends TipTextBuilder {
-  ExpandableTip({this.expandedValue, super.headerValue, super.isExpanded});
+  ExpandableTip({this.expandedValue, this.scenes = const [], super.headerValue, super.isExpanded});
 
   String? expandedValue;
+  final List<FeatureDiagramScene> scenes;
 
   @override
   Widget buildExpandedText() {
-    return Text(
+    final text = Text(
       expandedValue!,
       style: const TextStyle(
         fontSize: 13,
       ),
+    );
+    if (scenes.isEmpty) return text;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [text, const SizedBox(height: 12), FeatureDiagram(scenes: scenes)],
     );
   }
 }
@@ -117,6 +127,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
   var _chainingWarTipsList = <TipTextBuilder>[];
   var _spiesTipsList = <TipTextBuilder>[];
   var _ffScouterTipsList = <TipTextBuilder>[];
+  var _chatTipGroups = <ChatHelpGroup, List<TipTextBuilder>>{};
   var _tradingTipsList = <TipTextBuilder>[];
   var _deepLinksTipsList = <TipTextBuilder>[];
   var _userScriptsTipsList = <TipTextBuilder>[];
@@ -141,6 +152,13 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _browserGeneralTipList = buildBrowserGeneralTips();
     _browserTabsTipList = buildBrowserTabsTips();
     _browserFABTipList = buildBrowserFABTips();
+    _chatTipGroups = {
+      for (final g in ChatHelpGroup.values)
+        g: [
+          for (final e in chatHelp.where((e) => e.group == g))
+            ExpandableTip(headerValue: e.title, expandedValue: e.text, scenes: e.scenes),
+        ],
+    };
     _appwidgetTipsList = buildAppwidgetSectionTips();
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
@@ -225,6 +243,12 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.browserFAB),
                 const SizedBox(height: 25),
+                if (NativeChat.compiled) ...[
+                  const Text("CHAT"),
+                  const SizedBox(height: 10),
+                  tipsPanels(TipClass.chat),
+                  const SizedBox(height: 25),
+                ],
                 if (Platform.isAndroid)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,6 +348,19 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         listToShow = _browserTabsTipList;
       case TipClass.browserFAB:
         listToShow = _browserFABTipList;
+      case TipClass.chat:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final g in ChatHelpGroup.values) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              ),
+              _tipPanelList(_chatTipGroups[g]!),
+            ],
+          ],
+        );
       case TipClass.appwidget:
         listToShow = _appwidgetTipsList;
       case TipClass.travel:
@@ -348,6 +385,10 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         listToShow = _userScriptsTipsList;
     }
 
+    return _tipPanelList(listToShow);
+  }
+
+  Widget _tipPanelList(List<TipTextBuilder> listToShow) {
     return ExpansionPanelList(
       expandedHeaderPadding: const EdgeInsets.all(0),
       expansionCallback: (int index, bool isExpanded) {
@@ -772,10 +813,13 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     tips.add(
       ExpandableTip(
         headerValue: "Use the chat in different tabs",
-        expandedValue: "You can activate or deactivate the chat in separate tabs by short-tapping the chat icon "
-            "(enabled in Settings by default)."
-            "\n\nIf you wish to change the standard behavior of the chat when a new tab is opened, long-press the "
-            "chat icon in any tab and you'll get a confirmation message of the change.",
+        expandedValue: NativeChat.compiled
+            ? "Tap the chat icon to open the Torn PDA chat. Double tap it to hide or show Torn's own chat in that "
+                  "tab, and long press it for more options, like hiding Torn's chat in every tab."
+            : "You can activate or deactivate the chat in separate tabs by short-tapping the chat icon "
+                  "(enabled in Settings by default)."
+                  "\n\nIf you wish to change the standard behavior of the chat when a new tab is opened, long-press the "
+                  "chat icon in any tab and you'll get a confirmation message of the change.",
       ),
     );
     tips.add(
@@ -838,6 +882,15 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     tips.add(
       ExpandableTip(
         headerValue: "Two groups of tabs side by side",
+        scenes: [
+          FeatureDiagramScene.dragToApp,
+          FeatureDiagramScene.dragToOtherPanel,
+          FeatureDiagramScene.copyMainTab,
+          FeatureDiagramScene.linkCurrentTab,
+          FeatureDiagramScene.linkNewTab,
+          FeatureDiagramScene.linkTabBehindApp,
+          FeatureDiagramScene.linkNewTabAppSide,
+        ],
         expandedValue: "On wide screens (tablets, unfolded foldables or large Android windows) you can show "
             "two groups of browser tabs at once.\n\n"
             "First choose 'Browser left' or 'Browser right' in Settings / Split screen. On phones and foldables, "
@@ -1148,6 +1201,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       tips.add(
         ExpandableTip(
           headerValue: "Floating window",
+          scenes: [FeatureDiagramScene.pipChain, FeatureDiagramScene.pipPlayer],
           expandedValue: "On Android, the floating window shrinks the app into a small window that stays on top of "
               "other apps, so you can keep an eye on the chain or on a player while you do something else.\n\n"
               "Tap the window icon in the chain widget to watch the chain: you get the counter, the chain watcher "

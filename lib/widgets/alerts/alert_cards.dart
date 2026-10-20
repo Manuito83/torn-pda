@@ -3,6 +3,8 @@ import 'package:torn_pda/providers/theme_provider.dart';
 
 enum AlertChipKind { neutral, warning, critical }
 
+const alertDmPushText = 'Direct messages reach your phone even with Torn PDA closed';
+
 class AlertGroupCard extends StatelessWidget {
   final IconData icon;
   final String title;

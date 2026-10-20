@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
@@ -49,7 +48,6 @@ import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -66,6 +64,7 @@ import 'package:torn_pda/providers/ffscouter_flights_controller.dart';
 import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
 import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
+import 'package:torn_pda/providers/chat/chat_telemetry.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
@@ -82,9 +81,12 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
+import 'package:torn_pda/widgets/chat/chat_overlay.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 import 'package:torn_pda/widgets/pip/pip_view.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
+import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
 import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
@@ -221,11 +223,13 @@ Future<void> main() async {
   await _initializeBackupAndTheme(widgetsBinding);
   _startDebugWakelock();
   await _initializeFirebase();
-  if (_isFirebaseInitialized) unawaited(ExitInfo.reportPreviousExits());
+  if (_isFirebaseInitialized) {
+    unawaited(ExitInfo.reportPreviousExits());
+    unawaited(ChatTelemetry.flush());
+  }
   await _initializeWorkManager();
   await _initializeHomeWidget();
   await _initializeGetXControllers();
-  await _initializeSendbird();
   await _initializeNotifications();
   await _initializePlatformPlugins();
   await _initializeAudioAndConnectivity();
@@ -270,6 +274,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late Widget _mainBrowser;
   final GlobalKey _mainBrowserKey = GlobalKey();
   final GlobalKey _homeDrawerKey = GlobalKey();
+  final List<NavigatorObserver> _homeObservers = [NativeChat.homeWatch];
   final GlobalKey _devToolsKey = GlobalKey();
   final FocusNode _devToolsFocusNode = FocusNode(canRequestFocus: false, skipTraversal: true);
 
@@ -277,6 +282,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    NativeChat.start(login: context.read<NativeUserProvider>());
 
     _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
 
@@ -315,6 +321,11 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (!Get.find<PipController>().inPip.value) _setSplitScreenPosition();
 
     isStatusBarShown = MediaQuery.of(context).padding.top > 0;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) ChatTelemetry.flush();
   }
 
   @override
@@ -373,8 +384,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // reference to this widget is not lost. Key prevents unnecessary rebuilds.
     final homeDrawer = Navigator(
       key: _homeDrawerKey,
-      onGenerateRoute: (_) {
-        return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
+      observers: _homeObservers,
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(settings: settings, builder: (BuildContext _) => DrawerPage());
       },
     );
 
@@ -414,10 +426,15 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
             children: [
               const BrowserEnginePrewarm(),
               PipHost(child: content),
+              if (ChatEngine.enabled)
+                ValueListenableBuilder(
+                  valueListenable: NativeChat.remoteEnabled,
+                  builder: (_, on, _) => on ? ChatOverlay(navigatorKey: navigatorKey) : const SizedBox.shrink(),
+                ),
             ],
           );
         },
-        navigatorObservers: [BotToastNavigatorObserver()],
+        navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
         scrollBehavior: !Platform.isWindows
             ? null
             : const MaterialScrollBehavior().copyWith(
@@ -623,6 +640,25 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 }
 
+// Only way to swap iOS categories
+Future<void> registerTornChatCategories({required bool reply}) async {
+  try {
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.initialize(
+          DarwinInitializationSettings(
+            requestAlertPermission: false,
+            requestSoundPermission: false,
+            requestBadgePermission: false,
+            notificationCategories: darwinNotificationCategories(reply: reply),
+          ),
+          onDidReceiveNotificationResponse: _handleNotificationResponse,
+        );
+  } catch (e, stackTrace) {
+    logErrorToCrashlytics("Torn chat categories", "$e", stackTrace);
+  }
+}
+
 /// Initialize app compilation and detect updates
 Future<void> _initializeAppCompilation() async {
   final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
@@ -643,31 +679,15 @@ Future<void> _initializeAppCompilation() async {
 
 Future<void> _handleNotificationResponse(NotificationResponse notificationResponse) async {
   try {
-    String? payload = notificationResponse.payload;
+    final payload = notificationResponse.payload;
 
-    // Handle reply action on Sendbird notifications (while on background and foreground)
-    if (notificationResponse.id.toString().startsWith('666')) {
-      if (notificationResponse.actionId == "sb_reply_action") {
-        // Reply message
-        final message = notificationResponse.input ?? "";
-
-        // Get channel URL from notification payload
-        final payload = notificationResponse.payload;
-        Map<String, dynamic> decodedPayload = jsonDecode(payload ?? "{}");
-        final String channelUrl = decodedPayload["channelUrl"] ?? "";
-
-        // Send reply message
-        if (message.isNotEmpty && channelUrl.isNotEmpty) {
-          SendbirdController sb = Get.find<SendbirdController>();
-          sb.sendMessage(channelUrl: channelUrl, message: message);
-        }
-      }
-
-      // Reassign payload so that the browser opens in Drawwer
-      payload = "sendbird";
+    final chatTap = await handleTornChatResponse(notificationResponse);
+    if (chatTap != null) {
+      selectNotificationStream.add(NativeChat.dmTapPayload(chatTap.$1, chatTap.$2));
+      return;
     }
 
-    if (notificationResponse.payload != null) {
+    if (payload != null) {
       log('Notification payload: $payload');
       selectNotificationStream.add(payload);
     }
@@ -818,16 +838,6 @@ Future<void> _initializeGetXControllers() async {
   }
 }
 
-Future<void> _initializeSendbird() async {
-  try {
-    final sb = Get.put(SendbirdController(), permanent: true);
-    await sb.init();
-  } catch (e, stackTrace) {
-    log("Error initializing Sendbird: $e");
-    logErrorToCrashlytics("Error initializing Sendbird", "Sendbird initialization failed: $e", stackTrace);
-  }
-}
-
 Future<void> _initializeNotifications() async {
   try {
     tz.initializeTimeZones();
@@ -840,14 +850,16 @@ Future<void> _initializeNotifications() async {
     }
 
     const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-    const initializationSettingsIOS = DarwinInitializationSettings();
+    final initializationSettingsIOS = DarwinInitializationSettings(
+      notificationCategories: darwinNotificationCategories(reply: await Prefs().getNativeChatReplyEnabled()),
+    );
     const initizationSettingsWindows = WindowsInitializationSettings(
       appName: 'Torn PDA',
       appUserModelId: 'com.manuito.tornpda',
       guid: 'fdf9adab-cc5d-4660-aec3-f9b7e4b3e355',
     );
 
-    const initializationSettings = InitializationSettings(
+    final initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
       windows: initizationSettingsWindows,
@@ -856,7 +868,9 @@ Future<void> _initializeNotifications() async {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _handleNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: tornChatBackgroundResponse,
     );
+    if (Platform.isIOS) listenTornChatReplies();
 
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
     if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {

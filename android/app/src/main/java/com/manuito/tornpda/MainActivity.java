@@ -11,6 +11,7 @@ import android.service.notification.StatusBarNotification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import java.util.List;
 import io.flutter.plugin.common.MethodChannel;
@@ -52,12 +53,20 @@ import android.view.PixelCopy;
 import android.view.View;
 import java.util.Arrays;
 import io.flutter.plugin.common.MethodCall;
+import android.content.ContentResolver;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends FlutterActivity {
 
     private static final String CHANNEL = "tornpda.channel";
     private static final String PIP_CHANNEL = "tornpda.pip";
     private static final String PIP_ACTION = "com.manuito.tornpda.PIP_ACTION";
+    private static final String SHARE_CHANNEL = "tornpda.share";
+    private static final long SHARE_IMAGE_MAX = 32L * 1024 * 1024;
 
     private MethodChannel pipChannel;
     private BroadcastReceiver pipReceiver;
@@ -66,6 +75,8 @@ public class MainActivity extends FlutterActivity {
     private boolean pipOwnLaunch;
     private List<Map<String, String>> pipAutoActions;
     private HandlerThread pixelProbeThread;
+    private MethodChannel shareChannel;
+    private Map<String, String> pendingShare;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +109,93 @@ public class MainActivity extends FlutterActivity {
                             });
         }
 
+        // Skip restores and launches from recents
+        if (savedInstanceState == null
+                && (getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+            pendingShare = readShare(getIntent());
+        }
+
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    protected void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
+        Map<String, String> share = readShare(intent);
+        if (share == null) return;
+        if (shareChannel == null) {
+            pendingShare = share;
+            return;
+        }
+        // Dart may not be listening yet
+        shareChannel.invokeMethod("shared", share, new MethodChannel.Result() {
+            @Override
+            public void success(Object result) {}
+
+            @Override
+            public void error(@NonNull String code, String message, Object details) {
+                pendingShare = share;
+            }
+
+            @Override
+            public void notImplemented() {
+                pendingShare = share;
+            }
+        });
+    }
+
+    // Only images from other apps
+    private void copySharedImage(String raw) throws IOException {
+        Uri uri = raw == null ? null : Uri.parse(raw);
+        String authority = uri == null ? null : uri.getAuthority();
+        if (uri == null || !"content".equals(uri.getScheme()) || authority == null
+                || authority.startsWith(getPackageName())) {
+            throw new IOException("rejected");
+        }
+        ContentResolver resolver = getContentResolver();
+        String type = resolver.getType(uri);
+        if (type == null || !type.startsWith("image/")) throw new IOException("rejected");
+        File dir = new File(getCacheDir(), "chat_share");
+        if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("unreadable");
+        File out = new File(dir, "shared");
+        long total = 0;
+        boolean tooBig = false;
+        try (InputStream in = resolver.openInputStream(uri); OutputStream os = new FileOutputStream(out)) {
+            if (in == null) throw new IOException();
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                total += read;
+                if (total > SHARE_IMAGE_MAX) {
+                    tooBig = true;
+                    break;
+                }
+                os.write(buffer, 0, read);
+            }
+        } catch (IOException | RuntimeException e) {
+            out.delete();
+            throw new IOException("unreadable");
+        }
+        if (tooBig) {
+            out.delete();
+            throw new IOException("too_big");
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Map<String, String> readShare(Intent intent) {
+        if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction()) || intent.getType() == null) {
+            return null;
+        }
+        Map<String, String> share = new HashMap<>();
+        share.put("type", intent.getType());
+        CharSequence text = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+        if (text != null) share.put("text", text.toString());
+        if (intent.getType().startsWith("image/")) {
+            Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (stream != null) share.put("image", stream.toString());
+        }
+        return share.size() > 1 ? share : null;
     }
 
     private MethodChannel.Result myResult;
@@ -238,6 +335,29 @@ public class MainActivity extends FlutterActivity {
 
                 default:
                     result.notImplemented();
+            }
+        });
+
+        shareChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), SHARE_CHANNEL);
+        shareChannel.setMethodCallHandler((call, result) -> {
+            if ("take".equals(call.method)) {
+                result.success(pendingShare);
+                pendingShare = null;
+            } else if ("readImage".equals(call.method)) {
+                String raw = call.argument("uri");
+                new Thread(() -> {
+                    try {
+                        copySharedImage(raw);
+                        runOnUiThread(() -> result.success(null));
+                    } catch (Exception e) {
+                        String code = e instanceof IOException && e.getMessage() != null
+                                ? e.getMessage()
+                                : "unreadable";
+                        runOnUiThread(() -> result.error(code, null, null));
+                    }
+                }).start();
+            } else {
+                result.notImplemented();
             }
         });
 

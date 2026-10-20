@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/chat/chat_logo_bubble.dart';
 
 enum FeatureDiagramScene {
   dragToApp,
@@ -12,6 +14,14 @@ enum FeatureDiagramScene {
   linkNewTabAppSide,
   pipChain,
   pipPlayer,
+  chatBubble,
+  chatBrowser,
+  chatWindow,
+  chatLinkPreview,
+  chatPlayerCard,
+  chatDrawer,
+  chatMenuBar,
+  chatListReply,
 }
 
 const Map<FeatureDiagramScene, String> featureDiagramCaptions = {
@@ -24,6 +34,14 @@ const Map<FeatureDiagramScene, String> featureDiagramCaptions = {
   FeatureDiagramScene.linkNewTabAppSide: "Open a link from the app in a new tab on its side",
   FeatureDiagramScene.pipChain: "Tap the window icon to watch the chain over other apps",
   FeatureDiagramScene.pipPlayer: "Choose Watch players in the options and tap up to 4 cards",
+  FeatureDiagramScene.chatBubble: "Tap the bubble for your chats, then tap one to open it",
+  FeatureDiagramScene.chatBrowser: "Tap the chat button in the browser for your chats",
+  FeatureDiagramScene.chatWindow: "Open a chat in a small window, then minimize it to a bubble",
+  FeatureDiagramScene.chatLinkPreview: "Tap a link to preview it, then open it in a tab",
+  FeatureDiagramScene.chatPlayerCard: "Tap a name to see their card and actions",
+  FeatureDiagramScene.chatDrawer: "Tap the bubble in the side menu header",
+  FeatureDiagramScene.chatMenuBar: "Tap Chat in the side menu for your chats",
+  FeatureDiagramScene.chatListReply: "Tap the arrow on a chat to read it and answer from the list",
 };
 
 typedef _Palette = ({Color frame, Color panel, Color appBar, Color ink});
@@ -143,7 +161,18 @@ class _FeatureDiagramPainter extends CustomPainter {
     );
     final left = Rect.fromLTWH(u * 3, u * 3, u * 45.5, u * 56);
     final right = Rect.fromLTWH(u * 51.5, u * 3, u * 45.5, u * 56);
-    if (scene != FeatureDiagramScene.pipChain && scene != FeatureDiagramScene.pipPlayer) {
+    if (!const {
+      FeatureDiagramScene.pipChain,
+      FeatureDiagramScene.pipPlayer,
+      FeatureDiagramScene.chatBubble,
+      FeatureDiagramScene.chatBrowser,
+      FeatureDiagramScene.chatWindow,
+      FeatureDiagramScene.chatLinkPreview,
+      FeatureDiagramScene.chatPlayerCard,
+      FeatureDiagramScene.chatDrawer,
+      FeatureDiagramScene.chatMenuBar,
+      FeatureDiagramScene.chatListReply,
+    }.contains(scene)) {
       canvas.drawLine(
         Offset(u * 50, u * 22),
         Offset(u * 50, u * 40),
@@ -159,7 +188,8 @@ class _FeatureDiagramPainter extends CustomPainter {
           FeatureDiagramScene.linkNewTab ||
           FeatureDiagramScene.linkTabBehindApp ||
           FeatureDiagramScene.linkNewTabAppSide:
-        final bool behind = scene == FeatureDiagramScene.linkTabBehindApp || scene == FeatureDiagramScene.linkNewTabAppSide;
+        final bool behind =
+            scene == FeatureDiagramScene.linkTabBehindApp || scene == FeatureDiagramScene.linkNewTabAppSide;
         final bool newTab = scene == FeatureDiagramScene.linkNewTab || scene == FeatureDiagramScene.linkNewTabAppSide;
         final double tap = _seg(t, 0.28, 0.33);
         final double reveal = behind ? _seg(t, 0.38, 0.52) : 0;
@@ -501,6 +531,506 @@ class _FeatureDiagramPainter extends CustomPainter {
           tapWatch,
         ].firstWhere((v) => v > 0 && v < 1, orElse: () => 0);
         _drawFinger(canvas, finger, alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.6, 0.64)), ring: ring);
+      case FeatureDiagramScene.chatBubble || FeatureDiagramScene.chatBrowser:
+        final bool browser = scene == FeatureDiagramScene.chatBrowser;
+        final Rect full = Rect.fromLTWH(u * 3, u * 3, u * 94, u * 56);
+        final Offset bubble = browser ? Offset(full.right - u * 13, full.top + u * 4) : Offset(u * 89, u * 50);
+        final double tapBubble = _seg(t, 0.15, 0.2);
+        final double open = _seg(t, 0.22, 0.34);
+        final double tapRow = _seg(t, 0.48, 0.53);
+        final double slide = _seg(t, 0.56, 0.68);
+
+        if (browser) {
+          _drawBrowser(canvas, full, tabs: const [], active: 0, page: _pages['1']!);
+          canvas.save();
+          canvas.clipRRect(RRect.fromRectAndRadius(full, Radius.circular(u * 1.5)));
+          canvas.drawRect(Rect.fromLTWH(full.left, full.top, full.width, u * 8), Paint()..color = palette.appBar);
+          final white = Colors.white.withValues(alpha: 0.9);
+          canvas.drawRect(Rect.fromLTWH(full.left + u * 3, full.top + u * 3.4, u * 18, u * 1.2), Paint()..color = white);
+          _drawIcon(canvas, Icons.refresh_rounded, Offset(full.right - u * 5, bubble.dy), u * 4.6, white);
+          _drawIcon(canvas, Icons.inventory_2_outlined, Offset(full.right - u * 21, bubble.dy), u * 4.2, white);
+          _drawIcon(canvas, Icons.chat_bubble_outline_rounded, bubble, u * 4.6, white);
+          if (open == 0) {
+            final Offset badge = bubble + Offset(u * 2.4, -u * 1.8);
+            canvas.drawCircle(badge, u * 1.9, Paint()..color = Colors.red[400]!);
+            _drawLabel(canvas, "3", badge, u * 2.5, Colors.white);
+          }
+          canvas.restore();
+        } else {
+          _drawApp(canvas, full);
+        }
+        if (open > 0 && slide < 1) {
+          final Rect now = Rect.lerp(Rect.fromCenter(center: bubble, width: u * 9.4, height: u * 5.6), full, open)!;
+          final shape = RRect.fromRectAndRadius(full, Radius.circular(u * 1.5));
+          canvas.save();
+          canvas.translate(now.left, now.top);
+          canvas.scale(now.width / full.width);
+          canvas.translate(-full.left, -full.top);
+          canvas.saveLayer(full.inflate(u * 3), Paint()..color = Color.fromRGBO(0, 0, 0, open));
+          canvas.drawShadow(Path()..addRRect(shape), Colors.black, u * 1.5, false);
+          _drawChatList(canvas, full, tapRow: tapRow);
+          canvas.restore();
+          canvas.restore();
+        }
+        if (slide > 0) {
+          canvas.save();
+          canvas.clipRRect(RRect.fromRectAndRadius(full, Radius.circular(u * 1.5)));
+          _drawChat(canvas, full.shift(Offset(full.width * (1 - slide), 0)));
+          canvas.restore();
+        }
+        if (!browser) _drawChatBubble(canvas, bubble, alpha: 1 - open);
+
+        final Offset finger = t < 0.36
+            ? Offset.lerp(Offset(full.right - u * 2, size.height + u * 4), bubble, _seg(t, 0.04, 0.14))!
+            : Offset.lerp(bubble, _chatRow(full, 1).center, _seg(t, 0.38, 0.46))!;
+        _drawFinger(
+          canvas,
+          finger,
+          alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.56, 0.62)),
+          ring: [tapBubble, tapRow].firstWhere((v) => v > 0 && v < 1, orElse: () => 0),
+        );
+      case FeatureDiagramScene.chatListReply:
+        final Rect full = Rect.fromLTWH(u * 3, u * 3, u * 94, u * 56);
+        final Rect first = _chatRow(full, 0);
+        final Rect box = _replyBox(full);
+        final Offset arrow = Offset(first.right - u * 4, first.center.dy);
+        final Offset field = Offset(box.left + u * 10, box.center.dy);
+        final Offset send = Offset(box.right + u * 3.5, box.center.dy);
+        final double tapArrow = _seg(t, 0.15, 0.2);
+        final double tapField = _seg(t, 0.44, 0.48);
+        final double tapSend = _seg(t, 0.68, 0.72);
+
+        _drawChatList(canvas, full, reply: _seg(t, 0.22, 0.34), typed: _seg(t, 0.48, 0.62), sent: _seg(t, 0.72, 0.8));
+        final Offset finger = t < 0.36
+            ? Offset.lerp(Offset(full.right - u * 10, size.height + u * 4), arrow, _seg(t, 0.04, 0.14))!
+            : t < 0.62
+            ? Offset.lerp(arrow, field, _seg(t, 0.36, 0.43))!
+            : Offset.lerp(field, send, _seg(t, 0.62, 0.67))!;
+        _drawFinger(
+          canvas,
+          finger,
+          alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.8, 0.86)),
+          ring: [tapArrow, tapField, tapSend].firstWhere((v) => v > 0 && v < 1, orElse: () => 0),
+        );
+      case FeatureDiagramScene.chatWindow:
+        final Rect full = Rect.fromLTWH(u * 3, u * 3, u * 94, u * 56);
+        final Rect window = Rect.fromLTWH(u * 7, u * 8, u * 62.7, u * 37.35);
+        final double scale = window.width / full.width;
+        final Offset pip = Offset(full.right - u * 10, full.top + u * 4);
+        final Offset minimize = Offset(window.left + (full.width - u * 16) * scale, window.top + u * 4 * scale);
+        final Offset bubble = Offset(u * 89, u * 50);
+        final Offset mini = Offset(u * 89, u * 39);
+        final double tapPip = _seg(t, 0.15, 0.2);
+        final double shrink = _seg(t, 0.24, 0.38);
+        final double tapMin = _seg(t, 0.54, 0.59);
+        final double collapse = _seg(t, 0.62, 0.74);
+
+        _drawApp(canvas, full);
+        _drawChatBubble(canvas, bubble, alpha: _seg(t, 0.32, 0.4));
+        if (collapse < 1) {
+          final Rect now = Rect.lerp(
+            Rect.lerp(full, window, shrink)!,
+            Rect.fromCircle(center: mini, radius: u * 3),
+            collapse,
+          )!;
+          final shape = RRect.fromRectAndRadius(now, Radius.circular(u * (1.5 + 1.5 * collapse)));
+          if (shrink > 0) canvas.drawShadow(Path()..addRRect(shape), Colors.black, u * 1.5 * shrink, false);
+          canvas.save();
+          canvas.clipRRect(shape);
+          canvas.saveLayer(now, Paint()..color = Color.fromRGBO(0, 0, 0, 1 - collapse));
+          canvas.translate(now.left, now.top);
+          canvas.scale(now.width / full.width);
+          _drawChat(canvas, full.shift(-full.topLeft));
+          canvas.restore();
+          canvas.drawRRect(shape, Paint()..color = _pages['2']!.withValues(alpha: collapse));
+          canvas.restore();
+        } else {
+          canvas.drawShadow(Path()..addOval(Rect.fromCircle(center: mini, radius: u * 3)), Colors.black, u, false);
+          canvas.drawCircle(mini, u * 3, Paint()..color = _pages['2']!);
+        }
+        if (collapse > 0.6) {
+          _drawIcon(canvas, Icons.person_rounded, mini, u * 4, Colors.white.withValues(alpha: _seg(collapse, 0.6, 1)));
+        }
+
+        final Offset finger = t < 0.4
+            ? Offset.lerp(Offset(full.right - u * 2, size.height + u * 4), pip, _seg(t, 0.04, 0.14))!
+            : Offset.lerp(pip, minimize, _seg(t, 0.42, 0.52))!;
+        _drawFinger(
+          canvas,
+          finger,
+          alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.62, 0.68)),
+          ring: [tapPip, tapMin].firstWhere((v) => v > 0 && v < 1, orElse: () => 0),
+        );
+      case FeatureDiagramScene.chatLinkPreview:
+        final Rect full = Rect.fromLTWH(u * 3, u * 3, u * 94, u * 56);
+        final Offset link = Offset(full.left + u * 20, full.top + u * 35.7);
+        final Rect preview = Rect.fromLTWH(u * 14, u * 8, u * 72, u * 46);
+        final Rect mainTab = Rect.fromLTWH(preview.center.dx - u * 32, preview.bottom - u * 8, u * 30, u * 6);
+        final Rect newTab = Rect.fromLTWH(preview.center.dx + u * 2, preview.bottom - u * 8, u * 30, u * 6);
+        final double tapLink = _seg(t, 0.15, 0.2);
+        final double open = _seg(t, 0.22, 0.32);
+        final double load = ((t - 0.3) / 0.12).clamp(0, 1);
+        final double tapNew = _seg(t, 0.56, 0.61);
+        final double move = _seg(t, 0.64, 0.72);
+        final double swap = _seg(t, 0.72, 0.78);
+        final double grow = _seg(t, 0.76, 0.84);
+        final ink = palette.ink;
+
+        _drawChat(canvas, full, linkTap: tapLink);
+        if (move >= 1) {
+          _drawBrowser(
+            canvas,
+            full,
+            tabs: ['1', '2', '3'],
+            active: grow > 0.5 ? 2 : 1,
+            mainLeading: true,
+            growLast: grow,
+            page: Color.lerp(_pages['2'], _link, grow)!,
+          );
+        }
+        if (open > 0 && swap < 1) {
+          final Rect now = move > 0
+              ? Rect.lerp(preview, full, move)!
+              : Rect.lerp(Rect.fromCenter(center: link, width: u * 7.2, height: u * 4.6), preview, open)!;
+          final shape = RRect.fromRectAndRadius(preview, Radius.circular(u * 1.5));
+          canvas.save();
+          canvas.translate(now.left, now.top);
+          canvas.scale(now.width / preview.width, now.height / preview.height);
+          canvas.translate(-preview.left, -preview.top);
+          canvas.saveLayer(preview.inflate(u * 3), Paint()..color = Color.fromRGBO(0, 0, 0, open * (1 - swap)));
+          canvas.drawShadow(Path()..addRRect(shape), Colors.black, u * 1.5, false);
+          canvas.drawRRect(shape, Paint()..color = palette.panel);
+          canvas.save();
+          canvas.clipRRect(shape);
+          canvas.drawRect(
+            Rect.fromLTWH(preview.left, preview.top, preview.width, u * 7),
+            Paint()..color = Color.alphaBlend(ink.withValues(alpha: 0.08), palette.panel),
+          );
+          _drawIcon(
+            canvas,
+            Icons.arrow_back_rounded,
+            Offset(preview.left + u * 4, preview.top + u * 3.5),
+            u * 4,
+            ink.withValues(alpha: 0.4),
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(preview.left + u * 9, preview.top + u * 1.8, u * 24, u * 1.6),
+              Radius.circular(u),
+            ),
+            Paint()..color = ink.withValues(alpha: 0.5),
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(preview.left + u * 9, preview.top + u * 4.3, u * 14, u * 1.2),
+              Radius.circular(u),
+            ),
+            Paint()..color = ink.withValues(alpha: 0.25),
+          );
+          _drawIcon(
+            canvas,
+            Icons.open_in_full_rounded,
+            Offset(preview.right - u * 10, preview.top + u * 3.5),
+            u * 3.6,
+            ink.withValues(alpha: 0.7),
+          );
+          _drawIcon(
+            canvas,
+            Icons.close_rounded,
+            Offset(preview.right - u * 4, preview.top + u * 3.5),
+            u * 4,
+            ink.withValues(alpha: 0.7),
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(preview.left + u * 3, preview.top + u * 10, preview.width - u * 6, u * 12),
+              Radius.circular(u),
+            ),
+            Paint()..color = _link,
+          );
+          for (var i = 0; i < 3; i++) {
+            canvas.drawRRect(
+              RRect.fromRectAndRadius(
+                Rect.fromLTWH(
+                  preview.left + u * 3,
+                  preview.top + u * (25 + i * 4.5),
+                  (preview.width - u * 6) * (i.isEven ? 0.85 : 0.6),
+                  u * 2,
+                ),
+                Radius.circular(u),
+              ),
+              Paint()..color = ink.withValues(alpha: 0.14),
+            );
+          }
+          if (load > 0 && load < 1) {
+            canvas.drawRect(
+              Rect.fromLTWH(preview.left, preview.top + u * 7, preview.width * load, u * 0.9),
+              Paint()..color = _blue,
+            );
+          }
+          for (final (rect, icon, label, tapped) in [
+            (mainTab, Icons.tab_rounded, "Main tab", 0.0),
+            (newTab, Icons.add_box_outlined, "New tab", tapNew),
+          ]) {
+            canvas.drawRRect(
+              RRect.fromRectAndRadius(rect, Radius.circular(u * 1.5)),
+              Paint()..color = _blue.withValues(alpha: 0.12 + 0.3 * tapped),
+            );
+            _drawIcon(canvas, icon, Offset(rect.left + u * 5, rect.center.dy), u * 3.6, _blue);
+            _drawLabel(canvas, label, rect.center.translate(u * 2.5, 0), u * 3.2, _blue);
+          }
+          canvas.restore();
+          canvas.restore();
+          canvas.restore();
+        }
+
+        final Offset finger = t < 0.4
+            ? Offset.lerp(Offset(full.right - u * 20, size.height + u * 4), link, _seg(t, 0.04, 0.14))!
+            : Offset.lerp(link, newTab.center, _seg(t, 0.44, 0.52))!;
+        _drawFinger(
+          canvas,
+          finger,
+          alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.62, 0.68)),
+          ring: [tapLink, tapNew].firstWhere((v) => v > 0 && v < 1, orElse: () => 0),
+        );
+      case FeatureDiagramScene.chatPlayerCard:
+        final Rect full = Rect.fromLTWH(u * 3, u * 3, u * 94, u * 56);
+        final Offset name = Offset(full.left + u * 11, full.top + u * 14);
+        final double tapName = _seg(t, 0.15, 0.2);
+        final double up = _seg(t, 0.22, 0.34);
+        final double tapAttack = _seg(t, 0.56, 0.61);
+        final Rect sheet = Rect.fromLTWH(full.left, full.bottom - u * 36 * up, full.width, u * 36);
+        Offset action(int i) => Offset(sheet.left + u * (10 + i * 14.8), sheet.top + u * 23);
+        final ink = palette.ink;
+
+        _drawChat(canvas, full, nameTap: tapName);
+        if (up > 0) {
+          final shape = RRect.fromRectAndRadius(full, Radius.circular(u * 1.5));
+          final card = RRect.fromRectAndCorners(
+            sheet,
+            topLeft: Radius.circular(u * 3),
+            topRight: Radius.circular(u * 3),
+          );
+          canvas.save();
+          canvas.clipRRect(shape);
+          canvas.drawRRect(shape, Paint()..color = Colors.black.withValues(alpha: 0.35 * up));
+          canvas.drawShadow(Path()..addRRect(card), Colors.black, u * 1.5, false);
+          canvas.drawRRect(card, Paint()..color = palette.panel);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset(sheet.center.dx, sheet.top + u * 2.2), width: u * 8, height: u),
+              Radius.circular(u),
+            ),
+            Paint()..color = ink.withValues(alpha: 0.3),
+          );
+          final Offset avatar = Offset(sheet.left + u * 10, sheet.top + u * 10);
+          canvas.drawCircle(avatar, u * 4.5, Paint()..color = Colors.orange[400]!);
+          _drawIcon(canvas, Icons.person_rounded, avatar, u * 5.5, Colors.white);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromLTWH(sheet.left + u * 18, sheet.top + u * 5.5, u * 22, u * 2.2),
+              Radius.circular(u),
+            ),
+            Paint()..color = ink.withValues(alpha: 0.6),
+          );
+          _drawLabel(
+            canvas,
+            "Hospital",
+            Offset(sheet.left + u * 25.5, sheet.top + u * 10.5),
+            u * 3.4,
+            Colors.red[400]!,
+          );
+          for (final (x, y, w) in [(35.0, 9.5, 16.0), (18.0, 14.0, 30.0)]) {
+            canvas.drawRRect(
+              RRect.fromRectAndRadius(
+                Rect.fromLTWH(sheet.left + u * x, sheet.top + u * y, u * w, u * 2),
+                Radius.circular(u),
+              ),
+              Paint()..color = ink.withValues(alpha: 0.2),
+            );
+          }
+          for (final (i, (icon, label)) in [
+            (Icons.chat_rounded, "Chat"),
+            (Icons.person_rounded, "Profile"),
+            (MdiIcons.pistol, "Attack"),
+            (Icons.swap_horiz_rounded, "Trade"),
+            (Icons.storefront_rounded, "Bazaar"),
+            (Icons.email_rounded, "Mail"),
+          ].indexed) {
+            canvas.drawCircle(
+              action(i),
+              u * 3.6,
+              Paint()
+                ..color = i == 2 && tapAttack > 0
+                    ? Color.lerp(ink.withValues(alpha: 0.08), _blue.withValues(alpha: 0.45), tapAttack)!
+                    : ink.withValues(alpha: 0.08),
+            );
+            _drawIcon(canvas, icon, action(i), u * 4, ink.withValues(alpha: 0.75));
+            _drawLabel(canvas, label, action(i).translate(0, u * 6), u * 2.8, ink.withValues(alpha: 0.75));
+          }
+          canvas.restore();
+        }
+
+        final Offset finger = t < 0.4
+            ? Offset.lerp(Offset(full.left + u * 30, size.height + u * 4), name, _seg(t, 0.04, 0.14))!
+            : Offset.lerp(name, action(2), _seg(t, 0.44, 0.52))!;
+        _drawFinger(
+          canvas,
+          finger,
+          alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.62, 0.68)),
+          ring: [tapName, tapAttack].firstWhere((v) => v > 0 && v < 1, orElse: () => 0),
+        );
+      case FeatureDiagramScene.chatDrawer || FeatureDiagramScene.chatMenuBar:
+        final bool bar = scene == FeatureDiagramScene.chatMenuBar;
+        final Rect full = Rect.fromLTWH(u * 3, u * 3, u * 94, u * 56);
+        final Offset menu = Offset(full.left + u * 5, full.top + u * 4);
+        final double tapMenu = _seg(t, 0.15, 0.2);
+        final double tapBubble = _seg(t, 0.5, 0.55);
+        final double slide = _seg(t, 0.58, 0.7);
+        final double open = _seg(t, 0.22, 0.32) * (1 - slide);
+        final Rect drawer = Rect.fromLTWH(full.left - u * 46 * (1 - open), full.top, u * 46, full.height);
+        final double side = u * (bar ? 30 : 34);
+        final Rect logo = Rect.fromLTWH(drawer.center.dx - side / 2, drawer.top + u * 2, side, side);
+        Offset at(double x, double y) => logo.topLeft + Offset(logo.width * x, logo.height * y);
+        final Offset bubble = at(0.8, 0.36);
+        final double radius = logo.width * 0.16;
+        final ink = palette.ink;
+        final shape = RRect.fromRectAndRadius(full, Radius.circular(u * 1.5));
+        final Rect chatBar = Rect.fromLTWH(drawer.left + u * 4, logo.bottom + u * 1.5, drawer.width - u * 8, u * 5);
+        final Offset target = bar ? Offset(chatBar.left + u * 9, chatBar.center.dy) : bubble;
+
+        _drawApp(canvas, full);
+        if (open > 0) {
+          canvas.save();
+          canvas.clipRRect(shape);
+          canvas.drawRRect(shape, Paint()..color = Colors.black.withValues(alpha: 0.35 * open));
+          canvas.drawShadow(Path()..addRect(drawer), Colors.black, u * 1.5, false);
+          canvas.drawRect(drawer, Paint()..color = palette.panel);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromPoints(at(0.12, 0.015), at(0.88, 0.97)),
+              Radius.circular(logo.width * 0.1),
+            ),
+            Paint()..color = const Color(0xFF8E8E8E),
+          );
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(Rect.fromPoints(at(0.215, 0.11), at(0.786, 0.715)), Radius.circular(u * 0.5)),
+            Paint()..color = const Color(0xFF3A3A3A),
+          );
+          final hat = Paint()..color = const Color(0xFFD0D0D0);
+          canvas.drawOval(Rect.fromPoints(at(0.28, 0.25), at(0.72, 0.37)), hat);
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(Rect.fromPoints(at(0.38, 0.14), at(0.63, 0.29)), Radius.circular(u * 1.2)),
+            hat,
+          );
+          canvas.drawRect(
+            Rect.fromPoints(at(0.375, 0.255), at(0.635, 0.285)),
+            Paint()..color = const Color(0xFF3A3A3A),
+          );
+          for (final points in [
+            [at(0.389, 0.542), at(0.441, 0.687), at(0.457, 0.615)],
+            [at(0.593, 0.542), at(0.539, 0.687), at(0.513, 0.617)],
+          ]) {
+            canvas.drawPath(Path()..addPolygon(points, true), hat);
+          }
+          canvas.drawPath(
+            Path()
+              ..moveTo(at(0.445, 0.515).dx, at(0.445, 0.515).dy)
+              ..quadraticBezierTo(at(0.48, 0.495).dx, at(0.48, 0.495).dy, at(0.52, 0.515).dx, at(0.52, 0.515).dy),
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = u * 0.6
+              ..strokeCap = StrokeCap.round
+              ..color = const Color(0xFFD0D0D0),
+          );
+          for (final (x, y, r) in [(0.29, 0.84, 0.047), (0.5, 0.85, 0.064), (0.69, 0.84, 0.047)]) {
+            canvas.drawCircle(at(x, y), logo.width * r, Paint()..color = const Color(0xFF444444));
+          }
+          final dots = [(_blue, '2'), (Colors.amber[600]!, '1'), (Colors.red[400]!, '3')];
+          if (bar) {
+            canvas.drawRRect(
+              RRect.fromRectAndRadius(chatBar, Radius.circular(chatBar.height / 2)),
+              Paint()..color = Color.lerp(_blue, Colors.white, tapBubble * (1 - tapBubble) * 1.6)!,
+            );
+            _drawIcon(
+              canvas,
+              Icons.forum_rounded,
+              Offset(chatBar.left + u * 3.2, chatBar.center.dy),
+              u * 3,
+              Colors.white,
+            );
+            _drawLabel(canvas, "Chat", Offset(chatBar.left + u * 9, chatBar.center.dy), u * 2.8, Colors.white);
+            for (final (i, (color, n)) in dots.indexed) {
+              final Offset dot = Offset(chatBar.right - u * (12.2 - i * 4.6), chatBar.center.dy);
+              canvas.drawCircle(dot, u * 2, Paint()..color = palette.panel);
+              canvas.drawCircle(dot, u * 1.7, Paint()..color = color);
+              _drawLabel(canvas, n, dot, u * 2.3, Colors.white);
+            }
+          } else {
+            final outline = chatSpeechBubble(bubble, radius, at(0.52, 0.52));
+            canvas.drawShadow(outline, Colors.black, u, false);
+            canvas.drawPath(outline, Paint()..color = _blue);
+            _drawIcon(canvas, Icons.forum_rounded, bubble, radius * 1.1, Colors.white);
+            for (final (i, (color, n)) in dots.indexed) {
+              final Offset dot = bubble + Offset.fromDirection((i - 1) * 0.73, radius + u * 1.4);
+              canvas.drawCircle(dot, u * 2.4, Paint()..color = palette.panel);
+              canvas.drawCircle(dot, u * 2, Paint()..color = color);
+              _drawLabel(canvas, n, dot, u * 2.6, Colors.white);
+            }
+          }
+          for (var i = 0; i < 3; i++) {
+            final Rect row = Rect.fromLTWH(
+              drawer.left + u * 4,
+              logo.bottom + u * (bar ? 8 : 3) + i * u * 5.2,
+              drawer.width - u * 8,
+              u * 3.8,
+            );
+            canvas.drawRRect(
+              RRect.fromRectAndRadius(row, Radius.circular(u)),
+              Paint()..color = ink.withValues(alpha: 0.08),
+            );
+            canvas.drawCircle(
+              Offset(row.left + u * 2.4, row.center.dy),
+              u * 1.2,
+              Paint()..color = ink.withValues(alpha: 0.35),
+            );
+            if (bar && i == 0) {
+              _drawLabel(
+                canvas,
+                "Profile",
+                Offset(row.left + u * 10, row.center.dy),
+                u * 2.6,
+                ink.withValues(alpha: 0.7),
+              );
+            } else {
+              canvas.drawRRect(
+                RRect.fromRectAndRadius(
+                  Rect.fromLTWH(row.left + u * 5.5, row.center.dy - u * 0.7, u * (i.isEven ? 16 : 12), u * 1.4),
+                  Radius.circular(u),
+                ),
+                Paint()..color = ink.withValues(alpha: 0.3),
+              );
+            }
+          }
+          canvas.restore();
+        }
+        if (slide > 0) {
+          canvas.save();
+          canvas.clipRRect(shape);
+          final Rect shifted = full.shift(Offset(full.width * (1 - slide), 0));
+          bar ? _drawChatList(canvas, shifted) : _drawChat(canvas, shifted);
+          canvas.restore();
+        }
+
+        final Offset finger = t < 0.36
+            ? Offset.lerp(Offset(full.left + u * 30, size.height + u * 4), menu, _seg(t, 0.04, 0.14))!
+            : Offset.lerp(menu, target, _seg(t, 0.38, 0.46))!;
+        _drawFinger(
+          canvas,
+          finger,
+          alpha: _seg(t, 0.04, 0.08) * (1 - _seg(t, 0.58, 0.64)),
+          ring: [tapMenu, tapBubble].firstWhere((v) => v > 0 && v < 1, orElse: () => 0),
+        );
     }
     canvas.restore();
   }
@@ -789,6 +1319,216 @@ class _FeatureDiagramPainter extends CustomPainter {
         ..strokeWidth = u * 0.7
         ..color = border,
     );
+    canvas.restore();
+  }
+
+  Rect _chatRow(Rect full, int i) =>
+      Rect.fromLTWH(full.left + u * 3, full.top + u * 11 + i * u * 9.5, full.width - u * 6, u * 7);
+
+  Rect _replyBox(Rect full) {
+    final Rect first = _chatRow(full, 0);
+    return Rect.fromLTWH(first.left + u * 8, first.bottom + u * 15.8, first.width - u * 17, u * 5.5);
+  }
+
+  void _drawChatList(Canvas canvas, Rect full, {double tapRow = 0, double? reply, double typed = 0, double sent = 0}) {
+    final ink = palette.ink;
+    final double open = reply ?? 0;
+    final shape = RRect.fromRectAndRadius(full, Radius.circular(u * 1.5));
+    canvas.drawRRect(shape, Paint()..color = palette.panel);
+    canvas.save();
+    canvas.clipRRect(shape);
+    canvas.drawRect(Rect.fromLTWH(full.left, full.top, full.width, u * 8), Paint()..color = palette.appBar);
+    _drawLabel(canvas, "Chats", Offset(full.left + u * 9, full.top + u * 4), u * 3.6, Colors.white);
+    for (var i = 0; i < 4; i++) {
+      final Rect r = _chatRow(full, i).shift(Offset(0, i > 0 ? open * u * 23 : 0));
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(r, Radius.circular(u)),
+        Paint()
+          ..color = i == 1 && tapRow > 0
+              ? Color.lerp(ink.withValues(alpha: 0.08), _link.withValues(alpha: 0.45), tapRow)!
+              : ink.withValues(alpha: 0.08),
+      );
+      canvas.drawCircle(Offset(r.left + u * 4, r.center.dy), u * 2.4, Paint()..color = _pages.values.elementAt(i));
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(r.left + u * 8, r.top + u * 1.4, u * (i.isEven ? 18 : 14), u * 1.8),
+          Radius.circular(u),
+        ),
+        Paint()..color = ink.withValues(alpha: 0.45),
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(r.left + u * 8, r.top + u * 4.2, r.width * 0.5, u * 1.4),
+          Radius.circular(u),
+        ),
+        Paint()..color = ink.withValues(alpha: 0.2),
+      );
+      if (i < 2) {
+        final double alpha = i == 0 ? 1 - open : 1;
+        final Offset badge = Offset(r.right - u * (reply == null ? 4 : 10), r.center.dy);
+        canvas.drawCircle(badge, u * 2, Paint()..color = _blue.withValues(alpha: alpha));
+        _drawLabel(canvas, "${2 - i}", badge, u * 2.6, Colors.white.withValues(alpha: alpha));
+      }
+      if (reply != null) {
+        _drawIcon(
+          canvas,
+          i == 0 && open > 0.5 ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+          Offset(r.right - u * 4, r.center.dy),
+          u * 4.5,
+          ink.withValues(alpha: 0.6),
+        );
+      }
+    }
+    if (open > 0) {
+      final Rect first = _chatRow(full, 0);
+      final Rect box = _replyBox(full);
+      final double line = u * 4.6;
+      final double top = first.bottom + u * 1.5;
+      canvas.save();
+      canvas.clipRect(Rect.fromLTRB(first.left, first.bottom, first.right, first.bottom + u * 23 * open));
+      canvas.save();
+      canvas.clipRect(Rect.fromLTWH(box.left, top, first.width, line * 3));
+      for (var k = 0; k < 4; k++) {
+        if (k == 3 && sent == 0) continue;
+        final double y = top + (k - sent) * line + u * 1.5;
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(Rect.fromLTWH(box.left, y, u * 6, u * 1.6), Radius.circular(u)),
+          Paint()..color = k == 3 ? _link : _pages.values.elementAt(k + 1),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(box.left + u * 7.5, y, u * (k == 3 ? 16 : (k.isEven ? 30 : 22)), u * 1.6),
+            Radius.circular(u),
+          ),
+          Paint()..color = ink.withValues(alpha: 0.3),
+        );
+      }
+      canvas.restore();
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(box, Radius.circular(box.height / 2)),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = u * 0.4
+          ..color = ink.withValues(alpha: 0.3),
+      );
+      if (sent == 0 && typed > 0) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(box.left + u * 2.5, box.center.dy - u * 0.8, u * 16 * typed, u * 1.6),
+            Radius.circular(u),
+          ),
+          Paint()..color = ink.withValues(alpha: 0.6),
+        );
+      }
+      _drawIcon(
+        canvas,
+        Icons.send_rounded,
+        Offset(box.right + u * 3.5, box.center.dy),
+        u * 4,
+        typed > 0 && sent == 0 ? _blue : ink.withValues(alpha: 0.3),
+      );
+      canvas.restore();
+    }
+    canvas.restore();
+  }
+
+  void _drawChat(Canvas canvas, Rect rect, {double nameTap = 0, double linkTap = 0}) {
+    final ink = palette.ink;
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(u * 1.5));
+    canvas.drawRRect(rrect, Paint()..color = palette.panel);
+    canvas.save();
+    canvas.clipRRect(rrect);
+    canvas.drawRect(Rect.fromLTWH(rect.left, rect.top, rect.width, u * 8), Paint()..color = palette.appBar);
+    _drawIcon(canvas, Icons.arrow_back_rounded, Offset(rect.left + u * 4.5, rect.top + u * 4), u * 4.5, Colors.white);
+    canvas.drawCircle(Offset(rect.left + u * 11, rect.top + u * 4), u * 2.4, Paint()..color = _pages['2']!);
+    canvas.drawRect(
+      Rect.fromLTWH(rect.left + u * 15, rect.top + u * 3.4, u * 16, u * 1.2),
+      Paint()..color = Colors.white.withValues(alpha: 0.9),
+    );
+    for (final (i, icon) in [
+      Icons.minimize_rounded,
+      Icons.picture_in_picture_alt_rounded,
+      Icons.more_vert_rounded,
+    ].indexed) {
+      _drawIcon(canvas, icon, Offset(rect.right - u * (16 - i * 6), rect.top + u * 4), u * 4.5, Colors.white);
+    }
+
+    for (final (top, width, own, name) in [
+      (11.0, 40.0, false, Colors.orange[400]),
+      (21.5, 30.0, true, null),
+      (29.5, 46.0, false, _pages['4']),
+      (40.0, 22.0, true, null),
+    ]) {
+      final bubble = Rect.fromLTWH(
+        own ? rect.right - u * (3 + width) : rect.left + u * 3,
+        rect.top + u * top,
+        u * width,
+        u * (own ? 6 : 8.5),
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(bubble, Radius.circular(u * 1.5)),
+        Paint()..color = own ? _blue.withValues(alpha: 0.28) : ink.withValues(alpha: 0.08),
+      );
+      if (name != null) {
+        final label = Rect.fromLTWH(bubble.left + u * 2, bubble.top + u * 2, u * 12, u * 1.8);
+        final double tap = top == 11 ? nameTap : 0;
+        if (tap > 0) {
+          canvas.drawRRect(
+            RRect.fromRectAndRadius(label.inflate(u * 0.9), Radius.circular(u)),
+            Paint()..color = _link.withValues(alpha: 0.45 * tap),
+          );
+        }
+        canvas.drawRRect(RRect.fromRectAndRadius(label, Radius.circular(u)), Paint()..color = name);
+      }
+      final bool hasLink = top == 29.5;
+      final text = Rect.fromLTWH(
+        bubble.left + u * 2,
+        own ? bubble.top + u * 2.1 : bubble.top + u * 5.3,
+        hasLink ? u * 30 : bubble.width - u * 4,
+        u * 1.8,
+      );
+      if (hasLink && linkTap > 0) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(text.inflate(u * 0.9), Radius.circular(u)),
+          Paint()..color = _link.withValues(alpha: 0.45 * linkTap),
+        );
+      }
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(text, Radius.circular(u)),
+        Paint()..color = hasLink ? _link : ink.withValues(alpha: 0.25),
+      );
+    }
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(rect.left + u * 3, rect.bottom - u * 8, rect.width - u * 13, u * 5.5),
+        Radius.circular(u * 2.75),
+      ),
+      Paint()..color = ink.withValues(alpha: 0.08),
+    );
+    final Offset send = Offset(rect.right - u * 6.5, rect.bottom - u * 5.25);
+    canvas.drawCircle(send, u * 2.75, Paint()..color = _blue);
+    _drawIcon(canvas, Icons.send_rounded, send, u * 3, Colors.white);
+    canvas.restore();
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = u * 0.3
+        ..color = ink.withValues(alpha: 0.18),
+    );
+  }
+
+  void _drawChatBubble(Canvas canvas, Offset center, {double alpha = 1}) {
+    if (alpha <= 0) return;
+    final double radius = u * 4.5;
+    final Offset badge = center + Offset(radius * 0.75, -radius * 0.75);
+    canvas.saveLayer(Rect.fromCircle(center: center, radius: u * 9), Paint()..color = Color.fromRGBO(0, 0, 0, alpha));
+    canvas.drawShadow(Path()..addOval(Rect.fromCircle(center: center, radius: radius)), Colors.black, u, false);
+    canvas.drawCircle(center, radius, Paint()..color = _blue);
+    _drawIcon(canvas, Icons.forum_rounded, center, u * 5, Colors.white);
+    canvas.drawCircle(badge, u * 2, Paint()..color = Colors.red[400]!);
+    _drawLabel(canvas, "3", badge, u * 2.6, Colors.white);
     canvas.restore();
   }
 

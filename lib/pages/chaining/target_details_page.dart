@@ -10,10 +10,13 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/chat/chat_share_out.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class TargetDetailsPage extends StatefulWidget {
@@ -145,6 +148,24 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
           _goBack();
         },
       ),
+      actions: [
+        if (NativeChat.canShare)
+          IconButton(
+            tooltip: 'Share to chat',
+            icon: const Icon(Icons.forum_outlined),
+            onPressed: () => ChatShareIn.shareText(
+              ChatShareOut.player(
+                name: widget.target!.name ?? '',
+                id: widget.target!.playerId ?? 0,
+                level: widget.target!.level,
+                state: widget.target!.status?.state,
+                description: widget.target!.status?.description,
+                until: widget.target!.status?.until,
+                now: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+              ),
+            ),
+          ),
+      ],
     );
   }
 

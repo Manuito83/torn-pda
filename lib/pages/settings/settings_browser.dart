@@ -25,6 +25,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
@@ -1819,14 +1820,14 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Widget _chat() {
     List<SearchableRow> rows = [
       SearchableRow(
-        label: "Show chat remove icon",
+        label: "Show chat icon in the browser",
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Flexible(child: Text("Show chat remove icon")),
+              const Flexible(child: Text("Show chat icon in the browser")),
               Switch(
                 value: _settingsProvider.chatRemoveEnabled,
                 onChanged: (value) {
@@ -1866,19 +1867,23 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       ),
       if (_highlightChat)
         SearchableRow(
-          label: "Select words to highlight",
+          label: "Highlight words",
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Flexible(
+                Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Select words to highlight"),
-                      Text("(ONLY CHAT v2.0)", style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic)),
+                      const Text("Highlight words"),
+                      if (NativeChat.compiled)
+                        const Text(
+                          "(TORN CHAT AND PDA CHAT)",
+                          style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                        ),
                     ],
                   ),
                 ),
@@ -1899,12 +1904,16 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Flexible(
+                Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Select highlight color"),
-                      Text("(ONLY CHAT v2.0)", style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic)),
+                      const Text("Select highlight color"),
+                      if (NativeChat.compiled)
+                        const Text(
+                          "(TORN CHAT AND PDA CHAT)",
+                          style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                        ),
                     ],
                   ),
                 ),

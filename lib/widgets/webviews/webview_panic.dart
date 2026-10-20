@@ -259,7 +259,7 @@ class WebViewPanicState extends State<WebViewPanic> {
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
     final senderColor =
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
-    final String hlMap = '[ "${UserHelper.playerName}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String hlMap = jsonEncode([UserHelper.playerName, ..._settingsProvider.highlightWordList]);
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {

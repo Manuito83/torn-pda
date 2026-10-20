@@ -13,6 +13,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chat/chat_share_out.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/player_notes_controller.dart';
@@ -21,6 +22,8 @@ import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -95,6 +98,28 @@ class StakeoutCardState extends State<StakeoutCard> {
           ),
         ],
       ),
+      endActionPane: !NativeChat.canShare
+          ? null
+          : ActionPane(
+              motion: const ScrollMotion(),
+              children: [
+                SlidableAction(
+                  label: 'Share to chat',
+                  backgroundColor: Colors.blue,
+                  icon: Icons.forum_outlined,
+                  onPressed: (context) => ChatShareIn.shareText(
+                    ChatShareOut.player(
+                      name: _stakeout!.name ?? '',
+                      id: int.tryParse(_stakeout!.id ?? '') ?? 0,
+                      state: _stakeout!.status?.state,
+                      description: _stakeout!.status?.description,
+                      until: _stakeout!.status?.until,
+                      now: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                    ),
+                  ),
+                ),
+              ],
+            ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
         child: Card(

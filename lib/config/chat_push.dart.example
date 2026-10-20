@@ -1,0 +1,12 @@
+/// Native chat not configured in public builds
+class ChatPush {
+  const ChatPush({required this.senderId, required this.senderName, required this.message});
+
+  final int senderId;
+  final String senderName;
+  final String message;
+
+  static ChatPush? fromData(Map<String, dynamic> data) => null;
+
+  static Future<bool> reply(int userId, String content, String apiKey) async => false;
+}

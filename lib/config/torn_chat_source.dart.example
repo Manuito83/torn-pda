@@ -1,0 +1,72 @@
+import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_source.dart';
+import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
+
+class TornChatSource implements ChatSource {
+  TornChatSource(this._engine);
+
+  final ChatEngine _engine;
+
+  @override
+  bool get available => false;
+
+  @override
+  Stream<ChatEvent> get events => Stream<ChatEvent>.empty();
+
+  @override
+  Future<void> openRoom(String roomId) async {}
+
+  @override
+  Future<void> closeRoom() async {}
+
+  @override
+  Future<void> loadOlder(String roomId, DateTime before) async {}
+
+  @override
+  Future<void> pause(List<String> roomIds) async {}
+
+  @override
+  Future<void> refreshRooms() async {}
+
+  @override
+  Future<void> refreshUnread() async {}
+
+  @override
+  Future<void> refreshDms({bool force = false}) async {}
+
+  @override
+  Future<void> loadRecentDms({int offset = 0}) async {}
+
+  @override
+  Future<void> peek(List<String> roomIds) async {}
+
+  @override
+  Future<void> search(String name) async {}
+
+  @override
+  Future<void> online(List<int> userIds) async {}
+
+  @override
+  Future<void> touch() async {}
+
+  @override
+  Future<void> markRead(String roomId) async {}
+
+  @override
+  Future<void> markAllRead() async {}
+
+  @override
+  Future<void> loadBlocked() async {}
+
+  @override
+  Future<void> closeDm(int userId) async {}
+
+  @override
+  Future<void> send(String roomId, String content, String reqId) async {}
+
+  @override
+  Future<void> reconnect() => _engine.reconnect();
+
+  @override
+  Future<void> switchAccount() => _engine.switchAccount();
+}

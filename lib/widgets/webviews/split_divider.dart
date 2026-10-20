@@ -8,6 +8,9 @@ const double kSplitDividerWidth = 12;
 const double kSplitSlotMinWidth = 320;
 const Duration kSplitDividerHoldDuration = Duration(milliseconds: 400);
 
+// On screen, for the chat overlays
+final ValueNotifier<Rect?> splitDividerRect = ValueNotifier(null);
+
 double splitLeftSlotWidth(double width, double ratio, {double leftInset = 0, double rightInset = 0}) {
   final double available = width - kSplitDividerWidth;
   final double minLeft = kSplitSlotMinWidth + leftInset;
@@ -39,9 +42,28 @@ class SplitDivider extends StatefulWidget {
 
 class _SplitDividerState extends State<SplitDivider> {
   double? _dragOffset;
+  Rect? _published;
+
+  void _publish(Duration _) {
+    final box = mounted ? context.findRenderObject() as RenderBox? : null;
+    if (box == null || !box.hasSize || !box.attached) return;
+    _published = box.localToGlobal(Offset.zero) & box.size;
+    splitDividerRect.value = _published;
+  }
+
+  @override
+  void dispose() {
+    final Rect? published = _published;
+    // Tree is locked while unmounting
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (splitDividerRect.value == published) splitDividerRect.value = null;
+    });
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback(_publish);
     final double leftWidth = splitLeftSlotWidth(
       widget.width,
       widget.ratio,

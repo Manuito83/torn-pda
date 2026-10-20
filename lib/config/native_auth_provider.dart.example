@@ -13,6 +13,7 @@ class NativeAuthProvider extends ChangeNotifier {
   Future<TornLoginResponseContainer> requestTornRecurrentInitData({
     required NativeUserProvider userProvider,
     required GetInitDataModel loginData,
+    bool jwtOnly = false,
   }) async {
     return TornLoginResponseContainer(
       success: false,

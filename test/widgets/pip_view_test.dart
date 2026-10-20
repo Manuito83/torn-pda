@@ -62,6 +62,8 @@ class RecordingWebView extends WebViewProvider {
     bool fromNotification = false,
     final bool isChainingBrowser = false,
     final ChainingPayload? chainingPayload,
+    bool focusedPanel = false,
+    bool forceApp = false,
   }) async {
     urls.add(url);
   }

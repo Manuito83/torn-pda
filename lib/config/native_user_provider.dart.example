@@ -5,6 +5,7 @@ class NativeUserProvider extends ChangeNotifier {
   NativeLoginType get playerLastLoginMethod => NativeLoginType.none;
   String get playerSToken => "";
   bool get keychainAccessDenied => false;
+  int? get playerId => null;
 
   Future<void> loadPreferences() async {}
   void eraseUserPreferences() {}

@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -28,6 +27,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
@@ -195,8 +195,8 @@ class WebViewProvider extends ChangeNotifier {
   int get maxLiveTabsActive => _maxLiveTabsOverride == 0
       ? _maxLiveTabsDefaultRC
       : _maxLiveTabsOverride < 0
-          ? 0
-          : _maxLiveTabsOverride;
+      ? 0
+      : _maxLiveTabsOverride;
 
   // 0 off, 1 measure, 2 recover
   int _blankDetectorModeRC = 2;
@@ -450,10 +450,6 @@ class WebViewProvider extends ChangeNotifier {
     // Browser should not be resumed/paused while we are in split screen
     if (webViewSplitActive) {
       return;
-    }
-
-    if (Get.isRegistered<SendbirdController>()) {
-      Get.find<SendbirdController>().webviewInForeground = bringToForeground;
     }
 
     if (bringToForeground) {
@@ -822,7 +818,6 @@ class WebViewProvider extends ChangeNotifier {
         _webViewSplitActive = false;
         if (!_isBrowserForeground) browserForegroundWithSplitTransition();
       }
-      if (Get.isRegistered<SendbirdController>()) Get.find<SendbirdController>().webviewInForeground = true;
 
       if (refreshShownTabs || (left, right) != before) _bringSplitTabsOnScreen();
     }
@@ -1059,6 +1054,28 @@ class WebViewProvider extends ChangeNotifier {
 
   bool chatRemovalEnabledGlobal = false;
   bool chatRemovalWhileFullScreen = false;
+
+  // Only when it can be shown again
+  static bool _chatHides({required bool wanted, required bool inApp, required bool iconVisible}) =>
+      wanted && (inApp || iconVisible);
+
+  bool chatHidden(bool wanted) => _chatHides(
+    wanted: wanted,
+    inApp: NativeChat.compiled && NativeChat.prefs.inAppEnabled,
+    iconVisible: chatRemovalEnabledGlobal,
+  );
+
+  bool _chatHideListening = false;
+  bool _chatHideLast = false;
+
+  void _syncChatHide() {
+    final hidden = chatHidden(true);
+    if (hidden == _chatHideLast) return;
+    _chatHideLast = hidden;
+    for (final tab in _tabList) {
+      if (tab.chatRemovalActiveTab) tab.webViewKey?.currentState?.setChatHidden(true, report: false);
+    }
+  }
 
   bool _chatRemovalActiveGlobal = false;
   bool get chatRemovalActiveGlobal => _chatRemovalActiveGlobal;
@@ -1323,8 +1340,19 @@ class WebViewProvider extends ChangeNotifier {
     _bottomBarStyleType = await Prefs().getBrowserBottomBarStyleType();
     _browserBottomBarStylePlaceTabsAtBottom = await Prefs().getBrowserBottomBarStylePlaceTabsAtBottom();
 
+    await migrateChatRemoval();
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
+    _chatHideLast = chatHidden(true);
+    if (!_chatHideListening) {
+      _chatHideListening = true;
+      settingsProvider.addListener(() {
+        chatRemovalEnabledGlobal = settingsProvider.chatRemoveEnabled;
+        _syncChatHide();
+      });
+      NativeChat.prefs.addListener(_syncChatHide);
+      NativeChat.remoteEnabled.addListener(_syncChatHide);
+    }
 
     _useTabIcons = await Prefs().getUseTabsIcons();
     _hideTabs = await Prefs().getHideTabs();
@@ -1843,9 +1871,7 @@ class WebViewProvider extends ChangeNotifier {
       return !(_keepLockedTabsActive && tab.isLocked);
     }).toList();
     final DateTime never = DateTime.fromMillisecondsSinceEpoch(0);
-    candidates.sort(
-      (a, b) => (_tabList[a].lastUsedTimeDT ?? never).compareTo(_tabList[b].lastUsedTimeDT ?? never),
-    );
+    candidates.sort((a, b) => (_tabList[a].lastUsedTimeDT ?? never).compareTo(_tabList[b].lastUsedTimeDT ?? never));
 
     final List<int> slept = candidates.take(live.length - maxLive).toList();
     if (slept.isEmpty) return;
@@ -1893,8 +1919,10 @@ class WebViewProvider extends ChangeNotifier {
           final int graphicsMb = probe["graphicsMb"];
           FirebaseCrashlytics.instance.setCustomKey("wv_live_tabs", liveTabs);
           FirebaseCrashlytics.instance.setCustomKey("wv_graphics_mb", graphicsMb);
-          log("Blank check: ${probe["failed"]}/${probe["valid"]} failed, text ${probe["text"]}, "
-              "live tabs $liveTabs, graphics $graphicsMb MB, points ${probe["points"]}");
+          log(
+            "Blank check: ${probe["failed"]}/${probe["valid"]} failed, text ${probe["text"]}, "
+            "live tabs $liveTabs, graphics $graphicsMb MB, points ${probe["points"]}",
+          );
           if (probe["blank"] != true) continue;
 
           await Future.delayed(const Duration(seconds: 2));
@@ -2021,6 +2049,7 @@ class WebViewProvider extends ChangeNotifier {
 
     final WebViewFullState? state = tab.webViewKey?.currentState;
     if (state == null) return;
+    state.showPendingChat();
     if (currentTab < _tabList.length && _tabList[currentTab] == tab) {
       state.resumeThisWebview(publish: false);
       return;
@@ -2043,6 +2072,13 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
+  /// Also works on the current tab
+  void wakeTab(int index) {
+    if (index < 0 || index >= _tabList.length) return;
+    _bringTabOnScreen(_tabList[index]);
+    notifyListeners();
+  }
+
   void _wakeTabIfParked(TabDetails? tab) {
     final state = tab?.webViewKey?.currentState;
     if (state == null || !state.isParked) return;
@@ -2061,7 +2097,7 @@ class WebViewProvider extends ChangeNotifier {
       customUrl: sleeping.customUrl,
       key: sleeping.key,
       useTabs: true,
-      chatRemovalActive: sleeping.chatRemovalActive,
+      chatRemovalActive: getTabByUid(sleeping.tabUid)?.chatRemovalActiveTab ?? sleeping.chatRemovalActive,
       isChainingBrowser: sleeping.isChainingBrowser,
       chainingPayload: sleeping.chainingPayload,
       allowDownloads: sleeping.allowDownloads,
@@ -2298,11 +2334,43 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
+  // Hiding no longer needs the icon
+  Future<void> migrateChatRemoval() async {
+    if (await Prefs().getChatRemovalMigrated()) return;
+    if (!await Prefs().getChatRemovalEnabledLegacy()) {
+      await Prefs().setChatRemovalActive(false);
+      for (final (read, write) in [
+        (Prefs().getWebViewMainTab, Prefs().setWebViewMainTab),
+        (Prefs().getWebViewSecondaryTabs, Prefs().setWebViewSecondaryTabs),
+      ]) {
+        try {
+          final saved = tabSaveModelFromJson(await read());
+          for (final tab in saved.tabsSave ?? const <TabsSave>[]) {
+            tab.chatRemovalActive = false;
+          }
+          await write(tabSaveModelToJson(saved));
+        } catch (_) {}
+      }
+    }
+    await Prefs().setChatRemovalMigrated(true);
+  }
+
   void reportChatRemovalChange(String tabUid, bool active, bool global) {
     getTabByUid(tabUid)?.chatRemovalActiveTab = active;
     if (global) {
       chatRemovalActiveGlobal = active;
       Prefs().setChatRemovalActive(active);
+    }
+    _saveTabs();
+    notifyListeners();
+  }
+
+  void setChatHiddenEverywhere(bool hidden) {
+    chatRemovalActiveGlobal = hidden;
+    Prefs().setChatRemovalActive(hidden);
+    for (final tab in _tabList) {
+      tab.chatRemovalActiveTab = hidden;
+      tab.webViewKey?.currentState?.setChatHidden(hidden, report: false);
     }
     _saveTabs();
     notifyListeners();
@@ -2809,6 +2877,8 @@ class WebViewProvider extends ChangeNotifier {
     // Chaining
     final bool isChainingBrowser = false,
     final ChainingPayload? chainingPayload,
+    bool focusedPanel = false,
+    bool forceApp = false,
   }) async {
     // Checking _tabList might not be enough to ensure that the browser is closed. We might get duplicates
     // with double presses or even notifications, try to open the browser twice (creating repeated keys)
@@ -2829,7 +2899,7 @@ class WebViewProvider extends ChangeNotifier {
     setCurrentUiMode(uiMode, context);
 
     final browserType = await Prefs().getDefaultBrowser();
-    if (browserType == 'app' || browserTapType == BrowserTapType.deeplink) {
+    if (browserType == 'app' || forceApp || browserTapType == BrowserTapType.deeplink) {
       analytics?.logScreenView(screenName: 'browser_full');
 
       String? authUrl = await _assessNativeAuth(inputUrl: url, nativeUser: nativeUser, nativeAuth: nativeAuth);
@@ -2848,6 +2918,7 @@ class WebViewProvider extends ChangeNotifier {
         settings: settingsProvider,
         isChainingBrowser: isChainingBrowser,
         chainingPayload: chainingPayload,
+        focusedPanel: focusedPanel,
       );
       if (!openedBesideApp) {
         if (browserTapType == BrowserTapType.deeplink && settingsProvider.newTabByDeepLinkTap) {
@@ -2874,6 +2945,20 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> openTornChatDm(String userId) async {
+    if (!RegExp(r'^[1-9]\d{0,17}$').hasMatch(userId) || _tabList.isEmpty) return;
+    final index = _currentTab.clamp(0, _tabList.length - 1);
+    final tabId = _tabList[index].id;
+    final host = Uri.tryParse(_tabList[index].currentUrl ?? '')?.host ?? '';
+    if (host != 'torn.com' && !host.endsWith('.torn.com')) loadTabUrl('https://www.torn.com/', index: index);
+    for (var i = 0; i < 30; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      final tab = _tabList.where((t) => t.id == tabId).firstOrNull;
+      final state = tab?.webViewKey?.currentState;
+      if (state != null && await state.openWebChatDm(userId)) return;
+    }
+  }
+
   Future<bool> openLinkBesideApp({
     required String? url,
     required BrowserTapType tapType,
@@ -2881,19 +2966,24 @@ class WebViewProvider extends ChangeNotifier {
     bool fromNotification = false,
     bool isChainingBrowser = false,
     ChainingPayload? chainingPayload,
+    bool focusedPanel = false,
   }) async {
     if (fromNotification || tapType == BrowserTapType.notification || tapType == BrowserTapType.deeplink) {
       return false;
     }
     if (!splitBrowsersAllowed || !_splitScreenWide || _tabList.isEmpty || !settings.useTabsFullBrowser) return false;
-    if (splitAppSide == null) return false;
+    if (splitAppSide == null && !(focusedPanel && splitBrowsersActive)) return false;
 
     final SplitGroup besideGroup = focusedGroup;
     final SplitGroup? coveredGroup = splitBrowsersActive
         ? (besideGroup == SplitGroup.main ? SplitGroup.apart : SplitGroup.main)
         : null;
     final int? coveredTab = coveredGroup == null ? null : visibleTabIndexForGroup(coveredGroup);
-    final SplitAppLinkTarget target = settings.splitAppLinkTarget;
+    final SplitAppLinkTarget target = switch (settings.splitAppLinkTarget) {
+      SplitAppLinkTarget.appSideTab when focusedPanel => SplitAppLinkTarget.browserTab,
+      SplitAppLinkTarget.appSideNewTab when focusedPanel => SplitAppLinkTarget.browserNewTab,
+      final chosen => chosen,
+    };
     final int? shownTab = switch (target) {
       SplitAppLinkTarget.browserTab => currentTab,
       SplitAppLinkTarget.appSideTab => coveredTab,

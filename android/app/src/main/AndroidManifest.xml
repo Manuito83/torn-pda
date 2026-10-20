@@ -90,6 +90,17 @@
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.pda" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.pda" />
             </intent-filter>
+            <!-- Share sheet: text, links and images into the chat -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
         </activity>
         <provider android:name="com.pichillilorenzo.flutter_inappwebview_android.InAppWebViewFileProvider"
             android:authorities="${applicationId}.flutter_inappwebview.fileprovider"
@@ -138,6 +149,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"></action>
             </intent-filter>
         </receiver>
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <meta-data android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/notification_icon" />
         <meta-data android:name="flutterEmbedding"

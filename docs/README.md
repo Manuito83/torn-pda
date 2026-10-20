@@ -70,6 +70,10 @@ MAIN INDEX
   cp native_login_widget.dart.example ../torn-pda-native/auth/native_login_widget.dart
   mkdir -p ../torn-pda-native/stats
   cp stats_controller.dart.example ../torn-pda-native/stats/stats_controller.dart
+  mkdir -p ../torn-pda-native/chat
+  cp chat_engine.dart.example ../torn-pda-native/chat/chat_engine.dart
+  cp torn_chat_source.dart.example ../torn-pda-native/chat/torn_chat_source.dart
+  cp chat_push.dart.example ../torn-pda-native/chat/chat_push.dart
   ```
 
   ### 3. Set up Android signing (for release builds)

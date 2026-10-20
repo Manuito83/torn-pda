@@ -69,7 +69,6 @@ dependencies:
   flutter_slidable: 4.0.3
   flutter_speed_dial: 7.0.0
   flutter_svg: 2.2.4
-  flutter_timezone: 4.1.1
   flutter_xlider: 3.5.0
   font_awesome_flutter: 11.0.0
   # Temporary as per https://github.com/jonataslaw/getx/issues/3100
@@ -101,7 +100,6 @@ dependencies:
       ref: 21f20d96f745c49b2de5d792c9392c0ceb31b955
   rxdart: 0.28.0
   synchronized: 3.4.1+1
-  sendbird_chat_sdk: 4.7.0
   share_plus: 12.0.0
   shared_preferences: 2.5.5
   showcaseview: 4.0.1
@@ -167,6 +165,7 @@ dev_dependencies:
     sdk: flutter
   # Used by swagger_dart_code_generator
   json_serializable: 6.11.1
+  shared_preferences_platform_interface: 2.4.2
   ## flutter pub run import_sorter:main
   import_sorter: 5.0.0-releasecandidate.1
   ## Only consumed by analysis_options.yaml

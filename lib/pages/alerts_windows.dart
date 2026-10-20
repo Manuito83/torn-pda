@@ -1,15 +1,12 @@
 // Package imports:
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/widgets/alerts/sendbird_dnd_dialog.dart';
 
 class AlertsSettingsWindows extends StatefulWidget {
   @override
@@ -55,9 +52,9 @@ class AlertsSettingsWindowsState extends State<AlertsSettingsWindows> {
         color: _themeProvider!.canvas,
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: Column(
+          child: const Column(
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(20),
                 child: Text(
                   "Alerts are automatic notifications that you only "
@@ -65,85 +62,7 @@ class AlertsSettingsWindowsState extends State<AlertsSettingsWindows> {
                   style: TextStyle(fontSize: 12),
                 ),
               ),
-              GetBuilder(
-                init: SendbirdController(),
-                builder: (sendbird) {
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                        child: Material(
-                          type: MaterialType.transparency,
-                          child: CheckboxListTile(
-                            checkColor: Colors.white,
-                            activeColor: Colors.blueGrey,
-                            value: sendbird.sendBirdNotificationsEnabled,
-                            title: const Row(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.only(right: 5),
-                                  child: Text(
-                                    "Torn chat messages",
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: const Text(
-                              "Enable notifications for TORN chat messages",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                            onChanged: (enabled) async {
-                              sendbird.sendBirdNotificationsToggle(enabled: enabled!);
-                            },
-                          ),
-                        ),
-                      ),
-                      if (sendbird.sendBirdNotificationsEnabled)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 30, right: 32),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Row(
-                                children: [
-                                  Icon(Icons.keyboard_arrow_right_outlined),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 10),
-                                    child: Text(
-                                      "Do not disturb",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              GestureDetector(
-                                child: const Icon(Icons.more_time_outlined),
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return SendbirdDoNotDisturbDialog();
-                                    },
-                                  );
-                                },
-                              )
-                            ],
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 60),
+              SizedBox(height: 60),
             ],
           ),
         ),

@@ -58,6 +58,7 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/profile/events_timeline_fixes.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
@@ -388,6 +389,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _profileApi.deactivate();
     _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    NativeChat.dialOpen.value = false;
     super.dispose();
   }
 
@@ -5340,6 +5342,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
+      onOpen: () => NativeChat.dialOpen.value = true,
+      onClose: () => NativeChat.dialOpen.value = false,
       animationDuration: const Duration(),
       direction: MediaQuery.orientationOf(context) == Orientation.portrait
           ? SpeedDialDirection.up

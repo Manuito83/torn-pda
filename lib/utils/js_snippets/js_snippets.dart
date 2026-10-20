@@ -484,75 +484,90 @@ String restoreChatJS() {
   ''';
 }
 
+String openWebChatDmJS({required String userId}) {
+  if (!RegExp(r'^[1-9]\d{0,17}$').hasMatch(userId)) return '';
+  return '''
+    (() => {
+      if (window.__pdaChatDmTimer) clearInterval(window.__pdaChatDmTimer);
+      let tries = 0;
+      const tick = () => {
+        tries++;
+        const root = document.getElementById("chatRoot");
+        const ready = root && root.children.length > 0;
+        if (ready) {
+          window.dispatchEvent(new CustomEvent("chat.openChannel", { detail: { userId: "$userId" } }));
+        }
+        if (ready || tries > 20) {
+          clearInterval(window.__pdaChatDmTimer);
+          window.__pdaChatDmTimer = null;
+        }
+      };
+      window.__pdaChatDmTimer = setInterval(tick, 500);
+      tick();
+      return 123;
+    })();
+  ''';
+}
+
 String chatHighlightJS({required String highlights}) {
   return '''
-// Modified from TornTools' Highlight Chat feature
 (() => {
   "use strict";
-	const highlights = $highlights;
-	async function waitForChat() {
-		let count = 0;
-		return new Promise((res, rej) => {
-			const id = setInterval(() => {
-				const chat = document.querySelector("#chatRoot");
-				if (chat?.querySelector("[class*='chat-list-button__']")) {
-					clearInterval(id);
-					res(chat);
-				} else if (count > 20) {
-					clearInterval(id);
-					rej();
-				} else count++;
-			}, 500)
-		});
-	}
+  const highlights = ($highlights).map((h) => String(h).toLowerCase()).filter((h) => h);
+  const own = highlights[0];
+  let frame = 0;
 
-	function removeHighlights() {
-		[...document.querySelectorAll(".pda-chat-highlight, .pda-chat-outline")].forEach((el) => el.classList.remove("pda-chat-highlight", "pda-chat-outline"));
-	}
-	function applyHighlights(el) {
-		// Spread content, in case the msg content has a : in it.
-		const [sender, ...contentArr] = el.firstElementChild?.tagName === "DIV" ? el.lastChild.textContent.split(":") : el.textContent.split(":");
-		const content = contentArr.join(":");
-		// Make it easy to silent the errors, so if (when...) something breaks it doesn't spam the console.
-		if (!sender && !window.pda?.silenceChatErrors) console.error("Missing sender in message element.")
-		if (!content && !window.pda?.silenceChatErrors) console.error("Missing content in message element.");
-		if (sender && sender.toLowerCase() === highlights[0].toLowerCase()) el.classList.add("pda-chat-outline");
-		if (content && highlights.some((highlight) => content.toLowerCase().includes(highlight.toLowerCase()))) el.classList.add("pda-chat-highlight");
-	}
+  function mark(box) {
+    const message = box.querySelector("[class*='message___']");
+    if (!message) return;
+    const sender = (box.querySelector("[class*='sender___']")?.textContent || "").trim().replace(/:\$/, "").toLowerCase();
+    const content = (message.textContent || "").toLowerCase();
+    box.classList.toggle("pda-chat-outline", !!own && sender === own);
+    box.classList.toggle("pda-chat-highlight", highlights.some((h) => content.includes(h)));
+  }
 
-	waitForChat().then((chat) => {
-		removeHighlights();
+  function markAll(root) {
+    root.querySelectorAll("[class*='virtualItem___'] [class*='box___']").forEach(mark);
+  }
 
-		[...chat.querySelectorAll("[class*='chat-box-body__'] [class*='chat-box-message__box__']")].forEach(applyHighlights);
-		// Re-injections would otherwise stack a new observer on top of the previous ones
-		window.pdaChatObserver?.disconnect();
-		window.pdaChatObserver = new MutationObserver((muts) => {
-			for (const mut of muts) {
-				for (const node of mut.addedNodes) {
-					if (node instanceof HTMLElement && !node.className && (node.parentElement?.getAttribute("class") || "").includes("chat-box-body__")) {
-						applyHighlights(node);
-					}
-				}
-			}
-		});
-		window.pdaChatObserver.observe(chat, { childList: true, subtree: true })
-	// No chat on this page: waitForChat rejects and the promise must not go unhandled
-	}).catch(() => {});
+  function watch(root) {
+    markAll(root);
+    window.pdaChatObserver?.disconnect();
+    clearInterval(window.pdaChatTimer);
+    window.pdaChatTimer = setInterval(() => markAll(root), 1000);
+    window.pdaChatObserver = new MutationObserver(() => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        markAll(root);
+      });
+    });
+    window.pdaChatObserver.observe(root, { childList: true, subtree: true, characterData: true });
+  }
+
+  document.querySelectorAll(".pda-chat-highlight, .pda-chat-outline").forEach((el) => el.classList.remove("pda-chat-highlight", "pda-chat-outline"));
+  let tries = 0;
+  const id = setInterval(() => {
+    const root = document.querySelector("#chatRoot");
+    if (root) {
+      clearInterval(id);
+      watch(root);
+    } else if (++tries > 20) {
+      clearInterval(id);
+      console.warn("PDA chat highlight: #chatRoot not found");
+    }
+  }, 500);
 })();
   ''';
 }
 
 String chatHighlightCSS({required String background, required String senderColor}) {
-  // Yes the css is incredibly hacky, it's the only way to workaround Torn's inconsistent chat elements without
-  // using :has() or adding more complex JS. It works, so it works.
   return """
-  .pda-chat-highlight [class*=chat-box-message__box_][class*=chat-box-message__box--],
-  .pda-chat-highlight[class*=chat-box-message__box_][class*=chat-box-message__box--] {
+  .pda-chat-highlight[class*=box___] {
     background-color: $background;
   }
 
-  .pda-chat-outline [class*=chat-box-message__box_][class*=chat-box-message__box--],
-  .pda-chat-outline[class*=chat-box-message__box_][class*=chat-box-message__box--] {
+  .pda-chat-outline[class*=box___] {
     box-shadow: 0 0 0 1px $senderColor;
   }
   """;

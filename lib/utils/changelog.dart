@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
@@ -39,6 +40,7 @@ class _MItem {
   final String text;
   final String? detail;
   final bool androidOnly;
+  final bool chatOnly;
   final String? docUrl;
   final List<FeatureDiagramScene> diagrams;
   final bool Function(BuildContext)? pinOpenWhen;
@@ -47,12 +49,13 @@ class _MItem {
     this.text, {
     this.detail,
     this.androidOnly = false,
+    this.chatOnly = false,
     this.docUrl,
     this.diagrams = const [],
     this.pinOpenWhen,
   });
 
-  bool get visibleOnThisPlatform => !androidOnly || Platform.isAndroid;
+  bool get visibleOnThisPlatform => (!androidOnly || Platform.isAndroid) && (!chatOnly || NativeChat.compiled);
 
   // Credits are tagged inline as "[Name]", same as the legacy changelog
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
@@ -97,7 +100,7 @@ class _MVersion {
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
     version: 'v3.18.0',
-    date: '20 October 2026',
+    date: '05 November 2026',
     hotfixes: [],
     sections: [
       _MSection(
@@ -106,10 +109,26 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF1565C0),
         items: [
           _MItem(
-            'Quick items: support for items loaned by your faction',
+            "Chat: Torn's chat is now part of Torn PDA, on Android and iOS",
+            chatOnly: true,
+            pinOpenWhen: _always,
             detail:
-                'Loaned medical items, drugs, energy drinks, alcohol, candy and boosters can be added to quick items '
-                'as their own entry, marked with the faction shield. Using it spends the loaned item instead of your own.',
+                'Tap the floating bubble, the chat icon in the browser or the chat in the side menu to open your '
+                'chats. A chat can open in a small window over the app or shrink to a bubble. New messages can also '
+                'show as a short line on screen, and Torn\'s web chat can be hidden in the browser from the chat '
+                'settings.\n\n'
+                'Links open in a preview, with "Main tab" and "New tab" buttons to move them to the browser. Tap a name '
+                'to see the player card with their status and actions. Each chat has its own alerts, and rooms can '
+                'alert you only when your name is mentioned. In Trade and Global, sell and buy offers show the '
+                'item\'s market value.\n\nMore details in the Tips section.',
+            diagrams: [
+              FeatureDiagramScene.chatBubble,
+              FeatureDiagramScene.chatDrawer,
+              FeatureDiagramScene.chatMenuBar,
+              FeatureDiagramScene.chatWindow,
+              FeatureDiagramScene.chatLinkPreview,
+              FeatureDiagramScene.chatPlayerCard,
+            ],
           ),
           _MItem(
             'Browser: added support for two groups of tabs side by side',
@@ -145,6 +164,12 @@ List<_MVersion> _modernChangelog() => [
                 'system X is like leaving the app: the chain watcher stops alerting.\n\nMore details in the Tips '
                 'section.',
             diagrams: [FeatureDiagramScene.pipChain, FeatureDiagramScene.pipPlayer],
+          ),
+          _MItem(
+            'Quick items: support for items loaned by your faction',
+            detail:
+                'Loaned medical items, drugs, energy drinks, alcohol, candy and boosters can be added to quick items '
+                'as their own entry, marked with the faction shield. Using one spends the loaned item instead of your own.',
           ),
           _MItem(
             'Browser: option to allow remote debugging',

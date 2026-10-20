@@ -49,6 +49,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
@@ -65,7 +66,6 @@ import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
 import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -73,6 +73,7 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
+import 'package:torn_pda/torn-pda-native/chat/chat_push.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
@@ -85,6 +86,8 @@ import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.d
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/widgets/chat/chat_logo_bubble.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/backup_reminder_dialog.dart';
@@ -106,6 +109,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 bool routeWithDrawer = true;
 String routeName = "drawer";
+
+const List<ShortcutItem> pdaShortcutItems = [
+  ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
+  ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
+  ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
+  ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
+];
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -220,7 +230,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _initializeIntentListeners();
     _initializeRemoteConfigInit();
     _initializeChainStatus();
-    _initializeSendbird();
     _initializeBrowserPreferences();
     _initializeConnectivity();
   }
@@ -267,15 +276,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             url: "https://www.torn.com/travelagency.php",
             browserTapType: BrowserTapType.quickItem,
           );
+        } else if (shortcutType.startsWith(NativeChat.shortcutPrefix)) {
+          await _preferencesCompleter.future;
+          selectNotificationStream.add(NativeChat.tapPayload(shortcutType.substring(NativeChat.shortcutPrefix.length)));
         }
       });
 
-      quickActions.setShortcutItems(<ShortcutItem>[
-        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
-        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
-        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
-        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
-      ]);
+      // The chat publishes its own once loaded
+      if (!NativeChat.compiled) quickActions.setShortcutItems(pdaShortcutItems);
     } catch (e, stackTrace) {
       log("Error initializing quick actions: $e");
       logErrorToCrashlytics("Error initializing quick actions", e, stackTrace);
@@ -374,6 +382,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
 
         FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+          if (await showTornChatNotification(message.data, foreground: true)) return;
+
           if (message.data.isEmpty) {
             message.data["title"] = message.notification!.title;
             message.data["body"] = message.notification!.body;
@@ -457,18 +467,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } catch (e, stackTrace) {
       log("Error initializing chain status: $e");
       logErrorToCrashlytics("Error initializing chain status", e, stackTrace);
-    }
-  }
-
-  void _initializeSendbird() {
-    try {
-      _preferencesCompleter.future.whenComplete(() async {
-        final sbController = Get.find<SendbirdController>();
-        await sbController.register();
-      });
-    } catch (e, stackTrace) {
-      log("Error initializing Sendbird: $e");
-      logErrorToCrashlytics("Error initializing Sendbird", e, stackTrace);
     }
   }
 
@@ -747,6 +745,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_max_live_tabs_default": 0,
         "browser_blank_detector_mode": 2,
         "auth_recovery_enabled": true,
+        "native_chat_enabled": true,
+        "native_chat_reply_enabled": false,
+        "native_chat_rooms": "",
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
         //"revive_hela": "1.8 million or 2 Xanax",
@@ -866,6 +867,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _webViewProvider.blankDetectorModeRC =
           blankDetectorModeRC >= 0 && blankDetectorModeRC <= 2 ? blankDetectorModeRC : 2;
 
+      // Chat sessions also need native_jwt_weblogin
+      NativeChat.setRemoteEnabled(remoteConfig.getBool("native_chat_enabled"));
+      NativeChat.prefs.setRemoteRooms(remoteConfig.getString("native_chat_rooms"));
+      NativeChat.setReplyEnabled(remoteConfig.getBool("native_chat_reply_enabled"));
+
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
       Prefs().setAuthRecoveryEnabledRC(_authRecoveryEnabledRC);
@@ -879,11 +885,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
       _settingsProvider.reviveCombatReadyPrice = remoteConfig.getString("revive_combat_ready");
       _settingsProvider.reviveAsclepiusPrice = remoteConfig.getString("revive_asclepius");
-
-      // Sendbird
-      final sb = Get.find<SendbirdController>();
-      sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
-      sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
 
       // Torn API
       apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
@@ -1337,6 +1338,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Important: await preferences in case we need to use settings providers
     await _preferencesCompleter.future;
 
+    final chatDm = ChatPush.fromData(message);
+    if (chatDm != null) {
+      selectNotificationStream.add(NativeChat.dmTapPayload(chatDm.senderId, chatDm.senderName));
+      return;
+    }
+
     // Opens new tab in broser
     bool launchBrowserWithUrl = false;
     var browserUrl = "https://www.torn.com";
@@ -1364,7 +1371,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool assists = false;
     bool loot = false;
     bool retals = false;
-    bool sendbird = false;
+    bool tornChat = false;
     bool forums = false;
     bool workStats = false;
 
@@ -1432,7 +1439,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (channel.contains("Alerts retals")) {
       retals = true;
     } else if (channel.contains("Torn chat")) {
-      sendbird = true;
+      tornChat = true;
     } else if (channel.contains("Alerts forums")) {
       forums = true;
     } else if (channel.contains("Alerts work stats")) {
@@ -1691,7 +1698,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             ..showOnlineFactionWarning = false,
         );
       }
-    } else if (sendbird) {
+    } else if (tornChat) {
       showBrowserForeground = true;
     } else if (forums) {
       if (bulkDetails != null && bulkDetails.isNotEmpty) {
@@ -1723,6 +1730,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future<void> _onForegroundNotification() async {
     selectNotificationStream.stream.listen((String? payload) async {
       if (payload == null) return;
+      final tappedRoom = NativeChat.roomFromTap(payload);
+      if (tappedRoom != null && !await NativeChat.tapsOpenChat()) payload = NativeChat.webChatPayload(tappedRoom);
+      if (payload == NativeChat.settingsPayload) {
+        _callSectionFromOutside(DrawerSection.settings);
+        return;
+      }
+      if (payload == NativeChat.alertsPayload) {
+        _callSectionFromOutside(DrawerSection.alerts);
+        return;
+      }
 
       // Opens new tab in broser
       bool launchBrowserWithUrl = false;
@@ -1730,6 +1747,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Shows browser but does not change URL
       bool showBrowserForeground = false;
+      String? webChatPeer;
 
       // ##-88-## comes in the payload for browser notifications (triggered from user scripts)
       // We put them first to ensure they are not overridden by other conditions
@@ -2054,8 +2072,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               ..showOnlineFactionWarning = false,
           );
         }
-      } else if (payload.contains('sendbird')) {
+      } else if (payload.contains('tornChat')) {
         showBrowserForeground = true;
+        webChatPeer = NativeChat.webChatPeer(payload);
       } else if (payload == 'forums###') {
         launchBrowserWithUrl = true;
         browserUrl = payload.split('###')[1];
@@ -2070,8 +2089,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           );
         });
       } else if (showBrowserForeground) {
+        final peer = webChatPeer;
         _preferencesCompleter.future.whenComplete(() async {
           _webViewProvider.browserShowInForeground = true;
+          if (peer != null) _webViewProvider.openTornChatDm(peer);
         });
       }
     });
@@ -2155,6 +2176,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               child: Scaffold(
                 key: _scaffoldKey,
                 body: _getPages(),
+                onDrawerChanged: (open) => NativeChat.drawerOpen.value = open,
+                onEndDrawerChanged: (open) => NativeChat.drawerOpen.value = open,
                 endDrawer: _webViewProvider.splitAppSide == SplitSide.right
                     ? Drawer(
                         backgroundColor: _themeProvider!.canvas,
@@ -2271,9 +2294,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             showMemory
                 ? const Padding(padding: EdgeInsets.all(8.0), child: MemoryBarWidgetDrawer())
                 : const SizedBox.shrink(),
-            const Flexible(
-              child: Image(image: AssetImage('images/icons/torn_pda.png'), fit: BoxFit.fill),
-            ),
+            const Flexible(child: ChatLogoBubble()),
             const Padding(
               padding: EdgeInsets.only(top: 8.0),
               child: Text('TORN PDA', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -2451,8 +2472,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Widget _getDrawerItems(SettingsProvider settingsProvider) {
     final drawerOptions = <Widget>[];
     final visibleSections = _getVisibleSections(settingsProvider);
+    final order = DrawerSectionsPage.fullOrder(settingsProvider.drawerSectionOrder);
+    var chatAdded = false;
 
     for (final section in visibleSections) {
+      if (!chatAdded && order.indexOf(section.name) > order.indexOf(DrawerSectionsPage.chatId)) {
+        drawerOptions.add(const ChatMenuBar());
+        chatAdded = true;
+      }
       if (section.isDivider) {
         drawerOptions.add(const Divider());
         continue;
@@ -2483,6 +2510,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       );
     }
 
+    if (!chatAdded) drawerOptions.add(const ChatMenuBar());
     return Column(children: drawerOptions);
   }
 

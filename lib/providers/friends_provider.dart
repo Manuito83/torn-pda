@@ -293,6 +293,13 @@ class FriendsProvider extends ChangeNotifier {
     _saveFriendsSharedPrefs();
   }
 
+  void restoreFriend(FriendModel friend) {
+    if (_friends.any((f) => f.playerId == friend.playerId)) return;
+    _friends.add(friend);
+    notifyListeners();
+    _saveFriendsSharedPrefs();
+  }
+
   void restoredDeleted() {
     _friends = List<FriendModel>.from(_oldFriendsList);
     _oldFriendsList.clear();

@@ -64,7 +64,6 @@ flowchart TD
     E --> F4[_initializeFirebase]
     E --> F5[_initializeWorkManager]
     E --> F6[_initializeGetXControllers]
-    E --> F7[_initializeSendbird]
     E --> F8[_initializeNotifications]
     E --> F9[_initializePlatformPlugins]
     E --> F10[_initializeAudioAndConnectivity]
@@ -73,7 +72,6 @@ flowchart TD
     F6 --> G2[ApiCallerController]
     F6 --> G3[ChainStatusController]
     F6 --> G4[StakeoutsController]
-    F6 --> G5[SendbirdController]
     F6 --> G6[AudioController]
     F6 --> G7[+ 5 more GetX controllers]
 ```
@@ -153,7 +151,6 @@ flowchart TD
         G2[ApiCallerController]
         G3[ChainStatusController]
         G4[StakeoutsController]
-        G5[SendbirdController]
         G6[SpiesController]
         G7[WarController]
         G8[AudioController]
@@ -269,7 +266,7 @@ flowchart TD
 
     subgraph External["Other services"]
         FB[Firebase — 8 services]
-        SB[Sendbird Chat]
+        TC[Torn chat, hidden browser]
         YATA[YATA — spy data]
         TS[TornStats — spy data]
         FFS[FFScouter — target finder]
@@ -286,7 +283,7 @@ flowchart TD
 | **Firestore** | Settings backup, messaging tokens | `cloud_firestore` |
 | **FCM** | Push notifications | `firebase_messaging` |
 | **Crashlytics** | Error tracking | `firebase_crashlytics` |
-| **Sendbird** | In-game chat | `sendbird_chat_sdk` |
+| **Torn chat** | Native chat on top of a hidden browser | `flutter_inappwebview` |
 | **YATA / TornStats** | Spy data, stats | `http` / `dio` |
 
 ---
@@ -330,7 +327,7 @@ flowchart TD
         ALERT[Profile alerts — energy, nerve, travel, etc.]
         CHAIN[Chain watcher]
         LOOT[Loot timer]
-        SB[Sendbird chat messages]
+        TC[Torn chat push data]
         WV[Userscript-triggered notifications]
         FCM_SRC[FCM push — server-side]
     end
@@ -348,7 +345,7 @@ Notification IDs are namespaced by feature:
 - `101–110` — Profile cooldowns
 - `201` — Travel arrival
 - `555` — Chain watcher
-- `666+timestamp` — Sendbird chat
+- `677000-678999`: Torn chat (`showTornChatNotification`)
 - `88001+` — WebView / userscript notifications
 
 Each Android notification channel has its own color, sound, and importance level.
@@ -362,7 +359,7 @@ Each Android notification channel has its own color, sound, and importance level
 | **WebView** | `flutter_inappwebview` | In-app browser with JS bridge |
 | **State** | `provider`, `get` | UI state + business logic |
 | **Firebase** | 8 packages | Auth, DB, messaging, analytics, crashlytics |
-| **Chat** | `sendbird_chat_sdk` | In-game chat |
+| **Chat** | `flutter_inappwebview` | Native chat UI over a hidden browser |
 | **HTTP** | `http`, `dio`, `chopper` | API calls + code generation |
 | **Storage** | `shared_preferences`, `sembast`, `flutter_secure_storage` | Local persistence |
 | **Notifications** | `flutter_local_notifications`, `firebase_messaging` | Push + local alerts |

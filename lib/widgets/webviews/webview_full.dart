@@ -69,6 +69,9 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
+import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -287,6 +290,7 @@ class WebViewFullState extends State<WebViewFull>
   var _bazaarFillActive = false;
 
   var _localChatRemovalActive = false;
+  bool _chatReloadPending = false;
   var _localChatRemoveActiveBeforeFullScreen = false;
 
   var _quickItemsActive = false;
@@ -653,6 +657,10 @@ class WebViewFullState extends State<WebViewFull>
       // Pin textZoom to 100 on Android so the webview ignores the system font scale
       // From inappwebview 6.2.0-beta.3 textZoom defaults to null and the system scale leaks in
       textZoom: Platform.isAndroid ? _settingsProvider.androidBrowserTextZoom : null,
+      contentBlockers: [
+        if (NativeChat.compiled && _webViewProvider.chatHidden(widget.chatRemovalActive))
+          tchatBundleBlocker,
+      ],
     );
 
     _pullToRefreshController = Platform.isWindows
@@ -1180,7 +1188,7 @@ class WebViewFullState extends State<WebViewFull>
                     _tradesMenuIcon(),
                     _bazaarFillIcon(),
                     _vaultOptionsIcon(),
-                    if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
+                    if (_chatIconShown) _hideChatIcon() else const SizedBox.shrink(),
                     _reloadIcon(),
                   ],
                 ),
@@ -2702,6 +2710,7 @@ class WebViewFullState extends State<WebViewFull>
         activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
       ),
       ..._tornChatCacheTrimScript(),
+      if (NativeChat.compiled && _webViewProvider.chatHidden(_localChatRemovalActive)) tchatGuardScript,
     ];
     await webViewController!.addUserScripts(userScripts: handlers.map(_guardedOnce).toList());
     _handlersInjected = true;
@@ -2783,6 +2792,8 @@ class WebViewFullState extends State<WebViewFull>
         activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
       ),
       ..._tornChatCacheTrimScript(),
+      if (NativeChat.compiled && _webViewProvider.chatHidden(widget.chatRemovalActive))
+        tchatGuardScript,
       if (_initialUrl?.url != null)
         ..._userScriptsProvider.getCondSources(
           url: _initialUrl!.url.toString(),
@@ -2942,7 +2953,7 @@ class WebViewFullState extends State<WebViewFull>
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
     final senderColor =
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
-    final String hlMap = '[ "${UserHelper.playerName}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String hlMap = jsonEncode([UserHelper.playerName, ..._settingsProvider.highlightWordList]);
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
@@ -2968,10 +2979,52 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   void hideChatOnLoad() {
-    if ((_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) ||
-        _webViewProvider.chatRemovalWhileFullScreen) {
+    if (_webViewProvider.chatHidden(_localChatRemovalActive) || _webViewProvider.chatRemovalWhileFullScreen) {
       webViewController!.evaluateJavascript(source: removeChatJS());
     }
+  }
+
+  // False until the page is ready
+  Future<bool> openWebChatDm(String userId) async {
+    final controller = webViewController;
+    if (controller == null) return false;
+    final host = (await controller.getUrl())?.host ?? '';
+    if (host != 'torn.com' && !host.endsWith('.torn.com')) return false;
+    if (await controller.isLoading()) return false;
+    final hidden = _webViewProvider.chatHidden(_localChatRemovalActive) || _webViewProvider.chatRemovalWhileFullScreen;
+    if (hidden) return true;
+    await controller.evaluateJavascript(source: openWebChatDmJS(userId: userId));
+    return true;
+  }
+
+  Future<void> setChatHidden(bool hidden, {bool report = true}) async {
+    if (report) _webViewProvider.reportChatRemovalChange(_tabUid, hidden, false);
+    if (mounted) setState(() => _localChatRemovalActive = hidden);
+    _webViewProvider.verticalMenuClose();
+    final controller = webViewController;
+    if (controller == null) return;
+    final shown = !_webViewProvider.chatHidden(hidden);
+    controller.evaluateJavascript(source: shown ? restoreChatJS() : removeChatJS());
+    final settings = await controller.getSettings();
+    if (settings == null) return;
+    settings.contentBlockers = [if (!shown) tchatBundleBlocker];
+    await controller.setSettings(settings: settings);
+    await controller.removeUserScriptsByGroupName(groupName: tchatGuardScript.groupName!);
+    if (!shown) await controller.addUserScript(userScript: _guardedOnce(tchatGuardScript));
+    _chatReloadPending = shown;
+    if (shown && _webViewProvider.isTabUidVisible(_tabUid)) await showPendingChat();
+  }
+
+  // Background tabs reload once shown
+  Future<void> showPendingChat() async {
+    final controller = webViewController;
+    if (!_chatReloadPending || controller == null) return;
+    _chatReloadPending = false;
+    // Only a reload brings the chat back
+    final loaded = await controller.evaluateJavascript(
+      source: "!!document.querySelector('#chatRoot *') && !window.__pdaNoTchat",
+    );
+    if (loaded != true) controller.reload();
   }
 
   void hideChatWhileFullScreen() {
@@ -2981,7 +3034,7 @@ class WebViewFullState extends State<WebViewFull>
 
   void showChatAfterFullScreen() {
     _localChatRemovalActive = _localChatRemoveActiveBeforeFullScreen;
-    if (!_localChatRemovalActive) {
+    if (!_webViewProvider.chatHidden(_localChatRemovalActive)) {
       webViewController!.evaluateJavascript(source: restoreChatJS());
     }
   }
@@ -3328,7 +3381,7 @@ class WebViewFullState extends State<WebViewFull>
                 _vaultOptionsIcon(),
                 _bazaarFillIcon(),
                 _cityMenuIcon(),
-                if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
+                if (_chatIconShown) _hideChatIcon() else const SizedBox.shrink(),
                 _reloadIcon(),
               ],
       ),
@@ -4966,7 +5019,19 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   // HIDE CHAT
+  bool get _chatIconShown => _webViewProvider.chatRemovalEnabledGlobal || NativeChat.compiled;
+
   Widget _hideChatIcon() {
+    if (NativeChat.compiled) {
+      return ChatIconButton(
+        color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
+        hiddenInTab: _localChatRemovalActive,
+        hiddenEverywhere: _webViewProvider.chatRemovalActiveGlobal,
+        onHideInTab: setChatHidden,
+        onHideEverywhere: _webViewProvider.setChatHiddenEverywhere,
+        alwaysShown: _webViewProvider.chatRemovalEnabledGlobal,
+      );
+    }
     if (!_localChatRemovalActive) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -6006,6 +6071,7 @@ class WebViewFullState extends State<WebViewFull>
     if (publish) {
       await publishTabState();
     }
+    showPendingChat();
 
     // Restore native focus on tab show
     await _restoreNativeWebViewFocus();
@@ -6664,7 +6730,7 @@ class WebViewFullState extends State<WebViewFull>
 
     //myButtons.add(_quickItemsMenuIcon());
 
-    final Widget hideChatIcon = _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : const SizedBox.shrink();
+    final Widget hideChatIcon = _chatIconShown ? _hideChatIcon() : const SizedBox.shrink();
     myButtons.add(hideChatIcon);
 
     myButtons.add(_reloadIcon());
