@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:file_picker/file_picker.dart' show PlatformFile;
 import 'package:flutter/foundation.dart' show ValueListenable;
@@ -1685,57 +1686,125 @@ class ChatSessionMessage extends StatelessWidget {
   }
 }
 
-class ChatPausedBand extends StatelessWidget {
-  const ChatPausedBand({super.key});
+class ChatPausedGate extends StatefulWidget {
+  const ChatPausedGate({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<ChatPausedGate> createState() => _ChatPausedGateState();
+}
+
+class _ChatPausedGateState extends State<ChatPausedGate> {
+  @override
+  void initState() {
+    super.initState();
+    NativeChat.tornTabMissing.addListener(_closePopups);
+  }
+
+  @override
+  void dispose() {
+    NativeChat.tornTabMissing.removeListener(_closePopups);
+    super.dispose();
+  }
+
+  void _closePopups() {
+    if (!NativeChat.tornTabMissing.value) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).popUntil((route) => route is! PopupRoute);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Material(
-      color: scheme.surfaceContainerLow,
-      child: SafeArea(
-        top: false,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: scheme.outlineVariant)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.tab_unselected_rounded, color: scheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('No Torn tab open', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
-                    Text(
-                      'Chat needs a Torn page open in the browser.',
-                      style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        const FilledButton.tonal(onPressed: NativeChat.openTornBrowser, child: Text('Go to Torn tab')),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                          child: const Text('Close chat'),
-                        ),
-                      ],
-                    ),
-                  ],
+    return ValueListenableBuilder(
+      valueListenable: NativeChat.tornTabMissing,
+      child: widget.child,
+      builder: (context, paused, page) => Stack(
+        children: [
+          Positioned.fill(
+            child: ExcludeFocus(
+              excluding: paused,
+              child: IgnorePointer(
+                ignoring: paused,
+                child: ExcludeSemantics(
+                  excluding: paused,
+                  child: ImageFiltered(
+                    enabled: paused,
+                    imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10, tileMode: TileMode.decal),
+                    child: page,
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+          if (paused)
+            Positioned.fill(
+              child: ColoredBox(
+                color: scheme.scrim.withValues(alpha: 0.4),
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Material(
+                        color: scheme.surfaceContainerHigh,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: scheme.outlineVariant),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Icon(Icons.tab_unselected_rounded, size: 40, color: scheme.onSurfaceVariant),
+                              const SizedBox(height: 14),
+                              Text(
+                                'No Torn tab open',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                'Chat needs a Torn page open in the browser.',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                              const SizedBox(height: 20),
+                              FilledButton(
+                                style: _pausedButton,
+                                onPressed: NativeChat.goToTornTab,
+                                child: const Text('Go to Torn tab'),
+                              ),
+                              const SizedBox(height: 8),
+                              OutlinedButton(
+                                style: _pausedButton,
+                                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                                child: const Text('Close chat'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
+
+final _pausedButton = ButtonStyle(
+  minimumSize: const WidgetStatePropertyAll(Size.fromHeight(46)),
+  shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+);
 
 Color chatPresenceColor(ChatPresence presence, Color foreground) => switch (presence) {
   ChatPresence.online => Colors.green,

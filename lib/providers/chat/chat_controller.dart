@@ -21,6 +21,7 @@ class ChatController extends ChangeNotifier {
 
   static const int _maxMessagesPerRoom = 1000;
   static const int _maxAlerts = 100;
+  static const int _maxDeferred = 3000;
   static const Duration _sendTimeout = Duration(seconds: 30);
   static const Duration _stallAfter = Duration(seconds: 30);
   static const Duration _sessionRetryGap = Duration(seconds: 10);
@@ -1066,7 +1067,54 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _frozen = false;
+  bool _replaying = false;
+
+  bool _stale = false;
+  final List<ChatEvent> _deferred = [];
+
+  /// Held events apply in order on release
+  void setFrozen(bool value) {
+    if (value == _frozen) return;
+    _frozen = value;
+    if (value) return;
+    final held = [..._deferred];
+    _deferred.clear();
+    _replaying = true;
+    held.forEach(_onEvent);
+    _replaying = false;
+    if (!_stale) return;
+    _stale = false;
+    _loadedRooms.clear();
+    if (_ready) {
+      _inboxShown ? _refreshInbox() : _source.refreshUnread();
+      if (currentRoomId != null) {
+        openConversation(currentRoomId!);
+      } else {
+        _peeked.toList().forEach(peekRoom);
+      }
+    }
+    notifyListeners();
+  }
+
   void _onEvent(ChatEvent event) {
+    final flows =
+        event is ChatReadyEvent ||
+        event is ChatConnectionEvent ||
+        event is ChatUnreadFailedEvent ||
+        event is ChatPresenceEvent ||
+        event is ChatBlockedEvent ||
+        event is ChatSearchEvent ||
+        event is ChatSendResultEvent;
+    if (_frozen && !flows) {
+      if (event is ChatTypingEvent || _stale) return;
+      _deferred.add(event);
+      if (_deferred.length > _maxDeferred) {
+        _deferred.clear();
+        _stale = true;
+      }
+      return;
+    }
     switch (event) {
       case ChatReadyEvent():
         if (_myUserId != null && event.myUserId != null && event.myUserId != _myUserId) {
@@ -1319,7 +1367,7 @@ class ChatController extends ChangeNotifier {
     // A muted DM silences that person everywhere
     final dm = ChatRoom.dmId(message.sender.id);
     if (roomId != dm && _prefs.isMuted(dm)) return;
-    if (!isOnScreen(roomId)) _incomingStream.add(ChatAlert(message, match));
+    if (!isOnScreen(roomId) && !_replaying) _incomingStream.add(ChatAlert(message, match));
     final level = _prefs.alertLevel(roomId);
     if (!ChatAlertMatcher.shouldAlert(level, muted: _prefs.isMuted(roomId), match: match)) return;
     final alert = ChatAlert(message, match, seen: _seen(roomId));
@@ -1327,11 +1375,13 @@ class ChatController extends ChangeNotifier {
       _alerts.insert(0, alert);
       if (_alerts.length > _maxAlerts) _alerts.removeLast();
     }
-    if (!_seen(roomId)) _alertStream.add(alert);
+    if (!_seen(roomId) && !_replaying) _alertStream.add(alert);
   }
 
   /// Nothing from the previous account survives
   void _clearAccount() {
+    _deferred.clear();
+    _stale = false;
     _ready = false;
     _myUserId = null;
     _savedUserId = null;

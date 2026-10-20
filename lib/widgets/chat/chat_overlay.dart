@@ -226,7 +226,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
                 for (final (i, m) in minis.take(_maxMinis).indexed) _miniBubble(context, i, m),
                 if (minis.length > _maxMinis) _miniBubble(context, _maxMinis, null, more: minis.length - _maxMinis),
                 if (showBubble) _bubble(context),
-                if (paused && NativeChat.quickWindows.value.isNotEmpty && !covered)
+                if (paused && NativeChat.quickWindows.value.isNotEmpty)
                   _pausedNotice(context, media)
                 else if (!paused)
                   for (final roomId in NativeChat.quickWindows.value) _window(roomId),

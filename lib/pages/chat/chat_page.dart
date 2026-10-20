@@ -77,10 +77,12 @@ class _ChatPageState extends State<ChatPage> {
         builder: (_) => ChangeNotifierProvider<ChatController>.value(
           value: _chat,
           child: ChatTheme(
-            child: ChatSearchPage(
-              saved: saved,
-              onOpen: (roomId, {messageId, at}) => _open(roomId, messageId: messageId, at: at),
-              onPlayer: (user) => _open(ChatRoom.dmId(user.id), newPeer: user),
+            child: ChatPausedGate(
+              child: ChatSearchPage(
+                saved: saved,
+                onOpen: (roomId, {messageId, at}) => _open(roomId, messageId: messageId, at: at),
+                onPlayer: (user) => _open(ChatRoom.dmId(user.id), newPeer: user),
+              ),
             ),
           ),
         ),
@@ -411,10 +413,6 @@ class _ChatPageState extends State<ChatPage> {
                   ],
                 )
               : null,
-          bottomNavigationBar: ValueListenableBuilder(
-            valueListenable: NativeChat.tornTabMissing,
-            builder: (context, paused, _) => paused ? const ChatPausedBand() : const SizedBox.shrink(),
-          ),
           body: Column(
             children: [
               ChatStartingBar(starting: chat.starting, phrases: false),
@@ -439,7 +437,7 @@ class _ChatPageState extends State<ChatPage> {
             ],
           ),
         );
-        return tabs ? DefaultTabController(length: 2, child: scaffold) : scaffold;
+        return ChatPausedGate(child: tabs ? DefaultTabController(length: 2, child: scaffold) : scaffold);
       },
     );
   }

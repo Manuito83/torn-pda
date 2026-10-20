@@ -161,20 +161,29 @@ class NativeChat {
   static final ValueNotifier<bool> keyValid = ValueNotifier(false);
 
   /// No live Torn tab for a while
-  static final ValueNotifier<bool> tornTabMissing = ValueNotifier(false);
-  static const int _tabGrace = 15;
+  static final ValueNotifier<bool> tornTabMissing = ValueNotifier(false)..addListener(_syncFreeze);
+  static int _tabGrace = 30;
+  static const int _tabSettle = 2;
   static const Duration _touchEvery = Duration(seconds: 15);
   static WebViewProvider? _tabs;
   static Timer? _tabTimer;
   static int _tabLostFor = 0;
+  static bool _hadLive = false;
+  static bool _opening = false;
+  static String? _madeTab;
   static DateTime _touchedAt = DateTime(0);
-  static Future<void>? _opening;
 
   @visibleForTesting
   static bool Function(TabDetails) isLive = tabAlive;
 
   @visibleForTesting
+  static bool Function(TabDetails) isLoading = tabLoading;
+
+  @visibleForTesting
   static Future<void> Function() sendTouch = _source.touch;
+
+  @visibleForTesting
+  static bool Function() sessionOk = () => controller.ready && controller.connection == ChatConnection.connected;
 
   /// Bubble, ticker, drawer logo and shortcuts
   static bool get usable => compiled && prefs.inAppEnabled && keyValid.value;
@@ -239,10 +248,12 @@ class NativeChat {
         controller.resumed();
         _reportMode();
         _checkTabs();
+        _syncFreeze();
       },
       onPause: () {
         controller.paused();
         refreshShortcuts();
+        _syncFreeze();
       },
     );
     _watchKey();
@@ -395,32 +406,44 @@ class NativeChat {
     _tabTimer?.cancel();
     _tabTimer = null;
     _tabLostFor = 0;
+    _hadLive = false;
     tornTabMissing.value = false;
     _touchedAt = DateTime(0);
   }
 
+  static bool get _inBackground {
+    final state = WidgetsBinding.instance.lifecycleState;
+    return state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
+  }
+
+  // Background keeps its alerts
+  static void _syncFreeze() => controller.setFrozen(tornTabMissing.value && !_inBackground);
+
   static void _checkTabs() {
     final web = _tabs;
     if (web == null) return;
-    final state = WidgetsBinding.instance.lifecycleState;
-    final away = state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
-    if (!_shouldRun || away) {
+    if (!_shouldRun || _inBackground) {
       _tabTimer?.cancel();
       _tabTimer = null;
       _tabLostFor = 0;
-      if (!_shouldRun) tornTabMissing.value = false;
+      if (!_shouldRun) {
+        _hadLive = false;
+        tornTabMissing.value = false;
+      }
     } else if (tornTabOpen(web)) {
       _tabTimer?.cancel();
       _tabTimer = null;
       _tabLostFor = 0;
+      _hadLive = true;
       tornTabMissing.value = false;
-    } else if (_tabTimer == null) {
-      _tabTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    } else {
+      _tabTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
         _tabLostFor++;
         _checkTabs();
       });
-    } else if (_tabLostFor >= _tabGrace) {
-      tornTabMissing.value = true;
+      // Never live: no margin
+      final settled = !_hadLive && _tabLostFor >= _tabSettle && sessionOk();
+      if (settled || _tabLostFor >= _tabGrace) tornTabMissing.value = true;
     }
   }
 
@@ -434,15 +457,23 @@ class NativeChat {
         !page.initialLoadPending;
   }
 
+  /// Awake and mounted, maybe still loading
+  static bool tabLoading(TabDetails tab) {
+    final page = tab.webViewKey?.currentState;
+    return !tab.sleepTab && !tab.needsReloadAfterRendererGone && page != null && !page.isParked;
+  }
+
   /// Shown tabs only, both split sides
-  static bool tornTabOpen(WebViewProvider web) {
+  static bool tornTabOpen(WebViewProvider web, {bool loaded = false}) {
     final shown = [
       web.visibleTabIndexForGroup(SplitGroup.main),
       if (web.splitBrowsersActive) web.visibleTabIndexForGroup(SplitGroup.apart),
     ];
-    return shown.any(
-      (i) => i != null && i < web.tabList.length && _isTorn(web.tabList[i].currentUrl) && isLive(web.tabList[i]),
-    );
+    return shown.any((i) {
+      if (i == null || i >= web.tabList.length || !_isTorn(web.tabList[i].currentUrl)) return false;
+      final tab = web.tabList[i];
+      return isLive(tab) || (!loaded && web.isTabUidOnScreen(tab.id) && isLoading(tab));
+    });
   }
 
   static void touch([DateTime? at]) {
@@ -562,7 +593,6 @@ class NativeChat {
   /// Over the cap, minimizes the back one
   static void openQuickWindow(String roomId, {bool reply = false}) {
     ChatTelemetry.count('open_window');
-    unawaited(_backToTorn());
     _focusRoom = reply ? roomId : null;
     if (reply) composerFocus.value++;
     dropMinimized(roomId);
@@ -789,42 +819,40 @@ class NativeChat {
 
   static Future<void> openTornBrowser({bool keepChat = false}) async {
     final navigator = navigatorKey?.currentState;
-    if (navigator == null) return;
-    final web = navigator.context.read<WebViewProvider>();
-    final index = tornTabIndex(
-      [for (final tab in web.tabList) tab.currentUrl],
-      [web.currentTab, ...web.tabIndexesForGroup(web.focusedGroup), for (var i = 0; i < web.tabList.length; i++) i],
-      live: (i) => isLive(web.tabList[i]),
-    );
-    if (index == null) {
-      const home = 'https://www.torn.com';
-      keepChat
-          ? await _inBrowser(navigator.context, home, BrowserTapType.short, true, app: true)
-          : await openUrl(home, newTab: true, app: true);
-      return;
+    if (navigator == null || _opening) return;
+    _opening = true;
+    try {
+      final web = navigator.context.read<WebViewProvider>();
+      final made = web.tabList.indexWhere((tab) => tab.id == _madeTab);
+      final index = tornTabIndex(
+        [for (final tab in web.tabList) tab.currentUrl],
+        [web.currentTab, ...web.tabIndexesForGroup(web.focusedGroup), for (var i = 0; i < web.tabList.length; i++) i],
+        live: (i) => isLive(web.tabList[i]),
+        made: made,
+      );
+      if (index != made) _madeTab = null;
+      if (index == null) {
+        const home = 'https://www.torn.com';
+        final before = web.tabList.length;
+        keepChat
+            ? await _inBrowser(navigator.context, home, BrowserTapType.short, true, app: true)
+            : await openUrl(home, newTab: true, app: true);
+        if (web.tabList.length > before) _madeTab = web.tabList.last.id;
+        return;
+      }
+      if (!keepChat) {
+        hideQuickWindows();
+        navigator.popUntil((route) => route.isFirst);
+      }
+      if (index != web.currentTab) {
+        web.activateTab(index);
+      } else if (!isLive(web.tabList[index])) {
+        web.wakeTab(index);
+      }
+      web.browserShowInForeground = true;
+    } finally {
+      _opening = false;
     }
-    if (!keepChat) {
-      hideQuickWindows();
-      navigator.popUntil((route) => route.isFirst);
-    }
-    if (index != web.currentTab) {
-      web.activateTab(index);
-    } else if (!isLive(web.tabList[index])) {
-      web.wakeTab(index);
-    }
-    web.browserShowInForeground = true;
-  }
-
-  static Future<void> _backToTorn() async {
-    if (!tornTabMissing.value || _opening != null) return;
-    final hasTorn = _tabs?.tabList.any((t) => _isTorn(t.currentUrl)) ?? false;
-    _opening = openTornBrowser(keepChat: true).whenComplete(() => _opening = null);
-    chatToast(hasTorn ? 'Switched to your Torn tab for chat' : 'Opened Torn for chat');
-    // Android loads a page once it shows
-    for (var i = 0; i < 20 && _tabs != null && !tornTabOpen(_tabs!); i++) {
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-    }
-    _checkTabs();
   }
 
   static bool _isTorn(String? url) {
@@ -832,13 +860,33 @@ class NativeChat {
     return host == 'torn.com' || host.endsWith('.torn.com');
   }
 
-  /// Live ones first
-  static int? tornTabIndex(List<String?> urls, Iterable<int> order, {bool Function(int)? live}) {
+  static int? tornTabIndex(List<String?> urls, Iterable<int> order, {bool Function(int)? live, int made = -1}) {
     final torn = [
       for (final i in order)
         if (i >= 0 && i < urls.length && _isTorn(urls[i])) i,
     ];
-    return torn.where((i) => live?.call(i) ?? true).firstOrNull ?? torn.firstOrNull;
+    final found = torn.where((i) => live?.call(i) ?? true).firstOrNull ?? torn.firstOrNull;
+    if (found != null || made < 0 || made >= urls.length) return found;
+    return switch (urls[made]) {
+      null || '' || 'about:blank' => made,
+      _ => null,
+    };
+  }
+
+  /// Back to Torn, then reopen the chat
+  static Future<void> goToTornTab() async {
+    final navigator = navigatorKey?.currentState;
+    if (navigator == null) return;
+    final room = controller.currentRoomId;
+    navigator.popUntil((route) => route.isFirst);
+    await openTornBrowser(keepChat: true);
+    for (var i = 0; i < 75; i++) {
+      final web = _tabs;
+      if (web != null && !screenOpen.value && tornTabOpen(web, loaded: true)) {
+        return unawaited(open(navigator, roomId: room));
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
   }
 
   /// Where Torn Authentication lives
@@ -933,6 +981,9 @@ class NativeChat {
     refreshShortcuts();
   }
 
+  /// Remote Config native_chat_tab_grace_seconds
+  static void setTabGrace(int seconds) => _tabGrace = seconds;
+
   /// Remote Config native_chat_reply_enabled
   static Future<void> setReplyEnabled(bool value) async {
     if (value == await Prefs().getNativeChatReplyEnabled()) return;
@@ -957,8 +1008,6 @@ class NativeChat {
       controller.closeConversation(roomId);
       return;
     }
-    if (_opening != null) return;
-    await _backToTorn();
     if (!prefs.inAppEnabled) setEnabled(true);
     minimized.value = [...minimized.value.where((m) => m.window && m.roomId != roomId)];
     screenOpen.value = true;

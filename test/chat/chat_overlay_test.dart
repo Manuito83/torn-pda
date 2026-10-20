@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -286,6 +288,26 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
     }
+
+    testWidgets('a paused window leaves its notice, also over a dialog', (tester) async {
+      final key = await _pumpApp(tester);
+      NativeChat.quickWindows.value = ['global'];
+      await _settle(tester);
+      NativeChat.tornTabMissing.value = true;
+      await _settle(tester);
+      expect(find.text('Go to Torn'), findsOneWidget);
+      NativeChat.tornTabMissing.value = false;
+      await _settle(tester);
+
+      unawaited(showDialog<void>(context: key.currentContext!, builder: (_) => const Text('dialog')));
+      await _settle(tester);
+      NativeChat.tornTabMissing.value = true;
+      await _settle(tester);
+      expect(find.text('Go to Torn'), findsOneWidget);
+      expect(NativeChat.quickWindows.value, ['global']);
+      NativeChat.tornTabMissing.value = false;
+      NativeChat.closeQuickWindow();
+    });
 
     testWidgets('minimized windows become bubbles, dismissed only from their menus', (tester) async {
       await _pumpApp(tester);

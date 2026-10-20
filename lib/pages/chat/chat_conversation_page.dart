@@ -765,25 +765,20 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
             ),
           ),
           ChatTypingBar(users: chat.typingIn(room.id)),
-          ValueListenableBuilder(
-            valueListenable: NativeChat.tornTabMissing,
-            builder: (context, paused, _) => paused
-                ? const ChatPausedBand()
-                : ChatComposer(
-                    key: ValueKey(room.id),
-                    roomName: room.name,
-                    enabled: chat.available && room.canWrite,
-                    chat: chat,
-                    roomId: room.id,
-                    onSend: (text) {
-                      _send(text, _replyTo);
-                      if (_replyTo != null) setState(() => _replyTo = null);
-                    },
-                    draft: NativeChat.prefs.draftFor(room.id),
-                    onDraft: (text) => NativeChat.prefs.setDraft(room.id, text),
-                    replyTo: _replyTo,
-                    onCancelReply: () => setState(() => _replyTo = null),
-                  ),
+          ChatComposer(
+            key: ValueKey(room.id),
+            roomName: room.name,
+            enabled: chat.available && room.canWrite,
+            chat: chat,
+            roomId: room.id,
+            onSend: (text) {
+              _send(text, _replyTo);
+              if (_replyTo != null) setState(() => _replyTo = null);
+            },
+            draft: NativeChat.prefs.draftFor(room.id),
+            onDraft: (text) => NativeChat.prefs.setDraft(room.id, text),
+            replyTo: _replyTo,
+            onCancelReply: () => setState(() => _replyTo = null),
           ),
         ],
       ),
@@ -794,7 +789,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
         if (didPop) return;
         selecting ? setState(_selected.clear) : _toggleSearch();
       },
-      child: page,
+      child: ChatPausedGate(child: page),
     );
   }
 

@@ -1,7 +1,11 @@
-import 'package:flutter/widgets.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import 'chat_fakes.dart';
@@ -12,6 +16,8 @@ void main() {
   const torn = 'https://www.torn.com/index.php';
   const other = 'https://www.example.org';
   final original = NativeChat.sendTouch;
+  final originalSession = NativeChat.sessionOk;
+  final originalLoading = NativeChat.isLoading;
 
   setUp(() async {
     await Prefs().setWebViewSecondaryTabs('{"tabsSave":[]}');
@@ -28,6 +34,9 @@ void main() {
     NativeChat.resetTabs();
     NativeChat.isLive = NativeChat.tabAlive;
     NativeChat.sendTouch = original;
+    NativeChat.sessionOk = originalSession;
+    NativeChat.isLoading = originalLoading;
+    NativeChat.setTabGrace(30);
   });
 
   Future<WebViewProvider> browser(List<String> urls) async {
@@ -81,6 +90,32 @@ void main() {
       expect(NativeChat.tornTabOpen(web), isFalse);
     });
 
+    test('a shown tab that is still loading counts', () async {
+      NativeChat.isLive = (_) => false;
+      NativeChat.isLoading = (_) => true;
+      final web = await browser([torn]);
+      expect(NativeChat.tornTabOpen(web), isFalse);
+      web.browserShowInForeground = true;
+      expect(NativeChat.tornTabOpen(web), isTrue);
+      expect(NativeChat.tornTabOpen(web, loaded: true), isFalse);
+    });
+
+    test('a shown tab that is not mounted does not count', () async {
+      NativeChat.isLive = (_) => false;
+      NativeChat.isLoading = NativeChat.tabLoading;
+      final web = await browser([torn]);
+      web.browserShowInForeground = true;
+      expect(NativeChat.tornTabOpen(web), isFalse);
+    });
+
+    test('tornTabIndex falls back to the tab made for the chat', () {
+      const urls = [other, other, other];
+      expect(NativeChat.tornTabIndex(const [other, other, null], [0, 1, 2], made: 2), 2);
+      expect(NativeChat.tornTabIndex(urls, [0, 1, 2], made: 2), isNull);
+      expect(NativeChat.tornTabIndex(urls, [0, 1, 2]), isNull);
+      expect(NativeChat.tornTabIndex(const [torn, other], [0, 1], made: 1), 0);
+    });
+
     test('tornTabIndex prefers a live tab', () {
       const urls = [torn, other, torn];
       expect(NativeChat.tornTabIndex(urls, [0, 1, 2], live: (i) => i == 2), 2);
@@ -112,7 +147,7 @@ void main() {
       expect(NativeChat.tornTabMissing.value, isFalse);
 
       change(torn: false);
-      await tester.pump(const Duration(seconds: 14));
+      await tester.pump(const Duration(seconds: 29));
       expect(NativeChat.tornTabMissing.value, isFalse);
       await tester.pump(const Duration(seconds: 2));
       expect(NativeChat.tornTabMissing.value, isTrue);
@@ -129,22 +164,212 @@ void main() {
       change(torn: true);
       await tester.pump(const Duration(seconds: 1));
       change(torn: false);
-      await tester.pump(const Duration(seconds: 14));
+      await tester.pump(const Duration(seconds: 29));
       expect(NativeChat.tornTabMissing.value, isFalse);
       await tester.pump(const Duration(seconds: 2));
       expect(NativeChat.tornTabMissing.value, isTrue);
       change(torn: true);
     });
 
-    testWidgets('a tab that wakes without a notice ends it', (tester) async {
+    testWidgets('a lost live tab keeps the margin with a good session', (tester) async {
+      NativeChat.sessionOk = () => true;
+      await open(tester);
+
+      change(torn: false);
+      await tester.pump(const Duration(seconds: 29));
+      expect(NativeChat.tornTabMissing.value, isFalse);
+      await tester.pump(const Duration(seconds: 2));
+      expect(NativeChat.tornTabMissing.value, isTrue);
+      change(torn: true);
+    });
+
+    testWidgets('the margin comes from the setting, zero means none', (tester) async {
+      NativeChat.setTabGrace(5);
+      await open(tester);
+      change(torn: false);
+      await tester.pump(const Duration(seconds: 4));
+      expect(NativeChat.tornTabMissing.value, isFalse);
+      await tester.pump(const Duration(seconds: 2));
+      expect(NativeChat.tornTabMissing.value, isTrue);
+      change(torn: true);
+
+      NativeChat.setTabGrace(0);
+      change(torn: false);
+      expect(NativeChat.tornTabMissing.value, isTrue);
+      change(torn: true);
+    });
+
+    testWidgets('no live tab at start pauses without the margin', (tester) async {
+      NativeChat.sessionOk = () => true;
       live = false;
       await open(tester);
+      await tester.pump(const Duration(seconds: 1));
+      expect(NativeChat.tornTabMissing.value, isFalse);
+      await tester.pump(const Duration(seconds: 2));
+      expect(NativeChat.tornTabMissing.value, isTrue);
+      change(torn: true);
+    });
+
+    testWidgets('no live tab at start keeps the margin without a session', (tester) async {
+      NativeChat.sessionOk = () => false;
+      live = false;
+      await open(tester);
+      await tester.pump(const Duration(seconds: 25));
+      expect(NativeChat.tornTabMissing.value, isFalse);
+      await tester.pump(const Duration(seconds: 6));
+      expect(NativeChat.tornTabMissing.value, isTrue);
+      change(torn: true);
+    });
+
+    testWidgets('a tab alive within the settle time never pauses', (tester) async {
+      NativeChat.sessionOk = () => true;
+      live = false;
+      await open(tester);
+      await tester.pump(const Duration(seconds: 1));
+      live = true;
+      await tester.pump(const Duration(seconds: 1));
+      expect(NativeChat.tornTabMissing.value, isFalse);
+      await tester.pump(const Duration(seconds: 5));
+      expect(NativeChat.tornTabMissing.value, isFalse);
+    });
+
+    testWidgets('opening a window while paused leaves the browser alone', (tester) async {
+      await open(tester);
+      NativeChat.tornTabMissing.value = true;
+      final tabs = web.tabList.length;
+      NativeChat.openQuickWindow('dm:1');
+      await tester.pump(const Duration(seconds: 5));
+      expect(NativeChat.quickWindows.value, ['dm:1']);
+      expect(web.browserShowInForeground, isFalse);
+      expect(web.tabList.length, tabs);
+      NativeChat.closeQuickWindow();
+      NativeChat.tornTabMissing.value = false;
+    });
+
+    testWidgets('opening the chat page while paused leaves the browser alone', (tester) async {
+      await open(tester);
+      final key = GlobalKey<NavigatorState>();
+      NativeChat.navigatorKey = key;
+      addTearDown(() => NativeChat.navigatorKey = null);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<WebViewProvider>.value(
+          value: web,
+          child: MaterialApp(navigatorKey: key, home: const SizedBox()),
+        ),
+      );
+      NativeChat.tornTabMissing.value = true;
+      final tabs = web.tabList.length;
+      unawaited(NativeChat.open(key.currentState!));
+      await tester.pump(const Duration(seconds: 5));
+      expect(NativeChat.screenOpen.value, isTrue);
+      expect(web.browserShowInForeground, isFalse);
+      expect(web.tabList.length, tabs);
+      key.currentState!.popUntil((route) => route.isFirst);
+      await tester.pump();
+      NativeChat.tornTabMissing.value = false;
+    });
+
+    testWidgets('goToTornTab gives up after 15 seconds', (tester) async {
+      await open(tester);
+      live = false;
+      final key = GlobalKey<NavigatorState>();
+      NativeChat.navigatorKey = key;
+      addTearDown(() => NativeChat.navigatorKey = null);
+      await tester.pumpWidget(
+        ChangeNotifierProvider<WebViewProvider>.value(
+          value: web,
+          child: MaterialApp(navigatorKey: key, home: const SizedBox()),
+        ),
+      );
+      unawaited(NativeChat.goToTornTab());
       await tester.pump(const Duration(seconds: 16));
+      live = true;
+      await tester.pump(const Duration(seconds: 2));
+      expect(NativeChat.screenOpen.value, isFalse);
+      NativeChat.resetTabs();
+    });
+
+    testWidgets('a tab that wakes ends the pause', (tester) async {
+      live = false;
+      await open(tester);
+      await tester.pump(const Duration(seconds: 31));
       expect(NativeChat.tornTabMissing.value, isTrue);
 
       live = true;
       await tester.pump(const Duration(seconds: 1));
       expect(NativeChat.tornTabMissing.value, isFalse);
+    });
+  });
+
+  group('gate', () {
+    var taps = 0;
+
+    Future<void> show(WidgetTester tester) async {
+      taps = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ChatPausedGate(
+                    child: Scaffold(
+                      body: TextButton(onPressed: () => taps++, child: const Text('page')),
+                    ),
+                  ),
+                ),
+              ),
+              child: const Text('chat'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('chat'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('blocks the page behind the card', (tester) async {
+      await show(tester);
+      await tester.tap(find.text('page'));
+      expect(taps, 1);
+
+      NativeChat.tornTabMissing.value = true;
+      await tester.pump();
+      await tester.tap(find.text('page'), warnIfMissed: false);
+      expect(taps, 1);
+
+      NativeChat.tornTabMissing.value = false;
+      await tester.pump();
+      await tester.tap(find.text('page'));
+      expect(taps, 2);
+    });
+
+    testWidgets('a dialog open before the pause is closed', (tester) async {
+      await show(tester);
+      unawaited(showDialog<void>(context: tester.element(find.text('page')), builder: (_) => const Text('dialog')));
+      await tester.pumpAndSettle();
+      expect(find.text('dialog'), findsOneWidget);
+
+      NativeChat.tornTabMissing.value = true;
+      await tester.pumpAndSettle();
+      expect(find.text('dialog'), findsNothing);
+      expect(find.text('page'), findsOneWidget);
+      NativeChat.tornTabMissing.value = false;
+    });
+
+    testWidgets('close chat only closes it', (tester) async {
+      final web = (await tester.runAsync(() => browser([other])))!;
+      NativeChat.watchTabs(web);
+      await show(tester);
+      NativeChat.tornTabMissing.value = true;
+      await tester.pump();
+      await tester.tap(find.text('Close chat'));
+      await tester.pumpAndSettle();
+      expect(find.text('page'), findsNothing);
+      expect(find.text('chat'), findsOneWidget);
+      expect(web.browserShowInForeground, isFalse);
+      expect(web.tabList.length, 1);
+      NativeChat.resetTabs();
     });
   });
 

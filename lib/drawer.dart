@@ -748,6 +748,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "native_chat_enabled": true,
         "native_chat_reply_enabled": false,
         "native_chat_rooms": "",
+        "native_chat_tab_grace_seconds": 30,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
         //"revive_hela": "1.8 million or 2 Xanax",
@@ -871,6 +872,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       NativeChat.setRemoteEnabled(remoteConfig.getBool("native_chat_enabled"));
       NativeChat.prefs.setRemoteRooms(remoteConfig.getString("native_chat_rooms"));
       NativeChat.setReplyEnabled(remoteConfig.getBool("native_chat_reply_enabled"));
+      NativeChat.setTabGrace(remoteConfig.getInt("native_chat_tab_grace_seconds"));
 
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
