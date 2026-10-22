@@ -215,6 +215,10 @@ List<_MVersion> _modernChangelog() => [
                 'With many tabs open, the page you were looking at could stop drawing. Torn PDA now detects it, puts '
                 'the other tabs to sleep and redraws it.',
           ),
+          _MItem(
+            'Browser: zoom is now adjusted live with a slider, from the Zoom button in the URL options',
+            androidOnly: true,
+          ),
         ],
       ),
       _MSection(
@@ -227,10 +231,6 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Travel: flight times now include travel time reduction perks'),
-          _MItem(
-            'Browser: zoom is now adjusted live with a slider, from the Zoom button in the URL options',
-            androidOnly: true,
-          ),
         ],
       ),
     ],

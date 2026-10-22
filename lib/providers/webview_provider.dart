@@ -178,6 +178,7 @@ class WebViewProvider extends ChangeNotifier {
   set maxLiveTabsDefaultRC(int value) {
     _maxLiveTabsDefaultRC = value;
     Prefs().setMaxLiveTabsDefaultRC(value);
+    _reportExperimentUserProperties();
     _sleepTabsAboveMax();
     notifyListeners();
   }
@@ -188,6 +189,7 @@ class WebViewProvider extends ChangeNotifier {
   set maxLiveTabsOverride(int value) {
     _maxLiveTabsOverride = value;
     Prefs().setMaxLiveTabsOverride(value);
+    _reportExperimentUserProperties();
     _sleepTabsAboveMax();
     notifyListeners();
   }
@@ -362,6 +364,15 @@ class WebViewProvider extends ChangeNotifier {
   int _lastLocalStorageMeasuredTotalKb = -1;
   int get lastLocalStorageMeasuredTotalKb => _lastLocalStorageMeasuredTotalKb;
   String? _lastReportedLsTotalMb;
+  String? _lastReportedTabsBucket;
+
+  String get _tabsBucket {
+    final int n = _tabList.length;
+    if (n <= 5) return "1-5";
+    if (n <= 10) return "6-10";
+    if (n <= 20) return "11-20";
+    return "21+";
+  }
 
   void recordLocalStorageMeasurement({required int totalBytes, required int chatBytes, required String topKeys}) {
     _lastLocalStorageMeasuredTotalKb = totalBytes ~/ 1024;
@@ -384,15 +395,25 @@ class WebViewProvider extends ChangeNotifier {
     final String hwLayer = webViewHardwareLayerActiveForTelemetry ? "on" : "off";
     final String hwLayerSrc = webViewHardwareLayerSourceForTelemetry;
     final String chatLimit = tornChatCacheLimitActiveMb.toString();
+    final String maxTabs = maxLiveTabsActive.toString();
 
     analytics?.setUserProperty(name: "wv_hw_layer", value: hwLayer);
     analytics?.setUserProperty(name: "wv_hw_layer_src", value: hwLayerSrc);
     analytics?.setUserProperty(name: "wv_chat_limit_mb", value: chatLimit);
+    analytics?.setUserProperty(name: "wv_max_tabs", value: maxTabs);
 
     final crashlytics = FirebaseCrashlytics.instance;
     crashlytics.setCustomKey("wv_hw_layer", hwLayer);
     crashlytics.setCustomKey("wv_hw_layer_src", hwLayerSrc);
     crashlytics.setCustomKey("wv_chat_limit_mb", chatLimit);
+    crashlytics.setCustomKey("wv_max_tabs", maxTabs);
+
+    final String tabsBucket = _tabsBucket;
+    if (tabsBucket != _lastReportedTabsBucket) {
+      _lastReportedTabsBucket = tabsBucket;
+      analytics?.setUserProperty(name: "wv_tabs", value: tabsBucket);
+      crashlytics.setCustomKey("wv_tabs", tabsBucket);
+    }
   }
 
   // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
@@ -1581,6 +1602,7 @@ class WebViewProvider extends ChangeNotifier {
         ..lastUsedTimeDT = DateTime.fromMillisecondsSinceEpoch(lastUsedTime),
     );
     _sleepTabsAboveMax(keep: tab);
+    if (_tabsBucket != _lastReportedTabsBucket) _reportExperimentUserProperties();
     notifyListeners();
     _callAssessMethods(currentTab);
   }
@@ -2739,6 +2761,7 @@ class WebViewProvider extends ChangeNotifier {
     // second to initialise after the main), we'll just save the main and lose the rest if the phone is too quick in
     // loading the main and reporting back URL or page title (which triggers a save)!
     if (!_secondaryInitialised) return;
+    if (_tabsBucket != _lastReportedTabsBucket) _reportExperimentUserProperties();
 
     final TabSaveModel saveMainModel = TabSaveModel()..tabsSave = <TabsSave>[];
     final TabSaveModel saveSecondaryModel = TabSaveModel()..tabsSave = <TabsSave>[];
