@@ -40,6 +40,7 @@ class _MItem {
   final String text;
   final String? detail;
   final bool androidOnly;
+  final bool iosOnly;
   final bool chatOnly;
   final String? docUrl;
   final List<FeatureDiagramScene> diagrams;
@@ -49,13 +50,15 @@ class _MItem {
     this.text, {
     this.detail,
     this.androidOnly = false,
+    this.iosOnly = false,
     this.chatOnly = false,
     this.docUrl,
     this.diagrams = const [],
     this.pinOpenWhen,
   });
 
-  bool get visibleOnThisPlatform => (!androidOnly || Platform.isAndroid) && (!chatOnly || NativeChat.compiled);
+  bool get visibleOnThisPlatform =>
+      (!androidOnly || Platform.isAndroid) && (!iosOnly || Platform.isIOS) && (!chatOnly || NativeChat.compiled);
 
   // Credits are tagged inline as "[Name]", same as the legacy changelog
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
@@ -231,6 +234,9 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Travel: flight times now include travel time reduction perks'),
+          _MItem('Fixed crashes when a web page shows an alert while another dialog is open', iosOnly: true),
+          _MItem('Fixed crashes when a page asks for the camera or microphone', iosOnly: true),
+          _MItem('Fixed occasional crashes when Live Activities update', iosOnly: true),
         ],
       ),
     ],
