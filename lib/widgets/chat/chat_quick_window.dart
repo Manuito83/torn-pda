@@ -31,6 +31,7 @@ class ChatWindowFrame {
   ChatWindowFrame._();
 
   static const Size minSize = Size(220, 200);
+  static const Size bigWindowMinSize = Size(280, 360);
 
   /// [area] on [side] of the divider
   static Rect panel(Rect area, Rect? divider, SplitSide? side) => switch ((divider, side)) {
@@ -39,9 +40,9 @@ class ChatWindowFrame {
     _ => area,
   };
 
-  static Rect fit(Rect frame, Rect area) {
-    final width = frame.width.clamp(math.min(minSize.width, area.width), area.width).toDouble();
-    final height = frame.height.clamp(math.min(minSize.height, area.height), area.height).toDouble();
+  static Rect fit(Rect frame, Rect area, {Size min = minSize}) {
+    final width = frame.width.clamp(math.min(min.width, area.width), area.width).toDouble();
+    final height = frame.height.clamp(math.min(min.height, area.height), area.height).toDouble();
     return Rect.fromLTWH(
       frame.left.clamp(area.left, area.right - width).toDouble(),
       frame.top.clamp(area.top, area.bottom - height).toDouble(),
@@ -51,8 +52,8 @@ class ChatWindowFrame {
   }
 
   /// Like [fit] but free to leave sideways
-  static Rect loose(Rect frame, Rect area) {
-    final fitted = fit(frame, area);
+  static Rect loose(Rect frame, Rect area, {Size min = minSize}) {
+    final fitted = fit(frame, area, min: min);
     final left = frame.left.clamp(area.left - fitted.width, area.right).toDouble();
     return Rect.fromLTWH(left, fitted.top, fitted.width, fitted.height);
   }
@@ -79,6 +80,143 @@ class ChatWindowFrame {
       roomId: roomId,
       frame: Rect.fromLTWH(v[0]!, v[1]!, v[2]!, v[3]!),
       preset: ChatWindowSize.values.asNameMap()[parts.last],
+    );
+  }
+}
+
+class ChatWindowBox extends StatelessWidget {
+  const ChatWindowBox({
+    super.key,
+    required this.header,
+    required this.child,
+    required this.onClose,
+    this.onExpand,
+    this.onNext,
+    this.nextCount = 0,
+    this.onMinimize,
+    this.onFullscreen,
+    this.fullscreen = false,
+    this.onDrag,
+    this.onDragEnd,
+    this.onResize,
+    this.onResizeEnd,
+    this.sizeLabel,
+    this.onCycleSize,
+    this.moreItems,
+  });
+
+  final Widget header;
+  final Widget child;
+  final VoidCallback onClose;
+  final VoidCallback? onExpand;
+  final VoidCallback? onNext;
+  final int nextCount;
+  final VoidCallback? onMinimize;
+  final VoidCallback? onFullscreen;
+  final bool fullscreen;
+  final ValueChanged<Offset>? onDrag;
+  final ValueChanged<Velocity>? onDragEnd;
+  final ValueChanged<Offset>? onResize;
+  final VoidCallback? onResizeEnd;
+
+  /// Null for a custom size
+  final String? sizeLabel;
+  final VoidCallback? onCycleSize;
+
+  /// Menu entries before the rest
+  final List<PopupMenuItem<VoidCallback>> Function()? moreItems;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      removeBottom: true,
+      removeLeft: true,
+      removeRight: true,
+      child: Stack(
+        children: [
+          Positioned.fill(child: _window(context, scheme)),
+          if (onResize != null) Positioned(right: 0, bottom: 0, child: _grip(scheme)),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerButton(String tooltip, Widget icon, VoidCallback? onPressed) {
+    return IconButton(
+      tooltip: tooltip,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+      iconSize: 20,
+      icon: icon,
+      onPressed: onPressed,
+    );
+  }
+
+  Widget _grip(ColorScheme scheme) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onPanUpdate: (d) => onResize!(d.delta),
+      onPanEnd: (_) => onResizeEnd?.call(),
+      child: SizedBox(width: 26, height: 26, child: CustomPaint(painter: _GripPainter(scheme.onSurfaceVariant))),
+    );
+  }
+
+  Widget _window(BuildContext context, ColorScheme scheme) {
+    return Material(
+      color: chatPalette(context).background,
+      elevation: 10,
+      shadowColor: Colors.black54,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      child: Column(
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: onDrag == null ? null : (d) => onDrag!(d.delta),
+            onPanEnd: onDragEnd == null ? null : (d) => onDragEnd!(d.velocity),
+            child: Container(
+              color: scheme.surfaceContainer,
+              padding: const EdgeInsets.fromLTRB(10, 2, 2, 2),
+              child: Row(
+                children: [
+                  Expanded(child: header),
+                  if (onMinimize != null) _headerButton('Minimize', const Icon(Icons.minimize_rounded), onMinimize),
+                  if (onFullscreen != null)
+                    _headerButton(
+                      fullscreen ? 'Exit full screen' : 'Full screen',
+                      Icon(fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded),
+                      onFullscreen,
+                    ),
+                  if (onCycleSize != null || onExpand != null || onNext != null || moreItems != null)
+                    PopupMenuButton<VoidCallback>(
+                      tooltip: 'More',
+                      icon: const Icon(Icons.more_vert_rounded),
+                      iconSize: 20,
+                      padding: EdgeInsets.zero,
+                      onSelected: (action) => action(),
+                      itemBuilder: (_) => [
+                        ...?moreItems?.call(),
+                        if (onCycleSize != null)
+                          PopupMenuItem(value: onCycleSize, child: Text('Window size: ${sizeLabel ?? 'custom'}')),
+                        if (onNext != null && nextCount > 0)
+                          PopupMenuItem(value: onNext, child: Text('Next unread ($nextCount)')),
+                        if (onExpand != null) PopupMenuItem(value: onExpand, child: const Text('Open the full chat')),
+                      ],
+                    ),
+                  _headerButton('Close', const Icon(Icons.close_rounded), onClose),
+                ],
+              ),
+            ),
+          ),
+          Expanded(child: child),
+        ],
+      ),
     );
   }
 }
@@ -154,132 +292,65 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
     _focusPing.dispose();
     final chat = widget.chat;
     final roomId = widget.roomId;
-    scheduleMicrotask(() => chat.closeConversation(roomId));
+    scheduleMicrotask(() {
+      if (!NativeChat.bigWindowHolds(roomId)) chat.closeConversation(roomId);
+    });
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     return ListenableBuilder(
       listenable: widget.chat,
-      builder: (context, _) {
-        final chat = widget.chat;
-        final room = chat.roomById(widget.roomId);
-        return MediaQuery.removePadding(
-          context: context,
-          removeTop: true,
-          removeBottom: true,
-          removeLeft: true,
-          removeRight: true,
-          child: Stack(
-            children: [
-              Positioned.fill(child: _window(chat, room)),
-              if (widget.onResize != null) Positioned(right: 0, bottom: 0, child: _grip(scheme)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _headerButton(String tooltip, Widget icon, VoidCallback? onPressed) {
-    return IconButton(
-      tooltip: tooltip,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-      iconSize: 20,
-      icon: icon,
-      onPressed: onPressed,
-    );
-  }
-
-  Widget _grip(ColorScheme scheme) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onPanUpdate: (d) => widget.onResize!(d.delta),
-      onPanEnd: (_) => widget.onResizeEnd?.call(),
-      child: SizedBox(width: 26, height: 26, child: CustomPaint(painter: _GripPainter(scheme.onSurfaceVariant))),
+      builder: (context, _) => _window(widget.chat, widget.chat.roomById(widget.roomId)),
     );
   }
 
   Widget _window(ChatController chat, ChatRoom room) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Material(
-      color: chatPalette(context).background,
-      elevation: 10,
-      shadowColor: Colors.black54,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: scheme.outlineVariant),
-      ),
-      child: Column(
+    return ChatWindowBox(
+      header: Row(
         children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanUpdate: widget.onDrag == null ? null : (d) => widget.onDrag!(d.delta),
-            onPanEnd: widget.onDragEnd == null ? null : (d) => widget.onDragEnd!(d.velocity),
-            child: Container(
-              color: scheme.surfaceContainer,
-              padding: const EdgeInsets.fromLTRB(10, 2, 2, 2),
-              child: Row(
-                children: [
-                  ChatRoomAvatar(room: room, size: 32),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          room.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        DefaultTextStyle.merge(
-                          style: TextStyle(color: scheme.onSurfaceVariant),
-                          child: ChatConnectionLine(
-                            state: chat.connection,
-                            presence: chat.presenceOf(ChatRoom.peerIdOf(room.id)),
-                            lastSeen: chat.lastSeenOf(ChatRoom.peerIdOf(room.id)),
-                          ),
-                        ),
-                      ],
-                    ),
+          ChatRoomAvatar(room: room, size: 32),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  room.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                DefaultTextStyle.merge(
+                  style: TextStyle(color: scheme.onSurfaceVariant),
+                  child: ChatConnectionLine(
+                    state: chat.connection,
+                    presence: chat.presenceOf(ChatRoom.peerIdOf(room.id)),
+                    lastSeen: chat.lastSeenOf(ChatRoom.peerIdOf(room.id)),
                   ),
-                  if (widget.onMinimize != null)
-                    _headerButton('Minimize', const Icon(Icons.minimize_rounded), widget.onMinimize),
-                  if (widget.onCycleSize != null || widget.onExpand != null || widget.onNext != null)
-                    PopupMenuButton<VoidCallback>(
-                      tooltip: 'More',
-                      icon: const Icon(Icons.more_vert_rounded),
-                      iconSize: 20,
-                      padding: EdgeInsets.zero,
-                      onSelected: (action) => action(),
-                      itemBuilder: (_) => [
-                        if (widget.onCycleSize != null)
-                          PopupMenuItem(
-                            value: widget.onCycleSize,
-                            child: Text('Window size: ${widget.sizeLabel ?? 'custom'}'),
-                          ),
-                        if (widget.onNext != null && widget.chat.unreadQueue.isNotEmpty)
-                          PopupMenuItem(
-                            value: widget.onNext,
-                            child: Text('Next unread (${widget.chat.unreadQueue.length})'),
-                          ),
-                        if (widget.onExpand != null)
-                          PopupMenuItem(value: widget.onExpand, child: const Text('Open in the chat')),
-                      ],
-                    ),
-                  _headerButton('Close', const Icon(Icons.close_rounded), widget.onClose),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+      onClose: widget.onClose,
+      onExpand: widget.onExpand,
+      onNext: widget.onNext,
+      nextCount: chat.unreadQueue.length,
+      onMinimize: widget.onMinimize,
+      onDrag: widget.onDrag,
+      onDragEnd: widget.onDragEnd,
+      onResize: widget.onResize,
+      onResizeEnd: widget.onResizeEnd,
+      sizeLabel: widget.sizeLabel,
+      onCycleSize: widget.onCycleSize,
+      child: Column(
+        children: [
           ChatStartingBar(starting: chat.starting, phrases: chat.isLoaded(room.id)),
           Expanded(
             child: ChatArrivals(chat: chat, roomId: room.id, child: _messages(chat, room)),

@@ -1775,10 +1775,13 @@ class _ChatPausedGateState extends State<ChatPausedGate> {
                                 style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
                               ),
                               const SizedBox(height: 20),
-                              FilledButton(
-                                style: _pausedButton,
-                                onPressed: NativeChat.goToTornTab,
-                                child: const Text('Go to Torn tab'),
+                              ValueListenableBuilder(
+                                valueListenable: NativeChat.tornTabExists,
+                                builder: (context, exists, _) => FilledButton(
+                                  style: _pausedButton,
+                                  onPressed: NativeChat.goToTornTab,
+                                  child: Text(exists ? 'Go to Torn tab' : 'Open Torn tab'),
+                                ),
                               ),
                               const SizedBox(height: 8),
                               OutlinedButton(

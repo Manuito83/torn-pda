@@ -724,6 +724,53 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('an embedded conversation leaves navigation and covering to its host', (tester) async {
+    final api = _Api()..seen = ChatLastAction(ChatPresence.online, DateTime.now());
+    start(api);
+    final live = ValueNotifier(true);
+    var back = 0;
+    await _show(
+      tester,
+      chat,
+      ValueListenableBuilder(
+        valueListenable: live,
+        builder: (_, on, _) => TickerMode(
+          enabled: on,
+          child: ChatConversationPage(roomId: 'dm:7', embedded: true, onBack: () => back++),
+        ),
+      ),
+    );
+    _connect(source);
+    await tester.pump();
+    expect(api.asked, [7]);
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pump();
+    expect(back, 1);
+    expect(find.byType(ChatConversationPage), findsOneWidget);
+    live.value = false;
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(minutes: 2));
+    expect(api.asked, [7]);
+    await close(tester);
+  });
+
+  testWidgets('an embedded conversation reports a gone room to its host', (tester) async {
+    start();
+    var gone = 0;
+    await _show(tester, chat, ChatConversationPage(roomId: 'poker', embedded: true, onGone: () => gone++));
+    const faction = ChatRoom(id: 'faction', name: 'Faction');
+    const poker = ChatRoom(id: 'poker', name: 'Poker', icon: 'casino');
+    source
+      ..emit(const ChatRoomsEvent([faction, poker]))
+      ..emit(const ChatRoomsEvent([faction]));
+    await tester.pump();
+    await tester.pump();
+    expect(gone, 1);
+    expect(find.byType(ChatConversationPage), findsOneWidget);
+    await close(tester);
+  });
+
   testWidgets('compose extras fill the box and never send', (tester) async {
     NativeChat.prefs
       ..quickReplies = ['Price?']

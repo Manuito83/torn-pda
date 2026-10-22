@@ -295,7 +295,7 @@ void main() {
       await _settle(tester);
       NativeChat.tornTabMissing.value = true;
       await _settle(tester);
-      expect(find.text('Go to Torn'), findsOneWidget);
+      expect(find.text('Open Torn'), findsOneWidget);
       NativeChat.tornTabMissing.value = false;
       await _settle(tester);
 
@@ -303,7 +303,7 @@ void main() {
       await _settle(tester);
       NativeChat.tornTabMissing.value = true;
       await _settle(tester);
-      expect(find.text('Go to Torn'), findsOneWidget);
+      expect(find.text('Open Torn'), findsOneWidget);
       expect(NativeChat.quickWindows.value, ['global']);
       NativeChat.tornTabMissing.value = false;
       NativeChat.closeQuickWindow();

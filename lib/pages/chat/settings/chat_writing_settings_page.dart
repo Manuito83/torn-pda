@@ -29,7 +29,7 @@ class ChatWritingSettingsPage extends StatelessWidget {
           ),
           SwitchListTile(
             title: const Text('Confirm messages to public rooms'),
-            subtitle: const Text('Asks before sending to Global, Trade, Poker or New players'),
+            subtitle: const Text('Asks before sending to a public room like Global or Trade'),
             value: prefs.confirmPublic,
             onChanged: prefs.setConfirmPublic,
           ),

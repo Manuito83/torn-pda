@@ -814,8 +814,9 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       ExpandableTip(
         headerValue: "Use the chat in different tabs",
         expandedValue: NativeChat.compiled
-            ? "Tap the chat icon to open the Torn PDA chat. Double tap it to hide or show Torn's own chat in that "
-                  "tab, and long press it for more options, like hiding Torn's chat in every tab."
+            ? "Tap the chat icon to open the chat window, or a small menu when the in-app chat is off. Double tap it "
+                  "to hide or show Torn's own chat in that tab. Long press it for the full chat, Chat settings and "
+                  "hiding Torn's chat in every tab."
             : "You can activate or deactivate the chat in separate tabs by short-tapping the chat icon "
                   "(enabled in Settings by default)."
                   "\n\nIf you wish to change the standard behavior of the chat when a new tab is opened, long-press the "

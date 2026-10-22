@@ -534,6 +534,7 @@ class Prefs {
   final String _kNativeChatGlowLevels = "pda_nativeChatGlowLevels";
   final String _kNativeChatWindowFrame = "pda_nativeChatWindowFrame";
   final String _kNativeChatWindows = "pda_nativeChatWindows";
+  final String _kNativeChatBigWindow = "pda_nativeChatBigWindow";
   final String _kNativeChatBubbleSpot = "pda_nativeChatBubbleSpot";
   final String _kNativeChatImageAutoLoad = "pda_nativeChatImageAutoLoad";
   final String _kNativeChatLinkPreviews = "pda_nativeChatLinkPreviews";
@@ -3926,6 +3927,14 @@ class Prefs {
 
   Future setNativeChatWindows(List<String> value) async {
     return await PrefsDatabase.setStringList(_kNativeChatWindows, value);
+  }
+
+  Future<List<String>> getNativeChatBigWindow() async {
+    return await PrefsDatabase.getStringList(_kNativeChatBigWindow, <String>[]);
+  }
+
+  Future setNativeChatBigWindow(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kNativeChatBigWindow, value);
   }
 
   Future<List<String>> getNativeChatBubbleSpot() async {

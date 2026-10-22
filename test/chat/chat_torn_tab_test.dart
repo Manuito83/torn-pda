@@ -100,6 +100,17 @@ void main() {
       expect(NativeChat.tornTabOpen(web, loaded: true), isFalse);
     });
 
+    test('any Torn tab is known, awake or not', () async {
+      NativeChat.isLive = (_) => false;
+      final web = await browser([other]);
+      NativeChat.watchTabs(web);
+      expect(NativeChat.tornTabExists.value, isFalse);
+      await web.addTab(url: torn, tabUid: 'tabT');
+      expect(NativeChat.tornTabExists.value, isTrue);
+      await web.removeTab(position: 1);
+      expect(NativeChat.tornTabExists.value, isFalse);
+    });
+
     test('a shown tab that is not mounted does not count', () async {
       NativeChat.isLive = (_) => false;
       NativeChat.isLoading = NativeChat.tabLoading;
@@ -267,26 +278,6 @@ void main() {
       key.currentState!.popUntil((route) => route.isFirst);
       await tester.pump();
       NativeChat.tornTabMissing.value = false;
-    });
-
-    testWidgets('goToTornTab gives up after 15 seconds', (tester) async {
-      await open(tester);
-      live = false;
-      final key = GlobalKey<NavigatorState>();
-      NativeChat.navigatorKey = key;
-      addTearDown(() => NativeChat.navigatorKey = null);
-      await tester.pumpWidget(
-        ChangeNotifierProvider<WebViewProvider>.value(
-          value: web,
-          child: MaterialApp(navigatorKey: key, home: const SizedBox()),
-        ),
-      );
-      unawaited(NativeChat.goToTornTab());
-      await tester.pump(const Duration(seconds: 16));
-      live = true;
-      await tester.pump(const Duration(seconds: 2));
-      expect(NativeChat.screenOpen.value, isFalse);
-      NativeChat.resetTabs();
     });
 
     testWidgets('a tab that wakes ends the pause', (tester) async {

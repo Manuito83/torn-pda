@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,8 @@ void main() {
   });
 
   tearDown(() {
+    NativeChat.bigWindow.value = null;
+    NativeChat.quickWindows.value = const [];
     NativeChat.resetTabs();
     NativeChat.isLive = NativeChat.tabAlive;
   });
@@ -45,13 +48,18 @@ void main() {
     await tester.pumpWidget(
       ChangeNotifierProvider<WebViewProvider>.value(
         value: web,
-        child: MaterialApp(navigatorKey: key, home: const SizedBox()),
+        child: MaterialApp(
+          navigatorKey: key,
+          navigatorObservers: [BotToastNavigatorObserver()],
+          builder: BotToastInit(),
+          home: const SizedBox(),
+        ),
       ),
     );
     return key;
   }
 
-  testWidgets('goToTornTab reopens over a live tab', (tester) async {
+  testWidgets('from the page, the big window opens with the room and the page stays shut', (tester) async {
     live = false;
     final key = await start(tester);
     unawaited(NativeChat.open(key.currentState!, roomId: 'global'));
@@ -63,15 +71,43 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
     expect(NativeChat.screenOpen.value, isFalse);
+    expect(NativeChat.bigWindowShown, isTrue);
+    expect(NativeChat.bigWindow.value?.roomId, 'global');
     expect(web.browserShowInForeground, isTrue);
 
     live = true;
     for (var i = 0; i < 4; i++) {
       await tester.pump(const Duration(seconds: 1));
     }
-    expect(NativeChat.screenOpen.value, isTrue);
-    expect(NativeChat.controller.currentRoomId, 'global');
-    key.currentState!.popUntil((route) => route.isFirst);
+    expect(NativeChat.screenOpen.value, isFalse);
+    expect(NativeChat.bigWindow.value?.roomId, 'global');
+
+    await tester.pumpWidget(const SizedBox());
+    NativeChat.resetTabs();
+    for (var i = 0; i < 5; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+  });
+
+  testWidgets('from the windows, they stay where they are', (tester) async {
+    final key = await start(tester);
+    NativeChat.openQuickWindow('faction');
+    NativeChat.openBigWindow();
+    NativeChat.setBigWindowRoom('global');
+    final bigWindow = NativeChat.bigWindow.value;
+    key.currentState!.push(MaterialPageRoute<void>(builder: (_) => const SizedBox()));
     await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+
+    unawaited(NativeChat.openTornBrowser(keepChat: true));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(NativeChat.quickWindows.value, ['faction']);
+    expect(NativeChat.bigWindow.value, same(bigWindow));
+    expect(key.currentState!.canPop(), isFalse);
+    expect(web.browserShowInForeground, isTrue);
+    NativeChat.closeQuickWindow();
+    NativeChat.closeBigWindow();
   });
 }

@@ -5030,6 +5030,7 @@ class WebViewFullState extends State<WebViewFull>
         onHideInTab: setChatHidden,
         onHideEverywhere: _webViewProvider.setChatHiddenEverywhere,
         alwaysShown: _webViewProvider.chatRemovalEnabledGlobal,
+        tabUid: _tabUid,
       );
     }
     if (!_localChatRemovalActive) {

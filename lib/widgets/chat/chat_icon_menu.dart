@@ -15,6 +15,7 @@ class ChatIconButton extends StatelessWidget {
     required this.onHideInTab,
     required this.onHideEverywhere,
     this.alwaysShown = true,
+    this.tabUid,
   });
 
   final Color color;
@@ -24,6 +25,9 @@ class ChatIconButton extends StatelessWidget {
   final ValueChanged<bool> onHideEverywhere;
 
   final bool alwaysShown;
+
+  /// Browser tab that holds the icon
+  final String? tabUid;
 
   static bool get _isLauncher => NativeChat.usable && NativeChat.prefs.launcher == ChatLauncher.browser;
 
@@ -36,8 +40,8 @@ class ChatIconButton extends StatelessWidget {
 
   void _onTap(BuildContext context) {
     if (NativeChat.prefs.inAppEnabled) {
-      ChatTelemetry.count('open_browser');
-      NativeChat.open(Navigator.of(context));
+      ChatTelemetry.count('open_big_window');
+      NativeChat.openBigWindow(side: tabUid == null ? null : NativeChat.splitSideOfTab(tabUid!));
     } else {
       _showChatIconMenu(context, this);
     }
@@ -54,7 +58,8 @@ class ChatIconButton extends StatelessWidget {
           : const <String, int>{};
       final unread = counts.values.fold(0, (a, b) => a + b);
       final brightness = Theme.of(context).brightness;
-      Widget icon = Icon(hiddenInTab ? Icons.comments_disabled_outlined : Icons.chat_bubble_outline_rounded, color: color);
+      final struck = hiddenInTab && !NativeChat.prefs.inAppEnabled;
+      Widget icon = Icon(struck ? Icons.comments_disabled_outlined : Icons.chat_bubble_outline_rounded, color: color);
       if (unread > 0) {
         icon = Badge.count(
           count: unread,
@@ -98,7 +103,7 @@ class ChatIconButton extends StatelessWidget {
           if (hiddenInTab) 'Torn\'s chat hidden in this tab',
         ].join(', '),
         onTap: () => _onTap(context),
-        onTapHint: NativeChat.prefs.inAppEnabled ? 'open in-app chat' : 'open the chat menu',
+        onTapHint: NativeChat.prefs.inAppEnabled ? 'open the chat window' : 'open the chat menu',
         onLongPress: () => _showChatIconMenu(context, this),
         onLongPressHint: 'open the chat menu',
         customSemanticsActions: {
@@ -123,7 +128,7 @@ class ChatIconButton extends StatelessWidget {
 Future<void> _showChatIconMenu(BuildContext context, ChatIconButton icon) {
   final navigator = Navigator.of(context);
   return showModalBottomSheet(
-    context: context,
+    context: NativeChat.sheetsContext ?? context,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (context) => ListenableBuilder(
@@ -145,7 +150,7 @@ Future<void> _showChatIconMenu(BuildContext context, ChatIconButton icon) {
               if (inApp)
                 ListTile(
                   leading: const Icon(Icons.open_in_new_rounded),
-                  title: const Text('Open in-app chat'),
+                  title: const Text('Open the full chat'),
                   onTap: () {
                     Navigator.pop(context);
                     ChatTelemetry.count('open_browser');
@@ -203,7 +208,7 @@ class _GestureLegend extends StatelessWidget {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
     final gestures = [
-      ('Tap', inApp ? 'Open in-app chat' : 'Open this menu'),
+      ('Tap', inApp ? 'Open the chat window' : 'Open this menu'),
       ('Double tap', 'Hide or show Torn\'s chat in this tab'),
       ('Long press', 'Open this menu'),
     ];

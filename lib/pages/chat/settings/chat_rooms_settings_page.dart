@@ -69,7 +69,7 @@ class ChatRoomsSettingsPage extends StatelessWidget {
             description:
                 'On top: first, above pinned chats. By activity: mixed with the rest. Social tab: a tab of their own',
           ),
-          _placementRow(context, 'global', 'Global, Trade and Poker'),
+          _placementRow(context, 'global', 'Rooms like Global and Trade'),
           for (final room in ChatPrefs.placedRooms) _placementRow(context, room, ChatRooms.labelOf(room)),
           const SizedBox(height: 8),
           const ChatSettingsHeading(

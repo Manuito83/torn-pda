@@ -35,12 +35,31 @@ import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class ChatConversationPage extends StatefulWidget {
-  const ChatConversationPage({super.key, required this.roomId, this.focusMessageId, this.focusAt});
+  const ChatConversationPage({
+    super.key,
+    required this.roomId,
+    this.focusMessageId,
+    this.focusAt,
+    this.embedded = false,
+    this.onBack,
+    this.onOpenRoom,
+    this.onGone,
+    this.onPopOut,
+  });
 
   final String roomId;
 
   final String? focusMessageId;
   final DateTime? focusAt;
+
+  /// Callbacks replace routes
+  final bool embedded;
+  final VoidCallback? onBack;
+  final ValueChanged<String>? onOpenRoom;
+  final VoidCallback? onGone;
+
+  /// Embedded only: becomes a small window
+  final VoidCallback? onPopOut;
 
   @override
   State<ChatConversationPage> createState() => _ChatConversationPageState();
@@ -93,6 +112,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     NativeChat.translator.addListener(_onTranslation);
     NativeChat.prefs.addListener(_onPrefs);
     NativeChat.shownPages.add(_snapshot);
+    if (widget.embedded) NativeChat.bigWindowConversationBack = _backStep;
     _gone = _chat.goneStream.listen(_onGone);
     WidgetsBinding.instance.addPostFrameCallback((_) => _chat.openConversation(widget.roomId));
   }
@@ -106,6 +126,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
   @override
   void dispose() {
     _gone.cancel();
+    if (NativeChat.bigWindowConversationBack == _backStep) NativeChat.bigWindowConversationBack = null;
     NativeChat.shownPages.remove(_snapshot);
     NativeChat.translator.removeListener(_onTranslation);
     NativeChat.prefs.removeListener(_onPrefs);
@@ -117,15 +138,21 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
   }
 
   void _onGone(ChatRoom room) {
-    final route = ModalRoute.of(context);
-    if (room.id != widget.roomId || route == null || !route.isActive) return;
-    Navigator.of(context).removeRoute(route);
+    if (room.id != widget.roomId) return;
+    if (widget.embedded) {
+      widget.onGone?.call();
+    } else {
+      final route = ModalRoute.of(context);
+      if (route == null || !route.isActive) return;
+      Navigator.of(context).removeRoute(route);
+    }
     _chat.closeConversation(room.id);
   }
 
   void _nextUnread() {
     final next = _chat.unreadQueue.firstOrNull;
     if (next == null) return;
+    if (widget.embedded) return widget.onOpenRoom?.call(next.id);
     final chat = _chat;
     Navigator.of(context)
         .pushReplacement(
@@ -304,6 +331,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       seconds: 4,
       action: target.id == widget.roomId ? null : 'Open',
       onAction: () {
+        if (widget.embedded) return widget.onOpenRoom?.call(target.id);
         final navigator = NativeChat.navigatorKey?.currentState;
         if (navigator != null) NativeChat.open(navigator, roomId: target.id);
       },
@@ -338,6 +366,17 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
   void _popOut() {
     FocusManager.instance.primaryFocus?.unfocus();
     NativeChat.popOut(widget.roomId);
+  }
+
+  bool _backStep() {
+    if (_selected.isNotEmpty) {
+      setState(_selected.clear);
+    } else if (_searching) {
+      _toggleSearch();
+    } else {
+      return false;
+    }
+    return true;
   }
 
   void _toggleSearch() {
@@ -491,7 +530,11 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     final matchIndex = matchIds.indexOf(_matchId ?? '');
     final selecting = _selected.isNotEmpty;
     final allSaved = selecting && _selected.every(NativeChat.prefs.isSaved);
-    final toolbar = (MediaQuery.textScalerOf(context).scale(40) + 16).clamp(kToolbarHeight, double.infinity).toDouble();
+    final compact = widget.embedded;
+    final density = compact ? VisualDensity.compact : null;
+    final toolbar = compact
+        ? 44.0
+        : (MediaQuery.textScalerOf(context).scale(40) + 16).clamp(kToolbarHeight, double.infinity).toDouble();
     final theme = Theme.of(context);
     final barText =
         theme.appBarTheme.foregroundColor ??
@@ -583,12 +626,23 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
               ],
             )
           : AppBar(
+              leading: compact
+                  ? IconButton(
+                      visualDensity: density,
+                      tooltip: 'Back',
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      onPressed: widget.onBack,
+                    )
+                  : null,
+              leadingWidth: compact ? 40 : null,
               backgroundColor: ChatPlayerColor.tinted(
                 theme.appBarTheme.backgroundColor ?? theme.colorScheme.surface,
                 barText,
               ),
               foregroundColor: barText,
-              toolbarHeight: room.isDm ? toolbar + MediaQuery.textScalerOf(context).scale(_hasNote ? 34 : 18) : toolbar,
+              toolbarHeight: room.isDm && !compact
+                  ? toolbar + MediaQuery.textScalerOf(context).scale(_hasNote ? 34 : 18)
+                  : toolbar,
               titleSpacing: 0,
               title: InkWell(
                 onTap: room.isDm && ChatRoom.peerIdOf(room.id) != null
@@ -599,8 +653,8 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                     : null,
                 child: Row(
                   children: [
-                    ChatRoomAvatar(room: room, size: 38),
-                    const SizedBox(width: 12),
+                    ChatRoomAvatar(room: room, size: compact ? 28 : 38),
+                    SizedBox(width: compact ? 8 : 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -615,7 +669,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                                   semanticsLabel: room.isDm ? '${room.name}, player details' : null,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                                  style: TextStyle(fontSize: compact ? 15 : 18, fontWeight: FontWeight.w600),
                                 ),
                               ),
                               ListenableBuilder(
@@ -642,9 +696,10 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                               ),
                             ],
                           ),
-                          if (room.isDm ||
-                              chat.connection != ChatConnection.connected ||
-                              room.id == ChatFactionOps.roomId)
+                          if (!compact &&
+                              (room.isDm ||
+                                  chat.connection != ChatConnection.connected ||
+                                  room.id == ChatFactionOps.roomId))
                             Row(
                               children: [
                                 Flexible(
@@ -659,13 +714,13 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                                 if (room.id == ChatFactionOps.roomId) ChatChainLine(prefs: NativeChat.prefs),
                               ],
                             ),
-                          if (room.isDm && ChatRoom.peerIdOf(room.id) != null)
+                          if (!compact && room.isDm && ChatRoom.peerIdOf(room.id) != null)
                             ChatPlayerCardView(
                               id: ChatRoom.peerIdOf(room.id)!,
                               compact: true,
                               lastAction: chat.presenceOf(ChatRoom.peerIdOf(room.id)) == null,
                             ),
-                          if (room.isDm && ChatRoom.peerIdOf(room.id) != null)
+                          if (!compact && room.isDm && ChatRoom.peerIdOf(room.id) != null)
                             ChatNoteLine(id: ChatRoom.peerIdOf(room.id)!, name: room.name),
                         ],
                       ),
@@ -674,8 +729,15 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                 ),
               ),
               actions: [
-                ChatNextUnreadButton(count: chat.unreadQueue.length, onNext: _nextUnread),
-                if (NativeChat.prefs.inAppEnabled) ...[
+                if (!compact) ChatNextUnreadButton(count: chat.unreadQueue.length, onNext: _nextUnread),
+                if (compact && widget.onPopOut != null)
+                  IconButton(
+                    visualDensity: density,
+                    tooltip: 'Open in a small window',
+                    icon: const Icon(Icons.picture_in_picture_alt_rounded),
+                    onPressed: widget.onPopOut,
+                  ),
+                if (NativeChat.prefs.inAppEnabled && !widget.embedded) ...[
                   IconButton(
                     tooltip: 'Minimize to the bubble',
                     icon: const Icon(Icons.minimize_rounded),
@@ -688,9 +750,12 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                   ),
                 ],
                 PopupMenuButton<VoidCallback>(
+                  style: compact ? IconButton.styleFrom(visualDensity: density) : null,
                   tooltip: 'More',
                   onSelected: (action) => action(),
                   itemBuilder: (_) => [
+                    if (compact && chat.unreadQueue.isNotEmpty)
+                      PopupMenuItem(value: _nextUnread, child: Text('Next unread (${chat.unreadQueue.length})')),
                     PopupMenuItem(
                       enabled: chat.isLoaded(room.id),
                       value: _toggleSearch,
@@ -717,7 +782,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                       PopupMenuItem(
                         value: () {
                           chat.markUnread(room.id);
-                          Navigator.maybePop(context);
+                          widget.embedded ? widget.onBack?.call() : Navigator.maybePop(context);
                         },
                         child: const Text('Mark as unread'),
                       ),
@@ -783,11 +848,13 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
         ],
       ),
     );
+    if (widget.embedded) {
+      return MediaQuery.removeViewInsets(context: context, removeBottom: true, child: page);
+    }
     return PopScope(
       canPop: !_searching && !selecting,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        selecting ? setState(_selected.clear) : _toggleSearch();
+        if (!didPop) _backStep();
       },
       child: ChatPausedGate(child: page),
     );

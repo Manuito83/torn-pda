@@ -165,6 +165,26 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('opening a chat closes the open quick replies', (tester) async {
+    start();
+    await _show(tester, chat);
+    _connect(source);
+    source.emit(const ChatUnreadEvent({'faction': 2, 'company': 1}));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Quick reply').at(0));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(ChatListReply), findsOneWidget);
+
+    await tester.tap(find.text('Faction'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(ChatConversationPage), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(ChatListReply), findsNothing);
+    await close(tester);
+  });
+
   Future<void> history(WidgetTester tester, int count, {String? long, bool hasOlder = false}) async {
     start();
     await _show(tester, chat);

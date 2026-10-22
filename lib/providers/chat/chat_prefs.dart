@@ -177,6 +177,9 @@ class ChatPrefs extends ChangeNotifier {
   /// Encoded by ChatWindowFrame
   List<String> windows = [];
 
+  /// Encoded by ChatBigWindow
+  List<String> bigWindow = [];
+
   /// x and y fractions, then dock side
   List<String> bubbleSpot = [];
   ChatImageAutoLoad imageAutoLoad = ChatImageAutoLoad.torn;
@@ -393,6 +396,7 @@ class ChatPrefs extends ChangeNotifier {
     };
     windowFrame = await Prefs().getNativeChatWindowFrame();
     windows = await Prefs().getNativeChatWindows();
+    bigWindow = await Prefs().getNativeChatBigWindow();
     bubbleSpot = await Prefs().getNativeChatBubbleSpot();
     final autoLoad = await Prefs().getNativeChatImageAutoLoad();
     imageAutoLoad = ChatImageAutoLoad.values.firstWhere(
@@ -1262,6 +1266,11 @@ class ChatPrefs extends ChangeNotifier {
     Prefs().setNativeChatWindows(value);
   }
 
+  void setBigWindow(List<String> value) {
+    bigWindow = value;
+    Prefs().setNativeChatBigWindow(value);
+  }
+
   void setBubbleSpot(List<String> value) {
     bubbleSpot = value;
     Prefs().setNativeChatBubbleSpot(value);
@@ -1755,6 +1764,7 @@ class ChatPrefs extends ChangeNotifier {
     opens = [];
     shortcutCache = [];
     windows = [];
+    bigWindow = [];
     Prefs().setNativeChatDrafts('{}');
     Prefs().setNativeChatSaved('[]');
     Prefs().setNativeChatPlayerNotes('{}');
@@ -1765,6 +1775,7 @@ class ChatPrefs extends ChangeNotifier {
     Prefs().setNativeChatOpens(opens);
     Prefs().setNativeChatShortcutCache(shortcutCache);
     Prefs().setNativeChatWindows(windows);
+    Prefs().setNativeChatBigWindow(bigWindow);
     notifyListeners();
   }
 }

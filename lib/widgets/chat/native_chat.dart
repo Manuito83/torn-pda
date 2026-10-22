@@ -50,6 +50,51 @@ class ChatMinimized {
   final String? frozenAtId;
 }
 
+class ChatBigWindow {
+  const ChatBigWindow({this.roomId, this.minimized = false, this.full = false, this.below = const {}, this.side});
+
+  /// Null shows the list
+  final String? roomId;
+  final bool minimized;
+  final bool full;
+
+  /// Small windows drawn under it
+  final Set<String> below;
+
+  /// Split panel it was opened from
+  final SplitSide? side;
+
+  ChatBigWindow copyWith({bool? minimized, bool? full, Set<String>? below}) => ChatBigWindow(
+    roomId: roomId,
+    minimized: minimized ?? this.minimized,
+    full: full ?? this.full,
+    below: below ?? this.below,
+    side: side,
+  );
+
+  ChatBigWindow inRoom(String? id) =>
+      ChatBigWindow(roomId: id, minimized: minimized, full: full, below: below, side: side);
+
+  /// State, room, then the frame
+  static List<String> encode(ChatBigWindow? bigWindow, Rect? frame) => [
+    if (bigWindow == null) 'closed' else (bigWindow.minimized ? 'min' : 'open'),
+    bigWindow?.roomId ?? '',
+    if (frame != null)
+      for (final v in [frame.left, frame.top, frame.width, frame.height]) v.toStringAsFixed(1),
+  ];
+
+  static ({ChatBigWindow? bigWindow, Rect? frame}) decode(List<String> saved) {
+    if (saved.length < 2) return (bigWindow: null, frame: null);
+    final v = saved.skip(2).take(4).map(double.tryParse).toList();
+    final frame = v.length == 4 && !v.contains(null) ? Rect.fromLTWH(v[0]!, v[1]!, v[2]!, v[3]!) : null;
+    final bigWindow = switch (saved[0]) {
+      'open' || 'min' => ChatBigWindow(roomId: saved[1].isEmpty ? null : saved[1], minimized: true),
+      _ => null,
+    };
+    return (bigWindow: bigWindow, frame: frame);
+  }
+}
+
 class _TopWatch extends NavigatorObserver {
   _TopWatch(this._out);
 
@@ -117,6 +162,11 @@ class NativeChat {
   static const int _maxWindows = 3;
   static const int _maxMinimized = 8;
 
+  /// The big window in [stackOrder]
+  static const String bigWindowId = ':bigWindow';
+
+  static final ValueNotifier<ChatBigWindow?> bigWindow = ValueNotifier(null);
+
   /// Front one last
   static final ValueNotifier<List<String>> quickWindows = ValueNotifier(const []);
 
@@ -133,6 +183,10 @@ class NativeChat {
   static int _linkTaps = 0;
 
   static GlobalKey<NavigatorState>? navigatorKey;
+
+  /// Overlay navigator, above the windows
+  static GlobalKey<NavigatorState>? sheetsKey;
+  static BuildContext? get sheetsContext => sheetsKey?.currentState?.overlay?.context;
 
   static const String _tapPrefix = 'pdachat:';
   static const String settingsPayload = 'pdachat-settings';
@@ -162,6 +216,9 @@ class NativeChat {
 
   /// No live Torn tab for a while
   static final ValueNotifier<bool> tornTabMissing = ValueNotifier(false)..addListener(_syncFreeze);
+
+  /// Awake or not
+  static final ValueNotifier<bool> tornTabExists = ValueNotifier(false);
   static int _tabGrace = 30;
   static const int _tabSettle = 2;
   static const Duration _touchEvery = Duration(seconds: 15);
@@ -194,7 +251,12 @@ class NativeChat {
   static bool get _shouldRun => listens && !controller.loggedOut;
 
   static bool get tickerOn =>
-      prefs.ticker && usable && !screenOpen.value && quickWindows.value.isEmpty && !tornTabMissing.value;
+      prefs.ticker &&
+      usable &&
+      !screenOpen.value &&
+      quickWindows.value.isEmpty &&
+      (bigWindow.value?.minimized ?? true) &&
+      !tornTabMissing.value;
 
   /// The open app alerts DMs itself
   static bool get coversDmPush =>
@@ -230,6 +292,7 @@ class NativeChat {
     minimized.value = [
       for (final entry in prefs.windows) ChatMinimized(ChatWindowFrame.decode(entry).roomId, window: true),
     ];
+    loadBigWindow();
     // Before the page sends its first rooms
     controller.alertStream.listen(_notify);
     controller.addListener(_askEmblem);
@@ -332,6 +395,7 @@ class NativeChat {
       closeQuickWindow(id);
       dropMinimized(id);
     }
+    if (bigWindow.value?.roomId case final id? when controller.isUnlisted(id)) setBigWindowRoom(null);
     refreshShortcuts();
   }
 
@@ -339,10 +403,12 @@ class NativeChat {
   static void onRoomGone(ChatRoom room) {
     final open =
         quickWindows.value.contains(room.id) ||
+        bigWindow.value?.roomId == room.id ||
         minimized.value.any((m) => m.roomId == room.id) ||
         controller.isOnScreen(room.id);
     closeQuickWindow(room.id);
     dropMinimized(room.id);
+    if (bigWindow.value?.roomId == room.id) setBigWindowRoom(null);
     if (open) chatToast('${room.name} chat closed: you left the ${room.id == 'poker' ? 'table' : 'room'}');
   }
 
@@ -408,6 +474,7 @@ class NativeChat {
     _tabLostFor = 0;
     _hadLive = false;
     tornTabMissing.value = false;
+    tornTabExists.value = false;
     _touchedAt = DateTime(0);
   }
 
@@ -422,6 +489,13 @@ class NativeChat {
   static void _checkTabs() {
     final web = _tabs;
     if (web == null) return;
+    tornTabExists.value =
+        tornTabIndex(
+          [for (final tab in web.tabList) tab.currentUrl],
+          [for (var i = 0; i < web.tabList.length; i++) i],
+          made: web.tabList.indexWhere((tab) => tab.id == _madeTab),
+        ) !=
+        null;
     if (!_shouldRun || _inBackground) {
       _tabTimer?.cancel();
       _tabTimer = null;
@@ -595,6 +669,7 @@ class NativeChat {
     ChatTelemetry.count('open_window');
     _focusRoom = reply ? roomId : null;
     if (reply) composerFocus.value++;
+    _leaveBigWindow(roomId);
     dropMinimized(roomId);
     final open = [...quickWindows.value.where((r) => r != roomId), roomId];
     while (open.length > _maxWindows) {
@@ -604,15 +679,115 @@ class NativeChat {
   }
 
   static void swapQuickWindow(String from, String to) {
+    _leaveBigWindow(to);
+    final now = bigWindow.value;
+    if (now != null && now.below.contains(from)) bigWindow.value = now.copyWith(below: {...now.below}..remove(from));
     dropMinimized(to);
     quickWindows.value = [for (final r in quickWindows.value) r == from ? to : r];
   }
 
   static void focusQuickWindow(String roomId) {
     final open = quickWindows.value;
-    if (!open.contains(roomId) || open.last == roomId) return;
-    quickWindows.value = [...open.where((r) => r != roomId), roomId];
+    if (!open.contains(roomId)) return;
+    final now = bigWindow.value;
+    if (now != null && now.below.contains(roomId)) {
+      bigWindow.value = now.copyWith(below: {...now.below}..remove(roomId));
+    }
+    if (open.last != roomId) quickWindows.value = [...open.where((r) => r != roomId), roomId];
   }
+
+  /// Back to front, bigWindow as [bigWindowId]
+  static List<String> get stackOrder {
+    final now = bigWindow.value;
+    final open = quickWindows.value;
+    if (now == null || now.minimized) return open;
+    return [...open.where(now.below.contains), bigWindowId, ...open.where((r) => !now.below.contains(r))];
+  }
+
+  static bool get bigWindowShown => bigWindow.value?.minimized == false;
+
+  static bool bigWindowHolds(String roomId) => bigWindowShown && bigWindow.value?.roomId == roomId;
+
+  static void _leaveBigWindow(String roomId) {
+    final now = bigWindow.value;
+    if (now == null || (now.roomId != roomId && !now.below.contains(roomId))) return;
+    bigWindow.value = ChatBigWindow(
+      roomId: now.roomId == roomId ? null : now.roomId,
+      minimized: now.minimized,
+      full: now.full,
+      below: {...now.below}..remove(roomId),
+      side: now.side,
+    );
+  }
+
+  static void openBigWindow({SplitSide? side}) {
+    _leaveScreens();
+    final now = bigWindow.value;
+    bigWindow.value =
+        ChatBigWindow(roomId: now?.roomId, full: now?.full ?? false, below: {...quickWindows.value}, side: side);
+  }
+
+  /// Conversation's Back, true when used
+  static bool Function()? bigWindowConversationBack;
+
+  static void bigWindowBack() {
+    if (bigWindowConversationBack?.call() ?? false) return;
+    bigWindow.value?.roomId == null ? minimizeBigWindow() : setBigWindowRoom(null);
+  }
+
+  static void setBigWindowRoom(String? roomId) {
+    final now = bigWindow.value;
+    if (now == null || now.roomId == roomId) return;
+    if (roomId != null) _freeRoom(roomId);
+    bigWindow.value = now.inRoom(roomId);
+  }
+
+  // A draft keeps it as a bubble
+  static void _freeRoom(String roomId) {
+    if (!quickWindows.value.contains(roomId)) return;
+    prefs.draftFor(roomId).isEmpty ? closeQuickWindow(roomId) : minimizeQuickWindow(roomId);
+  }
+
+  static void focusBigWindow() {
+    final now = bigWindow.value;
+    if (now == null || quickWindows.value.every(now.below.contains)) return;
+    bigWindow.value = now.copyWith(below: {...quickWindows.value});
+  }
+
+  static void minimizeBigWindow() {
+    final now = bigWindow.value;
+    if (now != null && !now.minimized) bigWindow.value = now.copyWith(minimized: true);
+  }
+
+  static void restoreBigWindow() {
+    final now = bigWindow.value;
+    if (now == null || !now.minimized) return;
+    _leaveScreens();
+    bigWindow.value = now.copyWith(minimized: false, below: {...quickWindows.value});
+  }
+
+  static void closeBigWindow() => bigWindow.value = null;
+
+  static void toggleBigWindowFull() {
+    final now = bigWindow.value;
+    if (now != null) bigWindow.value = now.copyWith(full: !now.full);
+  }
+
+  static void popOutBigWindow() {
+    final room = bigWindow.value?.roomId;
+    if (room != null) openQuickWindow(room);
+  }
+
+  static void expandBigWindow({bool saved = false}) {
+    final room = bigWindow.value?.roomId;
+    final navigator = navigatorKey?.currentState;
+    closeBigWindow();
+    if (navigator != null) open(navigator, roomId: room, saved: saved);
+  }
+
+  // Back as a bubble, never a room
+  @visibleForTesting
+  static void loadBigWindow() => bigWindow.value = ChatBigWindow.decode(prefs.bigWindow).bigWindow;
 
   /// Without [roomId], all of them
   static void closeQuickWindow([String? roomId]) {
@@ -628,6 +803,7 @@ class NativeChat {
   }
 
   static void hideQuickWindows() {
+    minimizeBigWindow();
     if (quickWindows.value.isEmpty) return;
     for (final roomId in quickWindows.value) {
       _pushMinimized(ChatMinimized(roomId, window: true));
@@ -720,6 +896,7 @@ class NativeChat {
     prefs.forgetAccount();
     quickWindows.value = const [];
     minimized.value = const [];
+    bigWindow.value = null;
     refreshShortcuts();
     cancelChatNotifications();
   }
@@ -817,6 +994,22 @@ class NativeChat {
     return web.splitAppSide;
   }
 
+  /// Split panel of a tab
+  static SplitSide? splitSideOfTab(String tabUid) {
+    final context = navigatorKey?.currentContext;
+    if (context == null) return null;
+    final web = context.read<WebViewProvider>();
+    if (web.splitRightSlot == null) return null;
+    if (web.splitBrowsersActive) {
+      return web.slotOfGroup(web.getTabByUid(tabUid)?.splitApart ?? false ? SplitGroup.apart : SplitGroup.main);
+    }
+    return switch (web.splitAppSide) {
+      SplitSide.left => SplitSide.right,
+      SplitSide.right => SplitSide.left,
+      null => null,
+    };
+  }
+
   static Future<void> openTornBrowser({bool keepChat = false}) async {
     final navigator = navigatorKey?.currentState;
     if (navigator == null || _opening) return;
@@ -831,6 +1024,8 @@ class NativeChat {
         made: made,
       );
       if (index != made) _madeTab = null;
+      navigator.popUntil((route) => route.isFirst);
+      if (keepChat) chatToast(index == null ? 'Opening a Torn tab' : 'Switching to your Torn tab');
       if (index == null) {
         const home = 'https://www.torn.com';
         final before = web.tabList.length;
@@ -840,10 +1035,7 @@ class NativeChat {
         if (web.tabList.length > before) _madeTab = web.tabList.last.id;
         return;
       }
-      if (!keepChat) {
-        hideQuickWindows();
-        navigator.popUntil((route) => route.isFirst);
-      }
+      if (!keepChat) hideQuickWindows();
       if (index != web.currentTab) {
         web.activateTab(index);
       } else if (!isLive(web.tabList[index])) {
@@ -873,20 +1065,13 @@ class NativeChat {
     };
   }
 
-  /// Back to Torn, then reopen the chat
+  /// From the full page
   static Future<void> goToTornTab() async {
-    final navigator = navigatorKey?.currentState;
-    if (navigator == null) return;
+    if (navigatorKey?.currentState == null) return;
     final room = controller.currentRoomId;
-    navigator.popUntil((route) => route.isFirst);
+    openBigWindow();
+    setBigWindowRoom(room);
     await openTornBrowser(keepChat: true);
-    for (var i = 0; i < 75; i++) {
-      final web = _tabs;
-      if (web != null && !screenOpen.value && tornTabOpen(web, loaded: true)) {
-        return unawaited(open(navigator, roomId: room));
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-    }
   }
 
   /// Where Torn Authentication lives
@@ -991,7 +1176,7 @@ class NativeChat {
     if (Platform.isIOS) await registerTornChatCategories(reply: value);
   }
 
-  static Future<void> open(NavigatorState navigator, {String? roomId, String? messageId}) async {
+  static Future<void> open(NavigatorState navigator, {String? roomId, String? messageId, bool saved = false}) async {
     if (!compiled) return;
     if (screenOpen.value) {
       if (roomId == null || controller.isOnScreen(roomId)) return;
@@ -1010,12 +1195,13 @@ class NativeChat {
     }
     if (!prefs.inAppEnabled) setEnabled(true);
     minimized.value = [...minimized.value.where((m) => m.window && m.roomId != roomId)];
+    minimizeBigWindow();
     screenOpen.value = true;
     final route = MaterialPageRoute<void>(
       builder: (_) => ChangeNotifierProvider<ChatController>.value(
         value: controller,
         child: ChatTheme(
-          child: ChatPage(initialRoomId: roomId, initialMessageId: messageId),
+          child: ChatPage(initialRoomId: roomId, initialMessageId: messageId, openSaved: saved),
         ),
       ),
     );
