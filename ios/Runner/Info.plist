@@ -168,6 +168,10 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Torn PDA uses the camera when a web page asks you to take a photo or video to upload.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Torn PDA uses the microphone when you record a video to upload from a web page.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Allows Torn PDA to save images to your library (only write permission)</string>
 	<key>NSPhotoLibraryUsageDescription</key>
