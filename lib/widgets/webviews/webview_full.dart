@@ -2277,13 +2277,13 @@ class WebViewFullState extends State<WebViewFull>
                 analytics?.logEvent(
                   name: "webview_renderer_gone",
                   parameters: {
-                    "did_crash": detail.didCrash ? 1 : 0,
+                    "did_crash": detail.didCrash ? "1" : "0",
                     "hw_layer": _webViewProvider.webViewHardwareLayerActiveForTelemetry ? "on" : "off",
                     "chat_limit_mb": _webViewProvider.tornChatCacheLimitActiveMb,
                     "source": "full",
-                    "is_window": widget.windowId != null ? 1 : 0,
+                    "is_window": widget.windowId != null ? "1" : "0",
                     "tabs": _webViewProvider.tabList.length,
-                    "resumed": appResumed ? 1 : 0,
+                    "resumed": appResumed ? "1" : "0",
                     "ls_kb": _webViewProvider.lastLocalStorageMeasuredTotalKb,
                   },
                 );
@@ -2294,7 +2294,7 @@ class WebViewFullState extends State<WebViewFull>
                   analytics?.logEvent(
                     name: "webview_renderer_gone_fg",
                     parameters: {
-                      "did_crash": detail.didCrash ? 1 : 0,
+                      "did_crash": detail.didCrash ? "1" : "0",
                       "hw_layer": _webViewProvider.webViewHardwareLayerActiveForTelemetry ? "on" : "off",
                       "chat_limit_mb": _webViewProvider.tornChatCacheLimitActiveMb,
                       "tabs": _webViewProvider.tabList.length,
@@ -5174,6 +5174,7 @@ class WebViewFullState extends State<WebViewFull>
 
       final result = await Navigator.of(context).push(
         MaterialPageRoute(
+          settings: const RouteSettings(name: 'dev_tools'),
           builder: (context) => DevToolsMainPage(tabUid: _tabUid, initialIndex: initialTabIndex),
         ),
       );

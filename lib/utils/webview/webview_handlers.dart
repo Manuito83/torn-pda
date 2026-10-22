@@ -537,7 +537,7 @@ class WebviewHandlers {
             'total_kb': totalBytes ~/ 1024,
             'freed_kb': freedBytes ~/ 1024,
             'limit_mb': limitMb,
-            'reason': reason,
+            'reason': const {'chat', 'safety'}.contains(reason) ? reason : 'other',
           },
         );
       },

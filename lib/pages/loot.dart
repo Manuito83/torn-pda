@@ -116,7 +116,6 @@ class LootPageState extends State<LootPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     // LR fetch is folded into _getLoot's first-load branch so the cache can skip it too.
     _getInitialLootInformation = _getLoot();
-    analytics?.logScreenView(screenName: 'loot');
 
     routeWithDrawer = true;
     routeName = "loot";

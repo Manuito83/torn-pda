@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +19,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
@@ -391,7 +393,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void _reportExperimentUserProperties() {
-    if (Platform.isWindows) return;
+    if (Platform.isWindows || Firebase.apps.isEmpty) return;
     final String hwLayer = webViewHardwareLayerActiveForTelemetry ? "on" : "off";
     final String hwLayerSrc = webViewHardwareLayerSourceForTelemetry;
     final String chatLimit = tornChatCacheLimitActiveMb.toString();
@@ -480,6 +482,7 @@ class WebViewProvider extends ChangeNotifier {
 
       // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
+      StatsController.browserOpen = true;
       notifyListeners();
 
       resumeAllWebviews();
@@ -492,14 +495,18 @@ class WebViewProvider extends ChangeNotifier {
         FocusManager.instance.primaryFocus?.unfocus();
       }
 
+      final bool wasForeground = _isBrowserForeground;
+
       // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
+      StatsController.browserOpen = false;
       notifyListeners();
 
       broadcastTabState();
 
       // Signal that the browser has closed to listener (e.g.: Profile page)
       browserHasClosedStream.add(true);
+      if (wasForeground) StatsController.relog();
 
       _removeAllUserScripts().then((value) {
         pauseAllWebviews();
@@ -517,6 +524,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Change browser visibility early to avoid issues if device returns an error
     _isBrowserForeground = true;
+    StatsController.browserOpen = true;
     notifyListeners();
     resumeAllWebviews();
     broadcastTabState();
@@ -1962,7 +1970,7 @@ class WebViewProvider extends ChangeNotifier {
                 "live_tabs": liveTabs,
                 "graphics_mb": graphicsMb,
                 "points_failed": probe["failed"],
-                "mode": mode,
+                "mode": const {0, 1, 2}.contains(mode) ? "$mode" : "other",
               },
             );
             FirebaseCrashlytics.instance.recordError(

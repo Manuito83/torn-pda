@@ -590,6 +590,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                       Navigator.of(context).pop();
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
+                                          settings: const RouteSettings(name: 'userscripts'),
                                           builder: (BuildContext context) => const UserScriptsPage(fromWebview: true),
                                         ),
                                       );

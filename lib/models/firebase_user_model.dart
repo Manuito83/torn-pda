@@ -63,6 +63,30 @@ class FirebaseUserModel extends OwnProfileExtended {
 
   FirebaseUserModel();
 
+  List<String> get activeAlerts => [
+    if (energyNotification == true) 'energy',
+    if (nerveNotification == true) 'nerve',
+    if (lifeNotification == true) 'life',
+    if (travelNotification == true) 'travel',
+    if (hospitalNotification == true) 'hospital',
+    if (drugsNotification == true) 'drugs',
+    if (medicalNotification == true) 'medical',
+    if (boosterNotification == true) 'booster',
+    if (racingNotification == true) 'racing',
+    if (messagesNotification == true) 'messages',
+    if (eventsNotification == true) 'events',
+    if (refillsNotification == true) 'refills',
+    if (stockMarketNotification == true) 'stock_market',
+    if (retalsNotification == true) 'retals',
+    if (lootAlerts.isNotEmpty) 'loot_npc',
+    if (lootRangersAlerts == true) 'loot_rangers',
+    if (foreignRestockNotification == true) 'foreign_restock',
+    if (cityShopRestockNotification == true) 'city_shop',
+    if (abroadStayNotification == true) 'abroad_stay',
+    if (forumsSubscription == true) 'forums',
+    if (workStatsNotification == true) 'work_stats',
+  ];
+
   FirebaseUserModel.fromProfileModel(OwnProfileExtended model) {
     playerId = model.playerId;
     level = model.level;

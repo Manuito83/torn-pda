@@ -364,8 +364,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _profileApi.resetApiTimer(initCall: true, trigger: "browser-closed");
     });
 
-    analytics?.logScreenView(screenName: 'profile');
-
     routeWithDrawer = true;
     routeName = "profile`";
   }
@@ -862,6 +860,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             await Navigator.push(
               context,
               MaterialPageRoute(
+                settings: const RouteSettings(name: 'profile_options'),
                 builder: (context) => ProfileOptionsPage(
                   callBackTimings: _callBackFromNotificationOptions,
                   user: _user,
@@ -957,7 +956,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _shortcutsCarrousel() {
     void openShortcutsEditor() {
-      Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => ShortcutsPage()));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          settings: const RouteSettings(name: 'shortcuts'),
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
     }
 
     // Returns Main individual tile

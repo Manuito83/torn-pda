@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:torn_pda/main.dart' show analytics;
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -307,6 +308,10 @@ Future<void> syncBackgroundRefreshWithWidgetInstallation() async {
     await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
     await HomeWidget.updateWidget(name: 'HomeWidgetRankedWar', iOSName: 'HomeWidgetRankedWar');
   }
+
+  try {
+    analytics?.setUserProperty(name: "widget", value: installedWidgets.anyWidgetInstalled ? "on" : "off");
+  } catch (_) {}
 }
 
 /// Cancels all platform-specific background tasks related to widgets.

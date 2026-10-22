@@ -90,11 +90,11 @@ void main() {
     expect(sent, [
       [
         'chat_connect',
-        {'outcome': 'connected', 'ms_bucket': '<15s', 'cold': 1},
+        {'outcome': 'connected', 'ms_bucket': '<15s', 'cold': '1'},
       ],
       [
         'chat_connect',
-        {'outcome': 'offline', 'ms_bucket': '>60s', 'cold': 0},
+        {'outcome': 'offline', 'ms_bucket': '>60s', 'cold': '0'},
       ],
       [
         'chat_session_lost',

@@ -77,7 +77,6 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
     if (Platform.isIOS) _refreshAlarmPendingIos();
     _ticker = Timer.periodic(const Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics?.logScreenView(screenName: 'travel');
 
     routeWithDrawer = true;
     routeName = "travel";
@@ -153,6 +152,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               return OpenContainer(
                 transitionDuration: const Duration(milliseconds: 300),
                 transitionType: ContainerTransitionType.fade,
+                routeSettings: const RouteSettings(name: 'foreign_stocks'),
                 openBuilder: (BuildContext context, VoidCallback _) {
                   return ForeignStockPage(apiKey: _myCurrentKey);
                 },
@@ -300,6 +300,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         Navigator.of(context)
             .push(
               MaterialPageRoute(
+                settings: const RouteSettings(name: 'foreign_stocks'),
                 builder: (BuildContext context) => ForeignStockPage(
                   apiKey: _myCurrentKey,
                 ),

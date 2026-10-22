@@ -467,9 +467,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       _userScriptsProvider.showSafeModeWarning();
                       return;
                     }
-                    Navigator.of(
-                      context,
-                    ).push(MaterialPageRoute(builder: (BuildContext context) => const UserScriptsPage()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: 'userscripts'),
+                        builder: (BuildContext context) => const UserScriptsPage(),
+                      ),
+                    );
                   },
                 ),
               ],

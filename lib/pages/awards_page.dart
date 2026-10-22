@@ -99,8 +99,6 @@ class AwardsPageState extends State<AwardsPage> {
     _pinProvider = Provider.of<AwardsProvider>(context, listen: false);
     _getAwardsPayload = _fetchYataAndPopulate();
 
-    analytics?.logScreenView(screenName: 'awards');
-
     routeWithDrawer = true;
     routeName = "awards";
   }
@@ -421,7 +419,10 @@ class AwardsPageState extends State<AwardsPage> {
 
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AwardsGraphs(graphInfo: graphsToPass)),
+                MaterialPageRoute(
+                  settings: const RouteSettings(name: 'awards_graphs'),
+                  builder: (context) => AwardsGraphs(graphInfo: graphsToPass),
+                ),
               );
             },
           )

@@ -71,7 +71,6 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       routeWithDrawer = true;
     }
     _stocksInitialised = _initialiseStocks();
-    analytics?.logScreenView(screenName: 'stockMarket');
   }
 
   @override

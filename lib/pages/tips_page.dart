@@ -12,7 +12,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 
 // Project imports:
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -140,8 +139,6 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _batteryStatusFuture = _checkBatteryOptimization();
 
     _buildLists();
-
-    analytics?.logScreenView(screenName: 'tips');
 
     routeWithDrawer = true;
     routeName = "tips";

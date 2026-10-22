@@ -16,6 +16,7 @@ import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/torn-pda-native/stats/app_settings_daily.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
@@ -36,6 +37,7 @@ class FirestoreHelper {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;
   FirebaseUserModel? _firebaseUserModel;
+  FirebaseUserModel? get cachedUserModel => _firebaseUserModel;
 
   String? _uid;
   Future setUID(String userUID) async {
@@ -591,6 +593,10 @@ class FirestoreHelper {
     _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data()!);
     // Persist a local snapshot for auth-recovery fallback
     persistLocalSnapshot();
+
+    if (!Platform.isWindows) {
+      analytics?.setUserProperty(name: "alerts_on", value: AppSettingsDaily.countBucket(_firebaseUserModel!.activeAlerts.length));
+    }
     return _firebaseUserModel;
   }
 

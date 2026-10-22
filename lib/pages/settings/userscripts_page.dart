@@ -313,7 +313,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (BuildContext context) => const ScriptsCatalogPage()),
+              MaterialPageRoute(
+                settings: const RouteSettings(name: 'scripts_catalog'),
+                builder: (BuildContext context) => const ScriptsCatalogPage(),
+              ),
             ).then((_) {
               routeWithDrawer = false;
               routeName = "userscripts";

@@ -13,6 +13,7 @@ Future<void> publishCrashlyticsIdentity(int playerId) async {
     await crashlytics.setUserIdentifier(playerId == 0 ? "" : playerId.toString());
     // Lets Remote Config target a single player
     await analytics?.setUserProperty(name: "player_id", value: playerId == 0 ? null : playerId.toString());
+    await analytics?.setUserProperty(name: "api_key", value: playerId == 0 ? "no" : "yes");
 
     final String? uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null && uid.length >= 5) {

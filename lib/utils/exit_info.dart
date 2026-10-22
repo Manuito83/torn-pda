@@ -41,7 +41,11 @@ class ExitInfo {
         );
         analytics?.logEvent(
           name: "app_killed_signaled",
-          parameters: {"importance": importance, "status": status, "secs_since_rg": secsSinceRg},
+          parameters: {
+            "importance": const {100, 125, 200, 230, 300, 400}.contains(importance) ? "$importance" : "other",
+            "status": const {6, 9, 11, 15}.contains(status) ? "$status" : "other",
+            "secs_since_rg": secsSinceRg,
+          },
         );
       }
     } catch (e) {

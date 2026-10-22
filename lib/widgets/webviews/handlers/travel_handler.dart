@@ -12,6 +12,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -219,6 +220,8 @@ class ForeignStocksWebviewHandler {
   Future<void> _uploadStocks({required String provider, required Uri url, required String body}) async {
     const retryDelays = [Duration(seconds: 2), Duration(seconds: 5)];
     String error = "";
+    Object? failure;
+    int? status;
 
     for (int attempt = 0; attempt <= retryDelays.length; attempt++) {
       try {
@@ -229,16 +232,22 @@ class ForeignStocksWebviewHandler {
         log("$provider replied with status code ${response.statusCode}. Response: ${response.body}");
         if (response.statusCode == 200) return;
         error = "Status code ${response.statusCode}";
+        status = response.statusCode;
+        failure = null;
         // Client errors... does not make sense to retry
         if (response.statusCode < 500) break;
-      } on TimeoutException {
+      } on TimeoutException catch (e) {
         error = "Timed out";
+        failure = e;
       } on SocketException catch (e) {
         error = "Connection error: $e";
+        failure = e;
       } on http.ClientException catch (e) {
         error = "Connection error: $e";
+        failure = e;
       } catch (e) {
         error = "Catched exception: $e";
+        failure = e;
         break;
       }
 
@@ -248,11 +257,7 @@ class ForeignStocksWebviewHandler {
     }
 
     log('Error sending Foreign Stocks to $provider: $error');
-    final String details = "$appVersion $provider: $error";
-    analytics?.logEvent(
-      name: 'foreign_stock_upload_failed',
-      parameters: {'error': details.length > 99 ? details.substring(0, 99) : details},
-    );
+    unawaited(UsageCounters.apiError(provider.toLowerCase(), failure, status: failure == null ? status : null));
     logToUser("Error sending Foreign Stocks to $provider");
   }
 

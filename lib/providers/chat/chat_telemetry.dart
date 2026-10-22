@@ -70,7 +70,7 @@ class ChatTelemetry {
         event('chat_connect', {
           'outcome': outcome,
           'ms_bucket': ms < 5000 ? '<5s' : (ms < 15000 ? '<15s' : (ms < 60000 ? '<60s' : '>60s')),
-          'cold': data['cold'] == true ? 1 : 0,
+          'cold': data['cold'] == true ? '1' : '0',
         });
       case 'lost':
         event('chat_session_lost', {

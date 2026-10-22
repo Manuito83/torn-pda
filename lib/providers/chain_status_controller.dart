@@ -757,6 +757,7 @@ class ChainStatusController extends GetxController {
 
       navigatorKey.currentState?.push(
         MaterialPageRoute(
+          settings: const RouteSettings(name: 'panic_mode'),
           builder: (context) {
             return WebViewPanic(
               attackIdList: attacksIds,

@@ -91,6 +91,7 @@ class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
                     onPressed: () async {
                       await Navigator.of(context).push(
                         MaterialPageRoute(
+                          settings: const RouteSettings(name: 'shortcuts'),
                           builder: (BuildContext context) => ShortcutsPage(),
                         ),
                       );

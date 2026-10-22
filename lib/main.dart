@@ -69,6 +69,8 @@ import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/background_inbox.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
@@ -226,6 +228,7 @@ Future<void> main() async {
   if (_isFirebaseInitialized) {
     unawaited(ExitInfo.reportPreviousExits());
     unawaited(ChatTelemetry.flush());
+    unawaited(UsageCounters.flush());
   }
   await _initializeWorkManager();
   await _initializeHomeWidget();
@@ -274,7 +277,10 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late Widget _mainBrowser;
   final GlobalKey _mainBrowserKey = GlobalKey();
   final GlobalKey _homeDrawerKey = GlobalKey();
-  final List<NavigatorObserver> _homeObservers = [NativeChat.homeWatch];
+  final List<NavigatorObserver> _homeObservers = [
+    NativeChat.homeWatch,
+    if (_isFirebaseInitialized && analytics != null) StatsController.homeObserver,
+  ];
   final GlobalKey _devToolsKey = GlobalKey();
   final FocusNode _devToolsFocusNode = FocusNode(canRequestFocus: false, skipTraversal: true);
 
@@ -326,6 +332,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _isFirebaseInitialized) ChatTelemetry.flush();
+    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) UsageCounters.flush();
   }
 
   @override
@@ -434,7 +441,11 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
             ],
           );
         },
-        navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
+        navigatorObservers: [
+          BotToastNavigatorObserver(),
+          NativeChat.rootWatch,
+          if (_isFirebaseInitialized && analytics != null) StatsController.rootObserver,
+        ],
         scrollBehavior: !Platform.isWindows
             ? null
             : const MaterialScrollBehavior().copyWith(

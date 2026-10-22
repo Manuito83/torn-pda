@@ -1100,7 +1100,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _webViewProvider.browserShowInForeground = false;
         });
       }
-      Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => ShortcutsPage()));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          settings: const RouteSettings(name: 'shortcuts'),
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
       return;
     }
 
@@ -1227,7 +1232,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             // Push Advanced Browser Settings with highlight
             WidgetsBinding.instance.addPostFrameCallback((_) {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (BuildContext context) => SettingsBrowserPage(highlightItem: highlight)),
+                MaterialPageRoute(
+                  settings: const RouteSettings(name: 'settings_browser'),
+                  builder: (BuildContext context) => SettingsBrowserPage(highlightItem: highlight),
+                ),
               );
             });
           }
@@ -1838,7 +1846,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (_userScriptsProvider.isInSafeMode) {
           _userScriptsProvider.showSafeModeWarning();
         } else {
-          Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => const UserScriptsPage()));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              settings: const RouteSettings(name: 'userscripts'),
+              builder: (BuildContext context) => const UserScriptsPage(),
+            ),
+          );
         }
       } else if (payload.contains('400-')) {
         launchBrowserWithUrl = true;
@@ -2560,6 +2573,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _onSelectItem(DrawerSection section) async {
     Navigator.of(context).pop();
+    StatsController.section(section);
     setState(() {
       _selected = section;
       _activeDrawerIndex = section;
@@ -2598,6 +2612,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!userController.isApiKeyValid) {
       _selected = DrawerSection.settings;
       _activeDrawerIndex = DrawerSection.settings;
+      StatsController.section(DrawerSection.settings);
     } else {
       String defaultSection = await Prefs().getDefaultSection();
 
@@ -2617,6 +2632,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       _selected = resolvedSection;
       _activeDrawerIndex = resolvedSection;
+      StatsController.section(resolvedSection);
     }
 
     // Change device preferences
@@ -3128,6 +3144,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _selected = section;
       _activeDrawerIndex = section;
     });
+    StatsController.section(section);
     _getPages();
   }
 
@@ -3178,6 +3195,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       Navigator.of(context)
           .push(
             MaterialPageRoute(
+              settings: const RouteSettings(name: 'foreign_stocks'),
               builder: (BuildContext context) =>
                   ForeignStockPage(apiKey: UserHelper.apiKey, temporaryDestinationCountry: temporaryDestinationCountry),
             ),

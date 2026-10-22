@@ -82,8 +82,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
       _getFactionApiAccess(),
     ]);
 
-    analytics?.logScreenView(screenName: 'alerts');
-
     Prefs().getCityShopAutoPauseEnabled().then((value) {
       if (mounted) setState(() => _cityShopAutoPause = value);
     });
@@ -952,7 +950,13 @@ class AlertsSettingsState extends State<AlertsSettings> {
         subtitle: "Browse city shop items, filter by shop or mode, and pick the ones you want alerts for",
         trailing: _chevron(),
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const CityShopsPage()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              settings: const RouteSettings(name: 'city_shops'),
+              builder: (context) => const CityShopsPage(),
+            ),
+          );
         },
       ),
     ]);
@@ -1515,6 +1519,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
             Navigator.push(
               context,
               MaterialPageRoute(
+                settings: const RouteSettings(name: 'stockMarket'),
                 builder: (context) {
                   return StockMarketAlertsPage(
                     fbUser: _firebaseUserModel,

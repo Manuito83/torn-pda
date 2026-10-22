@@ -8,7 +8,6 @@ import 'package:get/get.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/pages/chaining/retals_page.dart';
@@ -20,6 +19,7 @@ import 'package:torn_pda/providers/retals_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/bounce_tabbar.dart';
@@ -233,22 +233,22 @@ class ChainingPageState extends State<ChainingPage> {
 
     switch (_currentPage) {
       case 0:
-        analytics?.logScreenView(screenName: 'targets');
+        StatsController.screen('targets');
       case 1:
-        analytics?.logScreenView(screenName: 'attacks');
+        StatsController.screen('attacks');
       case 2:
-        analytics?.logScreenView(screenName: 'war');
+        StatsController.screen('war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
       case 3:
         if (UserHelper.factionId != 0 && _retaliationEnabled) {
-          analytics?.logScreenView(screenName: 'retals');
+          StatsController.screen('retals');
           _r.retrieveRetals(context);
         }
       case 4:
-        analytics?.logScreenView(screenName: 'target_finder');
+        StatsController.screen('target_finder');
     }
   }
 
@@ -273,24 +273,24 @@ class ChainingPageState extends State<ChainingPage> {
 
     switch (index) {
       case 0:
-        analytics?.logScreenView(screenName: 'targets');
+        StatsController.screen('targets');
         Prefs().setChainingCurrentPage(_currentPage);
       case 1:
-        analytics?.logScreenView(screenName: 'attacks');
+        StatsController.screen('attacks');
         Prefs().setChainingCurrentPage(_currentPage);
       case 2:
-        analytics?.logScreenView(screenName: 'war');
+        StatsController.screen('war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
         Prefs().setChainingCurrentPage(_currentPage);
       case 3:
-        analytics?.logScreenView(screenName: 'retals');
+        StatsController.screen('retals');
         Prefs().setChainingCurrentPage(_currentPage);
         _r.retrieveRetals(context);
       case 4:
-        analytics?.logScreenView(screenName: 'target_finder');
+        StatsController.screen('target_finder');
         Prefs().setChainingCurrentPage(_currentPage);
     }
   }

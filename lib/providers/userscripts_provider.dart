@@ -19,6 +19,7 @@ import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/torn-pda-native/stats/app_settings_daily.dart';
 import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -234,7 +235,19 @@ class UserScriptsProvider extends ChangeNotifier {
       ScriptsBulkMode.scriptMode => _activeModeId == warModeId ? "warMode" : "mode:$_activeModeId",
     };
     Prefs().setUserScriptsBulkMode(saved);
+    _reportScriptsOn();
     notifyListeners();
+  }
+
+  String? _lastScriptsOn;
+  void _reportScriptsOn() {
+    if (Platform.isWindows) return;
+    final String value = AppSettingsDaily.countBucket(_userScriptsEnabled ? _userScriptList.where(isActive).length : 0);
+    if (value == _lastScriptsOn) return;
+    _lastScriptsOn = value;
+    try {
+      analytics?.setUserProperty(name: "scripts_on", value: value);
+    } catch (_) {}
   }
 
   UserScriptMode addMode(String name) {
@@ -733,6 +746,7 @@ class UserScriptsProvider extends ChangeNotifier {
       // Encode to Base64 with prefix to prevent character encoding issues
       final encodedString = "PDA_B64:${base64Encode(utf8.encode(saveString))}";
       await Prefs().setUserScriptsList(encodedString);
+      _reportScriptsOn();
     } catch (e, trace) {
       if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA error saving userscripts. Error: $e");
@@ -1076,6 +1090,7 @@ class UserScriptsProvider extends ChangeNotifier {
         if (!_initializationCompleter.isCompleted) {
           _initializationCompleter.complete();
         }
+        _reportScriptsOn();
       });
     }
   }

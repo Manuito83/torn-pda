@@ -204,7 +204,6 @@ class SettingsPageState extends State<SettingsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _loadRefreshRateInfo();
-    analytics?.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
     routeName = "settings";
@@ -430,6 +429,7 @@ class SettingsPageState extends State<SettingsPage> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
+                      settings: const RouteSettings(name: 'settings_browser'),
                       builder: (BuildContext context) => const SettingsBrowserPage(),
                     ),
                   );
@@ -463,6 +463,7 @@ class SettingsPageState extends State<SettingsPage> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
+                      settings: const RouteSettings(name: 'shortcuts'),
                       builder: (BuildContext context) => ShortcutsPage(),
                     ),
                   );
@@ -4450,6 +4451,8 @@ class SettingsPageState extends State<SettingsPage> {
           setState(() {
             _expandableController.expanded = false;
           });
+
+          if (!Platform.isWindows) analytics?.logEvent(name: "api_key_loaded");
 
           if (!Platform.isWindows) {
             try {

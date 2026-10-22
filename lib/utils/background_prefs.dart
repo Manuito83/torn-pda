@@ -19,6 +19,8 @@ class BackgroundPrefs {
   static const String _kChatCounts = "pda_chatTelemetryCounts";
   static const String _kChatDaily = "pda_chatTelemetryDaily";
   static const String _kChatMode = "pda_chatTelemetryMode";
+  static const String _kUsageBucket = "pda_usageCounts_";
+  static const String _kUsageDaily = "pda_usageCountsDaily";
 
   Future<String> getOwnDetails() async {
     final prefs = SharedPreferencesAsync();
@@ -105,5 +107,39 @@ class BackgroundPrefs {
   Future<void> setChatMode(String value) async {
     final prefs = SharedPreferencesAsync();
     await prefs.setString(_kChatMode, value);
+  }
+
+  Future<String> getUsageBucket(String bucket) async {
+    final prefs = SharedPreferencesAsync();
+    return (await prefs.getString('$_kUsageBucket$bucket')) ?? "";
+  }
+
+  Future<void> setUsageBucket(String bucket, String value) async {
+    final prefs = SharedPreferencesAsync();
+    await prefs.setString('$_kUsageBucket$bucket', value);
+  }
+
+  Future<List<String>> getUsageBuckets() async {
+    final prefs = SharedPreferencesAsync();
+    final keys = await prefs.getKeys();
+    return [for (final key in keys) if (key.startsWith(_kUsageBucket)) key.substring(_kUsageBucket.length)];
+  }
+
+  Future<String> takeUsageBucket(String bucket) async {
+    final prefs = SharedPreferencesAsync();
+    final value = (await prefs.getString('$_kUsageBucket$bucket')) ?? "";
+    await prefs.remove('$_kUsageBucket$bucket');
+    return value;
+  }
+
+  /// Written from the main isolate only
+  Future<int> getUsageDaily() async {
+    final prefs = SharedPreferencesAsync();
+    return (await prefs.getInt(_kUsageDaily)) ?? 0;
+  }
+
+  Future<void> setUsageDaily(int value) async {
+    final prefs = SharedPreferencesAsync();
+    await prefs.setInt(_kUsageDaily, value);
   }
 }

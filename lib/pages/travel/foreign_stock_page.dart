@@ -24,6 +24,7 @@ import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/inventory_feedback.dart';
@@ -1141,6 +1142,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     if (provider == "prometheus") url = "https://api.prombot.co.uk/api/travel";
 
     String lastError = "";
+    Object? failure;
+    int? status;
     for (int attempt = 0; attempt < 2; attempt++) {
       try {
         final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 6));
@@ -1152,16 +1155,21 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           return (apiSuccess: true, apiMessage: "");
         }
         lastError = "Status code ${responseDB.statusCode}";
-      } on TimeoutException {
+        status = responseDB.statusCode;
+        failure = null;
+      } on TimeoutException catch (e) {
         // Already waited long enough: move on to the next provider
         lastError = "Timed out";
+        failure = e;
         break;
       } catch (e) {
         lastError = e.toString();
+        failure = e;
       }
       if (attempt == 0) await Future.delayed(const Duration(seconds: 2));
     }
 
+    unawaited(UsageCounters.apiError(provider, failure, status: failure == null ? status : null));
     logToUser("Provider: $provider, Error: $lastError");
     return (apiSuccess: false, apiMessage: lastError);
   }
@@ -1327,13 +1335,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     // All three sources failed
-    final String failures =
-        "$primary[${primaryResult.apiMessage}] $backup[${backupResult.apiMessage}] db[${tornPDAResult.apiMessage}]";
-    analytics?.logEvent(
-      name: 'foreign_stocks_sources_failed',
-      parameters: {'error': failures.length > 99 ? failures.substring(0, 99) : failures},
-    );
-
     _showAllSourcesFailedDialog();
     return (
       providersSuccess: false,
