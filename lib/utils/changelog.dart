@@ -109,18 +109,16 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF1565C0),
         items: [
           _MItem(
-            "Chat: Torn's chat is now part of Torn PDA, on Android and iOS",
+            "Chat: Torn's chat is now built into Torn PDA",
             chatOnly: true,
             pinOpenWhen: _always,
             detail:
-                'Tap the floating bubble, the chat icon in the browser or the chat in the side menu to open your '
-                'chats. A chat can open in a small window over the app or shrink to a bubble. New messages can also '
-                'show as a short line on screen, and Torn\'s web chat can be hidden in the browser from the chat '
-                'settings.\n\n'
-                'Links open in a preview, with "Main tab" and "New tab" buttons to move them to the browser. Tap a name '
-                'to see the player card with their status and actions. Each chat has its own alerts, and rooms can '
-                'alert you only when your name is mentioned. In Trade and Global, sell and buy offers show the '
-                'item\'s market value.\n\nMore details in the Tips section.',
+                'Chat without leaving the game. The chat floats over the browser in a window you can move, resize or '
+                'shrink to a bubble, and any conversation can pop out on its own.\n\n'
+                'Names open a player card with their status and quick actions, links open in a preview, and sell and '
+                'buy offers in Trade and Global show the market value. Each chat has its own alerts, and rooms can '
+                'alert you only when you are mentioned.\n\n'
+                'Everything else is in Tips > Chat.',
             diagrams: [
               FeatureDiagramScene.chatBubble,
               FeatureDiagramScene.chatDrawer,
