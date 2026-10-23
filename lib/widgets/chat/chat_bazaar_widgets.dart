@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/models/chat/chat_bazaar.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_price_check_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -85,7 +85,7 @@ Future<void> showChatBazaarSheet(
   required ChatBazaar bazaar,
   Set<int> named = const {},
 }) {
-  ChatTelemetry.count('bazaar');
+  StatsController.chat.count('bazaar');
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

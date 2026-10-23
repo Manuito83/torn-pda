@@ -1,0 +1,2 @@
+#include "../Pods/Target Support Files/Pods-RankedWarWidget/Pods-RankedWarWidget.release.xcconfig"
+#include "../Flutter/Generated.xcconfig"

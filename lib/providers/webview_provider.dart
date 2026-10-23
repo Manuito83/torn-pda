@@ -480,6 +480,9 @@ class WebViewProvider extends ChangeNotifier {
         stackView = const WebViewStackView(recallLastSession: true);
       }
 
+      // Tabs restored unseen start asleep
+      if (currentTab < _tabList.length && _tabList[currentTab].sleepTab) _bringTabOnScreen(_tabList[currentTab]);
+
       // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
       StatsController.browserOpen = true;
@@ -529,6 +532,24 @@ class WebViewProvider extends ChangeNotifier {
     resumeAllWebviews();
     broadcastTabState();
     scheduleBlankCheck();
+  }
+
+  bool _restoreAsleep = false;
+  Completer<void>? _restoreDone;
+
+  /// Mounts the browser hidden and restores the saved tabs asleep
+  Future<void> restoreBehind() async {
+    if (_tabList.isNotEmpty || stackView is! Container) return;
+    _restoreAsleep = true;
+    final done = _restoreDone = Completer<void>();
+    stackView = const WebViewStackView(recallLastSession: true);
+    try {
+      await done.future.timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      log('Hidden browser restore timed out');
+    } finally {
+      _restoreAsleep = false;
+    }
   }
 
   void pdaIconActivation({required bool shortTap, required BuildContext context, required bool automaticLogin}) {
@@ -1400,6 +1421,7 @@ class WebViewProvider extends ChangeNotifier {
         // The StackView may have been replaced during the await
         if (!context.mounted) return;
         addTab(
+          sleepTab: _restoreAsleep,
           url: authUrl,
           pageTitle: savedMain.tabsSave![0].pageTitle,
           chatRemovalActive: savedMain.tabsSave![0].chatRemovalActive,
@@ -1414,7 +1436,7 @@ class WebViewProvider extends ChangeNotifier {
           nativeAuth: nativeAuth,
         );
         if (!context.mounted) return;
-        await addTab(url: authUrl, chatRemovalActive: chatRemovalActiveGlobal);
+        await addTab(sleepTab: _restoreAsleep, url: authUrl, chatRemovalActive: chatRemovalActiveGlobal);
       }
     } else {
       String? authUrl = await _assessNativeAuth(inputUrl: url, nativeUser: nativeUser, nativeAuth: nativeAuth);
@@ -1463,7 +1485,7 @@ class WebViewProvider extends ChangeNotifier {
       if (useTabs) {
         await addTab(
           tabKey: wv.tabKey,
-          sleepTab: sleepTabsByDefault && !(keepLocked && wv.isLocked),
+          sleepTab: (sleepTabsByDefault || _restoreAsleep) && !(keepLocked && wv.isLocked),
           url: wv.url,
           pageTitle: wv.pageTitle,
           chatRemovalActive: wv.chatRemovalActive,
@@ -1521,7 +1543,7 @@ class WebViewProvider extends ChangeNotifier {
       }
 
       // Awake WebView if we are recalling it
-      if (_tabList[currentTab].sleepTab) {
+      if (_tabList[currentTab].sleepTab && !(_restoreAsleep && !_isBrowserForeground)) {
         _tabList[currentTab].sleepTab = false;
         _tabList[currentTab].webView = _buildRealWebViewFromSleeping(_tabList[currentTab].sleepingWebView!);
       }
@@ -1532,6 +1554,7 @@ class WebViewProvider extends ChangeNotifier {
     _moveFocusOutOfCoveredGroup();
     _bringSplitTabsOnScreen();
     _sleepTabsAboveMax();
+    if (_restoreDone?.isCompleted == false) _restoreDone!.complete();
   }
 
   // TODO: old references to [windowId] can theoretically be removed since we are no longer using the windowId to open new tabs

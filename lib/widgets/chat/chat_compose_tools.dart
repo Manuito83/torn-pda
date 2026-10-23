@@ -16,7 +16,7 @@ import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -125,7 +125,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
   }
 
   Future<void> _insertReply(String reply) async {
-    ChatTelemetry.count('quick_reply');
+    StatsController.chat.count('quick_reply');
     final values = await chatSlotValues(
       name: widget.name,
       me: widget.chat?.myName,
@@ -276,7 +276,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
           label: Text(emoji, style: const TextStyle(fontSize: 18)),
           visualDensity: VisualDensity.compact,
           onPressed: () {
-            ChatTelemetry.count('quick_emoji');
+            StatsController.chat.count('quick_emoji');
             widget.onEmoji?.call(emoji);
           },
         ),
@@ -329,7 +329,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
 
   List<Widget> _actionChips(String id) {
     VoidCallback tap(VoidCallback action) => () {
-      ChatTelemetry.count('quick_action');
+      StatsController.chat.count('quick_action');
       action();
     };
     return switch (id) {

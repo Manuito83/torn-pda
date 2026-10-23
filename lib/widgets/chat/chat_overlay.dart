@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_bubble_glow.dart';
@@ -149,7 +149,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
 
   void _openChat() {
     final navigator = widget.navigatorKey.currentState;
-    ChatTelemetry.count('open_bubble');
+    StatsController.chat.count('open_bubble');
     if (navigator != null) NativeChat.open(navigator);
   }
 

@@ -10,7 +10,7 @@ import 'package:torn_pda/models/chat/chat_source.dart';
 import 'package:torn_pda/providers/chat/chat_api.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatController extends ChangeNotifier {
@@ -877,8 +877,8 @@ class ChatController extends ChangeNotifier {
     _sendTimers[reqId] = Timer(_sendTimeout, () => _settleSend(roomId, reqId, ChatMessageState.failed));
     notifyListeners();
     _source.send(roomId, content, reqId);
-    ChatTelemetry.count('sent');
-    ChatTelemetry.count('sent_${ChatTelemetry.roomKind(roomId)}');
+    StatsController.chat.count('sent');
+    StatsController.chat.count('sent_${StatsController.chat.roomKind(roomId)}');
   }
 
   void replaceLocal(String roomId, bool Function(ChatMessage m) test, List<ChatMessage> lines) {

@@ -22,7 +22,7 @@ import 'package:torn_pda/models/chat/chat_status.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
@@ -908,7 +908,7 @@ VoidCallback? chatSwipeLeft(ChatMessage m, {required bool mine}) {
   return () {
     final action = NativeChat.prefs.swipeLeft;
     if (action == ChatSwipeAction.off) return;
-    ChatTelemetry.count('swipe');
+    StatsController.chat.count('swipe');
     final url = chatPlayerUrl(action.name, m.sender.id);
     if (url != null) {
       NativeChat.openLink(url, always: true);

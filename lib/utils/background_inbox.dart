@@ -1,7 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -28,7 +28,7 @@ Future<void> messagingBackgroundHandler(RemoteMessage message) async {
   try {
     await showTornChatNotification(data);
   } catch (_) {
-    await ChatTelemetry.push('error');
+    await StatsController.chat.push('error');
   }
 }
 

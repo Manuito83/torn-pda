@@ -9,7 +9,7 @@ import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -359,7 +359,7 @@ Color chatToneColor(ChatPriceTone tone, bool dark) => switch (tone) {
 };
 
 Future<void> showChatItemSheet(BuildContext context, ChatItemRef item) {
-  ChatTelemetry.count('item_card');
+  StatsController.chat.count('item_card');
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,

@@ -23,7 +23,7 @@ import 'package:torn_pda/providers/chat/chat_faction_events.dart';
 import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_push_rules.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/chat/chat_ticker_queue.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
 import 'package:torn_pda/providers/user_controller.dart';
@@ -223,6 +223,11 @@ class NativeChat {
   static const int _tabSettle = 2;
   static const Duration _touchEvery = Duration(seconds: 15);
   static WebViewProvider? _tabs;
+  static final Listenable _chatShown = Listenable.merge([screenOpen, quickWindows, bigWindow]);
+  static Future<void>? _restore;
+  static bool _restoreTried = false;
+  // Waiting for the restored Torn tab to load
+  static bool _holding = false;
   static Timer? _tabTimer;
   static int _tabLostFor = 0;
   static bool _hadLive = false;
@@ -278,10 +283,7 @@ class NativeChat {
     if (_started) return;
     _started = true;
     await prefs.load();
-    prefs.unknownRoomSink = (id) {
-      final room = id.replaceAll(RegExp('[0-9]+'), 'N');
-      ChatTelemetry.event('chat_unknown_room', {'room_id': room.substring(0, math.min(room.length, 99))});
-    };
+    prefs.unknownRoomSink = StatsController.chat.unknownRoom;
     _owner = await Prefs().getNativeChatOwner();
     if (_owner! > 0) controller.restoreUserId(_owner!);
     prefs.addListener(_syncPush);
@@ -302,7 +304,7 @@ class NativeChat {
     controller.addListener(_watchOwner);
     controller.addListener(_watchRooms);
     controller.goneStream.listen(onRoomGone);
-    ChatEngine.instance.data.where((m) => m['k'] == 'health').listen(ChatTelemetry.health);
+    ChatEngine.instance.data.where((m) => m['k'] == 'health').listen(StatsController.chat.health);
     selectNotificationStream.stream.listen(_onNotificationTap);
     _factionOps.start();
     factionEvents.start();
@@ -329,7 +331,8 @@ class NativeChat {
     _syncRun();
   }
 
-  static void _reportMode() => unawaited(ChatTelemetry.report(prefs, remote: remoteEnabled.value, loaded: _started));
+  static void _reportMode() => unawaited(StatsController.chat.report(prefs,
+      remote: remoteEnabled.value, loaded: _started, hideWeb: _tabs?.chatRemovalActiveGlobal ?? false));
 
   static void _watchKey() {
     if (!Get.isRegistered<UserController>()) return;
@@ -462,6 +465,44 @@ class NativeChat {
   static void watchTabs(WebViewProvider web) {
     _tabs?.removeListener(_checkTabs);
     _tabs = web..addListener(_checkTabs);
+    _chatShown
+      ..removeListener(_onChatShown)
+      ..addListener(_onChatShown);
+    _checkTabs();
+  }
+
+  static void _onChatShown() {
+    final web = _tabs;
+    if (web == null || !_shouldRun || (!screenOpen.value && quickWindows.value.isEmpty && !bigWindowShown)) return;
+    unawaited(restoreTornBehind(web));
+  }
+
+  /// Cold browser: saved tabs come back asleep, hidden
+  static Future<void> restoreTornBehind(WebViewProvider web) {
+    if (web.tabList.isNotEmpty || _restoreTried) return _restore ?? Future.value();
+    _restoreTried = true;
+    return _restore = _restoreBehind(web).whenComplete(() => _restore = null);
+  }
+
+  static Future<void> _restoreBehind(WebViewProvider web) async {
+    _holding = true;
+    _tabLostFor = 0;
+    tornTabMissing.value = false;
+    // Out of the notifier that called
+    await Future<void>.microtask(() {});
+    await web.restoreBehind();
+    final index = tornTabIndex(
+      [for (final tab in web.tabList) tab.webViewKey == null ? null : tab.currentUrl],
+      [web.currentTab, for (var i = 0; i < web.tabList.length; i++) i],
+    );
+    if (index == null) {
+      _holding = false;
+      _tabLostFor = _tabSettle;
+      return _checkTabs();
+    }
+    final current = index == web.currentTab;
+    current ? web.wakeTab(index) : web.activateTab(index);
+    chatToast(current ? 'Torn opened in the background' : 'Switched to your Torn tab in the background');
     _checkTabs();
   }
 
@@ -469,6 +510,10 @@ class NativeChat {
   static void resetTabs() {
     _tabs?.removeListener(_checkTabs);
     _tabs = null;
+    _chatShown.removeListener(_onChatShown);
+    _restore = null;
+    _restoreTried = false;
+    _holding = false;
     _tabTimer?.cancel();
     _tabTimer = null;
     _tabLostFor = 0;
@@ -500,6 +545,7 @@ class NativeChat {
       _tabTimer?.cancel();
       _tabTimer = null;
       _tabLostFor = 0;
+      _holding = false;
       if (!_shouldRun) {
         _hadLive = false;
         tornTabMissing.value = false;
@@ -508,6 +554,7 @@ class NativeChat {
       _tabTimer?.cancel();
       _tabTimer = null;
       _tabLostFor = 0;
+      _holding = false;
       _hadLive = true;
       tornTabMissing.value = false;
     } else {
@@ -516,7 +563,7 @@ class NativeChat {
         _checkTabs();
       });
       // Never live: no margin
-      final settled = !_hadLive && _tabLostFor >= _tabSettle && sessionOk();
+      final settled = !_hadLive && !_holding && _tabLostFor >= _tabSettle && sessionOk();
       if (settled || _tabLostFor >= _tabGrace) tornTabMissing.value = true;
     }
   }
@@ -616,8 +663,8 @@ class NativeChat {
     final reminderNav = navigatorKey?.currentState;
     if (reminder != null && reminderNav != null) {
       hideQuickWindows();
-      ChatTelemetry.event('chat_notification_open', {'source': 'reminder', 'target': 'inbox'});
-      ChatTelemetry.count('open_notification');
+      StatsController.chat.notificationOpen('reminder', 'inbox');
+      StatsController.chat.count('open_notification');
       open(reminderNav, roomId: reminder.$1, messageId: reminder.$2);
       return;
     }
@@ -625,8 +672,8 @@ class NativeChat {
     if (roomId == null || !await tapsOpenChat()) return;
     final navigator = navigatorKey?.currentState;
     final inbox = prefs.notificationTap == ChatNotificationTap.inbox && navigator != null;
-    ChatTelemetry.event('chat_notification_open', {'source': source, 'target': inbox ? 'inbox' : 'window'});
-    ChatTelemetry.count('open_notification');
+    StatsController.chat.notificationOpen(source, inbox ? 'inbox' : 'window');
+    StatsController.chat.count('open_notification');
     if (inbox) {
       hideQuickWindows();
       open(navigator, roomId: roomId);
@@ -666,7 +713,7 @@ class NativeChat {
 
   /// Over the cap, minimizes the back one
   static void openQuickWindow(String roomId, {bool reply = false}) {
-    ChatTelemetry.count('open_window');
+    StatsController.chat.count('open_window');
     _focusRoom = reply ? roomId : null;
     if (reply) composerFocus.value++;
     _leaveBigWindow(roomId);
@@ -945,6 +992,8 @@ class NativeChat {
     BrowserTapType tap = BrowserTapType.short,
     bool newTab = false,
     bool app = false,
+    bool pdaIcon = false,
+    int? Function()? reuse,
   }) async {
     final navigator = navigatorKey?.currentState;
     if (navigator == null) return;
@@ -954,7 +1003,7 @@ class NativeChat {
     if (page != null) _pushMinimized(page);
     hideQuickWindows();
     navigator.popUntil((route) => route.isFirst);
-    await _inBrowser(navigator.context, url, tap, newTab, app: app);
+    await _inBrowser(navigator.context, url, tap, newTab, app: app, pdaIcon: pdaIcon, reuse: reuse);
   }
 
   static Future<void> _inBrowser(
@@ -963,17 +1012,18 @@ class NativeChat {
     BrowserTapType tap,
     bool newTab, {
     bool app = false,
+    bool pdaIcon = false,
+    int? Function()? reuse,
   }) async {
     final web = context.read<WebViewProvider>();
     if (newTab && (app || await Prefs().getDefaultBrowser() == 'app')) {
       final cold = web.tabList.isEmpty;
-      web.browserShowInForeground = true;
-      // A cold browser restores its tabs first
-      for (var i = 0, still = 0, count = -1; cold && i < 80 && still < 20; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        still = web.tabList.isNotEmpty && web.tabList.length == count ? still + 1 : 0;
-        count = web.tabList.length;
-      }
+      pdaIcon
+          ? web.pdaIconActivation(shortTap: true, context: context, automaticLogin: false)
+          : web.browserShowInForeground = true;
+      if (cold) await _settledTabs(web);
+      final found = reuse?.call();
+      if (found != null) return _showTab(web, found);
       if (web.tabList.isNotEmpty) {
         await web.addTab(url: url, splitApart: web.splitBrowsersActive && web.focusedGroup == SplitGroup.apart);
         web.activateTab(web.tabList.length - 1);
@@ -982,6 +1032,23 @@ class NativeChat {
     }
     if (!context.mounted) return;
     await web.openBrowserPreference(context: context, url: url, browserTapType: tap, focusedPanel: true, forceApp: app);
+  }
+
+  // A cold browser restores its tabs first
+  static Future<void> _settledTabs(WebViewProvider web) async {
+    for (var i = 0, still = 0, count = -1; i < 80 && still < 20; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      still = web.tabList.isNotEmpty && web.tabList.length == count ? still + 1 : 0;
+      count = web.tabList.length;
+    }
+  }
+
+  static void _showTab(WebViewProvider web, int index) {
+    if (index != web.currentTab) {
+      web.activateTab(index);
+    } else if (!isLive(web.tabList[index])) {
+      web.wakeTab(index);
+    }
   }
 
   /// Browser side with current tab, else app
@@ -1010,37 +1077,50 @@ class NativeChat {
     };
   }
 
+  static int? _findTornTab(WebViewProvider web) {
+    final made = web.tabList.indexWhere((tab) => tab.id == _madeTab);
+    final index = tornTabIndex(
+      [for (final tab in web.tabList) tab.currentUrl],
+      [web.currentTab, ...web.tabIndexesForGroup(web.focusedGroup), for (var i = 0; i < web.tabList.length; i++) i],
+      live: (i) => isLive(web.tabList[i]),
+      made: made,
+    );
+    if (index != made) _madeTab = null;
+    return index;
+  }
+
   static Future<void> openTornBrowser({bool keepChat = false}) async {
     final navigator = navigatorKey?.currentState;
     if (navigator == null || _opening) return;
     _opening = true;
     try {
       final web = navigator.context.read<WebViewProvider>();
-      final made = web.tabList.indexWhere((tab) => tab.id == _madeTab);
-      final index = tornTabIndex(
-        [for (final tab in web.tabList) tab.currentUrl],
-        [web.currentTab, ...web.tabIndexesForGroup(web.focusedGroup), for (var i = 0; i < web.tabList.length; i++) i],
-        live: (i) => isLive(web.tabList[i]),
-        made: made,
-      );
-      if (index != made) _madeTab = null;
+      if (web.tabList.isEmpty) {
+        await restoreTornBehind(web);
+        if (web.tabList.isEmpty) await _settledTabs(web);
+      }
+      final index = _findTornTab(web);
       navigator.popUntil((route) => route.isFirst);
       if (keepChat) chatToast(index == null ? 'Opening a Torn tab' : 'Switching to your Torn tab');
       if (index == null) {
         const home = 'https://www.torn.com';
         final before = web.tabList.length;
         keepChat
-            ? await _inBrowser(navigator.context, home, BrowserTapType.short, true, app: true)
-            : await openUrl(home, newTab: true, app: true);
+            ? await _inBrowser(
+                navigator.context,
+                home,
+                BrowserTapType.short,
+                true,
+                app: true,
+                pdaIcon: true,
+                reuse: () => _findTornTab(web),
+              )
+            : await openUrl(home, newTab: true, app: true, pdaIcon: true, reuse: () => _findTornTab(web));
         if (web.tabList.length > before) _madeTab = web.tabList.last.id;
         return;
       }
       if (!keepChat) hideQuickWindows();
-      if (index != web.currentTab) {
-        web.activateTab(index);
-      } else if (!isLive(web.tabList[index])) {
-        web.wakeTab(index);
-      }
+      _showTab(web, index);
       web.browserShowInForeground = true;
     } finally {
       _opening = false;

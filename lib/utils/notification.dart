@@ -20,7 +20,7 @@ import 'package:torn_pda/models/chat/chat_send_check.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/chat/chat_push_rules.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_push.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
@@ -1151,18 +1151,18 @@ Future<bool> showTornChatNotification(Map<String, dynamic> data, {bool foregroun
   final push = ChatPush.fromData(data);
   if (push == null || push.message.isEmpty) return false;
   if (foreground && NativeChat.coversDmPush) {
-    await ChatTelemetry.push('covered_in_app');
+    await StatsController.chat.push('covered_in_app');
     return true;
   }
 
   // Main isolate prefs are off limits here
   final rules = ChatPushRules.decode(await BackgroundPrefs().getChatPushRules());
   if (!await BackgroundPrefs().getTornChatDmPush()) {
-    await ChatTelemetry.push('dm_push_off');
+    await StatsController.chat.push('dm_push_off');
     return true;
   }
   if (!rules.allows(push.senderId, DateTime.now())) {
-    await ChatTelemetry.push('suppressed_rules');
+    await StatsController.chat.push('suppressed_rules');
     return true;
   }
   final tone = rules.toneFor(push.senderId);
@@ -1180,7 +1180,7 @@ Future<bool> showTornChatNotification(Map<String, dynamic> data, {bool foregroun
     ),
     payload: jsonEncode({_kTornChatDm: push.senderId, 'name': push.senderName, 'owner': own.id}),
   );
-  await ChatTelemetry.push('shown');
+  await StatsController.chat.push('shown');
   return true;
 }
 
@@ -1262,7 +1262,7 @@ Future<String?> _tornChatReplyStatus(
   bool prefsReadable = true,
 }) async {
   final result = await _tornChatReply(userId, text, owner: owner, checkOwner: checkOwner, prefsReadable: prefsReadable);
-  await ChatTelemetry.reply(result, main: prefsReadable);
+  await StatsController.chat.reply(result, main: prefsReadable);
   return switch (result) {
     'sent' => null,
     'disabled' => 'Not sent: open the chat to reply',
@@ -1362,7 +1362,7 @@ Future<void> _handleIosTornChatReply(Map<String, dynamic> args, {required bool p
       jsonEncode({_kTornChatDm: userId, 'name': name, 'owner': own.id}),
     );
   } catch (_) {
-    if (!counted) await ChatTelemetry.reply('error', main: prefsReadable);
+    if (!counted) await StatsController.chat.reply('error', main: prefsReadable);
   }
 }
 

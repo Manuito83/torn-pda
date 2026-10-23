@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -32,7 +32,7 @@ Path chatSpeechBubble(Offset center, double radius, Offset tip) {
 void _openChat(BuildContext context) {
   final navigator = NativeChat.navigatorKey?.currentState ?? Navigator.of(context);
   Navigator.of(context).pop();
-  ChatTelemetry.count(NativeChat.prefs.launcher == ChatLauncher.menuBar ? 'open_menu_bar' : 'open_menu_header');
+  StatsController.chat.count(NativeChat.prefs.launcher == ChatLauncher.menuBar ? 'open_menu_bar' : 'open_menu_header');
   NativeChat.open(navigator);
 }
 

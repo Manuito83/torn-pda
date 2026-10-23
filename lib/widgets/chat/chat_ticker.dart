@@ -9,7 +9,7 @@ import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/chat/chat_ticker_queue.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:vibration/vibration.dart';
@@ -137,7 +137,7 @@ class _ChatTickerState extends State<ChatTicker> {
     setState(() => entry.alert.demo ? _queue.entries.remove(entry) : _queue.removeRoom(roomId));
     _syncDemo();
     if (entry.alert.demo) return;
-    ChatTelemetry.count('ticker_open');
+    StatsController.chat.count('ticker_open');
     (reply ? widget.onReply ?? widget.onOpen : widget.onOpen)(roomId);
   }
 

@@ -1,5 +1,19 @@
 class StatsController {
+  static final chat = _ChatStats();
+
   Future<void> logCheckIn() async {}
   Future<void> logCheckOut() async {}
   Future<void> logFirstLoginEver() async {}
+}
+
+class _ChatStats {
+  Future<void> count(String key, [int by = 1]) async {}
+  Future<void> push(String result) async {}
+  Future<void> reply(String result, {required bool main}) async {}
+  Future<void> flush() async {}
+  Future<void> report(Object prefs, {required bool remote, required bool loaded, bool hideWeb = false}) async {}
+  void unknownRoom(String id) {}
+  void notificationOpen(String source, String target) {}
+  void health(Map data) {}
+  String roomKind(String roomId) => '';
 }

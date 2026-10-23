@@ -15,10 +15,10 @@ class BackgroundPrefs {
   static const String _kTornChatDmPush = "pda_tornChatDmPush";
   static const String _kChatPushRules = "pda_nativeChatPushRules";
   static const String _kVibrationPattern = "pda_vibrationPattern";
-  static const String _kChatInbox = "pda_chatTelemetryInbox";
-  static const String _kChatCounts = "pda_chatTelemetryCounts";
-  static const String _kChatDaily = "pda_chatTelemetryDaily";
-  static const String _kChatMode = "pda_chatTelemetryMode";
+  static const String _kChatInbox = "pda_chatStatsInbox";
+  static const String _kChatCounts = "pda_chatStatsCounts";
+  static const String _kChatDaily = "pda_chatStatsDaily";
+  static const String _kChatMode = "pda_chatStatsMode";
   static const String _kUsageBucket = "pda_usageCounts_";
   static const String _kUsageDaily = "pda_usageCountsDaily";
 
@@ -64,14 +64,14 @@ class BackgroundPrefs {
   }
 
   /// Any isolate, drained by the main one
-  Future<void> addChatTelemetry(String entry, {int max = 500}) async {
+  Future<void> addChatEntry(String entry, {int max = 500}) async {
     final prefs = SharedPreferencesAsync();
     final inbox = (await prefs.getStringList(_kChatInbox)) ?? <String>[];
     if (inbox.length >= max) return;
     await prefs.setStringList(_kChatInbox, [...inbox, entry]);
   }
 
-  Future<List<String>> takeChatTelemetry() async {
+  Future<List<String>> takeChatEntries() async {
     final prefs = SharedPreferencesAsync();
     final inbox = (await prefs.getStringList(_kChatInbox)) ?? <String>[];
     if (inbox.isNotEmpty) await prefs.remove(_kChatInbox);

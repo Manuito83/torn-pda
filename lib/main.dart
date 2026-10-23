@@ -64,7 +64,6 @@ import 'package:torn_pda/providers/ffscouter_flights_controller.dart';
 import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
 import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
@@ -96,9 +95,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.18.0';
-const String androidCompilation = '690';
-const String iosCompilation = '690';
+const String appVersion = '4.0.0';
+const String androidCompilation = '691';
+const String iosCompilation = '691';
 
 const double kSplitScreenMinWidth = 800;
 
@@ -227,7 +226,7 @@ Future<void> main() async {
   await _initializeFirebase();
   if (_isFirebaseInitialized) {
     unawaited(ExitInfo.reportPreviousExits());
-    unawaited(ChatTelemetry.flush());
+    unawaited(StatsController.chat.flush());
     unawaited(UsageCounters.flush());
   }
   await _initializeWorkManager();
@@ -331,7 +330,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) ChatTelemetry.flush();
+    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) StatsController.chat.flush();
     if (state == AppLifecycleState.resumed && _isFirebaseInitialized) UsageCounters.flush();
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -40,7 +40,7 @@ class ChatIconButton extends StatelessWidget {
 
   void _onTap(BuildContext context) {
     if (NativeChat.prefs.inAppEnabled) {
-      ChatTelemetry.count('open_big_window');
+      StatsController.chat.count('open_big_window');
       NativeChat.openBigWindow(side: tabUid == null ? null : NativeChat.splitSideOfTab(tabUid!));
     } else {
       _showChatIconMenu(context, this);
@@ -153,7 +153,7 @@ Future<void> _showChatIconMenu(BuildContext context, ChatIconButton icon) {
                   title: const Text('Open the full chat'),
                   onTap: () {
                     Navigator.pop(context);
-                    ChatTelemetry.count('open_browser');
+                    StatsController.chat.count('open_browser');
                     NativeChat.open(navigator);
                   },
                 ),

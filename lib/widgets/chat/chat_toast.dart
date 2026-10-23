@@ -11,7 +11,7 @@ void chatToast(String text, {int seconds = 2, String? action, VoidCallback? onAc
     onClose: onClose,
     toastBuilder: (close) => Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4, right: 4),
+      padding: EdgeInsets.only(left: 16, top: 4, bottom: 4, right: action == null ? 16 : 4),
       decoration: BoxDecoration(color: const Color(0xE6303030), borderRadius: BorderRadius.circular(8)),
       child: Row(
         mainAxisSize: MainAxisSize.min,

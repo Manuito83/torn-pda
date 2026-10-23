@@ -7,7 +7,7 @@ import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
 import 'package:torn_pda/pages/chat/chat_search_page.dart';
 import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
-import 'package:torn_pda/providers/chat/chat_telemetry.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_friends_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
@@ -161,7 +161,7 @@ class ChatInboxButtons extends StatelessWidget {
   }
 
   static Future<void> pickFriend(BuildContext context, ChatController chat, ValueChanged<ChatUser> onPick) {
-    ChatTelemetry.count('friends');
+    StatsController.chat.count('friends');
     return _pick(context, chat, const ChatFriendsSheet(), onPick);
   }
 

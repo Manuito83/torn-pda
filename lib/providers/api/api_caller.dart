@@ -21,7 +21,7 @@ import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/telemetry_sanitize.dart';
+import 'package:torn_pda/utils/safe_text.dart';
 
 class ApiCallerController extends GetxController {
   int maxCallsAllowed = 95;
