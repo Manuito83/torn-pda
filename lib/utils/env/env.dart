@@ -3,8 +3,6 @@ import 'package:envied/envied.dart';
 
 part 'env.g.dart';
 
+// Before adding keys, untrack env.g.dart
 @Envied(allowOptionalFields: true)
-abstract class Env {
-  @EnviedField(varName: 'TSC_HEADER_KEY', defaultValue: '', obfuscate: true)
-  static String tscHeader = _Env.tscHeader;
-}
+abstract class Env {}
