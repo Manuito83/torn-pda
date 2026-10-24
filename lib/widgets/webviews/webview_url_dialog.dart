@@ -496,6 +496,33 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         },
                       ),
                     ),
+                    if (_webviewProvider.splitScreenWide)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
+                        child: ElevatedButton(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(MdiIcons.viewSplitVertical, size: 20),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  _webviewProvider.splitScreenPosition == WebViewSplitPosition.off
+                                      ? 'Split with app'
+                                      : 'Close split',
+                                  style: const TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                          onPressed: () {
+                            _customURLController.text = "";
+                            Navigator.of(context).pop();
+                            _webviewProvider.toggleSplitScreen();
+                          },
+                        ),
+                      ),
                     if (widget.inAppWebview != null && Platform.isAndroid)
                       Padding(
                         padding: const EdgeInsets.only(top: 5),

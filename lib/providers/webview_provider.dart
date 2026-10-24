@@ -627,6 +627,7 @@ class WebViewProvider extends ChangeNotifier {
     final bool wasInUse = _splitBrowsersInUse;
     final before = (splitLeftSlot, splitRightSlot);
     _webViewSplitPosition = value;
+    if (value != WebViewSplitPosition.off) _lastSplitPosition = value;
     if (value == WebViewSplitPosition.off) _splitDevToolsOpen = false;
     switch (value) {
       case WebViewSplitPosition.off:
@@ -648,6 +649,15 @@ class WebViewProvider extends ChangeNotifier {
     } else {
       notifyListeners();
     }
+  }
+
+  WebViewSplitPosition _lastSplitPosition = WebViewSplitPosition.right;
+
+  void toggleSplitScreen() {
+    final before = (splitLeftSlot, splitRightSlot);
+    final bool turningOn = _webViewSplitPosition == WebViewSplitPosition.off;
+    splitScreenPosition = turningOn ? _lastSplitPosition : WebViewSplitPosition.off;
+    if (_splitScreenWide) _applySplitLayout(before, singleViewShowsBrowser: !turningOn);
   }
 
   // Recovery after conditions are no longer met
@@ -3655,6 +3665,7 @@ class WebViewProvider extends ChangeNotifier {
       case "right":
         _webViewSplitPosition = WebViewSplitPosition.right;
     }
+    if (_webViewSplitPosition != WebViewSplitPosition.off) _lastSplitPosition = _webViewSplitPosition;
 
     _splitScreenRevertsToApp = await Prefs().getSplitScreenRevertsToApp();
 

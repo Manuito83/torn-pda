@@ -3,6 +3,7 @@ import { logger } from "firebase-functions/v2";
 
 // Using non-ESM string-strip-html@8.5.0
 import { stripHtml } from "string-strip-html";
+import { isDiscreetNow } from "./discreet";
 
 export interface NotificationParams {
   token: string;
@@ -37,7 +38,7 @@ export function sendEnergyNotification(userStats: any, subscriber: any) {
 
       let title = `Full Energy Bar`;
       let body = `Your energy is full, go spend it on something!`;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `E`;
         body = `Full`;
       }
@@ -81,7 +82,7 @@ export function sendNerveNotification(userStats: any, subscriber: any) {
 
       let title = `Full Nerve Bar`;
       let body = `Your nerve is full, go crazy!`;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `N`;
         body = `Full`;
       }
@@ -129,7 +130,7 @@ export function sendLifeNotification(userStats: any, subscriber: any) {
 
       let title = `Full Life Bar`;
       let body = `Your life is full, unstoppable!`;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `Lf`;
         body = `Full`;
       }
@@ -219,7 +220,7 @@ export function sendHospitalNotification(userStats: any, subscriber: any) {
 
         let title = `Hospital admission`;
         let body = `You have been hospitalised!`;
-        if (subscriber.discrete) {
+        if (isDiscreetNow(subscriber)) {
           title = `H`;
           body = `Adm`;
         }
@@ -252,7 +253,7 @@ export function sendHospitalNotification(userStats: any, subscriber: any) {
 
         let title = `Hospital time ending`;
         let body = `You are about to be released from the hospital, grab your things!`;
-        if (subscriber.discrete) {
+        if (isDiscreetNow(subscriber)) {
           title = `H`;
           body = `End`;
         }
@@ -284,7 +285,7 @@ export function sendHospitalNotification(userStats: any, subscriber: any) {
 
         let title = `You are out of hospital!`;
         let body = `You left hospital earlier than expected!`;
-        if (subscriber.discrete) {
+        if (isDiscreetNow(subscriber)) {
           title = `H`;
           body = `Out`;
         }
@@ -331,7 +332,7 @@ export function sendDrugsNotification(userStats: any, subscriber: any) {
 
       let title = `Drug cooldown expired`;
       let body = `Hey junkie! Your drugs cooldown has expired, go get some more!`;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `D`;
         body = `Exp`;
       }
@@ -379,7 +380,7 @@ export function sendMedicalNotification(userStats: any, subscriber: any) {
 
       let title = `Medical cooldown expired`;
       let body = `Your medical cooldown has expired, are you feeling better now?!`;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `Med`;
         body = `Exp`;
       }
@@ -427,7 +428,7 @@ export function sendBoosterNotification(userStats: any, subscriber: any) {
 
       let title = `Booster cooldown expired`;
       let body = `Your booster cooldown has expired, you are not special anymore!`;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `B`;
         body = `Exp`;
       }
@@ -475,7 +476,7 @@ export function sendRacingNotification(userStats: any, subscriber: any) {
 
       let title = `Race finished`;
       let body = `Get in there ${userStats.name}!`;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `R`;
         body = `End`;
       }
@@ -593,7 +594,7 @@ export function sendMessagesNotification(userStats: any, subscriber: any) {
 
       let title = notificationTitle;
       let body = notificationSubtitle;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `M`;
         let sender = "";
         if (newMessages === 1) {
@@ -834,7 +835,7 @@ export function sendEventsNotification(userStats: any, subscriber: any) {
 
         let title = notificationTitle;
         let body = notificationSubtitle;
-        if (subscriber.discrete) {
+        if (isDiscreetNow(subscriber)) {
           title = `Event`;
           body = ` `;
         }
@@ -902,7 +903,7 @@ export function sendEventsNotification(userStats: any, subscriber: any) {
 
         let title = notificationTitle;
         let body = notificationSubtitle;
-        if (subscriber.discrete) {
+        if (isDiscreetNow(subscriber)) {
           title = `Trade`;
           body = ` `;
         }
@@ -1022,7 +1023,7 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
         restockActiveAlerts: userStocks,
       }
 
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `Stock`;
         body = ` `;
       }
@@ -1127,7 +1128,7 @@ export function sendAbroadStayNotification(userStats: any, subscriber: any) {
     const where = country ? ` in ${country}` : "";
     let title = `Still abroad${where}`;
     let body = `You've been${where} for ${formatAbroadDuration(triggered)}. Don't forget to come back!`;
-    if (subscriber.discrete) {
+    if (isDiscreetNow(subscriber)) {
       title = `T`;
       body = ` `;
     }
@@ -1224,7 +1225,7 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
 
       let title = notificationTitle;
       let body = notificationSubtitle;
-      if (subscriber.discrete) {
+      if (isDiscreetNow(subscriber)) {
         title = `Shares`;
         body = ` `;
       }
@@ -1306,7 +1307,7 @@ export function sendWorkStatsNotification(userStats: any, subscriber: any) {
     if (pendingTargets === 0) {
       body += `\nNo targets left, the alert has been disabled`;
     }
-    if (subscriber.discrete) {
+    if (isDiscreetNow(subscriber)) {
       title = `W`;
       body = ` `;
     }

@@ -2,6 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
+import { isDiscreetNow } from "./discreet";
 const privateKey = require("../key/torn_key");
 
 const LOOT_DEFAULT_AHEAD = 360; // default before v3.10.1 (6 minutes)
@@ -171,7 +172,7 @@ export const lootAlerts = onSchedule(
 
                             let title = `${npcName} level ${warnLevel}!`;
                             let body = warnMessage;
-                            if (sub.discrete) {
+                            if (isDiscreetNow(sub)) {
                                 title = `L`;
                                 body = `${npcName} - ${warnLevel}`;
                             }

@@ -33,6 +33,18 @@ class ChatWritingSettingsPage extends StatelessWidget {
             value: prefs.confirmPublic,
             onChanged: prefs.setConfirmPublic,
           ),
+          SwitchListTile(
+            title: const Text('Enter sends with a physical keyboard'),
+            subtitle: const Text('Shift and Enter adds a new line'),
+            value: prefs.enterSendsHardware,
+            onChanged: prefs.setEnterSendsHardware,
+          ),
+          SwitchListTile(
+            title: const Text('Enter sends with the on-screen keyboard'),
+            subtitle: const Text('The action key sends instead of adding a new line'),
+            value: prefs.enterSendsSoft,
+            onChanged: prefs.setEnterSendsSoft,
+          ),
           ChatSettingsLink(
             leading: const Icon(Icons.bolt_rounded),
             title: 'Quick actions',

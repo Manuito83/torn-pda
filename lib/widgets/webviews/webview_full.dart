@@ -32,6 +32,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/utils/js_snippets/js_bank_vault.dart';
 import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
@@ -67,11 +68,14 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/download_error.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
+import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
+import 'package:torn_pda/widgets/webviews/chat_profile_icon.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -1467,6 +1471,8 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addTornChatCacheTrimHandler(webview: webViewController!, webViewProvider: _webViewProvider);
 
+            addChatProfileIconHandler(webViewController!);
+
             WebviewHandlers.addLocalStorageMeasuredHandler(webview: webViewController!, webViewProvider: _webViewProvider);
 
             WebviewHandlers.addToastHandler(webview: webViewController!);
@@ -2710,6 +2716,8 @@ class WebViewFullState extends State<WebViewFull>
         activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
       ),
       ..._tornChatCacheTrimScript(),
+      if (NativeChat.compiled) chatProfileIconScript,
+      if (NativeChat.compiled) bankVaultScript,
       if (NativeChat.compiled && _webViewProvider.chatHidden(_localChatRemovalActive)) tchatGuardScript,
     ];
     await webViewController!.addUserScripts(userScripts: handlers.map(_guardedOnce).toList());
@@ -2792,6 +2800,8 @@ class WebViewFullState extends State<WebViewFull>
         activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
       ),
       ..._tornChatCacheTrimScript(),
+      if (NativeChat.compiled) chatProfileIconScript,
+      if (NativeChat.compiled) bankVaultScript,
       if (NativeChat.compiled && _webViewProvider.chatHidden(widget.chatRemovalActive))
         tchatGuardScript,
       if (_initialUrl?.url != null)
@@ -6600,6 +6610,7 @@ class WebViewFullState extends State<WebViewFull>
   }) async {
     final progressStream = StreamController<int>();
     final cancelToken = CancelToken();
+    CancelFunc? cancelToastCallback;
 
     try {
       if (dialogCancel != null) {
@@ -6625,7 +6636,7 @@ class WebViewFullState extends State<WebViewFull>
       // Get the correct path based on device
       String fileSavePath = await _getDownloadFilePath(fileName);
 
-      var cancelToastCallback = BotToast.showCustomText(
+      cancelToastCallback = BotToast.showCustomText(
         clickClose: false,
         crossPage: false,
         duration: null,
@@ -6642,6 +6653,7 @@ class WebViewFullState extends State<WebViewFull>
       await Dio().download(
         url,
         fileSavePath,
+        options: Options(headers: await _downloadHeaders(url)),
         onReceiveProgress: (received, total) {
           int progress = ((received / total) * 100).toInt();
           progressStream.add(progress);
@@ -6652,6 +6664,7 @@ class WebViewFullState extends State<WebViewFull>
       // When the download is complete or an error occurs, dismiss and close the stream
       progressStream.close();
       cancelToastCallback();
+      cancelToastCallback = null;
 
       // Share the file
       if (_settingsProvider.downloadActionShare) {
@@ -6679,13 +6692,49 @@ class WebViewFullState extends State<WebViewFull>
         );
       }
     } catch (e) {
-      BotToast.showText(
-        text: "Could not complete download: ${cancelToken.isCancelled ? "cancelled" : e}",
-        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: Colors.orange[800]!,
-        contentPadding: const EdgeInsets.all(10),
-      );
+      if (!progressStream.isClosed) progressStream.close();
+      cancelToastCallback?.call();
+      _showDownloadError(e, retryUrl: manualSource ?? autoRequest?.url.toString());
     }
+  }
+
+  Future<Map<String, String>> _downloadHeaders(String url) async {
+    final headers = <String, String>{};
+    try {
+      final agent = await webViewController
+          ?.evaluateJavascript(source: "navigator.userAgent")
+          .timeout(const Duration(seconds: 2));
+      if (agent is String && agent.isNotEmpty) headers["User-Agent"] = agent;
+      final cookies = await cm.getCookies(url: WebUri(url));
+      final cookie = cookieHeaderFor(
+        Uri.parse(url).host,
+        cookies.map((c) => (name: c.name, value: c.value?.toString() ?? "", domain: c.domain)),
+      );
+      if (cookie != null) headers["Cookie"] = cookie;
+    } catch (_) {}
+    final referer = downloadReferer(_currentUrl, url);
+    if (referer != null) headers["Referer"] = referer;
+    return headers;
+  }
+
+  void _showDownloadError(Object error, {String? retryUrl}) {
+    final failure = describeDownloadError(error);
+    final uri = retryUrl == null ? null : Uri.tryParse(retryUrl);
+    if (failure.blocked && uri != null) {
+      chatToast(
+        failure.message,
+        seconds: 8,
+        action: "Open in browser",
+        onAction: () => launchUrl(uri, mode: LaunchMode.externalApplication),
+      );
+      return;
+    }
+    BotToast.showText(
+      text: failure.message,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.orange[800]!,
+      contentPadding: const EdgeInsets.all(10),
+    );
   }
 
   Future<void> _downloadData(String data, {String? fileName}) async {
@@ -6717,12 +6766,7 @@ class WebViewFullState extends State<WebViewFull>
         );
       }
     } catch (e) {
-      BotToast.showText(
-        text: "Could not complete download: $e",
-        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: Colors.orange[800]!,
-        contentPadding: const EdgeInsets.all(10),
-      );
+      _showDownloadError(e);
     }
   }
 

@@ -12,6 +12,7 @@
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"
         tools:node="remove" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <!-- For backups, see: https://github.com/juliansteenbakker/flutter_secure_storage/issues/43#issuecomment-471642126 -->
     <application android:name="${applicationName}"
         android:label="Torn PDA"

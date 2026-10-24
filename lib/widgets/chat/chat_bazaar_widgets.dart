@@ -118,10 +118,11 @@ class _ChatBazaarSheetState extends State<_ChatBazaarSheet> {
       for (final item in widget.bazaar.ordered(widget.named))
         if (query.isEmpty || (item.name ?? '').toLowerCase().contains(query)) item,
     ];
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      padding: EdgeInsets.only(bottom: keyboard),
       child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.7,
+        height: (MediaQuery.sizeOf(context).height - keyboard) * 0.7,
         child: Column(
           children: [
             Padding(
@@ -155,7 +156,11 @@ class _ChatBazaarSheetState extends State<_ChatBazaarSheet> {
               ),
             ),
             Expanded(
-              child: ListView.builder(itemCount: rows.length, itemBuilder: (context, i) => _row(theme, dark, rows[i])),
+              child: ListView.builder(
+                padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+                itemCount: rows.length,
+                itemBuilder: (context, i) => _row(theme, dark, rows[i]),
+              ),
             ),
           ],
         ),

@@ -881,6 +881,16 @@ class ChatController extends ChangeNotifier {
     StatsController.chat.count('sent_${StatsController.chat.roomKind(roomId)}');
   }
 
+  void resend(ChatMessage failed) {
+    final list = _messages[failed.roomId];
+    if (list == null || !list.any((m) => m.id == failed.id && m.state == ChatMessageState.failed)) return;
+    _messages[failed.roomId] = [
+      for (final m in list)
+        if (m.id != failed.id) m,
+    ];
+    send(failed.content, to: failed.roomId);
+  }
+
   void replaceLocal(String roomId, bool Function(ChatMessage m) test, List<ChatMessage> lines) {
     final current = messagesFor(roomId);
     final list = [

@@ -333,7 +333,7 @@ class _ChatMessageTextState extends State<ChatMessageText> {
           Padding(
             padding: EdgeInsets.only(top: onlyLinks && link == links.first ? 2 : 6),
             child: link.isImage && link.warning == null
-                ? ChatImageCard(link: link, color: widget.color)
+                ? ChatImageCard(link: link, color: widget.color, roomId: widget.roomId)
                 : ChatScriptLink.of(link) != null
                 ? ChatScriptCard(link: link, color: widget.color)
                 : ChatLinkCard(
@@ -930,6 +930,8 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
+    useSafeArea: true,
+    constraints: BoxConstraints(maxWidth: 640, maxHeight: MediaQuery.sizeOf(context).height * 0.85),
     builder: (context) {
       Widget action(ChatSwipeAction a) => Expanded(
         child: InkWell(

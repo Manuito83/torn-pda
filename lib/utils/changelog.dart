@@ -204,6 +204,13 @@ List<_MVersion> _modernChangelog() => [
                 'Maximum loaded tabs, in Advanced browser settings, Memory. Tabs above the limit go to sleep and '
                 'load again when you tap them, which avoids blank pages with many tabs open.',
           ),
+          _MItem(
+            'Notifications: discreet notifications on a schedule',
+            detail:
+                'In Settings, under Discreet local notifications, turn on Schedule and pick the hours. '
+                'Notifications created by Torn PDA and its server alerts are discreet between those hours. '
+                'Torn private messages on iOS are not covered.',
+          ),
         ],
       ),
       _MSection(

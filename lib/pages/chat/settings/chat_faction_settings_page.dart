@@ -38,6 +38,12 @@ class ChatFactionSettingsPage extends StatelessWidget {
             value: prefs.factionRoster,
             onChanged: prefs.setFactionRoster,
           ),
+          SwitchListTile(
+            title: const Text("I'm a banker"),
+            subtitle: const Text('Money requests from other members get a button that opens the vault page filled in'),
+            value: prefs.factionBanker,
+            onChanged: prefs.setFactionBanker,
+          ),
           ChatFactionEventsSetting(prefs: prefs),
         ];
       },

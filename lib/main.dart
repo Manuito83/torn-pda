@@ -96,8 +96,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '4.0.0';
-const String androidCompilation = '691';
-const String iosCompilation = '691';
+const String androidCompilation = '693';
+const String iosCompilation = '693';
 
 const double kSplitScreenMinWidth = 800;
 

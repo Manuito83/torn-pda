@@ -2,6 +2,7 @@ import { onCall } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
+import { isDiscreetNow } from "./discreet";
 
 export const sendAssistMessage = onCall({
     region: 'us-east4',
@@ -115,7 +116,7 @@ export const sendAssistMessage = onCall({
         let title = `Attack assist request!`;
         let body = `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking ${attackName}!` +
             `${attackLevelAge}${attackLife}${estimatedStats}${exactStats}${ffsStats}${fairFight}`;
-        if (thisMember.discrete) {
+        if (isDiscreetNow(thisMember)) {
             title = `Assist`;
             body = `${attackLevelAge}`;
         }

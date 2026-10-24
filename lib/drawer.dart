@@ -979,6 +979,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
+      FirestoreHelper().syncDiscreetScheduleOffset();
 
       // Execute periodic tasks
       Get.find<PeriodicExecutionController>().checkAndExecuteTasks();
@@ -2671,6 +2672,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!Platform.isWindows) {
       FirestoreHelper().uidCompleter.future.whenComplete(() {
         _updateLastActiveTime();
+        FirestoreHelper().syncDiscreetScheduleOffset();
       });
     }
 

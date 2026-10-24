@@ -65,7 +65,10 @@ class _SheetWatch extends NavigatorObserver {
   final VoidCallback changed;
 
   @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => changed();
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (route is PopupRoute) FocusManager.instance.primaryFocus?.unfocus();
+    changed();
+  }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => changed();
@@ -101,6 +104,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   SplitSide? _bigWindowSide;
   ModalRoute<dynamic>? _bigWindowRoute;
   Rect _area = Rect.zero;
+  Rect _areaNoKeyboard = Rect.zero;
   bool _menu = false;
   bool _menuRest = false;
   String? _pressed;
@@ -266,6 +270,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
             final safe = _safeOf(media);
             final areaBottom = media.size.height - math.max(safe.bottom, media.viewInsets.bottom + 12);
             _area = Rect.fromLTRB(safe.left, safe.top, media.size.width - safe.right, math.max(safe.top, areaBottom));
+            _areaNoKeyboard = Rect.fromLTRB(_area.left, _area.top, _area.right, media.size.height - safe.bottom);
             final covered = NativeChat.popupOnTop || NativeChat.dialOpen.value;
             final bigWindow = NativeChat.bigWindow.value;
             final showBubble =
@@ -506,7 +511,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final side = NativeChat.bigWindow.value?.side;
     if (_bigWin case final w? when side != null && side != _bigWindowSide) {
       final divider = splitDividerRect.value;
-      w.frame = ChatWindowFrame.fit(w.frame, ChatWindowFrame.panel(_area, divider, side), min: w.min);
+      w.frame = ChatWindowFrame.fit(w.frame, ChatWindowFrame.panel(_areaNoKeyboard, divider, side), min: w.min);
       _layer?.markNeedsBuild();
     }
     _bigWindowSide = side;
@@ -576,7 +581,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     const min = ChatWindowFrame.bigWindowMinSize;
     final divider = splitDividerRect.value;
     final side = divider == null ? null : NativeChat.bigWindow.value?.side ?? NativeChat.focusedSplitSide;
-    final panel = ChatWindowFrame.panel(_area, divider, side);
+    final panel = ChatWindowFrame.panel(_areaNoKeyboard, divider, side);
     final frame = ChatWindowFrame.fit(saved ?? _centered(const Size(360, 520), side), panel, min: min);
     return _float(frame, null, bigWindow: true);
   }
@@ -631,18 +636,20 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
 
   void _drag(_Floating w, Offset delta) {
     w.settle.stop();
-    final base = w.free ? w.frame : ChatWindowFrame.fit(w.frame, _area, min: w.min);
+    final room = w.bigWindow ? _areaNoKeyboard : _area;
+    final base = w.free ? w.frame : ChatWindowFrame.fit(w.frame, room, min: w.min);
     w.free = true;
-    w.frame = ChatWindowFrame.loose(base.shift(delta), _area, min: w.min);
+    w.frame = ChatWindowFrame.loose(base.shift(delta), room, min: w.min);
     _layer?.markNeedsBuild();
   }
 
   void _dragEnd(_Floating w, Velocity velocity, VoidCallback minimize) {
     final frame = w.frame;
+    final room = w.bigWindow ? _areaNoKeyboard : _area;
     final speed = velocity.pixelsPerSecond;
     final fling = speed.dx.abs() > 1200 && speed.dx.abs() > 2 * speed.dy.abs();
     if (!fling && ChatWindowFrame.outside(frame, _area) < 0.35) {
-      return _animateTo(w, ChatWindowFrame.fit(frame, _area, min: w.min), () {
+      return _animateTo(w, ChatWindowFrame.fit(frame, room, min: w.min), () {
         w.free = false;
         _save(w);
       });
@@ -651,20 +658,21 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final left = right ? _area.right + 24 : _area.left - frame.width - 24;
     _animateTo(w, Rect.fromLTWH(left, frame.top, frame.width, frame.height), () {
       w.free = false;
-      w.frame = ChatWindowFrame.fit(frame, _area, min: w.min);
+      w.frame = ChatWindowFrame.fit(frame, room, min: w.min);
       _save(w);
       minimize();
     });
   }
 
   void _resize(_Floating w, Offset delta) {
-    final frame = ChatWindowFrame.fit(w.frame, _area, min: w.min);
+    final room = w.bigWindow ? _areaNoKeyboard : _area;
+    final frame = ChatWindowFrame.fit(w.frame, room, min: w.min);
     final min = w.min;
     w.frame = Rect.fromLTWH(
       frame.left,
       frame.top,
-      (frame.width + delta.dx).clamp(math.min(min.width, _area.width), _area.right - frame.left).toDouble(),
-      (frame.height + delta.dy).clamp(math.min(min.height, _area.height), _area.bottom - frame.top).toDouble(),
+      (frame.width + delta.dx).clamp(math.min(min.width, room.width), room.right - frame.left).toDouble(),
+      (frame.height + delta.dy).clamp(math.min(min.height, room.height), room.bottom - frame.top).toDouble(),
     );
     w.preset = null;
     _layer?.markNeedsBuild();
@@ -718,11 +726,10 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   Widget _bigWindowView(ChatBigWindow bigWindow) {
     final w = _bigWin ??= _createBigWindow();
     final full = bigWindow.full;
-    final shown = full
-        ? _area
-        : (w.free
-              ? ChatWindowFrame.loose(w.frame, _area, min: w.min)
-              : ChatWindowFrame.fit(w.frame, _area, min: w.min));
+    final placed = w.free
+        ? ChatWindowFrame.loose(w.frame, _areaNoKeyboard, min: w.min)
+        : ChatWindowFrame.fit(w.frame, _areaNoKeyboard, min: w.min);
+    final shown = full ? _area : ChatWindowFrame.aboveKeyboard(placed, _area);
     return Positioned.fromRect(
       key: const ValueKey(NativeChat.bigWindowId),
       rect: shown,

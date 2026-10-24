@@ -32,6 +32,7 @@ class ChatWindowFrame {
 
   static const Size minSize = Size(220, 200);
   static const Size bigWindowMinSize = Size(280, 360);
+  static const double keyboardMinHeight = 250;
 
   /// [area] on [side] of the divider
   static Rect panel(Rect area, Rect? divider, SplitSide? side) => switch ((divider, side)) {
@@ -49,6 +50,13 @@ class ChatWindowFrame {
       width,
       height,
     );
+  }
+
+  /// Shrinks over a keyboard, then rises
+  static Rect aboveKeyboard(Rect frame, Rect area) {
+    if (frame.bottom <= area.bottom) return frame;
+    final height = math.min(area.height, math.max(keyboardMinHeight, area.bottom - frame.top));
+    return Rect.fromLTWH(frame.left, area.bottom - height, frame.width, height);
   }
 
   /// Like [fit] but free to leave sideways

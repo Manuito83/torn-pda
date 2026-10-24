@@ -44,6 +44,29 @@ class ChatLauncherSettingsPage extends StatelessWidget {
             value: prefs.shortcuts,
             onChanged: NativeChat.setShortcuts,
           ),
+          ListTile(
+            title: const Text('Chat icon on Torn profiles'),
+            subtitle: Text(
+              prefs.profileIcon == ChatProfileIcon.pda
+                  ? 'Opens a private chat window in Torn PDA'
+                  : 'Opens the chat on Torn\'s own page',
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<ChatProfileIcon>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: ChatProfileIcon.pda, label: Text('Torn PDA')),
+                  ButtonSegment(value: ChatProfileIcon.torn, label: Text('Torn')),
+                ],
+                selected: {prefs.profileIcon},
+                onSelectionChanged: (v) => prefs.setProfileIcon(v.first),
+              ),
+            ),
+          ),
           if (prefs.launcher == ChatLauncher.bubble) ...const [
             ChatGlowSettings(),
             ChatSettingsNote('Same as ticker follows the ticker levels in Alerts'),

@@ -17,6 +17,7 @@ import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/torn-pda-native/stats/app_settings_daily.dart';
+import 'package:torn_pda/utils/discreet_schedule.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
@@ -127,7 +128,12 @@ class FirestoreHelper {
       payload["tokenErrors"] = 0;
     }
 
+    final schedule = await Prefs().getDiscreetSchedule();
+    final offset = DateTime.now().timeZoneOffset.inMinutes;
+    if (schedule.enabled) payload["discreetSchedule"] = schedule.toFirestore(offset);
+
     await playerDoc.set(payload, SetOptions(merge: true));
+    if (schedule.enabled) await Prefs().setDiscreetScheduleSynced(offset);
 
     // Mark synced only after a successful write (windows uses a placeholder token)
     if (validToken && !Platform.isWindows) {
@@ -167,6 +173,28 @@ class FirestoreHelper {
     return _updateAlertField("discrete", {
       "discrete": discreet, // Legacy field name (typo kept for compatibility)
     });
+  }
+
+  Future<bool> uploadDiscreetSchedule(DiscreetSchedule schedule) async {
+    final offset = DateTime.now().timeZoneOffset.inMinutes;
+    final success = await _updateAlertField("discreetSchedule", {"discreetSchedule": schedule.toFirestore(offset)});
+    if (success) {
+      await Prefs().setDiscreetScheduleSynced(offset);
+    } else {
+      await Prefs().setDiscreetSchedulePending();
+    }
+    return success;
+  }
+
+  Future<void> syncDiscreetScheduleOffset() async {
+    final schedule = await Prefs().getDiscreetSchedule();
+    final needsSync = discreetScheduleNeedsSync(
+      schedule,
+      offset: DateTime.now().timeZoneOffset.inMinutes,
+      uploadedOffset: await Prefs().getDiscreetScheduleOffsetSynced(),
+      pending: await Prefs().getDiscreetSchedulePending(),
+    );
+    if (needsSync) await uploadDiscreetSchedule(schedule);
   }
 
   Future<bool> subscribeToTravelNotification(bool? subscribe) {

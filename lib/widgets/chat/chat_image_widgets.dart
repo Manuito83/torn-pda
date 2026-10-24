@@ -5,15 +5,112 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
+import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
+import 'package:torn_pda/pages/chat/settings/chat_upload_settings_page.dart';
+import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
-import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/utils/download_error.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
+
+class ChatUploadSetupNotice extends StatelessWidget {
+  const ChatUploadSetupNotice({super.key, required this.host, this.blockedMessage, this.excluded, this.onPicked});
+
+  final ChatImageHost host;
+
+  final String? blockedMessage;
+
+  final ChatImageHost? excluded;
+
+  /// After a pick or a saved key
+  final VoidCallback? onPicked;
+
+  /// A blocked service is not offered again
+  static List<ChatImageHost> choices({ChatImageHost? excluded}) => [
+    for (final h in ChatImageHost.values)
+      if (h != excluded) h,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final small = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final blocked = blockedMessage != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          blocked ? 'Could not upload the image' : 'Images need an upload service',
+          style: theme.textTheme.labelLarge,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          blockedMessage ?? '${host.label} needs its ${host.credentialName} first. Pick a service',
+          style: small,
+        ),
+        if (blocked) Text('Try another one:', style: small),
+        for (final h in choices(excluded: blocked ? host : excluded))
+          Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                !blocked && h == host ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                size: 20,
+              ),
+              title: Text(h.label),
+              subtitle: Text(
+                '${h.note} - up to ${h.maxMegabytes} MB',
+                style: small,
+              ),
+              onTap: () {
+                NativeChat.prefs.setImageHost(h);
+                onPicked?.call();
+              },
+            ),
+          ),
+        Wrap(
+          children: [
+            if (!blocked && host.needsCredential)
+              TextButton.icon(
+                onPressed: () async {
+                  await ChatUploadSettingsPage.editCredential(context, host);
+                  onPicked?.call();
+                },
+                icon: const Icon(Icons.key_rounded, size: 18),
+                label: Text('Paste the ${host.credentialName}'),
+              ),
+            if (!blocked && host.needsCredential)
+              TextButton.icon(
+                onPressed: () => ChatUploadSettingsPage.openRegister(host),
+                icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                label: Text('Register at ${host.label}'),
+              ),
+            TextButton.icon(
+              onPressed: () {
+                NativeChat.hideQuickWindows();
+                final navigator = NativeChat.navigatorKey?.currentState ?? Navigator.of(context);
+                showChatSettings(navigator, imageUpload: true);
+              },
+              icon: const Icon(Icons.tune_rounded, size: 18),
+              label: const Text('Image upload settings'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
 class ChatImages {
   ChatImages._();
@@ -34,11 +131,21 @@ class ChatImages {
     ),
   );
 
-  static bool autoLoads(ChatLink link) => switch (NativeChat.prefs.imageAutoLoad) {
-    ChatImageAutoLoad.never => false,
-    ChatImageAutoLoad.torn => link.isTorn,
-    ChatImageAutoLoad.always => true,
-  };
+  // Hosts here can see the viewer's IP
+  static final RegExp autoLoadHosts = RegExp(
+    r'^(i\.imgur\.com|i\.ibb\.co|files\.catbox\.moe|litter\.catbox\.moe|media\.tenor\.com'
+    r'|media\d*\.giphy\.com|cdn\.discordapp\.com|media\.discordapp\.net)$',
+  );
+
+  /// Anything unsure counts as public
+  static bool closedRoom(ChatRoom? room) =>
+      room != null && (room.isDm || room.type == ChatRoomType.custom || room.id == 'faction' || room.id == 'company');
+
+  static bool autoLoads(ChatLink link, ChatRoom? room) {
+    final prefs = NativeChat.prefs;
+    if (!(closedRoom(room) ? prefs.imagesPrivate : prefs.imagesPublic)) return false;
+    return link.isTorn || autoLoadHosts.hasMatch(link.uri.host.toLowerCase());
+  }
 
   static Uint8List? cached(String url) {
     final bytes = _cache.remove(url);
@@ -76,10 +183,11 @@ class ChatImages {
 }
 
 class ChatImageCard extends StatefulWidget {
-  const ChatImageCard({super.key, required this.link, required this.color});
+  const ChatImageCard({super.key, required this.link, required this.color, this.roomId});
 
   final ChatLink link;
   final Color color;
+  final String? roomId;
 
   @override
   State<ChatImageCard> createState() => _ChatImageCardState();
@@ -91,15 +199,20 @@ class _ChatImageCardState extends State<ChatImageCard> {
   @override
   void initState() {
     super.initState();
-    if (ChatImages.shown.contains(widget.link.url) || ChatImages.autoLoads(widget.link)) _show();
+    if (ChatImages.shown.contains(widget.link.url) || _auto) _show();
   }
+
+  bool get _auto => ChatImages.autoLoads(
+    widget.link,
+    widget.roomId == null ? null : NativeChat.controller.roomById(widget.roomId!),
+  );
 
   @override
   void didUpdateWidget(ChatImageCard old) {
     super.didUpdateWidget(old);
     if (old.link.url == widget.link.url) return;
     _bytes = null;
-    if (ChatImages.shown.contains(widget.link.url) || ChatImages.autoLoads(widget.link)) _show();
+    if (ChatImages.shown.contains(widget.link.url) || _auto) _show();
   }
 
   void _show() {
@@ -199,7 +312,9 @@ class _ChatImageCardState extends State<ChatImageCard> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _card(
-            title: 'Could not load the image',
+            title: describeDownloadError(snapshot.error!).blocked
+                ? 'The site may be blocked in your country'
+                : 'Could not load the image',
             onTap: () => NativeChat.openLink(widget.link.url),
             action: IconButton(
               tooltip: 'Retry',
@@ -302,19 +417,21 @@ class _ChatImageViewerState extends State<ChatImageViewer> {
     try {
       final segments = widget.link.uri.pathSegments.where((s) => s.isNotEmpty);
       final name = (segments.isEmpty ? 'image.png' : segments.last).replaceAll(RegExp(r'[^\w.-]'), '_');
-      final temp = '${(await getTemporaryDirectory()).path}/downloads';
-      final folder = share
-          ? temp
-          : Platform.isAndroid
-          ? (await getDownloadsDirectory())?.path ?? temp
-          : (await getApplicationDocumentsDirectory()).path;
-      final file = await File('$folder/$name').create(recursive: true);
-      await file.writeAsBytes(widget.bytes);
       if (share) {
+        final folder = '${(await getTemporaryDirectory()).path}/downloads';
+        final file = await File('$folder/$name').create(recursive: true);
+        await file.writeAsBytes(widget.bytes);
         await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], sharePositionOrigin: origin));
       } else {
-        chatToast(Platform.isIOS ? 'Downloaded in app folder as $name' : 'Downloaded as ${file.path}', seconds: 4);
+        await Gal.putImageBytes(widget.bytes, name: name.replaceFirst(RegExp(r'\.[^.]*$'), ''));
+        chatToast('Saved to gallery', seconds: 2);
       }
+    } on GalException catch (e) {
+      chatToast(switch (e.type) {
+        GalExceptionType.accessDenied => 'No access to the gallery. Allow it in the system settings',
+        GalExceptionType.notEnoughSpace => 'Not enough space to save the image',
+        _ => 'Could not save the image',
+      }, seconds: 4);
     } catch (_) {
       chatToast('Could not save the image', seconds: 3);
     }

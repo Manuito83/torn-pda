@@ -81,6 +81,7 @@ class _ChatAlertsSheet extends StatelessWidget {
                             : 'Mentions of ${chat.myName} and your highlight words show up here while the app is open',
                       )
                     : ListView.separated(
+                        padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
                         itemCount: alerts.length,
                         separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
                         itemBuilder: (context, index) => _alertTile(context, alerts[index]),
@@ -645,6 +646,16 @@ class ChatTickerSettings extends StatelessWidget {
   }
 }
 
+class ChatRoomGlyphBox extends StatelessWidget {
+  const ChatRoomGlyphBox(this.room, {super.key, this.size = 24});
+
+  final ChatRoom room;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(dimension: size, child: ChatRoomGlyph.of(room, size: size));
+}
+
 class ChatGroupLevelRow extends StatelessWidget {
   const ChatGroupLevelRow({super.key, required this.group, required this.level, required this.onChanged});
 
@@ -658,7 +669,10 @@ class ChatGroupLevelRow extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
         children: [
-          SizedBox(width: 32, child: ChatRoomGlyph.of(NativeChat.controller.roomById(group), size: 22)),
+          SizedBox(
+            width: 32,
+            child: Center(child: ChatRoomGlyphBox(NativeChat.controller.roomById(group), size: 22)),
+          ),
           Expanded(child: Text(ChatRooms.labelOf(group))),
           SegmentedButton<ChatAlertLevel>(
             showSelectedIcon: false,

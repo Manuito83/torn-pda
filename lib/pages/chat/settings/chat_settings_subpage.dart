@@ -16,7 +16,7 @@ class ChatSettingsSubpage extends StatelessWidget {
       body: ListenableBuilder(
         listenable: Listenable.merge([NativeChat.prefs, NativeChat.controller]),
         builder: (context, _) => ListView(
-          padding: const EdgeInsets.only(top: 6, bottom: 24),
+          padding: EdgeInsets.only(top: 6, bottom: 24 + MediaQuery.paddingOf(context).bottom),
           children: [if (description != null) ChatSettingsNote(description!), ...builder(context)],
         ),
       ),

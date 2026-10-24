@@ -103,7 +103,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
     label: picked.label,
   );
   try {
-    await scheduleChatReminder(reminder, discreet: settings.discreetNotifications);
+    await scheduleChatReminder(reminder);
   } catch (_) {
     if (context.mounted) tell('Could not set the reminder');
     return;

@@ -40,6 +40,7 @@ Future<ChatRoom?> showChatRoomPicker(BuildContext context, ChatController chat, 
                     .toList();
                 return ListView.builder(
                   controller: scroll,
+                  padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
                   itemCount: targets.length,
                   itemBuilder: (context, index) {
                     final room = targets[index];

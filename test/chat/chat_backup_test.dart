@@ -59,6 +59,7 @@ void main() {
       ..setBubbleRoom('global', true)
       ..setBubbleTotal(true)
       ..setLauncher(ChatLauncher.menuBar)
+      ..setProfileIcon(ChatProfileIcon.torn)
       ..setTicker(false)
       ..setTickerTop(false)
       ..setTickerTap(ChatTickerTap.expand)
@@ -69,7 +70,8 @@ void main() {
       ..setGlowLevel('faction', ChatAlertLevel.none)
       ..setGlowLevel('global', ChatAlertLevel.all)
       ..setWaitingHours(12)
-      ..setImageAutoLoad(ChatImageAutoLoad.never)
+      ..setImagesPrivate(false)
+      ..setImagesPublic(true)
       ..setLinkPreviews(ChatImageAutoLoad.always)
       ..setLinkWindow(false)
       ..setLinkNewTab(true)
@@ -121,6 +123,7 @@ void main() {
     expect(target.roomState('global'), ChatRoomState.frozen);
     expect((target.isMuted('faction'), target.isMuted('company')), (true, false));
     expect(target.frozenUntilOf('poker'), isNull);
+    expect(target.profileIcon, ChatProfileIcon.torn);
 
     final restarted = ChatPrefs();
     addTearDown(restarted.dispose);

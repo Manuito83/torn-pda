@@ -10,6 +10,8 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/models/trades/trade_price_provider.dart';
+import 'package:torn_pda/utils/background_prefs.dart';
+import 'package:torn_pda/utils/discreet_schedule.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
@@ -123,6 +125,11 @@ class Prefs {
   final String _kDynamicAppIconsManual = "pda_dynamicAppIconsManual";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
+  final String _kDiscreetSchedule = "pda_discreetSchedule";
+  final String _kDiscreetScheduleFrom = "pda_discreetScheduleFrom";
+  final String _kDiscreetScheduleTo = "pda_discreetScheduleTo";
+  final String _kDiscreetScheduleOffsetSynced = "pda_discreetScheduleOffsetSynced";
+  final String _kDiscreetSchedulePending = "pda_discreetSchedulePending";
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDrawerSectionOrder = "pda_drawerSectionOrder";
@@ -442,6 +449,10 @@ class Prefs {
   final String _kNativeChatEnabled = "pda_nativeChatEnabled";
   final String _kNativeChatBubbleRooms = "pda_nativeChatBubbleRooms";
   final String _kNativeChatBubbleTotal = "pda_nativeChatBubbleTotal";
+  final String _kNativeChatEnterSendsHardware = "pda_nativeChatEnterSendsHardware";
+  final String _kNativeChatEnterSendsSoft = "pda_nativeChatEnterSendsSoft";
+  final String _kNativeChatFactionBanker = "pda_nativeChatFactionBanker";
+  final String _kNativeChatProfileIcon = "pda_nativeChatProfileIcon";
   final String _kNativeChatPinned = "pda_nativeChatPinned";
   final String _kNativeChatHiddenRooms = "pda_nativeChatHiddenRooms";
   final String _kNativeChatArchived = "pda_nativeChatArchived";
@@ -537,11 +548,14 @@ class Prefs {
   final String _kNativeChatBigWindow = "pda_nativeChatBigWindow";
   final String _kNativeChatBubbleSpot = "pda_nativeChatBubbleSpot";
   final String _kNativeChatImageAutoLoad = "pda_nativeChatImageAutoLoad";
+  final String _kNativeChatImagesPrivate = "pda_nativeChatImagesPrivate";
+  final String _kNativeChatImagesPublic = "pda_nativeChatImagesPublic";
   final String _kNativeChatLinkPreviews = "pda_nativeChatLinkPreviews";
   final String _kNativeChatLinkWindow = "pda_nativeChatLinkWindow";
   final String _kNativeChatLinkNewTab = "pda_nativeChatLinkNewTab";
   final String _kNativeChatSwipeLeft = "pda_nativeChatSwipeLeft";
   final String _kChatImageHost = "pda_chatImageHost";
+  final String _kChatImgbbExpiration = "pda_chatImgbbExpiration";
   final String _kChatImgurClientId = "pda_chatImgurClientId";
   final String _kChatImgbbKey = "pda_chatImgbbKey";
   final String _kChatCatboxUserhash = "pda_chatCatboxUserhash";
@@ -831,6 +845,9 @@ class Prefs {
 
     await prefs.setBool(_kTornChatDmPush, await PrefsDatabase.getBool(_kTornChatDmPush, true));
     await prefs.setString(_kVibrationPattern, await PrefsDatabase.getString(_kVibrationPattern, 'medium'));
+
+    await BackgroundPrefs().setDiscreetNotifications(await getDiscreetNotifications());
+    await BackgroundPrefs().setDiscreetSchedule(await getDiscreetSchedule());
 
     final activeShortcuts = await PrefsDatabase.getStringList(_kActiveShortcutsList, <String>[]);
     final existingShortcuts = await prefs.getStringList(_kActiveShortcutsList);
@@ -1374,7 +1391,41 @@ class Prefs {
   }
 
   Future setDiscreetNotifications(bool value) async {
+    await BackgroundPrefs().setDiscreetNotifications(value);
     return await PrefsDatabase.setBool(_kDiscreetNotifications, value);
+  }
+
+  Future<DiscreetSchedule> getDiscreetSchedule() async {
+    const fallback = DiscreetSchedule();
+    return DiscreetSchedule(
+      enabled: await PrefsDatabase.getBool(_kDiscreetSchedule, false),
+      from: await PrefsDatabase.getInt(_kDiscreetScheduleFrom, fallback.from),
+      to: await PrefsDatabase.getInt(_kDiscreetScheduleTo, fallback.to),
+    );
+  }
+
+  Future setDiscreetSchedule(DiscreetSchedule value) async {
+    await BackgroundPrefs().setDiscreetSchedule(value);
+    await PrefsDatabase.setBool(_kDiscreetSchedule, value.enabled);
+    await PrefsDatabase.setInt(_kDiscreetScheduleFrom, value.from);
+    await PrefsDatabase.setInt(_kDiscreetScheduleTo, value.to);
+  }
+
+  Future<int?> getDiscreetScheduleOffsetSynced() async {
+    return int.tryParse(await PrefsDatabase.getString(_kDiscreetScheduleOffsetSynced, ""));
+  }
+
+  Future<bool> getDiscreetSchedulePending() async {
+    return await PrefsDatabase.getBool(_kDiscreetSchedulePending, false);
+  }
+
+  Future setDiscreetScheduleSynced(int offset) async {
+    await PrefsDatabase.setString(_kDiscreetScheduleOffsetSynced, offset.toString());
+    return await PrefsDatabase.setBool(_kDiscreetSchedulePending, false);
+  }
+
+  Future setDiscreetSchedulePending() async {
+    return await PrefsDatabase.setBool(_kDiscreetSchedulePending, true);
   }
 
   /// ----------------------------
@@ -3551,6 +3602,38 @@ class Prefs {
     return await PrefsDatabase.setBool(_kNativeChatBubbleTotal, value);
   }
 
+  Future<bool> getNativeChatEnterSendsHardware() async {
+    return await PrefsDatabase.getBool(_kNativeChatEnterSendsHardware, true);
+  }
+
+  Future setNativeChatEnterSendsHardware(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatEnterSendsHardware, value);
+  }
+
+  Future<bool> getNativeChatEnterSendsSoft() async {
+    return await PrefsDatabase.getBool(_kNativeChatEnterSendsSoft, false);
+  }
+
+  Future setNativeChatEnterSendsSoft(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatEnterSendsSoft, value);
+  }
+
+  Future<bool> getNativeChatFactionBanker() async {
+    return await PrefsDatabase.getBool(_kNativeChatFactionBanker, false);
+  }
+
+  Future setNativeChatFactionBanker(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatFactionBanker, value);
+  }
+
+  Future<String> getNativeChatProfileIcon() async {
+    return await PrefsDatabase.getString(_kNativeChatProfileIcon, '');
+  }
+
+  Future setNativeChatProfileIcon(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatProfileIcon, value);
+  }
+
   Future<List<String>> getNativeChatPinned() async {
     return await PrefsDatabase.getStringList(_kNativeChatPinned, <String>[]);
   }
@@ -3785,12 +3868,25 @@ class Prefs {
     return await PrefsDatabase.setBool(_kNativeChatTickerTop, value);
   }
 
+  // Old setting, only read to migrate
   Future<String> getNativeChatImageAutoLoad() async {
     return await PrefsDatabase.getString(_kNativeChatImageAutoLoad, "torn");
   }
 
-  Future setNativeChatImageAutoLoad(String value) async {
-    return await PrefsDatabase.setString(_kNativeChatImageAutoLoad, value);
+  Future<bool> getNativeChatImagesPrivate(bool defaultValue) async {
+    return await PrefsDatabase.getBool(_kNativeChatImagesPrivate, defaultValue);
+  }
+
+  Future setNativeChatImagesPrivate(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatImagesPrivate, value);
+  }
+
+  Future<bool> getNativeChatImagesPublic(bool defaultValue) async {
+    return await PrefsDatabase.getBool(_kNativeChatImagesPublic, defaultValue);
+  }
+
+  Future setNativeChatImagesPublic(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatImagesPublic, value);
   }
 
   Future<String> getNativeChatLinkPreviews() async {
@@ -3834,11 +3930,19 @@ class Prefs {
   }
 
   Future<String> getChatImageHost() async {
-    return await PrefsDatabase.getString(_kChatImageHost, "imgur");
+    return await PrefsDatabase.getString(_kChatImageHost, "");
   }
 
   Future setChatImageHost(String value) async {
     return await PrefsDatabase.setString(_kChatImageHost, value);
+  }
+
+  Future<int> getChatImgbbExpiration() async {
+    return await PrefsDatabase.getInt(_kChatImgbbExpiration, 0);
+  }
+
+  Future setChatImgbbExpiration(int value) async {
+    return await PrefsDatabase.setInt(_kChatImgbbExpiration, value);
   }
 
   Future<String> getChatImgbbKey() async {

@@ -54,16 +54,17 @@ class ChatMessagesSettingsPage extends StatelessWidget {
       builder: (context) {
         final prefs = NativeChat.prefs;
         return [
-          _loadChoice(
-            context,
-            'Load linked images',
-            prefs.imageAutoLoad,
-            prefs.setImageAutoLoad,
-            switch (prefs.imageAutoLoad) {
-              ChatImageAutoLoad.never => 'Every image waits until you tap Show',
-              ChatImageAutoLoad.torn => 'Images from torn.com load by themselves, other sites wait until you tap Show',
-              ChatImageAutoLoad.always => 'Images from any site load by themselves. Other sites see your IP address',
-            },
+          SwitchListTile(
+            title: const Text('Load images in private chats'),
+            subtitle: const Text('Private chats, faction, company and groups. Known sites only, others wait for a tap'),
+            value: prefs.imagesPrivate,
+            onChanged: prefs.setImagesPrivate,
+          ),
+          SwitchListTile(
+            title: const Text('Load images in public channels'),
+            subtitle: const Text('Global, Trade and other public rooms. Known sites only, others wait for a tap'),
+            value: prefs.imagesPublic,
+            onChanged: prefs.setImagesPublic,
           ),
           _loadChoice(context, 'Link previews', prefs.linkPreviews, prefs.setLinkPreviews, switch (prefs.linkPreviews) {
             ChatImageAutoLoad.never => 'Every preview waits until you tap it',

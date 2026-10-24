@@ -2,6 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
+import { isDiscreetNow } from "./discreet";
 
 const LOOT_RANGERS_DEFAULT_AHEAD = 180; // seconds (3 minutes)
 const LOOT_RANGERS_BUCKETS = [180, 360, 600];
@@ -120,11 +121,12 @@ export const sendLootRangersNotification = onSchedule({
         continue;
       }
 
+      const discreet = isDiscreetNow(sub);
       promises.push(
         sendNotificationToUser({
           token: sub.token,
-          title: sub.discrete ? discreetTitle : fullTitle,
-          body: sub.discrete ? discreetSubtitle : fullSubtitle,
+          title: discreet ? discreetTitle : fullTitle,
+          body: discreet ? discreetSubtitle : fullSubtitle,
           icon: "notification_loot",
           color: "#FF0000",
           channelId: "Alerts loot",

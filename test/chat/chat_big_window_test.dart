@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,9 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_big_window.dart';
 import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
+import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
+import 'package:torn_pda/widgets/chat/chat_slot_sheet.dart';
+import 'package:torn_pda/widgets/chat/chat_status_sheet.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
 
@@ -308,6 +312,85 @@ void main() {
       expect(tester.getRect(_bigWindowView), frame);
     });
 
+    testWidgets('over a rising keyboard it shrinks in place and gets its size back', (tester) async {
+      const dpr = 2.625;
+      tester.view.physicalSize = const Size(1080, 2424);
+      tester.view.devicePixelRatio = dpr;
+      addTearDown(tester.view.reset);
+      await _pumpApp(tester);
+      NativeChat.openBigWindow();
+      await _settle(tester);
+      final window = tester.state(_bigWindowView);
+      final frame = tester.getRect(_bigWindowView);
+      final saved = [...NativeChat.prefs.bigWindow];
+      final screen = tester.view.physicalSize.height / dpr;
+
+      for (var inset = 0.0; inset <= 500; inset += 20) {
+        tester.view.viewInsets = FakeViewPadding(bottom: inset * dpr);
+        await tester.pump(const Duration(milliseconds: 16));
+        final rect = tester.getRect(_bigWindowView);
+        expect(rect.top, frame.top);
+        expect(rect.bottom, moreOrLessEquals(math.min(frame.bottom, screen - inset - 12)));
+        expect(rect.width, frame.width);
+      }
+
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await _settle(tester);
+      expect(tester.getRect(_bigWindowView), frame);
+      expect(tester.state(_bigWindowView), same(window));
+      expect(NativeChat.prefs.bigWindow, saved);
+    });
+
+    testWidgets('dragged or resized over a keyboard it keeps the saved size', (tester) async {
+      const dpr = 2.625;
+      tester.view.physicalSize = const Size(1080, 2424);
+      tester.view.devicePixelRatio = dpr;
+      addTearDown(tester.view.reset);
+      await _pumpApp(tester);
+      NativeChat.openBigWindow();
+      await _settle(tester);
+      final frame = tester.getRect(_bigWindowView);
+      double savedHeight() => double.parse(NativeChat.prefs.bigWindow[5]);
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 400 * dpr);
+      await _settle(tester);
+      final shrunk = tester.getRect(_bigWindowView);
+      expect(shrunk.height, lessThan(frame.height));
+
+      final drag = await tester.startGesture(shrunk.topLeft + const Offset(40, 20));
+      await drag.moveBy(const Offset(0, 30));
+      await tester.pump();
+      await drag.moveBy(const Offset(0, 30));
+      await tester.pump();
+      expect(tester.getRect(_bigWindowView).top, moreOrLessEquals(shrunk.top + 60, epsilon: 20));
+      await drag.moveBy(const Offset(0, -60));
+      await drag.up();
+      await _settle(tester);
+      await _settle(tester);
+      expect(savedHeight(), frame.height);
+
+      await tester.dragFrom(tester.getRect(_bigWindowView).bottomRight - const Offset(8, 8), const Offset(0, -30));
+      await _settle(tester);
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await _settle(tester);
+      expect(savedHeight(), moreOrLessEquals(frame.height - 30, epsilon: 20));
+      expect(tester.getRect(_bigWindowView).height, savedHeight());
+    });
+
+    test('aboveKeyboard shrinks, rises, then fills', () {
+      const room = Rect.fromLTRB(8, 16, 400, 400);
+      const frame = Rect.fromLTWH(30, 200, 360, 520);
+      expect(ChatWindowFrame.aboveKeyboard(frame, room), const Rect.fromLTRB(30, 150, 390, 400));
+      expect(
+        ChatWindowFrame.aboveKeyboard(frame, const Rect.fromLTRB(8, 16, 400, 216)),
+        const Rect.fromLTRB(30, 16, 390, 216),
+      );
+      expect(
+        ChatWindowFrame.aboveKeyboard(const Rect.fromLTWH(30, 100, 360, 260), room),
+        const Rect.fromLTWH(30, 100, 360, 260),
+      );
+    });
+
     testWidgets('it moves and keeps a size fit for a list', (tester) async {
       await _pumpApp(tester);
       NativeChat.openBigWindow();
@@ -424,6 +507,36 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('sheet'), findsNothing);
       NativeChat.tornTabMissing.value = false;
+    });
+
+    testWidgets('the status sheet from the window closes the keyboard', (tester) async {
+      final fetch = chatStatusFetch;
+      addTearDown(() => chatStatusFetch = fetch);
+      chatStatusFetch = () async => null;
+      final typing = FocusNode();
+      addTearDown(typing.dispose);
+      await _pumpApp(tester, home: Scaffold(body: TextField(focusNode: typing, autofocus: true)));
+      NativeChat.openBigWindow();
+      await _settle(tester);
+      expect(typing.hasFocus, isTrue);
+
+      unawaited(showChatStatusSheet(tester.element(_bigWindowView), (_) {}));
+      await _settle(tester);
+      expect(find.text('Insert my status'), findsOneWidget);
+      expect(typing.hasFocus, isFalse);
+    });
+
+    testWidgets('a sheet with its own field keeps the keyboard', (tester) async {
+      await _pumpApp(tester, home: const Scaffold(body: TextField(autofocus: true)));
+      NativeChat.openBigWindow();
+      await _settle(tester);
+
+      unawaited(showChatSlotSheet(tester.element(_bigWindowView), 'Hi {name}', const {}, const ['name']));
+      await _settle(tester);
+      final field = tester.widget<EditableText>(
+        find.descendant(of: find.byType(ChatSlotSheet), matching: find.byType(EditableText)),
+      );
+      expect(field.focusNode.hasFocus, isTrue);
     });
   });
 

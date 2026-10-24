@@ -263,6 +263,10 @@ Future showNotificationBoth(Map payload, int notId) async {
 
     title = parts.isNotEmpty ? parts[0].trim() : "";
     body = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
+    if (await BackgroundPrefs().getDiscreetAt()) {
+      title = _discreetChatTitle;
+      body = _discreetChatBody;
+    }
   }
 
   final tone = ChatTone.decode('${payload["chatTone"]}') ?? const ChatTone(ChatSound.silent);
@@ -1084,6 +1088,8 @@ Future<void> scheduleAlarmGradeNotificationAndroid({
 }
 
 const String _kTornChatDm = 'tornChatDm';
+const String _discreetChatTitle = 'C';
+const String _discreetChatBody = ' ';
 const String _kTornChatReply = 'tchat_reply_action';
 
 Future<({int id, String key})> _ownAccount() async {
@@ -1168,12 +1174,14 @@ Future<bool> showTornChatNotification(Map<String, dynamic> data, {bool foregroun
   final tone = rules.toneFor(push.senderId);
   final own = await _ownAccount();
   final reply = own.key.isNotEmpty && await Prefs().getNativeChatReplyEnabled();
-  final android = await _tornChatAndroidDetails(push.message, reply: reply, tone: tone);
+  final discreet = await BackgroundPrefs().getDiscreetAt();
+  final body = discreet ? _discreetChatBody : push.message;
+  final android = await _tornChatAndroidDetails(body, reply: reply, tone: tone);
   // Same id as the in-app chat alert
   await flutterLocalNotificationsPlugin.show(
     677000 + ChatRoom.dmId(push.senderId).hashCode.abs() % 1000,
-    push.senderName,
-    push.message,
+    discreet ? _discreetChatTitle : push.senderName,
+    body,
     NotificationDetails(
       android: android,
       iOS: _tornChatIosDetails(tone, reply: reply),
@@ -1196,7 +1204,9 @@ Future<void> cancelChatNotifications() async {
   } catch (_) {}
 }
 
-Future<void> scheduleChatReminder(ChatReminder reminder, {bool discreet = false}) async {
+Future<void> scheduleChatReminder(ChatReminder reminder) async {
+  // Discreet is judged at fire time too
+  final discreet = await BackgroundPrefs().getDiscreetAt(reminder.at);
   final modifier = await getNotificationChannelsModifiers();
   final channelId = 'Chat reminders ${modifier.channelIdModifier}';
   await flutterLocalNotificationsPlugin.zonedSchedule(
@@ -1290,9 +1300,11 @@ Future<String> _tornChatReply(
 }
 
 Future<void> _showTornChatReplyStatus(int id, String name, String status, String? payload) async {
+  final discreet = await BackgroundPrefs().getDiscreetAt();
+  if (discreet && status.startsWith('Reply failed')) status = 'Reply failed';
   await flutterLocalNotificationsPlugin.show(
     id,
-    name,
+    discreet ? _discreetChatTitle : name,
     status,
     NotificationDetails(
       android: Platform.isAndroid ? await _tornChatAndroidDetails(status) : null,

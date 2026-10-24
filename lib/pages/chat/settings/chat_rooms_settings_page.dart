@@ -80,7 +80,7 @@ class ChatRoomsSettingsPage extends StatelessWidget {
           ),
           for (final id in rooms)
             ChatSettingsLink(
-              leading: ChatRoomGlyph.of(chat.roomById(id)),
+              leading: ChatRoomGlyphBox(chat.roomById(id)),
               title: ChatRooms.isKnown(id) ? ChatRooms.labelOf(id) : chat.roomById(id).name,
               subtitle: _state(id),
               onTap: () {
@@ -114,7 +114,7 @@ class ChatRoomsSettingsPage extends StatelessWidget {
           const ChatSettingsHeading('Unread counts shown'),
           for (final room in ChatPrefs.bubbleOptions)
             CheckboxListTile(
-              secondary: room == 'dm' ? Icon(chatRoomIcon(room)) : ChatRoomGlyph.of(chat.roomById(room)),
+              secondary: room == 'dm' ? Icon(chatRoomIcon(room)) : ChatRoomGlyphBox(chat.roomById(room)),
               title: Text(ChatRooms.labelOf(room)),
               subtitle: ChatPrefs.globalRooms.contains(room) ? const Text('Torn never marks it as read') : null,
               value: prefs.bubbleRooms.contains(room),

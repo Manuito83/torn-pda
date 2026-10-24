@@ -265,6 +265,7 @@ class _NewChatSheetState extends State<_NewChatSheet> {
                       subtitle: 'Check the spelling or try fewer letters',
                     )
                   : ListView(
+                      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
                       children: [
                         for (final user in results)
                           ListTile(

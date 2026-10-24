@@ -7,6 +7,7 @@ import 'package:torn_pda/pages/chat/settings/chat_messages_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_people_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_rooms_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
+import 'package:torn_pda/pages/chat/settings/chat_upload_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_writing_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -17,10 +18,13 @@ import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
-Future<void> showChatSettings(NavigatorState navigator, {bool alerts = false}) {
+Future<void> showChatSettings(NavigatorState navigator, {bool alerts = false, bool imageUpload = false}) {
   final opened = navigator.push(MaterialPageRoute(builder: (_) => const ChatTheme(child: ChatSettingsPage())));
   if (alerts) {
     navigator.push(MaterialPageRoute(builder: (_) => const ChatTheme(child: ChatAlertsSettingsPage())));
+  }
+  if (imageUpload) {
+    navigator.push(MaterialPageRoute(builder: (_) => const ChatTheme(child: ChatUploadSettingsPage())));
   }
   return opened;
 }

@@ -40,8 +40,8 @@ class ChatIconButton extends StatelessWidget {
 
   void _onTap(BuildContext context) {
     if (NativeChat.prefs.inAppEnabled) {
-      StatsController.chat.count('open_big_window');
-      NativeChat.openBigWindow(side: tabUid == null ? null : NativeChat.splitSideOfTab(tabUid!));
+      final opened = NativeChat.toggleBigWindow(side: tabUid == null ? null : NativeChat.splitSideOfTab(tabUid!));
+      if (opened) StatsController.chat.count('open_big_window');
     } else {
       _showChatIconMenu(context, this);
     }
@@ -61,37 +61,11 @@ class ChatIconButton extends StatelessWidget {
       final struck = hiddenInTab && !NativeChat.prefs.inAppEnabled;
       Widget icon = Icon(struck ? Icons.comments_disabled_outlined : Icons.chat_bubble_outline_rounded, color: color);
       if (unread > 0) {
-        icon = Badge.count(
-          count: unread,
-          maxCount: 99,
-          backgroundColor: Colors.red[400],
-          textColor: Colors.white,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              icon,
-              if (!NativeChat.prefs.bubbleTotal)
-                Positioned(
-                  right: -4,
-                  bottom: -3,
-                  child: Row(
-                    spacing: 2,
-                    children: [
-                      for (final group in ChatPrefs.bubbleOptions)
-                        if ((counts[group] ?? 0) > 0)
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: chatGroupColors(group, brightness).$1,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
+        icon = ChatIconWithBadge(
+          icon: icon,
+          unread: unread,
+          counts: NativeChat.prefs.bubbleTotal ? const {} : counts,
+          brightness: brightness,
         );
       }
       return Semantics(
@@ -103,7 +77,9 @@ class ChatIconButton extends StatelessWidget {
           if (hiddenInTab) 'Torn\'s chat hidden in this tab',
         ].join(', '),
         onTap: () => _onTap(context),
-        onTapHint: NativeChat.prefs.inAppEnabled ? 'open the chat window' : 'open the chat menu',
+        onTapHint: NativeChat.prefs.inAppEnabled
+            ? (NativeChat.bigWindowShown ? 'close the chat window' : 'open the chat window')
+            : 'open the chat menu',
         onLongPress: () => _showChatIconMenu(context, this),
         onLongPressHint: 'open the chat menu',
         customSemanticsActions: {
@@ -122,6 +98,76 @@ class ChatIconButton extends StatelessWidget {
         ),
       );
     },
+  );
+}
+
+String _badgeText(int count) => count > 99 ? '99+' : '$count';
+
+class ChatIconWithBadge extends StatelessWidget {
+  const ChatIconWithBadge({
+    super.key,
+    required this.icon,
+    required this.unread,
+    required this.counts,
+    required this.brightness,
+  });
+
+  final Widget icon;
+  final int unread;
+
+  /// Per group, empty to show only the total
+  final Map<String, int> counts;
+  final Brightness brightness;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 24,
+    height: 24,
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        icon,
+        Positioned(top: -6, right: -8, child: ChatIconBadge(unread)),
+        if (counts.isNotEmpty)
+          Positioned(
+            right: -4,
+            bottom: -3,
+            child: Row(
+              spacing: 2,
+              children: [
+                for (final group in ChatPrefs.bubbleOptions)
+                  if ((counts[group] ?? 0) > 0)
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(color: chatGroupColors(group, brightness).$1, shape: BoxShape.circle),
+                    ),
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+class ChatIconBadge extends StatelessWidget {
+  const ChatIconBadge(this.count, {super.key});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    alignment: Alignment.center,
+    decoration: ShapeDecoration(color: Colors.red[400], shape: const StadiumBorder()),
+    child: Text(
+      _badgeText(count),
+      maxLines: 1,
+      softWrap: false,
+      textScaler: TextScaler.noScaling,
+      style: TextStyle(color: Colors.white, fontSize: count > 9 ? 8 : 10, height: 1, fontWeight: FontWeight.w500),
+    ),
   );
 }
 

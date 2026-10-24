@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
+import 'package:torn_pda/providers/chat/chat_banking.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -20,6 +21,7 @@ import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chat/chat_bank_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_help.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_slot_sheet.dart';
@@ -30,12 +32,13 @@ import 'package:torn_pda/widgets/chat/native_chat.dart';
 enum _Tool { replies, price, player, tabs, scripts, wiki, help }
 
 class ChatComposeTools extends StatefulWidget {
-  const ChatComposeTools({super.key, required this.onInsert, this.onEmoji, this.chat, this.name});
+  const ChatComposeTools({super.key, required this.onInsert, this.onEmoji, this.chat, this.name, this.roomId});
 
   final ValueChanged<String> onInsert;
   final ValueChanged<String>? onEmoji;
   final ChatController? chat;
   final String? name;
+  final String? roomId;
 
   @override
   State<ChatComposeTools> createState() => _ChatComposeToolsState();
@@ -150,6 +153,11 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
     if (picked == null) return;
     final today = DateTime.now();
     widget.onInsert(ChatTimeRef.insertText(DateTime(today.year, today.month, today.day, picked.hour, picked.minute)));
+  }
+
+  Future<void> _requestMoney() async {
+    final text = await showChatBankRequest(context);
+    if (text != null && mounted) widget.onInsert(text);
   }
 
   void _onName(String text) {
@@ -387,6 +395,14 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
           label: const Text('Time'),
           visualDensity: VisualDensity.compact,
           onPressed: tap(_insertTime),
+        ),
+      ],
+      'bank' when ChatBanking.appliesTo(widget.roomId ?? '') => [
+        ActionChip(
+          avatar: const Icon(Icons.account_balance_outlined, size: 18),
+          label: const Text('Request money'),
+          visualDensity: VisualDensity.compact,
+          onPressed: tap(_requestMoney),
         ),
       ],
       'emoji' => _emojiChips(),
@@ -793,6 +809,7 @@ class ChatQuickActionsEditor extends StatelessWidget {
     'status': (Icons.monitor_heart_outlined, 'Status'),
     'wiki': (Icons.menu_book_outlined, 'Wiki'),
     'time': (Icons.schedule_rounded, 'Time'),
+    'bank': (Icons.account_balance_outlined, 'Request money'),
     'emoji': (Icons.add_reaction_outlined, 'Emojis'),
     'replies': (Icons.bolt_rounded, 'Quick replies'),
   };

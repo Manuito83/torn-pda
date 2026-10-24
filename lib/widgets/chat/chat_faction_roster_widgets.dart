@@ -156,6 +156,7 @@ class ChatFactionRosterSheet extends StatelessWidget {
               ),
               Expanded(
                 child: ListView.builder(
+                  padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
                   itemCount: members.length,
                   itemBuilder: (context, i) {
                     final m = members[i];

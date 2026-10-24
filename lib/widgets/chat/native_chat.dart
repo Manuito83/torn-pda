@@ -774,6 +774,22 @@ class NativeChat {
         ChatBigWindow(roomId: now?.roomId, full: now?.full ?? false, below: {...quickWindows.value}, side: side);
   }
 
+  /// False when it closed
+  static bool toggleBigWindow({SplitSide? side}) {
+    final now = bigWindow.value;
+    final sameSide = now?.side == null || side == null || now?.side == side;
+    if (now != null && !now.minimized && sameSide) {
+      if (quickWindows.value.every(now.below.contains)) {
+        closeBigWindow();
+        return false;
+      }
+      focusBigWindow();
+      return true;
+    }
+    openBigWindow(side: side);
+    return true;
+  }
+
   /// Conversation's Back, true when used
   static bool Function()? bigWindowConversationBack;
 

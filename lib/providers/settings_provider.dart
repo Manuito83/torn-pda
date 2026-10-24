@@ -20,6 +20,7 @@ import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/utils/discreet_schedule.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -335,10 +336,24 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _discreetNotifications = false;
-  bool get discreetNotifications => _discreetNotifications;
+
+  bool get discreetNotificationsOption => _discreetNotifications;
+
+  // Includes the schedule
+  bool get discreetNotifications =>
+      isDiscreetAt(always: _discreetNotifications, schedule: _discreetSchedule, time: DateTime.now());
   set discreetNotifications(bool value) {
     _discreetNotifications = value;
     Prefs().setDiscreetNotifications(value);
+    notifyListeners();
+  }
+
+  var _discreetSchedule = const DiscreetSchedule();
+  DiscreetSchedule get discreetSchedule => _discreetSchedule;
+  set discreetSchedule(DiscreetSchedule value) {
+    _discreetSchedule = value;
+    Prefs().setDiscreetSchedule(value);
+    FirestoreHelper().uploadDiscreetSchedule(value);
     notifyListeners();
   }
 
@@ -1930,6 +1945,7 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _discreetNotifications = await Prefs().getDiscreetNotifications();
+    _discreetSchedule = await Prefs().getDiscreetSchedule();
 
     _showDateInClock = await Prefs().getShowDateInClock();
     _showSecondsInClock = await Prefs().getShowSecondsInClock();

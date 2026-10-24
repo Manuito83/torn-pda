@@ -950,6 +950,63 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('picking Catbox in the upload notice shows the pickers', (tester) async {
+    NativeChat.prefs
+      ..imageHost = ChatImageHost.imgur
+      ..imgurClientId = '';
+    addTearDown(() => NativeChat.prefs.imageHost = ChatImageHost.imgur);
+    start();
+    await _show(tester, chat, const ChatConversationPage(roomId: 'global'));
+    _connect(source);
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Attach an image'));
+    await tester.pump();
+    expect(find.text('Gallery'), findsNothing);
+    await tester.tap(find.text('Catbox'));
+    await tester.pump();
+    expect(find.text('Gallery'), findsOneWidget);
+    expect(find.text('Files'), findsOneWidget);
+    await close(tester);
+  });
+
+  testWidgets('picking another service after a blocked upload clears the notice', (tester) async {
+    NativeChat.prefs
+      ..imageHost = ChatImageHost.imgur
+      ..imgurClientId = 'fake-client-id';
+    final pick = ChatImageUpload.pick;
+    final adapter = ChatImageUpload.dio.httpClientAdapter;
+    addTearDown(() {
+      ChatImageUpload.pick = pick;
+      ChatImageUpload.dio.httpClientAdapter = adapter;
+      NativeChat.prefs
+        ..imageHost = ChatImageHost.imgur
+        ..imgurClientId = '';
+    });
+    ChatImageUpload.pick = ({required bool fromFiles}) async =>
+        PlatformFile(name: 'a.png', size: 3, bytes: Uint8List.fromList([1, 2, 3]));
+    ChatImageUpload.dio.httpClientAdapter = _Host(451, {});
+    start();
+    await _show(tester, chat, const ChatConversationPage(roomId: 'global'));
+    _connect(source);
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Attach an image'));
+    await tester.pump();
+    await tester.tap(find.text('Gallery'));
+    for (var i = 0; i < 50 && find.text('Could not upload the image').evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+    expect(find.text('Could not upload the image'), findsOneWidget);
+    expect(find.text('imgur'), findsNothing);
+
+    await tester.tap(find.text('ImgBB'));
+    await tester.pump();
+    expect(find.text('Could not upload the image'), findsNothing);
+    expect(find.text('imgur'), findsNothing);
+    await close(tester);
+  });
+
   test('ImgBB and Catbox uploads and their errors', () async {
     final adapter = ChatImageUpload.dio.httpClientAdapter;
     addTearDown(() => ChatImageUpload.dio.httpClientAdapter = adapter);
@@ -993,7 +1050,17 @@ void main() {
       'ImgBB could not read that image',
     );
     await fails(ChatImageHost.imgbb, _Host(429, {}), 'ImgBB is limiting uploads right now, try again later');
-    await fails(ChatImageHost.imgbb, _Host(0, {}), 'Could not reach ImgBB, check the connection');
+    await fails(
+      ChatImageHost.imgbb,
+      _Host(0, {}),
+      'Could not reach ImgBB, check the connection. If it is fine, ImgBB may be blocked in your country',
+    );
+    for (final blocked in [_Host(451, {}), _Host(403, '<html>denied</html>')]) {
+      await expectLater(
+        up(ChatImageHost.imgbb, blocked, 'k'),
+        throwsA(isA<ChatUploadError>().having((e) => e.blocked, 'blocked', isTrue)),
+      );
+    }
     await fails(ChatImageHost.imgbb, _Host(200, {}), 'Add the ImgBB API key in the chat settings first', ' ');
     await expectLater(
       ChatImageUpload.upload(ChatImageHost.imgbb, Uint8List(ChatImageHost.imgbb.maxBytes + 1), 'big.png', 'k'),

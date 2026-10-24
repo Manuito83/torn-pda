@@ -36,7 +36,6 @@ class ChatBackup {
     this.listTextScale,
     this.bubbleRooms,
     this.waitingHours,
-    this.imageAutoLoad,
     this.linkPreviews,
     this.translateTo,
     this.switches = const {},
@@ -49,6 +48,7 @@ class ChatBackup {
     this.tickerLines,
     this.glowMode,
     this.launcher,
+    this.profileIcon,
     this.quietFrom,
     this.quietTo,
     this.quickOrder,
@@ -59,6 +59,7 @@ class ChatBackup {
     this.messageActionHidden,
     this.emojiFavorites,
     this.imageHost,
+    this.imgbbExpiration,
     this.muted,
   });
 
@@ -93,7 +94,6 @@ class ChatBackup {
   final double? listTextScale;
   final Set<String>? bubbleRooms;
   final int? waitingHours;
-  final ChatImageAutoLoad? imageAutoLoad;
 
   /// By ChatPrefs.switches name
   final Map<String, bool> switches;
@@ -106,6 +106,7 @@ class ChatBackup {
   final int? tickerLines;
   final ChatGlowMode? glowMode;
   final ChatLauncher? launcher;
+  final ChatProfileIcon? profileIcon;
   final int? quietFrom;
   final int? quietTo;
   final List<String>? quickOrder;
@@ -116,6 +117,7 @@ class ChatBackup {
   final Set<String>? messageActionHidden;
   final List<String>? emojiFavorites;
   final ChatImageHost? imageHost;
+  final int? imgbbExpiration;
 
   /// For good only, timed mutes stay out
   final Set<String>? muted;
@@ -160,7 +162,6 @@ class ChatBackup {
       'listTextScale': prefs.listTextScale,
       'bubbleRooms': prefs.bubbleRooms.toList(),
       'waitingHours': prefs.waitingHours,
-      'imageAutoLoad': prefs.imageAutoLoad.name,
       'linkPreviews': prefs.linkPreviews.name,
       'translateTo': prefs.translateTo,
       for (final e in prefs.switches.entries) e.key: e.value.$1,
@@ -173,6 +174,7 @@ class ChatBackup {
       'tickerLines': prefs.tickerLines,
       'glowMode': prefs.glowMode.name,
       'launcher': prefs.launcher.name,
+      'profileIcon': prefs.profileIcon.name,
       'quietFrom': prefs.quietFrom,
       'quietTo': prefs.quietTo,
       'quickOrder': prefs.quickOrder,
@@ -183,6 +185,7 @@ class ChatBackup {
       'messageActionHidden': prefs.messageActionHidden.toList(),
       'emojiFavorites': prefs.emojiFavorites,
       'imageHost': prefs.imageHost.name,
+      'imgbbExpiration': prefs.imgbbExpiration,
       'muted': prefs.muted.toList(),
     },
   });
@@ -274,10 +277,14 @@ class ChatBackup {
       waitingHours: prefs['waitingHours'] is int && (prefs['waitingHours'] as int) >= 0
           ? prefs['waitingHours'] as int
           : null,
-      imageAutoLoad: named('imageAutoLoad', ChatImageAutoLoad.values),
       linkPreviews: named('linkPreviews', ChatImageAutoLoad.values),
       translateTo: prefs['translateTo'] is String ? prefs['translateTo'] as String : null,
       switches: {
+        if (named('imageAutoLoad', ChatImageAutoLoad.values) case final old?)
+          if (ChatPrefs.imagesFromLegacy(old.name) case (final inPrivate, final inPublic)) ...{
+            'imagesPrivate': inPrivate,
+            'imagesPublic': inPublic,
+          },
         for (final e in prefs.entries)
           if ((e.key, e.value) case (final String name, final bool on)) name: on,
       },
@@ -290,6 +297,7 @@ class ChatBackup {
       tickerLines: option('tickerLines', ChatPrefs.tickerLinesOptions),
       glowMode: named('glowMode', ChatGlowMode.values),
       launcher: named('launcher', ChatLauncher.values),
+      profileIcon: named('profileIcon', ChatProfileIcon.values),
       quietFrom: minutes('quietFrom'),
       quietTo: minutes('quietTo'),
       quickOrder: strings('quickOrder'),
@@ -300,6 +308,7 @@ class ChatBackup {
       messageActionHidden: strings('messageActionHidden')?.toSet(),
       emojiFavorites: strings('emojiFavorites')?.toSet().toList(),
       imageHost: named('imageHost', ChatImageHost.values),
+      imgbbExpiration: option('imgbbExpiration', ChatPrefs.imgbbExpirationOptions),
       muted: strings('muted')?.where((r) => r.isNotEmpty).toSet(),
     );
   }

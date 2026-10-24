@@ -495,7 +495,7 @@ String openWebChatDmJS({required String userId}) {
         const root = document.getElementById("chatRoot");
         const ready = root && root.children.length > 0;
         if (ready) {
-          window.dispatchEvent(new CustomEvent("chat.openChannel", { detail: { userId: "$userId" } }));
+          window.dispatchEvent(new CustomEvent("chat.openChannel", { detail: { userId: "$userId", pda: true } }));
         }
         if (ready || tries > 20) {
           clearInterval(window.__pdaChatDmTimer);

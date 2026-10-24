@@ -1,3 +1,8 @@
+import 'dart:math' as math;
+import 'dart:ui' show FlutterView;
+
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
@@ -41,10 +46,106 @@ class ChatBigWindowView extends StatefulWidget {
   State<ChatBigWindowView> createState() => _ChatBigWindowViewState();
 }
 
+/// Field blurred before the keyboard settles
+class BigWindowKeyboardProbe with WidgetsBindingObserver {
+  BigWindowKeyboardProbe(this._send, {DateTime Function()? clock}) : _clock = clock ?? DateTime.now;
+
+  static BigWindowKeyboardProbe instance = BigWindowKeyboardProbe(
+    (reason) => FirebaseCrashlytics.instance.recordError(
+      StateError('Big window keyboard closed'),
+      StackTrace.current,
+      reason: reason,
+    ),
+  );
+
+  final void Function(String reason) _send;
+  final DateTime Function() _clock;
+  int conversations = 0;
+  DateTime? _since;
+  double _height = 0;
+  double _insetBefore = 0;
+  double _insetMax = 0;
+  int _metrics = 0;
+  final List<String> _states = [];
+  bool _sent = false;
+  bool _watching = false;
+
+  static FlutterView? get _view => WidgetsBinding.instance.platformDispatcher.implicitView;
+
+  static double get _inset => switch (_view) {
+    final view? => view.viewInsets.bottom / view.devicePixelRatio,
+    null => 0,
+  };
+
+  void focused() {
+    if (_sent) return;
+    if (!_watching) {
+      _watching = true;
+      WidgetsBinding.instance.addObserver(this);
+    }
+    final view = _view;
+    _since = _clock();
+    _height = view == null ? 0 : view.physicalSize.height / view.devicePixelRatio;
+    _insetBefore = _insetMax = _inset;
+    _metrics = 0;
+    _states.clear();
+  }
+
+  void lost({required bool fieldGone, required bool fullscreen, bool disposed = false}) {
+    final since = _since;
+    _since = null;
+    if (since == null || _sent || _insetBefore > 0) return;
+    final ms = _clock().difference(since).inMilliseconds;
+    if (ms > 1500 || disposed) return;
+    _sent = true;
+    _send(
+      'PDA: big window field lost focus early (ms: $ms, height: ${_height.round()}, '
+      'insetMax: ${_insetMax.round()}, insetAfter: ${_inset.round()}, metrics: $_metrics, '
+      'lifecycle: ${_states.isEmpty ? 'none' : _states.join('>')}, fieldGone: $fieldGone, '
+      'fullscreen: $fullscreen, conversations: $conversations)',
+    );
+  }
+
+  @override
+  void didChangeMetrics() {
+    if (_since == null) return;
+    _metrics++;
+    _insetMax = math.max(_insetMax, _inset);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_since != null) _states.add(state.name);
+  }
+}
+
 class _ChatBigWindowViewState extends State<ChatBigWindowView> {
+  EditableTextState? _field;
+  FocusScopeNode? _scope;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scope = FocusScope.of(context);
+  }
+
+  void _watchField() {
+    final node = FocusManager.instance.primaryFocus;
+    final field = node?.context?.findAncestorStateOfType<EditableTextState>();
+    final inside = field != null && node!.ancestors.contains(_scope);
+    final now = inside ? field : null;
+    if (now == _field) return;
+    final old = _field;
+    _field = now;
+    if (old != null) BigWindowKeyboardProbe.instance.lost(fieldGone: !old.mounted, fullscreen: widget.fullscreen);
+    if (now != null) BigWindowKeyboardProbe.instance.focused();
+  }
+
   @override
   void initState() {
     super.initState();
+    if (widget.roomId != null) BigWindowKeyboardProbe.instance.conversations++;
+    if (defaultTargetPlatform == TargetPlatform.android) FocusManager.instance.addListener(_watchField);
     if (widget.roomId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) widget.chat.attach();
@@ -56,6 +157,7 @@ class _ChatBigWindowViewState extends State<ChatBigWindowView> {
   void didUpdateWidget(ChatBigWindowView old) {
     super.didUpdateWidget(old);
     if (old.roomId == widget.roomId) return;
+    if (widget.roomId != null) BigWindowKeyboardProbe.instance.conversations++;
     _release(old.roomId);
     if (widget.roomId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,6 +170,10 @@ class _ChatBigWindowViewState extends State<ChatBigWindowView> {
 
   @override
   void dispose() {
+    if (defaultTargetPlatform == TargetPlatform.android) FocusManager.instance.removeListener(_watchField);
+    if (_field != null) {
+      BigWindowKeyboardProbe.instance.lost(fieldGone: true, disposed: true, fullscreen: widget.fullscreen);
+    }
     _release(widget.roomId);
     if (widget.roomId == null) widget.chat.detach();
     super.dispose();

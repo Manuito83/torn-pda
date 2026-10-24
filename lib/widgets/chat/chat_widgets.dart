@@ -26,6 +26,8 @@ import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
 import 'package:torn_pda/widgets/chat/chat_appearance_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_bank_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_loading_phrases.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/chat_send_check_dialog.dart';
@@ -125,6 +127,7 @@ class ChatMessageBubble extends StatelessWidget {
     this.onReply,
     this.onSwipeLeft,
     this.onForward,
+    this.onRetry,
     this.pinned = false,
     this.selected,
   });
@@ -156,6 +159,8 @@ class ChatMessageBubble extends StatelessWidget {
   final VoidCallback? onReply;
   final VoidCallback? onSwipeLeft;
   final VoidCallback? onForward;
+
+  final VoidCallback? onRetry;
   final bool pinned;
 
   /// Null outside selection mode
@@ -191,6 +196,7 @@ class ChatMessageBubble extends StatelessWidget {
     final hasPlayer = message.sender.id > 0;
     final pending = message.state == ChatMessageState.pending;
     final failed = message.state == ChatMessageState.failed;
+    final retry = failed ? (onRetry ?? () => NativeChat.controller.resend(message)) : null;
     final palette = chatPalette(context);
     final prefs = NativeChat.prefs;
     final compact = prefs.compactMode;
@@ -259,6 +265,7 @@ class ChatMessageBubble extends StatelessWidget {
         CustomSemanticsAction(
           label: '${chatSwipeLook[NativeChat.prefs.swipeLeft]?.$2 ?? 'Chat'} ${message.sender.name}',
         ): onSwipeLeft!,
+      if (retry != null) const CustomSemanticsAction(label: 'Retry'): retry,
       const CustomSemanticsAction(label: 'Copy'): copy,
       if (onForward != null) const CustomSemanticsAction(label: 'Forward'): onForward!,
       if (onLongPress != null) CustomSemanticsAction(label: selected == true ? 'Deselect' : 'Select'): onLongPress!,
@@ -344,6 +351,7 @@ class ChatMessageBubble extends StatelessWidget {
     final metaColor = foreground.withValues(alpha: 0.6);
     final compactRow = GestureDetector(
       excludeFromSemantics: true,
+      onTap: retry,
       onLongPress: onLongPress ?? copy,
       child: Opacity(
         opacity: pending ? 0.75 : 1,
@@ -462,6 +470,7 @@ class ChatMessageBubble extends StatelessWidget {
     );
     final bubble = GestureDetector(
       excludeFromSemantics: true,
+      onTap: retry,
       onLongPress: onLongPress ?? copy,
       child: Opacity(
         opacity: pending ? 0.75 : 1,
@@ -531,7 +540,7 @@ class ChatMessageBubble extends StatelessWidget {
                     if (failed) ...[
                       Icon(Icons.error_outline_rounded, size: 12, color: scheme.error),
                       const SizedBox(width: 3),
-                      Text('Not sent', style: theme.textTheme.labelSmall?.copyWith(color: scheme.error)),
+                      Text('Not sent, tap to retry', style: theme.textTheme.labelSmall?.copyWith(color: scheme.error)),
                       const SizedBox(width: 6),
                     ],
                     if (saved) ...[
@@ -559,12 +568,19 @@ class ChatMessageBubble extends StatelessWidget {
       ),
     );
 
-    final insert = ChatTradeInsert(
-      roomId: message.roomId,
-      text: body,
-      userId: isMine ? null : message.sender.id,
-      color: plainText,
-      mine: isMine && !compact,
+    final insert = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ChatTradeInsert(
+          roomId: message.roomId,
+          text: body,
+          userId: isMine ? null : message.sender.id,
+          color: plainText,
+          mine: isMine && !compact,
+        ),
+        if (!isMine) ChatBankInsert(message: message),
+      ],
     );
     final avatarColumn = !isMine && showSender && prefs.showAvatars;
     return ChatTextScale(
@@ -986,6 +1002,8 @@ class _ChatComposerState extends State<ChatComposer> {
   bool _formatOpen = false;
   double? _upload;
   String? _uploadError;
+  String? _blockedError;
+  ChatImageHost? _blockedHost;
 
   @override
   void initState() {
@@ -1010,7 +1028,13 @@ class _ChatComposerState extends State<ChatComposer> {
   @override
   void didUpdateWidget(ChatComposer old) {
     super.didUpdateWidget(old);
-    if (widget.replyTo != null && widget.replyTo?.id != old.replyTo?.id) _focus.requestFocus();
+    if (widget.replyTo != null && widget.replyTo?.id != old.replyTo?.id) {
+      if (_focus.hasFocus) {
+        SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+      } else {
+        _focus.requestFocus();
+      }
+    }
     if (widget.enabled && !old.enabled) _takeShared();
   }
 
@@ -1075,15 +1099,25 @@ class _ChatComposerState extends State<ChatComposer> {
         bytes,
         name,
         NativeChat.prefs.credentialFor(host),
+        expiration: NativeChat.prefs.imgbbExpiration,
         onProgress: (p) {
           if (mounted) setState(() => _upload = p);
         },
       );
       if (!mounted) return;
       _insert(link);
-      setState(() => _attachOpen = false);
+      setState(() {
+        _attachOpen = false;
+        _blockedHost = null;
+      });
     } on ChatUploadError catch (e) {
-      if (mounted) setState(() => _uploadError = e.message);
+      if (mounted) {
+        setState(() {
+          _uploadError = e.message;
+          _blockedError = e.blocked ? e.message : null;
+          _blockedHost = e.blocked ? host : null;
+        });
+      }
     } finally {
       if (mounted) setState(() => _upload = null);
     }
@@ -1193,6 +1227,17 @@ class _ChatComposerState extends State<ChatComposer> {
     super.dispose();
   }
 
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    final enter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
+    if (!enter || !widget.enabled || !_text.value.composing.isCollapsed) return KeyEventResult.ignored;
+    if (View.of(context).viewInsets.bottom > 0) return KeyEventResult.ignored;
+    if (!NativeChat.prefs.hardwareEnterSends(shift: HardwareKeyboard.instance.isShiftPressed)) {
+      return KeyEventResult.ignored;
+    }
+    if (event is KeyDownEvent) _send();
+    return KeyEventResult.handled;
+  }
+
   void _send() {
     if (!_hasText) return;
     final name = widget.roomName;
@@ -1221,25 +1266,12 @@ class _ChatComposerState extends State<ChatComposer> {
         ],
       );
     } else if (host.needsCredential && NativeChat.prefs.credentialFor(host).isEmpty) {
-      content = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Images are uploaded to ${host.label}', style: theme.textTheme.labelLarge),
-          const SizedBox(height: 2),
-          Text(
-            host == ChatImageHost.imgur
-                ? 'Register a free app at imgur, with anonymous use and no callback, '
-                      'and paste its Client-ID in the chat settings, under Image upload'
-                : 'Get the API key of a free ImgBB account and paste it in the chat settings, under Image upload',
-            style: small,
-          ),
-          TextButton.icon(
-            onPressed: () => NativeChat.openUrl(host.registerUrl),
-            icon: const Icon(Icons.open_in_new_rounded, size: 18),
-            label: Text('Register at ${host.label}'),
-          ),
-        ],
+      content = ChatUploadSetupNotice(
+        host: host,
+        excluded: _blockedHost,
+        onPicked: () {
+          if (mounted) setState(() {});
+        },
       );
     } else {
       final error = _uploadError;
@@ -1261,10 +1293,24 @@ class _ChatComposerState extends State<ChatComposer> {
               ),
             ],
           ),
-          Text(
-            error ?? 'The image goes to ${host.label} and anyone with the link can see it',
-            style: error == null ? small : small?.copyWith(color: scheme.error),
-          ),
+          if (error != null && error == _blockedError && _blockedHost == host)
+            ChatUploadSetupNotice(
+              host: host,
+              blockedMessage: error,
+              onPicked: () {
+                if (mounted) {
+                  setState(() {
+                    _uploadError = null;
+                    _blockedError = null;
+                  });
+                }
+              },
+            )
+          else
+            Text(
+              error ?? 'The image goes to ${host.label} and anyone with the link can see it',
+              style: error == null ? small : small?.copyWith(color: scheme.error),
+            ),
         ],
       );
     }
@@ -1295,6 +1341,7 @@ class _ChatComposerState extends State<ChatComposer> {
                   _attachOpen = !_attachOpen;
                   _toolsOpen = false;
                   _uploadError = null;
+                  _blockedHost = null;
                 })
               : null,
           icon: Icon(_attachOpen ? Icons.close_rounded : Icons.add_photo_alternate_outlined),
@@ -1315,34 +1362,41 @@ class _ChatComposerState extends State<ChatComposer> {
         ),
         Expanded(
           child: LayoutBuilder(
-            builder: (context, box) => TextField(
-              controller: _text,
-              focusNode: _focus,
-              autofocus: widget.autofocus,
-              enabled: widget.enabled,
-              onChanged: (_) => NativeChat.touch(),
-              minLines: 1,
-              maxLines: MediaQuery.textScalerOf(context).scale(1) >= 1.5 ? 3 : 5,
-              textCapitalization: TextCapitalization.sentences,
-              keyboardType: TextInputType.multiline,
-              decoration: InputDecoration(
-                hintText: !widget.enabled
-                    ? 'You can\'t write in ${widget.roomName}'
-                    : box.maxWidth < 220
-                    ? 'Message'
-                    : 'Message ${widget.roomName}',
-                hintMaxLines: 1,
-                filled: true,
-                fillColor: scheme.surfaceContainerHighest,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                suffixIcon: IconButton(
-                  tooltip: 'Text format',
-                  onPressed: widget.enabled ? () => setState(() => _formatOpen = !_formatOpen) : null,
-                  icon: Icon(Icons.text_format_rounded, color: _formatOpen ? scheme.primary : null),
+            builder: (context, box) => Focus(
+              canRequestFocus: false,
+              skipTraversal: true,
+              onKeyEvent: _onKey,
+              child: TextField(
+                controller: _text,
+                focusNode: _focus,
+                autofocus: widget.autofocus,
+                enabled: widget.enabled,
+                onChanged: (_) => NativeChat.touch(),
+                minLines: 1,
+                maxLines: MediaQuery.textScalerOf(context).scale(1) >= 1.5 ? 3 : 5,
+                textCapitalization: TextCapitalization.sentences,
+                keyboardType: TextInputType.multiline,
+                textInputAction: NativeChat.prefs.softAction,
+                onEditingComplete: NativeChat.prefs.enterSendsSoft ? _send : null,
+                decoration: InputDecoration(
+                  hintText: !widget.enabled
+                      ? 'You can\'t write in ${widget.roomName}'
+                      : box.maxWidth < 220
+                      ? 'Message'
+                      : 'Message ${widget.roomName}',
+                  hintMaxLines: 1,
+                  filled: true,
+                  fillColor: scheme.surfaceContainerHighest,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
+                  suffixIcon: IconButton(
+                    tooltip: 'Text format',
+                    onPressed: widget.enabled ? () => setState(() => _formatOpen = !_formatOpen) : null,
+                    icon: Icon(Icons.text_format_rounded, color: _formatOpen ? scheme.primary : null),
+                  ),
+                  suffixIconConstraints: const BoxConstraints.tightFor(width: 48, height: 48),
                 ),
-                suffixIconConstraints: const BoxConstraints.tightFor(width: 48, height: 48),
               ),
             ),
           ),
@@ -1384,6 +1438,7 @@ class _ChatComposerState extends State<ChatComposer> {
                           onEmoji: _insertEmoji,
                           chat: widget.chat,
                           name: _replyName,
+                          roomId: widget.roomId,
                         ),
                       if (_formatOpen && widget.enabled) ChatFormatBar(controller: _text, focus: _focus),
                       if (_mention != null && (suggestions.isNotEmpty || lookingUp))
@@ -2673,6 +2728,7 @@ Future<void> showChatArchived(BuildContext context, void Function(String roomId)
         }
         return ListView(
           shrinkWrap: true,
+          padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
           children: [
             for (final room in rooms)
               ListTile(
@@ -2713,6 +2769,7 @@ Future<void> showChatHiddenRooms(BuildContext context) {
         }
         return ListView(
           shrinkWrap: true,
+          padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
           children: [
             for (final room in rooms)
               ListTile(

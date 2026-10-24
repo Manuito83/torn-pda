@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:torn_pda/utils/discreet_schedule.dart';
 
 /// Background-safe preferences access.
 ///
@@ -21,6 +22,10 @@ class BackgroundPrefs {
   static const String _kChatMode = "pda_chatStatsMode";
   static const String _kUsageBucket = "pda_usageCounts_";
   static const String _kUsageDaily = "pda_usageCountsDaily";
+  static const String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
+  static const String _kDiscreetSchedule = "pda_discreetSchedule";
+  static const String _kDiscreetScheduleFrom = "pda_discreetScheduleFrom";
+  static const String _kDiscreetScheduleTo = "pda_discreetScheduleTo";
 
   Future<String> getOwnDetails() async {
     final prefs = SharedPreferencesAsync();
@@ -141,5 +146,30 @@ class BackgroundPrefs {
   Future<void> setUsageDaily(int value) async {
     final prefs = SharedPreferencesAsync();
     await prefs.setInt(_kUsageDaily, value);
+  }
+
+  Future<void> setDiscreetNotifications(bool value) async {
+    await SharedPreferencesAsync().setBool(_kDiscreetNotifications, value);
+  }
+
+  Future<void> setDiscreetSchedule(DiscreetSchedule value) async {
+    final prefs = SharedPreferencesAsync();
+    await prefs.setBool(_kDiscreetSchedule, value.enabled);
+    await prefs.setInt(_kDiscreetScheduleFrom, value.from);
+    await prefs.setInt(_kDiscreetScheduleTo, value.to);
+  }
+
+  Future<bool> getDiscreetAt([DateTime? time]) async {
+    final prefs = SharedPreferencesAsync();
+    const fallback = DiscreetSchedule();
+    return isDiscreetAt(
+      always: await prefs.getBool(_kDiscreetNotifications) ?? false,
+      schedule: DiscreetSchedule(
+        enabled: await prefs.getBool(_kDiscreetSchedule) ?? false,
+        from: await prefs.getInt(_kDiscreetScheduleFrom) ?? fallback.from,
+        to: await prefs.getInt(_kDiscreetScheduleTo) ?? fallback.to,
+      ),
+      time: time ?? DateTime.now(),
+    );
   }
 }

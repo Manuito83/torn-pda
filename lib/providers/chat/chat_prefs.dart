@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
+import 'package:flutter/services.dart' show TextInputAction;
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_colors.dart';
 import 'package:torn_pda/models/chat/chat_emoji.dart';
@@ -43,6 +44,8 @@ enum ChatImageAutoLoad { never, torn, always }
 
 enum ChatLauncher { bubble, browser, menuHeader, menuBar }
 
+enum ChatProfileIcon { pda, torn }
+
 enum ChatQuickRow {
   actions('Actions'),
   emoji('Emoji'),
@@ -76,6 +79,9 @@ class ChatPrefs extends ChangeNotifier {
   static const List<int> tickerMaxOptions = [1, 2, 3];
   static const List<int> tickerLinesOptions = [1, 2];
   static const List<int> previewLinesOptions = [1, 2, 3];
+
+  /// Seconds, 0 keeps images forever
+  static const List<int> imgbbExpirationOptions = [0, 86400, 604800, 2592000, 15552000];
   static const int minListReplyCount = 1;
   static const int maxListReplyCount = 20;
 
@@ -182,13 +188,15 @@ class ChatPrefs extends ChangeNotifier {
 
   /// x and y fractions, then dock side
   List<String> bubbleSpot = [];
-  ChatImageAutoLoad imageAutoLoad = ChatImageAutoLoad.torn;
+  bool imagesPrivate = true;
+  bool imagesPublic = false;
   ChatImageAutoLoad linkPreviews = ChatImageAutoLoad.torn;
   bool linkWindow = true;
   bool linkNewTab = false;
-  ChatImageHost imageHost = ChatImageHost.imgur;
+  ChatImageHost imageHost = ChatImageHost.imgbb;
   String imgurClientId = '';
   String imgbbKey = '';
+  int imgbbExpiration = 0;
   String catboxUserhash = '';
 
   /// Only in Torn PDA, id to name
@@ -222,6 +230,7 @@ class ChatPrefs extends ChangeNotifier {
     'status',
     'wiki',
     'time',
+    'bank',
     'emoji',
     'replies',
   ];
@@ -229,6 +238,7 @@ class ChatPrefs extends ChangeNotifier {
   static const String rowBreak3 = 'row3';
   static const List<String> rowBreaks = [rowBreak2, rowBreak3];
   static const String offBreak = 'off';
+  ChatProfileIcon profileIcon = ChatProfileIcon.pda;
   static const List<int> quickRowsOptions = [1, 2, 3];
   List<String> quickOrder = [..._quickActionIds];
   Set<String> quickHidden = {};
@@ -255,6 +265,8 @@ class ChatPrefs extends ChangeNotifier {
   bool moneyOnHand = false;
   bool warnApiKey = true;
   bool confirmPublic = false;
+  bool enterSendsHardware = true;
+  bool enterSendsSoft = false;
   bool playerColors = true;
   bool compactMode = false;
   bool showAvatars = true;
@@ -275,6 +287,7 @@ class ChatPrefs extends ChangeNotifier {
   bool factionWar = true;
   bool factionEnemyChain = true;
   bool factionRoster = true;
+  bool factionBanker = false;
   Set<String> statusPieces = {};
 
   /// One per conversation
@@ -398,19 +411,22 @@ class ChatPrefs extends ChangeNotifier {
     windows = await Prefs().getNativeChatWindows();
     bigWindow = await Prefs().getNativeChatBigWindow();
     bubbleSpot = await Prefs().getNativeChatBubbleSpot();
-    final autoLoad = await Prefs().getNativeChatImageAutoLoad();
-    imageAutoLoad = ChatImageAutoLoad.values.firstWhere(
-      (v) => v.name == autoLoad,
-      orElse: () => ChatImageAutoLoad.torn,
-    );
+    final (legacyPrivate, legacyPublic) = imagesFromLegacy(await Prefs().getNativeChatImageAutoLoad());
+    imagesPrivate = await Prefs().getNativeChatImagesPrivate(legacyPrivate);
+    imagesPublic = await Prefs().getNativeChatImagesPublic(legacyPublic);
     final previews = await Prefs().getNativeChatLinkPreviews();
     linkPreviews = ChatImageAutoLoad.values.firstWhere((v) => v.name == previews, orElse: () => ChatImageAutoLoad.torn);
     linkWindow = await Prefs().getNativeChatLinkWindow();
     linkNewTab = await Prefs().getNativeChatLinkNewTab();
-    final host = await Prefs().getChatImageHost();
-    imageHost = ChatImageHost.values.firstWhere((h) => h.name == host, orElse: () => ChatImageHost.imgur);
     imgurClientId = await Prefs().getChatImgurClientId();
+    final host = await Prefs().getChatImageHost();
+    imageHost = ChatImageHost.values.firstWhere(
+      (h) => h.name == host,
+      orElse: () => imgurClientId.isNotEmpty ? ChatImageHost.imgur : ChatImageHost.imgbb,
+    );
     imgbbKey = await Prefs().getChatImgbbKey();
+    final expiration = await Prefs().getChatImgbbExpiration();
+    imgbbExpiration = imgbbExpirationOptions.contains(expiration) ? expiration : 0;
     catboxUserhash = await Prefs().getChatCatboxUserhash();
     ignored = {
       for (final pair in await Prefs().getNativeChatIgnored())
@@ -474,6 +490,8 @@ class ChatPrefs extends ChangeNotifier {
     moneyOnHand = await Prefs().getNativeChatMoneyOnHand();
     warnApiKey = await Prefs().getNativeChatWarnApiKey();
     confirmPublic = await Prefs().getNativeChatConfirmPublic();
+    enterSendsHardware = await Prefs().getNativeChatEnterSendsHardware();
+    enterSendsSoft = await Prefs().getNativeChatEnterSendsSoft();
     playerColors = await Prefs().getNativeChatPlayerColors();
     compactMode = await Prefs().getNativeChatCompactMode();
     showAvatars = await Prefs().getNativeChatShowAvatars();
@@ -497,6 +515,9 @@ class ChatPrefs extends ChangeNotifier {
     factionWar = await Prefs().getNativeChatFactionWar();
     factionEnemyChain = await Prefs().getNativeChatFactionEnemyChain();
     factionRoster = await Prefs().getNativeChatFactionRoster();
+    factionBanker = await Prefs().getNativeChatFactionBanker();
+    final profileIconName = await Prefs().getNativeChatProfileIcon();
+    profileIcon = ChatProfileIcon.values.where((v) => v.name == profileIconName).firstOrNull ?? ChatProfileIcon.pda;
     factionEvents = await Prefs().getNativeChatFactionEvents();
     factionEventsDenied = await Prefs().getNativeChatFactionEventsDenied();
     try {
@@ -754,6 +775,22 @@ class ChatPrefs extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool hardwareEnterSends({required bool shift}) => enterSendsHardware && !shift;
+
+  TextInputAction get softAction => enterSendsSoft ? TextInputAction.send : TextInputAction.newline;
+
+  void setEnterSendsHardware(bool value) {
+    enterSendsHardware = value;
+    Prefs().setNativeChatEnterSendsHardware(value);
+    notifyListeners();
+  }
+
+  void setEnterSendsSoft(bool value) {
+    enterSendsSoft = value;
+    Prefs().setNativeChatEnterSendsSoft(value);
+    notifyListeners();
+  }
+
   void setPlayerColors(bool value) {
     playerColors = value;
     Prefs().setNativeChatPlayerColors(value);
@@ -838,6 +875,18 @@ class ChatPrefs extends ChangeNotifier {
   void setFactionEnemyChain(bool value) {
     factionEnemyChain = value;
     Prefs().setNativeChatFactionEnemyChain(value);
+    notifyListeners();
+  }
+
+  void setProfileIcon(ChatProfileIcon value) {
+    profileIcon = value;
+    Prefs().setNativeChatProfileIcon(value.name);
+    notifyListeners();
+  }
+
+  void setFactionBanker(bool value) {
+    factionBanker = value;
+    Prefs().setNativeChatFactionBanker(value);
     notifyListeners();
   }
 
@@ -1276,9 +1325,22 @@ class ChatPrefs extends ChangeNotifier {
     Prefs().setNativeChatBubbleSpot(value);
   }
 
-  void setImageAutoLoad(ChatImageAutoLoad value) {
-    imageAutoLoad = value;
-    Prefs().setNativeChatImageAutoLoad(value.name);
+  /// Old setting to private, public
+  static (bool, bool) imagesFromLegacy(String? value) => switch (value) {
+    'never' => (false, false),
+    'always' => (true, true),
+    _ => (true, false),
+  };
+
+  void setImagesPrivate(bool value) {
+    imagesPrivate = value;
+    Prefs().setNativeChatImagesPrivate(value);
+    notifyListeners();
+  }
+
+  void setImagesPublic(bool value) {
+    imagesPublic = value;
+    Prefs().setNativeChatImagesPublic(value);
     notifyListeners();
   }
 
@@ -1303,6 +1365,13 @@ class ChatPrefs extends ChangeNotifier {
   void setImageHost(ChatImageHost value) {
     imageHost = value;
     Prefs().setChatImageHost(value.name);
+    notifyListeners();
+  }
+
+  void setImgbbExpiration(int seconds) {
+    if (!imgbbExpirationOptions.contains(seconds)) return;
+    imgbbExpiration = seconds;
+    Prefs().setChatImgbbExpiration(seconds);
     notifyListeners();
   }
 
@@ -1549,10 +1618,14 @@ class ChatPrefs extends ChangeNotifier {
     'bubbleTotal': (bubbleTotal, setBubbleTotal),
     'ticker': (ticker, setTicker),
     'tickerTop': (tickerTop, setTickerTop),
+    'imagesPrivate': (imagesPrivate, setImagesPrivate),
+    'imagesPublic': (imagesPublic, setImagesPublic),
     'linkWindow': (linkWindow, setLinkWindow),
     'linkNewTab': (linkNewTab, setLinkNewTab),
     'warnApiKey': (warnApiKey, setWarnApiKey),
     'confirmPublic': (confirmPublic, setConfirmPublic),
+    'enterSendsHardware': (enterSendsHardware, setEnterSendsHardware),
+    'enterSendsSoft': (enterSendsSoft, setEnterSendsSoft),
     'shortcuts': (shortcuts, setShortcuts),
     'mentions': (mentions, setMentions),
     'alertNotify': (alertNotify, setAlertNotify),
@@ -1564,6 +1637,7 @@ class ChatPrefs extends ChangeNotifier {
     'factionWar': (factionWar, setFactionWar),
     'factionEnemyChain': (factionEnemyChain, setFactionEnemyChain),
     'factionRoster': (factionRoster, setFactionRoster),
+    'factionBanker': (factionBanker, setFactionBanker),
     'factionEvents': (factionEvents, setFactionEvents),
     'itemPrice': (itemPrice, setItemPrice),
     'priceCheck': (priceCheck, setPriceCheck),
@@ -1691,7 +1765,6 @@ class ChatPrefs extends ChangeNotifier {
       if (backup.listReplyCount case final v?) setListReplyCount(v);
       if (backup.listTextScale case final v?) setListTextScale(v);
       if (backup.waitingHours case final v?) setWaitingHours(v);
-      if (backup.imageAutoLoad case final v?) setImageAutoLoad(v);
       if (backup.linkPreviews case final v?) setLinkPreviews(v);
       if (backup.translateTo case final v?) setTranslateTo(v);
       for (final e in backup.switches.entries) {
@@ -1705,7 +1778,9 @@ class ChatPrefs extends ChangeNotifier {
       if (backup.tickerLines case final v?) setTickerLines(v);
       if (backup.glowMode case final v?) setGlowMode(v);
       if (backup.launcher case final v?) setLauncher(v);
+      if (backup.profileIcon case final v?) setProfileIcon(v);
       if (backup.imageHost case final v?) setImageHost(v);
+      if (backup.imgbbExpiration case final v?) setImgbbExpiration(v);
       setQuietRange(from: backup.quietFrom, to: backup.quietTo);
       if (backup.quickOrder case final order?) {
         quickOrder = _withAllQuick(order);

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
+import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ChatUploadSettingsPage extends StatelessWidget {
   const ChatUploadSettingsPage({super.key});
 
-  Future<void> _editCredential(BuildContext context, ChatImageHost host) async {
+  static Future<void> editCredential(BuildContext context, ChatImageHost host) async {
     var typed = NativeChat.prefs.credentialFor(host);
     final value = await showDialog<String>(
       context: context,
@@ -30,6 +33,13 @@ class ChatUploadSettingsPage extends StatelessWidget {
     if (value != null) NativeChat.prefs.setCredential(host, value);
   }
 
+  static Future<void> openRegister(ChatImageHost host) async {
+    try {
+      if (await launchUrl(Uri.parse(host.registerUrl), mode: LaunchMode.externalApplication)) return;
+    } catch (_) {}
+    chatToast('Could not open the browser', seconds: 3);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChatSettingsSubpage(
@@ -45,7 +55,10 @@ class ChatUploadSettingsPage extends StatelessWidget {
             trailing: DropdownButton<ChatImageHost>(
               value: host,
               underline: const SizedBox(),
-              items: [for (final h in ChatImageHost.values) DropdownMenuItem(value: h, child: Text(h.label))],
+              items: [
+                for (final h in ChatImageHost.values)
+                  DropdownMenuItem(value: h, child: Text(h.label)),
+              ],
               onChanged: (h) => h == null ? null : prefs.setImageHost(h),
             ),
           ),
@@ -61,6 +74,29 @@ class ChatUploadSettingsPage extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
           ),
+          if (host == ChatImageHost.imgbb)
+            ListTile(
+              leading: const Icon(Icons.auto_delete_outlined),
+              title: const Text('Delete images after'),
+              trailing: DropdownButton<int>(
+                value: prefs.imgbbExpiration,
+                underline: const SizedBox(),
+                items: [
+                  for (final seconds in ChatPrefs.imgbbExpirationOptions)
+                    DropdownMenuItem(
+                      value: seconds,
+                      child: Text(switch (seconds) {
+                        0 => 'Never',
+                        86400 => '1 day',
+                        604800 => '7 days',
+                        2592000 => '30 days',
+                        _ => '180 days',
+                      }),
+                    ),
+                ],
+                onChanged: (v) => v == null ? null : prefs.setImgbbExpiration(v),
+              ),
+            ),
           ListTile(
             leading: const Icon(Icons.key_rounded),
             title: Text('${host.label} ${host.credentialName}${host.needsCredential ? '' : ' (optional)'}'),
@@ -72,14 +108,14 @@ class ChatUploadSettingsPage extends StatelessWidget {
                   : 'Not set, uploads are anonymous',
             ),
             trailing: const Icon(Icons.edit_rounded),
-            onTap: () => _editCredential(context, host),
+            onTap: () => editCredential(context, host),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: () => NativeChat.openUrl(host.registerUrl),
+                onPressed: () => openRegister(host),
                 icon: const Icon(Icons.open_in_new_rounded, size: 18),
                 label: Text(
                   host.needsCredential ? 'Get your ${host.credentialName} at ${host.label}' : 'Open ${host.label}',

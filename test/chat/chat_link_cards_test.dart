@@ -72,7 +72,9 @@ void main() {
 
   tearDown(() {
     NativeChat.prefs.linkPreviews = ChatImageAutoLoad.torn;
-    NativeChat.prefs.imageAutoLoad = ChatImageAutoLoad.torn;
+    NativeChat.prefs
+      ..imagesPrivate = true
+      ..imagesPublic = false;
   });
 
   group('cards', () {
@@ -625,10 +627,6 @@ void main() {
       expect(find.byType(ChatLinkCard), findsNothing);
       expect(find.text('Show'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      final torn = link('https://www.torn.com/images/v2/a.gif');
-      expect(ChatImages.autoLoads(torn), isTrue);
-      NativeChat.prefs.imageAutoLoad = ChatImageAutoLoad.never;
-      expect(ChatImages.autoLoads(torn), isFalse);
     });
 
     testWidgets('a script from an unknown host carries a warning', (tester) async {

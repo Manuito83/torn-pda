@@ -3,6 +3,7 @@ import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { FactionModel, Attack, State } from "./interfaces/faction_interface";
 import { sendNotificationToUser } from "./notification";
+import { isDiscreetNow } from "./discreet";
 
 export const evaluateRetals = onSchedule(
     {
@@ -101,7 +102,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                         let body = "No users in this faction detected with faction API access permits " +
                             "and retaliation notifications active in Torn PDA.\n\n" +
                             "Retaliation notifications might not work!";
-                        if (subscribers[key].discrete) {
+                        if (isDiscreetNow(subscribers[key])) {
                             title = `Retals`;
                             body = `Inactive`;
                         }
@@ -402,7 +403,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
             let title = notificationTitle;
             let body = notificationBody;
-            if (subscribers[key].discrete) {
+            if (isDiscreetNow(subscribers[key])) {
                 title = `Retal`;
                 body = ` `;
             }

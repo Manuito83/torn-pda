@@ -41,6 +41,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/utils/discreet_schedule.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
@@ -697,6 +698,26 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  String _discreetHourLabel(int minutes) => TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60).format(context);
+
+  Future<void> _pickDiscreetHour({required bool from}) async {
+    final current = _settingsProvider.discreetSchedule;
+    final minutes = from ? current.from : current.to;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
+    );
+    if (picked == null || !mounted) return;
+    final value = picked.hour * 60 + picked.minute;
+    setState(() {
+      _settingsProvider.discreetSchedule = DiscreetSchedule(
+        enabled: current.enabled,
+        from: from ? value : current.from,
+        to: from ? current.to : value,
+      );
+    });
+  }
+
   Widget _notificationsSection() {
     List<SearchableRow> rows = [
       SearchableRow(
@@ -727,7 +748,7 @@ class SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               Switch(
-                value: _settingsProvider.discreetNotifications,
+                value: _settingsProvider.discreetNotificationsOption,
                 onChanged: (value) {
                   setState(() {
                     _settingsProvider.discreetNotifications = value;
@@ -736,6 +757,64 @@ class SettingsPageState extends State<SettingsPage> {
                 activeTrackColor: Colors.lightGreenAccent,
                 activeThumbColor: Colors.green,
               ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Discreet schedule",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Schedule")),
+                  Switch(
+                    value: _settingsProvider.discreetSchedule.enabled,
+                    onChanged: (value) {
+                      final current = _settingsProvider.discreetSchedule;
+                      setState(() {
+                        _settingsProvider.discreetSchedule = DiscreetSchedule(
+                          enabled: value,
+                          from: current.from,
+                          to: current.to,
+                        );
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              if (_settingsProvider.discreetSchedule.enabled) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("From"),
+                    TextButton(
+                      onPressed: () => _pickDiscreetHour(from: true),
+                      child: Text(_discreetHourLabel(_settingsProvider.discreetSchedule.from)),
+                    ),
+                    const Text("To"),
+                    TextButton(
+                      onPressed: () => _pickDiscreetHour(from: false),
+                      child: Text(_discreetHourLabel(_settingsProvider.discreetSchedule.to)),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    "Covers notifications created by Torn PDA on this phone and Torn PDA server alerts. "
+                    "Not covered: Torn private messages on iOS while the app is in the background or closed, "
+                    "other apps and the Torn website",
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
