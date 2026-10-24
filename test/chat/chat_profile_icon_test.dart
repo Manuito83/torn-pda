@@ -165,5 +165,73 @@ void main() {
         tester.getRect(find.byKey(const Key('left'))).center.dy,
       );
     });
+
+    Future<void> mountBar(
+      WidgetTester tester, {
+      bool material3 = false,
+      double iconSize = 24,
+      double textScale = 1,
+      Map<String, int> counts = const {},
+    }) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(useMaterial3: material3),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: Scaffold(
+            appBar: AppBar(
+              actionsIconTheme: IconThemeData(size: iconSize),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: ChatIconWithBadge(
+                    icon: Icon(Icons.chat_bubble_outline_rounded, size: iconSize),
+                    unread: 2,
+                    counts: counts,
+                    brightness: Brightness.dark,
+                  ),
+                ),
+                IconButton(icon: const Icon(Icons.refresh), onPressed: () {}),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('stays level with the reload icon in any bar and icon size', (tester) async {
+      for (final material3 in [true, false]) {
+        for (final iconSize in [24.0, 30.0]) {
+          for (final textScale in [1.0, 1.5]) {
+            await mountBar(tester, material3: material3, iconSize: iconSize, textScale: textScale);
+            final chat = tester.getCenter(find.byIcon(Icons.chat_bubble_outline_rounded));
+            final reload = tester.getCenter(find.byIcon(Icons.refresh));
+            expect(chat.dy, closeTo(reload.dy, 0.5));
+          }
+        }
+      }
+    });
+
+    testWidgets('badge and dots stay next to the bubble', (tester) async {
+      await mountBar(tester, textScale: 1.5, counts: {ChatPrefs.bubbleOptions.first: 3});
+      final bubble = tester.getRect(find.byIcon(Icons.chat_bubble_outline_rounded));
+      final badge = tester.getRect(find.byType(ChatIconBadge));
+      final dot = tester.getRect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is DecoratedBox &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).shape == BoxShape.circle,
+        ),
+      );
+      expect(badge.top, greaterThanOrEqualTo(0));
+      expect(badge.center.dy, lessThan(bubble.top + bubble.height / 3));
+      expect(badge.center.dx, greaterThan(bubble.center.dx));
+      expect(dot.center.dy, greaterThan(bubble.center.dy));
+      expect(dot.center.dx, greaterThan(bubble.center.dx));
+    });
   });
 }

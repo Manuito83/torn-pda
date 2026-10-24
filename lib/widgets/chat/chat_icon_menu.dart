@@ -120,9 +120,9 @@ class ChatIconWithBadge extends StatelessWidget {
   final Brightness brightness;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 24,
-    height: 24,
+  Widget build(BuildContext context) => Center(
+    widthFactor: 1,
+    heightFactor: 1,
     child: Stack(
       clipBehavior: Clip.none,
       children: [
