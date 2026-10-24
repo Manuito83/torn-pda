@@ -47,6 +47,7 @@ cp ../config/native_auth_provider.dart.example   auth/native_auth_provider.dart
 cp ../config/native_user_provider.dart.example   auth/native_user_provider.dart
 cp ../config/native_login_widget.dart.example    auth/native_login_widget.dart
 cp ../config/stats_controller.dart.example       stats/stats_controller.dart
+cp ../utils/env/env.g.dart.example               ../utils/env/env.g.dart
 ```
 
 ### 2. Install dependencies
@@ -176,7 +177,7 @@ everything up:
 
 ```bash
 # From the project root
-cd lib/config && for f in *.dart.example; do cp "$f" "${f%.example}"; done && cd ../torn-pda-native && mkdir -p auth stats && cp ../config/native_auth_models.dart.example auth/native_auth_models.dart && cp ../config/native_auth_provider.dart.example auth/native_auth_provider.dart && cp ../config/native_user_provider.dart.example auth/native_user_provider.dart && cp ../config/native_login_widget.dart.example auth/native_login_widget.dart && cp ../config/stats_controller.dart.example stats/stats_controller.dart && cd ../..
+cd lib/config && for f in *.dart.example; do cp "$f" "${f%.example}"; done && cd ../torn-pda-native && mkdir -p auth stats && cp ../config/native_auth_models.dart.example auth/native_auth_models.dart && cp ../config/native_auth_provider.dart.example auth/native_auth_provider.dart && cp ../config/native_user_provider.dart.example auth/native_user_provider.dart && cp ../config/native_login_widget.dart.example auth/native_login_widget.dart && cp ../config/stats_controller.dart.example stats/stats_controller.dart && cp ../utils/env/env.g.dart.example ../utils/env/env.g.dart && cd ../..
 ```
 
 ### No emulator needed

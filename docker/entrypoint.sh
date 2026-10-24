@@ -44,6 +44,10 @@ if [ -d "lib/torn-pda-native" ] || [ -d "lib/config" ]; then
     cp lib/config/stats_controller.dart.example lib/torn-pda-native/stats/stats_controller.dart
 fi
 
+# Env part file stub
+[ -f lib/utils/env/env.g.dart.example ] && [ ! -f lib/utils/env/env.g.dart ] && \
+  cp lib/utils/env/env.g.dart.example lib/utils/env/env.g.dart
+
 # Android Firebase config stub
 if [ -f "android/app/google-services.json.example" ] && [ ! -f "android/app/google-services.json" ]; then
   cp android/app/google-services.json.example android/app/google-services.json

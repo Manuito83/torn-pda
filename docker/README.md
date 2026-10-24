@@ -114,6 +114,7 @@ Stubs handled automatically:
 | `lib/config/native_user_provider.dart.example` | `lib/torn-pda-native/auth/native_user_provider.dart` |
 | `lib/config/native_login_widget.dart.example` | `lib/torn-pda-native/auth/native_login_widget.dart` |
 | `lib/config/stats_controller.dart.example` | `lib/torn-pda-native/stats/stats_controller.dart` |
+| `lib/utils/env/env.g.dart.example` | `lib/utils/env/env.g.dart` |
 | `android/app/google-services.json.example` | `android/app/google-services.json` |
 
 Features that need real credentials (YATA proxy, native auth, TAC) won't

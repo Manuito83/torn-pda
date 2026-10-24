@@ -74,6 +74,7 @@ MAIN INDEX
   cp chat_engine.dart.example ../torn-pda-native/chat/chat_engine.dart
   cp torn_chat_source.dart.example ../torn-pda-native/chat/torn_chat_source.dart
   cp chat_push.dart.example ../torn-pda-native/chat/chat_push.dart
+  cp ../utils/env/env.g.dart.example ../utils/env/env.g.dart
   ```
 
   ### 3. Set up Android signing (for release builds)

@@ -60,6 +60,7 @@ jobs:
           if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
           if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
           if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
+          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
 
       - name: Install dependencies
         run: flutter pub get
@@ -96,6 +97,7 @@ jobs:
           if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
           if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
           if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
+          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
 
       - name: Install dependencies
         run: flutter pub get
@@ -168,6 +170,7 @@ jobs:
           if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
           if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
           if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
+          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
 
       - name: Create iOS CI stubs
         run: |
@@ -243,6 +246,7 @@ jobs:
           if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
           if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
           if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
+          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
           # Android Firebase config stub for APK build
           if [ ! -f ../android/app/google-services.json ]; then cp ../android/app/google-services.json.example ../android/app/google-services.json; fi
 
