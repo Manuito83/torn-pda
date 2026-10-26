@@ -177,7 +177,8 @@
       "downloadUrl": "https://update.greasyfork.org/scripts/590627/TORN%3A%20TornTools%20-%20Bazaar%20Market.user.js",
       "pageUrl": "https://greasyfork.org/scripts/590627-torn-torntools-bazaar-market",
       "matches": [
-        "https://*.torn.com/page.php?sid=ItemMarket*"
+        "https://*.torn.com/page.php?sid=ItemMarket*",
+        "https://*.torn.com/bazaar.php*"
       ]
     },
     {
@@ -851,6 +852,18 @@
       "pageUrl": "https://greasyfork.org/en/scripts/600218-torn-torntools-race-car-selector",
       "matches": [
         "https://*.torn.com/page.php?sid=racing*"
+      ]
+    },
+    {
+      "id": "torntools.settings",
+      "greasyforkId": 602381,
+      "name": "Settings",
+      "description": "Shared settings for other userscripts.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/602381/TORN%3A%20TornTools%20-%20Settings.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/602381-torn-torntools-settings",
+      "matches": [
+        "https://*.torn.com/preferences.php*"
       ]
     }
   ]
