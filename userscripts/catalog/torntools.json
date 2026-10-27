@@ -865,6 +865,18 @@
       "matches": [
         "https://*.torn.com/preferences.php*"
       ]
+    },
+    {
+      "id": "torntools.persistent-list-filter",
+      "greasyforkId": 602534,
+      "name": "Persistent List Filter",
+      "description": "Remember the native sort and filter of the friends, enemies and targets lists, and apply them from the sidebar.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/602534/TORN%3A%20TornTools%20-%20Persistent%20List%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/602534-torn-torntools-persistent-list-filter",
+      "matches": [
+        "https://*.torn.com/*"
+      ]
     }
   ]
 }
