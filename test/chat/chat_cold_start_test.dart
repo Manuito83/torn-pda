@@ -8,6 +8,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 import 'chat_fakes.dart';
 
@@ -101,6 +102,35 @@ void main() {
   }
 
   List<bool> asleep(WebViewProvider web) => [for (final tab in web.tabList) tab.sleepTab];
+
+  List<bool> loadsHidden(WebViewProvider web) => [
+    for (final tab in web.tabList) tab.webView is WebViewFull && (tab.webView! as WebViewFull).loadWhenHidden,
+  ];
+
+  testWidgets('pauseKind by tab state', (tester) async {
+    final web = ColdBrowser([torn, other], active: 0);
+    await mount(tester, web);
+    await web.restoreBehind();
+    expect(NativeChat.pauseKind(web), 'asleep');
+
+    web.wakeTab(0);
+    expect(NativeChat.pauseKind(web), 'not_mounted');
+
+    web.activateTab(1);
+    expect(NativeChat.pauseKind(web), 'no_tab');
+    await end(tester);
+  });
+
+  testWidgets('woken Torn tab loads hidden', (tester) async {
+    final web = ColdBrowser([other, torn, torn], active: 0);
+    await mount(tester, web);
+
+    unawaited(NativeChat.restoreTornBehind(web));
+    await secs(tester, 1);
+
+    expect(loadsHidden(web), [false, true, false]);
+    await end(tester);
+  });
 
   testWidgets('cold, the active tab is Torn: only that one wakes', (tester) async {
     final web = ColdBrowser([other, torn, other], active: 1);

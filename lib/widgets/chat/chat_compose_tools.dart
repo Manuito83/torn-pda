@@ -143,13 +143,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
   }
 
   Future<void> _insertTime() async {
-    final now = TimeOfDay.now();
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: now,
-      builder: (context, child) =>
-          MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child!),
-    );
+    final picked = await showChatTimePicker(context, TimeOfDay.now());
     if (picked == null) return;
     final today = DateTime.now();
     widget.onInsert(ChatTimeRef.insertText(DateTime(today.year, today.month, today.day, picked.hour, picked.minute)));
@@ -616,14 +610,9 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
                   Positioned(
                     right: -1,
                     bottom: -1,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: chatPresenceColor(presence, scheme.onSurface),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: scheme.surfaceContainerHighest, width: 1.5),
-                      ),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: scheme.surfaceContainerHighest, shape: BoxShape.circle),
+                      child: ChatPresenceDot(presence: presence, foreground: scheme.onSurface, size: 12, spoken: true),
                     ),
                   ),
               ],
@@ -646,13 +635,11 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
             ),
             IconButton(
               tooltip: 'Add to the message',
-              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.add_comment_outlined, size: 20),
               onPressed: found == null ? null : () => widget.onInsert('${found.name} [${found.id}]'),
             ),
             IconButton(
               tooltip: 'Player actions',
-              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.more_horiz_rounded, size: 20),
               onPressed: found == null ? null : () => showChatPlayerActions(context, found),
             ),
@@ -850,7 +837,6 @@ class ChatQuickActionsEditor extends StatelessWidget {
                 title: const Text('Rows'),
                 trailing: SegmentedButton<int>(
                   showSelectedIcon: false,
-                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
                   segments: [for (final n in ChatPrefs.quickRowsOptions) ButtonSegment(value: n, label: Text('$n'))],
                   selected: {prefs.quickRows},
                   onSelectionChanged: (v) => prefs.setQuickRows(v.first),

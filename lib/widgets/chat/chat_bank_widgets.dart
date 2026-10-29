@@ -78,14 +78,12 @@ class ChatBankInsert extends StatelessWidget {
           key: buttonKey,
           avatar: const Icon(Icons.account_balance_outlined, size: 18),
           label: Text(giveLabel),
-          visualDensity: VisualDensity.compact,
           onPressed: () => NativeChat.openLink(ChatBanking.link(message.sender.id, entry.request)),
         ),
         ActionChip(
           key: paidKey,
           avatar: const Icon(Icons.done_rounded, size: 18),
           label: const Text('Mark as paid'),
-          visualDensity: VisualDensity.compact,
           onPressed: () => _markPaid(context, amount),
         ),
       ],
@@ -94,7 +92,6 @@ class ChatBankInsert extends StatelessWidget {
           key: buttonKey,
           avatar: Icon(Icons.account_balance_outlined, size: 18, color: theme.hintColor),
           label: Text(giveLabel, style: muted),
-          visualDensity: VisualDensity.compact,
           onPressed: () => _giveAgain(context, entry, paidName),
         ),
         Icon(Icons.check_circle_outline_rounded, size: 16, color: theme.hintColor),
@@ -106,7 +103,7 @@ class ChatBankInsert extends StatelessWidget {
       ignoring: hidden,
       child: AnimatedOpacity(
         opacity: hidden ? 0 : 1,
-        duration: const Duration(milliseconds: 120),
+        duration: chatMotion(context, const Duration(milliseconds: 120)),
         child: Padding(
           padding: const EdgeInsets.only(left: 14, top: 2, bottom: 2),
           child: Wrap(spacing: 6, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: children),

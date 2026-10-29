@@ -189,7 +189,7 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
       ignoring: hidden,
       child: AnimatedOpacity(
         opacity: hidden ? 0 : 1,
-        duration: const Duration(milliseconds: 120),
+        duration: chatMotion(context, const Duration(milliseconds: 120)),
         child: Padding(
           padding: EdgeInsets.only(left: mine ? 0 : 14, right: mine ? 14 : 0),
           child: Column(
@@ -249,7 +249,6 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
                       if (_checks.isNotEmpty)
                         Wrap(
                           spacing: 6,
-                          runSpacing: 6,
                           children: [for (final check in _checks) _chip(theme, check, chatToneColor(check.tone, dark))],
                         ),
                       for (final check in _checks)
@@ -298,7 +297,7 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
       key: ChatTradeInsert.checkKey,
       onTap: _loading ? null : _check,
       child: SizedBox(
-        height: 40,
+        height: 48,
         child: Row(
           children: [
             _loading
@@ -321,30 +320,45 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
   Widget _chip(ThemeData theme, ChatPriceCheck check, Color color) {
     final far = check.tone == ChatPriceTone.off;
     return Semantics(
+      container: true,
       label: '${check.name}: ${check.label}${far ? ', far from market, be careful' : ''}',
       button: true,
       expanded: _open.contains(check.id),
       onTap: () => _toggle(check),
       excludeSemantics: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+      // 48 dp to touch, small chip
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => _toggle(check),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(10)),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(far ? Icons.warning_amber_rounded : Icons.sell_outlined, size: 15, color: color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  check.label,
-                  style: theme.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w600),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+          child: Center(
+            widthFactor: 1,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => _toggle(check),
+              child: Ink(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(far ? Icons.warning_amber_rounded : Icons.sell_outlined, size: 15, color: color),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        check.label,
+                        style: theme.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(_open.contains(check.id) ? Icons.expand_less : Icons.expand_more, size: 15, color: color),
+                  ],
                 ),
               ),
-              Icon(_open.contains(check.id) ? Icons.expand_less : Icons.expand_more, size: 15, color: color),
-            ],
+            ),
           ),
         ),
       ),
@@ -501,7 +515,7 @@ class _ChatItemSheetState extends State<_ChatItemSheet> {
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                             minimumSize: const Size(44, 32),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            tapTargetSize: MaterialTapTargetSize.padded,
                           ),
                           onPressed: () => setState(() => _unfolded = !_unfolded),
                           child: Text(_unfolded ? 'Less' : 'More'),

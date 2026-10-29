@@ -8,6 +8,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
+import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
@@ -168,8 +169,10 @@ void main() {
 
     test('local text marks another day and inserted text is UTC', () {
       final now = DateTime(2026, 10, 14, 10);
-      expect(ChatTimeRef.local(DateTime(2026, 10, 14, 7, 5), now), '07:05');
-      expect(ChatTimeRef.local(DateTime(2026, 10, 15, 7, 5), now), '07:05 tomorrow');
+      final prefs = ChatPrefs();
+      addTearDown(prefs.dispose);
+      expect(prefs.localClock(DateTime(2026, 10, 14, 7, 5), now), '07:05');
+      expect(prefs.localClock(DateTime(2026, 10, 15, 7, 5), now), '07:05 tomorrow');
       expect(ChatTimeRef.insertText(DateTime.utc(2026, 10, 14, 7, 5)), '07:05 TCT');
       expect(ChatTimeRef.insertText(DateTime(2026, 10, 14, 7, 5).toUtc()), matches(RegExp(r'^\d\d:\d\d TCT$')));
     });

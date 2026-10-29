@@ -47,7 +47,7 @@ class ChatMessageActions extends StatelessWidget {
       fixedSize: const Size(36, 36),
       minimumSize: const Size(36, 36),
       padding: EdgeInsets.zero,
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      tapTargetSize: MaterialTapTargetSize.padded,
       foregroundColor: ink,
       backgroundColor: on ? ink.withValues(alpha: 0.14) : null,
     );
@@ -62,7 +62,7 @@ class ChatMessageActions extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Row(mainAxisSize: MainAxisSize.min, children: children),
           ),
         ),
@@ -137,7 +137,7 @@ class ChatMessageActionsEditor extends StatelessWidget {
                   children: [
                     Icon(chatMessageActionLooks[id]!.$1, size: 18),
                     const SizedBox(width: 8),
-                    Text(chatMessageActionLooks[id]!.$2),
+                    Flexible(child: Text(chatMessageActionLooks[id]!.$2)),
                   ],
                 ),
                 value: !prefs.messageActionHidden.contains(id),

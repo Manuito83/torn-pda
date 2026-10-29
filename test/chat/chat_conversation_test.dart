@@ -28,6 +28,7 @@ import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_player_actions_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_status_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_message_actions.dart';
+import 'package:torn_pda/widgets/chat/chat_next_unread.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -228,6 +229,41 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('a room that never answers offers a retry and reloads when Torn is back', (tester) async {
+    start();
+    await _show(tester, chat, const ChatConversationPage(roomId: 'dm:7'));
+    _connect(source);
+    await tester.pump();
+    expect(source.count('openRoom'), 1);
+    expect(find.text('Fetching recent messages'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 21));
+    expect(find.text('Fetching recent messages'), findsNothing);
+    await tester.tap(find.text('Try again'));
+    await tester.pump();
+    expect(source.count('openRoom'), 2);
+    expect(find.text('Fetching recent messages'), findsOneWidget);
+
+    source
+      ..emit(const ChatConnectionEvent(ChatConnection.disconnected))
+      ..emit(const ChatConnectionEvent(ChatConnection.connected, reconnected: true));
+    await tester.pump();
+    expect(source.count('openRoom'), 3);
+
+    source
+      ..emit(const ChatConnectionEvent(ChatConnection.tornDown))
+      ..emit(const ChatConnectionEvent(ChatConnection.connected))
+      ..emit(const ChatReadyEvent(99, myName: 'Me'));
+    await tester.pump();
+    expect(source.count('openRoom'), 4);
+
+    _history(source, 'dm:7', [_ago('a', 'dm:7', 7, 'Bravo', 1)]);
+    await tester.pump(const Duration(seconds: 21));
+    expect(find.text('text a'), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+    await close(tester);
+  });
+
   testWidgets('asks before sending to a public room or a key', (tester) async {
     Future<List<String>> send(String draft, {String? roomId, String? asks, String answer = 'Send'}) async {
       final sent = <String>[];
@@ -341,6 +377,61 @@ void main() {
     chat.dispose();
   });
 
+  testWidgets('the cross on the unread notice marks the room read', (tester) async {
+    start();
+    source
+      ..emit(const ChatReadyEvent(99))
+      ..emit(const ChatUnreadEvent({'faction': 35}));
+    await _show(tester, chat, const ChatConversationPage(roomId: 'faction'));
+    await tester.pump();
+    final now = DateTime.now();
+    _history(source, 'faction', [
+      for (var i = 0; i < 40; i++) chatMessage('m$i', 'faction', sender: 1, at: now.add(Duration(seconds: i))),
+    ]);
+    await tester.pump();
+    source.emit(const ChatUnreadEvent({'faction': 35}));
+    await tester.pump();
+    source.calls.clear();
+
+    final notice = find.byType(ChatUnreadAbove);
+    expect(notice, findsOneWidget);
+    expect(chat.canMarkRead('faction'), isTrue);
+
+    await tester.tap(find.byTooltip('Mark as read'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(source.calls, ['markRead faction']);
+    expect(chat.canMarkRead('faction'), isFalse);
+    expect(tester.widget<ChatPopIn>(find.ancestor(of: notice, matching: find.byType(ChatPopIn))).visible, isFalse);
+    await close(tester);
+  });
+
+  testWidgets('the unread notice itself scrolls to the first unread without reading', (tester) async {
+    start();
+    source
+      ..emit(const ChatReadyEvent(99))
+      ..emit(const ChatUnreadEvent({'faction': 35}));
+    await _show(tester, chat, const ChatConversationPage(roomId: 'faction'));
+    await tester.pump();
+    final now = DateTime.now();
+    _history(source, 'faction', [
+      for (var i = 0; i < 40; i++) chatMessage('m$i', 'faction', sender: 1, at: now.add(Duration(seconds: i))),
+    ]);
+    await tester.pump();
+    source.emit(const ChatUnreadEvent({'faction': 35}));
+    await tester.pump();
+    source.calls.clear();
+    expect(find.byType(ChatUnreadSeparator), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.keyboard_double_arrow_up_rounded));
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(ChatUnreadSeparator), findsOneWidget);
+    expect(source.calls, isEmpty);
+    expect(chat.canMarkRead('faction'), isTrue);
+    await close(tester);
+  });
+
   testWidgets('search in a chat marks and walks the matches', (tester) async {
     start();
     source
@@ -407,6 +498,28 @@ void main() {
     source.emit(ChatMessageEvent(chatMessage('fresh', 'global', sender: 3, text: 'fresh news', at: DateTime.now())));
     await tester.pump();
     expect(rows(), before);
+    await close(tester);
+  });
+
+  testWidgets('with fewer animations the jump to the latest is instant', (tester) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    start();
+    source.emit(const ChatReadyEvent(99));
+    await _show(tester, chat, const ChatConversationPage(roomId: 'global'));
+    await tester.pump();
+    final begin = DateTime.now().subtract(const Duration(hours: 1));
+    _history(source, 'global', [
+      for (var i = 0; i < 40; i++)
+        chatMessage('m$i', 'global', sender: 3, text: 'line $i', at: begin.add(Duration(seconds: i))),
+    ]);
+    await tester.pump();
+    final list = find.byType(ListView).first;
+    await tester.drag(list, const Offset(0, 600));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Go to the latest messages'));
+    await tester.pump();
+    expect(tester.widget<ListView>(list).controller!.offset, 0);
     await close(tester);
   });
 
@@ -721,6 +834,30 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 30));
     expect(api.asked, [7, 7, 7]);
+    await close(tester);
+  });
+
+  testWidgets('the full screen chat minimizes only where a bubble takes it', (tester) async {
+    start();
+    final enabled = NativeChat.prefs.inAppEnabled;
+    addTearDown(
+      () => NativeChat.prefs
+        ..inAppEnabled = enabled
+        ..launcher = ChatLauncher.bubble
+        ..miniBubbles = true,
+    );
+    Future<Finder> minimize(ChatLauncher launcher, {required bool miniBubbles}) async {
+      NativeChat.prefs
+        ..inAppEnabled = true
+        ..launcher = launcher
+        ..miniBubbles = miniBubbles;
+      await _show(tester, chat, ChatConversationPage(key: UniqueKey(), roomId: 'global'));
+      return find.byTooltip('Minimize to the bubble');
+    }
+
+    expect(await minimize(ChatLauncher.browser, miniBubbles: false), findsNothing);
+    expect(await minimize(ChatLauncher.menuBar, miniBubbles: true), findsOneWidget);
+    expect(await minimize(ChatLauncher.bubble, miniBubbles: false), findsOneWidget);
     await close(tester);
   });
 

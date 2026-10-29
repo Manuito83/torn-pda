@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -388,29 +389,31 @@ void main() {
   });
 
   group('touch', () {
-    final start = DateTime(2026, 10, 20, 12);
-
-    test('goes out at most every 15 seconds', () {
-      var sent = 0;
-      NativeChat.sendTouch = () async => sent++;
-      NativeChat.touch(start);
-      NativeChat.touch(start.add(const Duration(seconds: 10)));
-      NativeChat.touch(start.add(const Duration(seconds: 14)));
-      expect(sent, 1);
-      NativeChat.touch(start.add(const Duration(seconds: 15)));
-      expect(sent, 2);
-      NativeChat.touch(start.add(const Duration(seconds: 20)));
-      expect(sent, 2);
-    });
-
     test('never goes out while paused', () {
       var sent = 0;
       NativeChat.sendTouch = () async => sent++;
       NativeChat.tornTabMissing.value = true;
-      NativeChat.touch(start);
+      NativeChat.touch();
       expect(sent, 0);
       NativeChat.tornTabMissing.value = false;
-      NativeChat.touch(start.add(const Duration(seconds: 1)));
+      NativeChat.touch();
+      expect(sent, 1);
+    });
+
+    testWidgets('a tap touches, a scroll does not', (tester) async {
+      var sent = 0;
+      NativeChat.sendTouch = () async => sent++;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ChatTaps(
+            child: ListView(children: [for (var i = 0; i < 50; i++) SizedBox(height: 60, child: Text('row $i'))]),
+          ),
+        ),
+      );
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+      expect(sent, 0);
+      await tester.tap(find.text('row 6'));
       expect(sent, 1);
     });
   });

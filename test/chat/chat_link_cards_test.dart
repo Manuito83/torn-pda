@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -66,12 +67,14 @@ void main() {
     ChatLinkPreviews.fetchCompany = (id) async => null;
     ChatLinkPreviews.fetchItems = () async => null;
     ChatLinkPreviews.fetchThread = (id) async => null;
+    ChatLinkPreviews.fetchForumSections = () async => null;
     ChatLinkPreviews.fetchPage = (uri) async => null;
     ChatLinkPreviews.fetchVideo = (id) async => null;
   });
 
   tearDown(() {
     NativeChat.prefs.linkPreviews = ChatImageAutoLoad.torn;
+    NativeChat.prefs.linkPreviewsOff = {...ChatPrefs.globalRooms};
     NativeChat.prefs
       ..imagesPrivate = true
       ..imagesPublic = false;
@@ -127,7 +130,7 @@ void main() {
       expect(info.detail, allOf(contains('Bravo'), contains('12 posts')));
       expect(ChatLinkInfo.forum(thread(posts: 1, author: ''))!.detail, '1 post');
       expect(ChatLinkInfo.forum(thread(title: ' ')), isNull);
-      expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php#/p=forums&f=2')), isNull);
+      expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php')), isNull);
       final asked = <int>[];
       ChatLinkPreviews.fetchThread = (id) async {
         asked.add(id);
@@ -139,6 +142,84 @@ void main() {
       );
       expect(loaded?.title, 'Big & small');
       expect(asked, [16000000]);
+    });
+
+    test('forum link sections', () {
+      int? section(String url) => link(url).forumId;
+      expect(section('https://www.torn.com/forums.php#/p=forums&f=4'), 4);
+      expect(section('https://www.torn.com/forums.php?p=forums&f=4&b=0&a=0'), 4);
+      expect(section('https://www.torn.com/forums.php#!p=threads&f=67&t=16163503&b=0&a=0'), 67);
+      expect(section('https://www.torn.com/forums.php#/p=threads&f=2&t=5&b=0&a=0&start=20&to=24014610'), 2);
+      expect(section('https://www.torn.com/forums.php'), isNull);
+      expect(section('https://www.torn.com/forums.php#/p=forums&f=abc'), isNull);
+      expect(section('https://www.torn.com/gym.php?f=4'), isNull);
+      expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php#/p=forums&f=4')), 'forumSection:4');
+      expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php#/p=threads&f=4&t=9')), 'forum:9');
+    });
+
+    group('forum names', () {
+      ForumCategoriesResponse$Categories$Item category(int id, String title, [int threads = 10]) =>
+          ForumCategoriesResponse$Categories$Item(id: id, title: title, acronym: 'X', threads: threads);
+
+      var categoryCalls = 0;
+      setUp(() {
+        categoryCalls = 0;
+        ChatLinkPreviews.fetchForumSections = () async {
+          categoryCalls++;
+          return [category(2, 'General &amp; Chat', 1500), category(4, 'Gambling', 1)];
+        };
+      });
+
+      Future<ChatLinkInfo?> load(String url) => ChatLinkPreviews.load(link(url), () => true);
+
+      test('section link', () async {
+        final info = await load('https://www.torn.com/forums.php#/p=forums&f=2');
+        expect(info!.title, 'General & Chat');
+        expect(info.detail, '1,500 threads');
+        expect((await load('https://www.torn.com/forums.php#/p=forums&f=4'))!.detail, '1 thread');
+        expect(categoryCalls, 1);
+      });
+
+      test('unknown section', () async {
+        expect(await load('https://www.torn.com/forums.php#/p=forums&f=99'), isNull);
+      });
+
+      test('thread section', () async {
+        ChatLinkPreviews.fetchThread = (id) async => thread();
+        final info = await load('https://www.torn.com/forums.php#/p=threads&f=4&t=16000000&b=0&a=0&start=20');
+        expect(info!.title, 'Big & small');
+        expect(info.kicker, 'Torn forum - General & Chat');
+      });
+
+      test('sections failing', () async {
+        ChatLinkPreviews.fetchThread = (id) async => thread();
+        ChatLinkPreviews.fetchForumSections = () async => throw Exception('offline');
+        final info = await load('https://www.torn.com/forums.php#/p=threads&f=2&t=16000000');
+        expect(info!.title, 'Big & small');
+        expect(info.kicker, isNull);
+      });
+
+      test('thread failing', () async {
+        final info = await load('https://www.torn.com/forums.php#/p=threads&f=4&t=16000000');
+        expect(info!.title, 'Forum thread #16000000');
+        expect(info.kicker, 'Torn forum - Gambling');
+      });
+
+      test('no sections', () async {
+        ChatLinkPreviews.fetchForumSections = () async => null;
+        expect(await load('https://www.torn.com/forums.php#/p=threads&f=4&t=16000000'), isNull);
+        expect(await load('https://www.torn.com/forums.php#/p=forums&f=4'), isNull);
+      });
+
+      test('failed sections are not retried straight away', () async {
+        ChatLinkPreviews.fetchForumSections = () async {
+          categoryCalls++;
+          return null;
+        };
+        expect(await load('https://www.torn.com/forums.php#/p=forums&f=4'), isNull);
+        expect(await ChatLinkPreviews.forumSections(), isNull);
+        expect(categoryCalls, 1);
+      });
     });
 
     test('web pages use the og title and a resolved image', () {
@@ -567,6 +648,21 @@ void main() {
       await tester.pump(const Duration(minutes: 1));
     });
 
+    testWidgets('a forum card swaps its small label for the section once loaded', (tester) async {
+      ChatLinkPreviews.fetchThread = (id) async => thread();
+      ChatLinkPreviews.fetchForumSections = () async => [
+        const ForumCategoriesResponse$Categories$Item(id: 2, title: 'General', acronym: 'GD', threads: 3),
+      ];
+      await tester.pumpWidget(host('https://www.torn.com/forums.php#/p=threads&f=2&t=16000000'));
+      expect(find.text('Torn forum'), findsOneWidget);
+      expect(find.text('Forum thread #16000000'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 800));
+      await tester.pump();
+      expect(find.text('Torn forum - General'), findsOneWidget);
+      expect(find.text('Big & small'), findsOneWidget);
+      await tester.pump(const Duration(minutes: 1));
+    });
+
     testWidgets('a busy key waits for a tap or a calmer minute', (tester) async {
       var calls = 0;
       var load = 80;
@@ -608,6 +704,24 @@ void main() {
       expect(find.text('A page'), findsOneWidget);
       expect(calls, 1);
       await tester.pump(const Duration(minutes: 1));
+    });
+
+    test('previews load alone by room', () {
+      final prefs = NativeChat.prefs..linkPreviews = ChatImageAutoLoad.never;
+      expect(prefs.previewsAlone('faction', torn: true), isFalse);
+      prefs.linkPreviews = ChatImageAutoLoad.torn;
+      expect(prefs.previewsAlone('faction', torn: true), isTrue);
+      expect(prefs.previewsAlone('faction', torn: false), isFalse);
+      prefs.linkPreviews = ChatImageAutoLoad.always;
+      expect(prefs.previewsAlone('global', torn: true), isTrue);
+      expect(prefs.previewsAlone('global', torn: false), isFalse);
+      expect(prefs.previewsAlone('dm:42', torn: false), isTrue);
+      expect(prefs.previewsAlone('somegroup123', torn: false), isTrue);
+      expect(prefs.previewsAlone(null, torn: false), isFalse);
+      prefs.linkPreviewsOff.add(ChatRooms.other);
+      expect(prefs.previewsAlone('somegroup123', torn: false), isFalse);
+      prefs.linkPreviewsOff.remove('global');
+      expect(prefs.previewsAlone('global', torn: false), isTrue);
     });
 
     testWidgets('a lookalike link never loads and warns before opening', (tester) async {

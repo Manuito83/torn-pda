@@ -10,6 +10,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
 import 'package:torn_pda/pages/chat/chat_page.dart';
 import 'package:torn_pda/pages/chat/chat_search_page.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_big_window.dart';
@@ -57,6 +58,7 @@ void main() {
       ..introSeen = true
       ..inAppEnabled = true
       ..launcher = ChatLauncher.bubble
+      ..launcherTap = ChatLauncherTap.full
       ..ticker = true
       ..bubbleSpot = []
       ..windows = []
@@ -300,16 +302,35 @@ void main() {
       expect(frame.width, greaterThanOrEqualTo(280));
       expect(frame.height, greaterThanOrEqualTo(360));
 
-      await tester.tap(find.byTooltip('Full screen'));
+      await tester.tap(find.byTooltip('More'));
+      await _settle(tester);
+      await _settle(tester);
+      await tester.tap(find.text('Maximize window'));
       await _settle(tester);
       final full = tester.getRect(_bigWindowView);
       expect(full.width, greaterThan(frame.width));
       expect(full.height, greaterThan(frame.height));
-      expect(find.byTooltip('Exit full screen'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Exit full screen'));
+      await tester.tap(find.byTooltip('More'));
+      await _settle(tester);
+      await _settle(tester);
+      await tester.tap(find.text('Restore window size'));
       await _settle(tester);
       expect(tester.getRect(_bigWindowView), frame);
+    });
+
+    testWidgets('Chat settings from More minimizes the window', (tester) async {
+      await _pumpApp(tester);
+      NativeChat.openBigWindow();
+      await _settle(tester);
+      await tester.tap(find.byTooltip('More'));
+      await _settle(tester);
+      await _settle(tester);
+      await tester.tap(find.text('Chat settings'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(ChatSettingsPage), findsOneWidget);
+      expect(NativeChat.bigWindow.value?.minimized, isTrue);
     });
 
     testWidgets('over a rising keyboard it shrinks in place and gets its size back', (tester) async {
@@ -593,17 +614,27 @@ void main() {
       ),
     );
 
-    testWidgets('a tap opens the window, not the page', (tester) async {
+    testWidgets('a tap opens what the setting says', (tester) async {
+      NativeChat.prefs.launcherTap = ChatLauncherTap.window;
       await _pumpApp(tester, home: icon);
       await tester.tap(find.byType(ChatIconButton));
       await _settle(tester);
-      expect(NativeChat.bigWindowShown, isTrue);
       expect(_bigWindowView, findsOneWidget);
       expect(NativeChat.screenOpen.value, isFalse);
-      expect(find.byType(ChatPage), findsNothing);
+      await tester.tap(find.byType(ChatIconButton));
+      await _settle(tester);
+      expect(NativeChat.bigWindow.value, isNull);
+
+      NativeChat.prefs.launcherTap = ChatLauncherTap.full;
+      await tester.tap(find.byType(ChatIconButton));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(ChatPage), findsOneWidget);
+      expect(_bigWindowView, findsNothing);
     });
 
     testWidgets('paused, a tap opens the window and the notice shows', (tester) async {
+      NativeChat.prefs.launcherTap = ChatLauncherTap.window;
       await _pumpApp(tester, home: icon);
       NativeChat.tornTabMissing.value = true;
       await _settle(tester);
@@ -614,16 +645,70 @@ void main() {
       expect(find.text('Chat paused'), findsOneWidget);
     });
 
-    testWidgets('the menu opens the page', (tester) async {
+    testWidgets('the long press menu opens the window, the page and the settings', (tester) async {
       await _pumpApp(tester, home: icon);
       await tester.longPress(find.byType(ChatIconButton));
       await _settle(tester);
-      await tester.tap(find.text('Open the full chat'));
+      await tester.tap(find.text('Window'));
+      await _settle(tester);
+      expect(_bigWindowView, findsOneWidget);
+
+      NativeChat.closeBigWindow();
+      await tester.longPress(find.byType(ChatIconButton));
+      await _settle(tester);
+      await tester.tap(find.text('Chat settings'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(ChatSettingsPage), findsOneWidget);
+      await tester.pageBack();
+      await _settle(tester);
+      await _settle(tester);
+
+      await tester.longPress(find.byType(ChatIconButton));
+      await _settle(tester);
+      await tester.tap(find.text('Full chat'));
       await tester.pump(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
       expect(NativeChat.screenOpen.value, isTrue);
       expect(find.byType(ChatPage), findsOneWidget);
-      expect(_bigWindowView, findsNothing);
+    });
+  });
+
+  group('bubble', () {
+    Finder bubble() => find.byIcon(Icons.forum_rounded).first;
+
+    testWidgets('a tap opens what the setting says', (tester) async {
+      final key = await _pumpApp(tester);
+      await tester.tap(bubble());
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(ChatPage), findsOneWidget);
+      key.currentState!.pop();
+      await _settle(tester);
+      await _settle(tester);
+
+      NativeChat.prefs.launcherTap = ChatLauncherTap.window;
+      await tester.tap(bubble());
+      await _settle(tester);
+      expect(_bigWindowView, findsOneWidget);
+      expect(NativeChat.screenOpen.value, isFalse);
+    });
+
+    testWidgets('a long press gives the chat menu', (tester) async {
+      await _pumpApp(tester);
+      await tester.longPress(bubble());
+      await _settle(tester);
+      await tester.tap(find.text('Window'));
+      await _settle(tester);
+      expect(_bigWindowView, findsOneWidget);
+
+      await tester.longPress(bubble());
+      await _settle(tester);
+      await tester.tap(find.text('Chat settings'));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(ChatSettingsPage), findsOneWidget);
+      expect(NativeChat.bigWindow.value?.minimized, isTrue);
     });
   });
 

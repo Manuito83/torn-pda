@@ -11,7 +11,7 @@ class TornChatSource implements ChatSource {
   bool get available => false;
 
   @override
-  Stream<ChatEvent> get events => Stream<ChatEvent>.empty();
+  Stream<ChatEvent> get events => const Stream<ChatEvent>.empty();
 
   @override
   Future<void> openRoom(String roomId) async {}
@@ -60,6 +60,9 @@ class TornChatSource implements ChatSource {
 
   @override
   Future<void> closeDm(int userId) async {}
+
+  @override
+  Future<void> typing(String roomId, bool on) async {}
 
   @override
   Future<void> send(String roomId, String content, String reqId) async {}

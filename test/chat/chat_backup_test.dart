@@ -11,6 +11,7 @@ import 'package:torn_pda/models/chat/chat_item_aliases.dart';
 import 'package:torn_pda/models/chat/chat_person.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
+import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -59,6 +60,10 @@ void main() {
       ..setBubbleRoom('global', true)
       ..setBubbleTotal(true)
       ..setLauncher(ChatLauncher.menuBar)
+      ..setLauncherTap(ChatLauncherTap.window)
+      ..setMiniBubbles(false)
+      ..setChatTimes(ChatTimes.local)
+      ..setAnimations(ChatAnimations.quick)
       ..setProfileIcon(ChatProfileIcon.torn)
       ..setTicker(false)
       ..setTickerTop(false)
@@ -80,7 +85,6 @@ void main() {
       ..setConfirmPublic(true)
       ..setShowAvatars(false)
       ..setPlayerColors(false)
-      ..setShortcuts(false)
       ..setMentions(false)
       ..setAlertNotify(false)
       ..setAlertVibrate(true)
@@ -124,12 +128,32 @@ void main() {
     expect((target.isMuted('faction'), target.isMuted('company')), (true, false));
     expect(target.frozenUntilOf('poker'), isNull);
     expect(target.profileIcon, ChatProfileIcon.torn);
+    expect(target.animations, ChatAnimations.quick);
 
     final restarted = ChatPrefs();
     addTearDown(restarted.dispose);
     await restarted.load();
     restarted.syncBrowser(enabled: true, words: await Prefs().getHighlightWordList(), color: 0);
     expect(ChatBackup.export(restarted, now), exported);
+  });
+
+  test('the app icon menu comes back with the chat settings', () async {
+    AppIconMenu.setItems = (_) async {};
+    final prefs = ChatPrefs();
+    addTearDown(prefs.dispose);
+    await AppIconMenu.setSlots(['chat:faction', 'open_gym', '', 'open_torn']);
+    final exported = ChatBackup.export(prefs, DateTime.now());
+    await AppIconMenu.setSlots([for (final s in AppIconMenu.sections) s.type]);
+
+    prefs.applyBackup(ChatBackup.parse(exported), replace: false);
+    await pumpEventQueue();
+    expect(AppIconMenu.slots.value, ['open_torn', 'open_gym', 'open_crimes', 'open_travel']);
+    prefs.applyBackup(ChatBackup.parse(exported), replace: true);
+    await pumpEventQueue();
+    expect(AppIconMenu.slots.value, ['chat:faction', 'open_gym', '', 'open_torn']);
+    prefs.applyBackup(ChatBackup.parse(backup(prefs: {'appIconMenu': ['open_gym']})), replace: true);
+    await pumpEventQueue();
+    expect(AppIconMenu.slots.value, ['chat:faction', 'open_gym', '', 'open_torn']);
   });
 
   test('message actions keep their order and a new one lands last', () async {
@@ -187,12 +211,15 @@ void main() {
     await fresh.load();
     expect(fresh.launcher, ChatLauncher.bubble);
 
-    fresh.setLauncher(ChatLauncher.menuBar);
+    fresh
+      ..setLauncher(ChatLauncher.menuBar)
+      ..setLauncherTap(ChatLauncherTap.window);
     await Future<void>.delayed(Duration.zero);
     final restarted = ChatPrefs();
     addTearDown(restarted.dispose);
     await restarted.load();
     expect(restarted.launcher, ChatLauncher.menuBar);
+    expect(restarted.launcherTap, ChatLauncherTap.window);
 
     expect(ChatBackup.parse(backup(prefs: {'launcher': 'browser'})).launcher, ChatLauncher.browser);
   });
@@ -222,6 +249,7 @@ void main() {
           'playerNotes': {'2': ' friend ', '3': 7},
           'compactMode': true,
           'waitingHours': -1,
+          'linkPreviewsOff': ['dm'],
         },
       ),
     );
@@ -242,6 +270,7 @@ void main() {
     expect(merged.toneOf('faction').sound, ChatSound.swordClash);
     expect(merged.playerNotes, {2: 'friend'});
     expect(merged.compactMode, isFalse);
+    expect(merged.linkPreviewsOff, {'global', 'trade', 'poker', 'dm'});
 
     final replaced = customized();
     addTearDown(replaced.dispose);
@@ -258,5 +287,6 @@ void main() {
     expect(replaced.toneOf('faction').sound, ChatSound.swordClash);
     expect(replaced.compactMode, isTrue);
     expect(replaced.waitingHours, 3);
+    expect(replaced.linkPreviewsOff, {'dm'});
   });
 }

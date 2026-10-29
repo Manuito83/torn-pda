@@ -6,11 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
 import 'package:torn_pda/utils/discreet_schedule.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import 'chat_fakes.dart';
 
@@ -20,7 +20,7 @@ void main() {
   const plugin = MethodChannel('dexterous.com/flutter/local_notifications');
   final shown = <Map>[];
   final push = {'event': 'tchat', 'kind': 'dm', 'userId': '7', 'sender': 'Bravo', 'message': 'hello'};
-  final skip = NativeChat.compiled ? false : 'Native chat not configured';
+  final skip = ChatEngine.enabled ? false : 'Native chat not configured';
 
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(plugin, (call) async {

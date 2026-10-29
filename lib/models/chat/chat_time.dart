@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 /// An explicit "18:00 TCT" in a message
 class ChatTimeRef {
   const ChatTimeRef(this.hour, this.minute, this.raw);
@@ -61,27 +63,6 @@ class ChatTimeRef {
     return seconds > 0 ? 'in $text' : '$text ago';
   }
 
-  static String clock(DateTime time) =>
-      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-
-  /// Local time, "tomorrow" if another day
-  static String local(DateTime at, DateTime now) {
-    final here = at.toLocal();
-    final today = now.toLocal();
-    final days = DateTime(
-      here.year,
-      here.month,
-      here.day,
-    ).difference(DateTime(today.year, today.month, today.day)).inDays;
-    final day = switch (days) {
-      0 => '',
-      1 => ' tomorrow',
-      -1 => ' yesterday',
-      _ => ' (${here.month}/${here.day})',
-    };
-    return '${clock(here)}$day';
-  }
-
   /// Takes a time in the device's zone
-  static String insertText(DateTime time) => '${clock(time.toUtc())} TCT';
+  static String insertText(DateTime time) => '${DateFormat('HH:mm').format(time.toUtc())} TCT';
 }

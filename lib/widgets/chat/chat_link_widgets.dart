@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
@@ -44,6 +45,61 @@ import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+final _partsCache = <(String, ItemsModel?, List<ChatItemAlias>, bool), List<(Object, int)>>{};
+
+List<(Object, int)> chatMessageParts(String text, {ItemsModel? catalog, bool slang = false}) {
+  final key = (text, catalog, NativeChat.prefs.itemAliases, slang);
+  final parts = _partsCache.remove(key) ?? List<(Object, int)>.unmodifiable(_split(text, catalog, slang));
+  _partsCache[key] = parts;
+  if (_partsCache.length > 400) _partsCache.remove(_partsCache.keys.first);
+  return parts;
+}
+
+List<(Object, int)> _split(String text, ItemsModel? catalog, bool slang) => [
+  for (final (run, style) in ChatFormat.runs(text))
+    for (final part in ChatLink.split(run))
+      if (part is String)
+        for (final piece in ChatPlayerRef.split(part))
+          if (piece is String)
+            for (final bit in ChatTimeRef.split(piece))
+              if (bit is String)
+                for (final cash in ChatMoneyRef.split(bit))
+                  if (cash is String)
+                    for (final item
+                        in catalog == null ? [cash] : ChatItemRef.split(cash, catalog, NativeChat.prefs.itemAliases))
+                      if (item is String && slang)
+                        for (final word in ChatWiki.split(item)) (word, style)
+                      else
+                        (item, style)
+                  else
+                    (cash, style)
+              else
+                (bit, style)
+          else
+            (piece, style)
+      else
+        (part, style),
+];
+
+Map<CustomSemanticsAction, VoidCallback> chatRefActions(
+  BuildContext context,
+  String text, {
+  String? roomId,
+  bool slang = false,
+}) {
+  final items = roomId != null && ChatPriceCheck.rooms.contains(roomId) && NativeChat.prefs.priceCheck;
+  final catalog = items ? ChatPriceCheck.loadedCatalog : null;
+  final parts = chatMessageParts(text, catalog: catalog, slang: slang).map((p) => p.$1);
+  return {
+    for (final ref in parts.whereType<ChatTimeRef>().take(3))
+      CustomSemanticsAction(label: '${ref.raw} in your time'): () => showChatTimeSheet(context, ref),
+    for (final ref in parts.whereType<ChatMoneyRef>().take(3))
+      CustomSemanticsAction(label: 'Amount ${ChatMoneyRef.format(ref.amount)}'): () => showChatMoneySheet(context, ref),
+    for (final ref in parts.whereType<ChatItemRef>().take(3))
+      CustomSemanticsAction(label: 'Price of ${ref.name}'): () => showChatItemSheet(context, ref),
+  };
+}
 
 class ChatMessageText extends StatefulWidget {
   const ChatMessageText({
@@ -140,33 +196,7 @@ class _ChatMessageTextState extends State<ChatMessageText> {
       tap.dispose();
     }
     _taps.clear();
-    _parts = [
-      for (final (run, style) in ChatFormat.runs(widget.content))
-        for (final part in ChatLink.split(run))
-          if (part is String)
-            for (final piece in ChatPlayerRef.split(part))
-              if (piece is String)
-                for (final bit in ChatTimeRef.split(piece))
-                  if (bit is String)
-                    for (final cash in ChatMoneyRef.split(bit))
-                      if (cash is String)
-                        for (final item
-                            in catalog == null
-                                ? [cash]
-                                : ChatItemRef.split(cash, catalog, NativeChat.prefs.itemAliases))
-                          if (item is String && widget.slang)
-                            for (final word in ChatWiki.split(item)) (word, style)
-                          else
-                            (item, style)
-                      else
-                        (cash, style)
-                  else
-                    (bit, style)
-              else
-                (piece, style)
-          else
-            (part, style),
-    ];
+    _parts = chatMessageParts(widget.content, catalog: catalog, slang: widget.slang);
   }
 
   @override
@@ -222,9 +252,14 @@ class _ChatMessageTextState extends State<ChatMessageText> {
     );
     final formatted = _parts.any((p) => p.$2 != 0);
     final lead = widget.lead;
+    // The parent reads the text aloud
     if (links.isEmpty && !refs && !formatted) {
-      if (widget.highlight?.isNotEmpty != true && lead == null) return Text(widget.content, style: style);
-      return Text.rich(TextSpan(children: [?lead, ..._marked(widget.content, mark)]), style: style);
+      if (widget.highlight?.isNotEmpty != true && lead == null) {
+        return ExcludeSemantics(child: Text(widget.content, style: style));
+      }
+      return ExcludeSemantics(
+        child: Text.rich(TextSpan(children: [?lead, ..._marked(widget.content, mark)]), style: style),
+      );
     }
 
     final onlyLinks = _parts.every((p) => p.$1 is ChatLink || (p.$1 is String && (p.$1 as String).trim().isEmpty));
@@ -238,7 +273,7 @@ class _ChatMessageTextState extends State<ChatMessageText> {
       if (tapIndex == _taps.length) _taps.add(_LinkPress());
       final tap = _taps[tapIndex++]..long.onLongPress = null;
       if (part is ChatTimeRef) {
-        tap.onTap = () => _showChatTimeSheet(context, part);
+        tap.onTap = () => showChatTimeSheet(context, part);
         spans.add(
           TextSpan(
             text: part.raw,
@@ -252,7 +287,7 @@ class _ChatMessageTextState extends State<ChatMessageText> {
         continue;
       }
       if (part is ChatMoneyRef) {
-        tap.onTap = () => _showChatMoneySheet(context, part);
+        tap.onTap = () => showChatMoneySheet(context, part);
         spans.add(
           TextSpan(
             text: part.raw,
@@ -326,21 +361,26 @@ class _ChatMessageTextState extends State<ChatMessageText> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (!onlyLinks)
-          Text.rich(TextSpan(children: [?lead, ...spans]), style: style)
+          ExcludeSemantics(child: Text.rich(TextSpan(children: [?lead, ...spans]), style: style))
         else if (lead != null)
-          Text.rich(lead, style: style),
+          ExcludeSemantics(child: Text.rich(lead, style: style)),
         for (final link in links)
           Padding(
             padding: EdgeInsets.only(top: onlyLinks && link == links.first ? 2 : 6),
-            child: link.isImage && link.warning == null
-                ? ChatImageCard(link: link, color: widget.color, roomId: widget.roomId)
-                : ChatScriptLink.of(link) != null
-                ? ChatScriptCard(link: link, color: widget.color)
-                : ChatLinkCard(
-                    link: link,
-                    color: widget.color,
-                    named: link.kind == ChatLinkKind.bazaar && NativeChat.prefs.bazaarAnalysis ? _named : null,
-                  ),
+            child: Semantics(
+              container: true,
+              link: !link.isImage || link.warning != null,
+              child: link.isImage && link.warning == null
+                  ? ChatImageCard(link: link, color: widget.color, roomId: widget.roomId)
+                  : ChatScriptLink.of(link) != null
+                  ? ChatScriptCard(link: link, color: widget.color)
+                  : ChatLinkCard(
+                      link: link,
+                      color: widget.color,
+                      named: link.kind == ChatLinkKind.bazaar && NativeChat.prefs.bazaarAnalysis ? _named : null,
+                      roomId: widget.roomId,
+                    ),
+            ),
           ),
       ],
     );
@@ -474,13 +514,14 @@ class ChatInsertFrame extends StatelessWidget {
 }
 
 class ChatLinkCard extends StatefulWidget {
-  const ChatLinkCard({super.key, required this.link, required this.color, this.named});
+  const ChatLinkCard({super.key, required this.link, required this.color, this.named, this.roomId});
 
   final ChatLink link;
   final Color color;
 
   /// Null skips the bazaar summary
   final Set<int>? named;
+  final String? roomId;
 
   static const Map<ChatLinkKind, (IconData, String)> _looks = {
     ChatLinkKind.player: (Icons.person_rounded, 'Player'),
@@ -539,11 +580,7 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
     super.dispose();
   }
 
-  bool get _auto => switch (NativeChat.prefs.linkPreviews) {
-    ChatImageAutoLoad.never => false,
-    ChatImageAutoLoad.torn => widget.link.isTorn,
-    ChatImageAutoLoad.always => true,
-  };
+  bool get _auto => NativeChat.prefs.previewsAlone(widget.roomId, torn: widget.link.isTorn);
 
   void _prepare() {
     final key = _key;
@@ -676,14 +713,14 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
     final video = link.videoId != null;
     final (looksIcon, label) = ChatLinkCard._looks[link.kind]!;
     final icon = video ? Icons.smart_display_rounded : looksIcon;
+    final info = _info;
     final top = switch (link.kind) {
       _ when warning != null => warning,
       _ when video => 'YouTube',
       ChatLinkKind.external => 'Link',
       ChatLinkKind.torn => 'Torn',
-      _ => 'Torn ${label.toLowerCase()}',
+      _ => info?.kicker ?? 'Torn ${label.toLowerCase()}',
     };
-    final info = _info;
     final title = info?.title ?? link.title;
     final image = info?.imageUrl;
     final bazaar = widget.named == null || link.id == null ? null : info?.bazaar;
@@ -718,11 +755,7 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
                       Positioned(
                         right: -2,
                         bottom: -2,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(color: chatPresenceColor(presence, color), shape: BoxShape.circle),
-                        ),
+                        child: ChatPresenceDot(presence: presence, foreground: color, spoken: true),
                       ),
                   ],
                 ),
@@ -786,7 +819,6 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
               else if (canAsk)
                 IconButton(
                   tooltip: 'Show preview',
-                  visualDensity: VisualDensity.compact,
                   iconSize: 18,
                   onPressed: _load,
                   icon: Icon(Icons.travel_explore_rounded, color: color.withValues(alpha: 0.7)),
@@ -794,7 +826,6 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
               if (link.kind == ChatLinkKind.player && link.id != null)
                 IconButton(
                   tooltip: 'Player actions',
-                  visualDensity: VisualDensity.compact,
                   iconSize: 18,
                   onPressed: () => showChatPlayerActions(
                     context,
@@ -849,7 +880,7 @@ class _Thumb extends StatelessWidget {
   }
 }
 
-Future<void> _showChatTimeSheet(BuildContext context, ChatTimeRef ref) async {
+Future<void> showChatTimeSheet(BuildContext context, ChatTimeRef ref) async {
   final now = DateTime.now();
   final at = ref.occurrence(now);
   await showModalBottomSheet<void>(
@@ -858,14 +889,14 @@ Future<void> _showChatTimeSheet(BuildContext context, ChatTimeRef ref) async {
     builder: (context) => SafeArea(
       child: ListTile(
         leading: const Icon(Icons.schedule_rounded),
-        title: Text('${ChatTimeRef.local(at, now)} your time'),
+        title: Text('${NativeChat.prefs.localClock(at, now)} your time'),
         subtitle: Text(ChatTimeRef.relative(at, now)),
       ),
     ),
   );
 }
 
-Future<void> _showChatMoneySheet(BuildContext context, ChatMoneyRef ref) async {
+Future<void> showChatMoneySheet(BuildContext context, ChatMoneyRef ref) async {
   final bars = Get.isRegistered<ChainStatusController>() ? Get.find<ChainStatusController>().barsAndStatusModel : null;
   final age = DateTime.now().millisecondsSinceEpoch ~/ 1000 - (bars?.serverTime ?? 0);
   final onHand = bars?.moneyOnhand;
@@ -1004,7 +1035,7 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
                             : Icons.notifications_active_rounded),
                 ),
                 title: const Text('Alerts and mute'),
-                subtitle: until == null ? null : Text('Muted until ${chatMuteUntilText(until)}'),
+                subtitle: until == null ? null : Text('Muted until ${NativeChat.prefs.stamp(until)}'),
                 onTap: () => Navigator.of(context).pop(('alerts', false)),
               ),
               if (notes != null)

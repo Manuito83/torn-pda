@@ -70,7 +70,9 @@ class PrefsBackupService {
     'pda_nativeChatReminders',
     'pda_nativeChatShortcutCache',
     'pda_nativeChatOpens',
+    'pda_appIconMenu',
     'pda_nativeChatWindows',
+    'pda_nativeChatOnScreen',
     'pda_nativeChatTones',
     'pda_nativeChatMuted',
     'pda_nativeChatMutedUntil',
@@ -86,6 +88,7 @@ class PrefsBackupService {
     'pda_nativeChatRoomFilters',
     'pda_nativeChatPausedAt',
     'pda_nativeChatOwner',
+    'pda_nativeChatInbox',
   };
 
   /// Export preferences for local backup.

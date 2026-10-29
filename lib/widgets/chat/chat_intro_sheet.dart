@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/chat/chat_appearance_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_help.dart';
 import 'package:torn_pda/widgets/chat/chat_logo_bubble.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -82,6 +83,33 @@ class _ChatIntro extends StatelessWidget {
         ],
       ),
     );
+    final needs = welcome ? const <ChatNeed>{} : chatNeedsOf(MediaQuery.of(context));
+    Widget access() => Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer.withValues(alpha: 0.35),
+        border: Border.all(color: scheme.secondary),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ExpansionTile(
+        leading: const Icon(Icons.accessibility_new_rounded),
+        title: Text(ChatHelpGroup.accessibility.title, style: theme.textTheme.titleMedium),
+        subtitle: Text(chatNeedsText(needs)),
+        initiallyExpanded: true,
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(top: 4),
+        shape: const Border(),
+        collapsedShape: const Border(),
+        children: [
+          for (final e in chatHelpOf(ChatHelpGroup.accessibility, needs)) ...[
+            entry(e.icon, e.title, e.text),
+            if (e.needs.contains(ChatNeed.largeText) && needs.contains(ChatNeed.largeText))
+              const Padding(padding: EdgeInsets.only(bottom: 12), child: ChatTextSizeSetting()),
+          ],
+        ],
+      ),
+    );
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + MediaQuery.viewPaddingOf(context).bottom),
       child: Column(
@@ -95,17 +123,20 @@ class _ChatIntro extends StatelessWidget {
           const SizedBox(height: 18),
           if (welcome)
             for (final e in chatHelp.where((e) => e.spots.contains(ChatHelpSpot.intro))) entry(e.icon, e.title, e.text)
-          else
+          else ...[
+            if (needs.isNotEmpty) access(),
             for (final group in ChatHelpGroup.values)
-              ExpansionTile(
-                title: Text(group.title, style: theme.textTheme.titleMedium),
-                initiallyExpanded: group == ChatHelpGroup.start,
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: const EdgeInsets.only(top: 4),
-                shape: const Border(),
-                collapsedShape: const Border(),
-                children: [for (final e in chatHelp.where((e) => e.group == group)) entry(e.icon, e.title, e.text)],
-              ),
+              if (needs.isEmpty || group != ChatHelpGroup.accessibility)
+                ExpansionTile(
+                  title: Text(group.title, style: theme.textTheme.titleMedium),
+                  initiallyExpanded: group == ChatHelpGroup.start,
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(top: 4),
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  children: [for (final e in chatHelp.where((e) => e.group == group)) entry(e.icon, e.title, e.text)],
+                ),
+          ],
           if (welcome) ...[
             const ChatHideWebChatTile(title: 'Hide Torn\'s web chat in browser tabs', contentPadding: EdgeInsets.zero),
             ListenableBuilder(
@@ -117,7 +148,7 @@ class _ChatIntro extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Open the chat from', style: theme.textTheme.bodyLarge),
+                        Text('Chat button', style: theme.textTheme.bodyLarge),
                         const SizedBox(height: 6),
                         const ChatLauncherPicker(),
                       ],

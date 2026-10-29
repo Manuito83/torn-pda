@@ -174,7 +174,7 @@ class ChatFactionRosterSheet extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (presence != null)
-                            Icon(Icons.circle, size: 10, color: chatPresenceColor(presence, scheme.onSurface)),
+                            ChatPresenceDot(presence: presence, foreground: scheme.onSurface, spoken: true),
                           const SizedBox(width: 6),
                           Text(ago ?? 'now', style: theme.textTheme.labelMedium),
                         ],

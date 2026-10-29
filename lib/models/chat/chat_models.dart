@@ -66,6 +66,9 @@ class ChatRoom {
 
   final String? emblemUrl;
 
+  /// Torn's reportTyping rule
+  final bool reportTyping;
+
   const ChatRoom({
     required this.id,
     required this.name,
@@ -76,6 +79,7 @@ class ChatRoom {
     this.lastMessage,
     this.icon,
     this.emblemUrl,
+    this.reportTyping = true,
   });
 
   /// Contextual room while abroad
@@ -93,6 +97,7 @@ class ChatRoom {
     lastMessage: lastMessage,
     icon: icon,
     emblemUrl: url,
+    reportTyping: reportTyping,
   );
 
   static String dmId(int userId) => 'dm:$userId';

@@ -14,6 +14,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
+import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
 import 'package:torn_pda/widgets/chaining/target_card.dart';
 import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
@@ -134,6 +135,7 @@ class TargetsListState extends State<TargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
+          profileSlidableAction(widget.targets[index].playerId),
           if (_chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).isEmpty)
             SlidableAction(
               label: 'Add to panic!',

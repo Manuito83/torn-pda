@@ -49,6 +49,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
@@ -86,6 +87,7 @@ import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.d
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/widgets/chaining/chain_mini_window.dart';
 import 'package:torn_pda/widgets/chat/chat_logo_bubble.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
@@ -109,13 +111,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 bool routeWithDrawer = true;
 String routeName = "drawer";
-
-const List<ShortcutItem> pdaShortcutItems = [
-  ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
-  ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
-  ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
-  ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
-];
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -282,8 +277,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       });
 
-      // The chat publishes its own once loaded
-      if (!NativeChat.compiled) quickActions.setShortcutItems(pdaShortcutItems);
+      // The chat start publishes the menu
+      if (!NativeChat.compiled) AppIconMenu.publish();
     } catch (e, stackTrace) {
       log("Error initializing quick actions: $e");
       logErrorToCrashlytics("Error initializing quick actions", e, stackTrace);
@@ -731,11 +726,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_restore_webview_focus_allowed": true,
         "browser_engine_prewarm_allowed": true,
         "browser_engine_prewarm_unmount_after_load": false,
+        "browser_hidden_tab_load_allowed": true,
+        "browser_hidden_tab_rebuild_allowed": true,
+        "browser_torn_page_refresh_allowed": true,
         "browser_webview_recovery_allowed": true,
         "browser_render_process_gone_allowed": true,
         "browser_recovery_overlay_allowed": true,
         "browser_park_background_tabs_allowed": true,
         "browser_split_browsers_allowed": true,
+        "chain_web_live_enabled": true,
+        "chain_mini_window_enabled": true,
         // Default for the browser memory settings (can be overriden)
         "browser_park_background_tabs_default": false,
         "browser_webview_hardware_layer_mode": "default_on",
@@ -852,6 +852,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_park_background_tabs_allowed",
       );
       _webViewProvider.splitBrowsersAllowedRC = remoteConfig.getBool("browser_split_browsers_allowed");
+      _webViewProvider.hiddenTabLoadAllowedRC = remoteConfig.getBool("browser_hidden_tab_load_allowed");
+      _webViewProvider.hiddenTabRebuildAllowedRC = remoteConfig.getBool("browser_hidden_tab_rebuild_allowed");
+      _webViewProvider.tornPageRefreshRC = remoteConfig.getBool("browser_torn_page_refresh_allowed");
+      final bool chainWebLiveRC = remoteConfig.getBool("chain_web_live_enabled");
+      Get.find<ChainStatusController>().webLiveAllowed = chainWebLiveRC;
+      ChainMiniWindow.setRemote(mini: remoteConfig.getBool("chain_mini_window_enabled"), web: chainWebLiveRC);
 
       // Browser memory defaults (also persisted, so they are known before the fetch on next launch)
       _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");

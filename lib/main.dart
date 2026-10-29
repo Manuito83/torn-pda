@@ -82,12 +82,12 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
+import 'package:torn_pda/widgets/chaining/chain_mini_window.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 import 'package:torn_pda/widgets/pip/pip_view.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
-import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
 import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
@@ -96,8 +96,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '4.0.0';
-const String androidCompilation = '693';
-const String iosCompilation = '693';
+const String androidCompilation = '698';
+const String iosCompilation = '698';
 
 const double kSplitScreenMinWidth = 800;
 
@@ -432,11 +432,12 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
             children: [
               const BrowserEnginePrewarm(),
               PipHost(child: content),
-              if (ChatEngine.enabled)
+              if (NativeChat.engineEnabled)
                 ValueListenableBuilder(
                   valueListenable: NativeChat.remoteEnabled,
                   builder: (_, on, _) => on ? ChatOverlay(navigatorKey: navigatorKey) : const SizedBox.shrink(),
                 ),
+              if (chainMiniEnabled) const ChainMiniHost(),
             ],
           );
         },

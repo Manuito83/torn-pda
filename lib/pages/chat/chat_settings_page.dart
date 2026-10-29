@@ -9,6 +9,7 @@ import 'package:torn_pda/pages/chat/settings/chat_rooms_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
 import 'package:torn_pda/pages/chat/settings/chat_upload_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_writing_settings_page.dart';
+import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_alias_widgets.dart';
@@ -32,13 +33,12 @@ Future<void> showChatSettings(NavigatorState navigator, {bool alerts = false, bo
 class ChatSettingsPage extends StatelessWidget {
   const ChatSettingsPage({super.key});
 
-  String _alertsSummary(BuildContext context) {
+  String _alertsSummary() {
     final prefs = NativeChat.prefs;
-    String time(int minutes) => TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60).format(context);
     return [
       prefs.mentions ? 'Mentions on' : 'Mentions off',
       prefs.ticker ? 'Ticker ${prefs.tickerTop ? 'top' : 'bottom'}' : 'Ticker off',
-      if (prefs.quietHours && prefs.alertNotify) 'Quiet ${time(prefs.quietFrom)} to ${time(prefs.quietTo)}',
+      if (prefs.quietHours && prefs.alertNotify) 'Quiet ${prefs.minutesClock(prefs.quietFrom)} to ${prefs.minutesClock(prefs.quietTo)}',
     ].join(' - ');
   }
 
@@ -53,7 +53,7 @@ class ChatSettingsPage extends StatelessWidget {
     if (replace && backup.inAppEnabled != null && backup.inAppEnabled != NativeChat.prefs.inAppEnabled) {
       NativeChat.setEnabled(backup.inAppEnabled!);
     }
-    NativeChat.refreshShortcuts();
+    AppIconMenu.publish();
     chatToast('Chat settings imported', seconds: 2);
     return null;
   }
@@ -75,7 +75,7 @@ class ChatSettingsPage extends StatelessWidget {
           const SizedBox(height: 8),
           ChatSettingsLink(
             leading: const Icon(Icons.ads_click_rounded),
-            title: 'Open the chat from',
+            title: 'Chat button',
             subtitle: switch (prefs.launcher) {
               ChatLauncher.bubble => 'Bubble',
               ChatLauncher.browser => 'Browser',
@@ -87,7 +87,7 @@ class ChatSettingsPage extends StatelessWidget {
           ChatSettingsLink(
             leading: const Icon(Icons.notifications_rounded),
             title: 'Alerts',
-            subtitle: _alertsSummary(context),
+            subtitle: _alertsSummary(),
             page: const ChatAlertsSettingsPage(),
           ),
           const ChatSettingsLink(

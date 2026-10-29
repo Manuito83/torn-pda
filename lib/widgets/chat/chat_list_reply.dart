@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
@@ -8,6 +10,7 @@ import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_appearance_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_send_check_dialog.dart';
+import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class ChatListReply extends StatefulWidget {
@@ -102,7 +105,9 @@ class _ChatListReplyState extends State<ChatListReply>
 
   void _toNewest() {
     setState(() => _frozenAt = null);
-    if (_scroll.hasClients) _scroll.animateTo(0, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    if (!_scroll.hasClients) return;
+    if (MediaQuery.disableAnimationsOf(context)) return _scroll.jumpTo(0);
+    _scroll.animateTo(0, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
   }
 
   void _send() {
@@ -136,60 +141,84 @@ class _ChatListReplyState extends State<ChatListReply>
         ? scheme.onSurfaceVariant.withValues(alpha: 0.6)
         : scheme.onSurfaceVariant;
     final mine = chat.myUserId != null && m.sender.id == chat.myUserId;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (quote != null)
-          Container(
-            margin: const EdgeInsets.only(bottom: 4),
-            padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
-            decoration: BoxDecoration(
-              color: scheme.onSurface.withValues(alpha: 0.06),
-              border: Border(left: BorderSide(color: scheme.onSurface.withValues(alpha: 0.4), width: 3)),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${quote.author}\n',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: quote.excerpt),
-                ],
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: small?.copyWith(color: color),
-            ),
-          ),
-        if (forwarded != null)
-          Text(
-            'Forwarded from ${forwarded.from}',
-            style: small?.copyWith(color: color, fontStyle: FontStyle.italic),
-          ),
-        ChatMessageText(
-          content: quote?.body ?? forwarded?.body ?? m.content,
-          color: color,
-          slang: ChatWiki.slangIn(m.roomId, prefs.slangEverywhere),
-          lead: TextSpan(
-            children: [
-              if (m.state == ChatMessageState.failed)
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: Icon(Icons.error_outline_rounded, size: 15, color: scheme.error, semanticLabel: 'Not sent'),
-                  ),
+    final who = mine ? 'You' : prefs.displayName(m.sender.id, m.sender.name);
+    final body = quote?.body ?? forwarded?.body ?? m.content;
+    final spoken = [
+      who,
+      if (quote != null) 'replying to ${quote.author}: ${chatSpokenText(quote.excerpt)}',
+      if (forwarded != null) 'forwarded from ${forwarded.from}',
+      chatSpokenText(body),
+      if (m.state == ChatMessageState.pending) 'sending',
+      if (m.state == ChatMessageState.failed) 'not sent',
+    ].join(', ');
+    return Semantics(
+      container: true,
+      label: spoken,
+      customSemanticsActions: {
+        for (final ref in ChatPlayerRef.split(body).whereType<ChatPlayerRef>())
+          CustomSemanticsAction(label: 'Options for ${ref.name}'): () =>
+              showChatPlayerActions(context, ChatUser(id: ref.id, name: ref.name)),
+        ...chatRefActions(context, body, roomId: m.roomId, slang: ChatWiki.slangIn(m.roomId, prefs.slangEverywhere)),
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (quote != null)
+            ExcludeSemantics(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 4),
+                padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
+                decoration: BoxDecoration(
+                  color: scheme.onSurface.withValues(alpha: 0.06),
+                  border: Border(left: BorderSide(color: scheme.onSurface.withValues(alpha: 0.4), width: 3)),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              TextSpan(
-                text: '${mine ? 'You' : prefs.displayName(m.sender.id, m.sender.name)}  ',
-                style: TextStyle(fontWeight: FontWeight.w600, color: scheme.onSurface),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${quote.author}\n',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      TextSpan(text: quote.excerpt),
+                    ],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: small?.copyWith(color: color),
+                ),
               ),
-            ],
+            ),
+          if (forwarded != null)
+            ExcludeSemantics(
+              child: Text(
+                'Forwarded from ${forwarded.from}',
+                style: small?.copyWith(color: color, fontStyle: FontStyle.italic),
+              ),
+            ),
+          ChatMessageText(
+            content: body,
+            color: color,
+            slang: ChatWiki.slangIn(m.roomId, prefs.slangEverywhere),
+            lead: TextSpan(
+              children: [
+                if (m.state == ChatMessageState.failed)
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Icon(Icons.error_outline_rounded, size: 15, color: scheme.error),
+                    ),
+                  ),
+                TextSpan(
+                  text: '$who  ',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: scheme.onSurface),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -210,6 +239,7 @@ class _ChatListReplyState extends State<ChatListReply>
     final cut = _frozenAt == null ? -1 : listed.lastIndexWhere((m) => (m.reqId ?? m.id) == _frozenAt);
     final shown = cut < 0 ? listed : listed.sublist(0, cut + 1);
     final loading = !chat.isLoaded(room.id);
+    final failed = chat.openFailed(room.id);
     if (!loading && _known == null) {
       _known = {for (final m in all) m.reqId ?? m.id};
       final last = all.lastOrNull?.createdAt;
@@ -231,7 +261,12 @@ class _ChatListReplyState extends State<ChatListReply>
     if (shown.isNotEmpty && !_opened) {
       _opened = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _open.forward();
+        if (!mounted) return;
+        if (MediaQuery.disableAnimationsOf(context)) {
+          _open.value = 1;
+        } else {
+          _open.forward();
+        }
       });
     }
     final writable = chat.available && room.canWrite;
@@ -244,7 +279,7 @@ class _ChatListReplyState extends State<ChatListReply>
           : Opacity(opacity: const Interval(0.3, 1).transform(_open.value), child: child),
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: fresh.contains(m.reqId ?? m.id) ? 0 : 1, end: 1),
-        duration: const Duration(milliseconds: 180),
+        duration: chatMotion(context, const Duration(milliseconds: 180)),
         curve: Curves.easeOut,
         builder: (context, t, child) => Opacity(
           opacity: t,
@@ -256,19 +291,26 @@ class _ChatListReplyState extends State<ChatListReply>
         ),
       ),
     );
-    return Padding(
+    final block = Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 2, child: loading ? const LinearProgressIndicator(minHeight: 2) : null),
+          SizedBox(height: 2, child: loading && !failed ? const LinearProgressIndicator(minHeight: 2) : null),
+          if (failed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(_indent, 0, 8, 0),
+              child: ChatLoadFailed(name: name, onRetry: () => chat.retryRoom(room.id), compact: true),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(_indent, 0, 16, 0),
             child: shown.isEmpty
-                ? Text(
-                    loading ? 'Loading messages' : 'No messages yet',
-                    style: small?.copyWith(color: scheme.onSurfaceVariant),
-                  )
+                ? failed
+                      ? null
+                      : Text(
+                          loading ? 'Loading messages' : 'No messages yet',
+                          style: small?.copyWith(color: scheme.onSurfaceVariant),
+                        )
                 : Stack(
                     children: [
                       ConstrainedBox(
@@ -307,16 +349,15 @@ class _ChatListReplyState extends State<ChatListReply>
                       Positioned(
                         right: 0,
                         bottom: 0,
-                        child: AnimatedScale(
-                          scale: _away ? 1 : 0,
-                          duration: const Duration(milliseconds: 150),
+                        child: ChatPopIn(
+                          visible: _away,
                           child: IconButton.filledTonal(
                             tooltip: 'Go to the latest messages',
                             onPressed: _toNewest,
                             icon: const Icon(Icons.keyboard_arrow_down_rounded),
                             iconSize: 20,
                             padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+                            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
                           ),
                         ),
                       ),
@@ -358,13 +399,20 @@ class _ChatListReplyState extends State<ChatListReply>
                     onPressed: _hasText ? _send : null,
                     icon: const Icon(Icons.send_rounded),
                     iconSize: 20,
-                    constraints: const BoxConstraints.tightFor(width: 42, height: 42),
+                    constraints: const BoxConstraints.tightFor(width: 48, height: 48),
                   ),
                 ],
               ),
             ),
         ],
       ),
+    );
+    // Another room may have taken the open
+    return Listener(
+      onPointerDown: (_) {
+        if (loading && !failed && !chat.opening(room.id)) chat.peekRoom(room.id);
+      },
+      child: block,
     );
   }
 }

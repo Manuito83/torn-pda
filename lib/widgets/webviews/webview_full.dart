@@ -38,6 +38,7 @@ import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
+import 'package:torn_pda/providers/pip_controller.dart';
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
@@ -75,6 +76,7 @@ import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
+import 'package:torn_pda/widgets/webviews/chain_web.dart';
 import 'package:torn_pda/widgets/webviews/chat_profile_icon.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
@@ -160,6 +162,7 @@ class WebViewFull extends StatefulWidget {
   final bool useTabs;
   final bool chatRemovalActive;
   final bool allowDownloads;
+  final bool loadWhenHidden;
 
   @override
   final GlobalKey<WebViewFullState>? key;
@@ -184,6 +187,7 @@ class WebViewFull extends StatefulWidget {
     this.useTabs = false,
     this.chatRemovalActive = false,
     this.allowDownloads = true,
+    this.loadWhenHidden = false,
     this.key,
     this.restoreScrollX,
     this.restoreScrollY,
@@ -238,6 +242,7 @@ class WebViewFullState extends State<WebViewFull>
   // of the webview, so we register it once and never remove or re-add it
   // to avoid collisions and ensure that they are active
   bool _handlersInjected = false;
+  bool _browserUnderChat = false;
   // Shared across tabs: one renderer death hits every webview, record ONE Crashlytics event per death
   static DateTime? _lastRendererGoneRecorded;
   static DateTime? _lastRendererGoneFgLogged;
@@ -359,6 +364,8 @@ class WebViewFullState extends State<WebViewFull>
   bool _reloadRequestActive = false;
   Timer? _reloadWatchdog;
   static const Duration _reloadProbeTimeout = Duration(seconds: 3);
+  static const Duration _longAway = Duration(seconds: 45);
+  DateTime? _hiddenAt;
   int? _scrollY = 0;
   int? _scrollX = 0;
 
@@ -389,6 +396,8 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   void discardUrlBeforeInitialLoad() => _urlBeforeInitialLoad = null;
+
+  String? get urlBeforeInitialLoad => _urlBeforeInitialLoad;
 
   // Downloads never report the initial load
   void _watchInitialLoad() {
@@ -495,6 +504,7 @@ class WebViewFullState extends State<WebViewFull>
     _tabUid = widget.tabUid;
 
     WidgetsBinding.instance.addObserver(this);
+    NativeChat.screenOpen.addListener(_onChatScreen);
 
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
@@ -623,6 +633,7 @@ class WebViewFullState extends State<WebViewFull>
       useShouldOverrideUrlLoading: true,
       // Android: handle renderer-process death when OOM / crashed WebView
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
+      loadWhenHidden: widget.loadWhenHidden,
       javaScriptCanOpenWindowsAutomatically: true,
       applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
       isInspectable: kDebugMode || _settingsProvider.browserRemoteDebugging,
@@ -764,6 +775,7 @@ class WebViewFullState extends State<WebViewFull>
       _progressAnimation.removeListener(_onProgressAnimationUpdate);
       _progressController.dispose();
 
+      NativeChat.screenOpen.removeListener(_onChatScreen);
       webViewController?.dispose();
     } catch (e, t) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
@@ -777,6 +789,14 @@ class WebViewFullState extends State<WebViewFull>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (Platform.isWindows) return;
+
+    if (state == AppLifecycleState.hidden) {
+      _hiddenAt ??= DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      final DateTime? hiddenAt = _hiddenAt;
+      _hiddenAt = null;
+      if (hiddenAt != null && DateTime.now().difference(hiddenAt) >= _longAway) _refreshTornPage();
+    }
 
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
@@ -798,6 +818,16 @@ class WebViewFullState extends State<WebViewFull>
         }
       }
     }
+  }
+
+  static bool _isTornHost(String? host) => host == 'torn.com' || (host ?? '').endsWith('.torn.com');
+
+  void _refreshTornPage() {
+    final String source = ChatEngine.pageResumeJS;
+    if (source.isEmpty || !_webViewProvider.tornPageRefreshRC || !_isTornHost(Uri.tryParse(_currentUrl)?.host)) {
+      return;
+    }
+    webViewController?.evaluateJavascript(source: source).catchError((_) {});
   }
 
   @override
@@ -1473,6 +1503,8 @@ class WebViewFullState extends State<WebViewFull>
 
             addChatProfileIconHandler(webViewController!);
 
+            addChainWebHandler(webViewController!, onScreen: () => _chainWebOnScreen);
+
             WebviewHandlers.addLocalStorageMeasuredHandler(webview: webViewController!, webViewProvider: _webViewProvider);
 
             WebviewHandlers.addToastHandler(webview: webViewController!);
@@ -1792,6 +1824,9 @@ class WebViewFullState extends State<WebViewFull>
             if (!mounted) return;
             _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
+            if (_webViewProvider.tornPageRefreshRC && _isTornHost(uri?.host) && ChatEngine.pageLoadJS.isNotEmpty) {
+              c.evaluateJavascript(source: ChatEngine.pageLoadJS);
+            }
             _loadStopTime = DateTime.now();
             if (_webViewProvider.isTabUidVisible(_tabUid)) _webViewProvider.scheduleBlankCheck();
             _recovery?.onLoadStopBegin();
@@ -1829,6 +1864,12 @@ class WebViewFullState extends State<WebViewFull>
                     });
                     }
                   ''',
+              );
+            }
+
+            if (_chainWebAllowed) {
+              c.evaluateJavascript(
+                source: "window.__pdaChainShown = ${_webViewProvider.isTabUidOnScreen(_tabUid)};\n$chainWebReader",
               );
             }
 
@@ -3451,6 +3492,22 @@ class WebViewFullState extends State<WebViewFull>
       if (!mounted || !_backgroundSnapshotRequested) return;
       _webViewProvider.storeTabSnapshot(_tabUid, shot);
     } catch (_) {}
+  }
+
+  void _onChatScreen() {
+    if (NativeChat.screenOpen.value) _browserUnderChat = mounted && ModalRoute.of(context)?.isCurrent == true;
+  }
+
+  bool get _chainWebAllowed =>
+      Get.isRegistered<ChainStatusController>() && Get.find<ChainStatusController>().webLiveAllowed;
+
+  // Only the chat may cover it
+  bool get _chainWebOnScreen {
+    final host = Uri.tryParse(_currentUrl)?.host ?? '';
+    if (host != 'torn.com' && !host.endsWith('.torn.com')) return false;
+    if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return false;
+    if (Get.find<PipController>().inPip.value || !_webViewProvider.isTabUidOnScreen(_tabUid)) return false;
+    return ModalRoute.of(context)?.isCurrent == true || (NativeChat.screenOpen.value && _browserUnderChat);
   }
 
   // Null when it can't be checked
@@ -5165,8 +5222,18 @@ class WebViewFullState extends State<WebViewFull>
           callFindInPage: _activateFindInPage,
           webviewKey: widget.key,
           openDevTools: _openDevTools,
+          onSoftCacheReset: _softCacheResetAndReload,
         );
       },
+    );
+  }
+
+  Future<void> _softCacheResetAndReload() async {
+    if (webViewController == null) return;
+    await softCacheReset(
+      clearHttpCache: () => InAppWebViewController.clearAllCache(),
+      reload: _reloadWithFeedback,
+      notify: showSoftCacheResetToast,
     );
   }
 
@@ -6191,6 +6258,8 @@ class WebViewFullState extends State<WebViewFull>
               }
             }
             root.tab.state = $payloadJson;
+            window.__pdaChainShown = ${_publishedOnScreen == true && _chainWebAllowed};
+            if (window.__pdaChainShown && window.__pdaChainReader) window.__pdaChainReader.check(true);
             try {
               window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: $payloadJson }));
             } catch (_) {}
@@ -6351,6 +6420,8 @@ class WebViewFullState extends State<WebViewFull>
 
     _webViewCreatedWatchdog = Timer(const Duration(milliseconds: 2500), () async {
       if (!mounted || _webViewCreatedFired || webViewController != null) return;
+      // Rebuilt webview took over
+      if (_webViewProvider.getTabByUid(_tabUid)?.webViewKey != widget.key) return;
 
       String webViewPackage = "unknown";
       try {
@@ -6400,6 +6471,7 @@ class WebViewFullState extends State<WebViewFull>
           isChainingBrowser: _isChainingBrowser,
           chainingPayload: _chainingPayload,
           reason: "webview_never_created",
+          loadWhenHidden: widget.loadWhenHidden && !_webViewProvider.browserShowInForeground,
         );
       }
     });
@@ -7249,7 +7321,8 @@ class WebViewFullState extends State<WebViewFull>
       await InAppWebViewController.clearAllCache();
     }
     CookieManager cookieManager = CookieManager.instance();
-    cookieManager.deleteAllCookies();
+    await cookieManager.deleteAllCookies();
+    NativeChat.recheckSession();
     webViewController!.evaluateJavascript(
       source: '''
         localStorage.clear();

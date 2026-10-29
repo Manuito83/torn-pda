@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
@@ -252,12 +251,6 @@ class _ChatFoundTile extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
 
-  static String _when(DateTime at) {
-    final now = DateTime.now();
-    final today = at.year == now.year && at.month == now.month && at.day == now.day;
-    return today ? DateFormat.Hm().format(at) : DateFormat('d MMM, HH:mm').format(at);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -277,7 +270,7 @@ class _ChatFoundTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(_when(at), style: theme.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+          Text(NativeChat.prefs.stamp(at), style: theme.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
         ],
       ),
       subtitle: Text.rich(

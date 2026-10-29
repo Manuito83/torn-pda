@@ -143,9 +143,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
     }
 
-    await tap(find.byTooltip('Quick reply').at(0));
+    await tap(find.byTooltip(RegExp('^Quick reply')).at(0));
     final first = open().single;
-    await tap(find.byTooltip('Quick reply').at(0));
+    await tap(find.byTooltip(RegExp('^Quick reply')).at(0));
     expect(open(), hasLength(2));
     final second = open().firstWhere((id) => id != first);
     expect(
@@ -154,14 +154,92 @@ void main() {
     );
     expect(chat.unreadGroups(), isEmpty);
 
-    await tap(find.byTooltip('Close quick reply').first);
+    await tap(find.byTooltip(RegExp('^Close quick reply')).first);
     expect(open(), hasLength(1));
     expect(source.calls.last, isNot('closeRoom'));
 
-    await tap(find.byTooltip('Close quick reply'));
+    await tap(find.byTooltip(RegExp('^Close quick reply')));
     expect(open(), isEmpty);
     expect(source.calls.last, 'closeRoom');
     expect((chat.unreadFor(first), chat.unreadFor(second)), (0, 0));
+    await close(tester);
+  });
+
+  testWidgets('a quick reply opened under Unread stays readable', (tester) async {
+    start();
+    await _show(tester, chat);
+    _connect(source);
+    source.emit(const ChatUnreadEvent({'faction': 2, 'company': 1}));
+    await tester.pump();
+    await tester.tap(find.text('Unread 2'));
+    await tester.pump();
+
+    await tester.tap(find.byTooltip(RegExp('^Quick reply')).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(ChatListReply), findsOneWidget);
+    final room = tester.widget<ChatListReply>(find.byType(ChatListReply)).room.id;
+    expect(chat.unreadFor(room), 0);
+    expect(find.byTooltip(RegExp('^Close quick reply')), findsOneWidget);
+
+    await tester.tap(find.byTooltip(RegExp('^Close quick reply')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(ChatListReply), findsNothing);
+    // Filter is static, restore it
+    await tester.tap(find.textContaining('Unread'));
+    await tester.pump();
+    await close(tester);
+  });
+
+  testWidgets('a quick reply that never loads offers a retry', (tester) async {
+    start();
+    await _show(tester, chat);
+    _connect(source);
+    await tester.pump();
+    await tester.tap(find.byTooltip(RegExp('^Quick reply')).first);
+    await tester.pump();
+    final room = tester.widget<ChatListReply>(find.byType(ChatListReply)).room;
+    final opens = source.count('openRoom');
+
+    await tester.pump(const Duration(seconds: 21));
+    expect(find.textContaining('Could not load'), findsOneWidget);
+    await tester.tap(find.text('Try again'));
+    await tester.pump();
+    expect(source.count('openRoom'), opens + 1);
+    expect(chat.openFailed(room.id), isFalse);
+
+    await tester.tap(find.byTooltip(RegExp('^Close quick reply')));
+    await tester.pump(const Duration(milliseconds: 300));
+    await close(tester);
+  });
+
+  testWidgets('touching a waiting quick reply asks for its room again', (tester) async {
+    start();
+    await _show(tester, chat);
+    _connect(source);
+    source.emit(const ChatUnreadEvent({'faction': 2, 'company': 1}));
+    await tester.pump();
+    await tester.tap(find.byTooltip(RegExp('^Quick reply')).at(0));
+    await tester.pump(const Duration(milliseconds: 300));
+    final first = tester.widget<ChatListReply>(find.byType(ChatListReply)).room.id;
+    await tester.tap(find.byTooltip(RegExp('^Quick reply')).at(0));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.pump(const Duration(seconds: 21));
+    expect(chat.openFailed(first), isFalse);
+    final opens = source.count('openRoom $first');
+    Future<void> touchFirst() async {
+      await tester.tap(find.byWidgetPredicate((w) => w is ChatListReply && w.room.id == first));
+      await tester.pump();
+    }
+
+    await touchFirst();
+    await touchFirst();
+    expect(source.count('openRoom $first'), opens + 1);
+    await tester.pump(const Duration(seconds: 21));
+    expect(chat.openFailed(first), isTrue);
+
     await close(tester);
   });
 
@@ -171,7 +249,7 @@ void main() {
     _connect(source);
     source.emit(const ChatUnreadEvent({'faction': 2, 'company': 1}));
     await tester.pump();
-    await tester.tap(find.byTooltip('Quick reply').at(0));
+    await tester.tap(find.byTooltip(RegExp('^Quick reply')).at(0));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(ChatListReply), findsOneWidget);
 
@@ -215,7 +293,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.widgetWithText(ChatConversationTile, 'Faction'),
-        matching: find.byTooltip('Quick reply'),
+        matching: find.byTooltip(RegExp('^Quick reply')),
       ),
     );
     await tester.pumpAndSettle();
@@ -257,7 +335,7 @@ void main() {
     expect(row, findsNothing);
     expect([for (var i = 1; i <= 4; i++) shown(tester, 'line $i')], [false, true, true, true]);
 
-    await tester.tap(find.byTooltip('Close quick reply'));
+    await tester.tap(find.byTooltip(RegExp('^Close quick reply')));
     await tester.pumpAndSettle();
     expect(find.textContaining('line 4'), findsOneWidget);
     expect(find.byType(ChatListReply), findsNothing);
@@ -360,9 +438,9 @@ void main() {
       isOlderPage: false,
     );
     double opacity(String text) => tester
-        .widgetList<Opacity>(find.ancestor(of: find.textContaining(text), matching: find.byType(Opacity)))
-        .map((o) => o.opacity)
-        .reduce((a, b) => a < b ? a : b);
+        .widgetList<FadeTransition>(find.ancestor(of: find.textContaining(text), matching: find.byType(FadeTransition)))
+        .map((o) => o.opacity.value)
+        .fold(1.0, (a, b) => a < b ? a : b);
     await tester.pumpWidget(
       MaterialApp(
         home: ChangeNotifierProvider<ChatController>.value(
@@ -406,7 +484,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.widgetWithText(ChatConversationTile, 'Faction'),
-        matching: find.byTooltip('Quick reply'),
+        matching: find.byTooltip(RegExp('^Quick reply')),
       ),
     );
     await tester.pumpAndSettle();

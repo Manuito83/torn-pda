@@ -20,9 +20,17 @@ class ChatEngine {
 
   static const bool enabled = false;
 
-  Stream<Map> get data => Stream<Map>.empty();
+  Stream<Map> get data => const Stream<Map>.empty();
 
   bool get active => false;
+
+  static String get pageLoadJS => '';
+
+  static String get pageResumeJS => '';
+
+  void scene({required bool shown, required bool tabLive}) {}
+
+  void touch() {}
 
   void start() {}
 

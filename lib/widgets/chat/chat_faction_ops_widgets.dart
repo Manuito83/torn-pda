@@ -21,21 +21,48 @@ Color _chatChainColor(ChatChainLevel level, {required bool onDark}) => switch (l
 };
 
 /// Hits and timeout for the room header
-class ChatChainLine extends StatelessWidget {
+class ChatChainLine extends StatefulWidget {
   const ChatChainLine({super.key, required this.prefs});
 
   final ChatPrefs prefs;
 
   @override
+  State<ChatChainLine> createState() => _ChatChainLineState();
+}
+
+class _ChatChainLineState extends State<ChatChainLine> {
+  late final Timer _clock;
+
+  @override
+  void initState() {
+    super.initState();
+    _clock = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_running) setState(() {});
+    });
+  }
+
+  bool get _running {
+    if (!widget.prefs.factionChain || !Get.isRegistered<ChainStatusController>()) return false;
+    return ChatFactionOps.chainOf(Get.find<ChainStatusController>())?.running ?? false;
+  }
+
+  @override
+  void dispose() {
+    _clock.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (!Get.isRegistered<ChainStatusController>()) return const SizedBox.shrink();
+    final prefs = widget.prefs;
     return ListenableBuilder(
       listenable: prefs,
       builder: (context, _) => GetBuilder<ChainStatusController>(
         builder: (c) {
           final chain = ChatFactionOps.chainOf(c);
           if (!prefs.factionChain || chain == null || !chain.running) return const SizedBox.shrink();
-          return ChatChainChip(chain: chain);
+          return ChatChainChip(chain: chain, live: c.webLive);
         },
       ),
     );
@@ -43,9 +70,10 @@ class ChatChainLine extends StatelessWidget {
 }
 
 class ChatChainChip extends StatelessWidget {
-  const ChatChainChip({super.key, required this.chain});
+  const ChatChainChip({super.key, required this.chain, this.live = false});
 
   final ChatChain chain;
+  final bool live;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +84,7 @@ class ChatChainChip extends StatelessWidget {
     final clock = chatClock(Duration(seconds: chain.seconds));
     final style = theme.textTheme.labelMedium?.copyWith(color: foreground.withValues(alpha: 0.8));
     return Semantics(
-      label: 'Chain ${chain.hits} hits, $clock left',
+      label: 'Chain ${chain.hits} hits, $clock left${live ? ', live' : ''}',
       excludeSemantics: true,
       child: Padding(
         padding: const EdgeInsets.only(left: 10),
@@ -75,6 +103,10 @@ class ChatChainChip extends StatelessWidget {
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
+            if (live) ...[
+              const SizedBox(width: 3),
+              Icon(Icons.sensors_rounded, size: 12, color: style?.color),
+            ],
           ],
         ),
       ),

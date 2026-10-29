@@ -45,7 +45,7 @@ class ChatFactionOps {
   /// Only what the chain bar already fetched
   static ChatChain? chainOf(ChainStatusController c) {
     final chain = c.chainModel?.chain;
-    if (!c.statusActive || c.modelError || chain == null) return null;
+    if (!(c.statusActive || c.webLive) || c.modelError || chain == null) return null;
     return ChatChain(hits: chain.current ?? 0, seconds: c.currentSecondsCounter, cooldown: (chain.cooldown ?? 0) > 0);
   }
 

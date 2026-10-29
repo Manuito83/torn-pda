@@ -3,7 +3,8 @@ import 'package:torn_pda/providers/theme_provider.dart';
 
 enum AlertChipKind { neutral, warning, critical }
 
-const alertDmPushText = 'Direct messages reach your phone even with Torn PDA closed';
+const alertDmPushText =
+    'Direct messages reach you with Torn PDA closed. Other chats alert only while it is open or just left';
 
 class AlertGroupCard extends StatelessWidget {
   final IconData icon;
@@ -128,9 +129,11 @@ class AlertRow extends StatelessWidget {
               )
             : null);
     final VoidCallback? tap = onTap ?? (value != null && onChanged != null ? () => onChanged!(!value!) : null);
+    final toggle = trailing == null && value != null && onTap == null;
 
-    return InkWell(
+    final row = InkWell(
       onTap: tap,
+      excludeFromSemantics: toggle,
       child: Padding(
         padding: EdgeInsets.fromLTRB(sub ? 24 : 14, 9, 10, 9),
         child: Row(
@@ -179,11 +182,14 @@ class AlertRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (control != null) ...[const SizedBox(width: 8), control],
+            if (control != null) ...[const SizedBox(width: 8), toggle ? ExcludeSemantics(child: control) : control],
           ],
         ),
       ),
     );
+    if (!toggle) return row;
+    // Row is the switch for readers
+    return Semantics(container: true, toggled: value, enabled: onChanged != null, onTap: tap, child: row);
   }
 }
 

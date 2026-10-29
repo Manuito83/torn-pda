@@ -366,7 +366,7 @@ class _ChatFriendsSheetState extends State<ChatFriendsSheet> with SingleTickerPr
           const SizedBox(width: 4),
           Text(
             status.label(now),
-            style: theme.textTheme.labelSmall?.copyWith(color: tone, fontWeight: FontWeight.w600),
+            style: theme.textTheme.labelSmall?.copyWith(color: tone, fontWeight: FontWeight.normal),
           ),
         ],
       ),

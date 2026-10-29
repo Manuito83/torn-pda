@@ -37,42 +37,46 @@ class ChatBazaarSummary extends StatelessWidget {
       onTap: tappable ? () => showChatBazaarSheet(context, userId: userId, bazaar: bazaar, named: named) : null,
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: framed ? 6 : 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: framed ? MainAxisSize.max : MainAxisSize.min,
-              children: [
-                if (framed) ...[Icon(Icons.storefront_rounded, size: 18, color: color), const SizedBox(width: 8)],
-                Flexible(
-                  fit: framed ? FlexFit.tight : FlexFit.loose,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: tappable ? 48 - (framed ? 12 : 0) : 0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: framed ? MainAxisSize.max : MainAxisSize.min,
+                children: [
+                  if (framed) ...[Icon(Icons.storefront_rounded, size: 18, color: color), const SizedBox(width: 8)],
+                  Flexible(
+                    fit: framed ? FlexFit.tight : FlexFit.loose,
+                    child: Text(
+                      bazaar.summary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(color: color),
+                    ),
+                  ),
+                  if (tappable) Icon(Icons.chevron_right_rounded, size: 18, color: color),
+                ],
+              ),
+              for (final item in bazaar.named(named))
+                Padding(
+                  padding: EdgeInsets.only(left: framed ? 26 : 0),
                   child: Text(
-                    bazaar.summary,
+                    ChatBazaar.line(item),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: color),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: switch (ChatBazaar.tone(item)) {
+                        null || ChatPriceTone.near => soft,
+                        final tone => chatToneColor(tone, dark),
+                      },
+                    ),
                   ),
                 ),
-                if (tappable) Icon(Icons.chevron_right_rounded, size: 18, color: color),
-              ],
-            ),
-            for (final item in bazaar.named(named))
-              Padding(
-                padding: EdgeInsets.only(left: framed ? 26 : 0),
-                child: Text(
-                  ChatBazaar.line(item),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: switch (ChatBazaar.tone(item)) {
-                      null || ChatPriceTone.near => soft,
-                      final tone => chatToneColor(tone, dark),
-                    },
-                  ),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

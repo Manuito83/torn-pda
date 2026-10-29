@@ -503,6 +503,7 @@ class WebViewProvider extends ChangeNotifier {
       // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
       StatsController.browserOpen = false;
+      _loadShownTabHidden();
       notifyListeners();
 
       broadcastTabState();
@@ -536,6 +537,78 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _restoreAsleep = false;
   Completer<void>? _restoreDone;
+
+  /// Remote Config browser_hidden_tab_load_allowed
+  bool hiddenTabLoadAllowedRC = true;
+
+  /// Remote Config browser_torn_page_refresh_allowed
+  bool tornPageRefreshRC = true;
+  String? _hiddenLoadTabUid;
+
+  // Torn tab built after closing
+  bool _loadsHidden(String? url) {
+    final String host = Uri.tryParse(url ?? '')?.host ?? '';
+    return hiddenTabLoadAllowedRC &&
+        hiddenTabRebuildAllowedRC &&
+        !_isBrowserForeground &&
+        !_restoreAsleep &&
+        (host == 'torn.com' || host.endsWith('.torn.com'));
+  }
+
+  /// Remote Config browser_hidden_tab_rebuild_allowed
+  bool hiddenTabRebuildAllowedRC = true;
+
+  @visibleForTesting
+  static bool Function() isAndroid = () => Platform.isAndroid;
+
+  Timer? _hiddenRebuildTimer;
+
+  // Closed before its first load started
+  void _loadShownTabHidden() {
+    _hiddenRebuildTimer?.cancel();
+    if (!isAndroid() || currentTab >= _tabList.length) return;
+    final TabDetails tab = _tabList[currentTab];
+    bool stuck() {
+      final WebViewFullState? page = tab.webViewKey?.currentState;
+      return !_isBrowserForeground &&
+          _tabList.contains(tab) &&
+          !tab.sleepTab &&
+          (page == null || page.initialLoadPending) &&
+          _loadsHidden(tab.currentUrl);
+    }
+
+    if (!stuck()) return;
+    if (tab.webViewKey?.currentState == null) return _rebuildHidden(tab);
+    // Half created view never unmounts
+    var waited = 0;
+    int? createdAt;
+    _hiddenRebuildTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      final WebViewFullState? page = tab.webViewKey?.currentState;
+      if (!stuck() || ++waited > 12) return timer.cancel();
+      if (page?.webViewController == null) return;
+      createdAt ??= waited;
+      if (waited - createdAt! < 2) return;
+      timer.cancel();
+      _rebuildHidden(tab, url: page?.urlBeforeInitialLoad);
+    });
+  }
+
+  void _rebuildHidden(TabDetails tab, {String? url}) {
+    rebuildUnresponsiveWebView(
+      tabUid: tab.id,
+      isChainingBrowser: tab.isChainingBrowser,
+      chainingPayload: tab.chainingPayload,
+      reason: 'hidden_load',
+      loadWhenHidden: true,
+      url: url,
+    );
+  }
+
+  /// Its next build loads even while hidden
+  void allowHiddenLoad(int index) {
+    if (!hiddenTabLoadAllowedRC || index < 0 || index >= _tabList.length || !_tabList[index].sleepTab) return;
+    _hiddenLoadTabUid = _tabList[index].id;
+  }
 
   /// Mounts the browser hidden and restores the saved tabs asleep
   Future<void> restoreBehind() async {
@@ -1422,6 +1495,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Add the main opener tab, restoring last session if requested
     String? url = initUrl;
+    final bool mainShown = !recallLastSession || await Prefs().getWebViewLastActiveTab() <= 0;
     if (recallLastSession) {
       final String savedJson = await Prefs().getWebViewMainTab();
       final TabSaveModel savedMain = tabSaveModelFromJson(savedJson);
@@ -1432,6 +1506,7 @@ class WebViewProvider extends ChangeNotifier {
         if (!context.mounted) return;
         addTab(
           sleepTab: _restoreAsleep,
+          loadWhenHidden: mainShown && _loadsHidden(authUrl),
           url: authUrl,
           pageTitle: savedMain.tabsSave![0].pageTitle,
           chatRemovalActive: savedMain.tabsSave![0].chatRemovalActive,
@@ -1446,12 +1521,18 @@ class WebViewProvider extends ChangeNotifier {
           nativeAuth: nativeAuth,
         );
         if (!context.mounted) return;
-        await addTab(sleepTab: _restoreAsleep, url: authUrl, chatRemovalActive: chatRemovalActiveGlobal);
+        await addTab(
+          sleepTab: _restoreAsleep,
+          loadWhenHidden: mainShown && _loadsHidden(authUrl),
+          url: authUrl,
+          chatRemovalActive: chatRemovalActiveGlobal,
+        );
       }
     } else {
       String? authUrl = await _assessNativeAuth(inputUrl: url, nativeUser: nativeUser, nativeAuth: nativeAuth);
       if (!context.mounted) return;
       await addTab(
+        loadWhenHidden: _loadsHidden(authUrl),
         url: authUrl,
         chatRemovalActive: chatRemovalActiveGlobal,
         isChainingBrowser: isChainingBrowser,
@@ -1488,6 +1569,7 @@ class WebViewProvider extends ChangeNotifier {
     final savedWebViews = tabSaveModelFromJson(savedJson);
     final bool sleepTabsByDefault = await Prefs().getOnlyLoadTabsWhenUsed();
     final bool keepLocked = await Prefs().getKeepLockedTabsActive();
+    final int lastActive = recallLastSession ? await Prefs().getWebViewLastActiveTab() : 0;
 
     _secondaryInitialised = true;
 
@@ -1496,6 +1578,7 @@ class WebViewProvider extends ChangeNotifier {
         await addTab(
           tabKey: wv.tabKey,
           sleepTab: (sleepTabsByDefault || _restoreAsleep) && !(keepLocked && wv.isLocked),
+          loadWhenHidden: _tabList.length == lastActive && _loadsHidden(wv.url),
           url: wv.url,
           pageTitle: wv.pageTitle,
           chatRemovalActive: wv.chatRemovalActive,
@@ -1544,9 +1627,7 @@ class WebViewProvider extends ChangeNotifier {
       _splitMainVisibleUid = splitLayout["mainVisible"] is String ? splitLayout["mainVisible"] : null;
       _splitApartVisibleUid = splitLayout["apartVisible"] is String ? splitLayout["apartVisible"] : null;
 
-      int lastActive = await Prefs().getWebViewLastActiveTab();
-      if (lastActive < 0) lastActive = 0;
-      if (lastActive <= _tabList.length - 1) {
+      if (lastActive >= 0 && lastActive <= _tabList.length - 1) {
         currentTab = lastActive;
       } else {
         currentTab = 0;
@@ -1554,6 +1635,7 @@ class WebViewProvider extends ChangeNotifier {
 
       // Awake WebView if we are recalling it
       if (_tabList[currentTab].sleepTab && !(_restoreAsleep && !_isBrowserForeground)) {
+        if (_loadsHidden(_tabList[currentTab].currentUrl)) _hiddenLoadTabUid = _tabList[currentTab].id;
         _tabList[currentTab].sleepTab = false;
         _tabList[currentTab].webView = _buildRealWebViewFromSleeping(_tabList[currentTab].sleepingWebView!);
       }
@@ -1581,6 +1663,7 @@ class WebViewProvider extends ChangeNotifier {
     bool isChainingBrowser = false,
     ChainingPayload? chainingPayload,
     bool allowDownloads = true,
+    bool loadWhenHidden = false,
     bool isLocked = false,
     bool isLockFull = false,
     String customName = "",
@@ -1615,6 +1698,7 @@ class WebViewProvider extends ChangeNotifier {
                 isChainingBrowser: isChainingBrowser,
                 chainingPayload: chainingPayload,
                 allowDownloads: allowDownloads,
+                loadWhenHidden: loadWhenHidden,
               )
         ..sleepingWebView = sleepTab
             ? SleepingWebView(
@@ -2155,7 +2239,10 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   Widget _buildRealWebViewFromSleeping(SleepingWebView sleeping) {
+    final bool loadWhenHidden = sleeping.tabUid == _hiddenLoadTabUid;
+    if (loadWhenHidden) _hiddenLoadTabUid = null;
     return WebViewFull(
+      loadWhenHidden: loadWhenHidden,
       tabUid: sleeping.tabUid,
       customUrl: sleeping.customUrl,
       key: sleeping.key,
@@ -2203,6 +2290,8 @@ class WebViewProvider extends ChangeNotifier {
     required bool isChainingBrowser,
     required dynamic chainingPayload,
     String reason = "renderer_gone",
+    bool loadWhenHidden = false,
+    String? url,
   }) {
     final int index = tabUid == null ? currentTab : _tabList.indexWhere((t) => t.id == tabUid);
     if (index < 0 || index >= _tabList.length) return;
@@ -2215,7 +2304,7 @@ class WebViewProvider extends ChangeNotifier {
 
     crashedTab.webView = WebViewFull(
       tabUid: crashedTab.id,
-      customUrl: crashedTab.currentUrl,
+      customUrl: url ?? crashedTab.currentUrl,
       key: newKey,
       useTabs: true,
       chatRemovalActive: crashedTab.chatRemovalActiveTab,
@@ -2225,6 +2314,7 @@ class WebViewProvider extends ChangeNotifier {
       restoreScrollX: crashedTab.rendererGoneScrollX,
       restoreScrollY: crashedTab.rendererGoneScrollY,
       recoveryReason: recovering ? reason : null,
+      loadWhenHidden: loadWhenHidden,
     );
 
     _tabList[index].webView = crashedTab.webView;

@@ -125,9 +125,69 @@ void main() {
 
     test('reconnection asks the unread once', () {
       chat.openConversation('faction');
+      page('faction', [1]);
       source.calls.clear();
       source.emit(const ChatConnectionEvent(ChatConnection.connected, reconnected: true));
       expect(source.calls, ['refreshUnread']);
+    });
+
+    testWidgets('a room caught by a drop asks again, a failed one each minute', (tester) async {
+      final torn = FakeChatSource();
+      final c = ChatController(torn, ChatPrefs());
+      torn
+        ..emit(const ChatConnectionEvent(ChatConnection.connected))
+        ..emit(const ChatReadyEvent(1));
+      c.openConversation('faction');
+      torn
+        ..emit(const ChatConnectionEvent(ChatConnection.disconnected))
+        ..emit(const ChatConnectionEvent(ChatConnection.connected, reconnected: true));
+      expect(torn.count('openRoom'), 2);
+
+      await tester.pump(const Duration(seconds: 21));
+      expect(c.openFailed('faction'), isTrue);
+      await tester.pump(const Duration(seconds: 40));
+      expect(torn.count('openRoom'), 3);
+      expect(c.openFailed('faction'), isTrue);
+
+      torn.emit(const ChatHistoryEvent('faction', [], hasOlder: false, isOlderPage: false));
+      await tester.pump(const Duration(seconds: 60));
+      expect(torn.count('openRoom'), 3);
+      expect(c.openFailed('faction'), isFalse);
+      c.dispose();
+    });
+
+    testWidgets('only the last room opened can fail to load', (tester) async {
+      final torn = FakeChatSource();
+      final c = ChatController(torn, ChatPrefs());
+      torn
+        ..emit(const ChatConnectionEvent(ChatConnection.connected))
+        ..emit(const ChatReadyEvent(1));
+      c.peekRoom('faction');
+      c.peekRoom('global');
+
+      await tester.pump(const Duration(seconds: 21));
+      expect(c.openFailed('faction'), isFalse);
+      expect(c.openFailed('global'), isTrue);
+      c.dispose();
+    });
+
+    testWidgets('a window left waiting loads again when asked', (tester) async {
+      final torn = FakeChatSource();
+      final c = ChatController(torn, ChatPrefs());
+      torn
+        ..emit(const ChatConnectionEvent(ChatConnection.connected))
+        ..emit(const ChatReadyEvent(1));
+      c.openConversation('faction');
+      c.openConversation('global');
+      expect((c.opening('faction'), c.opening('global')), (false, true));
+
+      await tester.pump(const Duration(seconds: 21));
+      expect(c.openFailed('faction'), isFalse);
+      c.openConversation('faction');
+      expect(c.opening('faction'), isTrue);
+      await tester.pump(const Duration(seconds: 21));
+      expect(c.openFailed('faction'), isTrue);
+      c.dispose();
     });
 
     test('forgetAccount clears personal data', () {
@@ -138,7 +198,6 @@ void main() {
         ..playerNotes = {7: 'note'}
         ..pinnedMessages = {'dm:7': ChatSaved.of(message, 'Bravo')}
         ..pinned = ['faction', 'dm:7']
-        ..opens = ['dm:7|1']
         ..shortcutCache = ['dm:7|Bravo']
         ..windows = ['dm:7']
         ..ignored = {3: 'Echo'};
@@ -148,7 +207,6 @@ void main() {
       expect(prefs.playerNotes, isEmpty);
       expect(prefs.pinnedMessages, isEmpty);
       expect(prefs.pinned, ['faction']);
-      expect(prefs.opens, isEmpty);
       expect(prefs.shortcutCache, isEmpty);
       expect(prefs.windows, isEmpty);
       expect(prefs.ignored, {3: 'Echo'});

@@ -7,9 +7,11 @@ import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_help.dart';
 import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_list_reply.dart';
+import 'package:torn_pda/widgets/chat/chat_slide_to_place.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -132,7 +134,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
                 ),
                 title: const Text('Alerts and mute'),
                 subtitle: switch (prefs.mutedUntilOf(room.id)) {
-                  final until? => Text('Muted until ${chatMuteUntilText(until)}'),
+                  final until? => Text('Muted until ${NativeChat.prefs.stamp(until)}'),
                   null => null,
                 },
                 onTap: () => Navigator.pop(context, 'alerts'),
@@ -198,7 +200,8 @@ class ChatInboxViewState extends State<ChatInboxView> {
     final prefs = NativeChat.prefs;
     final pinned = prefs.isPinned(room.id);
     final muted = prefs.isMuted(room.id);
-    final (unread, more) = chat.unreadShown(room.id);
+    final (shown, more) = chat.unreadShown(room.id);
+    final unread = shown > 0 ? shown : chat.listUnreadFor(room.id);
     final dot = unread == 0 && !chat.tornMarksRead(room.id) && chat.newSinceVisit(room.id);
     final readable = widget.chat.canMarkRead(room.id);
     final unreadable = widget.chat.canMarkUnread(room.id);
@@ -263,6 +266,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
         mentioned: chat.hasUnseenAlert(room.id),
         draft: prefs.draftFor(room.id),
         awayLine: unreadCount > 0 ? chat.awayFor(room.id)?.inboxLine(unreadCount) : null,
+        typing: chat.typingIn(room.id),
         hidePreview: replying,
         onTap: () => _open(room.id),
         onLongPress: () => _showActions(room),
@@ -285,13 +289,13 @@ class ChatInboxViewState extends State<ChatInboxView> {
     if (!prefs.listReply) return slidable;
     return AnimatedContainer(
       key: ValueKey(room.id),
-      duration: const Duration(milliseconds: 200),
+      duration: chatMotion(context, const Duration(milliseconds: 200)),
       color: replying ? Theme.of(context).colorScheme.surfaceContainerLow : Colors.transparent,
       child: Column(
         children: [
           slidable,
           AnimatedSize(
-            duration: const Duration(milliseconds: 200),
+            duration: chatMotion(context, const Duration(milliseconds: 200)),
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: replying
@@ -417,7 +421,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
       );
     }
     if (chat.sessionIssue) return ChatSessionMessage(state: chat.connection);
-    if (chat.connection == ChatConnection.error && !chat.ready) {
+    if (chat.unreachable && (chat.connection == ChatConnection.error || chat.conversations.isEmpty)) {
       return ChatStateMessage(
         icon: Icons.cloud_off_rounded,
         title: 'Could not reach the chat',
@@ -427,38 +431,53 @@ class ChatInboxViewState extends State<ChatInboxView> {
     return null;
   }
 
-  Widget _filterRow(int unread, bool canMarkAll) => Padding(
-    padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-    child: Row(
+  Widget _filterRow(int unread, bool canMarkAll) {
+    final chips = Wrap(
+      spacing: 8,
+      runSpacing: 4,
       children: [
-        Expanded(
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              FilterChip(
-                avatar: _unreadOnly ? null : const Icon(Icons.mark_chat_unread_outlined, size: 18),
-                label: Text(unread > 0 ? 'Unread $unread' : 'Unread'),
-                selected: _unreadOnly,
-                onSelected: (value) => setState(() => _unreadOnly = value),
-              ),
-              if (widget.onSaved != null && NativeChat.prefs.savedMessages.isNotEmpty)
-                ActionChip(
-                  avatar: const Icon(Icons.bookmark_border_rounded, size: 18),
-                  label: Text('Saved ${NativeChat.prefs.savedMessages.length}'),
-                  onPressed: widget.onSaved,
-                ),
-            ],
-          ),
+        FilterChip(
+          avatar: _unreadOnly ? null : const Icon(Icons.mark_chat_unread_outlined, size: 18),
+          label: Text(unread > 0 ? 'Unread $unread' : 'Unread'),
+          selected: _unreadOnly,
+          onSelected: (value) => setState(() {
+            _replying.clear();
+            _unreadOnly = value;
+          }),
         ),
-        if (canMarkAll) TextButton(onPressed: _markAllRead, child: const Text('Mark all as read')),
+        if (widget.onSaved != null && NativeChat.prefs.savedMessages.isNotEmpty)
+          ActionChip(
+            avatar: const Icon(Icons.bookmark_border_rounded, size: 18),
+            label: Text('Saved ${NativeChat.prefs.savedMessages.length}'),
+            onPressed: widget.onSaved,
+          ),
       ],
-    ),
-  );
+    );
+    final markAll = TextButton(onPressed: _markAllRead, child: const Text('Mark all as read'));
+    final stacked = chatLargeText(MediaQuery.textScalerOf(context));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+      child: stacked
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                chips,
+                if (canMarkAll) Align(alignment: Alignment.centerRight, child: markAll),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: chips),
+                if (canMarkAll) markAll,
+              ],
+            ),
+    );
+  }
 
   Widget _list(ChatController chat, List<ChatRoom> all, {bool social = false}) {
     final unread = all.where((r) => chat.unreadFor(r.id) > 0 && chat.countsUnread(r.id)).toList();
-    final conversations = _unreadOnly ? unread : all;
+    // Open quick reply keeps its room
+    final conversations = _unreadOnly ? all.where((r) => unread.contains(r) || _replying.contains(r.id)).toList() : all;
     final loading = !_unreadOnly && !social && (!chat.dmsLoaded || chat.loadingRecent);
     final empty = conversations.isEmpty && !loading;
     final more = !_unreadOnly && !social && !loading && chat.recentHasMore;
@@ -553,7 +572,11 @@ class ChatInboxViewState extends State<ChatInboxView> {
             ),
           );
         }
-        return _tile(chat, conversations[index]);
+        return ChatSlideToPlace(
+          key: ValueKey(conversations[index].id),
+          index: index,
+          child: _tile(chat, conversations[index]),
+        );
       },
     );
     return SlidableAutoCloseBehavior(child: list);

@@ -58,25 +58,29 @@ class ChatUploadSetupNotice extends StatelessWidget {
         ),
         if (blocked) Text('Try another one:', style: small),
         for (final h in choices(excluded: blocked ? host : excluded))
-          Material(
-            type: MaterialType.transparency,
-            child: ListTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                !blocked && h == host ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                size: 20,
+          Semantics(
+            container: true,
+            inMutuallyExclusiveGroup: true,
+            checked: !blocked && h == host,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  !blocked && h == host ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                  size: 20,
+                ),
+                title: Text(h.label),
+                subtitle: Text(
+                  '${h.note} - up to ${h.maxMegabytes} MB',
+                  style: small,
+                ),
+                onTap: () {
+                  NativeChat.prefs.setImageHost(h);
+                  onPicked?.call();
+                },
               ),
-              title: Text(h.label),
-              subtitle: Text(
-                '${h.note} - up to ${h.maxMegabytes} MB',
-                style: small,
-              ),
-              onTap: () {
-                NativeChat.prefs.setImageHost(h);
-                onPicked?.call();
-              },
             ),
           ),
         Wrap(
@@ -292,17 +296,26 @@ class _ChatImageCardState extends State<ChatImageCard> {
         setState(_show);
       }
 
-      return _card(
-        title: top,
+      return Semantics(
+        image: true,
+        label: 'Image from ${widget.link.uri.host}, not loaded',
         onTap: show,
-        action: TextButton(
-          onPressed: show,
-          style: TextButton.styleFrom(
-            foregroundColor: color,
-            visualDensity: VisualDensity.compact,
-            backgroundColor: color.withValues(alpha: 0.1),
+        onTapHint: 'show',
+        onLongPress: _copy,
+        onLongPressHint: 'copy link',
+        excludeSemantics: true,
+        child: _card(
+          title: top,
+          onTap: show,
+          action: TextButton(
+            onPressed: show,
+            style: TextButton.styleFrom(
+              foregroundColor: color,
+              visualDensity: VisualDensity.compact,
+              backgroundColor: color.withValues(alpha: 0.1),
+            ),
+            child: const Text('Show'),
           ),
-          child: const Text('Show'),
         ),
       );
     }
@@ -318,7 +331,6 @@ class _ChatImageCardState extends State<ChatImageCard> {
             onTap: () => NativeChat.openLink(widget.link.url),
             action: IconButton(
               tooltip: 'Retry',
-              visualDensity: VisualDensity.compact,
               icon: Icon(Icons.refresh_rounded, size: 20, color: color.withValues(alpha: 0.8)),
               onPressed: () => setState(_show),
             ),

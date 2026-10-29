@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
@@ -12,7 +11,9 @@ import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/widgets/chat/chat_help.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_settings_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -113,7 +114,7 @@ class _ChatAlertsSheet extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(DateFormat.Hm().format(m.createdAt), style: theme.textTheme.labelSmall),
+          Text(NativeChat.prefs.clock(m.createdAt), style: theme.textTheme.labelSmall),
           const SizedBox(height: 4),
           if (match != null)
             Container(
@@ -130,17 +131,6 @@ class _ChatAlertsSheet extends StatelessWidget {
       onLongPress: m.sender.id > 0 ? () => showChatPlayerActions(context, m.sender) : null,
     );
   }
-}
-
-String chatMuteUntilText(DateTime until) {
-  final now = DateTime.now();
-  final days = DateTime(until.year, until.month, until.day).difference(DateTime(now.year, now.month, now.day)).inDays;
-  final time = DateFormat.Hm().format(until);
-  return switch (days) {
-    0 => time,
-    1 => 'tomorrow $time',
-    _ => '${DateFormat.MMMd().format(until)} $time',
-  };
 }
 
 Widget _dropdownTile(BuildContext context, String title, Widget dropdown) {
@@ -192,7 +182,7 @@ Future<void> showChatRoomAlerts(BuildContext context, ChatRoom room) {
                         ? effect
                         : (until == null
                               ? 'Muted until you unmute. $effect'
-                              : 'Until ${chatMuteUntilText(until)}. $effect'),
+                              : 'Until ${NativeChat.prefs.stamp(until)}. $effect'),
                   ),
                 ),
                 Padding(
@@ -261,6 +251,17 @@ Future<void> showChatRoomAlerts(BuildContext context, ChatRoom room) {
                     ),
                   ),
                 ),
+                if (!room.isDm)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Alerts from this room need the app open or just left',
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ),
                 _dropdownTile(
                   context,
                   'Sound',
@@ -323,14 +324,8 @@ Future<void> showChatRoomAlerts(BuildContext context, ChatRoom room) {
 class ChatAlertSettings extends StatelessWidget {
   const ChatAlertSettings({super.key});
 
-  static String _time(BuildContext context, int minutes) =>
-      TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60).format(context);
-
   static Future<void> _pickTime(BuildContext context, int minutes, void Function(int) onPicked) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
-    );
+    final picked = await showChatTimePicker(context, TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60));
     if (picked != null) onPicked(picked.hour * 60 + picked.minute);
   }
 
@@ -355,7 +350,7 @@ class ChatAlertSettings extends StatelessWidget {
           ),
           SwitchListTile(
             title: const Text('Notify while the app is open'),
-            subtitle: const Text('When off, mentions only show in the @ list'),
+            subtitle: const Text('Also just after leaving the app. When off, mentions only show in the @ list'),
             value: prefs.alertNotify,
             onChanged: prefs.setAlertNotify,
           ),
@@ -368,7 +363,7 @@ class ChatAlertSettings extends StatelessWidget {
           if (prefs.alertNotify) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: Text('Tapping a notification opens', style: theme.textTheme.bodyMedium),
+              child: ChatSettingsText('Tapping a notification opens', style: theme.textTheme.bodyMedium),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -392,17 +387,16 @@ class ChatAlertSettings extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 6, 16, 4),
-              child: Text(
+              child: ChatSettingsText.hint(
                 prefs.notificationTap == ChatNotificationTap.window
                     ? 'A floating window over the browser or the app'
                     : 'The chat screen, open on that conversation',
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             ),
             SwitchListTile(
               title: const Text('Quiet hours'),
               subtitle: Text(
-                'No chat notifications from ${_time(context, prefs.quietFrom)} to ${_time(context, prefs.quietTo)}. '
+                'No chat notifications from ${prefs.minutesClock(prefs.quietFrom)} to ${prefs.minutesClock(prefs.quietTo)}. '
                 'The ticker, the counts and the list of mentions keep working',
               ),
               value: prefs.quietHours,
@@ -416,7 +410,7 @@ class ChatAlertSettings extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.bedtime_rounded, size: 18),
-                        label: Text('From ${_time(context, prefs.quietFrom)}'),
+                        label: Text('From ${prefs.minutesClock(prefs.quietFrom)}'),
                         onPressed: () => _pickTime(context, prefs.quietFrom, (m) => prefs.setQuietRange(from: m)),
                       ),
                     ),
@@ -424,7 +418,7 @@ class ChatAlertSettings extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.wb_sunny_rounded, size: 18),
-                        label: Text('To ${_time(context, prefs.quietTo)}'),
+                        label: Text('To ${prefs.minutesClock(prefs.quietTo)}'),
                         onPressed: () => _pickTime(context, prefs.quietTo, (m) => prefs.setQuietRange(to: m)),
                       ),
                     ),
@@ -534,7 +528,6 @@ class ChatTickerSettings extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final prefs = NativeChat.prefs;
-    final hint = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
     return ListenableBuilder(
       listenable: NativeChat.prefs,
       builder: (context, _) => Column(
@@ -561,7 +554,11 @@ class ChatTickerSettings extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-              child: Text('When tapped', style: theme.textTheme.titleSmall),
+              child: Semantics(
+                container: true,
+                header: true,
+                child: Text('When tapped', style: theme.textTheme.titleSmall),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -578,16 +575,16 @@ class ChatTickerSettings extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-              child: Text(
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
+              child: ChatSettingsText.hint(
                 'Press and hold for the other one. Expanded shows the whole message with Open and Reply',
-                style: hint,
               ),
             ),
-            ListTile(
-              title: const Text('Time on screen'),
-              trailing: DropdownButton<int>(
+            ChatSettingsTile(
+              title: 'Time on screen',
+              control: (below) => DropdownButton<int>(
+                isExpanded: below,
                 value: prefs.tickerSeconds,
                 underline: const SizedBox.shrink(),
                 items: [
@@ -597,23 +594,33 @@ class ChatTickerSettings extends StatelessWidget {
                 onChanged: (v) => prefs.setTickerSeconds(v ?? 6),
               ),
             ),
-            ListTile(
-              title: const Text('How many at a time'),
-              trailing: SegmentedButton<int>(
+            ChatSettingsTile(
+              title: 'How many at a time',
+              control: (_) => SegmentedButton<int>(
                 showSelectedIcon: false,
-                style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                segments: [for (final n in ChatPrefs.tickerMaxOptions) ButtonSegment(value: n, label: Text('$n'))],
+                segments: [
+                  for (final n in ChatPrefs.tickerMaxOptions)
+                    ButtonSegment(
+                      value: n,
+                      label: Text('$n', semanticsLabel: '$n at a time'),
+                    ),
+                ],
                 selected: {prefs.tickerMax},
                 onSelectionChanged: (v) => prefs.setTickerMax(v.first),
               ),
             ),
-            ListTile(
-              title: const Text('Lines of text'),
-              subtitle: const Text('The size follows the chat text size in Appearance'),
-              trailing: SegmentedButton<int>(
+            ChatSettingsTile(
+              title: 'Lines of text',
+              subtitle: 'The size follows the chat text size in Appearance',
+              control: (_) => SegmentedButton<int>(
                 showSelectedIcon: false,
-                style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                segments: [for (final n in ChatPrefs.tickerLinesOptions) ButtonSegment(value: n, label: Text('$n'))],
+                segments: [
+                  for (final n in ChatPrefs.tickerLinesOptions)
+                    ButtonSegment(
+                      value: n,
+                      label: Text('$n', semanticsLabel: n == 1 ? '1 line' : '$n lines'),
+                    ),
+                ],
                 selected: {prefs.tickerLines},
                 onSelectionChanged: (v) => prefs.setTickerLines(v.first),
               ),
@@ -629,9 +636,11 @@ class ChatTickerSettings extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Text('Muted chats and ignored players stay out. @ means only when you are mentioned', style: hint),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: ChatSettingsText.hint(
+                'Muted chats and ignored players stay out. @ means only when you are mentioned',
+              ),
             ),
             for (final group in ChatPrefs.tickerOptions)
               ChatGroupLevelRow(
@@ -665,28 +674,33 @@ class ChatGroupLevelRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+    final room = ChatRooms.labelOf(group);
+    final name = ExcludeSemantics(
       child: Row(
         children: [
           SizedBox(
             width: 32,
             child: Center(child: ChatRoomGlyphBox(NativeChat.controller.roomById(group), size: 22)),
           ),
-          Expanded(child: Text(ChatRooms.labelOf(group))),
-          SegmentedButton<ChatAlertLevel>(
-            showSelectedIcon: false,
-            style: const ButtonStyle(visualDensity: VisualDensity.compact),
-            segments: const [
-              ButtonSegment(value: ChatAlertLevel.all, label: Text('All')),
-              ButtonSegment(value: ChatAlertLevel.mentions, label: Text('@')),
-              ButtonSegment(value: ChatAlertLevel.none, label: Text('Off')),
-            ],
-            selected: {level},
-            onSelectionChanged: (v) => onChanged(v.first),
-          ),
+          Flexible(child: Text(room)),
         ],
       ),
+    );
+    final levels = SegmentedButton<ChatAlertLevel>(
+      showSelectedIcon: false,
+      segments: [
+        ButtonSegment(value: ChatAlertLevel.all, label: Text('All', semanticsLabel: '$room: all')),
+        ButtonSegment(value: ChatAlertLevel.mentions, label: Text('@', semanticsLabel: '$room: mentions only')),
+        ButtonSegment(value: ChatAlertLevel.none, label: Text('Off', semanticsLabel: '$room: off')),
+      ],
+      selected: {level},
+      onSelectionChanged: (v) => onChanged(v.first),
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: chatLargeText(MediaQuery.textScalerOf(context))
+          ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [name, const SizedBox(height: 4), levels])
+          : Row(children: [Expanded(child: name), levels]),
     );
   }
 }
@@ -747,7 +761,6 @@ class ChatRoomStatePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final prefs = NativeChat.prefs;
     final state = prefs.roomState(roomId);
     final until = prefs.frozenUntilOf(roomId);
@@ -756,7 +769,7 @@ class ChatRoomStatePicker extends StatelessWidget {
       ChatRoomState.frozen =>
         until == null
             ? 'Frozen until you unfreeze it. No messages, alerts or counts'
-            : 'Frozen until ${chatMuteUntilText(until)}. No messages, alerts or counts',
+            : 'Frozen until ${NativeChat.prefs.stamp(until)}. No messages, alerts or counts',
       ChatRoomState.hidden => 'Out of the chat list and the counts',
     };
     return Column(
@@ -801,10 +814,7 @@ class ChatRoomStatePicker extends StatelessWidget {
               ],
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Text(hint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-        ),
+        Padding(padding: const EdgeInsets.only(top: 6), child: ChatSettingsText.hint(hint)),
       ],
     );
   }

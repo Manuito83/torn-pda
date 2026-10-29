@@ -20,28 +20,14 @@ if [ -d "lib/config" ]; then
   cd ../..
 fi
 
-if [ -d "lib/torn-pda-native" ] || [ -d "lib/config" ]; then
-  mkdir -p lib/torn-pda-native/auth lib/torn-pda-native/stats
-
-  [ -f lib/config/native_auth_models.dart.example ] && \
-    [ ! -f lib/torn-pda-native/auth/native_auth_models.dart ] && \
-    cp lib/config/native_auth_models.dart.example lib/torn-pda-native/auth/native_auth_models.dart
-
-  [ -f lib/config/native_auth_provider.dart.example ] && \
-    [ ! -f lib/torn-pda-native/auth/native_auth_provider.dart ] && \
-    cp lib/config/native_auth_provider.dart.example lib/torn-pda-native/auth/native_auth_provider.dart
-
-  [ -f lib/config/native_user_provider.dart.example ] && \
-    [ ! -f lib/torn-pda-native/auth/native_user_provider.dart ] && \
-    cp lib/config/native_user_provider.dart.example lib/torn-pda-native/auth/native_user_provider.dart
-
-  [ -f lib/config/native_login_widget.dart.example ] && \
-    [ ! -f lib/torn-pda-native/auth/native_login_widget.dart ] && \
-    cp lib/config/native_login_widget.dart.example lib/torn-pda-native/auth/native_login_widget.dart
-
-  [ -f lib/config/stats_controller.dart.example ] && \
-    [ ! -f lib/torn-pda-native/stats/stats_controller.dart ] && \
-    cp lib/config/stats_controller.dart.example lib/torn-pda-native/stats/stats_controller.dart
+if [ -d "lib/config" ]; then
+  for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
+           chat/chat_engine chat/chat_push chat/torn_chat_source \
+           stats/stats_controller stats/usage_counters stats/app_settings_daily; do
+    target="lib/torn-pda-native/$f.dart"
+    mkdir -p "$(dirname "$target")"
+    if [ ! -f "$target" ]; then cp "lib/config/$(basename "$f").dart.example" "$target"; fi
+  done
 fi
 
 # Env part file stub

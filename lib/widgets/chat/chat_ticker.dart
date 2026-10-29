@@ -221,24 +221,23 @@ class _TickerCaption extends StatefulWidget {
 }
 
 class _TickerCaptionState extends State<_TickerCaption> with SingleTickerProviderStateMixin {
-  late final AnimationController _animation = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 220),
-    reverseDuration: const Duration(milliseconds: 260),
-  );
+  late final AnimationController _animation = AnimationController(vsync: this);
   late final Animation<double> _curve = CurvedAnimation(parent: _animation, curve: Curves.easeOut);
   Timer? _timer;
   bool? _screenReader;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.leaving ? _leave() : _animation.forward();
-  }
+  bool _started = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final still = MediaQuery.disableAnimationsOf(context);
+    _animation
+      ..duration = still ? Duration.zero : const Duration(milliseconds: 220)
+      ..reverseDuration = still ? Duration.zero : const Duration(milliseconds: 260);
+    if (!_started) {
+      _started = true;
+      widget.leaving ? _leave() : _animation.forward();
+    }
     final on = MediaQuery.accessibleNavigationOf(context);
     if (on == _screenReader) return;
     _screenReader = on;

@@ -10,14 +10,8 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
+import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-
-String _when(BuildContext context, DateTime at) {
-  final time = MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(at));
-  final now = DateTime.now();
-  final today = at.year == now.year && at.month == now.month && at.day == now.day;
-  return today ? time : '${at.day}/${at.month} $time';
-}
 
 Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, String roomName) async {
   final chain = Get.isRegistered<ChainStatusController>() ? Get.find<ChainStatusController>() : null;
@@ -56,7 +50,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
                 minTileHeight: 48,
                 leading: const Icon(Icons.alarm_rounded),
                 title: Text(label),
-                trailing: Text(_when(sheet, now.add(wait))),
+                trailing: Text(NativeChat.prefs.stamp(now.add(wait))),
                 onTap: () => Navigator.pop(sheet, ChatReminderOption(label, DateTime.now().add(wait))),
               ),
             for (final option in game)
@@ -64,7 +58,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
                 minTileHeight: 48,
                 leading: const Icon(Icons.alarm_rounded),
                 title: Text(option.label),
-                trailing: Text(_when(sheet, option.at)),
+                trailing: Text(NativeChat.prefs.stamp(option.at)),
                 onTap: () => Navigator.pop(sheet, option),
               ),
             ListTile(
@@ -72,14 +66,13 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
               leading: const Icon(Icons.schedule_rounded),
               title: const Text('Custom time'),
               onTap: () async {
-                final time = await showTimePicker(
-                  context: sheet,
-                  initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
+                final prefs = NativeChat.prefs;
+                final time = await showChatTimePicker(
+                  sheet,
+                  TimeOfDay.fromDateTime(prefs.wallClock(now.add(const Duration(hours: 1)))),
                 );
                 if (time == null || !sheet.mounted) return;
-                final today = DateTime.now();
-                var at = DateTime(today.year, today.month, today.day, time.hour, time.minute);
-                if (!at.isAfter(today)) at = at.add(const Duration(days: 1));
+                final at = prefs.nextAt(time.hour, time.minute, DateTime.now());
                 Navigator.pop(sheet, ChatReminderOption('Custom time', at));
               },
             ),
@@ -110,7 +103,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
   }
   prefs.setReminders([...prefs.pendingReminders, reminder]);
   if (!context.mounted) return;
-  tell('Reminder set for ${_when(context, picked.at)}');
+  tell('Reminder set for ${NativeChat.prefs.stamp(picked.at)}');
 }
 
 Future<void> showChatRemindersList(BuildContext context) => showModalBottomSheet<void>(
@@ -144,7 +137,7 @@ Future<void> showChatRemindersList(BuildContext context) => showModalBottomSheet
               for (final r in pending)
                 ListTile(
                   title: Text(r.excerpt, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  subtitle: Text('${r.author} in ${r.roomName} - ${_when(sheet, r.at)} (${r.label})'),
+                  subtitle: Text('${r.author} in ${r.roomName} - ${NativeChat.prefs.stamp(r.at)} (${r.label})'),
                   trailing: IconButton(
                     tooltip: 'Delete reminder',
                     style: IconButton.styleFrom(minimumSize: const Size(48, 48)),

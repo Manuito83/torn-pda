@@ -30,12 +30,16 @@ class ChatRooms {
     'poker': 'Poker',
     travel: 'Travel',
     newPlayers: 'New players',
+    'hospital': 'Hospital',
+    'jail': 'Jail',
   };
 
   static const Map<String, String> _occasional = {
     'poker': 'Only at a poker table',
     travel: 'Only while flying',
     newPlayers: 'Only for new players',
+    'hospital': 'Only while in hospital',
+    'jail': 'Only while in jail',
   };
 
   static List<ChatRemoteRoom> remote = const [];

@@ -9,7 +9,6 @@ import 'package:torn_pda/models/chat/chat_mentions.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_saved.dart';
 import 'package:torn_pda/models/chat/chat_send_check.dart';
-import 'package:torn_pda/models/chat/chat_shortcuts.dart';
 import 'package:torn_pda/models/chat/chat_status.dart';
 import 'package:torn_pda/models/chat/chat_template.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -393,44 +392,6 @@ void main() {
     prefs.emojiFavorites = List.filled(ChatEmoji.maxFavorites, '🔥');
     prefs.toggleEmojiFavorite('😀');
     expect(prefs.emojiFavorites, isNot(contains('😀')));
-  });
-
-  test('room shortcuts are the top three opened this week', () {
-    int ms(Duration ago) => chatNow.subtract(ago).millisecondsSinceEpoch;
-    expect(
-      ChatShortcuts.top([
-        'old|${ms(const Duration(days: 8))}',
-        'old|${ms(const Duration(days: 9))}',
-        'old|${ms(const Duration(days: 10))}',
-        'faction|${ms(const Duration(days: 2))}',
-        'faction|${ms(const Duration(days: 1))}',
-        'dm:5|${ms(const Duration(hours: 3))}',
-      ], chatNow),
-      ['faction', 'dm:5'],
-    );
-    expect(
-      ChatShortcuts.top([
-        'a|${ms(const Duration(hours: 5))}',
-        'b|${ms(const Duration(hours: 1))}',
-        'c|${ms(const Duration(hours: 3))}',
-        'd|${ms(const Duration(hours: 9))}',
-      ], chatNow),
-      ['b', 'c', 'a'],
-    );
-  });
-
-  test('recording an opening skips quick repeats and prunes the list', () {
-    var opens = ChatShortcuts.record([], 'faction', chatNow);
-    expect(opens, hasLength(1));
-    expect(ChatShortcuts.record(opens, 'faction', chatNow.add(const Duration(minutes: 2))), same(opens));
-    opens = ChatShortcuts.record(opens, 'faction', chatNow.add(const Duration(minutes: 6)));
-    expect(opens, hasLength(2));
-
-    final old = chatNow.subtract(const Duration(days: 8)).millisecondsSinceEpoch;
-    final recent = chatNow.subtract(const Duration(days: 1)).millisecondsSinceEpoch;
-    final next = ChatShortcuts.record(['x|$old', 'broken', 'y|$recent'], 'z', chatNow);
-    expect(next.map((e) => e.split('|').first), ['y', 'z']);
-    expect(ChatShortcuts.top(ChatShortcuts.record([], 'a|b', chatNow), chatNow), ['a|b']);
   });
 
   test('a saved message keeps only the excerpt', () {

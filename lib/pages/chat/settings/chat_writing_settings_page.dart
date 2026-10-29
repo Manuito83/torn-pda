@@ -5,6 +5,7 @@ import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_compose_tools.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_message_actions.dart';
+import 'package:torn_pda/widgets/chat/chat_settings_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class ChatWritingSettingsPage extends StatelessWidget {
@@ -89,10 +90,11 @@ class ChatMessageActionsSettingsPage extends StatelessWidget {
     return ChatSettingsSubpage(
       title: 'Message actions',
       builder: (context) => [
-        ListTile(
-          title: const Text('Swipe left on a message'),
-          subtitle: const Text('Outside private chats, acts on who wrote it'),
-          trailing: DropdownButton<ChatSwipeAction>(
+        ChatSettingsTile(
+          title: 'Swipe left on a message',
+          subtitle: 'Outside private chats, acts on who wrote it',
+          control: (below) => DropdownButton<ChatSwipeAction>(
+            isExpanded: below,
             value: NativeChat.prefs.swipeLeft,
             underline: const SizedBox.shrink(),
             items: [

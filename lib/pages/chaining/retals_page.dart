@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -21,6 +22,7 @@ import 'package:torn_pda/widgets/countdown.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
+import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
 
 class RetalsOptions {
   String? description;
@@ -511,7 +513,15 @@ class RetalsTargetsList extends StatelessWidget {
             key: ValueKey(card.retalModel.retalId),
             id: card.retalModel.retalId!,
             name: card.retalModel.name ?? '',
-            child: card,
+            child: Slidable(
+              key: ValueKey(card.retalModel.retalId),
+              closeOnScroll: false,
+              endActionPane: ActionPane(
+                motion: const ScrollMotion(),
+                children: [profileSlidableAction(card.retalModel.retalId)],
+              ),
+              child: card,
+            ),
           ),
     ];
   }

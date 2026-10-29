@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart' show TextInputAction;
+import 'package:intl/intl.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_colors.dart';
 import 'package:torn_pda/models/chat/chat_emoji.dart';
@@ -14,8 +15,8 @@ import 'package:torn_pda/models/chat/chat_person.dart';
 import 'package:torn_pda/models/chat/chat_reminder.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/chat/chat_saved.dart';
-import 'package:torn_pda/models/chat/chat_shortcuts.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
+import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -43,6 +44,12 @@ enum ChatGlowMode { ticker, custom, off }
 enum ChatImageAutoLoad { never, torn, always }
 
 enum ChatLauncher { bubble, browser, menuHeader, menuBar }
+
+enum ChatLauncherTap { full, window }
+
+enum ChatTimes { app, tct, local }
+
+enum ChatAnimations { quick, smooth, verySmooth }
 
 enum ChatProfileIcon { pda, torn }
 
@@ -158,10 +165,15 @@ class ChatPrefs extends ChangeNotifier {
   ChatSwipeAction swipeLeft = ChatSwipeAction.message;
   bool ticker = true;
   ChatLauncher launcher = ChatLauncher.bubble;
-  bool shortcuts = true;
+  ChatLauncherTap launcherTap = ChatLauncherTap.full;
+  bool miniBubbles = true;
+  bool reopenChats = false;
+  ChatTimes chatTimes = ChatTimes.app;
+  ChatAnimations animations = ChatAnimations.verySmooth;
 
-  /// "roomId|epochMs" per opening
-  List<String> opens = [];
+  /// From the app settings, not stored
+  bool appTornTime = false;
+  bool app12h = false;
 
   /// "roomId|title" as last published
   List<String> shortcutCache = [];
@@ -186,11 +198,17 @@ class ChatPrefs extends ChangeNotifier {
   /// Encoded by ChatBigWindow
   List<String> bigWindow = [];
 
+  /// Encoded by ChatOnScreen
+  List<String> onScreen = [];
+
   /// x and y fractions, then dock side
   List<String> bubbleSpot = [];
   bool imagesPrivate = true;
   bool imagesPublic = false;
-  ChatImageAutoLoad linkPreviews = ChatImageAutoLoad.torn;
+  ChatImageAutoLoad linkPreviews = ChatImageAutoLoad.always;
+
+  /// Groups where web previews wait
+  Set<String> linkPreviewsOff = {...globalRooms};
   bool linkWindow = true;
   bool linkNewTab = false;
   ChatImageHost imageHost = ChatImageHost.imgbb;
@@ -381,8 +399,15 @@ class ChatPrefs extends ChangeNotifier {
     ticker = await Prefs().getNativeChatTicker();
     final launcherName = await Prefs().getNativeChatLauncher();
     launcher = ChatLauncher.values.where((l) => l.name == launcherName).firstOrNull ?? ChatLauncher.bubble;
-    shortcuts = await Prefs().getNativeChatShortcuts();
-    opens = await Prefs().getNativeChatOpens();
+    final tapName = await Prefs().getNativeChatLauncherTap();
+    launcherTap = ChatLauncherTap.values.where((t) => t.name == tapName).firstOrNull ?? ChatLauncherTap.full;
+    miniBubbles = await Prefs().getNativeChatMiniBubbles();
+    reopenChats = await Prefs().getNativeChatReopen();
+    final timesName = await Prefs().getNativeChatTimes();
+    chatTimes = ChatTimes.values.where((t) => t.name == timesName).firstOrNull ?? ChatTimes.app;
+    final animationsName = await Prefs().getNativeChatAnimations();
+    animations =
+        ChatAnimations.values.where((a) => a.name == animationsName).firstOrNull ?? ChatAnimations.verySmooth;
     shortcutCache = await Prefs().getNativeChatShortcutCache();
     final paused = await Prefs().getNativeChatPausedAt();
     pausedAt = paused > 0 ? DateTime.fromMillisecondsSinceEpoch(paused) : null;
@@ -410,12 +435,14 @@ class ChatPrefs extends ChangeNotifier {
     windowFrame = await Prefs().getNativeChatWindowFrame();
     windows = await Prefs().getNativeChatWindows();
     bigWindow = await Prefs().getNativeChatBigWindow();
+    onScreen = await Prefs().getNativeChatOnScreen();
     bubbleSpot = await Prefs().getNativeChatBubbleSpot();
     final (legacyPrivate, legacyPublic) = imagesFromLegacy(await Prefs().getNativeChatImageAutoLoad());
     imagesPrivate = await Prefs().getNativeChatImagesPrivate(legacyPrivate);
     imagesPublic = await Prefs().getNativeChatImagesPublic(legacyPublic);
     final previews = await Prefs().getNativeChatLinkPreviews();
-    linkPreviews = ChatImageAutoLoad.values.firstWhere((v) => v.name == previews, orElse: () => ChatImageAutoLoad.torn);
+    linkPreviews = ChatImageAutoLoad.values.firstWhere((v) => v.name == previews, orElse: () => ChatImageAutoLoad.always);
+    linkPreviewsOff = (await Prefs().getNativeChatLinkPreviewsOff()).toSet();
     linkWindow = await Prefs().getNativeChatLinkWindow();
     linkNewTab = await Prefs().getNativeChatLinkNewTab();
     imgurClientId = await Prefs().getChatImgurClientId();
@@ -1269,23 +1296,113 @@ class ChatPrefs extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setLauncherTap(ChatLauncherTap value) {
+    launcherTap = value;
+    Prefs().setNativeChatLauncherTap(value.name);
+    notifyListeners();
+  }
+
+  void setMiniBubbles(bool value) {
+    miniBubbles = value;
+    Prefs().setNativeChatMiniBubbles(value);
+    notifyListeners();
+  }
+
+  void setReopenChats(bool value) {
+    reopenChats = value;
+    Prefs().setNativeChatReopen(value);
+    notifyListeners();
+  }
+
+  /// The bubble launcher always minimizes
+  bool get canMinimize => launcher == ChatLauncher.bubble || miniBubbles;
+
+  void setChatTimes(ChatTimes value) {
+    chatTimes = value;
+    Prefs().setNativeChatTimes(value.name);
+    notifyListeners();
+  }
+
+  void setAnimations(ChatAnimations value) {
+    animations = value;
+    Prefs().setNativeChatAnimations(value.name);
+    notifyListeners();
+  }
+
+  void followAppTime({required bool tornTime, required bool h12}) {
+    if (appTornTime == tornTime && app12h == h12) return;
+    appTornTime = tornTime;
+    app12h = h12;
+    notifyListeners();
+  }
+
+  bool get tornTime => switch (chatTimes) {
+    ChatTimes.app => appTornTime,
+    ChatTimes.tct => true,
+    ChatTimes.local => false,
+  };
+
+  @visibleForTesting
+  Duration localOffset(DateTime at) => at.toLocal().timeZoneOffset;
+
+  /// Chat zone time, as UTC
+  DateTime wallClock(DateTime at) => at.toUtc().add(tornTime ? Duration.zero : localOffset(at));
+
+  String clock(DateTime at) => clockOf(wallClock(at));
+
+  /// [wall] already in the zone shown
+  String clockOf(DateTime wall) => DateFormat(app12h ? 'h:mm a' : 'HH:mm').format(wall);
+
+  String minutesClock(int minutes) => clockOf(DateTime.utc(2000, 1, 1, minutes ~/ 60, minutes % 60));
+
+  /// Time, with the date if not today
+  String stamp(DateTime at) {
+    final time = clock(at);
+    return switch (daysFrom(DateTime.now(), at)) {
+      0 => time,
+      1 => 'tomorrow $time',
+      _ => '${DateFormat.MMMd().format(wallClock(at))}, $time',
+    };
+  }
+
+  /// Device time, "tomorrow" if another day
+  String localClock(DateTime at, DateTime now) {
+    final here = at.toLocal();
+    final today = now.toLocal();
+    final days = DateTime(
+      here.year,
+      here.month,
+      here.day,
+    ).difference(DateTime(today.year, today.month, today.day)).inDays;
+    final day = switch (days) {
+      0 => '',
+      1 => ' tomorrow',
+      -1 => ' yesterday',
+      _ => ' (${DateFormat.MMMd().format(here)})',
+    };
+    return '${clockOf(here)}$day';
+  }
+
+  /// Next [hour]:[minute] in chat time
+  DateTime nextAt(int hour, int minute, DateTime now) {
+    final (wall, here) = (wallClock(now), now.toLocal());
+    var at = tornTime
+        ? DateTime.utc(wall.year, wall.month, wall.day, hour, minute).toLocal()
+        : DateTime(here.year, here.month, here.day, hour, minute);
+    if (!at.isAfter(now)) at = at.add(const Duration(days: 1));
+    return at;
+  }
+
+  /// Calendar days, negative if earlier
+  int daysFrom(DateTime now, DateTime at) {
+    final (x, y) = (wallClock(now), wallClock(at));
+    return DateTime.utc(y.year, y.month, y.day).difference(DateTime.utc(x.year, x.month, x.day)).inDays;
+  }
+
   void setTicker(bool value) {
     ticker = value;
     Prefs().setNativeChatTicker(value);
     notifyListeners();
-  }
-
-  void setShortcuts(bool value) {
-    shortcuts = value;
-    Prefs().setNativeChatShortcuts(value);
-    notifyListeners();
-  }
-
-  void recordOpen(String roomId) {
-    final next = ChatShortcuts.record(opens, roomId, DateTime.now());
-    if (identical(next, opens)) return;
-    opens = next;
-    Prefs().setNativeChatOpens(opens);
   }
 
   void setShortcutCache(List<String> value) {
@@ -1320,6 +1437,11 @@ class ChatPrefs extends ChangeNotifier {
     Prefs().setNativeChatBigWindow(value);
   }
 
+  void setOnScreen(List<String> value) {
+    onScreen = value;
+    Prefs().setNativeChatOnScreen(value);
+  }
+
   void setBubbleSpot(List<String> value) {
     bubbleSpot = value;
     Prefs().setNativeChatBubbleSpot(value);
@@ -1349,6 +1471,19 @@ class ChatPrefs extends ChangeNotifier {
     Prefs().setNativeChatLinkPreviews(value.name);
     notifyListeners();
   }
+
+  void setLinkPreviewsIn(String group, bool on) {
+    on ? linkPreviewsOff.remove(group) : linkPreviewsOff.add(group);
+    Prefs().setNativeChatLinkPreviewsOff(linkPreviewsOff.toList());
+    notifyListeners();
+  }
+
+  bool previewsAlone(String? roomId, {required bool torn}) => switch (linkPreviews) {
+    ChatImageAutoLoad.never => false,
+    _ when torn => true,
+    ChatImageAutoLoad.torn => false,
+    ChatImageAutoLoad.always => roomId != null && !linkPreviewsOff.contains(ChatRooms.group(roomId)),
+  };
 
   void setLinkWindow(bool value) {
     linkWindow = value;
@@ -1626,7 +1761,8 @@ class ChatPrefs extends ChangeNotifier {
     'confirmPublic': (confirmPublic, setConfirmPublic),
     'enterSendsHardware': (enterSendsHardware, setEnterSendsHardware),
     'enterSendsSoft': (enterSendsSoft, setEnterSendsSoft),
-    'shortcuts': (shortcuts, setShortcuts),
+    'miniBubbles': (miniBubbles, setMiniBubbles),
+    'reopenChats': (reopenChats, setReopenChats),
     'mentions': (mentions, setMentions),
     'alertNotify': (alertNotify, setAlertNotify),
     'alertVibrate': (alertVibrate, setAlertVibrate),
@@ -1758,6 +1894,10 @@ class ChatPrefs extends ChangeNotifier {
       bubbleRooms = replace ? {...set} : {...bubbleRooms, ...set};
       Prefs().setNativeChatBubbleRooms(bubbleRooms.toList());
     }
+    if (backup.linkPreviewsOff case final set?) {
+      linkPreviewsOff = replace ? {...set} : {...linkPreviewsOff, ...set};
+      Prefs().setNativeChatLinkPreviewsOff(linkPreviewsOff.toList());
+    }
     if (replace) {
       if (backup.soundForAllType case final v?) setSoundForAllType(v);
       if (backup.textScale case final v?) setTextScale(v);
@@ -1778,6 +1918,9 @@ class ChatPrefs extends ChangeNotifier {
       if (backup.tickerLines case final v?) setTickerLines(v);
       if (backup.glowMode case final v?) setGlowMode(v);
       if (backup.launcher case final v?) setLauncher(v);
+      if (backup.launcherTap case final v?) setLauncherTap(v);
+      if (backup.chatTimes case final v?) setChatTimes(v);
+      if (backup.animations case final v?) setAnimations(v);
       if (backup.profileIcon case final v?) setProfileIcon(v);
       if (backup.imageHost case final v?) setImageHost(v);
       if (backup.imgbbExpiration case final v?) setImgbbExpiration(v);
@@ -1791,6 +1934,7 @@ class ChatPrefs extends ChangeNotifier {
         setQuickRowTypes(types ?? List.filled(3, ChatQuickRow.actions));
       }
       if (backup.quickRows case final v?) setQuickRows(v);
+      if (backup.appIconMenu case final slots?) AppIconMenu.setSlots(slots);
       if (backup.messageActionOrder case final order?) {
         messageActionOrder = _withAllActions(order);
         Prefs().setNativeChatMessageActionOrder(messageActionOrder);
@@ -1836,10 +1980,10 @@ class ChatPrefs extends ChangeNotifier {
         if (!id.startsWith('dm:')) id,
     ];
     reminders = [];
-    opens = [];
     shortcutCache = [];
     windows = [];
     bigWindow = [];
+    onScreen = [];
     Prefs().setNativeChatDrafts('{}');
     Prefs().setNativeChatSaved('[]');
     Prefs().setNativeChatPlayerNotes('{}');
@@ -1847,10 +1991,10 @@ class ChatPrefs extends ChangeNotifier {
     Prefs().setNativeChatPinnedMessages('{}');
     Prefs().setNativeChatPinned(pinned);
     Prefs().setNativeChatReminders('[]');
-    Prefs().setNativeChatOpens(opens);
     Prefs().setNativeChatShortcutCache(shortcutCache);
     Prefs().setNativeChatWindows(windows);
     Prefs().setNativeChatBigWindow(bigWindow);
+    Prefs().setNativeChatOnScreen(onScreen);
     notifyListeners();
   }
 }

@@ -407,6 +407,7 @@ class Prefs {
   final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kShortcutTile = "pda_shortcutTile"; // Firebase User Pref
   final String _kShortcutMenu = "pda_shortcutMenu"; // Firebase User Pref
+  final String _kAppIconMenu = "pda_appIconMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList"; // Firebase User Pref
 
   // Reviving
@@ -488,8 +489,6 @@ class Prefs {
   final String _kNativeChatRoomFilters = "pda_nativeChatRoomFilters";
   final String _kNativeChatDrafts = "pda_nativeChatDrafts";
   final String _kNativeChatSaved = "pda_nativeChatSaved";
-  final String _kNativeChatShortcuts = "pda_nativeChatShortcuts";
-  final String _kNativeChatOpens = "pda_nativeChatOpens";
   final String _kNativeChatShortcutCache = "pda_nativeChatShortcutCache";
   final String _kNativeChatPausedAt = "pda_nativeChatPausedAt";
   final String _kNativeChatQuickReplies = "pda_nativeChatQuickReplies";
@@ -531,10 +530,16 @@ class Prefs {
   final String _kNativeChatIntroSeen = "pda_nativeChatIntroSeen";
   final String _kNativeChatReminders = "pda_nativeChatReminders";
   final String _kNativeChatOwner = "pda_nativeChatOwner";
+  final String _kNativeChatInbox = "pda_nativeChatInbox";
   final String _kNativeChatRemoteEnabled = "pda_nativeChatRemoteEnabled";
   final String _kNativeChatReplyEnabled = "pda_nativeChatReplyEnabled";
   final String _kNativeChatTicker = "pda_nativeChatTicker";
   final String _kNativeChatLauncher = "pda_nativeChatLauncher";
+  final String _kNativeChatLauncherTap = "pda_nativeChatLauncherTap";
+  final String _kNativeChatMiniBubbles = "pda_nativeChatMiniBubbles";
+  final String _kNativeChatReopen = "pda_nativeChatReopen";
+  final String _kNativeChatTimes = "pda_nativeChatTimes";
+  final String _kNativeChatAnimations = "pda_nativeChatAnimations";
   final String _kNativeChatTickerTop = "pda_nativeChatTickerTop";
   final String _kNativeChatTickerLevels = "pda_nativeChatTickerLevels";
   final String _kNativeChatTickerTap = "pda_nativeChatTickerTap";
@@ -546,11 +551,13 @@ class Prefs {
   final String _kNativeChatWindowFrame = "pda_nativeChatWindowFrame";
   final String _kNativeChatWindows = "pda_nativeChatWindows";
   final String _kNativeChatBigWindow = "pda_nativeChatBigWindow";
+  final String _kNativeChatOnScreen = "pda_nativeChatOnScreen";
   final String _kNativeChatBubbleSpot = "pda_nativeChatBubbleSpot";
   final String _kNativeChatImageAutoLoad = "pda_nativeChatImageAutoLoad";
   final String _kNativeChatImagesPrivate = "pda_nativeChatImagesPrivate";
   final String _kNativeChatImagesPublic = "pda_nativeChatImagesPublic";
   final String _kNativeChatLinkPreviews = "pda_nativeChatLinkPreviews";
+  final String _kNativeChatLinkPreviewsOff = "pda_nativeChatLinkPreviewsOff";
   final String _kNativeChatLinkWindow = "pda_nativeChatLinkWindow";
   final String _kNativeChatLinkNewTab = "pda_nativeChatLinkNewTab";
   final String _kNativeChatSwipeLeft = "pda_nativeChatSwipeLeft";
@@ -3209,6 +3216,14 @@ class Prefs {
     return await PrefsDatabase.setString(_kShortcutTile, value);
   }
 
+  Future<List<String>> getAppIconMenu() async {
+    return await PrefsDatabase.getStringList(_kAppIconMenu, <String>[]);
+  }
+
+  Future setAppIconMenu(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kAppIconMenu, value);
+  }
+
   Future<String> getShortcutMenu() async {
     return await PrefsDatabase.getString(_kShortcutMenu, 'carousel');
   }
@@ -3860,6 +3875,46 @@ class Prefs {
     return await PrefsDatabase.setString(_kNativeChatLauncher, value);
   }
 
+  Future<String> getNativeChatLauncherTap() async {
+    return await PrefsDatabase.getString(_kNativeChatLauncherTap, 'full');
+  }
+
+  Future setNativeChatLauncherTap(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatLauncherTap, value);
+  }
+
+  Future<bool> getNativeChatMiniBubbles() async {
+    return await PrefsDatabase.getBool(_kNativeChatMiniBubbles, true);
+  }
+
+  Future setNativeChatMiniBubbles(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatMiniBubbles, value);
+  }
+
+  Future<bool> getNativeChatReopen() async {
+    return await PrefsDatabase.getBool(_kNativeChatReopen, false);
+  }
+
+  Future setNativeChatReopen(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatReopen, value);
+  }
+
+  Future<String> getNativeChatTimes() async {
+    return await PrefsDatabase.getString(_kNativeChatTimes, '');
+  }
+
+  Future setNativeChatTimes(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatTimes, value);
+  }
+
+  Future<String> getNativeChatAnimations() async {
+    return await PrefsDatabase.getString(_kNativeChatAnimations, '');
+  }
+
+  Future setNativeChatAnimations(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatAnimations, value);
+  }
+
   Future<bool> getNativeChatTickerTop() async {
     return await PrefsDatabase.getBool(_kNativeChatTickerTop, true);
   }
@@ -3890,11 +3945,19 @@ class Prefs {
   }
 
   Future<String> getNativeChatLinkPreviews() async {
-    return await PrefsDatabase.getString(_kNativeChatLinkPreviews, "torn");
+    return await PrefsDatabase.getString(_kNativeChatLinkPreviews, "always");
   }
 
   Future setNativeChatLinkPreviews(String value) async {
     return await PrefsDatabase.setString(_kNativeChatLinkPreviews, value);
+  }
+
+  Future<List<String>> getNativeChatLinkPreviewsOff() async {
+    return await PrefsDatabase.getStringList(_kNativeChatLinkPreviewsOff, <String>['global', 'trade', 'poker']);
+  }
+
+  Future setNativeChatLinkPreviewsOff(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kNativeChatLinkPreviewsOff, value);
   }
 
   Future<bool> getNativeChatLinkWindow() async {
@@ -4041,6 +4104,14 @@ class Prefs {
     return await PrefsDatabase.setStringList(_kNativeChatBigWindow, value);
   }
 
+  Future<List<String>> getNativeChatOnScreen() async {
+    return await PrefsDatabase.getStringList(_kNativeChatOnScreen, <String>[]);
+  }
+
+  Future setNativeChatOnScreen(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kNativeChatOnScreen, value);
+  }
+
   Future<List<String>> getNativeChatBubbleSpot() async {
     return await PrefsDatabase.getStringList(_kNativeChatBubbleSpot, <String>[]);
   }
@@ -4119,22 +4190,6 @@ class Prefs {
 
   Future setNativeChatSaved(String value) async {
     return await PrefsDatabase.setString(_kNativeChatSaved, value);
-  }
-
-  Future<bool> getNativeChatShortcuts() async {
-    return await PrefsDatabase.getBool(_kNativeChatShortcuts, true);
-  }
-
-  Future setNativeChatShortcuts(bool value) async {
-    return await PrefsDatabase.setBool(_kNativeChatShortcuts, value);
-  }
-
-  Future<List<String>> getNativeChatOpens() async {
-    return await PrefsDatabase.getStringList(_kNativeChatOpens, <String>[]);
-  }
-
-  Future setNativeChatOpens(List<String> value) async {
-    return await PrefsDatabase.setStringList(_kNativeChatOpens, value);
   }
 
   Future<List<String>> getNativeChatShortcutCache() async {
@@ -4464,6 +4519,14 @@ class Prefs {
 
   Future setNativeChatReminders(String value) async {
     return await PrefsDatabase.setString(_kNativeChatReminders, value);
+  }
+
+  Future<String> getNativeChatInbox() async {
+    return await PrefsDatabase.getString(_kNativeChatInbox, "");
+  }
+
+  Future setNativeChatInbox(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatInbox, value);
   }
 
   Future<int> getNativeChatOwner() async {

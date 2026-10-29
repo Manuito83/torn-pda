@@ -34,13 +34,13 @@ const Map<FeatureDiagramScene, String> featureDiagramCaptions = {
   FeatureDiagramScene.linkNewTabAppSide: "Open a link from the app in a new tab on its side",
   FeatureDiagramScene.pipChain: "Tap the window icon to watch the chain over other apps",
   FeatureDiagramScene.pipPlayer: "Choose Watch players in the options and tap up to 4 cards",
-  FeatureDiagramScene.chatBubble: "Tap the bubble for your chats, then tap one to open it",
-  FeatureDiagramScene.chatBrowser: "Tap the chat button in the browser for your chats",
+  FeatureDiagramScene.chatBubble: "The chat button floats as a bubble, drag it anywhere",
+  FeatureDiagramScene.chatBrowser: "The chat button sits in the browser bar",
   FeatureDiagramScene.chatWindow: "Open a chat in a small window, then minimize it to a bubble",
   FeatureDiagramScene.chatLinkPreview: "Tap a link to preview it, then open it in a tab",
   FeatureDiagramScene.chatPlayerCard: "Tap a name to see their card and actions",
-  FeatureDiagramScene.chatDrawer: "Tap the bubble in the side menu header",
-  FeatureDiagramScene.chatMenuBar: "Tap Chat in the side menu for your chats",
+  FeatureDiagramScene.chatDrawer: "The chat button sits on the side menu logo",
+  FeatureDiagramScene.chatMenuBar: "The chat button is a Chat row in the side menu",
   FeatureDiagramScene.chatListReply: "Tap the arrow on a chat to read it and answer from the list",
 };
 

@@ -18,6 +18,43 @@ enum ChatHelpGroup {
   final String title;
 }
 
+enum ChatNeed {
+  screenReader('a screen reader'),
+  largeText('larger text'),
+  boldText('bold text'),
+  highContrast('higher contrast'),
+  fewerAnimations('fewer animations');
+
+  const ChatNeed(this.label);
+
+  final String label;
+}
+
+bool chatLargeText(TextScaler scaler) => scaler.scale(14) > 14 * 1.3;
+
+Set<ChatNeed> chatNeedsOf(MediaQueryData media) => {
+  if (media.accessibleNavigation) ChatNeed.screenReader,
+  if (chatLargeText(media.textScaler)) ChatNeed.largeText,
+  if (media.boldText) ChatNeed.boldText,
+  if (media.highContrast) ChatNeed.highContrast,
+  if (media.disableAnimations) ChatNeed.fewerAnimations,
+};
+
+String chatNeedsText(Set<ChatNeed> needs) {
+  final names = [
+    for (final n in ChatNeed.values)
+      if (needs.contains(n)) n.label,
+  ];
+  final list = names.length < 2 ? names.join() : '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}';
+  return 'Your phone uses $list';
+}
+
+List<ChatHelpEntry> chatHelpOf(ChatHelpGroup group, Set<ChatNeed> needs) {
+  final all = chatHelp.where((e) => e.group == group);
+  bool fits(ChatHelpEntry e) => e.needs.any(needs.contains);
+  return [...all.where(fits), ...all.where((e) => !fits(e))];
+}
+
 class ChatHelpEntry {
   const ChatHelpEntry(
     this.group,
@@ -28,6 +65,7 @@ class ChatHelpEntry {
     this.scenes = const [],
     this.actions = const {},
     this.withSlots = false,
+    this.needs = const {},
   }) : _text = text;
 
   final ChatHelpGroup group;
@@ -41,6 +79,9 @@ class ChatHelpEntry {
 
   /// Adds what each reply slot fills
   final bool withSlots;
+
+  /// Shown first with these phone settings
+  final Set<ChatNeed> needs;
 
   String get text => withSlots ? '$_text:\n${ChatTemplate.slots.map((s) => '${s.tag} - ${s.help}').join('\n')}' : _text;
 }
@@ -80,11 +121,12 @@ const chatHelp = <ChatHelpEntry>[
     ChatHelpGroup.start,
     Icons.forum_rounded,
     'The bubble',
-    'Tap it to open the chat. Drag it anywhere, or push it against an edge to tuck it away and tap it to bring it '
-        'back. A double tap marks your chats as read, with Undo. Rooms like Global and Trade, hidden rooms and '
-        'archived chats stay as they are. A red cloud means the chat is not connected. To open the '
-        'chat from the browser or the side menu instead, pick Browser, Menu header or Menu bar in Chat settings > '
-        'Open the chat from',
+    'Tap it to open the full chat, or a chat window if you pick Window in Chat settings > Chat button. Long press '
+        'it for Window, Full chat and Chat settings. Drag it anywhere, or push it against an edge to tuck it away and '
+        'tap it to bring it back. A double tap marks your chats as read, with Undo. Rooms like Global and Trade, '
+        'hidden rooms and archived chats stay as they are. A red cloud means the chat is not connected. To have the '
+        'chat button in the browser or the side menu instead, pick Browser, Menu header or Menu bar in Chat '
+        'settings > Chat button',
     spots: {ChatHelpSpot.intro},
     scenes: [FeatureDiagramScene.chatBubble, FeatureDiagramScene.chatWindow],
   ),
@@ -93,25 +135,26 @@ const chatHelp = <ChatHelpEntry>[
     Icons.bubble_chart_outlined,
     'Minimized chats',
     'Small bubbles next to the bubble hold your minimized chats. Tap one to reopen it, or hold it to dismiss it. '
-        'With chats minimized, long press the bubble to see them all in a list. The chat window minimizes into the '
-        'bubble, or into a small bubble of its own if you open the chat from somewhere else',
+        'Long press the bubble to see them all in a list. The chat window minimizes into the '
+        'bubble, or into a small bubble of its own if you open the chat from somewhere else. To get your open windows '
+        'and full chat back after a restart, turn on Reopen chats as I left them in Chat settings > Chat button',
   ),
   ChatHelpEntry(
     ChatHelpGroup.start,
     Icons.menu_rounded,
     'The chat in the side menu',
     'Menu header puts the bubble on the side menu logo, with the same unread counts. Menu bar adds a Chat row '
-        'above Profile instead, and Settings > Drawer sections moves it. Tap either one to open the chat. Both need '
-        'the in-app chat on and a working API key',
+        'above Profile instead, and Settings > Drawer sections moves it. Tap either one to open the chat, long press '
+        'it for Window, Full chat and Chat settings. Both need the in-app chat on and a working API key',
     scenes: [FeatureDiagramScene.chatDrawer, FeatureDiagramScene.chatMenuBar],
   ),
   ChatHelpEntry(
     ChatHelpGroup.start,
     Icons.chat_bubble_outline_rounded,
     'The chat icon in the browser',
-    'Tap it to open the chat window, or a small menu when the in-app chat is off. Double tap it to hide or show '
-        'Torn\'s own chat in that tab. Long press it for Open the full chat, Chat settings and hiding Torn\'s chat '
-        'in every tab. With Browser picked in Chat settings > Open the chat from, it shows in every tab with your '
+    'Tap it to open the chat, or a small menu when the in-app chat is off. Double tap it to hide or show '
+        'Torn\'s own chat in that tab. Long press it for Window, Full chat, Chat settings and hiding Torn\'s chat '
+        'in every tab. With Browser picked in Chat settings > Chat button, it shows in every tab with your '
         'unread counts',
     spots: {ChatHelpSpot.intro},
     scenes: [FeatureDiagramScene.chatBrowser],
@@ -120,16 +163,16 @@ const chatHelp = <ChatHelpEntry>[
     ChatHelpGroup.start,
     Icons.web_stories_outlined,
     'The chat window',
-    'The window from the browser chat icon floats over the app. Drag its top bar to move it and the corner to '
-        'resize it. The buttons on top minimize it or make it full screen, and More has Open the full chat. In a '
-        'conversation, the small window button pops it out on its own',
+    'The chat window floats over the app. Drag its top bar to move it and the corner to resize it. The buttons on '
+        'top minimize it and open the full chat. More has Chat settings and Maximize window, which only makes the '
+        'window fill the screen. In a conversation, the small window button pops it out on its own',
   ),
   ChatHelpEntry(
     ChatHelpGroup.start,
     Icons.tune_rounded,
     'Settings',
-    'The settings button at the top of the full chat opens Chat settings, and so does the chat icon menu in the '
-        'browser. This guide is there too, under How the chat works',
+    'The settings button at the top of the full chat opens Chat settings. So do a long press on the chat button, '
+        'More in a chat window and Chat in the app Settings. This guide is there too, under How the chat works',
     spots: {ChatHelpSpot.intro},
   ),
   ChatHelpEntry(
@@ -322,7 +365,7 @@ const chatHelp = <ChatHelpEntry>[
     Icons.flash_on_rounded,
     'Bubble glow',
     'The bubble flashes in the color of the room the message came from. With Bubble picked in Chat settings > '
-        'Open the chat from, choose Same as ticker, Custom or Off there. Frozen and hidden rooms never make it glow',
+        'Chat button, choose Same as ticker, Custom or Off there. Frozen and hidden rooms never make it glow',
   ),
   ChatHelpEntry(
     ChatHelpGroup.alerts,
@@ -468,6 +511,13 @@ const chatHelp = <ChatHelpEntry>[
   ),
   ChatHelpEntry(
     ChatHelpGroup.alerts,
+    Icons.phone_android_rounded,
+    'With the app closed',
+    'Only private chats notify with the app closed. Faction, company and other rooms alert while it is open '
+        'or just left',
+  ),
+  ChatHelpEntry(
+    ChatHelpGroup.alerts,
     Icons.reply_rounded,
     'Reply from notifications',
     'On Android, private chat notifications have a Reply button to answer without opening the app',
@@ -476,15 +526,17 @@ const chatHelp = <ChatHelpEntry>[
     ChatHelpGroup.start,
     Icons.ads_click_rounded,
     'App icon shortcuts',
-    'Long press the Torn PDA icon to jump to your most used chats. Turn it on or off in Chat settings > Open the '
-        'chat from > Chats in the app icon menu',
+    'Long press the Torn PDA icon to jump to a chat. Pick which ones in Chat settings > Chat button > '
+        'App icon menu',
   ),
   ChatHelpEntry(
     ChatHelpGroup.accessibility,
     Icons.accessibility_new_rounded,
     'Screen readers',
-    'TalkBack and VoiceOver work in the chat. Gestures on messages, the bubble, the ticker, the chat list and the '
-        'browser chat icon are in the screen reader\'s actions menu',
+    'TalkBack and VoiceOver read each message as one line, with its links, times and gestures in the actions '
+        'menu. The bubble, windows, ticker, chat list and browser chat icon have their gestures there too, moving '
+        'included, and notices with Undo wait for you',
+    needs: {ChatNeed.screenReader},
   ),
   ChatHelpEntry(
     ChatHelpGroup.accessibility,
@@ -492,13 +544,15 @@ const chatHelp = <ChatHelpEntry>[
     'New messages read aloud',
     'The chat you have open reads out new messages: all of them in private, faction and company chats, only '
         'mentions and highlight words elsewhere. Ticker lines stay until you dismiss them',
+    needs: {ChatNeed.screenReader},
   ),
   ChatHelpEntry(
     ChatHelpGroup.accessibility,
     Icons.format_size_rounded,
     'Text size',
-    'The chat follows your system text size. On top of it, Chat settings > Appearance > Chat text size goes from '
-        '80% to 160%, and the ticker follows it too',
+    'The chat follows your system text size. On top of it, Chat settings > Appearance > Chat text size goes '
+        'from 80% to 160% for messages and the ticker',
+    needs: {ChatNeed.largeText, ChatNeed.boldText},
   ),
   ChatHelpEntry(
     ChatHelpGroup.accessibility,
@@ -506,11 +560,14 @@ const chatHelp = <ChatHelpEntry>[
     'Contrast',
     'Name colors always stay readable on the bubble. In Chat settings > Appearance > Colors, Torn PDA '
         'warns you when some text gets hard to read and offers white or black text',
+    needs: {ChatNeed.highContrast},
   ),
   ChatHelpEntry(
     ChatHelpGroup.accessibility,
     Icons.motion_photos_off_outlined,
     'Fewer animations',
-    'When the system asks for fewer animations, the bubble does not flash with new messages',
+    'When the system asks for fewer animations, the chat jumps instead of animating and the bubble does not '
+        'flash with new messages',
+    needs: {ChatNeed.fewerAnimations},
   ),
 ];

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/pages/chat/chat_item_nicknames_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -69,8 +70,22 @@ class ChatMessagesSettingsPage extends StatelessWidget {
           _loadChoice(context, 'Link previews', prefs.linkPreviews, prefs.setLinkPreviews, switch (prefs.linkPreviews) {
             ChatImageAutoLoad.never => 'Every preview waits until you tap it',
             ChatImageAutoLoad.torn => 'Torn links fill in from the API, other sites wait until you tap them',
-            ChatImageAutoLoad.always => 'Any link fills in by itself. Other sites see your IP address',
+            ChatImageAutoLoad.always => 'Torn links fill in by themselves, other sites in the chats below. '
+                'Those sites see your IP address',
           }),
+          if (prefs.linkPreviews == ChatImageAutoLoad.always) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Text('Load link previews automatically', style: Theme.of(context).textTheme.titleSmall),
+            ),
+            for (final group in ChatPrefs.tickerOptions)
+              SwitchListTile(
+                dense: true,
+                title: Text(ChatRooms.labelOf(group)),
+                value: !prefs.linkPreviewsOff.contains(group),
+                onChanged: (v) => prefs.setLinkPreviewsIn(group, v),
+              ),
+          ],
           SwitchListTile(
             title: const Text('Preview links in a window'),
             subtitle: const Text('A small browser over the app, without scripts'),

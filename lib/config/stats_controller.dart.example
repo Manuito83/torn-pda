@@ -1,5 +1,17 @@
+import 'package:flutter/widgets.dart';
+import 'package:torn_pda/models/drawer_section.dart';
+
 class StatsController {
+  static bool browserOpen = false;
+
   static final chat = _ChatStats();
+
+  static final NavigatorObserver rootObserver = NavigatorObserver();
+  static final NavigatorObserver homeObserver = NavigatorObserver();
+
+  static void section(DrawerSection section) {}
+  static void screen(String name) {}
+  static void relog() {}
 
   Future<void> logCheckIn() async {}
   Future<void> logCheckOut() async {}

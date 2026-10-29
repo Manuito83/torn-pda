@@ -1,0 +1,7 @@
+class UsageCounters {
+  static Future<void> feature(String name) async {}
+
+  static Future<void> apiError(String api, Object? error, {int? status, String? body, Object? tornCode}) async {}
+
+  static Future<void> flush() async {}
+}

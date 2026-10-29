@@ -26,6 +26,9 @@ class ChatLink {
   /// Player, item, thread, faction, company or report
   final int? id;
 
+  /// Forum section of a forum link
+  final int? forumId;
+
   final String? label;
 
   /// Why it may be phishing
@@ -38,6 +41,7 @@ class ChatLink {
     required this.title,
     this.detail,
     this.id,
+    this.forumId,
     this.label,
     this.warning,
   });
@@ -135,6 +139,7 @@ class ChatLink {
           title: link.title,
           detail: link.detail,
           id: link.id,
+          forumId: link.forumId,
           label: label.isEmpty ? null : label,
           warning: link.warning ?? (!link.isTorn && label.toLowerCase().contains('torn.com') ? lookalikeWarning : null),
         );
@@ -170,8 +175,8 @@ class ChatLink {
       } catch (_) {}
     }
     int? id(String key) => int.tryParse(p[key] ?? '');
-    ChatLink card(ChatLinkKind kind, String title, [String? detail, int? id]) =>
-        ChatLink(uri: uri, raw: raw, kind: kind, title: title, detail: detail, id: id);
+    ChatLink card(ChatLinkKind kind, String title, [String? detail, int? id, int? forumId]) =>
+        ChatLink(uri: uri, raw: raw, kind: kind, title: title, detail: detail, id: id, forumId: forumId);
 
     switch (page) {
       case 'profiles.php':
@@ -216,8 +221,8 @@ class ChatLink {
       case 'forums.php':
         final thread = id('t');
         final forum = id('f');
-        if (thread != null) return card(ChatLinkKind.forum, 'Forum thread #$thread', null, thread);
-        if (forum != null) return card(ChatLinkKind.forum, 'Forum section #$forum');
+        if (thread != null) return card(ChatLinkKind.forum, 'Forum thread #$thread', null, thread, forum);
+        if (forum != null) return card(ChatLinkKind.forum, 'Forum section #$forum', null, null, forum);
         return card(ChatLinkKind.forum, 'Forums');
       case 'imarket.php':
       case 'page.php':

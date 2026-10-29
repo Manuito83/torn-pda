@@ -41,6 +41,33 @@ import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+/// Clears HTTP cache only, then reloads
+Future<bool> softCacheReset({
+  required Future<void> Function() clearHttpCache,
+  required Future<void> Function() reload,
+  required void Function(String text, bool success) notify,
+}) async {
+  try {
+    await clearHttpCache();
+  } catch (e) {
+    notify('Could not clear the cache', false);
+    return false;
+  }
+  notify('Cache cleared, reloading', true);
+  await reload();
+  return true;
+}
+
+void showSoftCacheResetToast(String text, bool success) {
+  BotToast.showText(
+    text: text,
+    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+    contentColor: success ? Colors.grey[600]! : Colors.red[700]!,
+    duration: const Duration(seconds: 2),
+    contentPadding: const EdgeInsets.all(10),
+  );
+}
+
 class WebviewUrlDialog extends StatefulWidget {
   final Function? callFindInPage;
   final String? title;
@@ -49,6 +76,7 @@ class WebviewUrlDialog extends StatefulWidget {
   final WebViewController? stockWebView;
   final Key? webviewKey;
   final Function? openDevTools;
+  final Future<void> Function()? onSoftCacheReset;
 
   const WebviewUrlDialog({
     this.callFindInPage,
@@ -58,6 +86,7 @@ class WebviewUrlDialog extends StatefulWidget {
     this.stockWebView,
     this.webviewKey,
     this.openDevTools,
+    this.onSoftCacheReset,
   });
 
   @override
@@ -547,6 +576,32 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               },
                             ),
                           ],
+                        ),
+                      ),
+                    if (widget.onSoftCacheReset != null && !Platform.isWindows)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: ElevatedButton(
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cleaning_services_outlined, size: 20),
+                              SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Soft cache reset',
+                                  style: TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                          onPressed: () {
+                            final reset = widget.onSoftCacheReset!;
+                            _customURLController.text = "";
+                            Navigator.of(context).pop();
+                            reset();
+                          },
                         ),
                       ),
                     if (widget.inAppWebview != null)

@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:torn_pda/models/chat/chat_faction_events.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_api.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/chat/chat_arrival_fade.dart';
 import 'package:torn_pda/widgets/chat/chat_color_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
@@ -66,6 +69,25 @@ class ChatWindowFrame {
     return Rect.fromLTWH(left, fitted.top, fitted.width, fitted.height);
   }
 
+  /// Half the free room toward [direction]
+  static Rect nudge(Rect frame, Rect area, Offset direction) {
+    final room = Size(math.max(0, area.width - frame.width), math.max(0, area.height - frame.height));
+    return Rect.fromLTWH(
+      (frame.left + direction.dx * room.width / 2).clamp(area.left, area.left + room.width).toDouble(),
+      (frame.top + direction.dy * room.height / 2).clamp(area.top, area.top + room.height).toDouble(),
+      frame.width,
+      frame.height,
+    );
+  }
+
+  /// Screen reader moves instead of dragging
+  static Map<String, Offset> moves(Rect frame, Rect area) => {
+    if (frame.top > area.top + 0.5) 'Move up': const Offset(0, -1),
+    if (frame.bottom < area.bottom - 0.5) 'Move down': const Offset(0, 1),
+    if (frame.left > area.left + 0.5) 'Move left': const Offset(-1, 0),
+    if (frame.right < area.right - 0.5) 'Move right': const Offset(1, 0),
+  };
+
   /// Share of the width out of [area]
   static double outside(Rect frame, Rect area) {
     final out = math.max(0.0, area.left - frame.left) + math.max(0.0, frame.right - area.right);
@@ -111,6 +133,9 @@ class ChatWindowBox extends StatelessWidget {
     this.sizeLabel,
     this.onCycleSize,
     this.moreItems,
+    this.label = 'Chat window',
+    this.onDismiss,
+    this.moves,
   });
 
   final Widget header;
@@ -134,6 +159,13 @@ class ChatWindowBox extends StatelessWidget {
   /// Menu entries before the rest
   final List<PopupMenuItem<VoidCallback>> Function()? moreItems;
 
+  /// Read when it opens
+  final String label;
+
+  /// Screen reader escape, else minimize or close
+  final VoidCallback? onDismiss;
+  final Map<CustomSemanticsAction, VoidCallback>? moves;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -143,11 +175,21 @@ class ChatWindowBox extends StatelessWidget {
       removeBottom: true,
       removeLeft: true,
       removeRight: true,
-      child: Stack(
-        children: [
-          Positioned.fill(child: _window(context, scheme)),
-          if (onResize != null) Positioned(right: 0, bottom: 0, child: _grip(scheme)),
-        ],
+      child: Semantics(
+        container: true,
+        scopesRoute: true,
+        namesRoute: true,
+        explicitChildNodes: true,
+        label: label,
+        onDismiss: onDismiss ?? onMinimize ?? onClose,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: LayoutBuilder(builder: (context, constraints) => _window(context, scheme, constraints.maxWidth)),
+            ),
+            if (onResize != null) Positioned(right: 0, bottom: 0, child: _grip(scheme)),
+          ],
+        ),
       ),
     );
   }
@@ -172,7 +214,9 @@ class ChatWindowBox extends StatelessWidget {
     );
   }
 
-  Widget _window(BuildContext context, ColorScheme scheme) {
+  Widget _window(BuildContext context, ColorScheme scheme, double width) {
+    final expandShown = onExpand != null && width >= 280;
+
     return Material(
       color: chatPalette(context).background,
       elevation: 10,
@@ -193,30 +237,40 @@ class ChatWindowBox extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(10, 2, 2, 2),
               child: Row(
                 children: [
-                  Expanded(child: header),
+                  Expanded(
+                    child: Semantics(container: true, customSemanticsActions: moves, child: header),
+                  ),
                   if (onMinimize != null) _headerButton('Minimize', const Icon(Icons.minimize_rounded), onMinimize),
-                  if (onFullscreen != null)
-                    _headerButton(
-                      fullscreen ? 'Exit full screen' : 'Full screen',
-                      Icon(fullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded),
-                      onFullscreen,
-                    ),
-                  if (onCycleSize != null || onExpand != null || onNext != null || moreItems != null)
-                    PopupMenuButton<VoidCallback>(
-                      tooltip: 'More',
-                      icon: const Icon(Icons.more_vert_rounded),
-                      iconSize: 20,
-                      padding: EdgeInsets.zero,
-                      onSelected: (action) => action(),
-                      itemBuilder: (_) => [
-                        ...?moreItems?.call(),
-                        if (onCycleSize != null)
-                          PopupMenuItem(value: onCycleSize, child: Text('Window size: ${sizeLabel ?? 'custom'}')),
-                        if (onNext != null && nextCount > 0)
-                          PopupMenuItem(value: onNext, child: Text('Next unread ($nextCount)')),
-                        if (onExpand != null) PopupMenuItem(value: onExpand, child: const Text('Open the full chat')),
-                      ],
-                    ),
+                  if (expandShown) _headerButton('Open the full chat', const Icon(Icons.open_in_new_rounded), onExpand),
+                  PopupMenuButton<VoidCallback>(
+                    tooltip: 'More',
+                    icon: const Icon(Icons.more_vert_rounded),
+                    iconSize: 20,
+                    padding: EdgeInsets.zero,
+                    onSelected: (action) => action(),
+                    itemBuilder: (_) => [
+                      ...?moreItems?.call(),
+                      if (onFullscreen != null)
+                        PopupMenuItem(
+                          value: onFullscreen,
+                          child: Text(fullscreen ? 'Restore window size' : 'Maximize window'),
+                        ),
+                      if (onCycleSize != null)
+                        PopupMenuItem(value: onCycleSize, child: Text('Window size: ${sizeLabel ?? 'custom'}')),
+                      if (onNext != null && nextCount > 0)
+                        PopupMenuItem(value: onNext, child: Text('Next unread ($nextCount)')),
+                      if (onExpand != null && !expandShown)
+                        PopupMenuItem(value: onExpand, child: const Text('Open the full chat')),
+                      PopupMenuItem(
+                        value: () {
+                          (onMinimize ?? onClose)();
+                          final navigator = NativeChat.navigatorKey?.currentState;
+                          if (navigator != null) showChatSettings(navigator);
+                        },
+                        child: const Text('Chat settings'),
+                      ),
+                    ],
+                  ),
                   _headerButton('Close', const Icon(Icons.close_rounded), onClose),
                 ],
               ),
@@ -244,6 +298,7 @@ class ChatQuickWindow extends StatefulWidget {
     this.onResizeEnd,
     this.sizeLabel,
     this.onCycleSize,
+    this.moves,
   });
 
   final ChatController chat;
@@ -260,6 +315,7 @@ class ChatQuickWindow extends StatefulWidget {
   /// Null for a custom size
   final String? sizeLabel;
   final VoidCallback? onCycleSize;
+  final Map<CustomSemanticsAction, VoidCallback>? moves;
 
   @override
   State<ChatQuickWindow> createState() => _ChatQuickWindowState();
@@ -268,6 +324,7 @@ class ChatQuickWindow extends StatefulWidget {
 class _ChatQuickWindowState extends State<ChatQuickWindow> {
   static const int _shown = 60;
   ChatMessage? _replyTo;
+  final _arrivals = ChatArrivalTracker();
   final ValueNotifier<int> _focusPing = ValueNotifier(0);
   late final bool _autofocus = NativeChat.takeComposerFocus(widget.roomId);
 
@@ -346,6 +403,8 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
           ),
         ],
       ),
+      label: '${room.name} chat window',
+      moves: widget.moves,
       onClose: widget.onClose,
       onExpand: widget.onExpand,
       onNext: widget.onNext,
@@ -387,12 +446,12 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
   }
 
   Widget _messages(ChatController chat, ChatRoom room) {
-    if (!chat.isLoaded(room.id) && (chat.connection == ChatConnection.error || chat.sessionIssue)) {
+    if (!chat.isLoaded(room.id) && (chat.connection == ChatConnection.error || chat.unreachable || chat.sessionIssue)) {
       final reason = switch (chat.connection) {
         ChatConnection.noSession => 'Log in to Torn in the browser',
         ChatConnection.needsBrowser => 'Finish logging in to Torn in the browser',
         ChatConnection.twoFactor => 'Enter your 2FA code in the browser',
-        _ => null,
+        _ => chat.sessionIssue ? null : 'Could not reach the chat',
       };
       return Center(
         child: Column(
@@ -404,9 +463,13 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
                 padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
                 child: Text(reason, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
               ),
+            if (!chat.sessionIssue) TextButton(onPressed: chat.retry, child: const Text('Try again')),
           ],
         ),
       );
+    }
+    if (chat.openFailed(room.id)) {
+      return ChatLoadFailed(name: room.name, onRetry: () => chat.retryRoom(room.id));
     }
     if (!chat.isLoaded(room.id)) {
       return Center(
@@ -420,6 +483,7 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
       );
     }
     final all = chat.filteredMessagesFor(room.id).where((m) => !isChatFactionEvent(m)).toList();
+    _arrivals.update(room.id, all);
     final shown = all.sublist(math.max(0, all.length - _shown));
     if (shown.isEmpty) {
       return Center(child: Text('No messages yet', style: Theme.of(context).textTheme.bodySmall));
@@ -438,7 +502,8 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
             : null;
         final mine = chat.myUserId != null && m.sender.id == chat.myUserId;
         final swipeLeft = chatSwipeLeft(m, mine: mine);
-        return ChatSwipeReply(
+        final newDay = older == null || !ChatDaySeparator.sameDay(older.createdAt, m.createdAt);
+        final row = ChatSwipeReply(
           key: ValueKey(m.id),
           onReply: reply,
           onSwipeLeft: swipeLeft,
@@ -448,12 +513,22 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
             showSender: !room.isDm,
             highlighted: chat.highlightOf(m).on,
             highlightColor: chat.highlightOf(m).color,
-            isFirstInGroup: older == null || older.isSystem || older.sender.id != m.sender.id,
-            isLastInGroup: newer == null || newer.isSystem || newer.sender.id != m.sender.id,
+            isFirstInGroup: !chatSameGroup(older, m),
+            isLastInGroup: !chatSameGroup(m, newer),
             presence: ChatApi.hasRoster(room.id) ? chat.presenceOf(m.sender.id) : null,
             onReply: reply,
             onSwipeLeft: swipeLeft,
           ),
+        );
+        return ChatArrivalFade(
+          key: ValueKey(newDay ? 'day-${m.id}' : m.id),
+          animate: _arrivals.take(ChatArrivalTracker.keyOf(m)),
+          child: !newDay
+              ? row
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [ChatDaySeparator(day: m.createdAt, compact: true), row],
+                ),
         );
       },
     );

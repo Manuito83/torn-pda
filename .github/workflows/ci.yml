@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.44.0"
+  FLUTTER_VERSION: "3.47.8"
 
 jobs:
   # ──────────────────────────────────────────────
@@ -54,13 +54,14 @@ jobs:
           done
           if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
-          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
+          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
+                   chat/chat_engine chat/chat_push chat/torn_chat_source \
+                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
+            target="torn-pda-native/$f.dart"
+            mkdir -p "$(dirname "$target")"
+            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
+          done
+          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
 
       - name: Install dependencies
         run: flutter pub get
@@ -91,13 +92,14 @@ jobs:
           done
           if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
-          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
+          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
+                   chat/chat_engine chat/chat_push chat/torn_chat_source \
+                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
+            target="torn-pda-native/$f.dart"
+            mkdir -p "$(dirname "$target")"
+            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
+          done
+          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
 
       - name: Install dependencies
         run: flutter pub get
@@ -164,13 +166,14 @@ jobs:
           done
           if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
-          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
+          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
+                   chat/chat_engine chat/chat_push chat/torn_chat_source \
+                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
+            target="torn-pda-native/$f.dart"
+            mkdir -p "$(dirname "$target")"
+            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
+          done
+          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
 
       - name: Create iOS CI stubs
         run: |
@@ -240,13 +243,14 @@ jobs:
           done
           if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
           cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
-          if [ ! -f utils/env/env.g.dart ];                           then cp utils/env/env.g.dart.example              utils/env/env.g.dart;                           fi
+          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
+                   chat/chat_engine chat/chat_push chat/torn_chat_source \
+                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
+            target="torn-pda-native/$f.dart"
+            mkdir -p "$(dirname "$target")"
+            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
+          done
+          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
           # Android Firebase config stub for APK build
           if [ ! -f ../android/app/google-services.json ]; then cp ../android/app/google-services.json.example ../android/app/google-services.json; fi
 

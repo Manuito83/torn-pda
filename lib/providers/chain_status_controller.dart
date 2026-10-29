@@ -1,6 +1,7 @@
 // Flutter imports:
 import 'dart:async';
 import 'dart:developer';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -142,7 +143,7 @@ class ChainStatusController extends GetxController {
 
   int _currentSecondsCounter = 0;
   int get currentSecondsCounter {
-    return _currentSecondsCounter;
+    return _webAnchored ? _webSecondsLeft : _currentSecondsCounter;
   }
 
   // MARK: - Watcher & Status Active Flags
@@ -189,6 +190,108 @@ class ChainStatusController extends GetxController {
 
   Timer? _tickerCallFullChainApi;
   Timer? _tickerCallOnlyStatusColorApi;
+
+  // MARK: - Chain From Torn Pages
+  static const int webFreshMs = 15000;
+  int _webTs = 0;
+  int _webEndsAt = 0;
+  bool _webAnchored = false;
+  bool _webFromStore = false;
+  bool Function()? _webOnScreen;
+  Timer? _webWatch;
+
+  @visibleForTesting
+  DateTime Function() clock = DateTime.now;
+
+  bool _webLiveAllowed = true;
+  bool get webLiveAllowed => _webLiveAllowed;
+
+  // Remote Config kill switch
+  set webLiveAllowed(bool value) {
+    if (_webLiveAllowed == value) return;
+    _webLiveAllowed = value;
+    if (value || _webTs == 0) return;
+    _webTs = 0;
+    _webEndsAt = 0;
+    _webAnchored = false;
+    _webFromStore = false;
+    _handOverWhenUnseen();
+  }
+
+  bool get webLive =>
+      _webLiveAllowed && clock().millisecondsSinceEpoch - _webTs < webFreshMs && (_webOnScreen?.call() ?? false);
+
+  int get _webSecondsLeft => math.max(0, ((_webEndsAt - clock().millisecondsSinceEpoch) / 1000).ceil());
+
+  void applyWebChain(Object? raw, {required bool Function() onScreen}) {
+    if (!_webLiveAllowed || raw is! Map || !onScreen()) return;
+    // The page has no chain bar
+    if (raw['none'] == true) {
+      if (!identical(onScreen, _webOnScreen)) return;
+      _webOnScreen = null;
+      return _handOverWhenUnseen();
+    }
+    int? read(String key) => raw[key] is num ? (raw[key] as num).toInt() : null;
+    final current = read('current');
+    var max = read('max');
+    final ts = read('ts');
+    var cooldown = read('cooldown');
+    final pageTimeout = read('timeout');
+    // Attack page: hits and time only
+    if (raw['attack'] == true) {
+      final api = _chainModel?.chain;
+      if (current == null || api?.max == null) return;
+      max = (api!.cooldown ?? 0) == 0 && current < api.max! ? api.max : _nextChainBonus(current);
+      cooldown = 0;
+    }
+    // Narrow pages without the store hide the timer
+    if (current == null || max == null || ts == null || cooldown == null || pageTimeout == null) return;
+    if (ts <= _webTs) return;
+    if (clock().millisecondsSinceEpoch - ts >= webFreshMs) return;
+
+    final running = raw['active'] == true && cooldown == 0;
+    final timeout = running ? pageTimeout : 0;
+    _webTs = ts;
+    _webEndsAt = ts + (cooldown > 0 ? cooldown : timeout) * 1000;
+    _webAnchored = true;
+    _webFromStore = raw['store'] == true;
+    _webOnScreen = onScreen;
+    _webWatch ??= Timer.periodic(const Duration(seconds: 1), (_) => _handOverWhenUnseen());
+    _chainModel = ChainModel(
+      chain: ChainDetails(
+        current: current,
+        max: max,
+        timeout: timeout,
+        cooldown: cooldown,
+        modifier: _chainModel?.chain?.modifier ?? 0,
+        start: _chainModel?.chain?.start ?? 0,
+      ),
+    );
+    _modelError = false;
+    _accumulatedErrors = 0;
+    _lastChainCount = current;
+    _wereWeChaining = running && current >= 10;
+    _currentSecondsCounter = _webSecondsLeft;
+    if (cooldown > 0) {
+      _refreshCooldownClock(_currentSecondsCounter);
+    } else {
+      _refreshChainClock(_currentSecondsCounter);
+    }
+  }
+
+  static int _nextChainBonus(int hits) {
+    const bonuses = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
+    return bonuses.firstWhere((b) => b > hits, orElse: () => hits);
+  }
+
+  void _handOverWhenUnseen() {
+    if (webLive) return;
+    _webWatch?.cancel();
+    _webWatch = null;
+    _webOnScreen = null;
+    update();
+    getChainStatus();
+  }
 
   // MARK: - Initialization
   void initialiseProvider() {
@@ -250,6 +353,7 @@ class ChainStatusController extends GetxController {
     _tickerDecreaseCount?.cancel();
     _tickerCallFullChainApi?.cancel();
     _tickerCallOnlyStatusColorApi?.cancel();
+    _webWatch?.cancel();
     super.onClose();
   }
 
@@ -347,7 +451,9 @@ class ChainStatusController extends GetxController {
   }
 
   void _decreaseTimer() {
-    if (currentSecondsCounter > 0) {
+    if (_webAnchored) {
+      _currentSecondsCounter = _webSecondsLeft;
+    } else if (currentSecondsCounter > 0) {
       _currentSecondsCounter--;
     }
     if (!_modelError) {
@@ -479,9 +585,20 @@ class ChainStatusController extends GetxController {
   }
 
   Future<void> getChainStatus() async {
+    final requestedAt = clock().millisecondsSinceEpoch;
     final chainResponse = await ApiCallsV1.getChainStatus();
+    // Cached API answers lag behind the page
+    if (webLive || requestedAt < _webTs) return;
 
     if (chainResponse is ChainModel) {
+      if (_webAnchored) {
+        final web = _chainModel!.chain!;
+        final api = chainResponse.chain!;
+        final bothRunning = (web.cooldown ?? 0) == 0 && (api.cooldown ?? 0) == 0;
+        if (_webFromStore && bothRunning && _webSecondsLeft > 0 && (api.current ?? 0) < _lastChainCount) return;
+        _currentSecondsCounter = _webSecondsLeft;
+        _webAnchored = false;
+      }
       _accumulatedErrors = 0;
       _chainModel = chainResponse;
       _modelError = false;
@@ -611,6 +728,9 @@ class ChainStatusController extends GetxController {
       }
       return;
     }
+
+    // Page out of sight, wait for the API
+    if (_webAnchored && !webLive) return;
 
     // If under cooldown, apply blue color and return
     if (chainModel!.chain!.cooldown! > 0) {

@@ -114,6 +114,11 @@ Stubs handled automatically:
 | `lib/config/native_user_provider.dart.example` | `lib/torn-pda-native/auth/native_user_provider.dart` |
 | `lib/config/native_login_widget.dart.example` | `lib/torn-pda-native/auth/native_login_widget.dart` |
 | `lib/config/stats_controller.dart.example` | `lib/torn-pda-native/stats/stats_controller.dart` |
+| `lib/config/usage_counters.dart.example` | `lib/torn-pda-native/stats/usage_counters.dart` |
+| `lib/config/app_settings_daily.dart.example` | `lib/torn-pda-native/stats/app_settings_daily.dart` |
+| `lib/config/chat_engine.dart.example` | `lib/torn-pda-native/chat/chat_engine.dart` |
+| `lib/config/chat_push.dart.example` | `lib/torn-pda-native/chat/chat_push.dart` |
+| `lib/config/torn_chat_source.dart.example` | `lib/torn-pda-native/chat/torn_chat_source.dart` |
 | `lib/utils/env/env.g.dart.example` | `lib/utils/env/env.g.dart` |
 | `android/app/google-services.json.example` | `android/app/google-services.json` |
 

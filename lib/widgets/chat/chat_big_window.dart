@@ -4,6 +4,7 @@ import 'dart:ui' show FlutterView;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
@@ -27,6 +28,7 @@ class ChatBigWindowView extends StatefulWidget {
     this.onDragEnd,
     this.onResize,
     this.onResizeEnd,
+    this.moves,
   });
 
   final ChatController chat;
@@ -41,6 +43,7 @@ class ChatBigWindowView extends StatefulWidget {
   final ValueChanged<Velocity>? onDragEnd;
   final ValueChanged<Offset>? onResize;
   final VoidCallback? onResizeEnd;
+  final Map<CustomSemanticsAction, VoidCallback>? moves;
 
   @override
   State<ChatBigWindowView> createState() => _ChatBigWindowViewState();
@@ -257,6 +260,8 @@ class _ChatBigWindowViewState extends State<ChatBigWindowView> {
     final roomId = widget.roomId;
     return ChatWindowBox(
       header: _header(context),
+      onDismiss: NativeChat.bigWindowBack,
+      moves: widget.moves,
       onClose: widget.onClose,
       onMinimize: widget.onMinimize,
       onFullscreen: widget.onFullscreen,

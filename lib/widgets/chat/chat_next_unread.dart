@@ -43,7 +43,9 @@ class ChatNextUnreadEdge extends StatelessWidget {
           top: 0,
           bottom: 0,
           width: 20,
+          // The header button does it for readers
           child: GestureDetector(
+            excludeFromSemantics: true,
             behavior: HitTestBehavior.translucent,
             onHorizontalDragEnd: (d) {
               if ((d.primaryVelocity ?? 0) > -300) return;
@@ -53,6 +55,57 @@ class ChatNextUnreadEdge extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class ChatUnreadAbove extends StatelessWidget {
+  const ChatUnreadAbove({super.key, required this.label, required this.onJump, required this.onRead});
+
+  final String label;
+  final VoidCallback onJump;
+  final VoidCallback onRead;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = scheme.onSecondaryContainer;
+    return Material(
+      color: scheme.secondaryContainer,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Semantics(
+            button: true,
+            child: InkWell(
+              onTap: onJump,
+              child: SizedBox(
+                height: 48,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.keyboard_double_arrow_up_rounded, size: 18, color: color),
+                      const SizedBox(width: 8),
+                      Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Mark as read',
+            onPressed: onRead,
+            icon: Icon(Icons.close_rounded, size: 18, color: color),
+            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+            padding: EdgeInsets.zero,
+          ),
+        ],
+      ),
     );
   }
 }

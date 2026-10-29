@@ -120,7 +120,8 @@ List<_MVersion> _modernChangelog() => [
                 'shrink to a bubble, and any conversation can pop out on its own.\n\n'
                 'Names open a player card with their status and quick actions, links open in a preview, and sell and '
                 'buy offers in Trade and Global show the market value. Each chat has its own alerts, and rooms can '
-                'alert you only when you are mentioned.\n\n'
+                'alert you only when you are mentioned. With the app closed, only private messages notify you: '
+                'faction, company and other rooms alert while Torn PDA is open or just left.\n\n'
                 'Everything else is in Tips > Chat.',
             diagrams: [
               FeatureDiagramScene.chatBubble,
@@ -211,6 +212,19 @@ List<_MVersion> _modernChangelog() => [
                 'Notifications created by Torn PDA and its server alerts are discreet between those hours. '
                 'Torn private messages on iOS are not covered.',
           ),
+          _MItem(
+            'Chaining: live chain from the Torn page you are viewing',
+            detail:
+                'While a Torn page is on screen in the browser, the chain widget and the chain in the faction chat '
+                'update with every hit. The chain icon turns live while it lasts, and the API takes over when you '
+                'leave the page.',
+          ),
+          _MItem(
+            'App icon menu: pick its shortcuts, chats included',
+            detail:
+                'In Settings, Shortcuts, App icon menu. Each of the four slots can be a Torn page or one of your '
+                'chats, shown when you long press the Torn PDA icon.',
+          ),
         ],
       ),
       _MSection(
@@ -229,6 +243,8 @@ List<_MVersion> _modernChangelog() => [
             'Browser: zoom is now adjusted live with a slider, from the Zoom button in the URL options',
             androidOnly: true,
           ),
+          _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
+          _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
         ],
       ),
       _MSection(
@@ -241,6 +257,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Travel: flight times now include travel time reduction perks'),
+          _MItem('Fixed unread messages count in the home screen widget', androidOnly: true),
           _MItem('Fixed crashes when a web page shows an alert while another dialog is open', iosOnly: true),
           _MItem('Fixed crashes when a page asks for the camera or microphone', iosOnly: true),
           _MItem('Fixed occasional crashes when Live Activities update', iosOnly: true),

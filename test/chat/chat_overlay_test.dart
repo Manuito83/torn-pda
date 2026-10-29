@@ -15,10 +15,12 @@ import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
 import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
 import 'package:torn_pda/widgets/chat/chat_ticker.dart';
+import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
 
@@ -181,6 +183,38 @@ void main() {
       await tester.pump();
       expect(focused(), isTrue);
 
+      await tester.pumpWidget(const SizedBox());
+      chat.dispose();
+    });
+
+    testWidgets('a quick window that never loads offers a retry', (tester) async {
+      final source = FakeChatSource();
+      final chat = ChatController(source, ChatPrefs());
+      source.emit(const ChatReadyEvent(99));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 340,
+              height: 440,
+              child: ChatQuickWindow(chat: chat, roomId: 'faction', onClose: () {}),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(source.count('openRoom'), 1);
+
+      await tester.pump(const Duration(seconds: 21));
+      expect(find.text('Could not load Faction'), findsOneWidget);
+      await tester.tap(find.text('Try again'));
+      await tester.pump();
+      expect(source.count('openRoom'), 2);
+      expect(find.text('Try again'), findsNothing);
+
+      source.emit(const ChatHistoryEvent('faction', [], hasOlder: false, isOlderPage: false));
+      await tester.pump(const Duration(seconds: 21));
+      expect(find.text('No messages yet'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       chat.dispose();
     });
@@ -401,6 +435,140 @@ void main() {
       await tester.pumpAndSettle();
       expect(NativeChat.prefs.markedUnread, isNot(contains('faction')));
     });
+  });
+
+  group('small bubbles', () {
+    setUp(() => NativeChat.prefs.launcher = ChatLauncher.browser);
+
+    tearDown(() {
+      NativeChat.prefs
+        ..launcher = ChatLauncher.bubble
+        ..miniBubbles = true;
+      NativeChat.bigWindow.value = null;
+    });
+
+    Finder bigBubble() => find.byType(ChatUnreadArc);
+
+    void expectApartOnScreen(WidgetTester tester, List<String> rooms) {
+      final screen = Offset.zero & tester.view.physicalSize / tester.view.devicePixelRatio;
+      final rects = [for (final room in rooms) tester.getRect(_mini(room))];
+      for (final (i, rect) in rects.indexed) {
+        expect(screen.intersect(rect), rect);
+        for (final other in rects.skip(i + 1)) {
+          expect(rect.overlaps(other), isFalse);
+        }
+      }
+    }
+
+    testWidgets('each minimized chat gets its own, without the big bubble', (tester) async {
+      await _pumpApp(tester);
+      expect(bigBubble(), findsNothing);
+
+      NativeChat.quickWindows.value = ['global'];
+      await _settle(tester);
+      expect(find.byTooltip('Minimize'), findsOneWidget);
+      NativeChat.minimizeQuickWindow('global');
+      NativeChat.minimize('trade');
+      NativeChat.openBigWindow();
+      NativeChat.minimizeBigWindow();
+      await _settle(tester);
+
+      expect(bigBubble(), findsNothing);
+      final rooms = ['global', 'trade', NativeChat.bigWindowId];
+      expectApartOnScreen(tester, rooms);
+
+      await tester.drag(_mini('global'), const Offset(2000, 2000));
+      await _settle(tester);
+      await _settle(tester);
+      expectApartOnScreen(tester, rooms);
+      expect(tester.getRect(_mini('global')).left, greaterThan(600));
+      await tester.drag(_mini('trade'), const Offset(-3000, -3000));
+      await _settle(tester);
+      await _settle(tester);
+      expectApartOnScreen(tester, rooms);
+      expect(tester.getRect(_mini('global')).left, lessThan(100));
+
+      await tester.tap(_mini('global'));
+      await tester.tap(_mini(NativeChat.bigWindowId));
+      await _settle(tester);
+      expect(NativeChat.quickWindows.value, ['global']);
+      expect(NativeChat.bigWindowShown, isTrue);
+      expect(_mini('trade'), findsOneWidget);
+    });
+
+    testWidgets('switched off, windows close', (tester) async {
+      NativeChat.prefs.miniBubbles = false;
+      await _pumpApp(tester);
+      NativeChat.quickWindows.value = ['global'];
+      NativeChat.openBigWindow();
+      await _settle(tester);
+      expect(find.byTooltip('Minimize'), findsNothing);
+      expect(find.byTooltip('Close'), findsNWidgets(2));
+
+      NativeChat.hideQuickWindows();
+      await _settle(tester);
+      expect(NativeChat.quickWindows.value, isEmpty);
+      expect(NativeChat.bigWindow.value, isNull);
+      expect(_mini('global'), findsNothing);
+
+      NativeChat.prefs.miniBubbles = true;
+      NativeChat.quickWindows.value = ['global'];
+      NativeChat.openBigWindow();
+      await _settle(tester);
+      NativeChat.hideQuickWindows();
+      await _settle(tester);
+      expect(_mini('global'), findsOneWidget);
+      expect(NativeChat.bigWindow.value?.minimized, isTrue);
+    });
+
+    test('switching it off closes the bubbles', () {
+      NativeChat.quickWindows.value = ['global'];
+      NativeChat.minimizeQuickWindow('global');
+      NativeChat.openBigWindow();
+      NativeChat.minimizeBigWindow();
+      expect(NativeChat.minimized.value, hasLength(1));
+      expect(NativeChat.bigWindow.value?.minimized, isTrue);
+
+      NativeChat.prefs.setMiniBubbles(false);
+      expect(NativeChat.minimized.value, isEmpty);
+      expect(NativeChat.bigWindow.value, isNull);
+    });
+  });
+
+  testWidgets('chat times follow the app settings', (tester) async {
+    final settings = SettingsProvider();
+    final key = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: settings,
+        child: MaterialApp(
+          navigatorKey: key,
+          builder: (context, child) => Stack(
+            children: [
+              child!,
+              ChatOverlay(navigatorKey: key),
+            ],
+          ),
+          home: const Scaffold(),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect((NativeChat.prefs.tornTime, NativeChat.prefs.app12h), (false, false));
+
+    settings
+      ..changeTimeZone = TimeZoneSetting.tornTime
+      ..changeTimeFormat = TimeFormatSetting.h12;
+    await tester.pump();
+    await tester.pump();
+    expect((NativeChat.prefs.tornTime, NativeChat.prefs.app12h), (true, true));
+
+    settings
+      ..changeTimeZone = TimeZoneSetting.localTime
+      ..changeTimeFormat = TimeFormatSetting.h24;
+    await tester.pump();
+    await tester.pump();
+    expect((NativeChat.prefs.tornTime, NativeChat.prefs.app12h), (false, false));
   });
 
   group('ticker', () {

@@ -79,6 +79,36 @@ void main() {
     expect(chat.needsLogin, isTrue);
   });
 
+  session('two-factor skips the grace', (tester) async {
+    emit(ChatConnection.twoFactor);
+    expect(chat.connection, ChatConnection.twoFactor);
+    expect(chat.needsLogin, isTrue);
+  });
+
+  session('a start with no outcome stops spinning', (tester) async {
+    emit(ChatConnection.connecting);
+    await tester.pump(const Duration(seconds: 29));
+    expect(chat.unreachable, isFalse);
+    await tester.pump(const Duration(seconds: 1));
+    expect(chat.unreachable, isTrue);
+
+    source.emit(const ChatReadyEvent(1));
+    emit(ChatConnection.connected);
+    expect(chat.unreachable, isFalse);
+  });
+
+  session('a late ready after the login message reconnects', (tester) async {
+    await tester.pump(const Duration(seconds: 26));
+    emit(ChatConnection.needsBrowser);
+    expect(chat.needsLogin, isTrue);
+
+    source.emit(const ChatReadyEvent(1));
+    emit(ChatConnection.connected);
+    expect(chat.connection, ChatConnection.connected);
+    expect(chat.ready, isTrue);
+    expect(chat.unreachable, isFalse);
+  });
+
   session('session back within grace', (tester) async {
     emit(ChatConnection.needsBrowser);
     await tester.pump(const Duration(seconds: 10));

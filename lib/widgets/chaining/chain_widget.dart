@@ -16,6 +16,7 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/chaining/chain_mini_window.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
 class ChainWidget extends StatefulWidget {
@@ -67,6 +68,7 @@ class ChainWidgetState extends State<ChainWidget> {
     }
 
     final settings = Provider.of<SettingsProvider>(context);
+    final miniHidden = chainMiniEnabled && ChainMiniWindow.hiddenByBrowser(context);
 
     return GetBuilder(
       builder: (ChainStatusController chainP) {
@@ -88,7 +90,8 @@ class ChainWidgetState extends State<ChainWidget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (!chainP.panicModeEnabled) const SizedBox(width: 35), // Centers the widget without P icon
+                  if (!chainP.panicModeEnabled)
+                    const SizedBox(width: chainMiniEnabled ? 5 : 35), // Centers the widget without P icon
                   SizedBox(
                     width: 30,
                     child: !chainP.modelError || (chainP.modelError && chainP.chainWatcherDefcon == WatchDefcon.apiFail)
@@ -115,6 +118,33 @@ class ChainWidgetState extends State<ChainWidget> {
                           )
                         : const SizedBox.shrink(),
                   ),
+                  if (chainMiniEnabled)
+                    SizedBox(
+                      width: 30,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: ChainMiniWindow.available,
+                        builder: (context, available, child) => available ? child! : const SizedBox.shrink(),
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: ChainMiniWindow.open,
+                          builder: (context, open, _) => Tooltip(
+                            message: 'Live browser view',
+                            child: GestureDetector(
+                              onTap: () => _toggleMini(miniHidden),
+                              child: Icon(
+                                Icons.cell_tower,
+                                color: chainP.webLive || (open && !miniHidden)
+                                    ? widget.alwaysDarkBackground
+                                        ? Colors.orange[700]
+                                        : Colors.orange[900]
+                                    : widget.alwaysDarkBackground
+                                        ? Colors.grey
+                                        : _themeProvider.mainText,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   if (chainP.panicModeEnabled)
                     SizedBox(
                       width: 35,
@@ -173,6 +203,11 @@ class ChainWidgetState extends State<ChainWidget> {
                                                     : titleColor,
                                               ),
                                             ),
+                                            if (chainP.webLive)
+                                              Padding(
+                                                padding: const EdgeInsets.only(left: 4),
+                                                child: Icon(Icons.sensors_rounded, size: 14, color: titleColor),
+                                              ),
                                           ],
                                         ),
                                       ),
@@ -355,6 +390,7 @@ class ChainWidgetState extends State<ChainWidget> {
                           )
                         : null,
                   ),
+                  if (chainMiniEnabled && chainP.panicModeEnabled) const SizedBox(width: 30),
                 ],
               ),
             ),
@@ -414,6 +450,18 @@ class ChainWidgetState extends State<ChainWidget> {
       ),
       contentColor: Colors.green[700]!,
       duration: const Duration(seconds: 7),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  void _toggleMini(bool hidden) {
+    ChainMiniWindow.toggle();
+    if (!hidden) return;
+    BotToast.showText(
+      text: ChainMiniWindow.open.value ? 'Live view opens when you leave the browser' : 'Live view closed',
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.blue[700]!,
+      duration: const Duration(seconds: 3),
       contentPadding: const EdgeInsets.all(10),
     );
   }

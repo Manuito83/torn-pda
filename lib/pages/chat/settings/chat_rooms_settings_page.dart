@@ -44,7 +44,7 @@ class ChatRoomsSettingsPage extends StatelessWidget {
     final until = prefs.frozenUntilOf(id);
     final state = switch (prefs.roomState(id)) {
       ChatRoomState.live => 'Live',
-      ChatRoomState.frozen => until == null ? 'Frozen' : 'Frozen until ${chatMuteUntilText(until)}',
+      ChatRoomState.frozen => until == null ? 'Frozen' : 'Frozen until ${NativeChat.prefs.stamp(until)}',
       ChatRoomState.hidden => 'Hidden',
     };
     final listed = ChatRooms.whenListed(id);

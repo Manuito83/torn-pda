@@ -24,8 +24,12 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
+import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
+import 'package:torn_pda/widgets/chat/chat_widgets.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/player_notes_list_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
@@ -146,6 +150,7 @@ class SettingsPageState extends State<SettingsPage> {
   List<Widget> buildFilteredSections() {
     List<Widget> sections = [
       _browserSection(),
+      _chatSection(),
       _shortcutsSection(),
       _timeSection(),
       _notificationsSection(),
@@ -448,6 +453,34 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Widget _chatSection() {
+    if (!NativeChat.compiled) return const SizedBox.shrink();
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Chat settings",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Chat settings"),
+              IconButton(
+                icon: const Icon(Icons.forum_rounded),
+                onPressed: () => showChatSettings(Navigator.of(context)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+    return buildSectionWithRows(
+      title: "CHAT",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
   Widget _shortcutsSection() {
     List<SearchableRow> rows = [
       SearchableRow(
@@ -466,6 +499,30 @@ class SettingsPageState extends State<SettingsPage> {
                     MaterialPageRoute(
                       settings: const RouteSettings(name: 'shortcuts'),
                       builder: (BuildContext context) => ShortcutsPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "App icon menu",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("App icon menu"),
+              IconButton(
+                icon: const Icon(Icons.apps_rounded),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'app_icon_menu'),
+                      builder: (BuildContext context) => const AppIconMenuPage(),
                     ),
                   );
                 },
@@ -698,15 +755,21 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  String _discreetHourLabel(int minutes) => TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60).format(context);
+  Widget _discreetHourLabel(int minutes) {
+    if (!NativeChat.compiled) return Text(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60).format(context));
+    return ListenableBuilder(
+      listenable: NativeChat.prefs,
+      builder: (context, _) => Text(NativeChat.prefs.minutesClock(minutes)),
+    );
+  }
 
   Future<void> _pickDiscreetHour({required bool from}) async {
     final current = _settingsProvider.discreetSchedule;
     final minutes = from ? current.from : current.to;
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
-    );
+    final initial = TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
+    final picked = NativeChat.compiled
+        ? await showChatTimePicker(context, initial)
+        : await showTimePicker(context: context, initialTime: initial);
     if (picked == null || !mounted) return;
     final value = picked.hour * 60 + picked.minute;
     setState(() {
@@ -796,12 +859,12 @@ class SettingsPageState extends State<SettingsPage> {
                     const Text("From"),
                     TextButton(
                       onPressed: () => _pickDiscreetHour(from: true),
-                      child: Text(_discreetHourLabel(_settingsProvider.discreetSchedule.from)),
+                      child: _discreetHourLabel(_settingsProvider.discreetSchedule.from),
                     ),
                     const Text("To"),
                     TextButton(
                       onPressed: () => _pickDiscreetHour(from: false),
-                      child: Text(_discreetHourLabel(_settingsProvider.discreetSchedule.to)),
+                      child: _discreetHourLabel(_settingsProvider.discreetSchedule.to),
                     ),
                   ],
                 ),

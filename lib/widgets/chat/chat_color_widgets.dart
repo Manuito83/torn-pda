@@ -249,15 +249,19 @@ class _ChatColorSettingsState extends State<ChatColorSettings> {
                 for (final (label, slot, bubbleSlot, bubble, text) in pairs)
                   if ((custom[slot] != null || custom[bubbleSlot] != null) &&
                       ChatPlayerColor.contrast(bubble, text) < ChatPlayerColor.minContrast)
-                    ListTile(
-                      leading: Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error),
-                      title: Text(
-                        '$label is hard to read (${ChatPlayerColor.contrast(bubble, text).toStringAsFixed(1)}:1, '
-                        'aim for 4.5:1)',
-                      ),
-                      trailing: TextButton(
-                        onPressed: () => _set(slot, ChatPlayerColor.blackOrWhite(bubble)),
-                        child: Text(ChatPlayerColor.blackOrWhite(bubble) == Colors.white ? 'Use white' : 'Use black'),
+                    Semantics(
+                      container: true,
+                      liveRegion: true,
+                      child: ListTile(
+                        leading: Icon(Icons.warning_amber_rounded, color: theme.colorScheme.error),
+                        title: Text(
+                          '$label is hard to read (${ChatPlayerColor.contrast(bubble, text).toStringAsFixed(1)}:1, '
+                          'aim for 4.5:1)',
+                        ),
+                        trailing: TextButton(
+                          onPressed: () => _set(slot, ChatPlayerColor.blackOrWhite(bubble)),
+                          child: Text(ChatPlayerColor.blackOrWhite(bubble) == Colors.white ? 'Use white' : 'Use black'),
+                        ),
                       ),
                     ),
                 if (faint)

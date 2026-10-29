@@ -41,12 +41,17 @@ cd lib/config
 for f in *.dart.example; do cp "$f" "${f%.example}"; done
 
 cd ../torn-pda-native
-mkdir -p auth stats
+mkdir -p auth stats chat
 cp ../config/native_auth_models.dart.example    auth/native_auth_models.dart
 cp ../config/native_auth_provider.dart.example   auth/native_auth_provider.dart
 cp ../config/native_user_provider.dart.example   auth/native_user_provider.dart
 cp ../config/native_login_widget.dart.example    auth/native_login_widget.dart
 cp ../config/stats_controller.dart.example       stats/stats_controller.dart
+cp ../config/usage_counters.dart.example         stats/usage_counters.dart
+cp ../config/app_settings_daily.dart.example     stats/app_settings_daily.dart
+cp ../config/chat_engine.dart.example            chat/chat_engine.dart
+cp ../config/chat_push.dart.example              chat/chat_push.dart
+cp ../config/torn_chat_source.dart.example       chat/torn_chat_source.dart
 cp ../utils/env/env.g.dart.example               ../utils/env/env.g.dart
 ```
 
@@ -177,7 +182,7 @@ everything up:
 
 ```bash
 # From the project root
-cd lib/config && for f in *.dart.example; do cp "$f" "${f%.example}"; done && cd ../torn-pda-native && mkdir -p auth stats && cp ../config/native_auth_models.dart.example auth/native_auth_models.dart && cp ../config/native_auth_provider.dart.example auth/native_auth_provider.dart && cp ../config/native_user_provider.dart.example auth/native_user_provider.dart && cp ../config/native_login_widget.dart.example auth/native_login_widget.dart && cp ../config/stats_controller.dart.example stats/stats_controller.dart && cp ../utils/env/env.g.dart.example ../utils/env/env.g.dart && cd ../..
+cd lib/config && for f in *.dart.example; do cp "$f" "${f%.example}"; done && cd ../torn-pda-native && mkdir -p auth stats chat && cp ../config/native_auth_models.dart.example auth/native_auth_models.dart && cp ../config/native_auth_provider.dart.example auth/native_auth_provider.dart && cp ../config/native_user_provider.dart.example auth/native_user_provider.dart && cp ../config/native_login_widget.dart.example auth/native_login_widget.dart && cp ../config/stats_controller.dart.example stats/stats_controller.dart && for f in stats/usage_counters stats/app_settings_daily chat/chat_engine chat/chat_push chat/torn_chat_source; do cp ../config/$(basename $f).dart.example $f.dart; done && cp ../utils/env/env.g.dart.example ../utils/env/env.g.dart && cd ../..
 ```
 
 ### No emulator needed

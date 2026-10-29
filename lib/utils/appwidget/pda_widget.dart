@@ -606,7 +606,9 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<String>('racing_string', racingString);
 
     // Messages and events
-    int unreadMessages = user.messages?.length ?? 0;
+    // Only unseen count
+    final messages = user.messages;
+    final int unreadMessages = messages is Map ? messages.values.where((m) => m is Map && m['seen'] == 0).length : 0;
     HomeWidget.saveWidgetData<int>('messages', unreadMessages);
 
     int unreadEvents = user.events?.length ?? 0;

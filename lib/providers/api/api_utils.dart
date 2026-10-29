@@ -52,6 +52,7 @@ enum ApiSelection_v2 {
   factionNews,
   userFriendsList,
   forumThread,
+  forumCategories,
 }
 
 class ApiError {

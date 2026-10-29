@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/widgets/chat/chat_settings_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -60,15 +61,9 @@ class ChatSettingsHeading extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: theme.textTheme.titleSmall),
+          Semantics(container: true, header: true, child: Text(title, style: theme.textTheme.titleSmall)),
           if (description != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                description!,
-                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ),
+            Padding(padding: const EdgeInsets.only(top: 2), child: ChatSettingsText.hint(description!)),
         ],
       ),
     );
@@ -82,10 +77,6 @@ class ChatSettingsNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Text(text, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-    );
+    return Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 4), child: ChatSettingsText.hint(text));
   }
 }

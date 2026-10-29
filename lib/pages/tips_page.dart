@@ -3,6 +3,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:app_settings/app_settings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -127,6 +128,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
   var _spiesTipsList = <TipTextBuilder>[];
   var _ffScouterTipsList = <TipTextBuilder>[];
   var _chatTipGroups = <ChatHelpGroup, List<TipTextBuilder>>{};
+  Set<ChatNeed>? _chatNeeds;
   var _tradingTipsList = <TipTextBuilder>[];
   var _deepLinksTipsList = <TipTextBuilder>[];
   var _userScriptsTipsList = <TipTextBuilder>[];
@@ -149,13 +151,6 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _browserGeneralTipList = buildBrowserGeneralTips();
     _browserTabsTipList = buildBrowserTabsTips();
     _browserFABTipList = buildBrowserFABTips();
-    _chatTipGroups = {
-      for (final g in ChatHelpGroup.values)
-        g: [
-          for (final e in chatHelp.where((e) => e.group == g))
-            ExpandableTip(headerValue: e.title, expandedValue: e.text, scenes: e.scenes),
-        ],
-    };
     _appwidgetTipsList = buildAppwidgetSectionTips();
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
@@ -167,6 +162,67 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
     _userScriptsTipsList = buildUserScriptsTipsList();
+  }
+
+  void _buildChatTips(Set<ChatNeed> needs) {
+    _chatNeeds = needs;
+    _chatTipGroups = {
+      for (final g in ChatHelpGroup.values)
+        g: [
+          for (final e in chatHelpOf(g, needs))
+            ExpandableTip(
+              headerValue: e.title,
+              expandedValue: e.text,
+              scenes: e.scenes,
+              isExpanded: e.needs.any(needs.contains),
+            ),
+        ],
+    };
+  }
+
+  Widget _chatTips() {
+    final needs = _chatNeeds!;
+    final theme = Theme.of(context);
+    final groups = [
+      if (needs.isNotEmpty) ChatHelpGroup.accessibility,
+      for (final g in ChatHelpGroup.values)
+        if (g != ChatHelpGroup.accessibility || needs.isEmpty) g,
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final g in groups) ...[
+          if (g == ChatHelpGroup.accessibility && needs.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Semantics(
+                header: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text(chatNeedsText(needs), style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Semantics(
+                header: true,
+                child: Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          _tipPanelList(_chatTipGroups[g]!),
+        ],
+      ],
+    );
   }
 
   @override
@@ -197,6 +253,16 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
+    final needs = chatNeedsOf(
+      MediaQueryData(
+        accessibleNavigation: MediaQuery.accessibleNavigationOf(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        boldText: MediaQuery.boldTextOf(context),
+        highContrast: MediaQuery.highContrastOf(context),
+        disableAnimations: MediaQuery.disableAnimationsOf(context),
+      ),
+    );
+    if (_chatNeeds == null || !setEquals(needs, _chatNeeds)) _buildChatTips(needs);
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
@@ -346,18 +412,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       case TipClass.browserFAB:
         listToShow = _browserFABTipList;
       case TipClass.chat:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final g in ChatHelpGroup.values) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              ),
-              _tipPanelList(_chatTipGroups[g]!),
-            ],
-          ],
-        );
+        return _chatTips();
       case TipClass.appwidget:
         listToShow = _appwidgetTipsList;
       case TipClass.travel:

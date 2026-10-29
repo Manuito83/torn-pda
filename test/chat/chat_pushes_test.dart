@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chat/chat_reminder.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_push_rules.dart';
+import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -112,7 +113,7 @@ void main() {
     const plugin = MethodChannel('dexterous.com/flutter/local_notifications');
     final shown = <Map>[];
     final push = {'event': 'tchat', 'kind': 'dm', 'userId': '7', 'sender': 'Bravo', 'message': 'hello'};
-    final skip = NativeChat.compiled ? false : 'Native chat not configured';
+    final skip = ChatEngine.enabled ? false : 'Native chat not configured';
 
     Future<void> own({int id = 5, String key = ''}) =>
         SharedPreferencesAsync().setString('pda_ownDetails', jsonEncode({'player_id': id, 'userApiKey': key}));

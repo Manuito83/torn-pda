@@ -38,6 +38,9 @@ abstract class ChatSource {
 
   Future<void> closeDm(int userId);
 
+  /// Start or stop typing
+  Future<void> typing(String roomId, bool on);
+
   Future<void> send(String roomId, String content, String reqId);
 
   /// For a lost session

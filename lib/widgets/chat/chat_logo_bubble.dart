@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
+import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -33,8 +34,10 @@ void _openChat(BuildContext context) {
   final navigator = NativeChat.navigatorKey?.currentState ?? Navigator.of(context);
   Navigator.of(context).pop();
   StatsController.chat.count(NativeChat.prefs.launcher == ChatLauncher.menuBar ? 'open_menu_bar' : 'open_menu_header');
-  NativeChat.open(navigator);
+  NativeChat.launch(navigator);
 }
+
+void _showMenu(BuildContext context) => showChatLaunchMenu(context, onPick: Navigator.of(context).pop);
 
 final Listenable _shownWhen = Listenable.merge([
   NativeChat.remoteEnabled,
@@ -71,6 +74,7 @@ class ChatLogoBubble extends StatelessWidget {
             final left = (logo.dx + _center.dx * side - head / 2).clamp(0.0, math.max(0.0, width - arc)).toDouble();
             final center = Offset(left + head / 2, _center.dy * side);
             void open() => _openChat(context);
+            void menu() => _showMenu(context);
 
             return Stack(
               clipBehavior: Clip.none,
@@ -111,12 +115,14 @@ class ChatLogoBubble extends StatelessWidget {
                                   excludeSemantics: true,
                                   label: unread == 0 ? 'Chat' : 'Chat, $unread unread',
                                   onTap: open,
+                                  onLongPress: menu,
                                   child: ChatUnreadArc.bubble(
                                     iconSize: head,
                                     groups: groups,
                                     child: InkWell(
                                       customBorder: const CircleBorder(),
                                       onTap: open,
+                                      onLongPress: menu,
                                       child: Icon(Icons.forum_rounded, color: scheme.onTertiaryContainer),
                                     ),
                                   ),
@@ -177,14 +183,16 @@ class ChatMenuBar extends StatelessWidget {
                 excludeSemantics: true,
                 label: unread == 0 ? 'Chat' : 'Chat, $unread unread',
                 onTap: () => _openChat(context),
+                onLongPress: () => _showMenu(context),
                 child: Material(
                   color: scheme.tertiaryContainer,
                   shape: const StadiumBorder(),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () => _openChat(context),
-                    child: SizedBox(
-                      height: 36,
+                    onLongPress: () => _showMenu(context),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 36),
                       child: Row(
                         children: [
                           const SizedBox(width: 14),

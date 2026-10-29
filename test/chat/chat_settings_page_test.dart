@@ -40,7 +40,7 @@ void main() {
   testWidgets('each row opens its page', (tester) async {
     await openSettings(tester);
     for (final title in [
-      'Open the chat from',
+      'Chat button',
       'Alerts',
       'Rooms',
       'Appearance',

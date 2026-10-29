@@ -69,7 +69,11 @@ class ChatLinkInfo {
     this.lead,
     this.settled = false,
     this.bazaar,
+    this.kicker,
   });
+
+  /// Overrides the label above the title
+  final String? kicker;
 
   final ChatBazaar? bazaar;
 
@@ -195,12 +199,26 @@ class ChatLinkInfo {
     return ChatLinkInfo(name, detail: value == null || value <= 0 ? 'Item market' : 'Market \$${_number.format(value)}');
   }
 
-  static ChatLinkInfo? forum(ForumThreadExtended thread) {
+  static ChatLinkInfo? forum(ForumThreadExtended thread, [String? section]) {
     final title = html.parseFragment(thread.title).text?.trim() ?? '';
     if (title.isEmpty) return null;
     final author = thread.author.username;
     final posts = thread.posts == 1 ? '1 post' : '${_number.format(thread.posts)} posts';
-    return ChatLinkInfo(title, detail: author.isEmpty ? posts : 'by $author - $posts');
+    return ChatLinkInfo(title, detail: author.isEmpty ? posts : 'by $author - $posts', kicker: _forumKicker(section));
+  }
+
+  static ChatLinkInfo? forumSection(ForumCategoriesResponse$Categories$Item section) {
+    final name = html.parseFragment(section.title).text?.trim() ?? '';
+    if (name.isEmpty) return null;
+    return ChatLinkInfo(name, detail: section.threads == 1 ? '1 thread' : '${_number.format(section.threads)} threads');
+  }
+
+  static ChatLinkInfo? forumPlaced(ChatLink link, String? section) =>
+      section == null ? null : ChatLinkInfo(link.title, kicker: _forumKicker(section));
+
+  static String? _forumKicker(String? section) {
+    final name = section == null ? '' : html.parseFragment(section).text?.trim() ?? '';
+    return name.isEmpty ? null : 'Torn forum - $name';
   }
 
   static ChatLinkInfo? attackLog(Map<String, dynamic> json) {
@@ -369,6 +387,7 @@ class ChatLinkPreviews {
   static Future<Map<String, dynamic>?> Function(int id) fetchFaction = _faction;
   static Future<Map<String, dynamic>?> Function(int id) fetchCompany = _company;
   static Future<ItemsModel?> Function() fetchItems = _items;
+  static Future<List<ForumCategoriesResponse$Categories$Item>?> Function() fetchForumSections = _forumCategories;
   static Future<ForumThreadExtended?> Function(int id) fetchThread = _thread;
   static Future<String?> Function(Uri uri) fetchPage = _page;
   static Future<Map<String, dynamic>?> Function(String id) fetchVideo = _video;
@@ -386,6 +405,9 @@ class ChatLinkPreviews {
   static final Map<int, _Job<List<Object>>> _marketLoading = {};
   static final Map<String, DateTime> _inventoryTried = {};
   static final Map<String, Future<void>> _inventoryRunning = {};
+  static (DateTime, Map<int, ForumCategoriesResponse$Categories$Item>)? _sections;
+  static Future<Map<int, ForumCategoriesResponse$Categories$Item>?>? _sectionsLoading;
+  static DateTime? _sectionsRetry;
   static (DateTime, ItemsModel)? _catalog;
   static Future<ItemsModel?>? _catalogLoading;
   static DateTime? _catalogRetry;
@@ -440,8 +462,9 @@ class ChatLinkPreviews {
     ChatLinkKind.faction ||
     ChatLinkKind.company ||
     ChatLinkKind.chainReport ||
-    ChatLinkKind.warReport ||
-    ChatLinkKind.forum when link.id != null => '${link.kind.name}:${link.id}',
+    ChatLinkKind.warReport when link.id != null => '${link.kind.name}:${link.id}',
+    ChatLinkKind.forum when link.id != null => 'forum:${link.id}',
+    ChatLinkKind.forum when link.forumId != null => 'forumSection:${link.forumId}',
     ChatLinkKind.attackLog when link.logCode != null => 'attackLog:${link.logCode}',
     ChatLinkKind.item when link.id != null || !link.title.startsWith('Item') => 'item:${link.id ?? link.title}',
     ChatLinkKind.external when link.videoId != null => 'video:${link.videoId}',
@@ -454,7 +477,7 @@ class ChatLinkPreviews {
       : switch (link.kind) {
           ChatLinkKind.external => const Duration(minutes: 30),
           ChatLinkKind.item => const Duration(hours: 1),
-          ChatLinkKind.forum => const Duration(minutes: 15),
+          ChatLinkKind.forum => link.id == null ? const Duration(hours: 6) : const Duration(minutes: 15),
           ChatLinkKind.attackLog ||
           ChatLinkKind.chainReport ||
           ChatLinkKind.warReport when info.settled => const Duration(hours: 2),
@@ -536,9 +559,14 @@ class ChatLinkPreviews {
       case ChatLinkKind.item:
         final catalog = await catalogItems();
         return catalog == null ? null : ChatLinkInfo.item(link, catalog);
+      case ChatLinkKind.forum when link.id == null:
+        final section = (await forumSections())?[link.forumId];
+        return section == null ? null : ChatLinkInfo.forumSection(section);
       case ChatLinkKind.forum:
         final thread = await fetchThread(link.id!);
-        return thread == null ? null : ChatLinkInfo.forum(thread);
+        final sections = await forumSections();
+        final name = sections?[thread?.forumId ?? link.forumId]?.title;
+        return thread == null ? ChatLinkInfo.forumPlaced(link, name) : ChatLinkInfo.forum(thread, name);
       case ChatLinkKind.attackLog:
         final json = await fetchAttackLog(link.logCode!);
         return json == null ? null : ChatLinkInfo.attackLog(json);
@@ -583,6 +611,30 @@ class ChatLinkPreviews {
       } catch (_) {}
     }
     return cache.get(id);
+  }
+
+  static Future<Map<int, ForumCategoriesResponse$Categories$Item>?> forumSections() async {
+    final known = _sections;
+    if (known != null && DateTime.now().isBefore(known.$1)) return known.$2;
+    final retry = _sectionsRetry;
+    if (retry != null && DateTime.now().isBefore(retry)) return known?.$2;
+    return _sectionsLoading ??= _fetchSections()
+        .then((sections) {
+          final now = DateTime.now();
+          if (sections != null) _sections = (now.add(const Duration(hours: 12)), sections);
+          _sectionsRetry = sections == null ? now.add(const Duration(minutes: 5)) : null;
+          return sections ?? known?.$2;
+        })
+        .whenComplete(() => _sectionsLoading = null);
+  }
+
+  static Future<Map<int, ForumCategoriesResponse$Categories$Item>?> _fetchSections() async {
+    try {
+      final list = await fetchForumSections();
+      return list == null ? null : {for (final c in list) c.id: c};
+    } catch (_) {
+      return null;
+    }
   }
 
   static Future<ItemsModel?> catalogItems() async {
@@ -658,6 +710,14 @@ class ChatLinkPreviews {
       apiCall: (client, apiKey) => client.forumThreadIdThreadGet(threadId: id),
     );
     return response is ForumThreadResponse ? response.thread : null;
+  }
+
+  static Future<List<ForumCategoriesResponse$Categories$Item>?> _forumCategories() async {
+    final response = await Get.find<ApiCallerController>().enqueueApiCall<ForumCategoriesResponse>(
+      apiSelection_v2: ApiSelection_v2.forumCategories,
+      apiCall: (client, apiKey) => client.forumCategoriesGet(comment: 'PDA-App'),
+    );
+    return response is ForumCategoriesResponse ? response.categories : null;
   }
 
   static Future<List<Object>?> marketListings(int id, bool Function() wanted) {
@@ -779,6 +839,9 @@ class ChatLinkPreviews {
     _marketLoading.clear();
     _inventoryTried.clear();
     _inventoryRunning.clear();
+    _sections = null;
+    _sectionsLoading = null;
+    _sectionsRetry = null;
     _catalog = null;
     _catalogLoading = null;
     _catalogRetry = null;

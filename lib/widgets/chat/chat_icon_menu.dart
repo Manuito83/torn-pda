@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -38,13 +39,15 @@ class ChatIconButton extends StatelessWidget {
     NativeChat.prefs,
   ]);
 
+  SplitSide? get _side => tabUid == null ? null : NativeChat.splitSideOfTab(tabUid!);
+
   void _onTap(BuildContext context) {
-    if (NativeChat.prefs.inAppEnabled) {
-      final opened = NativeChat.toggleBigWindow(side: tabUid == null ? null : NativeChat.splitSideOfTab(tabUid!));
-      if (opened) StatsController.chat.count('open_big_window');
-    } else {
+    if (!NativeChat.prefs.inAppEnabled) {
       _showChatIconMenu(context, this);
+      return;
     }
+    StatsController.chat.count('open_browser');
+    NativeChat.launch(Navigator.of(context), side: _side, toggle: true);
   }
 
   @override
@@ -77,9 +80,11 @@ class ChatIconButton extends StatelessWidget {
           if (hiddenInTab) 'Torn\'s chat hidden in this tab',
         ].join(', '),
         onTap: () => _onTap(context),
-        onTapHint: NativeChat.prefs.inAppEnabled
-            ? (NativeChat.bigWindowShown ? 'close the chat window' : 'open the chat window')
-            : 'open the chat menu',
+        onTapHint: !NativeChat.prefs.inAppEnabled
+            ? 'open the chat menu'
+            : (NativeChat.prefs.launcherTap == ChatLauncherTap.full
+                  ? 'open the full chat'
+                  : (NativeChat.bigWindowShown ? 'close the chat window' : 'open the chat window')),
         onLongPress: () => _showChatIconMenu(context, this),
         onLongPressHint: 'open the chat menu',
         customSemanticsActions: {
@@ -171,73 +176,130 @@ class ChatIconBadge extends StatelessWidget {
   );
 }
 
-Future<void> _showChatIconMenu(BuildContext context, ChatIconButton icon) {
-  final navigator = Navigator.of(context);
+/// Long press on any chat button
+Future<void> showChatLaunchMenu(BuildContext context, {SplitSide? side, VoidCallback? onPick, Widget? more}) {
   return showModalBottomSheet(
     context: NativeChat.sheetsContext ?? context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (context) => ListenableBuilder(
+    builder: (sheet) => SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        children: [
+          ChatLaunchMenu(
+            side: side,
+            onPick: () {
+              Navigator.pop(sheet);
+              onPick?.call();
+            },
+          ),
+          ?more,
+        ],
+      ),
+    ),
+  );
+}
+
+class ChatLaunchMenu extends StatelessWidget {
+  const ChatLaunchMenu({super.key, required this.onPick, this.side, this.dense = false});
+
+  /// Closes the menu, runs before the action
+  final VoidCallback onPick;
+  final SplitSide? side;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: NativeChat.prefs,
+    builder: (context, _) {
+      final navigator = NativeChat.navigatorKey?.currentState ?? Navigator.of(context, rootNavigator: true);
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (NativeChat.prefs.inAppEnabled) ...[
+            ListTile(
+              dense: dense,
+              leading: const Icon(Icons.web_asset_rounded),
+              title: const Text('Window'),
+              onTap: () {
+                onPick();
+                StatsController.chat.count('open_big_window');
+                NativeChat.openBigWindow(side: side);
+              },
+            ),
+            ListTile(
+              dense: dense,
+              leading: const Icon(Icons.open_in_new_rounded),
+              title: const Text('Full chat'),
+              onTap: () {
+                onPick();
+                NativeChat.open(navigator);
+              },
+            ),
+          ],
+          ListTile(
+            dense: dense,
+            leading: const Icon(Icons.tune_rounded),
+            title: const Text('Chat settings'),
+            onTap: () {
+              onPick();
+              NativeChat.minimizeBigWindow();
+              showChatSettings(navigator);
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> _showChatIconMenu(BuildContext context, ChatIconButton icon) {
+  return showChatLaunchMenu(
+    context,
+    side: icon._side,
+    more: ListenableBuilder(
       listenable: NativeChat.prefs,
       builder: (context, _) {
         final theme = Theme.of(context);
         final inApp = NativeChat.prefs.inAppEnabled;
-        return SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              SwitchListTile(
-                secondary: const Icon(Icons.forum_rounded),
-                title: const Text('In-app chat'),
-                subtitle: inApp ? null : const Text('Off, only Torn\'s own chat is used'),
-                value: inApp,
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!inApp)
+              const SwitchListTile(
+                secondary: Icon(Icons.forum_rounded),
+                title: Text('In-app chat'),
+                subtitle: Text('Off, only Torn\'s own chat is used'),
+                value: false,
                 onChanged: NativeChat.setEnabled,
               ),
-              if (inApp)
-                ListTile(
-                  leading: const Icon(Icons.open_in_new_rounded),
-                  title: const Text('Open the full chat'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    StatsController.chat.count('open_browser');
-                    NativeChat.open(navigator);
-                  },
-                ),
-              ListTile(
-                leading: const Icon(Icons.tune_rounded),
-                title: const Text('Chat settings'),
-                onTap: () {
-                  Navigator.pop(context);
-                  showChatSettings(navigator);
-                },
-              ),
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Text('Torn\'s chat', style: theme.textTheme.titleSmall),
-              ),
-              ListTile(
-                leading: Icon(icon.hiddenInTab ? Icons.visibility_rounded : Icons.visibility_off_rounded),
-                title: Text(icon.hiddenInTab ? 'Show chat in this tab' : 'Hide chat in this tab'),
-                onTap: () {
-                  Navigator.pop(context);
-                  icon.onHideInTab(!icon.hiddenInTab);
-                },
-              ),
-              ListTile(
-                leading: Icon(icon.hiddenEverywhere ? Icons.layers_rounded : Icons.layers_clear_rounded),
-                title: Text(icon.hiddenEverywhere ? 'Show chat in every tab' : 'Hide chat in every tab'),
-                subtitle: const Text('Torn\'s chat is not loaded at all while hidden'),
-                onTap: () {
-                  Navigator.pop(context);
-                  icon.onHideEverywhere(!icon.hiddenEverywhere);
-                },
-              ),
-              const Divider(),
-              _GestureLegend(inApp: inApp),
-              const SizedBox(height: 12),
-            ],
-          ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text('Torn\'s chat', style: theme.textTheme.titleSmall),
+            ),
+            ListTile(
+              leading: Icon(icon.hiddenInTab ? Icons.visibility_rounded : Icons.visibility_off_rounded),
+              title: Text(icon.hiddenInTab ? 'Show chat in this tab' : 'Hide chat in this tab'),
+              onTap: () {
+                Navigator.pop(context);
+                icon.onHideInTab(!icon.hiddenInTab);
+              },
+            ),
+            ListTile(
+              leading: Icon(icon.hiddenEverywhere ? Icons.layers_rounded : Icons.layers_clear_rounded),
+              title: Text(icon.hiddenEverywhere ? 'Show chat in every tab' : 'Hide chat in every tab'),
+              subtitle: const Text('Torn\'s chat is not loaded at all while hidden'),
+              onTap: () {
+                Navigator.pop(context);
+                icon.onHideEverywhere(!icon.hiddenEverywhere);
+              },
+            ),
+            const Divider(),
+            _GestureLegend(inApp: inApp),
+            const SizedBox(height: 12),
+          ],
         );
       },
     ),
@@ -254,7 +316,12 @@ class _GestureLegend extends StatelessWidget {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
     final gestures = [
-      ('Tap', inApp ? 'Open the chat window' : 'Open this menu'),
+      (
+        'Tap',
+        !inApp
+            ? 'Open this menu'
+            : (NativeChat.prefs.launcherTap == ChatLauncherTap.full ? 'Open the full chat' : 'Open the chat window'),
+      ),
       ('Double tap', 'Hide or show Torn\'s chat in this tab'),
       ('Long press', 'Open this menu'),
     ];

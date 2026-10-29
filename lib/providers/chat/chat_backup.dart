@@ -6,6 +6,7 @@ import 'package:torn_pda/models/chat/chat_filter.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
 import 'package:torn_pda/models/chat/chat_person.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
+import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 
@@ -37,6 +38,7 @@ class ChatBackup {
     this.bubbleRooms,
     this.waitingHours,
     this.linkPreviews,
+    this.linkPreviewsOff,
     this.translateTo,
     this.switches = const {},
     this.inAppEnabled,
@@ -48,6 +50,9 @@ class ChatBackup {
     this.tickerLines,
     this.glowMode,
     this.launcher,
+    this.launcherTap,
+    this.chatTimes,
+    this.animations,
     this.profileIcon,
     this.quietFrom,
     this.quietTo,
@@ -61,6 +66,7 @@ class ChatBackup {
     this.imageHost,
     this.imgbbExpiration,
     this.muted,
+    this.appIconMenu,
   });
 
   static const int version = 1;
@@ -106,6 +112,9 @@ class ChatBackup {
   final int? tickerLines;
   final ChatGlowMode? glowMode;
   final ChatLauncher? launcher;
+  final ChatLauncherTap? launcherTap;
+  final ChatTimes? chatTimes;
+  final ChatAnimations? animations;
   final ChatProfileIcon? profileIcon;
   final int? quietFrom;
   final int? quietTo;
@@ -122,7 +131,11 @@ class ChatBackup {
   /// For good only, timed mutes stay out
   final Set<String>? muted;
   final ChatImageAutoLoad? linkPreviews;
+  final Set<String>? linkPreviewsOff;
   final String? translateTo;
+
+  /// Shortcut types, empty for none
+  final List<String>? appIconMenu;
 
   static String export(ChatPrefs prefs, DateTime now) => const JsonEncoder.withIndent('  ').convert({
     'version': version,
@@ -163,6 +176,7 @@ class ChatBackup {
       'bubbleRooms': prefs.bubbleRooms.toList(),
       'waitingHours': prefs.waitingHours,
       'linkPreviews': prefs.linkPreviews.name,
+      'linkPreviewsOff': prefs.linkPreviewsOff.toList(),
       'translateTo': prefs.translateTo,
       for (final e in prefs.switches.entries) e.key: e.value.$1,
       'inAppEnabled': prefs.inAppEnabled,
@@ -174,6 +188,9 @@ class ChatBackup {
       'tickerLines': prefs.tickerLines,
       'glowMode': prefs.glowMode.name,
       'launcher': prefs.launcher.name,
+      'launcherTap': prefs.launcherTap.name,
+      'chatTimes': prefs.chatTimes.name,
+      'animations': prefs.animations.name,
       'profileIcon': prefs.profileIcon.name,
       'quietFrom': prefs.quietFrom,
       'quietTo': prefs.quietTo,
@@ -187,6 +204,7 @@ class ChatBackup {
       'imageHost': prefs.imageHost.name,
       'imgbbExpiration': prefs.imgbbExpiration,
       'muted': prefs.muted.toList(),
+      'appIconMenu': AppIconMenu.slots.value,
     },
   });
 
@@ -278,6 +296,7 @@ class ChatBackup {
           ? prefs['waitingHours'] as int
           : null,
       linkPreviews: named('linkPreviews', ChatImageAutoLoad.values),
+      linkPreviewsOff: strings('linkPreviewsOff')?.toSet(),
       translateTo: prefs['translateTo'] is String ? prefs['translateTo'] as String : null,
       switches: {
         if (named('imageAutoLoad', ChatImageAutoLoad.values) case final old?)
@@ -297,6 +316,9 @@ class ChatBackup {
       tickerLines: option('tickerLines', ChatPrefs.tickerLinesOptions),
       glowMode: named('glowMode', ChatGlowMode.values),
       launcher: named('launcher', ChatLauncher.values),
+      launcherTap: named('launcherTap', ChatLauncherTap.values),
+      chatTimes: named('chatTimes', ChatTimes.values),
+      animations: named('animations', ChatAnimations.values),
       profileIcon: named('profileIcon', ChatProfileIcon.values),
       quietFrom: minutes('quietFrom'),
       quietTo: minutes('quietTo'),
@@ -310,6 +332,7 @@ class ChatBackup {
       imageHost: named('imageHost', ChatImageHost.values),
       imgbbExpiration: option('imgbbExpiration', ChatPrefs.imgbbExpirationOptions),
       muted: strings('muted')?.where((r) => r.isNotEmpty).toSet(),
+      appIconMenu: strings('appIconMenu')?.length == AppIconMenu.size ? strings('appIconMenu') : null,
     );
   }
 }

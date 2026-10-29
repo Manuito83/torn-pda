@@ -25,10 +25,12 @@ import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
+import 'package:torn_pda/providers/chat/chat_typing_report.dart';
 import 'package:torn_pda/widgets/chat/chat_appearance_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_bank_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_loading_phrases.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/chat_send_check_dialog.dart';
 import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
@@ -97,13 +99,76 @@ class ChatAvatar extends StatelessWidget {
   }
 }
 
+Future<TimeOfDay?> showChatTimePicker(BuildContext context, TimeOfDay initial) => showTimePicker(
+  context: context,
+  initialTime: initial,
+  builder: (context, child) => MediaQuery(
+    data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: !NativeChat.prefs.app12h),
+    child: child!,
+  ),
+);
+
 /// Screen reader time, words instead of "5m"
 String _chatSpokenTime(DateTime at) {
   final gap = DateTime.now().difference(at);
   if (gap.inMinutes < 1) return 'just now';
   if (gap.inMinutes < 60) return gap.inMinutes == 1 ? '1 minute ago' : '${gap.inMinutes} minutes ago';
   if (gap.inHours < 24) return gap.inHours == 1 ? '1 hour ago' : '${gap.inHours} hours ago';
-  return '${DateFormat.MMMd().format(at)}, ${DateFormat.Hm().format(at)}';
+  return NativeChat.prefs.stamp(at);
+}
+
+final _entity = RegExp(r'&(#\d{1,7}|#x[0-9a-f]{1,6}|[a-z]{2,6});', caseSensitive: false);
+const _entities = {'nbsp': ' ', 'amp': '&', 'lt': '<', 'gt': '>', 'quot': '"', 'apos': "'", 'hellip': '...'};
+
+String _decodeEntities(String text) => text.replaceAllMapped(_entity, (m) {
+  final name = m.group(1)!.toLowerCase();
+  final code = name.startsWith('#x')
+      ? int.tryParse(name.substring(2), radix: 16)
+      : name.startsWith('#')
+      ? int.tryParse(name.substring(1))
+      : null;
+  if (code != null) return code > 0 && code <= 0x10FFFF ? String.fromCharCode(code) : m.group(0)!;
+  return _entities[name] ?? m.group(0)!;
+});
+
+String _spokenLink(ChatLink link) {
+  final host = link.uri.host.replaceFirst(RegExp(r'^www\.'), '');
+  if (link.isImage) return 'image from $host';
+  if (link.label case final label?) return '$label link';
+  return switch (link.kind) {
+    ChatLinkKind.external => 'link to $host',
+    ChatLinkKind.torn => 'Torn link',
+    _ => 'link to ${link.title.replaceAll(RegExp(r'[\[\]]'), '')}',
+  };
+}
+
+String chatSpokenText(String text) => [
+  for (final part in ChatLink.split(ChatFormat.plain(_decodeEntities(text))))
+    part is ChatLink ? _spokenLink(part) : part,
+].join().replaceAll(RegExp(r'\s+'), ' ').trim();
+
+Duration chatMotion(BuildContext context, Duration duration) =>
+    MediaQuery.disableAnimationsOf(context) ? Duration.zero : duration;
+
+class ChatPopIn extends StatelessWidget {
+  const ChatPopIn({super.key, required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    excluding: !visible,
+    child: IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedScale(
+        scale: visible ? 1 : 0,
+        duration: chatMotion(context, const Duration(milliseconds: 180)),
+        curve: Curves.easeOutBack,
+        child: child,
+      ),
+    ),
+  );
 }
 
 class ChatMessageBubble extends StatelessWidget {
@@ -248,9 +313,9 @@ class ChatMessageBubble extends StatelessWidget {
     final spoken = [
       isMine ? 'You' : NativeChat.prefs.displayName(message.sender.id, message.sender.name),
       if (presence != null && isFirstInGroup && showSender && !isMine) presence!.name,
-      if (quote != null) 'replying to ${quote.author}: ${quote.excerpt}',
+      if (quote != null) 'replying to ${quote.author}: ${chatSpokenText(quote.excerpt)}',
       if (forwarded != null) 'forwarded from ${forwarded.from}',
-      ChatFormat.plain(body),
+      chatSpokenText(body),
       if (translation?.text case final text?) 'translation: $text',
       _chatSpokenTime(message.createdAt),
       if (highlighted) 'highlighted',
@@ -287,6 +352,12 @@ class ChatMessageBubble extends StatelessWidget {
       for (final ref in ChatPlayerRef.split(body).whereType<ChatPlayerRef>())
         CustomSemanticsAction(label: 'Options for ${ref.name}'): () =>
             showChatPlayerActions(context, ChatUser(id: ref.id, name: ref.name)),
+      ...chatRefActions(
+        context,
+        body,
+        roomId: message.roomId,
+        slang: ChatWiki.slangIn(message.roomId, NativeChat.prefs.slangEverywhere),
+      ),
     };
     final quoteBox = quote == null
         ? null
@@ -372,6 +443,7 @@ class ChatMessageBubble extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 1),
                   child: GestureDetector(
+                    excludeFromSemantics: true,
                     onTap: showPlayer,
                     child: ChatAvatar(user: message.sender, size: 20),
                   ),
@@ -383,8 +455,8 @@ class ChatMessageBubble extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ?quoteBox,
-                    ?forwardedRow,
+                    if (quoteBox != null) ExcludeSemantics(child: quoteBox),
+                    if (forwardedRow != null) ExcludeSemantics(child: forwardedRow),
                     ChatMessageText(
                       content: body,
                       color: foreground,
@@ -425,14 +497,7 @@ class ChatMessageBubble extends StatelessWidget {
                                     alignment: PlaceholderAlignment.middle,
                                     child: Padding(
                                       padding: const EdgeInsets.only(left: 4),
-                                      child: Container(
-                                        width: 7,
-                                        height: 7,
-                                        decoration: BoxDecoration(
-                                          color: chatPresenceColor(presence!, foreground),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
+                                      child: ChatPresenceDot(presence: presence!, foreground: foreground),
                                     ),
                                   ),
                                 const TextSpan(text: ': '),
@@ -440,27 +505,35 @@ class ChatMessageBubble extends StatelessWidget {
                             ),
                     ),
                     if (translation != null)
-                      ChatTranslationText(translation: translation!, color: foreground, onTap: onTranslationTap),
+                      ExcludeSemantics(
+                        child: ChatTranslationText(
+                          translation: translation!,
+                          color: foreground,
+                          onTap: onTranslationTap,
+                        ),
+                      ),
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(left: 6, top: 3),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (failed) Icon(Icons.error_outline_rounded, size: 12, color: scheme.error),
-                    if (saved) Icon(Icons.bookmark_rounded, size: 12, color: metaColor),
-                    const SizedBox(width: 3),
-                    Text(
-                      DateFormat.Hm().format(message.createdAt),
-                      style: theme.textTheme.labelSmall?.copyWith(color: metaColor),
-                    ),
-                    if (isMine) ...[
+              ExcludeSemantics(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 6, top: 3),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (failed) Icon(Icons.error_outline_rounded, size: 12, color: scheme.error),
+                      if (saved) Icon(Icons.bookmark_rounded, size: 12, color: metaColor),
                       const SizedBox(width: 3),
-                      Icon(pending ? Icons.schedule_rounded : Icons.done_rounded, size: 13, color: metaColor),
+                      Text(
+                        NativeChat.prefs.clock(message.createdAt),
+                        style: theme.textTheme.labelSmall?.copyWith(color: metaColor),
+                      ),
+                      if (isMine) ...[
+                        const SizedBox(width: 3),
+                        Icon(pending ? Icons.schedule_rounded : Icons.done_rounded, size: 13, color: metaColor),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -490,36 +563,34 @@ class ChatMessageBubble extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (isFirstInGroup && !isMine && showSender)
-                GestureDetector(
-                  onTap: hasPlayer ? () => showChatPlayerActions(context, message.sender) : null,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            NativeChat.prefs.displayName(message.sender.id, message.sender.name),
-                            style: theme.textTheme.labelLarge?.copyWith(color: nameColor, fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        if (presence != null) ...[
-                          const SizedBox(width: 5),
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: chatPresenceColor(presence!, foreground),
-                              shape: BoxShape.circle,
+                ExcludeSemantics(
+                  child: GestureDetector(
+                    onTap: hasPlayer ? () => showChatPlayerActions(context, message.sender) : null,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              NativeChat.prefs.displayName(message.sender.id, message.sender.name),
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: nameColor,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
+                          if (presence != null) ...[
+                            const SizedBox(width: 5),
+                            ChatPresenceDot(presence: presence!, foreground: foreground),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ?quoteBox,
-              ?forwardedRow,
+              if (quoteBox != null) ExcludeSemantics(child: quoteBox),
+              if (forwardedRow != null) ExcludeSemantics(child: forwardedRow),
               ChatMessageText(
                 content: body,
                 color: foreground,
@@ -528,38 +599,45 @@ class ChatMessageBubble extends StatelessWidget {
                 roomId: message.roomId,
               ),
               if (translation != null)
-                ChatTranslationText(translation: translation!, color: foreground, onTap: onTranslationTap),
+                ExcludeSemantics(
+                  child: ChatTranslationText(translation: translation!, color: foreground, onTap: onTranslationTap),
+                ),
               const SizedBox(height: 2),
-              Align(
-                alignment: Alignment.centerRight,
-                widthFactor: 1,
-                child: Wrap(
-                  alignment: WrapAlignment.end,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    if (failed) ...[
-                      Icon(Icons.error_outline_rounded, size: 12, color: scheme.error),
-                      const SizedBox(width: 3),
-                      Text('Not sent, tap to retry', style: theme.textTheme.labelSmall?.copyWith(color: scheme.error)),
-                      const SizedBox(width: 6),
-                    ],
-                    if (saved) ...[
-                      Icon(Icons.bookmark_rounded, size: 12, color: foreground.withValues(alpha: 0.6)),
-                      const SizedBox(width: 3),
-                    ],
-                    Text(
-                      DateFormat.Hm().format(message.createdAt),
-                      style: theme.textTheme.labelSmall?.copyWith(color: foreground.withValues(alpha: 0.6)),
-                    ),
-                    if (isMine) ...[
-                      const SizedBox(width: 3),
-                      Icon(
-                        pending ? Icons.schedule_rounded : Icons.done_rounded,
-                        size: 13,
-                        color: foreground.withValues(alpha: 0.6),
+              ExcludeSemantics(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  widthFactor: 1,
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (failed) ...[
+                        Icon(Icons.error_outline_rounded, size: 12, color: scheme.error),
+                        const SizedBox(width: 3),
+                        Text(
+                          'Not sent, tap to retry',
+                          style: theme.textTheme.labelSmall?.copyWith(color: scheme.error),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      if (saved) ...[
+                        Icon(Icons.bookmark_rounded, size: 12, color: foreground.withValues(alpha: 0.6)),
+                        const SizedBox(width: 3),
+                      ],
+                      Text(
+                        NativeChat.prefs.clock(message.createdAt),
+                        style: theme.textTheme.labelSmall?.copyWith(color: foreground.withValues(alpha: 0.6)),
                       ),
+                      if (isMine) ...[
+                        const SizedBox(width: 3),
+                        Icon(
+                          pending ? Icons.schedule_rounded : Icons.done_rounded,
+                          size: 13,
+                          color: foreground.withValues(alpha: 0.6),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -572,21 +650,23 @@ class ChatMessageBubble extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        ChatTradeInsert(
-          roomId: message.roomId,
-          text: body,
-          userId: isMine ? null : message.sender.id,
-          color: plainText,
-          mine: isMine && !compact,
+        Semantics(
+          container: true,
+          child: ChatTradeInsert(
+            roomId: message.roomId,
+            text: body,
+            userId: isMine ? null : message.sender.id,
+            color: plainText,
+            mine: isMine && !compact,
+          ),
         ),
-        if (!isMine) ChatBankInsert(message: message),
+        if (!isMine) Semantics(container: true, child: ChatBankInsert(message: message)),
       ],
     );
     final avatarColumn = !isMine && showSender && prefs.showAvatars;
     return ChatTextScale(
       child: Semantics(
         container: true,
-        excludeSemantics: true,
         label: spoken,
         selected: selected,
         onTap: selected == null ? null : onLongPress,
@@ -623,6 +703,7 @@ class ChatMessageBubble extends StatelessWidget {
                           if (avatarColumn) ...[
                             isLastInGroup
                                 ? GestureDetector(
+                                    excludeFromSemantics: true,
                                     onTap: hasPlayer ? () => showChatPlayerActions(context, message.sender) : null,
                                     onLongPress: hasPlayer
                                         ? () => showChatPlayerActions(context, message.sender)
@@ -764,7 +845,11 @@ class _ChatSwipeReplyState extends State<ChatSwipeReply> with SingleTickerProvid
     if (_armed) (_dx < 0 ? widget.onSwipeLeft : widget.onReply)?.call();
     _armed = false;
     _from = _dx;
-    _back.forward(from: 0);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      setState(() => _dx = 0);
+    } else {
+      _back.forward(from: 0);
+    }
   }
 
   @override
@@ -813,23 +898,23 @@ class ChatSwiping extends InheritedWidget {
 }
 
 class ChatDaySeparator extends StatelessWidget {
-  const ChatDaySeparator({super.key, required this.day});
+  const ChatDaySeparator({super.key, required this.day, this.compact = false});
 
   final DateTime day;
+  final bool compact;
+
+  static bool sameDay(DateTime a, DateTime b) => NativeChat.prefs.daysFrom(a, b) == 0;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final date = DateTime(day.year, day.month, day.day);
-    final label = date == today
-        ? 'Today'
-        : date == today.subtract(const Duration(days: 1))
-        ? 'Yesterday'
-        : DateFormat.yMMMd().format(date);
+    final label = switch (NativeChat.prefs.daysFrom(DateTime.now(), day)) {
+      0 => 'Today',
+      -1 => 'Yesterday',
+      _ => DateFormat.yMMMd().format(NativeChat.prefs.wallClock(day)),
+    };
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: EdgeInsets.symmetric(vertical: compact ? 6 : 12),
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -845,6 +930,13 @@ class ChatDaySeparator extends StatelessWidget {
       ),
     );
   }
+}
+
+const Duration _groupGap = Duration(minutes: 5);
+
+bool chatSameGroup(ChatMessage? a, ChatMessage? b) {
+  if (a == null || b == null || a.isSystem || b.isSystem || a.sender.id != b.sender.id) return false;
+  return ChatDaySeparator.sameDay(a.createdAt, b.createdAt) && b.createdAt.difference(a.createdAt).abs() < _groupGap;
 }
 
 class ChatUnreadSeparator extends StatelessWidget {
@@ -884,8 +976,25 @@ class ChatTypingBar extends StatefulWidget {
 }
 
 class _ChatTypingBarState extends State<ChatTypingBar> with SingleTickerProviderStateMixin {
-  late final AnimationController _dots = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
-    ..repeat();
+  late final AnimationController _dots = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+
+  void _syncDots() {
+    final moving = widget.users.isNotEmpty && !MediaQuery.disableAnimationsOf(context);
+    if (moving && !_dots.isAnimating) _dots.repeat();
+    if (!moving && _dots.isAnimating) _dots.stop();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncDots();
+  }
+
+  @override
+  void didUpdateWidget(ChatTypingBar old) {
+    super.didUpdateWidget(old);
+    _syncDots();
+  }
 
   @override
   void dispose() {
@@ -897,16 +1006,10 @@ class _ChatTypingBarState extends State<ChatTypingBar> with SingleTickerProvider
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final users = widget.users;
-    String text = '';
-    if (users.length == 1) {
-      text = '${users[0].name} is typing';
-    } else if (users.length == 2) {
-      text = '${users[0].name} and ${users[1].name} are typing';
-    } else if (users.length > 2) {
-      text = '${users[0].name}, ${users[1].name} and ${users.length - 2} more are typing';
-    }
+    final text =
+        chatTypingLine([for (final u in users) NativeChat.prefs.displayName(u.id, u.name)], isDm: false) ?? '';
     return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
+      duration: chatMotion(context, const Duration(milliseconds: 200)),
       alignment: Alignment.bottomCenter,
       child: users.isEmpty
           ? const SizedBox(width: double.infinity)
@@ -1036,6 +1139,7 @@ class _ChatComposerState extends State<ChatComposer> {
       }
     }
     if (widget.enabled && !old.enabled) _takeShared();
+    if (old.roomId != null && old.roomId != widget.roomId) old.chat?.typingStopped(old.roomId!);
   }
 
   void _saveDraft() {
@@ -1209,6 +1313,8 @@ class _ChatComposerState extends State<ChatComposer> {
 
   @override
   void dispose() {
+    final id = widget.roomId;
+    if (id != null) widget.chat?.typingStopped(id);
     _mentionTimer?.cancel();
     if (_mentionSearched case final searched?) {
       final chat = widget.chat;
@@ -1371,7 +1477,11 @@ class _ChatComposerState extends State<ChatComposer> {
                 focusNode: _focus,
                 autofocus: widget.autofocus,
                 enabled: widget.enabled,
-                onChanged: (_) => NativeChat.touch(),
+                onChanged: (value) {
+                  NativeChat.touch();
+                  final id = widget.roomId;
+                  if (id != null) widget.chat?.typed(id, value);
+                },
                 minLines: 1,
                 maxLines: MediaQuery.textScalerOf(context).scale(1) >= 1.5 ? 3 : 5,
                 textCapitalization: TextCapitalization.sentences,
@@ -1404,7 +1514,7 @@ class _ChatComposerState extends State<ChatComposer> {
         const SizedBox(width: 6),
         AnimatedScale(
           scale: _hasText ? 1 : 0.85,
-          duration: const Duration(milliseconds: 150),
+          duration: chatMotion(context, const Duration(milliseconds: 150)),
           child: IconButton.filled(
             tooltip: 'Send',
             onPressed: _hasText && widget.enabled ? _send : null,
@@ -1443,7 +1553,7 @@ class _ChatComposerState extends State<ChatComposer> {
                       if (_formatOpen && widget.enabled) ChatFormatBar(controller: _text, focus: _focus),
                       if (_mention != null && (suggestions.isNotEmpty || lookingUp))
                         Container(
-                          height: MediaQuery.textScalerOf(context).scale(40),
+                          height: MediaQuery.textScalerOf(context).scale(48),
                           margin: const EdgeInsets.only(bottom: 6, left: 6),
                           child: ListView(
                             scrollDirection: Axis.horizontal,
@@ -1451,16 +1561,17 @@ class _ChatComposerState extends State<ChatComposer> {
                               for (final user in suggestions)
                                 Padding(
                                   padding: const EdgeInsets.only(right: 6),
-                                  child: GestureDetector(
-                                    onLongPress: () => showChatPlayerActions(context, user),
-                                    child: ActionChip(
-                                      avatar: ChatAvatar(user: user, size: 24),
-                                      label: Text(user.name),
-                                      visualDensity: VisualDensity.compact,
-                                      onPressed: () {
-                                        _text.value = ChatMentions.insert(_text.value, user.name);
-                                        _focus.requestFocus();
-                                      },
+                                  child: MergeSemantics(
+                                    child: GestureDetector(
+                                      onLongPress: () => showChatPlayerActions(context, user),
+                                      child: ActionChip(
+                                        avatar: ChatAvatar(user: user, size: 24),
+                                        label: Text(user.name, semanticsLabel: 'Mention ${user.name}'),
+                                        onPressed: () {
+                                          _text.value = ChatMentions.insert(_text.value, user.name);
+                                          _focus.requestFocus();
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1585,6 +1696,37 @@ class ChatStateMessage extends StatelessWidget {
             if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ChatLoadFailed extends StatelessWidget {
+  const ChatLoadFailed({super.key, required this.name, required this.onRetry, this.compact = false});
+
+  final String name;
+  final VoidCallback onRetry;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final retry = TextButton(onPressed: onRetry, child: const Text('Try again'));
+    if (compact) {
+      final style = theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+      return Row(children: [Expanded(child: Text('Could not load $name', style: style)), retry]);
+    }
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_rounded),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+            child: Text('Could not load $name', textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+          ),
+          retry,
+        ],
       ),
     );
   }
@@ -1870,6 +2012,36 @@ Color chatPresenceColor(ChatPresence presence, Color foreground) => switch (pres
   ChatPresence.offline => foreground.withValues(alpha: 0.4),
 };
 
+/// Shape tells the state apart without color
+class ChatPresenceDot extends StatelessWidget {
+  const ChatPresenceDot({
+    super.key,
+    required this.presence,
+    required this.foreground,
+    this.size = 10,
+    this.spoken = false,
+  });
+
+  final ChatPresence presence;
+  final Color foreground;
+  final double size;
+
+  /// Off when the parent already says it
+  final bool spoken;
+
+  @override
+  Widget build(BuildContext context) => Icon(
+    switch (presence) {
+      ChatPresence.online => Icons.circle,
+      ChatPresence.idle => Icons.dark_mode_rounded,
+      ChatPresence.offline => Icons.circle_outlined,
+    },
+    size: size,
+    color: chatPresenceColor(presence, foreground),
+    semanticLabel: spoken ? presence.name : null,
+  );
+}
+
 class ChatConnectionLine extends StatelessWidget {
   const ChatConnectionLine({required this.state, this.presence, this.lastSeen, this.style, this.short = false});
 
@@ -1906,7 +2078,7 @@ class ChatConnectionLine extends StatelessWidget {
     return Row(
       children: [
         AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+          duration: chatMotion(context, const Duration(milliseconds: 300)),
           width: 8,
           height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
@@ -1950,7 +2122,7 @@ IconData chatRoomIcon(String roomId, [String? glyph]) {
     if (type != null) return type;
   }
   if (roomId == ChatRooms.travel) return Icons.flight_rounded;
-  if (const {'faction', 'company', 'dm', ChatRooms.newPlayers}.contains(roomId)) glyph = null;
+  if (const {'faction', 'company', 'dm', ChatRooms.newPlayers, 'hospital', 'jail'}.contains(roomId)) glyph = null;
   switch (glyph) {
     case 'globe':
       return Icons.public_rounded;
@@ -1978,6 +2150,10 @@ IconData chatRoomIcon(String roomId, [String? glyph]) {
       return Icons.person_rounded;
     case ChatRooms.newPlayers:
       return Icons.school_rounded;
+    case 'hospital':
+      return Icons.local_hospital_rounded;
+    case 'jail':
+      return Icons.lock_rounded;
   }
   return Icons.forum_rounded;
 }
@@ -2117,6 +2293,10 @@ class ChatRoomAvatar extends StatelessWidget {
       return (dark ? Colors.lightBlue[200]! : const Color(0xFF0A7FB5), dark ? const Color(0xFF06263A) : Colors.white);
     case ChatRooms.newPlayers:
       return (dark ? Colors.lightGreen[300]! : const Color(0xFF4C8A0F), dark ? const Color(0xFF1A2E05) : Colors.white);
+    case 'hospital':
+      return (dark ? Colors.pink[200]! : const Color(0xFFAD1457), dark ? const Color(0xFF3A0620) : Colors.white);
+    case 'jail':
+      return (dark ? Colors.blueGrey[200]! : const Color(0xFF546E7A), dark ? const Color(0xFF1C262B) : Colors.white);
   }
   return (dark ? Colors.red[300]! : const Color(0xFFD92B50), dark ? const Color(0xFF3A0611) : Colors.white);
 }
@@ -2249,6 +2429,7 @@ class ChatConversationTile extends StatelessWidget {
     this.mentioned = false,
     this.draft = '',
     this.awayLine,
+    this.typing = const [],
     this.actions = const {},
     this.dot = false,
     this.more = false,
@@ -2285,6 +2466,9 @@ class ChatConversationTile extends StatelessWidget {
   /// Replaces the preview
   final String? awayLine;
 
+  /// Who is typing, replaces everything else
+  final List<ChatUser> typing;
+
   /// For screen readers, the swipe actions
   final Map<CustomSemanticsAction, VoidCallback> actions;
 
@@ -2296,20 +2480,59 @@ class ChatConversationTile extends StatelessWidget {
     final peer = room.isDm ? ChatRoom.peerIdOf(room.id) : null;
     final name = peer == null ? room.name : NativeChat.prefs.displayName(peer, room.name);
     final hasDraft = draft.trim().isNotEmpty;
-    String preview;
-    if (awayLine != null) {
-      preview = awayLine!;
-    } else if (m == null) {
-      preview = room.isDm ? 'Private chat' : 'Tap to read';
-    } else if (myUserId != null && m.sender.id == myUserId) {
-      preview = 'You: ${ChatFormat.plain(m.content)}';
-    } else if (!room.isDm && !m.isSystem) {
-      preview = '${NativeChat.prefs.displayName(m.sender.id, m.sender.name)}: ${ChatFormat.plain(m.content)}';
-    } else {
-      preview = ChatFormat.plain(m.content);
+    final typingLine = chatTypingLine([
+      for (final u in typing) NativeChat.prefs.displayName(u.id, u.name),
+    ], isDm: room.isDm);
+    String preview([String Function(String) text = ChatFormat.plain]) {
+      if (awayLine != null) return awayLine!;
+      if (m == null) return room.isDm ? 'Private chat' : 'Tap to read';
+      if (myUserId != null && m.sender.id == myUserId) return 'You: ${text(m.content)}';
+      if (!room.isDm && !m.isSystem) {
+        return '${NativeChat.prefs.displayName(m.sender.id, m.sender.name)}: ${text(m.content)}';
+      }
+      return text(m.content);
     }
+
     final highlight = unread > 0;
     final hidden = hidePreview && !hasDraft;
+    // Fades when the last message changes, not per draft key
+    final previewKey = typingLine != null
+        ? 'typing'
+        : hasDraft
+        ? 'draft'
+        : awayLine != null
+        ? 'away'
+        : m == null
+        ? 'none'
+        : m.reqId ?? m.id;
+    Widget line(Key? key) => Text.rich(
+      key: key,
+      TextSpan(
+        children: [
+          if (hasDraft)
+            TextSpan(
+              text: 'Draft: ',
+              style: TextStyle(color: scheme.error, fontWeight: FontWeight.w600),
+            ),
+          if (!hasDraft && awayLine != null)
+            for (final (i, part) in awayLine!.split(' - ').indexed) ...[
+              if (i > 0) const TextSpan(text: ' - '),
+              TextSpan(
+                text: part,
+                style: part.endsWith('mention you')
+                    ? TextStyle(color: scheme.tertiary, fontWeight: FontWeight.w700)
+                    : null,
+              ),
+            ]
+          else
+            TextSpan(text: (hasDraft ? draft : preview()).replaceAll('\n', ' ')),
+        ],
+      ),
+      maxLines: NativeChat.prefs.previewLines,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+    );
+
     final spoken = [
       name,
       if (highlight)
@@ -2319,7 +2542,12 @@ class ChatConversationTile extends StatelessWidget {
             ? '1 unread message'
             : '$unread${more ? '+' : ''} unread messages',
       if (mentioned) 'you were mentioned',
-      if (hasDraft) 'draft: $draft' else if (!hidden) preview,
+      if (typingLine != null && !hidden)
+        typingLine
+      else if (hasDraft)
+        'draft: $draft'
+      else if (!hidden)
+        preview(chatSpokenText),
       if (m != null) _chatSpokenTime(m.createdAt),
       if (pinned) 'pinned',
       if (muted) snoozed ? 'snoozed' : 'muted',
@@ -2383,31 +2611,31 @@ class ChatConversationTile extends StatelessWidget {
                         Expanded(
                           child: hidden
                               ? const SizedBox.shrink()
-                              : Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      if (hasDraft)
-                                        TextSpan(
-                                          text: 'Draft: ',
-                                          style: TextStyle(color: scheme.error, fontWeight: FontWeight.w600),
-                                        ),
-                                      if (!hasDraft && awayLine != null)
-                                        for (final (i, part) in awayLine!.split(' - ').indexed) ...[
-                                          if (i > 0) const TextSpan(text: ' - '),
-                                          TextSpan(
-                                            text: part,
-                                            style: part.endsWith('mention you')
-                                                ? TextStyle(color: scheme.tertiary, fontWeight: FontWeight.w700)
-                                                : null,
-                                          ),
-                                        ]
-                                      else
-                                        TextSpan(text: (hasDraft ? draft : preview).replaceAll('\n', ' ')),
-                                    ],
+                              : AnimatedSwitcher(
+                                  duration: chatMotionSet(context).line,
+                                  layoutBuilder: (current, previous) => Stack(
+                                    alignment: Alignment.centerLeft,
+                                    children: [...previous, ?current],
                                   ),
-                                  maxLines: NativeChat.prefs.previewLines,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                                  child: typingLine == null
+                                      ? line(ValueKey(previewKey))
+                                      : Stack(
+                                          key: const ValueKey('typing'),
+                                          alignment: Alignment.topLeft,
+                                          children: [
+                                            // Holds the replaced line's height
+                                            Opacity(opacity: 0, child: line(null)),
+                                            Text(
+                                              typingLine,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: theme.textTheme.bodyMedium?.copyWith(
+                                                color: scheme.primary,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                 ),
                         ),
                         if (muted) ...[
@@ -2447,7 +2675,9 @@ class ChatConversationTile extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 6),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: muted ? scheme.onSurfaceVariant : scheme.primary,
+                              color: muted
+                                  ? ChatPlayerColor.tinted(scheme.onSurfaceVariant, scheme.surface)
+                                  : ChatPlayerColor.tinted(scheme.primary, scheme.onPrimary),
                               borderRadius: BorderRadius.circular(11),
                             ),
                             child: Text(
@@ -2473,15 +2703,19 @@ class ChatConversationTile extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: row),
-        IconButton(
-          tooltip: expanded ? 'Close quick reply' : 'Quick reply',
-          onPressed: onExpand,
-          visualDensity: VisualDensity.compact,
-          color: expanded ? scheme.primary : scheme.onSurfaceVariant,
-          icon: AnimatedRotation(
-            turns: expanded ? 0.5 : 0,
-            duration: const Duration(milliseconds: 200),
-            child: const Icon(Icons.expand_more_rounded),
+        // Own node, not merged into the slidable
+        Semantics(
+          container: true,
+          expanded: expanded,
+          child: IconButton(
+            tooltip: expanded ? 'Close quick reply to $name' : 'Quick reply to $name',
+            onPressed: onExpand,
+            color: expanded ? scheme.primary : scheme.onSurfaceVariant,
+            icon: AnimatedRotation(
+              turns: expanded ? 0.5 : 0,
+              duration: chatMotion(context, const Duration(milliseconds: 200)),
+              child: const Icon(Icons.expand_more_rounded),
+            ),
           ),
         ),
       ],
@@ -2490,9 +2724,10 @@ class ChatConversationTile extends StatelessWidget {
 
   String _when(DateTime at) {
     final now = DateTime.now();
-    if (at.year == now.year && at.month == now.month && at.day == now.day) return DateFormat.Hm().format(at);
-    if (now.difference(at).inDays < 7) return DateFormat.E().format(at);
-    return DateFormat.yMd().format(at);
+    final prefs = NativeChat.prefs;
+    if (prefs.daysFrom(now, at) == 0) return prefs.clock(at);
+    if (now.difference(at).inDays < 7) return DateFormat.E().format(prefs.wallClock(at));
+    return DateFormat.yMd().format(prefs.wallClock(at));
   }
 }
 
@@ -2617,7 +2852,7 @@ class _ChatArrivalsState extends State<ChatArrivals> {
     final last = _waiting.last;
     final count = _waiting.length;
     final text = count == 1
-        ? '${last.sender.name}: ${ChatFormat.plain(ChatQuote.excerpt(last.content))}'
+        ? '${last.sender.name}: ${chatSpokenText(ChatQuote.excerpt(last.content))}'
         : _waiting.every((m) => m.sender.id == last.sender.id)
         ? '$count new messages from ${last.sender.name}'
         : '$count new messages, the last from ${last.sender.name}';

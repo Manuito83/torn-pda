@@ -48,6 +48,7 @@ import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/revive/combat_ready_revive_button.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
 import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class WarOptions {
@@ -1836,6 +1837,7 @@ class WarTargetsListState extends State<WarTargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
+          profileSlidableAction(filteredCard.memberModel.memberId),
           if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel.name).isEmpty)
             SlidableAction(
               label: 'Add to panic!',

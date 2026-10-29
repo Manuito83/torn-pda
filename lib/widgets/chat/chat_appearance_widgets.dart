@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_color_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_settings_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
@@ -27,6 +29,93 @@ class ChatTextScale extends StatelessWidget {
   }
 }
 
+String _percent(double scale) => '${(scale * 100).round()}%';
+
+// Slider that the screen reader names
+class ChatNamedSlider extends StatelessWidget {
+  const ChatNamedSlider({
+    super.key,
+    required this.name,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.divisions,
+    required this.shown,
+    this.spoken,
+    this.onChanged,
+  });
+
+  final String name;
+  final double value;
+  final double min;
+  final double max;
+  final int divisions;
+  final String Function(double value) shown;
+  final String Function(double value)? spoken;
+  final ValueChanged<double>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final say = spoken ?? shown;
+    final step = (max - min) / divisions;
+    double snap(double v) => clampDouble(min + ((v - min) / step).round() * step, min, max);
+    final up = snap(value + step);
+    final down = snap(value - step);
+    final change = onChanged;
+    return Semantics(
+      container: true,
+      slider: true,
+      enabled: change != null,
+      label: name,
+      value: say(value),
+      increasedValue: say(up),
+      decreasedValue: say(down),
+      onIncrease: change == null || up == value ? null : () => change(up),
+      onDecrease: change == null || down == value ? null : () => change(down),
+      child: ExcludeSemantics(
+        child: Slider(value: value, min: min, max: max, divisions: divisions, label: shown(value), onChanged: change),
+      ),
+    );
+  }
+}
+
+class ChatTextSizeSetting extends StatelessWidget {
+  const ChatTextSizeSetting({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final prefs = NativeChat.prefs;
+    final theme = Theme.of(context);
+    return ListenableBuilder(
+      listenable: prefs,
+      builder: (context, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: ExcludeSemantics(
+              child: Text('Chat text size: ${_percent(prefs.textScale)}', style: theme.textTheme.bodyLarge),
+            ),
+          ),
+          ChatNamedSlider(
+            name: 'Chat text size',
+            value: prefs.textScale,
+            min: ChatPrefs.minTextScale,
+            max: ChatPrefs.maxTextScale,
+            divisions: 8,
+            shown: _percent,
+            onChanged: prefs.setTextScale,
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: ChatSettingsText.hint('On top of the system text size. Only the messages change'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ChatAppearanceSettings extends StatelessWidget {
   const ChatAppearanceSettings({super.key});
 
@@ -47,8 +136,7 @@ class ChatAppearanceSettings extends StatelessWidget {
   Widget _content(BuildContext context) {
     final prefs = NativeChat.prefs;
     final theme = Theme.of(context);
-    final percent = '${(prefs.textScale * 100).round()}%';
-    final listPercent = '${(prefs.listTextScale * 100).round()}%';
+    final listPercent = _percent(prefs.listTextScale);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -59,13 +147,18 @@ class ChatAppearanceSettings extends StatelessWidget {
           onChanged: prefs.setCompactMode,
         ),
         SwitchListTile(title: const Text('Show avatars'), value: prefs.showAvatars, onChanged: prefs.setShowAvatars),
-        ListTile(
-          title: const Text('Preview lines'),
-          subtitle: const Text('Of the last message in the chat list'),
-          trailing: SegmentedButton<int>(
+        ChatSettingsTile(
+          title: 'Preview lines',
+          subtitle: 'Of the last message in the chat list',
+          control: (_) => SegmentedButton<int>(
             showSelectedIcon: false,
-            style: const ButtonStyle(visualDensity: VisualDensity.compact),
-            segments: [for (final n in ChatPrefs.previewLinesOptions) ButtonSegment(value: n, label: Text('$n'))],
+            segments: [
+              for (final n in ChatPrefs.previewLinesOptions)
+                ButtonSegment(
+                  value: n,
+                  label: Text('$n', semanticsLabel: n == 1 ? '1 line' : '$n lines'),
+                ),
+            ],
             selected: {prefs.previewLines},
             onSelectionChanged: (v) => prefs.setPreviewLines(v.first),
           ),
@@ -80,61 +173,44 @@ class ChatAppearanceSettings extends StatelessWidget {
         ),
         ListTile(
           enabled: prefs.listReply,
-          title: Text('Messages in the quick reply: ${prefs.listReplyCount}'),
-          subtitle: const Text('How many of the last messages to show'),
+          title: ExcludeSemantics(child: Text('Messages in the quick reply: ${prefs.listReplyCount}')),
+          subtitle: const ChatSettingsText('How many of the last messages to show'),
         ),
-        Slider(
+        ChatNamedSlider(
+          name: 'Messages in the quick reply',
           value: prefs.listReplyCount.toDouble(),
           min: ChatPrefs.minListReplyCount.toDouble(),
           max: ChatPrefs.maxListReplyCount.toDouble(),
           divisions: ChatPrefs.maxListReplyCount - ChatPrefs.minListReplyCount,
-          label: '${prefs.listReplyCount}',
+          shown: (v) => '${v.round()}',
+          spoken: (v) => v.round() == 1 ? '1 message' : '${v.round()} messages',
           onChanged: prefs.listReply ? (v) => prefs.setListReplyCount(v.round()) : null,
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-          child: Text('List text size: $listPercent', style: theme.textTheme.bodyLarge),
+          child: ExcludeSemantics(child: Text('List text size: $listPercent', style: theme.textTheme.bodyLarge)),
         ),
-        Slider(
+        ChatNamedSlider(
+          name: 'List text size',
           value: prefs.listTextScale,
           min: ChatPrefs.minTextScale,
           max: ChatPrefs.maxTextScale,
           divisions: 8,
-          label: listPercent,
-          semanticFormatterCallback: (v) => '${(v * 100).round()} percent',
+          shown: _percent,
           onChanged: prefs.setListTextScale,
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-          child: Text(
-            'Only the messages in the quick reply of the chat list',
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ),
         const Padding(
-          padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: FeatureDiagram(scenes: [FeatureDiagramScene.chatListReply], showCaption: true),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 4),
+          child: ChatSettingsText.hint('Only the messages in the quick reply of the chat list'),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text('Chat text size: $percent', style: theme.textTheme.bodyLarge),
-        ),
-        Slider(
-          value: prefs.textScale,
-          min: ChatPrefs.minTextScale,
-          max: ChatPrefs.maxTextScale,
-          divisions: 8,
-          label: percent,
-          semanticFormatterCallback: (v) => '${(v * 100).round()} percent',
-          onChanged: prefs.setTextScale,
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-          child: Text(
-            'On top of the system text size. Only the messages change',
-            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Semantics(
+            container: true,
+            child: const FeatureDiagram(scenes: [FeatureDiagramScene.chatListReply], showCaption: true),
           ),
         ),
+        const ChatTextSizeSetting(),
         Semantics(
           label: 'Preview',
           container: true,
