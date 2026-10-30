@@ -865,6 +865,54 @@
       "matches": [
         "https://*.torn.com/preferences.php*"
       ]
+    },
+    {
+      "id": "torntools.persistent-list-filter",
+      "greasyforkId": 602534,
+      "name": "Persistent List Filter",
+      "description": "Remember the native sort and filter of the friends, enemies and targets lists, and apply them from the sidebar.",
+      "category": "lists",
+      "downloadUrl": "https://update.greasyfork.org/scripts/602534/TORN%3A%20TornTools%20-%20Persistent%20List%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/602534-torn-torntools-persistent-list-filter",
+      "matches": [
+        "https://*.torn.com/*"
+      ]
+    },
+    {
+      "id": "torntools.pickpocketing-filter",
+      "greasyforkId": 603000,
+      "name": "Pickpocketing Filter",
+      "description": "Filter the pickpocketing targets by tier and by body type.",
+      "category": "crimes",
+      "downloadUrl": "https://update.greasyfork.org/scripts/603000/TORN%3A%20TornTools%20-%20Pickpocketing%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/603000-torn-torntools-pickpocketing-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=crimes*"
+      ]
+    },
+    {
+      "id": "torntools.search-for-cash-chance-filter",
+      "greasyforkId": 603001,
+      "name": "Search for Cash Chance Filter",
+      "description": "Disable the Search for Cash places below a minimum success chance.",
+      "category": "crimes",
+      "downloadUrl": "https://update.greasyfork.org/scripts/603001/TORN%3A%20TornTools%20-%20Search%20for%20Cash%20Chance%20Filter.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/603001-torn-torntools-search-for-cash-chance-filter",
+      "matches": [
+        "https://*.torn.com/page.php?sid=crimes*"
+      ]
+    },
+    {
+      "id": "torntools.hide-crime-flavour-text",
+      "greasyforkId": 603002,
+      "name": "Hide Crime Flavour Text",
+      "description": "Hide the flavour text of successful crimes 2 outcomes.",
+      "category": "crimes",
+      "downloadUrl": "https://update.greasyfork.org/scripts/603002/TORN%3A%20TornTools%20-%20Hide%20Crime%20Flavour%20Text.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/603002-torn-torntools-hide-crime-flavour-text",
+      "matches": [
+        "https://*.torn.com/page.php?sid=crimes*"
+      ]
     }
   ]
 }
