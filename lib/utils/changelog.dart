@@ -3766,6 +3766,10 @@ class ChangeLogState extends State<ChangeLog> {
 
   @override
   Widget build(BuildContext context) {
+    // Hidden under the browser
+    final underBrowser = context.select<WebViewProvider?, bool>(
+      (w) => (w?.browserShowInForeground ?? false) && !w!.webViewSplitActive,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: Dialog(
@@ -3783,10 +3787,13 @@ class ChangeLogState extends State<ChangeLog> {
                     controller: _scrollController,
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: _items(),
+                      child: TickerMode(
+                        enabled: !underBrowser,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: _items(),
+                        ),
                       ),
                     ),
                   ),
