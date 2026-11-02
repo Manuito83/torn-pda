@@ -50,7 +50,7 @@ class ForeignStocksWebviewHandler {
   final SettingsProvider settingsProvider;
 
   DateTime? _foreignStocksSentTime;
-  // Counts the travel checks, so that a check that ends after the next page load is ignored
+  // Newest travel check wins
   int _travelCheck = 0;
 
   ForeignStocksWebviewHandler({
@@ -104,7 +104,7 @@ class ForeignStocksWebviewHandler {
       abroad = true;
       document = await _freshDocument(document);
     }
-    // A newer page started its own check while this one waited
+    // A newer page took over
     if (check != _travelCheck) return;
 
     if (abroad) {
