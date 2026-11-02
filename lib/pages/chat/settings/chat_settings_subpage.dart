@@ -3,6 +3,11 @@ import 'package:torn_pda/widgets/chat/chat_settings_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
+/// Unnamed, so Analytics skips it
+class ChatSettingsRoute extends MaterialPageRoute<void> {
+  ChatSettingsRoute(Widget page) : super(builder: (_) => ChatTheme(child: page));
+}
+
 class ChatSettingsSubpage extends StatelessWidget {
   const ChatSettingsSubpage({super.key, required this.title, this.description, required this.builder});
 
@@ -42,7 +47,7 @@ class ChatSettingsLink extends StatelessWidget {
       title: Text(title),
       subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onTap ?? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ChatTheme(child: page!))),
+      onTap: onTap ?? () => Navigator.of(context).push(ChatSettingsRoute(page!)),
     );
   }
 }

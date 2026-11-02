@@ -3,23 +3,15 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/models/webview/split_layout.dart';
+import 'package:torn_pda/providers/webview_provider.dart' show WebViewProvider;
 
-const double kSplitDividerWidth = 12;
-const double kSplitSlotMinWidth = 320;
+export 'package:torn_pda/models/webview/split_layout.dart' show kSplitDividerWidth, kSplitSlotMinWidth, splitLeftSlotWidth;
+
 const Duration kSplitDividerHoldDuration = Duration(milliseconds: 400);
 
-// On screen, for the chat overlays
-final ValueNotifier<Rect?> splitDividerRect = ValueNotifier(null);
-
-double splitLeftSlotWidth(double width, double ratio, {double leftInset = 0, double rightInset = 0}) {
-  final double available = width - kSplitDividerWidth;
-  final double minLeft = kSplitSlotMinWidth + leftInset;
-  final double minRight = kSplitSlotMinWidth + rightInset;
-  if (available <= minLeft + minRight) return leftInset + (available - leftInset - rightInset) / 2;
-  return (available * ratio).clamp(minLeft, available - minRight);
-}
-
-/// Only moves after a long press, so Torn swipes near the edge do not move it
+/// Moves only after a long press
 class SplitDivider extends StatefulWidget {
   final double width;
   final double ratio;
@@ -43,21 +35,26 @@ class SplitDivider extends StatefulWidget {
 class _SplitDividerState extends State<SplitDivider> {
   double? _dragOffset;
   Rect? _published;
+  late final ValueNotifier<Rect?> _screenRect = context.read<WebViewProvider>().splitDividerRect;
 
   void _publish(Duration _) {
     final box = mounted ? context.findRenderObject() as RenderBox? : null;
     if (box == null || !box.hasSize || !box.attached) return;
-    _published = box.localToGlobal(Offset.zero) & box.size;
-    splitDividerRect.value = _published;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    _screenRect.value = rect;
+    _published = rect;
   }
 
   @override
   void dispose() {
     final Rect? published = _published;
-    // Tree is locked while unmounting
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (splitDividerRect.value == published) splitDividerRect.value = null;
-    });
+    if (published != null) {
+      final screenRect = _screenRect;
+      // Tree is locked while unmounting
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (screenRect.value == published) screenRect.value = null;
+      });
+    }
     super.dispose();
   }
 

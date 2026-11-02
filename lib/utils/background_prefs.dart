@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:torn_pda/utils/discreet_schedule.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 
 /// Background-safe preferences access.
 ///
@@ -14,6 +14,7 @@ class BackgroundPrefs {
   static const String _kDefaultTimeZone = "pda_defaultTimeZone";
   static const String _kActiveShortcutsList = "pda_activeShortcutsList";
   static const String _kTornChatDmPush = "pda_tornChatDmPush";
+  static const String _kNativeChatReplyEnabled = "pda_nativeChatReplyEnabled";
   static const String _kChatPushRules = "pda_nativeChatPushRules";
   static const String _kVibrationPattern = "pda_vibrationPattern";
   static const String _kChatInbox = "pda_chatStatsInbox";
@@ -52,6 +53,18 @@ class BackgroundPrefs {
     return (await prefs.getBool(_kTornChatDmPush)) ?? true;
   }
 
+  Future<void> setTornChatDmPush(bool value) async {
+    await SharedPreferencesAsync().setBool(_kTornChatDmPush, value);
+  }
+
+  Future<bool> getNativeChatReplyEnabled() async {
+    return await SharedPreferencesAsync().getBool(_kNativeChatReplyEnabled) ?? false;
+  }
+
+  Future<void> setNativeChatReplyEnabled(bool value) async {
+    await SharedPreferencesAsync().setBool(_kNativeChatReplyEnabled, value);
+  }
+
   Future<String> getVibrationPattern() async {
     final prefs = SharedPreferencesAsync();
     return (await prefs.getString(_kVibrationPattern)) ?? "medium";
@@ -83,12 +96,12 @@ class BackgroundPrefs {
     return inbox;
   }
 
-  /// Written from the main isolate only
   Future<String> getChatCounts() async {
     final prefs = SharedPreferencesAsync();
     return (await prefs.getString(_kChatCounts)) ?? "";
   }
 
+  /// Written from the main isolate only
   Future<void> setChatCounts(String value) async {
     final prefs = SharedPreferencesAsync();
     await prefs.setString(_kChatCounts, value);
@@ -137,12 +150,12 @@ class BackgroundPrefs {
     return value;
   }
 
-  /// Written from the main isolate only
   Future<int> getUsageDaily() async {
     final prefs = SharedPreferencesAsync();
     return (await prefs.getInt(_kUsageDaily)) ?? 0;
   }
 
+  /// Written from the main isolate only
   Future<void> setUsageDaily(int value) async {
     final prefs = SharedPreferencesAsync();
     await prefs.setInt(_kUsageDaily, value);

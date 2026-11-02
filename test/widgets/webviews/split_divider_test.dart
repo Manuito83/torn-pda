@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
 import 'package:torn_pda/widgets/webviews/webview_panels_stack.dart';
 
@@ -66,13 +68,16 @@ void main() {
       addTearDown(tester.view.reset);
       final changes = <double>[];
       await tester.pumpWidget(
-        MaterialApp(
-          home: Row(
-            children: [
-              SizedBox(width: leftWidth),
-              SplitDivider(width: width, ratio: 0.5, onRatioChanged: changes.add),
-              const Expanded(child: SizedBox.expand()),
-            ],
+        ChangeNotifierProvider<WebViewProvider>(
+          create: (_) => WebViewProvider(),
+          child: MaterialApp(
+            home: Row(
+              children: [
+                SizedBox(width: leftWidth),
+                SplitDivider(width: width, ratio: 0.5, onRatioChanged: changes.add),
+                const Expanded(child: SizedBox.expand()),
+              ],
+            ),
           ),
         ),
       );
@@ -138,17 +143,20 @@ void main() {
 
     Future<void> pumpPanels(WidgetTester tester, {required double ratio, required bool keyboard}) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: WebViewPanelsStack(
-            panelTabs: const [0, 1],
-            childPanels: const [0, 1],
-            focusedPanel: 1,
-            splitRatio: ratio,
-            onSplitRatioChanged: (_) {},
-            resizeFocusedPanelForKeyboard: keyboard,
-            duration: 100,
-            errorCallback: () => fail("errorCallback called"),
-            children: [for (final key in keys) _FakeTab(key: key)],
+        ChangeNotifierProvider<WebViewProvider>(
+          create: (_) => WebViewProvider(),
+          child: MaterialApp(
+            home: WebViewPanelsStack(
+              panelTabs: const [0, 1],
+              childPanels: const [0, 1],
+              focusedPanel: 1,
+              splitRatio: ratio,
+              onSplitRatioChanged: (_) {},
+              resizeFocusedPanelForKeyboard: keyboard,
+              duration: 100,
+              errorCallback: () => fail("errorCallback called"),
+              children: [for (final key in keys) _FakeTab(key: key)],
+            ),
           ),
         ),
       );

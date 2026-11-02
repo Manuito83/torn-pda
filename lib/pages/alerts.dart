@@ -1146,7 +1146,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 _checkAndroidBatteryOptimization();
               }
 
-              await Get.find<LiveActivityTravelController>().activate();
+              await Get.find<LiveActivityTravelController>().activate(_settingsProvider);
               Get.find<LiveActivityBridgeController>().initializeHandler();
             } else {
               Get.find<LiveActivityTravelController>().deactivate();
@@ -1476,7 +1476,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-                  onPressed: () => showChatSettings(Navigator.of(context), alerts: true),
+                  onPressed: () => showChatSettingsFrom(context, alerts: true),
                   child: const Text("Chat settings"),
                 ),
               ),

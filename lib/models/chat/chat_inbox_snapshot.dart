@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
 
 /// Last inbox the player saw
 class ChatInboxSnapshot {
@@ -49,8 +50,9 @@ class ChatInboxSnapshot {
     'id': r.id,
     'name': r.name,
     'type': r.type.name,
-    'write': r.canWrite,
+    if (r.blockers.isNotEmpty) 'blockers': r.blockers,
     'icon': r.icon,
+    if (r.emblemUrl case final url?) 'emblem': url,
     if (!r.reportTyping) 'reportTyping': false,
     if (r.peer case final p?) 'peer': {'id': p.id, 'name': p.name, 'avatar': p.avatarUrl},
   };
@@ -62,8 +64,13 @@ class ChatInboxSnapshot {
       id: json['id'] as String,
       name: json['name'] as String,
       type: ChatRoomType.values.firstWhere((t) => t.name == json['type'], orElse: () => ChatRoomType.official),
-      canWrite: json['write'] != false,
+      blockers: [
+        if (json['blockers'] case final List list) ...list.map((b) => '$b'),
+        // Older saves only kept a flag
+        if (json['write'] == false && json['blockers'] == null) 'unknown',
+      ],
       icon: json['icon'] as String?,
+      emblemUrl: json['emblem'] as String?,
       reportTyping: json['reportTyping'] != false,
       peer: peer is Map && peer['id'] is int
           ? ChatUser(id: peer['id'] as int, name: '${peer['name']}', avatarUrl: peer['avatar'] as String?)
@@ -74,7 +81,10 @@ class ChatInboxSnapshot {
   static Map<String, Object?> _message(ChatMessage m) => {
     'id': m.id,
     'sender': {'id': m.sender.id, 'name': m.sender.name},
-    'text': m.content.length > _maxPreview ? m.content.substring(0, _maxPreview) : m.content,
+    'text': switch (chatShortText(m.content, m.createdAt)) {
+      final text when text.length > _maxPreview => text.substring(0, _maxPreview),
+      final text => text,
+    },
     'at': m.createdAt.millisecondsSinceEpoch,
     'system': m.isSystem,
   };

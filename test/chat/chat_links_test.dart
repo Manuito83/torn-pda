@@ -15,7 +15,20 @@ void main() {
       expect(userId.url, 'https://www.torn.com/profiles.php?userId=456');
       final bazaar = only('https://www.torn.com/bazaar.php?userId=7#/');
       expect((bazaar.kind, bazaar.id), (ChatLinkKind.bazaar, 7));
-      expect(only('https://www.torn.com/loader.php?sid=attack&user2ID=8').kind, ChatLinkKind.attack);
+      for (final link in [
+        'https://www.torn.com/loader.php?sid=attack&user2ID=8',
+        'http://torn.com/page.php?sid=attack&user2ID=8&x=1',
+        'torn.com/loader.php?sid=attack&user2ID=8#top',
+        'https://www.torn.com/page.php#/sid=attack&user2ID=8',
+      ]) {
+        final attack = only(link);
+        expect((attack.kind, attack.id, attack.uri.toString()), (
+          ChatLinkKind.attack,
+          8,
+          'https://www.torn.com/page.php?sid=attack&user2ID=8',
+        ), reason: link);
+      }
+      expect(only('https://example.com/page.php?sid=attack&user2ID=8').kind, ChatLinkKind.external);
       expect(only('https://www.torn.com/trade.php#step=view&ID=9').kind, ChatLinkKind.trade);
     });
 

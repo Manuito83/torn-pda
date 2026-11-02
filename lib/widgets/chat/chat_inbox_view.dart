@@ -5,12 +5,15 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
+import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_faction_ops_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_help.dart';
 import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_list_reply.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_slide_to_place.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -33,8 +36,6 @@ class ChatInboxView extends StatefulWidget {
 }
 
 class ChatInboxViewState extends State<ChatInboxView> {
-  static bool _unreadOnly = false;
-
   final Set<String> _replying = {};
 
   void closeReplies() {
@@ -58,7 +59,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
             .where((r) => !prefs.hiddenRooms.contains(r.id) && !prefs.isArchived(r.id))
             .toList();
         List<ChatRoom> placed(ChatGlobalsPlacement where) => [
-          for (final id in ChatPrefs.bubbleOptions)
+          for (final id in prefs.bubbleOptions)
             ...visible.where((r) => r.id == id && prefs.placementOf(id) == where),
         ];
         final top = placed(ChatGlobalsPlacement.top);
@@ -134,7 +135,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
                 ),
                 title: const Text('Alerts and mute'),
                 subtitle: switch (prefs.mutedUntilOf(room.id)) {
-                  final until? => Text('Muted until ${NativeChat.prefs.stamp(until)}'),
+                  final until? => Text('Muted until ${chatClockOf(context).stamp(until)}'),
                   null => null,
                 },
                 onTap: () => Navigator.pop(context, 'alerts'),
@@ -200,8 +201,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
     final prefs = NativeChat.prefs;
     final pinned = prefs.isPinned(room.id);
     final muted = prefs.isMuted(room.id);
-    final (shown, more) = chat.unreadShown(room.id);
-    final unread = shown > 0 ? shown : chat.listUnreadFor(room.id);
+    final (unread, more) = chat.listUnreadFor(room.id);
     final dot = unread == 0 && !chat.tornMarksRead(room.id) && chat.newSinceVisit(room.id);
     final readable = widget.chat.canMarkRead(room.id);
     final unreadable = widget.chat.canMarkUnread(room.id);
@@ -268,6 +268,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
         awayLine: unreadCount > 0 ? chat.awayFor(room.id)?.inboxLine(unreadCount) : null,
         typing: chat.typingIn(room.id),
         hidePreview: replying,
+        footer: room.id == ChatFactionOps.roomId ? ChatFactionFooter(prefs: prefs) : null,
         onTap: () => _open(room.id),
         onLongPress: () => _showActions(room),
         expanded: replying,
@@ -432,17 +433,18 @@ class ChatInboxViewState extends State<ChatInboxView> {
   }
 
   Widget _filterRow(int unread, bool canMarkAll) {
+    final unreadOnly = widget.chat.unreadOnly;
     final chips = Wrap(
       spacing: 8,
       runSpacing: 4,
       children: [
         FilterChip(
-          avatar: _unreadOnly ? null : const Icon(Icons.mark_chat_unread_outlined, size: 18),
+          avatar: unreadOnly ? null : const Icon(Icons.mark_chat_unread_outlined, size: 18),
           label: Text(unread > 0 ? 'Unread $unread' : 'Unread'),
-          selected: _unreadOnly,
+          selected: unreadOnly,
           onSelected: (value) => setState(() {
             _replying.clear();
-            _unreadOnly = value;
+            widget.chat.unreadOnly = value;
           }),
         ),
         if (widget.onSaved != null && NativeChat.prefs.savedMessages.isNotEmpty)
@@ -477,12 +479,13 @@ class ChatInboxViewState extends State<ChatInboxView> {
   Widget _list(ChatController chat, List<ChatRoom> all, {bool social = false}) {
     final unread = all.where((r) => chat.unreadFor(r.id) > 0 && chat.countsUnread(r.id)).toList();
     // Open quick reply keeps its room
-    final conversations = _unreadOnly ? all.where((r) => unread.contains(r) || _replying.contains(r.id)).toList() : all;
-    final loading = !_unreadOnly && !social && (!chat.dmsLoaded || chat.loadingRecent);
+    final unreadOnly = chat.unreadOnly;
+    final conversations = unreadOnly ? all.where((r) => unread.contains(r) || _replying.contains(r.id)).toList() : all;
+    final loading = !unreadOnly && !social && (!chat.dmsLoaded || chat.loadingRecent);
     final empty = conversations.isEmpty && !loading;
-    final more = !_unreadOnly && !social && !loading && chat.recentHasMore;
-    final archived = social || _unreadOnly ? const <ChatRoom>[] : chat.archivedDms;
-    final hidden = social || _unreadOnly ? const <ChatRoom>[] : chat.hiddenRooms;
+    final more = !unreadOnly && !social && !loading && chat.recentHasMore;
+    final archived = social || unreadOnly ? const <ChatRoom>[] : chat.archivedDms;
+    final hidden = social || unreadOnly ? const <ChatRoom>[] : chat.hiddenRooms;
     final tail = [
       if (archived.isNotEmpty)
         ListTile(
@@ -514,8 +517,9 @@ class ChatInboxViewState extends State<ChatInboxView> {
           return Column(
             children: [
               _filterRow(unread.length, chat.ready && chat.readable.isNotEmpty),
-              if (!social && !_unreadOnly)
+              if (!social && !unreadOnly)
                 ChatWaitingStrip(
+                  chat: chat,
                   waiting: chat.waitingDms(),
                   onOpen: _open,
                   onDismiss: chat.dismissWaiting,
@@ -528,7 +532,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
         if (empty) {
           return Padding(
             padding: const EdgeInsets.only(top: 56),
-            child: _unreadOnly
+            child: unreadOnly
                 ? const ChatStateMessage(
                     icon: Icons.mark_chat_read_outlined,
                     title: 'All caught up',

@@ -1,7 +1,3 @@
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:get/get.dart';
-import 'package:torn_pda/providers/chain_status_controller.dart';
-
 const String chainWebHandler = 'PDA_chainWeb';
 
 const String chainWebReader = r"""
@@ -201,10 +197,33 @@ const String chainWebReader = r"""
     } catch (e) {}
   }
 
+  var pending = false;
+  var observing = false;
+  var observer = new MutationObserver(function () {
+    if (pending) return;
+    pending = true;
+    setTimeout(function () {
+      pending = false;
+      check(false);
+    }, 100);
+  });
+
+  function observe(on) {
+    if (on === observing) return;
+    observing = on;
+    if (on) {
+      observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+    } else {
+      observer.disconnect();
+    }
+  }
+
   var saidNone = false;
   function check(force) {
     // PDA flags the tabs on screen
-    if (window.__pdaChainShown !== true || document.visibilityState !== 'visible') return;
+    var shown = window.__pdaChainShown === true && document.visibilityState === 'visible';
+    observe(shown);
+    if (!shown) return;
     var d = read();
     if (!d) {
       if (!saidNone) send({ none: true });
@@ -215,19 +234,8 @@ const String chainWebReader = r"""
     if (!force && !changed(d, last)) return;
     saidNone = false;
     last = d;
-    api.last = d;
     send(d);
   }
-
-  var pending = false;
-  new MutationObserver(function () {
-    if (pending) return;
-    pending = true;
-    setTimeout(function () {
-      pending = false;
-      check(false);
-    }, 100);
-  }).observe(document.documentElement, { subtree: true, childList: true, characterData: true });
 
   setInterval(function () {
     check(last !== null && Date.now() - last.ts >= 5000);
@@ -237,26 +245,12 @@ const String chainWebReader = r"""
     check(true);
   });
 
-  var api = {
-    check: check,
-    read: read,
-    readDom: function () {
-      var el = document.querySelector(BAR);
-      return el ? fromDom(el) : null;
-    },
-    last: null,
-  };
-  window.__pdaChainReader = api;
+  window.__pdaChainReader = { check: check };
   check(true);
 })();
 """;
 
-void addChainWebHandler(InAppWebViewController webview, {required bool Function() onScreen}) {
-  webview.addJavaScriptHandler(
-    handlerName: chainWebHandler,
-    callback: (JavaScriptHandlerFunctionData data) {
-      if (data.args.isEmpty || !Get.isRegistered<ChainStatusController>()) return;
-      Get.find<ChainStatusController>().applyWebChain(data.args.first, onScreen: onScreen);
-    },
-  );
-}
+String chainWebInject(bool shown) => 'window.__pdaChainShown = $shown;\n$chainWebReader';
+
+String chainWebShown(bool shown) =>
+    'window.__pdaChainShown = $shown; if ($shown && window.__pdaChainReader) window.__pdaChainReader.check(true);';

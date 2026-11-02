@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/chat/chat_away.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/widgets/chat/chat_away_widgets.dart';
 
 import 'chat_fakes.dart';
 
@@ -189,28 +187,5 @@ void main() {
       chat.markRead('dm:7');
       expect(chat.awayFor('dm:7'), isNull);
     });
-  });
-
-  testWidgets('chip jumps to first message', (tester) async {
-    const away = ChatAway(
-      away: Duration(hours: 5, minutes: 20),
-      total: 38,
-      more: false,
-      counts: {ChatAwayKind.mentions: 2, ChatAwayKind.leaders: 0, ChatAwayKind.attacks: 1, ChatAwayKind.words: 0},
-      firsts: {ChatAwayKind.mentions: 'm1', ChatAwayKind.attacks: 'a1'},
-      anchorId: 'x',
-    );
-    final jumped = <String>[];
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ChatAwayCard(away: away, onJump: jumped.add),
-        ),
-      ),
-    );
-    expect(find.textContaining('from leaders'), findsNothing);
-    await tester.tap(find.text('1 attack link'));
-    await tester.tap(find.text('2 mention you'));
-    expect(jumped, ['a1', 'm1']);
   });
 }

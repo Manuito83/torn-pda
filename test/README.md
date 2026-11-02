@@ -27,7 +27,6 @@ test/
 ├── utils/                           # Utility function tests
 │   ├── country_check_test.dart      # Player location detection
 │   ├── events_timeline_fixes_test.dart  # HTML cleanup for event messages
-│   ├── html_parser_test.dart        # Generic HTML → plain text
 │   ├── number_formatter_test.dart   # K / M / B shorthand
 │   ├── profit_formatter_test.dart   # Travel profit display
 │   └── travel_times_test.dart       # Country lookup & travel durations

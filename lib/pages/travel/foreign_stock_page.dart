@@ -1096,6 +1096,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       (TravelTimes.travelTimeMinutesOneWay(
                             ticket: _settingsProvider!.travelTicket,
                             countryCode: stock.country,
+                            reductionPercent: _settingsProvider!.travelTimeReduction,
                           ) *
                           2 /
                           60))
@@ -1111,6 +1112,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               minutes: TravelTimes.travelTimeMinutesOneWay(
                 countryCode: stock.country,
                 ticket: _settingsProvider!.travelTicket,
+                reductionPercent: _settingsProvider!.travelTimeReduction,
               ),
             ),
           );
@@ -1826,6 +1828,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       (TravelTimes.travelTimeMinutesOneWay(
                             ticket: _settingsProvider!.travelTicket,
                             countryCode: stock.country,
+                            reductionPercent: _settingsProvider!.travelTimeReduction,
                           ) *
                           2 /
                           60))

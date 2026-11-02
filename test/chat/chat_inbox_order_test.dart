@@ -60,8 +60,8 @@ void main() {
       final chat = ChatController(FakeChatSource())..restoreInbox(_saved());
       expect(_ids(chat), ['dm:7', 'global', 'faction', 'company', 'trade']);
       expect(chat.lastMessageIn('faction')!.content, 'text m-faction-60');
-      expect(chat.listUnreadFor('faction'), 2);
-      expect(chat.listUnreadFor('dm:7'), 3);
+      expect(chat.listUnreadFor('faction').$1, 2);
+      expect(chat.listUnreadFor('dm:7').$1, 3);
       expect(chat.unreadFor('faction'), 0);
       expect(chat.unreadQueue, isEmpty);
       expect(chat.unreadGroups(), isEmpty);
@@ -109,10 +109,10 @@ void main() {
       final source = FakeChatSource();
       final chat = ChatController(source)..restoreInbox(_saved());
       _connect(source);
-      expect(chat.listUnreadFor('faction'), 2);
+      expect(chat.listUnreadFor('faction').$1, 2);
       source.emit(const ChatUnreadEvent({'dm:7': 1}));
-      expect(chat.listUnreadFor('faction'), 0);
-      expect(chat.listUnreadFor('dm:7'), 1);
+      expect(chat.listUnreadFor('faction').$1, 0);
+      expect(chat.listUnreadFor('dm:7').$1, 1);
       chat.dispose();
     });
 
@@ -197,30 +197,22 @@ void main() {
       chat.dispose();
     });
 
-    test('another account on a cold start drops the list', () {
-      final source = FakeChatSource();
-      final stored = <String>[];
-      final chat = ChatController(source)
-        ..onInboxChanged = stored.add
-        ..restoreUserId(99)
-        ..restoreInbox(_saved());
-      source.emit(const ChatReadyEvent(100));
-      expect(_ids(chat), isNot(contains('dm:7')));
-      expect(chat.listUnreadFor('faction'), 0);
-      expect(chat.lastMessageIn('faction'), isNull);
-      expect(stored, ['']);
-      chat.dispose();
-    });
-
-    test('the same account on a cold start keeps the list', () {
-      final source = FakeChatSource();
-      final chat = ChatController(source)
-        ..restoreUserId(99)
-        ..restoreInbox(_saved());
-      source.emit(const ChatReadyEvent(99));
-      expect(_ids(chat), contains('dm:7'));
-      expect(chat.listUnreadFor('faction'), 2);
-      chat.dispose();
+    test('a cold start keeps the list only for the same account', () {
+      for (final account in [99, 100]) {
+        final source = FakeChatSource();
+        final stored = <String>[];
+        final chat = ChatController(source)
+          ..onInboxChanged = stored.add
+          ..restoreUserId(99)
+          ..restoreInbox(_saved());
+        source.emit(ChatReadyEvent(account));
+        final same = account == 99;
+        expect(_ids(chat).contains('dm:7'), same);
+        expect(chat.listUnreadFor('faction').$1, same ? 2 : 0);
+        expect(chat.lastMessageIn('faction'), same ? isNotNull : isNull);
+        expect(stored, same ? isEmpty : ['']);
+        chat.dispose();
+      }
     });
   });
 

@@ -59,6 +59,12 @@ class TornChatSource implements ChatSource {
   Future<void> loadBlocked() async {}
 
   @override
+  Future<bool> block(int userId) async => false;
+
+  @override
+  Future<bool> unblock(int userId) async => false;
+
+  @override
   Future<void> closeDm(int userId) async {}
 
   @override

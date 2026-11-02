@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 
 class ChatFactionEventsFold extends StatefulWidget {
   const ChatFactionEventsFold({super.key, required this.events});
@@ -68,7 +68,7 @@ class _ChatFactionEventsFoldState extends State<ChatFactionEventsFold> {
                       for (final e in widget.events)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text('${NativeChat.prefs.clock(e.createdAt)}  ${e.content}', style: style),
+                          child: Text('${chatClockOf(context).clock(e.createdAt)}  ${e.content}', style: style),
                         ),
                       const SizedBox(height: 4),
                       Text(

@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:chopper/chopper.dart' as chopper;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
@@ -13,6 +14,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_source.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 
 final chatNow = DateTime(2026, 10, 14, 12);
 
@@ -23,6 +25,7 @@ class FakeChatSource implements ChatSource {
   final List<String> calls = [];
   final List<({String roomId, String content, String reqId})> sent = [];
   Object? olderError;
+  bool tornAccepts = true;
 
   void emit(ChatEvent event) => _events.add(event);
 
@@ -47,6 +50,18 @@ class FakeChatSource implements ChatSource {
   }
 
   @override
+  Future<bool> block(int userId) async {
+    calls.add('block $userId');
+    return tornAccepts;
+  }
+
+  @override
+  Future<bool> unblock(int userId) async {
+    calls.add('unblock $userId');
+    return tornAccepts;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) {
     final name = invocation.memberName.toString().split('"')[1];
     calls.add([name, ...invocation.positionalArguments].join(' '));
@@ -62,6 +77,7 @@ ChatMessage chatMessage(
   String? text,
   DateTime? at,
   String? reqId,
+  ChatMessageState state = ChatMessageState.sent,
 }) => ChatMessage(
   id: id,
   reqId: reqId,
@@ -69,6 +85,7 @@ ChatMessage chatMessage(
   sender: ChatUser(id: sender, name: name),
   content: text ?? 'text $id',
   createdAt: at ?? chatNow,
+  state: state,
 );
 
 void useTempPathProvider() {
@@ -82,9 +99,11 @@ void useTempPathProvider() {
       (call) async => dir.path,
     );
   });
+  setUp(() => Get.put(AppIconMenuController(setItems: (_) async {})));
   tearDownAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
     dir.deleteSync(recursive: true);
+    Get.delete<AppIconMenuController>();
   });
 }
 

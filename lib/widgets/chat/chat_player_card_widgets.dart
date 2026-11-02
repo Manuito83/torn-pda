@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_cache_model.dart';
+import 'package:torn_pda/models/chat/chat_link_info.dart';
+import 'package:torn_pda/models/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -69,7 +71,7 @@ class _ChatTickingState extends State<ChatTicking> {
   Widget build(BuildContext context) => widget.builder(context);
 }
 
-InlineSpan _chatStatusSpan(String status, ChatStatusKind kind, ColorScheme scheme) => TextSpan(
+InlineSpan _chatStatusSpan(String status, ChatStatusKind kind, ColorScheme scheme, {bool bold = true}) => TextSpan(
   children: [
     WidgetSpan(
       alignment: PlaceholderAlignment.middle,
@@ -80,21 +82,21 @@ InlineSpan _chatStatusSpan(String status, ChatStatusKind kind, ColorScheme schem
         decoration: BoxDecoration(color: _chatStatusColor(kind, scheme), shape: BoxShape.circle),
       ),
     ),
-    TextSpan(
-      text: status,
-      style: const TextStyle(fontWeight: FontWeight.w600),
-    ),
+    TextSpan(text: status, style: bold ? const TextStyle(fontWeight: FontWeight.w600) : null),
   ],
 );
 
 class ChatPlayerCardView extends StatefulWidget {
-  const ChatPlayerCardView({super.key, required this.id, this.compact = false, this.lastAction = true});
+  const ChatPlayerCardView({super.key, required this.id, this.compact = false, this.lastAction = true, this.style});
 
   final int id;
   final bool compact;
 
   /// Off when the header shows presence
   final bool lastAction;
+
+  /// Compact line, same as its neighbours
+  final TextStyle? style;
 
   @override
   State<ChatPlayerCardView> createState() => _ChatPlayerCardViewState();
@@ -179,15 +181,13 @@ class _ChatPlayerCardViewState extends State<ChatPlayerCardView> {
     return Text.rich(
       TextSpan(
         children: [
-          if (status != null) _chatStatusSpan(status, card.kind, theme.colorScheme),
+          if (status != null) _chatStatusSpan(status, card.kind, theme.colorScheme, bold: false),
           if (rest.isNotEmpty) TextSpan(text: '${status == null ? '' : ' - '}${rest.join(' - ')}'),
         ],
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.bodySmall?.copyWith(
-        fontSize: 13,
-        letterSpacing: 0.1,
+      style: (widget.style ?? theme.textTheme.bodySmall)?.copyWith(
         color: DefaultTextStyle.of(context).style.color ?? theme.colorScheme.onSurface,
       ),
     );

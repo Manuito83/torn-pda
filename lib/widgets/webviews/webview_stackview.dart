@@ -30,7 +30,6 @@ import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:torn_pda/widgets/webviews/webview_panels_stack.dart';
-import 'package:torn_pda/widgets/webviews/split_divider.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
@@ -367,7 +366,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
               panelTabs: panelTabs,
               childPanels: [
                 for (final tab in _webViewProvider.tabList)
-                  panelGroups.indexOf(tab.splitApart ? SplitGroup.apart : SplitGroup.main).clamp(0, 1),
+                  panelGroups.indexOf(tab.group).clamp(0, 1),
               ],
               focusedPanel: panelTabs.contains(_webViewProvider.currentTab)
                   ? panelTabs.indexOf(_webViewProvider.currentTab)

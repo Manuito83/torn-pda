@@ -183,11 +183,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
   Widget _chatTips() {
     final needs = _chatNeeds!;
     final theme = Theme.of(context);
-    final groups = [
-      if (needs.isNotEmpty) ChatHelpGroup.accessibility,
-      for (final g in ChatHelpGroup.values)
-        if (g != ChatHelpGroup.accessibility || needs.isEmpty) g,
-    ];
+    final groups = chatHelpGroupsOf(needs);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -253,15 +249,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
-    final needs = chatNeedsOf(
-      MediaQueryData(
-        accessibleNavigation: MediaQuery.accessibleNavigationOf(context),
-        textScaler: MediaQuery.textScalerOf(context),
-        boldText: MediaQuery.boldTextOf(context),
-        highContrast: MediaQuery.highContrastOf(context),
-        disableAnimations: MediaQuery.disableAnimationsOf(context),
-      ),
-    );
+    final needs = chatNeedsOf(context);
     if (_chatNeeds == null || !setEquals(needs, _chatNeeds)) _buildChatTips(needs);
 
     return Scaffold(

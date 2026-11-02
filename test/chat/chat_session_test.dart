@@ -140,6 +140,17 @@ void main() {
     expect(chat.sessionIssue, isTrue);
   });
 
+  session('slow load retries from scratch', (tester) async {
+    await tester.pump(const Duration(seconds: 26));
+    emit(ChatConnection.slowLoad);
+    expect(chat.loadOf('faction'), ChatRoomLoad.session);
+
+    chat.retry();
+    expect(source.count('reconnect'), 1);
+    expect(chat.connection, ChatConnection.connecting);
+    expect(chat.sessionIssue, isFalse);
+  });
+
   session('resume restarts the grace', (tester) async {
     await tester.pump(const Duration(seconds: 26));
     emit(ChatConnection.needsBrowser);

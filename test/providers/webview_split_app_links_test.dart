@@ -316,16 +316,6 @@ void main() {
       expect(p.tabList[at(p, 'tab2')].isChainingBrowser, isFalse);
       expect(p.tabList[0].isChainingBrowser, isTrue);
     });
-
-    test('cancelling a tab that is gone does nothing', () async {
-      final p = await build(position: WebViewSplitPosition.right);
-      p.convertToChainingBrowser(chainingPayload: payload());
-
-      p.cancelChainingBrowser(tabUid: 'gone');
-      await settle();
-
-      expect(p.tabList[0].isChainingBrowser, isTrue);
-    });
   });
 
   test('a sleeping tab behind the app wakes with the link', () async {

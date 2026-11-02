@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const int maxTerminalEntries = 500;
+
 class TerminalProvider extends ChangeNotifier {
   // Map to store individual terminal texts keyed by webview id
   final Map<Key, String> _terminals = {};
@@ -33,8 +35,18 @@ class TerminalProvider extends ChangeNotifier {
       prefixedInstruction = "[OUT] < $instruction";
     }
 
-    _terminals[webviewKey] = "$prefixedInstruction\n\n$existing";
+    _terminals[webviewKey] = _newestEntries("$prefixedInstruction\n\n$existing");
     notifyListeners();
+  }
+
+  String _newestEntries(String text) {
+    int end = 0;
+    for (int i = 0; i < maxTerminalEntries; i++) {
+      final int separator = text.indexOf("\n\n", end);
+      if (separator == -1) return text;
+      end = separator + 2;
+    }
+    return text.substring(0, end);
   }
 
   // Clear the terminal for a specific webview
@@ -46,6 +58,12 @@ class TerminalProvider extends ChangeNotifier {
 
   void removeTerminal(Key? webviewKey) {
     if (_terminals.remove(webviewKey) != null) notifyListeners();
+  }
+
+  void moveTerminal(Key? from, Key? to) {
+    if (to != null) _terminals[to] = (_terminals[to] ?? "") + (_terminals[from] ?? "");
+    final bool removed = _terminals.remove(from) != null;
+    if (to != null || removed) notifyListeners();
   }
 
   bool hasTerminal(Key? webviewKey) => _terminals.containsKey(webviewKey);

@@ -63,7 +63,7 @@ class _ChatBubbleGlowState extends State<ChatBubbleGlow> with SingleTickerProvid
     final m = alert.message;
     if (!alert.demo && !widget.prefs.glowShows(m.roomId, alert.match)) return;
     if (MediaQuery.disableAnimationsOf(context)) return;
-    _color = chatGroupColors(ChatRooms.group(m.roomId), Theme.of(context).brightness).$1;
+    _color = chatGroupColors(ChatRooms.group(m.roomId, widget.prefs.remoteRooms), Theme.of(context).brightness).$1;
     _flash.forward(from: 0);
   }
 

@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart' show TextInputAction;
-import 'package:intl/intl.dart';
+import 'package:get/get.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_colors.dart';
 import 'package:torn_pda/models/chat/chat_emoji.dart';
@@ -12,14 +12,18 @@ import 'package:torn_pda/models/chat/chat_filter.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_person.dart';
+import 'package:torn_pda/models/chat/chat_profile_icon.dart';
+import 'package:torn_pda/models/chat/chat_quick_rows.dart';
 import 'package:torn_pda/models/chat/chat_reminder.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/chat/chat_saved.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
-import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+
+export 'package:torn_pda/models/chat/chat_profile_icon.dart' show ChatProfileIcon;
 
 enum ChatGlobalsPlacement { top, mixed, tab }
 
@@ -51,8 +55,6 @@ enum ChatTimes { app, tct, local }
 
 enum ChatAnimations { quick, smooth, verySmooth }
 
-enum ChatProfileIcon { pda, torn }
-
 enum ChatQuickRow {
   actions('Actions'),
   emoji('Emoji'),
@@ -69,17 +71,14 @@ enum ChatQuickRow {
 }
 
 class ChatPrefs extends ChangeNotifier {
-  static List<String> get bubbleOptions => ChatRooms.groups;
   static const Set<String> globalRooms = {'global', 'trade', 'poker'};
-  static List<String> get placedRooms => [
-    'faction',
-    'company',
-    ChatRooms.travel,
-    for (final r in ChatRooms.remote) r.id,
-  ];
   static const int _maxSaved = 300;
   static const int maxQuickReplies = 20;
-  static List<String> get tickerOptions => [...bubbleOptions, ChatRooms.other];
+
+  List<ChatRemoteRoom> remoteRooms = const [];
+  List<String> get bubbleOptions => ChatRooms.groups(remoteRooms);
+  List<String> get placedRooms => ['faction', 'company', ChatRooms.travel, for (final r in remoteRooms) r.id];
+  List<String> get tickerOptions => [...bubbleOptions, ChatRooms.other];
 
   /// Zero is until dismissed
   static const List<int> tickerSecondsOptions = [4, 6, 10, 0];
@@ -171,10 +170,6 @@ class ChatPrefs extends ChangeNotifier {
   ChatTimes chatTimes = ChatTimes.app;
   ChatAnimations animations = ChatAnimations.verySmooth;
 
-  /// From the app settings, not stored
-  bool appTornTime = false;
-  bool app12h = false;
-
   /// "roomId|title" as last published
   List<String> shortcutCache = [];
 
@@ -227,6 +222,11 @@ class ChatPrefs extends ChangeNotifier {
   /// Faction and company lists: status, online or name
   String friendsSort = 'status';
 
+  /// Faction members sheet
+  String rosterSort = 'status';
+  bool rosterReversed = false;
+  Map<String, String> rosterFilters = {};
+
   /// Only in chat, by player id
   Map<int, String> playerNotes = {};
   static const int playerNoteMax = 500;
@@ -240,25 +240,8 @@ class ChatPrefs extends ChangeNotifier {
   List<String> quickReplies = [];
   bool itemPrice = true;
   List<ChatItemAlias> itemAliases = ChatItemAliases.defaults;
-  static const List<String> _quickActionIds = [
-    'price',
-    'player',
-    'tab',
-    'script',
-    'status',
-    'wiki',
-    'time',
-    'bank',
-    'emoji',
-    'replies',
-  ];
-  static const String rowBreak2 = 'row2';
-  static const String rowBreak3 = 'row3';
-  static const List<String> rowBreaks = [rowBreak2, rowBreak3];
-  static const String offBreak = 'off';
   ChatProfileIcon profileIcon = ChatProfileIcon.pda;
-  static const List<int> quickRowsOptions = [1, 2, 3];
-  List<String> quickOrder = [..._quickActionIds];
+  List<String> quickOrder = [...chatQuickActionIds];
   Set<String> quickHidden = {};
   int quickRows = 3;
   List<ChatQuickRow> quickRowTypes = [...ChatQuickRow.values];
@@ -303,8 +286,18 @@ class ChatPrefs extends ChangeNotifier {
 
   bool factionEventsDenied = false;
   bool factionWar = true;
+
+  /// Last tab of the chain sheet
+  int chainSheetTab = 0;
+
+  /// Attack link in hit calls
+  bool hitCallLink = true;
+  bool watchTurnsOnWatcher = true;
+  bool watchRetals = false;
+
+  /// Last chain watch length picked
+  int watchHours = 1;
   bool factionEnemyChain = true;
-  bool factionRoster = true;
   bool factionBanker = false;
   Set<String> statusPieces = {};
 
@@ -442,7 +435,7 @@ class ChatPrefs extends ChangeNotifier {
     imagesPublic = await Prefs().getNativeChatImagesPublic(legacyPublic);
     final previews = await Prefs().getNativeChatLinkPreviews();
     linkPreviews = ChatImageAutoLoad.values.firstWhere((v) => v.name == previews, orElse: () => ChatImageAutoLoad.always);
-    linkPreviewsOff = (await Prefs().getNativeChatLinkPreviewsOff()).toSet();
+    linkPreviewsOff = (await Prefs().getNativeChatLinkPreviewsOff([...globalRooms])).toSet();
     linkWindow = await Prefs().getNativeChatLinkWindow();
     linkNewTab = await Prefs().getNativeChatLinkNewTab();
     imgurClientId = await Prefs().getChatImgurClientId();
@@ -465,6 +458,13 @@ class ChatPrefs extends ChangeNotifier {
     };
     friendsTab = await Prefs().getNativeChatFriendsTab();
     friendsSort = await Prefs().getNativeChatFriendsSort();
+    rosterSort = await Prefs().getNativeChatRosterSort();
+    rosterReversed = await Prefs().getNativeChatRosterReversed();
+    rosterFilters = {
+      for (final pair in await Prefs().getNativeChatRosterFilters())
+        if (pair.indexOf(':') case final at when at > 0 && !pair.startsWith('mark:'))
+          pair.substring(0, at): pair.substring(at + 1),
+    };
     try {
       roomFilters = {
         for (final e in (jsonDecode(await Prefs().getNativeChatRoomFilters()) as Map).entries)
@@ -492,12 +492,12 @@ class ChatPrefs extends ChangeNotifier {
     quickReplies = await Prefs().getNativeChatQuickReplies();
     itemPrice = await Prefs().getNativeChatItemPrice();
     itemAliases = ChatItemAliases.decode(await Prefs().getNativeChatItemAliases());
-    quickOrder = _withAllQuick(await Prefs().getNativeChatQuickOrder());
+    quickOrder = chatQuickWithAll(await Prefs().getNativeChatQuickOrder());
     final rows = await Prefs().getNativeChatQuickRows();
-    final hidden = (await Prefs().getNativeChatQuickHidden()).where(_quickActionIds.contains).toSet();
+    final hidden = (await Prefs().getNativeChatQuickHidden()).where(chatQuickActionIds.contains).toSet();
     final types = ChatQuickRow.read(await Prefs().getNativeChatQuickRowTypes());
     quickRowTypes = types ?? [...ChatQuickRow.values];
-    quickRows = quickRowsOptions.contains(rows) ? rows : 3;
+    quickRows = chatQuickRowsOptions.contains(rows) ? rows : 3;
     quickHidden = types != null ? hidden : {'emoji', 'replies'};
     quickOrder = _withActiveBreaks(quickOrder);
     if (types == null) {
@@ -540,8 +540,13 @@ class ChatPrefs extends ChangeNotifier {
     lastChainReport = await Prefs().getNativeChatLastChainReport();
     lastWarReport = await Prefs().getNativeChatLastWarReport();
     factionWar = await Prefs().getNativeChatFactionWar();
+    final tab = await Prefs().getNativeChatChainSheetTab();
+    chainSheetTab = tab >= 0 ? tab : (await Prefs().getNativeChatChainSheetWar() ? 1 : 0);
+    hitCallLink = await Prefs().getNativeChatHitCallLink();
+    watchTurnsOnWatcher = await Prefs().getNativeChatWatchTurnsOnWatcher();
+    watchRetals = await Prefs().getNativeChatWatchRetals();
+    watchHours = await Prefs().getNativeChatWatchHours();
     factionEnemyChain = await Prefs().getNativeChatFactionEnemyChain();
-    factionRoster = await Prefs().getNativeChatFactionRoster();
     factionBanker = await Prefs().getNativeChatFactionBanker();
     final profileIconName = await Prefs().getNativeChatProfileIcon();
     profileIcon = ChatProfileIcon.values.where((v) => v.name == profileIconName).firstOrNull ?? ChatProfileIcon.pda;
@@ -600,65 +605,24 @@ class ChatPrefs extends ChangeNotifier {
 
   int get actionRows => quickRowsShown.where((t) => t == ChatQuickRow.actions).length;
 
-  List<String> get _activeBreaks => rowBreaks.take((actionRows - 1).clamp(0, rowBreaks.length)).toList();
+  List<String> get _activeBreaks => chatQuickActiveBreaks(actionRows);
 
-  bool _quickShown(String id) => rowBreaks.contains(id) ? _activeBreaks.contains(id) : !quickOff(id);
+  bool _quickShown(String id) => chatQuickRowBreaks.contains(id) ? _activeBreaks.contains(id) : !quickOff(id);
 
-  List<String> get quickEditor => [
-    for (final id in quickOrder)
-      if (_quickShown(id)) id,
-    offBreak,
-    for (final id in quickOrder)
-      if (!rowBreaks.contains(id) && quickOff(id)) id,
-  ];
+  List<String> get quickEditor => chatQuickEditor(quickOrder, _quickShown);
 
   void moveQuickAction(int from, int to) {
-    final list = quickEditor;
-    final id = list.removeAt(from);
-    list.insert(to, id);
-    var at = list.indexOf(offBreak);
-    final isBreak = rowBreaks.contains(id);
-    if (isBreak && to > at) {
-      list
-        ..remove(id)
-        ..insert(at, id);
-      at = list.indexOf(offBreak);
-    } else if (!isBreak) {
-      _setQuickOff(id, to > at);
-    }
-    list.removeAt(at);
-    for (final parked in rowBreaks.where((b) => !_activeBreaks.contains(b))) {
-      final was = quickOrder.indexOf(parked);
-      if (was >= 0) list.insert(was.clamp(0, at), parked);
-    }
-    final first = list.indexOf(rowBreak2);
-    final second = list.indexOf(rowBreak3);
-    if (first > second && second >= 0) {
-      list[first] = rowBreak3;
-      list[second] = rowBreak2;
-    }
-    quickOrder = list;
-    Prefs().setNativeChatQuickOrder(list);
+    final moved = chatQuickMoved(quickEditor, from, to, saved: quickOrder, activeBreaks: _activeBreaks);
+    if (moved.off case final off?) _setQuickOff(moved.id, off);
+    quickOrder = moved.order;
+    Prefs().setNativeChatQuickOrder(quickOrder);
     notifyListeners();
   }
 
-  static List<String> _withAllQuick(List<String> saved) {
-    final ids = [...saved.where((id) => _quickActionIds.contains(id) || rowBreaks.contains(id)).toSet()];
-    return [...ids, ..._quickActionIds.where((id) => !saved.contains(id))];
-  }
-
-  List<String> _withActiveBreaks(List<String> saved) {
-    final order = [...saved];
-    for (final id in _activeBreaks.where((b) => !order.contains(b))) {
-      final start = order.lastIndexWhere((e) => rowBreaks.contains(e) && _quickShown(e)) + 1;
-      final end = order.lastIndexWhere(_quickShown) + 1;
-      order.insert(start + (end - start + 1) ~/ 2, id);
-    }
-    return order;
-  }
+  List<String> _withActiveBreaks(List<String> saved) => chatQuickWithActiveBreaks(saved, _activeBreaks, _quickShown);
 
   void setQuickRows(int value) {
-    if (!quickRowsOptions.contains(value)) return;
+    if (!chatQuickRowsOptions.contains(value)) return;
     quickRows = value;
     quickOrder = _withActiveBreaks(quickOrder);
     Prefs().setNativeChatQuickOrder(quickOrder);
@@ -675,21 +639,6 @@ class ChatPrefs extends ChangeNotifier {
     Prefs().setNativeChatQuickOrder(quickOrder);
     Prefs().setNativeChatQuickRowTypes([for (final t in types) t.name]);
     notifyListeners();
-  }
-
-  static List<List<String>> splitQuickRows(List<String> order, {required int rows}) {
-    final split = [<String>[]];
-    for (final id in order) {
-      if (_quickActionIds.contains(id)) {
-        split.last.add(id);
-      } else if (rowBreaks.contains(id) && split.length < rows) {
-        split.add([]);
-      }
-    }
-    while (split.length < rows) {
-      split.add([]);
-    }
-    return split;
   }
 
   bool quickOff(String id) => quickHidden.contains(id) || (id == 'price' && !itemPrice);
@@ -899,6 +848,33 @@ class ChatPrefs extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setChainSheetTab(int value) {
+    chainSheetTab = value;
+    Prefs().setNativeChatChainSheetTab(value);
+  }
+
+  void setHitCallLink(bool value) {
+    hitCallLink = value;
+    Prefs().setNativeChatHitCallLink(value);
+  }
+
+  void setWatchTurnsOnWatcher(bool value) {
+    watchTurnsOnWatcher = value;
+    Prefs().setNativeChatWatchTurnsOnWatcher(value);
+    notifyListeners();
+  }
+
+  void setWatchRetals(bool value) {
+    watchRetals = value;
+    Prefs().setNativeChatWatchRetals(value);
+    notifyListeners();
+  }
+
+  void setWatchHours(int value) {
+    watchHours = value;
+    Prefs().setNativeChatWatchHours(value);
+  }
+
   void setFactionEnemyChain(bool value) {
     factionEnemyChain = value;
     Prefs().setNativeChatFactionEnemyChain(value);
@@ -914,12 +890,6 @@ class ChatPrefs extends ChangeNotifier {
   void setFactionBanker(bool value) {
     factionBanker = value;
     Prefs().setNativeChatFactionBanker(value);
-    notifyListeners();
-  }
-
-  void setFactionRoster(bool value) {
-    factionRoster = value;
-    Prefs().setNativeChatFactionRoster(value);
     notifyListeners();
   }
 
@@ -1035,8 +1005,31 @@ class ChatPrefs extends ChangeNotifier {
       if (bubbleRooms.contains(e.key) && roomState(e.key) == ChatRoomState.live) e.key: e.value,
   };
 
+  /// Torn ids from Remote Config
+  Set<int> testers = {};
+
+  /// Never saved, gone when the app closes
+  String? testFactionRoom;
+
+  bool testingFor(int? playerId, {bool debug = kDebugMode}) => debug || testers.contains(playerId);
+
+  Set<String> get factionRooms => {'faction', ?testFactionRoom};
+
+  bool isFactionRoom(String roomId) => roomId == 'faction' || roomId == testFactionRoom;
+
+  void setTesters(String raw) {
+    testers = {for (final part in raw.split(',')) ?int.tryParse(part.trim())};
+    notifyListeners();
+  }
+
+  void setTestFactionRoom(String? roomId) {
+    if (roomId == testFactionRoom) return;
+    testFactionRoom = roomId;
+    notifyListeners();
+  }
+
   void setRemoteRooms(String raw) {
-    ChatRooms.remote = ChatRooms.parse(raw);
+    remoteRooms = ChatRooms.parse(raw);
     _remoteReady = true;
     noteRooms(const []);
     notifyListeners();
@@ -1048,7 +1041,7 @@ class ChatPrefs extends ChangeNotifier {
     if (!_remoteReady) return;
     final fresh = [
       for (final id in _seenRooms)
-        if (!ChatRooms.isKnown(id) && unknownRooms.add(id)) id,
+        if (!ChatRooms.isKnown(id, remoteRooms) && unknownRooms.add(id)) id,
     ];
     _seenRooms.clear();
     if (fresh.isEmpty) return;
@@ -1329,76 +1322,6 @@ class ChatPrefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  void followAppTime({required bool tornTime, required bool h12}) {
-    if (appTornTime == tornTime && app12h == h12) return;
-    appTornTime = tornTime;
-    app12h = h12;
-    notifyListeners();
-  }
-
-  bool get tornTime => switch (chatTimes) {
-    ChatTimes.app => appTornTime,
-    ChatTimes.tct => true,
-    ChatTimes.local => false,
-  };
-
-  @visibleForTesting
-  Duration localOffset(DateTime at) => at.toLocal().timeZoneOffset;
-
-  /// Chat zone time, as UTC
-  DateTime wallClock(DateTime at) => at.toUtc().add(tornTime ? Duration.zero : localOffset(at));
-
-  String clock(DateTime at) => clockOf(wallClock(at));
-
-  /// [wall] already in the zone shown
-  String clockOf(DateTime wall) => DateFormat(app12h ? 'h:mm a' : 'HH:mm').format(wall);
-
-  String minutesClock(int minutes) => clockOf(DateTime.utc(2000, 1, 1, minutes ~/ 60, minutes % 60));
-
-  /// Time, with the date if not today
-  String stamp(DateTime at) {
-    final time = clock(at);
-    return switch (daysFrom(DateTime.now(), at)) {
-      0 => time,
-      1 => 'tomorrow $time',
-      _ => '${DateFormat.MMMd().format(wallClock(at))}, $time',
-    };
-  }
-
-  /// Device time, "tomorrow" if another day
-  String localClock(DateTime at, DateTime now) {
-    final here = at.toLocal();
-    final today = now.toLocal();
-    final days = DateTime(
-      here.year,
-      here.month,
-      here.day,
-    ).difference(DateTime(today.year, today.month, today.day)).inDays;
-    final day = switch (days) {
-      0 => '',
-      1 => ' tomorrow',
-      -1 => ' yesterday',
-      _ => ' (${DateFormat.MMMd().format(here)})',
-    };
-    return '${clockOf(here)}$day';
-  }
-
-  /// Next [hour]:[minute] in chat time
-  DateTime nextAt(int hour, int minute, DateTime now) {
-    final (wall, here) = (wallClock(now), now.toLocal());
-    var at = tornTime
-        ? DateTime.utc(wall.year, wall.month, wall.day, hour, minute).toLocal()
-        : DateTime(here.year, here.month, here.day, hour, minute);
-    if (!at.isAfter(now)) at = at.add(const Duration(days: 1));
-    return at;
-  }
-
-  /// Calendar days, negative if earlier
-  int daysFrom(DateTime now, DateTime at) {
-    final (x, y) = (wallClock(now), wallClock(at));
-    return DateTime.utc(y.year, y.month, y.day).difference(DateTime.utc(x.year, x.month, x.day)).inDays;
-  }
-
   void setTicker(bool value) {
     ticker = value;
     Prefs().setNativeChatTicker(value);
@@ -1478,11 +1401,11 @@ class ChatPrefs extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool previewsAlone(String? roomId, {required bool torn}) => switch (linkPreviews) {
+  bool previewLoadsAlone(String? roomId, {required bool torn}) => switch (linkPreviews) {
     ChatImageAutoLoad.never => false,
     _ when torn => true,
     ChatImageAutoLoad.torn => false,
-    ChatImageAutoLoad.always => roomId != null && !linkPreviewsOff.contains(ChatRooms.group(roomId)),
+    ChatImageAutoLoad.always => roomId != null && !linkPreviewsOff.contains(ChatRooms.group(roomId, remoteRooms)),
   };
 
   void setLinkWindow(bool value) {
@@ -1544,7 +1467,11 @@ class ChatPrefs extends ChangeNotifier {
   bool tickerShows(String roomId, ChatMatch? match) =>
       ticker &&
       !hiddenRooms.contains(roomId) &&
-      ChatAlertMatcher.shouldAlert(tickerLevel(ChatRooms.group(roomId)), muted: isMuted(roomId), match: match);
+      ChatAlertMatcher.shouldAlert(
+        tickerLevel(ChatRooms.group(roomId, remoteRooms)),
+        muted: isMuted(roomId),
+        match: match,
+      );
 
   void setTickerTap(ChatTickerTap value) {
     tickerTap = value;
@@ -1591,7 +1518,7 @@ class ChatPrefs extends ChangeNotifier {
   /// Levels apply with ticker off
   bool glowShows(String roomId, ChatMatch? match) {
     if (glowMode == ChatGlowMode.off || hiddenRooms.contains(roomId) || isFrozen(roomId)) return false;
-    final group = ChatRooms.group(roomId);
+    final group = ChatRooms.group(roomId, remoteRooms);
     final level = glowMode == ChatGlowMode.ticker ? tickerLevel(group) : glowLevel(group);
     return ChatAlertMatcher.shouldAlert(level, muted: isMuted(roomId), match: match);
   }
@@ -1635,6 +1562,21 @@ class ChatPrefs extends ChangeNotifier {
   void setFriendsSort(String value) {
     friendsSort = value;
     Prefs().setNativeChatFriendsSort(value);
+  }
+
+  void setRosterSort(String value) {
+    rosterSort = value;
+    Prefs().setNativeChatRosterSort(value);
+  }
+
+  void setRosterReversed(bool value) {
+    rosterReversed = value;
+    Prefs().setNativeChatRosterReversed(value);
+  }
+
+  void setRosterFilters(Map<String, String> value) {
+    rosterFilters = value;
+    Prefs().setNativeChatRosterFilters([for (final e in value.entries) '${e.key}:${e.value}']);
   }
 
   String playerNoteFor(int userId) => playerNotes[userId] ?? '';
@@ -1772,7 +1714,6 @@ class ChatPrefs extends ChangeNotifier {
     'factionChain': (factionChain, setFactionChain),
     'factionWar': (factionWar, setFactionWar),
     'factionEnemyChain': (factionEnemyChain, setFactionEnemyChain),
-    'factionRoster': (factionRoster, setFactionRoster),
     'factionBanker': (factionBanker, setFactionBanker),
     'factionEvents': (factionEvents, setFactionEvents),
     'itemPrice': (itemPrice, setItemPrice),
@@ -1872,7 +1813,7 @@ class ChatPrefs extends ChangeNotifier {
       _storeFilters();
     }
     if (backup.quickHidden case final set?) {
-      quickHidden = {...?(replace ? null : quickHidden), ...set.where(_quickActionIds.contains)};
+      quickHidden = {...?(replace ? null : quickHidden), ...set.where(chatQuickActionIds.contains)};
       Prefs().setNativeChatQuickHidden(quickHidden.toList());
     }
     if (backup.messageActionHidden case final set?) {
@@ -1926,7 +1867,7 @@ class ChatPrefs extends ChangeNotifier {
       if (backup.imgbbExpiration case final v?) setImgbbExpiration(v);
       setQuietRange(from: backup.quietFrom, to: backup.quietTo);
       if (backup.quickOrder case final order?) {
-        quickOrder = _withAllQuick(order);
+        quickOrder = chatQuickWithAll(order);
         Prefs().setNativeChatQuickOrder(quickOrder);
       }
       final types = ChatQuickRow.read(backup.quickRowTypes ?? const []);
@@ -1934,7 +1875,7 @@ class ChatPrefs extends ChangeNotifier {
         setQuickRowTypes(types ?? List.filled(3, ChatQuickRow.actions));
       }
       if (backup.quickRows case final v?) setQuickRows(v);
-      if (backup.appIconMenu case final slots?) AppIconMenu.setSlots(slots);
+      if (backup.appIconMenu case final slots?) Get.find<AppIconMenuController>().setSlots(slots);
       if (backup.messageActionOrder case final order?) {
         messageActionOrder = _withAllActions(order);
         Prefs().setNativeChatMessageActionOrder(messageActionOrder);

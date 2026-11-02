@@ -805,6 +805,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             (TravelTimes.travelTimeMinutesOneWay(
                   ticket: widget.ticket,
                   countryCode: widget.foreignStock.country,
+                  reductionPercent: _settingsProvider.travelTimeReduction,
                 ) *
                 2 /
                 60))
@@ -1763,6 +1764,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.foreignStock.country,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60;
         final totalNeeded = timeToWidgetCountry + timeToTorn;
@@ -1788,6 +1790,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final timeToTornAndBack = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.foreignStock.country,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60 *
             2;
@@ -1817,11 +1820,13 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final timeBackToTorn = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.travelingCountry,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60;
         final timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.foreignStock.country,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60;
         final totalNeeded = timeToFirstCountryFromTorn + timeBackToTorn + timeToWidgetCountry;
@@ -1843,6 +1848,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       _travelSeconds = TravelTimes.travelTimeMinutesOneWay(
             ticket: widget.ticket,
             countryCode: widget.foreignStock.country,
+            reductionPercent: _settingsProvider.travelTimeReduction,
           ) *
           60;
       _earliestArrival = DateTime.now().add(Duration(seconds: _travelSeconds));

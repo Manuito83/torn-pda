@@ -41,9 +41,6 @@ class ChatTemplate {
 
   static final RegExp _slot = RegExp(r'\{(\w+)\}');
 
-  /// Last item from the price tool
-  static ChatItemPrice? lastItem;
-
   static int percent(int base, int total) => (base * (100 + total) + 50) ~/ 100;
 
   static List<String> used(String text) => [
@@ -90,7 +87,7 @@ class ChatTemplate {
       'nerve': bar(bars?.nerve),
       'life': bar(bars?.life),
       'chain': chainCurrent > 0 && chainSeconds > 0 ? '$chainCurrent hits, ${ChatStatus.duration(chainSeconds)}' : null,
-      'time': ChatTimeRef.insertText(DateTime.fromMillisecondsSinceEpoch(now * 1000)),
+      'time': chatTctText(DateTime.fromMillisecondsSinceEpoch(now * 1000)),
       'bazaar': bazaar,
       'trade': trade,
       'profile': profile,

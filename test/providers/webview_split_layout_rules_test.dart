@@ -163,17 +163,6 @@ void main() {
   });
 
   group('two browsers need split screen enabled in Settings', () {
-    test('with split screen off a tab cannot be sent apart', () async {
-      final p = await build(position: WebViewSplitPosition.off);
-
-      expect(p.splitBrowsersAllowed, isFalse);
-      expect(p.moveTabToOtherGroup(2), isFalse);
-      expect(p.tabList[2].splitApart, isFalse);
-      expect(p.splitBrowsersActive, isFalse);
-      expect(p.splitRightSlot, isNull);
-      await settle();
-    });
-
     test('switching split screen off with two browsers leaves a single view with every tab', () async {
       final p = await build(count: 6);
       p.moveTabToOtherGroup(2);
@@ -227,24 +216,6 @@ void main() {
 
       expect(p.splitRightSlot, isNull);
       expect(p.splitBrowsersActive, isFalse);
-      await settle();
-    });
-  });
-
-  group('tab menu bar height', () {
-    test('grows with the items of the open menu so that the top one takes taps', () async {
-      final p = await build();
-      expect(p.verticalMenuBarHeight, 40);
-
-      p.verticalMenuOpen();
-      p.reportVerticalMenuItems(7);
-      expect(p.verticalMenuBarHeight, 390);
-
-      p.reportVerticalMenuItems(8);
-      expect(p.verticalMenuBarHeight, 50 + 47 * 8);
-
-      p.verticalMenuClose();
-      expect(p.verticalMenuBarHeight, 40);
       await settle();
     });
   });

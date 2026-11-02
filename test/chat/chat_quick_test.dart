@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+import 'package:torn_pda/models/chat/chat_quick_rows.dart';
 import 'package:torn_pda/models/chat/chat_template.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -20,10 +21,10 @@ void main() {
   ChatPrefs actionRows() => ChatPrefs()..quickRowTypes = List.filled(3, ChatQuickRow.actions);
 
   group('rows', () {
-    const order = ['price', 'player', ChatPrefs.rowBreak2, 'tab', ChatPrefs.rowBreak3, 'status', 'wiki'];
+    const order = ['price', 'player', chatQuickRowBreak2, 'tab', chatQuickRowBreak3, 'status', 'wiki'];
 
     test('the breaks split three rows', () {
-      expect(ChatPrefs.splitQuickRows(order, rows: 3), [
+      expect(chatQuickRowsSplit(order, rows: 3), [
         ['price', 'player'],
         ['tab'],
         ['status', 'wiki'],
@@ -31,17 +32,17 @@ void main() {
     });
 
     test('fewer rows ignore the extra breaks', () {
-      expect(ChatPrefs.splitQuickRows(order, rows: 2), [
+      expect(chatQuickRowsSplit(order, rows: 2), [
         ['price', 'player'],
         ['tab', 'status', 'wiki'],
       ]);
-      expect(ChatPrefs.splitQuickRows(order, rows: 1), [
+      expect(chatQuickRowsSplit(order, rows: 1), [
         ['price', 'player', 'tab', 'status', 'wiki'],
       ]);
     });
 
     test('saved order without breaks is all row 1', () {
-      expect(ChatPrefs.splitQuickRows(['price', 'tab'], rows: 3), [
+      expect(chatQuickRowsSplit(['price', 'tab'], rows: 3), [
         ['price', 'tab'],
         <String>[],
         <String>[],
@@ -49,7 +50,7 @@ void main() {
     });
 
     test('a break at the top leaves row 1 empty', () {
-      expect(ChatPrefs.splitQuickRows([ChatPrefs.rowBreak2, 'price'], rows: 2), [
+      expect(chatQuickRowsSplit([chatQuickRowBreak2, 'price'], rows: 2), [
         <String>[],
         ['price'],
       ]);
@@ -57,18 +58,18 @@ void main() {
 
     test('going to three rows adds the new break inside the last row', () {
       final prefs = actionRows()..setQuickRows(2);
-      final second = prefs.quickOrder.indexOf(ChatPrefs.rowBreak2);
+      final second = prefs.quickOrder.indexOf(chatQuickRowBreak2);
       prefs.setQuickRows(3);
-      final split = ChatPrefs.splitQuickRows(prefs.quickOrder, rows: 3);
-      expect(prefs.quickOrder.indexOf(ChatPrefs.rowBreak2), second);
+      final split = chatQuickRowsSplit(prefs.quickOrder, rows: 3);
+      expect(prefs.quickOrder.indexOf(chatQuickRowBreak2), second);
       expect(split.map((r) => r.isNotEmpty), [true, true, true]);
     });
 
     test('row 3 cannot end up above row 2', () {
       final prefs = actionRows()..setQuickRows(3);
       final editor = prefs.quickEditor;
-      prefs.moveQuickAction(editor.indexOf(ChatPrefs.rowBreak3), editor.indexOf(ChatPrefs.rowBreak2));
-      expect(prefs.quickOrder.indexOf(ChatPrefs.rowBreak2), lessThan(prefs.quickOrder.indexOf(ChatPrefs.rowBreak3)));
+      prefs.moveQuickAction(editor.indexOf(chatQuickRowBreak3), editor.indexOf(chatQuickRowBreak2));
+      expect(prefs.quickOrder.indexOf(chatQuickRowBreak2), lessThan(prefs.quickOrder.indexOf(chatQuickRowBreak3)));
     });
 
     test('rows survive a backup', () {
@@ -82,21 +83,21 @@ void main() {
 
     test('dragging with a break hidden keeps its place', () {
       final prefs = actionRows()..setQuickRows(2);
-      final at = prefs.quickOrder.indexOf(ChatPrefs.rowBreak2);
+      final at = prefs.quickOrder.indexOf(chatQuickRowBreak2);
       prefs.setQuickRows(1);
       prefs.moveQuickAction(0, 1);
-      expect(prefs.quickOrder.indexOf(ChatPrefs.rowBreak2), at);
+      expect(prefs.quickOrder.indexOf(chatQuickRowBreak2), at);
     });
 
     test('only action rows take the breaks', () {
       final prefs = ChatPrefs()..setQuickRows(3);
       prefs.setQuickRowTypes([ChatQuickRow.actions, ChatQuickRow.emoji, ChatQuickRow.actions]);
       expect(prefs.actionRows, 2);
-      expect(prefs.quickEditor, contains(ChatPrefs.rowBreak2));
-      expect(prefs.quickEditor, isNot(contains(ChatPrefs.rowBreak3)));
+      expect(prefs.quickEditor, contains(chatQuickRowBreak2));
+      expect(prefs.quickEditor, isNot(contains(chatQuickRowBreak3)));
       prefs.setQuickRowTypes([ChatQuickRow.emoji, ChatQuickRow.replies, ChatQuickRow.emoji]);
       expect(prefs.actionRows, 0);
-      expect(prefs.quickEditor, isNot(contains(ChatPrefs.rowBreak2)));
+      expect(prefs.quickEditor, isNot(contains(chatQuickRowBreak2)));
     });
 
     test('an old copy with rows turns them all into actions', () {
@@ -118,15 +119,6 @@ void main() {
         await prefs.load();
         return prefs;
       }
-
-      test('nothing saved means actions, emoji and replies with examples', () async {
-        final prefs = await loaded();
-        expect(prefs.quickRows, 3);
-        expect(prefs.quickRowTypes, [ChatQuickRow.actions, ChatQuickRow.emoji, ChatQuickRow.replies]);
-        expect(prefs.quickHidden, {'emoji', 'replies'});
-        expect(prefs.quickReplies, isNotEmpty);
-        expect((await loaded()).quickRowTypes, prefs.quickRowTypes);
-      });
 
       test('deleting every reply leaves the list empty', () async {
         final first = await loaded();
@@ -154,22 +146,22 @@ void main() {
       ..quickRows = rows;
 
     test('the editor lists disabled ones under the break', () {
-      final p = prefs(['price', 'tab', ChatPrefs.rowBreak2, 'status'], rows: 2)..quickHidden = {'tab'};
-      expect(p.quickEditor, ['price', ChatPrefs.rowBreak2, 'status', ChatPrefs.offBreak, 'tab']);
+      final p = prefs(['price', 'tab', chatQuickRowBreak2, 'status'], rows: 2)..quickHidden = {'tab'};
+      expect(p.quickEditor, ['price', chatQuickRowBreak2, 'status', chatQuickOffBreak, 'tab']);
     });
 
     test('turning off drops it below and turning on makes it last', () {
       final p = prefs(['price', 'tab', 'status']);
       p.setQuickActionShown('tab', false);
-      expect(p.quickEditor, ['price', 'status', ChatPrefs.offBreak, 'tab']);
+      expect(p.quickEditor, ['price', 'status', chatQuickOffBreak, 'tab']);
       p.setQuickActionShown('tab', true);
-      expect(p.quickEditor, ['price', 'status', 'tab', ChatPrefs.offBreak]);
+      expect(p.quickEditor, ['price', 'status', 'tab', chatQuickOffBreak]);
     });
 
     test('turning on goes after an empty last row', () {
-      final p = prefs(['price', ChatPrefs.rowBreak2, 'tab'], rows: 2)..quickHidden = {'tab'};
+      final p = prefs(['price', chatQuickRowBreak2, 'tab'], rows: 2)..quickHidden = {'tab'};
       p.setQuickActionShown('tab', true);
-      expect(ChatPrefs.splitQuickRows(p.quickOrder, rows: 2)[1], ['tab']);
+      expect(chatQuickRowsSplit(p.quickOrder, rows: 2)[1], ['tab']);
     });
 
     test('dragging across the break turns it off or on', () {
@@ -177,16 +169,16 @@ void main() {
       p.moveQuickAction(0, 3);
       expect(p.quickOff('price'), isTrue);
       expect(p.itemPrice, isFalse);
-      expect(p.quickEditor, ['tab', 'status', ChatPrefs.offBreak, 'price']);
+      expect(p.quickEditor, ['tab', 'status', chatQuickOffBreak, 'price']);
       p.moveQuickAction(3, 0);
       expect(p.quickOff('price'), isFalse);
-      expect(p.quickEditor, ['price', 'tab', 'status', ChatPrefs.offBreak]);
+      expect(p.quickEditor, ['price', 'tab', 'status', chatQuickOffBreak]);
     });
 
     test('a row break cannot go below the break', () {
-      final p = prefs(['price', ChatPrefs.rowBreak2, 'tab'], rows: 2);
+      final p = prefs(['price', chatQuickRowBreak2, 'tab'], rows: 2);
       p.moveQuickAction(1, 3);
-      expect(p.quickEditor, ['price', 'tab', ChatPrefs.rowBreak2, ChatPrefs.offBreak]);
+      expect(p.quickEditor, ['price', 'tab', chatQuickRowBreak2, chatQuickOffBreak]);
     });
   });
 
@@ -196,7 +188,7 @@ void main() {
 
     test('guide order', () {
       final guide = quickGuide(
-        order: ['status', 'price', ChatPrefs.rowBreak2, 'time', 'wiki'],
+        order: ['status', 'price', chatQuickRowBreak2, 'time', 'wiki'],
         rows: [actions, ChatQuickRow.emoji, ChatQuickRow.replies, actions],
         isOff: {'price', 'time'}.contains,
       );
@@ -210,7 +202,7 @@ void main() {
     });
 
     test('one action row puts everything enabled in it', () {
-      final guide = quickGuide(order: ['tab', ChatPrefs.rowBreak2, 'status'], rows: [actions], isOff: (_) => false);
+      final guide = quickGuide(order: ['tab', chatQuickRowBreak2, 'status'], rows: [actions], isOff: (_) => false);
       expect(guide.rows.map(titles), [
         ['Share tab or script', 'Status'],
       ]);

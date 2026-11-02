@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/config/webview_config.dart';
+import 'package:torn_pda/utils/torn_web.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
@@ -62,7 +62,7 @@ class _SimpleWebViewContentState extends State<_SimpleWebViewContent> {
 
     PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
 
-    final uaSuffix = _buildUserAgentSuffix();
+    final uaSuffix = webviewUserAgentSuffix;
     _settings = InAppWebViewSettings(
       transparentBackground: true,
       hardwareAcceleration: context.read<WebViewProvider>().webViewHardwareLayerActive,
@@ -75,12 +75,6 @@ class _SimpleWebViewContentState extends State<_SimpleWebViewContent> {
       isInspectable: kDebugMode || settingsProvider.browserRemoteDebugging,
       useOnRenderProcessGone: settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
     );
-  }
-
-  String _buildUserAgentSuffix() {
-    const unknown = "##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##";
-    final deviceInfo = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
-    return "${WebviewConfig.agent} $deviceInfo".trim();
   }
 
   @override

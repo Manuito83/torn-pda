@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
@@ -8,22 +9,23 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
+import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_bubble_glow.dart';
 import 'package:torn_pda/widgets/chat/chat_big_window.dart';
 import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
 import 'package:torn_pda/widgets/chat/chat_link_window.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_ticker.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-import 'package:torn_pda/widgets/webviews/split_divider.dart';
 
 class ChatOverlay extends StatefulWidget {
   const ChatOverlay({super.key, required this.navigatorKey});
@@ -115,6 +117,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   bool _syncing = false;
   bool _noticeShown = false;
   double _textGrow = 1;
+  late final ValueNotifier<Rect?> _splitDivider = context.read<WebViewProvider>().splitDividerRect;
 
   OverlayEntry? _layer;
   final GlobalKey<NavigatorState> _sheets = GlobalKey();
@@ -127,8 +130,9 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     super.initState();
     NativeChat.navigatorKey = widget.navigatorKey;
     NativeChat.sheetsKey = _sheets;
-    chatToastHosted = true;
     NativeChat.rootTop.addListener(_trackWindowBack);
+    NativeChat.rootTop.addListener(dropChatToast);
+    NativeChat.homeTop.addListener(dropChatToast);
     NativeChat.quickWindows.addListener(_scheduleSync);
     NativeChat.minimized.addListener(_scheduleSync);
     NativeChat.bigWindow.addListener(_scheduleSync);
@@ -138,9 +142,10 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   @override
   void dispose() {
     if (NativeChat.sheetsKey == _sheets) NativeChat.sheetsKey = null;
-    chatToastHosted = false;
     dropChatToast();
     NativeChat.rootTop.removeListener(_trackWindowBack);
+    NativeChat.rootTop.removeListener(dropChatToast);
+    NativeChat.homeTop.removeListener(dropChatToast);
     // ignore: deprecated_member_use
     if (_backRoute?.subtreeContext != null) _backRoute!.removeScopedWillPopCallback(_windowBack);
     NativeChat.quickWindows.removeListener(_scheduleSync);
@@ -166,6 +171,12 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     if (navigator != null) NativeChat.launch(navigator);
   }
 
+  void _openSettings(VoidCallback leaveWindow) {
+    leaveWindow();
+    final navigator = widget.navigatorKey.currentState;
+    if (navigator != null) showChatSettings(navigator);
+  }
+
   @override
   void didUpdateWidget(ChatOverlay old) {
     super.didUpdateWidget(old);
@@ -174,19 +185,27 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
 
   static bool get _windowsShown => NativeChat.bigWindowShown || NativeChat.quickWindows.value.isNotEmpty;
 
-  bool get _still => MediaQuery.disableAnimationsOf(context);
+  // iOS keeps its back swipe
+  static bool get _holdsBack =>
+      defaultTargetPlatform == TargetPlatform.iOS ? NativeChat.bigWindowShown : _windowsShown;
+
+  // Readers keep chat screens and the dial
+  static bool get _overApp => (NativeChat.rootTop.value?.isFirst ?? true) && !NativeChat.dialOpen.value;
+
+  // Their switches sit where the bubble floats
+  static bool get _settingsOnTop => NativeChat.rootTop.value is ChatSettingsRoute;
 
   // Beats PopScope to the back press
   void _trackWindowBack() {
     final top = NativeChat.rootTop.value;
-    final route = _windowsShown && top is ModalRoute ? top : null;
+    final route = _holdsBack && top is ModalRoute ? top : null;
     if (route == _backRoute) return;
     // ignore: deprecated_member_use
     if (_backRoute?.subtreeContext != null) _backRoute!.removeScopedWillPopCallback(_windowBack);
     _backRoute = null;
     if (route == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final visible = mounted && _windowsShown && NativeChat.rootTop.value == route;
+      final visible = mounted && _holdsBack && NativeChat.rootTop.value == route;
       if (!visible || _backRoute == route || route.subtreeContext == null) return;
       // ignore: deprecated_member_use
       _backRoute = route..addScopedWillPopCallback(_windowBack);
@@ -229,14 +248,6 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    final appTime = context.select<SettingsProvider?, (bool, bool)?>(
-      (s) => s == null
-          ? null
-          : (s.currentTimeZone == TimeZoneSetting.tornTime, s.currentTimeFormat == TimeFormatSetting.h12),
-    );
-    if (appTime case (final tornTime, final h12)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => NativeChat.prefs.followAppTime(tornTime: tornTime, h12: h12));
-    }
     final overlay = HeroControllerScope.none(
       child: ChatTheme(
         touch: false,
@@ -270,7 +281,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
             NativeChat.drawerOpen,
             NativeChat.tornTabMissing,
             NativeChat.tickerDemo,
-            splitDividerRect,
+            _splitDivider,
           ]),
           builder: (context, _) {
             final covered = NativeChat.popupOnTop || NativeChat.drawerOpen.value;
@@ -292,7 +303,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
             NativeChat.dialOpen,
             NativeChat.drawerOpen,
             NativeChat.tornTabMissing,
-            splitDividerRect,
+            _splitDivider,
           ]),
           builder: (context, _) {
             final media = MediaQuery.of(context);
@@ -301,10 +312,10 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
             final areaBottom = media.size.height - math.max(safe.bottom, media.viewInsets.bottom + 12);
             _area = Rect.fromLTRB(safe.left, safe.top, media.size.width - safe.right, math.max(safe.top, areaBottom));
             _areaNoKeyboard = Rect.fromLTRB(_area.left, _area.top, _area.right, media.size.height - safe.bottom);
-            final covered = NativeChat.popupOnTop || NativeChat.dialOpen.value;
+            final covered = NativeChat.popupOnTop || NativeChat.dialOpen.value || _settingsOnTop;
             final bigWindow = NativeChat.bigWindow.value;
             final active = !NativeChat.screenOpen.value && NativeChat.usable && !covered;
-            final showBubble = active && !_small;
+            final showBubble = active && !_minisOnly;
             final paused = NativeChat.tornTabMissing.value;
             final minis = active ? _minis : const <ChatMinimized>[];
             final lead = _lead(active);
@@ -324,7 +335,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
                   _miniBubble(context, _maxMinis + lead, null, more: minis.length - _maxMinis),
                 if (showBubble) _bubble(context),
                 // Windows hide what lies below
-                if (!paused && !NativeChat.popupOnTop && !NativeChat.drawerOpen.value && _windowsShown)
+                if (!paused && !NativeChat.popupOnTop && !NativeChat.drawerOpen.value && _windowsShown && _overApp)
                   const Positioned(left: 0, top: 0, child: BlockSemantics()),
                 if (notice)
                   _pausedNotice(context, media)
@@ -345,7 +356,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
           },
         ),
         ValueListenableBuilder(
-          valueListenable: chatHeldToast,
+          valueListenable: NativeChat.controller.heldToast,
           builder: (context, toast, _) => toast == null
               ? const SizedBox.shrink()
               : Align(
@@ -427,7 +438,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final media = MediaQuery.of(context);
     final top = NativeChat.prefs.tickerTop;
     if (!top && media.viewInsets.bottom > 0) return const SizedBox.shrink();
-    final divider = splitDividerRect.value;
+    final divider = _splitDivider.value;
     return Positioned(
       left: media.padding.left + 12,
       right: math.max(media.padding.right + 84, divider == null ? 0 : media.size.width - divider.left + 8),
@@ -476,7 +487,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   (Offset, int) get _spot {
     final v = NativeChat.prefs.bubbleSpot.map(double.tryParse).toList();
     if (v.length != 3 || v.contains(null)) return (const Offset(1, 0.7), 0);
-    return (Offset(v[0]!.clamp(0.0, 1.0), v[1]!.clamp(0.0, 1.0)), v[2]!.sign.toInt());
+    return (Offset(v[0]!.clamp(0.0, 1.0), v[1]!.clamp(0.0, 1.0)), _minisOnly ? 0 : v[2]!.sign.toInt());
   }
 
   void _setSpot(Offset spot, int dock) {
@@ -492,9 +503,9 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final range = _bubbleRange(media);
     final (left, right) = _edges(media);
     final y = range.top + range.height * spot.dy;
-    if (dock != 0 && !_small) return Offset((dock < 0 ? left : right) - _head / 2, y);
+    if (dock != 0) return Offset((dock < 0 ? left : right) - _head / 2, y);
     var at = Offset(range.left + range.width * spot.dx, y);
-    final divider = splitDividerRect.value;
+    final divider = _splitDivider.value;
     if (divider != null && at.dx + _head + ChatUnreadArc.reach > divider.left && at.dx < divider.right) {
       // Off the divider, to its nearer side
       final toLeft = at.dx + _head / 2 < divider.center.dx;
@@ -524,21 +535,20 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final spot = _spot.$1;
     final at = Rect.fromLTWH(range.left + range.width * spot.dx, range.top + range.height * spot.dy, 0, 0);
     double share(double v, double from, double span) => span > 0 ? ((v - from) / span).clamp(0.0, 1.0) : 0;
-    return {
-      for (final MapEntry(key: label, value: direction) in ChatWindowFrame.moves(at, range).entries)
-        CustomSemanticsAction(label: label): () {
-          final to = ChatWindowFrame.nudge(at, range, direction);
-          _setSpot(Offset(share(to.left, range.left, range.width), share(to.top, range.top, range.height)), 0);
-        },
-    };
+    return ChatWindowFrame.semanticMoves(
+      at,
+      range,
+      (to) => _setSpot(Offset(share(to.left, range.left, range.width), share(to.top, range.top, range.height)), 0),
+    );
   }
 
   void _bubbleDrag(MediaQueryData media, Offset delta) {
     final at = _bubbleAt(media) + delta;
     final range = _bubbleRange(media);
-    final (left, right) = _small ? (range.left, range.right) : _edges(media);
-    final x = _small ? at.dx.clamp(left, right) : at.dx.clamp(left - _head / 2, right - _head / 2);
-    _dragged = Offset(x, at.dy.clamp(range.top, range.bottom));
+    final (edgeLeft, edgeRight) = _edges(media);
+    // Half out, ready to dock
+    final (left, right) = _minisOnly ? (range.left, range.right) : (edgeLeft - _head / 2, edgeRight - _head / 2);
+    _dragged = Offset(at.dx.clamp(left, right), at.dy.clamp(range.top, range.bottom));
     _layer?.markNeedsBuild();
   }
 
@@ -585,7 +595,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     _persist();
     final side = NativeChat.bigWindow.value?.side;
     if (_bigWin case final w? when side != null && side != _bigWindowSide) {
-      final divider = splitDividerRect.value;
+      final divider = _splitDivider.value;
       w.frame = ChatWindowFrame.fit(w.frame, ChatWindowFrame.panel(_areaNoKeyboard, divider, side), min: _minOf(w));
       _layer?.markNeedsBuild();
     }
@@ -633,7 +643,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   }
 
   Rect _centered(Size size, [SplitSide? panel]) {
-    final divider = splitDividerRect.value;
+    final divider = _splitDivider.value;
     final side = divider == null ? null : panel ?? NativeChat.focusedSplitSide;
     final center = ChatWindowFrame.panel(_area, divider, side).center.dx;
     return Rect.fromLTWH(center - size.width / 2, _area.top + 40, size.width, size.height);
@@ -658,7 +668,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   _Floating _createBigWindow() {
     final saved = ChatBigWindow.decode(NativeChat.prefs.bigWindow).frame;
     final min = ChatWindowFrame.bigWindowMinSize * _textGrow;
-    final divider = splitDividerRect.value;
+    final divider = _splitDivider.value;
     final side = divider == null ? null : NativeChat.bigWindow.value?.side ?? NativeChat.focusedSplitSide;
     final panel = ChatWindowFrame.panel(_areaNoKeyboard, divider, side);
     final frame = ChatWindowFrame.fit(saved ?? _centered(const Size(360, 520), side), panel, min: min);
@@ -692,7 +702,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   }
 
   void _animateTo(_Floating w, Rect target, VoidCallback then) {
-    if (_still) {
+    if (MediaQuery.disableAnimationsOf(context)) {
       w.frame = target;
       _layer?.markNeedsBuild();
       return then();
@@ -717,11 +727,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     if (others.any((w) => w.scope.hasFocus)) FocusManager.instance.primaryFocus?.unfocus();
     id == NativeChat.bigWindowId ? NativeChat.focusBigWindow() : NativeChat.focusQuickWindow(id);
     final roomId = id == NativeChat.bigWindowId ? NativeChat.bigWindow.value?.roomId : id;
-    final chat = NativeChat.controller;
-    // Another window may have taken the open
-    if (roomId != null && !chat.isLoaded(roomId) && !chat.openFailed(roomId) && !chat.opening(roomId)) {
-      chat.openConversation(roomId);
-    }
+    if (roomId != null && NativeChat.controller.needsOpen(roomId)) NativeChat.controller.openConversation(roomId);
   }
 
   void _drag(_Floating w, Offset delta) {
@@ -778,17 +784,15 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     _layer?.markNeedsBuild();
   }
 
-  Map<CustomSemanticsAction, VoidCallback> _moves(_Floating w, Rect frame, Rect room) => {
-    for (final MapEntry(key: label, value: direction) in ChatWindowFrame.moves(frame, room).entries)
-      CustomSemanticsAction(label: label): () {
+  Map<CustomSemanticsAction, VoidCallback> _moves(_Floating w, Rect frame, Rect room) =>
+      ChatWindowFrame.semanticMoves(frame, room, (to) {
         w
           ..settle.stop()
           ..free = false
-          ..frame = ChatWindowFrame.nudge(frame, room, direction);
+          ..frame = to;
         _save(w);
         _layer?.markNeedsBuild();
-      },
-  };
+      });
 
   Widget _window(String roomId) {
     final w = _windows[roomId] ??= _create(roomId);
@@ -807,6 +811,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
               chat: NativeChat.controller,
               roomId: roomId,
               onClose: () => NativeChat.closeQuickWindow(roomId),
+              onSettings: () => _openSettings(minimize ?? () => NativeChat.closeQuickWindow(roomId)),
               onExpand: () => NativeChat.expandQuickWindow(roomId),
               onNext: () => _next(roomId),
               onMinimize: minimize,
@@ -846,6 +851,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
               roomId: bigWindow.roomId,
               fullscreen: full,
               onClose: NativeChat.closeBigWindow,
+              onSettings: () => _openSettings(minimize ?? NativeChat.closeBigWindow),
               onMinimize: minimize,
               onFullscreen: NativeChat.toggleBigWindowFull,
               onDrag: full ? null : (delta) => _drag(w, delta),
@@ -870,13 +876,19 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
       );
     }
     var undone = false;
+    // Readers get no auto close
+    final undo = Timer(const Duration(seconds: 10), dropChatToast);
     chatToast(
       '$count ${count == 1 ? 'chat' : 'chats'} marked as read',
       seconds: 4,
       action: 'Undo',
-      onAction: () => undone = true,
+      onAction: () {
+        undone = true;
+        undo.cancel();
+      },
       onClose: () {
-        if (!undone) Future.microtask(NativeChat.controller.markAllRead);
+        undo.cancel();
+        if (!undone) scheduleMicrotask(NativeChat.controller.markAllRead);
       },
     );
   }
@@ -888,16 +900,17 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     _layer?.markNeedsBuild();
   }
 
-  /// Own bubbles, not the big one
-  bool get _small => NativeChat.prefs.launcher != ChatLauncher.bubble;
+  bool get _minisOnly => NativeChat.prefs.launcher != ChatLauncher.bubble;
 
-  /// Newest first, pages only when small
-  List<ChatMinimized> get _minis => NativeChat.minimized.value.reversed.where((m) => m.window || _small).toList();
+  /// Newest first, pages too without the bubble
+  List<ChatMinimized> get _minis => NativeChat.minimized.value.reversed.where((m) => m.window || _minisOnly).toList();
 
   int get _slots => _lead(true) + math.min(_minis.length, _maxMinis + 1);
 
+  bool get _tucked => _dragged == null && _spot.$2 != 0;
+
   // The big window's own bubble sits first
-  int _lead(bool shown) => shown && _small && (NativeChat.bigWindow.value?.minimized ?? false) ? 1 : 0;
+  int _lead(bool shown) => shown && _minisOnly && (NativeChat.bigWindow.value?.minimized ?? false) ? 1 : 0;
 
   List<ChatMinimized> get _menuItems =>
       _menuRest ? _minis.skip(_maxMinis).toList() : NativeChat.minimized.value.reversed.toList();
@@ -906,14 +919,14 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   Offset _miniAt(MediaQueryData media, int slot) {
     final at = _bubbleAt(media);
     const inset = (_head - _mini) / 2;
-    if (_small) {
+    if (_minisOnly) {
       // The whole stack stays on screen
       final range = _bubbleRange(media);
       final span = (_slots - 1) * _miniStep;
       final top = math.min(at.dy, math.max(range.top, range.bottom - span));
       return Offset(at.dx + inset, top + inset + slot * _miniStep);
     }
-    if (_dragged == null && _spot.$2 != 0) return at + const Offset(inset, inset);
+    if (_tucked) return at + const Offset(inset, inset);
     final below = at.dy + _head / 2 < media.size.height / 2;
     final y = below ? at.dy + _head + 20 + slot * _miniStep : at.dy - 20 - _mini - slot * _miniStep;
     return Offset(at.dx + inset, y);
@@ -931,7 +944,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final at = _bubbleAt(media);
     final dock = _dragged == null ? _spot.$2 : 0;
     final failed = chat.connection == ChatConnection.error;
-    final holdsBigWindow = !_small && (NativeChat.bigWindow.value?.minimized ?? false);
+    final holdsBigWindow = NativeChat.bigWindow.value?.minimized ?? false;
     final VoidCallback open = holdsBigWindow
         ? NativeChat.restoreBigWindow
         : (pages.isEmpty ? _openChat : () => NativeChat.restore(pages.last));
@@ -955,14 +968,15 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
       'Chat',
       total == 0 ? 'no unread messages' : (total == 1 ? '1 unread message' : '$total unread messages'),
       for (final e in groups.entries)
-        if (e.value > 0 && !prefs.bubbleTotal) '${names[e.key] ?? ChatRooms.labelOf(e.key)} ${e.value}',
+        if (e.value > 0 && !prefs.bubbleTotal)
+          '${names[e.key] ?? ChatRooms.labelOf(e.key, prefs.remoteRooms)} ${e.value}',
       if (holdsBigWindow) 'chat window minimized',
       if (pages.isNotEmpty) '${chat.roomById(pages.last.roomId).name} minimized',
       if (dock != 0) 'tucked at the edge',
       if (chat.stalled) 'no connection' else if (chat.loadingCounts) 'starting',
     ].join(', ');
     return AnimatedPositioned(
-      duration: _dragged == null && !_still ? const Duration(milliseconds: 220) : Duration.zero,
+      duration: _dragged == null ? chatMotion(context, const Duration(milliseconds: 220)) : Duration.zero,
       curve: Curves.easeOutCubic,
       left: at.dx,
       top: at.dy - ChatUnreadArc.padTop,
@@ -1118,7 +1132,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   Widget _miniBubble(BuildContext context, int slot, ChatMinimized? m, {int more = 0, bool bigWindow = false}) {
     final scheme = Theme.of(context).colorScheme;
     final chat = NativeChat.controller;
-    final hidden = !_small && _dragged == null && _spot.$2 != 0;
+    final hidden = _tucked;
     final media = MediaQuery.of(context);
     final at = _miniAt(media, slot);
     final size = m == null && !bigWindow ? 32.0 : _mini;
@@ -1145,7 +1159,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
           };
     return AnimatedPositioned(
       key: ValueKey('mini:${bigWindow ? NativeChat.bigWindowId : (m?.roomId ?? '+')}'),
-      duration: _still ? Duration.zero : Duration(milliseconds: _dragged == null ? 220 : 90),
+      duration: chatMotion(context, Duration(milliseconds: _dragged == null ? 220 : 90)),
       curve: Curves.easeOutCubic,
       left: at.dx + (_mini - _miniTap) / 2,
       top: at.dy + (_mini - _miniTap) / 2,
@@ -1153,7 +1167,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
         ignoring: hidden,
         child: AnimatedOpacity(
           opacity: hidden ? 0 : 1,
-          duration: _still ? Duration.zero : const Duration(milliseconds: 160),
+          duration: chatMotion(context, const Duration(milliseconds: 160)),
           child: Semantics(
             container: true,
             excludeSemantics: true,
@@ -1165,22 +1179,22 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
                 const CustomSemanticsAction(label: 'Dismiss'): NativeChat.closeBigWindow
               else if (m != null)
                 const CustomSemanticsAction(label: 'Dismiss'): () => NativeChat.dropMinimized(m.roomId),
-              if (_small) ..._bubbleMoves(media),
+              if (_minisOnly) ..._bubbleMoves(media),
             },
             // Touch area wider than the circle
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: tap,
               onLongPress: hold,
-              onPanUpdate: _small ? (d) => _bubbleDrag(media, d.delta) : null,
-              onPanEnd: _small ? (_) => _bubbleDragEnd(media) : null,
-              onPanCancel: _small ? () => _bubbleDragEnd(media) : null,
+              onPanUpdate: _minisOnly ? (d) => _bubbleDrag(media, d.delta) : null,
+              onPanEnd: _minisOnly ? (_) => _bubbleDragEnd(media) : null,
+              onPanCancel: _minisOnly ? () => _bubbleDragEnd(media) : null,
               child: SizedBox.square(
                 dimension: _miniTap,
                 child: Center(
                   child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: _still ? 1 : 0.5, end: 1),
-                    duration: const Duration(milliseconds: 180),
+                    tween: Tween(begin: 0.5, end: 1),
+                    duration: chatMotion(context, const Duration(milliseconds: 180)),
                     curve: Curves.easeOutBack,
                     builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
                     child: Stack(
@@ -1253,7 +1267,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final below = at.dy + _head / 2 < media.size.height / 2;
     final minis = _slots;
     final shift = minis == 0 ? 0.0 : 8 + minis * _miniStep;
-    final edge = _small
+    final edge = _minisOnly
         ? (below ? _miniAt(media, minis - 1).dy + _mini + 16 : _miniAt(media, 0).dy - 16)
         : (below ? at.dy + _head + 16 + shift : at.dy - 16 - shift);
     final room = below ? media.size.height - safe.bottom - edge : edge - safe.top;

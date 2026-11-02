@@ -24,6 +24,7 @@ import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/chaining/chain_attack.dart';
 import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_activity_badge.dart';
@@ -31,30 +32,28 @@ import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_hit_call_chip.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_notes_badge.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class WarCard extends StatefulWidget {
   final Member memberModel;
 
+  /// Replaces the chaining browser launch
+  final Future<void> Function(bool shortTap)? onAttack;
+
   // Key is needed to update at least the hospital counter individually
-  const WarCard({required this.memberModel, super.key});
+  const WarCard({required this.memberModel, super.key, this.onAttack});
 
   @override
   WarCardState createState() => WarCardState();
@@ -165,7 +164,6 @@ class WarCardState extends State<WarCard> {
   late SettingsProvider _settingsProvider;
   final _chainProvider = Get.find<ChainStatusController>();
   final _ffScouterCache = Get.find<FFScouterCacheController>();
-  late WebViewProvider _webViewProvider;
 
   Timer? _updatedTicker;
   Timer? _lifeTicker;
@@ -179,7 +177,6 @@ class WarCardState extends State<WarCard> {
   void initState() {
     super.initState();
     _member = widget.memberModel;
-    _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
   }
@@ -1175,66 +1172,9 @@ class WarCardState extends State<WarCard> {
     }
   }
 
-  Future<void> _startAttack({required bool shortTap}) async {
-    final browserType = _settingsProvider.currentBrowser;
-    switch (browserType) {
-      case BrowserSetting.app:
-        final List<WarCardDetails> myTargetList = List<WarCardDetails>.from(_w.orderedCardsDetails);
-
-        // Adjust the list (remove targets above the one selected)
-        final int selectedIndex = myTargetList.indexWhere((element) => element.memberId == _member.memberId);
-        if (selectedIndex > 0) {
-          myTargetList.removeRange(0, selectedIndex);
-        } else if (selectedIndex == -1) {
-          myTargetList.clear();
-        }
-
-        List<String> attacksIds = <String>[];
-        List<String?> attacksNames = <String?>[];
-        List<String?> attackNotes = <String?>[];
-        List<String?> attacksNotesColor = <String?>[];
-        for (final tar in myTargetList) {
-          attacksIds.add(tar.memberId.toString());
-          attacksNames.add(tar.name);
-          final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(tar.memberId.toString());
-          attackNotes.add(playerNote?.note);
-          attacksNotesColor.add(playerNote?.color);
-        }
-
-        if (attacksIds.isEmpty) {
-          final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(_member.memberId.toString());
-          attacksIds.add(_member.memberId.toString());
-          attacksNames.add(_member.name);
-          attackNotes.add(playerNote?.note);
-          attacksNotesColor.add(playerNote?.color);
-        }
-
-        final bool showNotes = await Prefs().getShowTargetsNotes();
-        final bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
-        final bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
-
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: 'https://www.torn.com/page.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
-          isChainingBrowser: true,
-          chainingPayload: ChainingPayload()
-            ..war = true
-            ..attackIdList = attacksIds
-            ..attackNameList = attacksNames
-            ..attackNotesList = attackNotes
-            ..attackNotesColorList = attacksNotesColor
-            ..showNotes = showNotes
-            ..showBlankNotes = showBlankNotes
-            ..showOnlineFactionWarning = showOnlineFactionWarning,
-        );
-
-      case BrowserSetting.external:
-        final url = 'https://www.torn.com/page.php?sid=attack&user2ID=${_member.memberId}';
-        if (await canLaunchUrl(Uri.parse(url))) {
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        }
-    }
+  Future<void> _startAttack({required bool shortTap}) {
+    final attack = widget.onAttack;
+    return attack == null ? attackFromWar(context, _member.memberId, _member.name, shortTap: shortTap) : attack(shortTap);
   }
 
   Widget _lastOnlineWidget() {
@@ -1525,6 +1465,9 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
     Color notificationIconColor = Colors.red;
 
     int secondsToNotification = untilTime.difference(DateTime.now()).inSeconds - 15;
+    final discreet = context.read<SettingsProvider>().discreetAt(
+      DateTime.now().add(Duration(seconds: secondsToNotification)),
+    );
     String channelTitle = 'Manual war member';
     String channelSubtitle = 'Manual war member';
     String channelDescription = 'Manual notifications for war member';
@@ -1532,14 +1475,14 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
     String place = "";
     if (_member.status!.state == "Hospital") {
       place = "#h#";
-      notificationTitle = context.read<SettingsProvider>().discreetNotifications ? "WT" : "War target";
-      notificationSubtitle = context.read<SettingsProvider>().discreetNotifications
+      notificationTitle = discreet ? "WT" : "War target";
+      notificationSubtitle = discreet
           ? " "
           : "${_member.name} is about to be released from hospital!";
     } else if (_member.status!.state == "Jail") {
       place = "#j#";
-      notificationTitle = context.read<SettingsProvider>().discreetNotifications ? "WT" : "";
-      notificationSubtitle = context.read<SettingsProvider>().discreetNotifications
+      notificationTitle = discreet ? "WT" : "";
+      notificationSubtitle = discreet
           ? " "
           : "${_member.name} is about to be released from jail!";
     } else {

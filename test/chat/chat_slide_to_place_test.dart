@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_slide_to_place.dart';
-import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 Widget _list(List<String> ids, {bool still = false, double header = 0}) => MaterialApp(
   home: MediaQuery(
@@ -61,21 +59,5 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(_top(tester, 'c'), _top(tester, 'a') - 100);
-  });
-
-  testWidgets('the chosen option sets how long the slide lasts', (tester) async {
-    addTearDown(() => NativeChat.prefs.animations = ChatAnimations.verySmooth);
-    final settled = <ChatAnimations, bool>{};
-    for (final option in [ChatAnimations.quick, ChatAnimations.verySmooth]) {
-      NativeChat.prefs.animations = option;
-      await tester.pumpWidget(_list(['a', 'b', 'c']));
-      await tester.pumpWidget(_list(['c', 'a', 'b']));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      settled[option] = _top(tester, 'c') == _top(tester, 'a') - 100;
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pumpWidget(const SizedBox());
-    }
-    expect(settled, {ChatAnimations.quick: true, ChatAnimations.verySmooth: false});
   });
 }

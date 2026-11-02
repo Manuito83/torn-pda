@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_panels_stack.dart';
 
 int _created = 0;
@@ -49,18 +51,21 @@ void main() {
 
   Future<void> pumpPanels(WidgetTester tester, List<int?> panelTabs, List<int> childPanels) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: SizedBox(
-          width: 800,
-          height: 600,
-          child: WebViewPanelsStack(
-            panelTabs: panelTabs,
-            childPanels: childPanels,
-            focusedPanel: 0,
-            emptyPanel: const ColoredBox(key: ValueKey("blank"), color: Colors.grey),
-            duration: 100,
-            errorCallback: () => fail("errorCallback called"),
-            children: [for (final key in keys) _FakeTab(key: key)],
+      ChangeNotifierProvider<WebViewProvider>(
+        create: (_) => WebViewProvider(),
+        child: MaterialApp(
+          home: SizedBox(
+            width: 800,
+            height: 600,
+            child: WebViewPanelsStack(
+              panelTabs: panelTabs,
+              childPanels: childPanels,
+              focusedPanel: 0,
+              emptyPanel: const ColoredBox(key: ValueKey("blank"), color: Colors.grey),
+              duration: 100,
+              errorCallback: () => fail("errorCallback called"),
+              children: [for (final key in keys) _FakeTab(key: key)],
+            ),
           ),
         ),
       ),
@@ -117,14 +122,17 @@ void main() {
     final touched = <int>[];
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: WebViewPanelsStack(
-          panelTabs: const [0, 2],
-          childPanels: const [0, 0, 1],
-          duration: 100,
-          errorCallback: () => fail("errorCallback called"),
-          onTabPointerDown: touched.add,
-          children: [for (final key in keys) _FakeTab(key: key)],
+      ChangeNotifierProvider<WebViewProvider>(
+        create: (_) => WebViewProvider(),
+        child: MaterialApp(
+          home: WebViewPanelsStack(
+            panelTabs: const [0, 2],
+            childPanels: const [0, 0, 1],
+            duration: 100,
+            errorCallback: () => fail("errorCallback called"),
+            onTabPointerDown: touched.add,
+            children: [for (final key in keys) _FakeTab(key: key)],
+          ),
         ),
       ),
     );

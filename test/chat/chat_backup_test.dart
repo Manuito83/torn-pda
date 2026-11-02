@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
@@ -11,7 +12,7 @@ import 'package:torn_pda/models/chat/chat_item_aliases.dart';
 import 'package:torn_pda/models/chat/chat_person.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
-import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -138,22 +139,22 @@ void main() {
   });
 
   test('the app icon menu comes back with the chat settings', () async {
-    AppIconMenu.setItems = (_) async {};
+    final menu = Get.find<AppIconMenuController>();
     final prefs = ChatPrefs();
     addTearDown(prefs.dispose);
-    await AppIconMenu.setSlots(['chat:faction', 'open_gym', '', 'open_torn']);
-    final exported = ChatBackup.export(prefs, DateTime.now());
-    await AppIconMenu.setSlots([for (final s in AppIconMenu.sections) s.type]);
+    await menu.setSlots(['chat:faction', 'open_gym', '', 'open_torn']);
+    final exported = ChatBackup.export(prefs, DateTime.now(), appIconMenu: menu.slots.value);
+    await menu.setSlots([for (final s in AppIconMenuController.sections) s.type]);
 
     prefs.applyBackup(ChatBackup.parse(exported), replace: false);
     await pumpEventQueue();
-    expect(AppIconMenu.slots.value, ['open_torn', 'open_gym', 'open_crimes', 'open_travel']);
+    expect(menu.slots.value, ['open_torn', 'open_gym', 'open_crimes', 'open_travel']);
     prefs.applyBackup(ChatBackup.parse(exported), replace: true);
     await pumpEventQueue();
-    expect(AppIconMenu.slots.value, ['chat:faction', 'open_gym', '', 'open_torn']);
+    expect(menu.slots.value, ['chat:faction', 'open_gym', '', 'open_torn']);
     prefs.applyBackup(ChatBackup.parse(backup(prefs: {'appIconMenu': ['open_gym']})), replace: true);
     await pumpEventQueue();
-    expect(AppIconMenu.slots.value, ['chat:faction', 'open_gym', '', 'open_torn']);
+    expect(menu.slots.value, ['chat:faction', 'open_gym', '', 'open_torn']);
   });
 
   test('message actions keep their order and a new one lands last', () async {

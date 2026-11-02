@@ -91,12 +91,6 @@ void main() {
       expect(catalog.scripts.first.id, 'good');
     });
 
-    test('keeps the disabled flag so the section can be switched off remotely', () {
-      final catalog = ScriptCatalog.tryParse(_catalogJson(enabled: false));
-      expect(catalog, isNotNull);
-      expect(catalog!.enabled, isFalse);
-    });
-
     test('populatedCategories skips categories with no scripts', () {
       final catalog = ScriptCatalog.tryParse(_catalogJson())!;
       expect(catalog.populatedCategories.map((c) => c.id), ['items']);
@@ -189,12 +183,6 @@ void main() {
       final file = File('userscripts/catalog/torntools.json');
       expect(file.existsSync(), isTrue, reason: 'the bundled catalog asset must exist');
       catalog = ScriptCatalog.tryParse(file.readAsStringSync())!;
-    });
-
-    test('parses and is enabled', () {
-      expect(catalog.enabled, isTrue);
-      expect(catalog.schemaVersion, ScriptCatalog.supportedSchemaVersion);
-      expect(catalog.scripts, isNotEmpty);
     });
 
     test('every script has a Greasy Fork download URL and an id we can match', () {

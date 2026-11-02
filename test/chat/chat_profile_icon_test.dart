@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/models/chat/chat_profile_icon.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-import 'package:torn_pda/widgets/webviews/chat_profile_icon.dart';
 
 import 'chat_fakes.dart';
 
@@ -216,7 +215,7 @@ void main() {
     });
 
     testWidgets('badge and dots stay next to the bubble', (tester) async {
-      await mountBar(tester, textScale: 1.5, counts: {ChatPrefs.bubbleOptions.first: 3});
+      await mountBar(tester, textScale: 1.5, counts: {NativeChat.prefs.bubbleOptions.first: 3});
       final bubble = tester.getRect(find.byIcon(Icons.chat_bubble_outline_rounded));
       final badge = tester.getRect(find.byType(ChatIconBadge));
       final dot = tester.getRect(

@@ -27,6 +27,12 @@ MAIN INDEX
   
   From JS code, you can communicate with the native (Flutter) side of Torn PDA, which offers some additional capabilities (such as notifications) and also helps to overcome restrictions imposed by Torn (such as cross-origin http requests).
 <br></br>
+- ## Remote debugging of the browser
+
+  Connect Chrome DevTools (Android) or Safari Web Inspector (iOS) to the Torn PDA browser to debug userscripts: console, handler calls and breakpoints.
+
+  [Remote debugging guide](./webview/remote-debugging.md)
+<br></br>
 - ## GM support for PDA
 
   As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not include any external libraries that are served in frameworks such as GM or TM. 

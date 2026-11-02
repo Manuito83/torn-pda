@@ -38,7 +38,7 @@ Future<Map<String, String>> chatSlotValues({String? name, String? me, bool fetch
     chainSeconds: chain?.currentSecondsCounter ?? 0,
     name: name,
     me: me,
-    item: ChatTemplate.lastItem,
+    item: NativeChat.controller.lastItem,
     faction: user?.basic?.faction?.factionName,
     bazaar: id == null ? null : chatPlayerUrl('bazaar', id),
     trade: id == null ? null : chatPlayerUrl('trade', id),

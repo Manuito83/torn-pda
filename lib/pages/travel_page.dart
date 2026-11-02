@@ -986,7 +986,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var notificationTitle = await Prefs().getTravelNotificationTitle();
     var notificationSubtitle = await Prefs().getTravelNotificationBody();
 
-    if (_settingsProvider!.discreetNotifications) {
+    if (_settingsProvider!.discreetAt(scheduledNotificationDateTime)) {
       notificationTitle = "T";
       notificationSubtitle = " ";
     }
@@ -1066,7 +1066,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
       final descriptor = AlarmKitServiceIos.profileDescriptor('travel');
 
-      final label = _settingsProvider!.discreetNotifications ? 'T' : 'Travel';
+      final label = _settingsProvider!.discreetAt(alarmTime) ? 'T' : 'Travel';
       await AlarmKitServiceIos.setAlarm(
         targetTime: alarmTime,
         label: label,
@@ -1104,7 +1104,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': _alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
-        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications ? "T" : 'TORN PDA Travel',
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetAt(alarmTime) ? "T" : 'TORN PDA Travel',
       },
     );
     intent.launch();
@@ -1130,18 +1130,19 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setTimer() async {
+    final timerEnd = DateTime.now().add(Duration(seconds: _travelModel.timeLeft! - _travelTimerAhead));
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft! - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications ? "T" : 'TORN PDA Travel',
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetAt(timerEnd) ? "T" : 'TORN PDA Travel',
       },
     );
     intent.launch();
 
-    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft! - _travelTimerAhead));
+    return timerEnd;
   }
 
   Future _restorePreferences() async {

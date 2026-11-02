@@ -6,12 +6,13 @@ import 'package:flutter/semantics.dart';
 import 'package:torn_pda/models/chat/chat_faction_events.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
-import 'package:torn_pda/pages/chat/chat_settings_page.dart';
-import 'package:torn_pda/providers/chat/chat_api.dart';
+import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_arrival_fade.dart';
 import 'package:torn_pda/widgets/chat/chat_color_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_composer.dart';
+import 'package:torn_pda/widgets/chat/chat_faction_ops_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -81,12 +82,18 @@ class ChatWindowFrame {
   }
 
   /// Screen reader moves instead of dragging
-  static Map<String, Offset> moves(Rect frame, Rect area) => {
-    if (frame.top > area.top + 0.5) 'Move up': const Offset(0, -1),
-    if (frame.bottom < area.bottom - 0.5) 'Move down': const Offset(0, 1),
-    if (frame.left > area.left + 0.5) 'Move left': const Offset(-1, 0),
-    if (frame.right < area.right - 0.5) 'Move right': const Offset(1, 0),
-  };
+  static Map<CustomSemanticsAction, VoidCallback> semanticMoves(Rect frame, Rect area, ValueChanged<Rect> onMove) {
+    final directions = {
+      if (frame.top > area.top + 0.5) 'Move up': const Offset(0, -1),
+      if (frame.bottom < area.bottom - 0.5) 'Move down': const Offset(0, 1),
+      if (frame.left > area.left + 0.5) 'Move left': const Offset(-1, 0),
+      if (frame.right < area.right - 0.5) 'Move right': const Offset(1, 0),
+    };
+    return {
+      for (final MapEntry(key: label, value: direction) in directions.entries)
+        CustomSemanticsAction(label: label): () => onMove(nudge(frame, area, direction)),
+    };
+  }
 
   /// Share of the width out of [area]
   static double outside(Rect frame, Rect area) {
@@ -136,11 +143,13 @@ class ChatWindowBox extends StatelessWidget {
     this.label = 'Chat window',
     this.onDismiss,
     this.moves,
+    this.onSettings,
   });
 
   final Widget header;
   final Widget child;
   final VoidCallback onClose;
+  final VoidCallback? onSettings;
   final VoidCallback? onExpand;
   final VoidCallback? onNext;
   final int nextCount;
@@ -261,14 +270,8 @@ class ChatWindowBox extends StatelessWidget {
                         PopupMenuItem(value: onNext, child: Text('Next unread ($nextCount)')),
                       if (onExpand != null && !expandShown)
                         PopupMenuItem(value: onExpand, child: const Text('Open the full chat')),
-                      PopupMenuItem(
-                        value: () {
-                          (onMinimize ?? onClose)();
-                          final navigator = NativeChat.navigatorKey?.currentState;
-                          if (navigator != null) showChatSettings(navigator);
-                        },
-                        child: const Text('Chat settings'),
-                      ),
+                      if (onSettings case final onSettings?)
+                        PopupMenuItem(value: onSettings, child: const Text('Chat settings')),
                     ],
                   ),
                   _headerButton('Close', const Icon(Icons.close_rounded), onClose),
@@ -299,11 +302,13 @@ class ChatQuickWindow extends StatefulWidget {
     this.sizeLabel,
     this.onCycleSize,
     this.moves,
+    this.onSettings,
   });
 
   final ChatController chat;
   final String roomId;
   final VoidCallback onClose;
+  final VoidCallback? onSettings;
   final VoidCallback? onExpand;
   final VoidCallback? onNext;
   final VoidCallback? onMinimize;
@@ -367,11 +372,31 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: widget.chat,
-      builder: (context, _) => _window(widget.chat, widget.chat.roomById(widget.roomId)),
+      builder: (context, _) => _window(widget.chat, widget.chat.roomById(widget.roomId), chatClockOf(context)),
     );
   }
 
-  Widget _window(ChatController chat, ChatRoom room) {
+  Widget _connectionOrOps(ChatController chat, ChatRoom room) {
+    final connection = ChatConnectionLine(
+      state: chat.connection,
+      presence: chat.presenceOf(ChatRoom.peerIdOf(room.id)),
+      lastSeen: chat.lastSeenOf(ChatRoom.peerIdOf(room.id)),
+    );
+    if (!NativeChat.prefs.isFactionRoom(room.id)) return connection;
+    return ChatFactionOpsBuilder(
+      prefs: NativeChat.prefs,
+      builder: (context, now) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (now.isEmpty || chat.connection != ChatConnection.connected) connection,
+          if (!now.isEmpty) ChatFactionPills(now: now, chainOnly: true, roomId: room.id),
+        ],
+      ),
+    );
+  }
+
+  Widget _window(ChatController chat, ChatRoom room, ChatClock clock) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return ChatWindowBox(
@@ -392,11 +417,7 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
                 ),
                 DefaultTextStyle.merge(
                   style: TextStyle(color: scheme.onSurfaceVariant),
-                  child: ChatConnectionLine(
-                    state: chat.connection,
-                    presence: chat.presenceOf(ChatRoom.peerIdOf(room.id)),
-                    lastSeen: chat.lastSeenOf(ChatRoom.peerIdOf(room.id)),
-                  ),
+                  child: _connectionOrOps(chat, room),
                 ),
               ],
             ),
@@ -406,6 +427,7 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
       label: '${room.name} chat window',
       moves: widget.moves,
       onClose: widget.onClose,
+      onSettings: widget.onSettings,
       onExpand: widget.onExpand,
       onNext: widget.onNext,
       nextCount: chat.unreadQueue.length,
@@ -420,12 +442,13 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
         children: [
           ChatStartingBar(starting: chat.starting, phrases: chat.isLoaded(room.id)),
           Expanded(
-            child: ChatArrivals(chat: chat, roomId: room.id, child: _messages(chat, room)),
+            child: ChatArrivals(chat: chat, roomId: room.id, child: _messages(chat, room, clock)),
           ),
           ChatComposer(
             key: ValueKey(room.id),
             roomName: room.name,
             enabled: chat.available && room.canWrite,
+            blockerText: room.blockerText,
             chat: chat,
             roomId: room.id,
             autofocus: _autofocus,
@@ -445,42 +468,38 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
     );
   }
 
-  Widget _messages(ChatController chat, ChatRoom room) {
-    if (!chat.isLoaded(room.id) && (chat.connection == ChatConnection.error || chat.unreachable || chat.sessionIssue)) {
-      final reason = switch (chat.connection) {
-        ChatConnection.noSession => 'Log in to Torn in the browser',
-        ChatConnection.needsBrowser => 'Finish logging in to Torn in the browser',
-        ChatConnection.twoFactor => 'Enter your 2FA code in the browser',
-        _ => chat.sessionIssue ? null : 'Could not reach the chat',
-      };
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.cloud_off_rounded),
-            if (reason != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-                child: Text(reason, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
-              ),
-            if (!chat.sessionIssue) TextButton(onPressed: chat.retry, child: const Text('Try again')),
-          ],
-        ),
-      );
-    }
-    if (chat.openFailed(room.id)) {
-      return ChatLoadFailed(name: room.name, onRetry: () => chat.retryRoom(room.id));
-    }
-    if (!chat.isLoaded(room.id)) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
-            ChatLoadingPhrase(active: chat.starting),
-          ],
-        ),
-      );
+  Widget _messages(ChatController chat, ChatRoom room, ChatClock clock) {
+    switch (chat.loadOf(room.id)) {
+      case final load && (ChatRoomLoad.unreachable || ChatRoomLoad.session):
+        final reason = chatUnreachableReason(chat.connection, load);
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_rounded),
+              if (reason != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                  child: Text(reason, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+                ),
+              if (!chat.needsLogin) TextButton(onPressed: chat.retry, child: const Text('Try again')),
+            ],
+          ),
+        );
+      case ChatRoomLoad.timedOut:
+        return ChatLoadFailed(name: room.name, onRetry: () => chat.retryRoom(room.id));
+      case ChatRoomLoad.loading:
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5)),
+              ChatLoadingPhrase(active: chat.starting),
+            ],
+          ),
+        );
+      case ChatRoomLoad.loaded:
+        break;
     }
     final all = chat.filteredMessagesFor(room.id).where((m) => !isChatFactionEvent(m)).toList();
     _arrivals.update(room.id, all);
@@ -488,10 +507,18 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
     if (shown.isEmpty) {
       return Center(child: Text('No messages yet', style: Theme.of(context).textTheme.bodySmall));
     }
+    String rowKey(int i) {
+      final key = ChatArrivalTracker.keyOf(shown[i]);
+      final newDay = i == 0 || !clock.sameDay(shown[i - 1].createdAt, shown[i].createdAt);
+      return newDay ? 'day-$key' : key;
+    }
+
+    final at = {for (var i = 0; i < shown.length; i++) rowKey(i): shown.length - 1 - i};
     return ListView.builder(
       reverse: true,
       padding: const EdgeInsets.symmetric(vertical: 6),
       itemCount: shown.length,
+      findChildIndexCallback: (key) => key is ValueKey<String> ? at[key.value] : null,
       itemBuilder: (context, index) {
         final i = shown.length - 1 - index;
         final m = shown[i];
@@ -502,9 +529,10 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
             : null;
         final mine = chat.myUserId != null && m.sender.id == chat.myUserId;
         final swipeLeft = chatSwipeLeft(m, mine: mine);
-        final newDay = older == null || !ChatDaySeparator.sameDay(older.createdAt, m.createdAt);
+        final newDay = older == null || !clock.sameDay(older.createdAt, m.createdAt);
+        final key = rowKey(i);
         final row = ChatSwipeReply(
-          key: ValueKey(m.id),
+          key: ValueKey(key),
           onReply: reply,
           onSwipeLeft: swipeLeft,
           child: ChatMessageBubble(
@@ -513,15 +541,15 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
             showSender: !room.isDm,
             highlighted: chat.highlightOf(m).on,
             highlightColor: chat.highlightOf(m).color,
-            isFirstInGroup: !chatSameGroup(older, m),
-            isLastInGroup: !chatSameGroup(m, newer),
-            presence: ChatApi.hasRoster(room.id) ? chat.presenceOf(m.sender.id) : null,
+            isFirstInGroup: !chatSameGroup(clock, older, m),
+            isLastInGroup: !chatSameGroup(clock, m, newer),
+            presence: chat.hasRoster(room.id) ? chat.presenceOf(m.sender.id) : null,
             onReply: reply,
             onSwipeLeft: swipeLeft,
           ),
         );
         return ChatArrivalFade(
-          key: ValueKey(newDay ? 'day-${m.id}' : m.id),
+          key: ValueKey(key),
           animate: _arrivals.take(ChatArrivalTracker.keyOf(m)),
           child: !newDay
               ? row

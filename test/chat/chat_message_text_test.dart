@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,10 +8,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
-import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
-import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
-import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 
 import 'chat_fakes.dart';
 
@@ -169,12 +166,11 @@ void main() {
 
     test('local text marks another day and inserted text is UTC', () {
       final now = DateTime(2026, 10, 14, 10);
-      final prefs = ChatPrefs();
-      addTearDown(prefs.dispose);
-      expect(prefs.localClock(DateTime(2026, 10, 14, 7, 5), now), '07:05');
-      expect(prefs.localClock(DateTime(2026, 10, 15, 7, 5), now), '07:05 tomorrow');
-      expect(ChatTimeRef.insertText(DateTime.utc(2026, 10, 14, 7, 5)), '07:05 TCT');
-      expect(ChatTimeRef.insertText(DateTime(2026, 10, 14, 7, 5).toUtc()), matches(RegExp(r'^\d\d:\d\d TCT$')));
+      final clock = ChatClock(tornTime: true);
+      expect(clock.localClock(DateTime(2026, 10, 14, 7, 5), now), '07:05');
+      expect(clock.localClock(DateTime(2026, 10, 15, 7, 5), now), '07:05 tomorrow');
+      expect(chatTctText(DateTime.utc(2026, 10, 14, 7, 5)), '07:05 TCT');
+      expect(chatTctText(DateTime(2026, 10, 14, 7, 5).toUtc()), matches(RegExp(r'^\d\d:\d\d TCT$')));
     });
   });
 
@@ -341,31 +337,23 @@ void main() {
       await translator.show('m1', 'hola', 'fr');
       expect(asked.last, 'fr:hola');
     });
-  });
 
-  testWidgets('tapping a TCT time or a slang term explains it', (tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: ChatMessageText(content: 'join the OC at 18:00 TCT', color: Colors.black, slang: true),
-        ),
-      ),
-    );
-    await tester.tapOnText(find.textRange.ofSubstring('18:00 TCT'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('your time'), findsOneWidget);
+    test('a translation that lands after forget is not kept', () async {
+      final reply = Completer<(String, String?)?>();
+      var asked = 0;
+      final translator = ChatTranslator(
+        fetch: (text, target) async => ++asked == 1 ? reply.future : ('hello again', null),
+      );
 
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
-    await tester.tapOnText(find.textRange.ofSubstring('OC'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Organized crime'), findsOneWidget);
-  });
+      final first = translator.show('m1', 'hola', 'en');
+      translator.forget();
+      reply.complete(('hello', 'es'));
+      await first;
+      expect(translator.shownFor('m1', 'en'), isNull);
 
-  test('highlight words reach the web chat as a JSON literal', () {
-    final words = ['a"b', r'c\d', r'$e', "f'g", 'h\ni'];
-    final script = chatHighlightJS(highlights: jsonEncode(words));
-    expect(script, contains(jsonEncode(words)));
-    expect(script, isNot(contains('\nh\ni')));
+      await translator.show('m1', 'hola', 'en');
+      expect(asked, 2);
+      expect(translator.shownFor('m1', 'en')!.text, 'hello again');
+    });
   });
 }

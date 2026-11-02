@@ -1,5 +1,5 @@
-import 'package:intl/intl.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
+import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/items_model.dart';
 
 enum ChatPriceTone { good, near, off }
@@ -59,8 +59,7 @@ class ChatPriceCheck {
         if (l is Map && l['price'] is int) (l['price'] as int, l['amount'] is int ? l['amount'] as int : 1),
     ]..sort((a, b) => a.$1 - b.$1);
     if (cheapest.isEmpty) return null;
-    final money = NumberFormat.decimalPattern('en_US');
-    return cheapest.take(3).map((l) => '\$${money.format(l.$1)} x${l.$2}').join(' - ');
+    return cheapest.take(3).map((l) => '\$${chatCount(l.$1)} x${l.$2}').join(' - ');
   }
 
   static String lowestLine(List<Object>? listings) {
@@ -70,8 +69,7 @@ class ChatPriceCheck {
   }
 
   static String haveLine(int amount, [String unit = '']) {
-    final count = NumberFormat.decimalPattern('en_US').format(amount);
-    final what = amount == 0 ? (unit.isEmpty ? 'none' : 'no $unit') : '$count $unit'.trim();
+    final what = amount == 0 ? (unit.isEmpty ? 'none' : 'no $unit') : '${chatCount(amount)} $unit'.trim();
     return 'You have $what - only you see this';
   }
 

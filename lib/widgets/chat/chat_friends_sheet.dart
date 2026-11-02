@@ -45,7 +45,7 @@ class _ChatFriendsSheetState extends State<ChatFriendsSheet> with SingleTickerPr
   late final TabController _tab;
   bool _askedSaved = false;
   int? _asking;
-  late final ChatApi _api = widget.api ?? TornChatApi();
+  late final ChatApi _api = widget.api ?? TornChatApi(NativeChat.prefs);
 
   @override
   void initState() {

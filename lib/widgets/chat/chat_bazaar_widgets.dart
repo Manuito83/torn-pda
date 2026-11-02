@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:torn_pda/models/chat/chat_bazaar.dart';
+import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
@@ -110,7 +110,6 @@ class _ChatBazaarSheet extends StatefulWidget {
 }
 
 class _ChatBazaarSheetState extends State<_ChatBazaarSheet> {
-  static final NumberFormat _money = NumberFormat.decimalPattern('en_US');
   String _query = '';
 
   @override
@@ -181,7 +180,7 @@ class _ChatBazaarSheetState extends State<_ChatBazaarSheet> {
       onTap: () => NativeChat.openLink(chatPlayerUrl('bazaar', widget.userId)!, always: true, fill: item.name),
       onLongPress: () => NativeChat.openUrl(chatPlayerUrl('bazaar', widget.userId)!),
       title: Text(item.name ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text('x${item.quantity} - \$${_money.format(item.price ?? 0)}'),
+      subtitle: Text('x${item.quantity} - \$${chatCount(item.price ?? 0)}'),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,

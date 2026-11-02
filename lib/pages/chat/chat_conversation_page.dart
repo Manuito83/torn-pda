@@ -5,19 +5,20 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/models/chat/chat_faction_events.dart';
+import 'package:torn_pda/models/chat/chat_faction_now.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_player_color.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_share.dart';
-import 'package:torn_pda/providers/chat/chat_api.dart';
+import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
-import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_arrival_fade.dart';
 import 'package:torn_pda/widgets/chat/chat_away_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_color_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_composer.dart';
 import 'package:torn_pda/widgets/chat/chat_faction_events_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_faction_ops_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_faction_roster_widgets.dart';
@@ -25,6 +26,7 @@ import 'package:torn_pda/widgets/chat/chat_filter_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_compose_tools.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_message_actions.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_next_unread.dart';
 import 'package:torn_pda/widgets/chat/chat_note_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_player_card_widgets.dart';
@@ -46,6 +48,7 @@ class ChatConversationPage extends StatefulWidget {
     this.onOpenRoom,
     this.onGone,
     this.onPopOut,
+    this.narrowBelow = 360,
   });
 
   final String roomId;
@@ -61,6 +64,9 @@ class ChatConversationPage extends StatefulWidget {
 
   /// Embedded only: becomes a small window
   final VoidCallback? onPopOut;
+
+  /// Narrower, window buttons go to the menu
+  final double narrowBelow;
 
   @override
   State<ChatConversationPage> createState() => _ChatConversationPageState();
@@ -254,7 +260,11 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
 
   Future<void> _jumpTo(String id, {DateTime? at}) async {
     final roomId = widget.roomId;
-    bool shown() => _chat.visibleMessagesFor(roomId).any((m) => m.id == id);
+    bool shown() {
+      final target = _chat.shownIdOf(roomId, id);
+      return _chat.visibleMessagesFor(roomId).any((m) => m.id == target);
+    }
+
     for (var page = 0; page < _maxJumpPages && at != null && !shown() && _chat.hasOlder(roomId); page++) {
       final oldest = _chat.messagesFor(roomId).firstOrNull?.createdAt;
       if (oldest == null || oldest.isBefore(at)) break;
@@ -267,7 +277,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     if (!mounted) return;
     if (!shown()) return _snack('Message not loaded');
     _focusFade?.cancel();
-    setState(() => _focusId = id);
+    setState(() => _focusId = _chat.shownIdOf(roomId, id));
     await _reveal(_focusKey, older: true);
     _focusFade = Timer(const Duration(seconds: 2), () {
       if (mounted) setState(() => _focusId = null);
@@ -514,19 +524,32 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       c.available,
       c.loadingOlder,
       c.hasOlder(widget.roomId),
-      c.isLoaded(widget.roomId),
-      c.openFailed(widget.roomId),
+      c.loadOf(widget.roomId),
       c.myUserId,
       c.presenceRevision,
       c.searchQuery,
       c.searchResults,
-      (room.name, room.canWrite, room.isDm, room.emblemUrl, room.icon),
+      (room.name, room.blockers.join(), room.isDm, room.emblemUrl, room.icon),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     context.select<ChatController, Object>(_watched);
+    return LayoutBuilder(
+      builder: (context, box) {
+        final narrow = box.maxWidth < widget.narrowBelow;
+        if (!NativeChat.prefs.isFactionRoom(widget.roomId)) return _page(context, narrow: narrow);
+        return ChatFactionOpsBuilder(
+          prefs: NativeChat.prefs,
+          builder: (_, now) => _page(context, narrow: narrow, factionNow: now),
+        );
+      },
+    );
+  }
+
+  Widget _page(BuildContext context, {required bool narrow, ChatFactionNow? factionNow}) {
+    final clock = chatClockOf(context);
     final chat = _chat;
     final room = chat.roomById(widget.roomId);
 
@@ -535,6 +558,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     final selecting = _selected.isNotEmpty;
     final allSaved = selecting && _selected.every(NativeChat.prefs.isSaved);
     final compact = widget.embedded;
+    final popOut = compact ? widget.onPopOut : (NativeChat.prefs.inAppEnabled ? _popOut : null);
     final toolbar = compact
         ? 48.0
         : (MediaQuery.textScalerOf(context).scale(40) + 16).clamp(kToolbarHeight, double.infinity).toDouble();
@@ -545,6 +569,19 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
             ? theme.colorScheme.onSurface
             : theme.colorScheme.onPrimary);
     final lineStyle = theme.textTheme.bodySmall?.copyWith(fontSize: 12, letterSpacing: 0.1);
+    final connection = ChatConnectionLine(
+      state: chat.connection,
+      presence: chat.presenceOf(ChatRoom.peerIdOf(room.id)),
+      lastSeen: chat.lastSeenOf(ChatRoom.peerIdOf(room.id)),
+      style: lineStyle,
+      short: true,
+    );
+    final faction = NativeChat.prefs.isFactionRoom(room.id);
+    final threeLines =
+        faction &&
+        !compact &&
+        chat.connection != ChatConnection.connected &&
+        !(factionNow?.isEmpty ?? true);
     final page = Scaffold(
       appBar: selecting
           ? AppBar(
@@ -644,6 +681,8 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
               foregroundColor: barText,
               toolbarHeight: room.isDm && !compact
                   ? toolbar + MediaQuery.textScalerOf(context).scale(_hasNote ? 34 : 18)
+                  : threeLines
+                  ? toolbar + MediaQuery.textScalerOf(context).scale(20)
                   : toolbar,
               titleSpacing: 0,
               title: InkWell(
@@ -651,7 +690,10 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                     ? () => showChatPlayerActions(
                         context,
                         room.peer ?? ChatUser(id: ChatRoom.peerIdOf(room.id)!, name: room.name),
+                        roomId: room.id,
                       )
+                    : faction
+                    ? () => showChatFactionMembers(context, prefs: NativeChat.prefs)
                     : null,
                 child: Row(
                   children: [
@@ -668,7 +710,11 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                                   room.isDm && ChatRoom.peerIdOf(room.id) != null
                                       ? NativeChat.prefs.displayName(ChatRoom.peerIdOf(room.id)!, room.name)
                                       : room.name,
-                                  semanticsLabel: room.isDm ? '${room.name}, player details' : null,
+                                  semanticsLabel: room.isDm
+                                      ? '${room.name}, player details'
+                                      : faction
+                                      ? '${room.name}, faction members'
+                                      : null,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(fontSize: compact ? 15 : 18, fontWeight: FontWeight.w600),
@@ -691,36 +737,32 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                                       size: 16,
                                       semanticLabel: until == null
                                           ? 'Muted'
-                                          : 'Muted until ${NativeChat.prefs.stamp(until)}',
+                                          : 'Muted until ${clock.stamp(until)}',
                                     ),
                                   );
                                 },
                               ),
                             ],
                           ),
-                          if (!compact &&
-                              (room.isDm ||
-                                  chat.connection != ChatConnection.connected ||
-                                  room.id == ChatFactionOps.roomId))
-                            Row(
+                          if (factionNow case final now?)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Flexible(
-                                  child: ChatConnectionLine(
-                                    state: chat.connection,
-                                    presence: chat.presenceOf(ChatRoom.peerIdOf(room.id)),
-                                    lastSeen: chat.lastSeenOf(ChatRoom.peerIdOf(room.id)),
-                                    style: lineStyle,
-                                    short: true,
-                                  ),
-                                ),
-                                if (room.id == ChatFactionOps.roomId) ChatChainLine(prefs: NativeChat.prefs),
+                                if (!compact && (now.isEmpty || chat.connection != ChatConnection.connected))
+                                  Row(children: [Flexible(child: connection)]),
+                                if (!now.isEmpty)
+                                  Row(children: [Flexible(child: ChatFactionPills(now: now, roomId: room.id))]),
                               ],
-                            ),
+                            )
+                          else if (!compact && (room.isDm || chat.connection != ChatConnection.connected))
+                            Row(children: [Flexible(child: connection)]),
                           if (!compact && room.isDm && ChatRoom.peerIdOf(room.id) != null)
                             ChatPlayerCardView(
                               id: ChatRoom.peerIdOf(room.id)!,
                               compact: true,
                               lastAction: chat.presenceOf(ChatRoom.peerIdOf(room.id)) == null,
+                              style: lineStyle,
                             ),
                           if (!compact && room.isDm && ChatRoom.peerIdOf(room.id) != null)
                             ChatNoteLine(id: ChatRoom.peerIdOf(room.id)!, name: room.name),
@@ -731,8 +773,8 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                 ),
               ),
               actions: [
-                if (!compact) ChatNextUnreadButton(count: chat.unreadQueue.length, onNext: _nextUnread),
-                if (compact && widget.onPopOut != null)
+                if (!compact && !narrow) ChatNextUnreadButton(count: chat.unreadQueue.length, onNext: _nextUnread),
+                if (compact && !narrow && widget.onPopOut != null)
                   IconButton(
                     tooltip: 'Open in a small window',
                     icon: const Icon(Icons.picture_in_picture_alt_rounded),
@@ -745,18 +787,21 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                       icon: const Icon(Icons.minimize_rounded),
                       onPressed: _minimize,
                     ),
-                  IconButton(
-                    tooltip: 'Open in a small window',
-                    icon: const Icon(Icons.picture_in_picture_alt_rounded),
-                    onPressed: _popOut,
-                  ),
+                  if (!narrow)
+                    IconButton(
+                      tooltip: 'Open in a small window',
+                      icon: const Icon(Icons.picture_in_picture_alt_rounded),
+                      onPressed: _popOut,
+                    ),
                 ],
                 PopupMenuButton<VoidCallback>(
                   tooltip: 'More',
                   onSelected: (action) => action(),
                   itemBuilder: (_) => [
-                    if (compact && chat.unreadQueue.isNotEmpty)
+                    if ((compact || narrow) && chat.unreadQueue.isNotEmpty)
                       PopupMenuItem(value: _nextUnread, child: Text('Next unread (${chat.unreadQueue.length})')),
+                    if (narrow && popOut != null)
+                      PopupMenuItem(value: popOut, child: const Text('Open in a small window')),
                     PopupMenuItem(
                       enabled: chat.isLoaded(room.id),
                       value: _toggleSearch,
@@ -767,6 +812,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                         value: () => showChatPlayerActions(
                           context,
                           room.peer ?? ChatUser(id: ChatRoom.peerIdOf(room.id)!, name: room.name),
+                          roomId: room.id,
                         ),
                         child: const Text('Player details'),
                       ),
@@ -776,7 +822,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                         child: Text(
                           NativeChat.prefs.mutedUntilOf(room.id) == null
                               ? 'Alerts and mute'
-                              : 'Muted until ${NativeChat.prefs.stamp(NativeChat.prefs.mutedUntilOf(room.id)!)}',
+                              : 'Muted until ${clock.stamp(NativeChat.prefs.mutedUntilOf(room.id)!)}',
                         ),
                       ),
                     if (chat.canMarkUnread(room.id))
@@ -796,8 +842,8 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       body: Column(
         children: [
           ChatStartingBar(starting: chat.starting, phrases: chat.isLoaded(widget.roomId)),
-          if (room.id == ChatFactionOps.roomId) ChatWarStrip(prefs: NativeChat.prefs),
-          if (room.id == ChatFactionOps.roomId) ChatFactionRosterLines(prefs: NativeChat.prefs),
+          ChatTestStrip(roomId: room.id),
+          if (faction) ChatFactionRosterLines(prefs: NativeChat.prefs, roomId: room.id),
           if (!room.isDm && NativeChat.prefs.filterOf(room.id).isActive)
             ChatFilterStrip(
               hidden: chat.visibleMessagesFor(room.id).length - chat.filteredMessagesFor(room.id).length,
@@ -825,7 +871,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                 child: ChatNextUnreadEdge(
                   enabled: chat.unreadQueue.isNotEmpty,
                   onNext: _nextUnread,
-                  child: ChatArrivals(chat: chat, roomId: room.id, child: _body(chat, room)),
+                  child: ChatArrivals(chat: chat, roomId: room.id, child: _body(chat, room, clock)),
                 ),
               ),
             ),
@@ -835,6 +881,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
             key: ValueKey(room.id),
             roomName: room.name,
             enabled: chat.available && room.canWrite,
+            blockerText: room.blockerText,
             chat: chat,
             roomId: room.id,
             onSend: (text) {
@@ -861,7 +908,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     );
   }
 
-  Widget _body(ChatController chat, ChatRoom room) {
+  Widget _body(ChatController chat, ChatRoom room, ChatClock clock) {
     final roomId = widget.roomId;
     if (!chat.available && !chat.loggedOut) {
       return ChatStateMessage(
@@ -875,23 +922,25 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       );
     }
     if (chat.sessionIssue) return ChatSessionMessage(state: chat.connection);
-    if (!chat.isLoaded(roomId)) {
-      final failed = chat.connection == ChatConnection.error || chat.unreachable;
-      final timedOut = !failed && chat.openFailed(roomId);
+    final load = chat.loadOf(roomId);
+    if (load != ChatRoomLoad.loaded) {
+      final busy = load == ChatRoomLoad.loading;
       return ChatStateMessage(
         icon: Icons.cloud_off_rounded,
-        busy: !failed && !timedOut,
+        busy: busy,
         phrases: chat.starting,
-        title: failed
-            ? 'Could not reach the chat'
-            : (timedOut ? 'Could not load ${room.name}' : 'Loading ${room.name}'),
-        subtitle: failed || timedOut ? null : (chat.ready ? 'Fetching recent messages' : 'Connecting to Torn'),
-        action: failed || timedOut
-            ? FilledButton.tonal(
-                onPressed: failed ? chat.retry : () => chat.retryRoom(roomId),
+        title: switch (load) {
+          ChatRoomLoad.unreachable => 'Could not reach the chat',
+          ChatRoomLoad.timedOut => 'Could not load ${room.name}',
+          _ => 'Loading ${room.name}',
+        },
+        subtitle: busy ? (chat.ready ? 'Fetching recent messages' : 'Connecting to Torn') : null,
+        action: busy
+            ? null
+            : FilledButton.tonal(
+                onPressed: load == ChatRoomLoad.unreachable ? chat.retry : () => chat.retryRoom(roomId),
                 child: const Text('Try again'),
-              )
-            : null,
+              ),
       );
     }
 
@@ -935,12 +984,12 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       if (isChatFactionEvent(shown[i])) folded[i] = last;
       final m = shown[i];
       final older = i > 0 ? shown[i - 1] : null;
-      at[m.id] = entries.length;
+      at[ChatArrivalTracker.keyOf(m)] = entries.length;
       entries.add((folded.containsKey(i) ? _Row.events : _Row.message, i));
       if (m.id == firstUnread) entries.add((_Row.unread, i));
       if (m.id == away?.anchorId) entries.add((_Row.away, i));
-      if (older == null || !ChatDaySeparator.sameDay(older.createdAt, m.createdAt)) {
-        at['day-${m.id}'] = entries.length;
+      if (older == null || !clock.sameDay(older.createdAt, m.createdAt)) {
+        at['day-${ChatArrivalTracker.keyOf(m)}'] = entries.length;
         entries.add((_Row.day, i));
       }
     }
@@ -964,9 +1013,12 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
             return switch (row) {
               _Row.unread => ChatUnreadSeparator(key: _unreadKey),
               _Row.away => ChatAwayCard(key: _awayKey, away: away!, onJump: _jumpTo),
-              _Row.day => ChatDaySeparator(key: ValueKey('day-${m.id}'), day: m.createdAt),
-              _Row.events => ChatFactionEventsFold(key: ValueKey(m.id), events: shown.sublist(i, folded[i]! + 1)),
-              _Row.message => _messageRow(chat, room, shown, i, term, firstUnread, saved),
+              _Row.day => ChatDaySeparator(key: ValueKey('day-${ChatArrivalTracker.keyOf(m)}'), day: m.createdAt),
+              _Row.events => ChatFactionEventsFold(
+                key: ValueKey(ChatArrivalTracker.keyOf(m)),
+                events: shown.sublist(i, folded[i]! + 1),
+              ),
+              _Row.message => _messageRow(chat, room, clock, shown, i, term, firstUnread, saved),
             };
           },
         ),
@@ -1012,6 +1064,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
   Widget _messageRow(
     ChatController chat,
     ChatRoom room,
+    ChatClock clock,
     List<ChatMessage> shown,
     int i,
     String? term,
@@ -1042,10 +1095,10 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       searchCurrent: current || m.id == _focusId,
       saved: saved.contains(m.id),
       onQuoteTap: () => _jumpToQuote(m),
-      isFirstInGroup: m.id == firstUnread || !chatSameGroup(older, m),
-      isLastInGroup: !chatSameGroup(m, newer),
+      isFirstInGroup: m.id == firstUnread || !chatSameGroup(clock, older, m),
+      isLastInGroup: !chatSameGroup(clock, m, newer),
       onLongPress: selectable ? () => _toggleSelected(m) : null,
-      presence: ChatApi.hasRoster(room.id) ? chat.presenceOf(m.sender.id) : null,
+      presence: chat.hasRoster(room.id) ? chat.presenceOf(m.sender.id) : null,
       translation: NativeChat.translator.shownFor(m.id, NativeChat.translateTarget),
       onTranslationTap: () => _translate(m),
       onReply: reply,
@@ -1149,10 +1202,11 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
         ),
       ),
     );
-    final row = ChatArrivalFade(animate: _arrivals.take(ChatArrivalTracker.keyOf(m)), child: gesture);
+    final key = ChatArrivalTracker.keyOf(m);
+    final row = ChatArrivalFade(animate: _arrivals.take(key), child: gesture);
     if (current) return KeyedSubtree(key: _matchKey, child: row);
     if (m.id == _focusId) return KeyedSubtree(key: _focusKey, child: row);
-    return KeyedSubtree(key: ValueKey(m.id), child: row);
+    return KeyedSubtree(key: ValueKey(key), child: row);
   }
 }
 

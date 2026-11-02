@@ -1,17 +1,18 @@
 import 'package:flutter/widgets.dart';
 import 'package:torn_pda/models/drawer_section.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 class StatsController {
-  static bool browserOpen = false;
-
   static final chat = _ChatStats();
 
-  static final NavigatorObserver rootObserver = NavigatorObserver();
-  static final NavigatorObserver homeObserver = NavigatorObserver();
+  WebViewProvider? webViews;
 
-  static void section(DrawerSection section) {}
-  static void screen(String name) {}
-  static void relog() {}
+  final NavigatorObserver rootObserver = NavigatorObserver();
+  final NavigatorObserver homeObserver = NavigatorObserver();
+
+  void section(DrawerSection section) {}
+  void screen(String name) {}
+  void relog() {}
 
   Future<void> logCheckIn() async {}
   Future<void> logCheckOut() async {}

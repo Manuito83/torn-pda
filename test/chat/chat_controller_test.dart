@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
-import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_faction_events.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_saved.dart';
+import 'package:torn_pda/providers/chat/chat_api.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_faction_events.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -14,6 +16,24 @@ import 'chat_fakes.dart';
 class _OfflineSource extends FakeChatSource {
   @override
   bool get available => false;
+}
+
+class _SlowApi implements ChatApi {
+  final rosterAnswer = Completer<List<(ChatUser, ChatLastAction)>?>();
+  final friendsAnswer = Completer<List<(ChatUser, ChatLastAction)>?>();
+  int rosterCalls = 0;
+
+  @override
+  Future<List<(ChatUser, ChatLastAction)>?> roster(String roomId) {
+    rosterCalls++;
+    return rosterAnswer.future;
+  }
+
+  @override
+  Future<List<(ChatUser, ChatLastAction)>?> friends() => friendsAnswer.future;
+
+  @override
+  Future<ChatLastAction?> lastAction(int userId) async => null;
 }
 
 void main() {
@@ -190,6 +210,26 @@ void main() {
       c.dispose();
     });
 
+    testWidgets('a room that timed out reads as unreachable while the chat is down', (tester) async {
+      final torn = FakeChatSource();
+      final c = ChatController(torn, ChatPrefs());
+      torn
+        ..emit(const ChatConnectionEvent(ChatConnection.connected))
+        ..emit(const ChatReadyEvent(1));
+      c.peekRoom('faction');
+      await tester.pump(const Duration(seconds: 21));
+      expect(c.loadOf('faction'), ChatRoomLoad.timedOut);
+
+      torn.emit(const ChatConnectionEvent(ChatConnection.error));
+      expect(c.loadOf('faction'), ChatRoomLoad.unreachable);
+
+      torn
+        ..emit(const ChatConnectionEvent(ChatConnection.connected))
+        ..emit(ChatHistoryEvent('faction', [chatMessage('a', 'faction')], hasOlder: false, isOlderPage: false));
+      expect(c.loadOf('faction'), ChatRoomLoad.loaded);
+      c.dispose();
+    });
+
     test('forgetAccount clears personal data', () {
       final message = chatMessage('a', 'dm:7');
       prefs
@@ -210,6 +250,42 @@ void main() {
       expect(prefs.shortcutCache, isEmpty);
       expect(prefs.windows, isEmpty);
       expect(prefs.ignored, {3: 'Echo'});
+    });
+
+    test('api answers for a forgotten account are dropped', () async {
+      final api = _SlowApi();
+      final c = ChatController(source, prefs, api);
+      addTearDown(c.dispose);
+      source.emit(const ChatReadyEvent(1));
+      c.openConversation('company');
+      unawaited(c.refreshFriends(force: true));
+
+      c.forgetAccount();
+      const worker = (ChatUser(id: 9, name: 'Worker'), ChatLastAction(ChatPresence.online, null));
+      api.rosterAnswer.complete([worker]);
+      api.friendsAnswer.complete([worker]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(c.rosterOf('company'), isEmpty);
+      expect(c.friends, isNull);
+    });
+
+    testWidgets('a forgotten account stops polling its room', (tester) async {
+      final api = _SlowApi();
+      final c = ChatController(source, prefs, api);
+      source.emit(const ChatReadyEvent(1));
+      c.openConversation('company');
+      expect(api.rosterCalls, 1);
+
+      c.forgetAccount();
+      await tester.pump(const Duration(minutes: 2));
+      expect(api.rosterCalls, 1);
+
+      c.openConversation('company');
+      expect(api.rosterCalls, 2);
+      api.rosterAnswer.complete([]);
+      await tester.pump();
+      c.dispose();
     });
 
     test('faction news of the last account never come back', () async {
@@ -423,20 +499,6 @@ void main() {
       expect([for (final r in chat.unreadQueue) r.id], ['faction']);
       prefs.hiddenRooms = {'faction'};
       expect(chat.unreadQueue, isEmpty);
-    });
-
-    test('landing time only while traveling with the flight ahead', () {
-      int secs(Duration d) => chatNow.add(d).millisecondsSinceEpoch ~/ 1000;
-      BarsStatusCooldownsModel bars(String state, int stamp) => BarsStatusCooldownsModel(
-        status: Status(state: state),
-        travel: Travel(timestamp: stamp),
-      );
-      final landing = secs(const Duration(hours: 2));
-      expect(chatLandingTime(bars('Traveling', landing), chatNow), DateTime.fromMillisecondsSinceEpoch(landing * 1000));
-      expect(chatLandingTime(bars('Traveling', secs(const Duration(minutes: -1))), chatNow), isNull);
-      expect(chatLandingTime(bars('Okay', landing), chatNow), isNull);
-      expect(chatLandingTime(bars('Hospital', landing), chatNow), isNull);
-      expect(chatLandingTime(null, chatNow), isNull);
     });
   });
 

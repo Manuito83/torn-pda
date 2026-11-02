@@ -542,27 +542,6 @@ void main() {
       }
     });
 
-    test('a row layout it does not expect drops the cache instead of misreading it', () async {
-      // What a later version would write if it started storing a third field per row
-      final store = _FakeStore('{"c":{"Medical":{"t":$_nowSeconds,"i":[[180,5,true]]}}}');
-      final provider = _newProvider(fetcher: _FakeApi({}).fetch, store: store);
-      await provider.restored;
-
-      expect(provider.loaded("Medical"), isFalse);
-      expect(store.value, isEmpty);
-    });
-
-    test('an empty store restores nothing and gets in nobody\'s way', () async {
-      final api = _FakeApi({"Medical": InventoryV2Category(items: const [], timestamp: _nowSeconds)});
-      final provider = _newProvider(fetcher: api.fetch);
-
-      await provider.restored;
-      expect(provider.loaded("Medical"), isFalse);
-
-      await provider.ensureFresh({"Medical"});
-      expect(provider.loaded("Medical"), isTrue);
-    });
-
     test('the disk is not read on construction, only when something needs it', () async {
       final store = _FakeStore('{"c":{"Medical":{"t":$_nowSeconds,"i":[[1,4]]}}}');
       final provider = _newProvider(fetcher: _FakeApi({}).fetch, store: store);

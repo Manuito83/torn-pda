@@ -9,6 +9,7 @@ import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_edge_back.dart';
 import 'package:torn_pda/widgets/chat/chat_friends_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
@@ -133,7 +134,7 @@ class _ChatPageState extends State<ChatPage> {
         chat: chat,
         onPick: (user) => _open(ChatRoom.dmId(user.id), newPeer: user),
       ),
-      body: body,
+      body: ChatEdgeBack(onBack: () => Navigator.maybePop(context), child: body),
     );
   }
 }

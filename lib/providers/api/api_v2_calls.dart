@@ -11,7 +11,6 @@ import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.da
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
 String apiV2LegacyRequests = "";
@@ -115,19 +114,23 @@ class ApiCallsV2 {
         }
       }
 
+      double? travelTimeReduction;
       final perksNode = _deepCastJson(apiResponse["perks"]);
       if (perksNode is Map && perksNode.values.any((list) => list is List)) {
-        final reduction = TravelTimes.parseReduction([
+        travelTimeReduction = TravelTimes.parseReduction([
           for (final list in perksNode.values)
             if (list is List) ...list,
         ]);
-        if (reduction != TravelTimes.reductionPercent) {
-          TravelTimes.reductionPercent = reduction;
-          unawaited(Prefs().setTravelTimeReduction(reduction));
-        }
       }
 
-      return ProfileMiscResult(ownProfileMisc, market, oc, virusResolved, virus);
+      return ProfileMiscResult(
+        ownProfileMisc,
+        market,
+        oc,
+        virusResolved,
+        virus,
+        travelTimeReduction: travelTimeReduction,
+      );
     } catch (e, trace) {
       log("Error converting V2 OwnProfileMisc: $e, $trace");
       return null;
@@ -360,5 +363,13 @@ class ProfileMiscResult {
   final UserOrganizedCrimeResponse? organizedCrime;
   final bool virusResolved; // if false, the virus below means nothing
   final UserVirus? virus; // null means nothing being programmed
-  ProfileMiscResult(this.misc, this.itemmarket, this.organizedCrime, this.virusResolved, this.virus);
+  final double? travelTimeReduction; // null when perks did not come
+  ProfileMiscResult(
+    this.misc,
+    this.itemmarket,
+    this.organizedCrime,
+    this.virusResolved,
+    this.virus, {
+    this.travelTimeReduction,
+  });
 }

@@ -119,7 +119,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     }
   }
 
-  // Paths that skip recovery still need the UID when Firebase already restored the session
+  // Also for paths that skip recovery
   void _setUidIfSessionRestored() {
     if (Platform.isWindows) return;
     try {

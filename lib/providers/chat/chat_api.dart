@@ -1,19 +1,14 @@
-import 'package:get/get.dart';
-import 'package:torn_pda/models/api_v2/torn_v2.enums.swagger.dart' as enums;
-import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
+import 'package:torn_pda/models/chat/chat_faction_roster.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_status.dart';
 import 'package:torn_pda/models/company/employees_model.dart';
-import 'package:torn_pda/providers/api/api_caller.dart';
-import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chat/chat_faction_roster.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
+import 'package:torn_pda/providers/chat/chat_prefs.dart';
 
 abstract class ChatApi {
-  static bool hasRoster(String roomId) => roomId == 'faction' || roomId == 'company';
-
   Future<ChatLastAction?> lastAction(int userId);
 
   Future<List<(ChatUser, ChatLastAction)>?> roster(String roomId);
@@ -22,6 +17,10 @@ abstract class ChatApi {
 }
 
 class TornChatApi implements ChatApi {
+  TornChatApi(this._prefs);
+
+  final ChatPrefs _prefs;
+
   @override
   Future<ChatLastAction?> lastAction(int userId) async {
     // Under the 30 s poll
@@ -32,18 +31,14 @@ class TornChatApi implements ChatApi {
 
   @override
   Future<List<(ChatUser, ChatLastAction)>?> roster(String roomId) async {
-    if (roomId == 'faction') {
-      final response = await Get.find<ApiCallerController>().enqueueApiCall<dynamic>(
-        apiSelection_v2: ApiSelection_v2.factionMembers,
-        apiCall: (client, apiKey) => client.factionMembersGet(striptags: enums.ApiStripTagsTrue.$true),
-      );
-      if (response is! FactionMembersResponse) return null;
-      final members = response.members;
-      ChatFactionRoster.shared.setMembers(members);
+    if (_prefs.isFactionRoom(roomId)) {
+      final roster = ChatFactionRoster.shared;
+      final members = roster.recentMembers() ?? await roster.loadMembers();
+      if (members == null) return null;
       return [
         for (final m in members)
           if (_parse(m.lastAction.status, m.lastAction.timestamp) case final action?)
-            (ChatUser(id: m.id, name: m.name, leader: _leads(m.position)), action),
+            (ChatUser(id: m.id, name: m.name, leader: chatIsLead(m.position)), action),
       ];
     }
     if (roomId == 'company') {
@@ -57,7 +52,7 @@ class TornChatApi implements ChatApi {
               ChatUser(
                 id: id,
                 name: name,
-                leader: _leads(e.value.position),
+                leader: chatIsLead(e.value.position),
                 playerStatus: ChatPlayerStatus.from(
                   e.value.status?.state,
                   e.value.status?.description,
@@ -70,8 +65,6 @@ class TornChatApi implements ChatApi {
     }
     return null;
   }
-
-  static bool _leads(String? position) => const {'leader', 'co-leader', 'director'}.contains(position?.toLowerCase());
 
   static const int _maxFriendPages = 3;
 

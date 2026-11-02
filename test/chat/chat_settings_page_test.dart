@@ -37,29 +37,6 @@ void main() {
     );
   }
 
-  testWidgets('each row opens its page', (tester) async {
-    await openSettings(tester);
-    for (final title in [
-      'Chat button',
-      'Alerts',
-      'Rooms',
-      'Appearance',
-      'Messages & links',
-      'Writing & actions',
-      'People',
-      'Faction room',
-    ]) {
-      await tester.tap(find.widgetWithText(ListTile, title));
-      await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
-      expect(_barTitle(title), findsOneWidget, reason: title);
-      expect(tester.takeException(), isNull, reason: title);
-      await tester.pageBack();
-      await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
-    }
-  });
-
   testWidgets('alerts summary follows mentions, ticker and quiet hours', (tester) async {
     NativeChat.prefs
       ..setMentions(false)

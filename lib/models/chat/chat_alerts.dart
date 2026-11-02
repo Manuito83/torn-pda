@@ -3,6 +3,10 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 
 enum ChatAlertLevel { all, mentions, none }
 
+const int chatAlertIdBase = 677000;
+
+int chatAlertId(String roomId) => chatAlertIdBase + roomId.hashCode.abs() % 1000;
+
 enum ChatMuteFor {
   hour('1 hour'),
   eightHours('8 hours'),

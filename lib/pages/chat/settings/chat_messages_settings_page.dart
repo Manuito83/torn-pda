@@ -78,10 +78,10 @@ class ChatMessagesSettingsPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Text('Load link previews automatically', style: Theme.of(context).textTheme.titleSmall),
             ),
-            for (final group in ChatPrefs.tickerOptions)
+            for (final group in prefs.tickerOptions)
               SwitchListTile(
                 dense: true,
-                title: Text(ChatRooms.labelOf(group)),
+                title: Text(ChatRooms.labelOf(group, prefs.remoteRooms)),
                 value: !prefs.linkPreviewsOff.contains(group),
                 onChanged: (v) => prefs.setLinkPreviewsIn(group, v),
               ),

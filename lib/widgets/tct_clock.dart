@@ -174,7 +174,8 @@ class TctClockState extends State<TctClock> {
 
         String eventString = "[${event.title}] is active!\n\n${event.description}\n\n$remainingStr";
         if (event.usesUserStartTime && event.userStartTimeLiteral != null) {
-          eventString += "\n\nStart time: ${event.userStartTimeLiteral}";
+          final String endTct = DateFormat('HH:mm').format(eventEnd.add(const Duration(seconds: 1)));
+          eventString += "\n\nEnds at $endTct TCT";
           if (!event.userStartTimeApplied) {
             eventString += "\n(Using default timing; couldn't apply configured start)";
           }
@@ -232,10 +233,9 @@ class TctClockState extends State<TctClock> {
       // Simulate a full-day Torn event that gets shifted to a 10:30 TCT user start
       final DateTime dayStart = DateTime.utc(now.year, now.month, now.day);
       final DateTime dayEnd = dayStart.add(const Duration(days: 1)).subtract(const Duration(seconds: 1));
-      final Duration fullDayDuration = dayEnd.difference(dayStart);
 
       final DateTime customStart = DateTime.utc(dayStart.year, dayStart.month, dayStart.day, 10, 30);
-      final DateTime customEnd = customStart.add(fullDayDuration);
+      final DateTime customEnd = customStart.add(const Duration(days: 1));
 
       eventsList = [
         _ActiveCalendarEvent(
@@ -270,7 +270,6 @@ class TctClockState extends State<TctClock> {
   _ActiveCalendarEvent? _buildActiveEvent(TornCalendarActivity activity, DateTime nowUtc) {
     final DateTime baseStart = DateTime.fromMillisecondsSinceEpoch(activity.start * 1000, isUtc: true);
     final DateTime baseEnd = DateTime.fromMillisecondsSinceEpoch(activity.end * 1000, isUtc: true);
-    final Duration duration = baseEnd.difference(baseStart);
 
     DateTime effectiveStart = baseStart;
     DateTime effectiveEnd = baseEnd;
@@ -278,10 +277,9 @@ class TctClockState extends State<TctClock> {
     bool userStartTimeApplied = false;
 
     if (usesUserStartTime && _userCalendarStartOffset != null) {
-      // Shift the start to the player selected hour and then
-      // compute the end so the total duration matches Torn's duration
+      // At the player's hour
       effectiveStart = _applyUserStartTime(baseStart, _userCalendarStartOffset!);
-      effectiveEnd = effectiveStart.add(duration);
+      effectiveEnd = _applyUserStartTime(baseEnd, _userCalendarStartOffset!);
       userStartTimeApplied = true;
     }
 

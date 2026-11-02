@@ -49,8 +49,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
-import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
-import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
@@ -82,12 +81,13 @@ import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/widgets/chaining/chain_mini_window.dart';
 import 'package:torn_pda/widgets/chat/chat_logo_bubble.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
@@ -104,7 +104,7 @@ import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/pda_update_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/chaining/chain_attack.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:uri_to_file/uri_to_file.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -126,7 +126,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Drawer section order
   final _drawerItemsList = DrawerSection.values;
 
-  final StatsController _statsController = StatsController();
+  final StatsController _statsController = Get.find<StatsController>();
 
   ThemeProvider? _themeProvider;
 
@@ -157,6 +157,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   bool _forceFireUserReload = false;
 
   bool _retalsRedirection = false;
+
+  // Rebuilds Chaining on the saved tab
+  int _chainingOpens = 0;
 
   // Tracks the enqueued PDA update version to avoid duplicate dialogs in a session
   int? _pdaUpdateDialogEnqueuedVersion;
@@ -278,7 +281,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       });
 
       // The chat start publishes the menu
-      if (!NativeChat.compiled) AppIconMenu.publish();
+      if (!NativeChat.compiled) Get.find<AppIconMenuController>().publish();
     } catch (e, stackTrace) {
       log("Error initializing quick actions: $e");
       logErrorToCrashlytics("Error initializing quick actions", e, stackTrace);
@@ -749,6 +752,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "native_chat_reply_enabled": false,
         "native_chat_rooms": "",
         "native_chat_tab_grace_seconds": 30,
+        "chat_test_players": "",
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
         //"revive_hela": "1.8 million or 2 Xanax",
@@ -764,6 +768,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "pda_update_details": "",
         // Connectivity check
         "pda_connectivity_check": false,
+        "network_strict_mode": true,
       });
 
       // Wait for preferences to be loaded before fetching Remote Config
@@ -856,8 +861,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _webViewProvider.hiddenTabRebuildAllowedRC = remoteConfig.getBool("browser_hidden_tab_rebuild_allowed");
       _webViewProvider.tornPageRefreshRC = remoteConfig.getBool("browser_torn_page_refresh_allowed");
       final bool chainWebLiveRC = remoteConfig.getBool("chain_web_live_enabled");
-      Get.find<ChainStatusController>().webLiveAllowed = chainWebLiveRC;
-      ChainMiniWindow.setRemote(mini: remoteConfig.getBool("chain_mini_window_enabled"), web: chainWebLiveRC);
+      Get.find<ChainStatusController>()
+        ..webLiveAllowed = chainWebLiveRC
+        ..setMiniRemote(mini: remoteConfig.getBool("chain_mini_window_enabled"), web: chainWebLiveRC);
 
       // Browser memory defaults (also persisted, so they are known before the fetch on next launch)
       _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");
@@ -879,6 +885,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       NativeChat.prefs.setRemoteRooms(remoteConfig.getString("native_chat_rooms"));
       NativeChat.setReplyEnabled(remoteConfig.getBool("native_chat_reply_enabled"));
       NativeChat.setTabGrace(remoteConfig.getInt("native_chat_tab_grace_seconds"));
+      NativeChat.prefs.setTesters(remoteConfig.getString("chat_test_players"));
 
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
@@ -902,6 +909,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Connectivity check
       Prefs().setPdaConnectivityCheck(remoteConfig.getBool("pda_connectivity_check"));
+
+      final httpOverrides = HttpOverrides.current;
+      if (httpOverrides is MyHttpOverrides) {
+        httpOverrides.strictMode = remoteConfig.getBool("network_strict_mode");
+      }
 
       // JS Snippets RC overrides: snippet_<id>_js (raw JS) + snippet_<id>_version
       for (final id in RemoteSnippets.ids) {
@@ -1684,35 +1696,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // This is a Loot Rangers alert for one or more NPCs
         final ids = <String>[];
         final names = <String>[];
-        final notes = <String>[];
-        final colors = <String>[];
         for (var i = 0; i < incomingIds.length; i++) {
           final parts = incomingIds[i].split("[");
           names.add(parts[0]);
           ids.add(parts[1].replaceAll("]", ""));
-          colors.add("green");
-          if (i == 0) {
-            notes.add("Attacks due to commence at $bulkDetails TCT!");
-          } else {
-            notes.add("");
-          }
         }
 
         // Open chaining browser for Loot Rangers
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
-          browserTapType: BrowserTapType.chainShort,
+        attackFromLootRangers(
+          context,
+          ids,
+          names,
+          "Attacks due to commence at $bulkDetails TCT!",
           fromNotification: true,
-          isChainingBrowser: true,
-          chainingPayload: ChainingPayload()
-            ..attackIdList = ids
-            ..attackNameList = names
-            ..attackNotesList = notes
-            ..attackNotesColorList = colors
-            ..showNotes = true
-            ..showBlankNotes = false
-            ..showOnlineFactionWarning = false,
         );
       }
     } else if (tornChat) {
@@ -1755,6 +1751,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
       if (payload == NativeChat.alertsPayload) {
         _callSectionFromOutside(DrawerSection.alerts);
+        return;
+      }
+      final chainingTab = NativeChat.chainingTabOf(payload);
+      if (chainingTab != null) {
+        await Prefs().setChainingCurrentPage(chainingTab);
+        _chainingOpens++;
+        _callSectionFromOutside(DrawerSection.chaining);
         return;
       }
 
@@ -1874,34 +1877,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final lootRangersNpcsIds = payload.split('-')[1].split(",");
         final lootRangersNpcsNames = payload.split('-')[2].split(",");
         final lootRangersTime = payload.split('-')[3];
-        final timeNote = "Attacks due to commence at $lootRangersTime!";
-
-        final notes = <String>[];
-        final colors = <String>[];
-        for (var i = 0; i < lootRangersNpcsIds.length; i++) {
-          colors.add("green");
-          if (i == 0) {
-            notes.add(timeNote);
-          } else {
-            notes.add("");
-          }
-        }
 
         // Open chaining browser for Loot Rangers
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: "https://www.torn.com/page.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
-          browserTapType: BrowserTapType.chainShort,
+        attackFromLootRangers(
+          context,
+          lootRangersNpcsIds,
+          lootRangersNpcsNames,
+          "Attacks due to commence at $lootRangersTime!",
           fromNotification: true,
-          isChainingBrowser: true,
-          chainingPayload: ChainingPayload()
-            ..attackIdList = lootRangersNpcsIds
-            ..attackNameList = lootRangersNpcsNames
-            ..attackNotesList = notes
-            ..attackNotesColorList = colors
-            ..showNotes = true
-            ..showBlankNotes = false
-            ..showOnlineFactionWarning = false,
         );
 
         browserUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=$lootRangersNpcsIds';
@@ -2063,35 +2046,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // This is a Loot Rangers alert for one or more NPCs
           final ids = <String>[];
           final names = <String>[];
-          final notes = <String>[];
-          final colors = <String>[];
           for (var i = 0; i < incomingIds.length; i++) {
             final parts = incomingIds[i].split("[");
             names.add(parts[0]);
             ids.add(parts[1].replaceAll("]", ""));
-            colors.add("green");
-            if (i == 0) {
-              notes.add("Attacks due to commence at ${bulkDetails[1]} TCT!");
-            } else {
-              notes.add("");
-            }
           }
 
           // Open chaining browser for Loot Rangers
-          _webViewProvider.openBrowserPreference(
-            context: context,
-            url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
-            browserTapType: BrowserTapType.chainShort,
+          attackFromLootRangers(
+            context,
+            ids,
+            names,
+            "Attacks due to commence at ${bulkDetails[1]} TCT!",
             fromNotification: true,
-            isChainingBrowser: true,
-            chainingPayload: ChainingPayload()
-              ..attackIdList = ids
-              ..attackNameList = names
-              ..attackNotesList = notes
-              ..attackNotesColorList = colors
-              ..showNotes = true
-              ..showBlankNotes = false
-              ..showOnlineFactionWarning = false,
           );
         }
       } else if (payload.contains('tornChat')) {
@@ -2494,11 +2461,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Widget _getDrawerItems(SettingsProvider settingsProvider) {
     final drawerOptions = <Widget>[];
     final visibleSections = _getVisibleSections(settingsProvider);
-    final order = DrawerSectionsPage.fullOrder(settingsProvider.drawerSectionOrder);
+    final order = drawerFullOrder(settingsProvider.drawerSectionOrder);
     var chatAdded = false;
 
     for (final section in visibleSections) {
-      if (!chatAdded && order.indexOf(section.name) > order.indexOf(DrawerSectionsPage.chatId)) {
+      if (!chatAdded && order.indexOf(section.name) > order.indexOf(drawerChatId)) {
         drawerOptions.add(const ChatMenuBar());
         chatAdded = true;
       }
@@ -2546,7 +2513,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case DrawerSection.travel:
         return const TravelPage();
       case DrawerSection.chaining:
-        return ChainingPage(retalsRedirection: _retalsRedirection);
+        return KeyedSubtree(
+          key: ValueKey(_chainingOpens),
+          child: ChainingPage(retalsRedirection: _retalsRedirection),
+        );
       case DrawerSection.loot:
         return LootPage();
       case DrawerSection.friends:
@@ -2580,7 +2550,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _onSelectItem(DrawerSection section) async {
     Navigator.of(context).pop();
-    StatsController.section(section);
+    _statsController.section(section);
     setState(() {
       _selected = section;
       _activeDrawerIndex = section;
@@ -2619,7 +2589,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!userController.isApiKeyValid) {
       _selected = DrawerSection.settings;
       _activeDrawerIndex = DrawerSection.settings;
-      StatsController.section(DrawerSection.settings);
+      _statsController.section(DrawerSection.settings);
     } else {
       String defaultSection = await Prefs().getDefaultSection();
 
@@ -2639,7 +2609,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       _selected = resolvedSection;
       _activeDrawerIndex = resolvedSection;
-      StatsController.section(resolvedSection);
+      _statsController.section(resolvedSection);
     }
 
     // Change device preferences
@@ -3152,7 +3122,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _selected = section;
       _activeDrawerIndex = section;
     });
-    StatsController.section(section);
+    _statsController.section(section);
     _getPages();
   }
 
@@ -3456,7 +3426,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       bridgeController.initializeHandler();
       if (isAndroid || _settingsProvider.iosLiveActivityTravelEnabled) {
-        await travelController.activate();
+        await travelController.activate(_settingsProvider);
       }
       if ((isIos && _settingsProvider.iosLiveActivityRacingEnabled) ||
           (isAndroid && _settingsProvider.androidLiveActivityRacingEnabled)) {

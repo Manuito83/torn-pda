@@ -1,19 +1,28 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ColorScheme;
 import 'package:flutter/widgets.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_away.dart';
+import 'package:torn_pda/models/chat/chat_banking.dart';
+import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/models/chat/chat_inbox_snapshot.dart';
+import 'package:torn_pda/models/chat/chat_item_price.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
+import 'package:torn_pda/models/chat/chat_share.dart';
 import 'package:torn_pda/models/chat/chat_source.dart';
+import 'package:torn_pda/models/chat/chat_watch.dart';
 import 'package:torn_pda/providers/chat/chat_api.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_typing_report.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
+import 'package:torn_pda/utils/app_lifecycle.dart';
 import 'package:uuid/uuid.dart';
+
+typedef ChatHeldToast = ({String text, String action, VoidCallback? onAction, VoidCallback? onClose});
 
 class ChatController extends ChangeNotifier {
   ChatController(this._source, [ChatPrefs? prefs, this._api]) : _prefs = prefs ?? ChatPrefs() {
@@ -59,9 +68,11 @@ class ChatController extends ChangeNotifier {
       _connection == ChatConnection.needsBrowser ||
       _connection == ChatConnection.twoFactor;
 
+  static bool _outage(ChatConnection state) =>
+      state == ChatConnection.offline || state == ChatConnection.tornDown || state == ChatConnection.slowLoad;
+
   /// Anything keeping the chat from a session
-  bool get sessionIssue =>
-      needsLogin || (!_ready && (_connection == ChatConnection.offline || _connection == ChatConnection.tornDown));
+  bool get sessionIssue => needsLogin || (!_ready && _outage(_connection));
 
   Timer? _graceTimer;
   ChatConnection? _held;
@@ -143,10 +154,16 @@ class ChatController extends ChangeNotifier {
 
   final Map<String, String> _emblems = {};
 
-  void setEmblem(String roomId, String url) {
-    _emblems[roomId] = url;
+  void setEmblem(String roomId, String? url) {
+    if (_emblems[roomId] == url) return;
+    if (url == null) {
+      _emblems.remove(roomId);
+    } else {
+      _emblems[roomId] = url;
+    }
     _rooms = [for (final r in _rooms) r.id == roomId ? r.withEmblem(url) : r];
     notifyListeners();
+    _scheduleSave();
   }
 
   // Panels open in Torn
@@ -170,8 +187,61 @@ class ChatController extends ChangeNotifier {
   String? get currentRoomId => _onScreen.lastOrNull;
   bool isOnScreen(String roomId) => _onScreen.contains(roomId);
 
+  /// Room the launcher reopens after leaving
+  String? backTo;
+
+  bool unreadOnly = false;
+  bool waitingExpanded = false;
+
+  /// Last item from the price tool
+  ChatItemPrice? lastItem;
+
+  /// Share waiting for its room's composer
+  final sharePending = ValueNotifier<({String roomId, ChatShared shared, DateTime at})?>(null);
+
+  /// Toast held on the overlay for readers
+  final heldToast = ValueNotifier<ChatHeldToast?>(null);
+
+  static const int _maxMessageParts = 400;
+  final Map<Object, List<(Object, int)>> _messageParts = {};
+
+  List<(Object, int)> messageParts(Object key, List<(Object, int)> Function() split) {
+    final parts = _messageParts.remove(key) ?? List<(Object, int)>.unmodifiable(split());
+    _messageParts[key] = parts;
+    if (_messageParts.length > _maxMessageParts) _messageParts.remove(_messageParts.keys.first);
+    return parts;
+  }
+
+  static const int _maxUserSchemes = 200;
+  final Map<(int, Brightness), ColorScheme> _userSchemes = {};
+
+  ColorScheme userSchemeFor(int userId, Brightness brightness) {
+    final key = (userId, brightness);
+    final scheme =
+        _userSchemes.remove(key) ??
+        ColorScheme.fromSeed(
+          seedColor: HSVColor.fromAHSV(1, (userId * 47) % 360, 0.6, 0.8).toColor(),
+          brightness: brightness,
+        );
+    _userSchemes[key] = scheme;
+    if (_userSchemes.length > _maxUserSchemes) _userSchemes.remove(_userSchemes.keys.first);
+    return scheme;
+  }
+
   final Map<String, List<ChatMessage>> _messages = {};
   List<ChatMessage> messagesFor(String roomId) => _messages[roomId] ?? const [];
+
+  List<ChatMessage>? _bankFor;
+  Map<String, ChatBankEntry> _bank = const {};
+
+  /// Requests by message id, oldest messages first
+  Map<String, ChatBankEntry> bankStates(String roomId) {
+    final messages = messagesFor(roomId);
+    if (identical(messages, _bankFor)) return _bank;
+    _bank = chatBankDerive(messages);
+    _bankFor = messages;
+    return _bank;
+  }
 
   final Map<int, ChatPresence> _presence = {};
   final Map<int, ChatLastAction> _lastAction = {};
@@ -193,20 +263,86 @@ class ChatController extends ChangeNotifier {
   bool get loadingFriends => _askingFriends;
   DateTime _friendsAt = DateTime(0);
 
-  Set<int> _blocked = {};
+  Map<int, ChatUser> _blocked = {};
+
+  /// Blocked in Torn, not ignored in PDA
+  List<ChatUser> get blockedUsers => _blocked.values.toList();
+
+  bool isBlocked(int userId) => _blocked.containsKey(userId);
 
   bool isHidden(ChatUser user) =>
-      user.id > 0 && user.id != myUserId && (_blocked.contains(user.id) || _prefs.isIgnored(user.id));
+      user.id > 0 && user.id != myUserId && (_blocked.containsKey(user.id) || _prefs.isIgnored(user.id));
 
-  final Map<String, (List<ChatMessage>, List<ChatMessage>)> _visible = {};
+  /// False when Torn refuses, nothing changes then
+  Future<bool> setBlocked(ChatUser user, bool blocked) async {
+    _markBlocked(user, blocked);
+    final ok = blocked ? await _source.block(user.id) : await _source.unblock(user.id);
+    if (!ok) _markBlocked(user, !blocked);
+    return ok;
+  }
+
+  void _markBlocked(ChatUser user, bool blocked) {
+    final dm = ChatRoom.dmId(user.id);
+    final others = roomById(dm).blockers.where((b) => b != ChatRoom.blockedByMe);
+    _setBlockers(dm, [...others, if (blocked) ChatRoom.blockedByMe]);
+    _syncBlocked(user, blocked);
+    notifyListeners();
+  }
+
+  void _syncBlocked(ChatUser user, bool blocked) {
+    if (blocked == _blocked.containsKey(user.id)) return;
+    if (blocked) {
+      _blocked[user.id] = user;
+    } else {
+      _blocked.remove(user.id);
+    }
+    _visible.clear();
+  }
+
+  void _setBlockers(String roomId, List<String> blockers) {
+    ChatRoom swap(ChatRoom r) => r.id == roomId ? r.withBlockers(blockers) : r;
+    _rooms = _rooms.map(swap).toList();
+    _dms = _dms.map(swap).toList();
+    _recent = _recent.map(swap).toList();
+    if (_draftDm case final draft?) _draftDm = swap(draft);
+  }
+
+  void _onBlockers(ChatBlockersEvent event) {
+    _setBlockers(event.roomId, event.blockers);
+    if (ChatRoom.peerIdOf(event.roomId) == null) return;
+    final user = roomById(event.roomId).peer;
+    // Unknown names come with the list
+    if (user == null) {
+      _source.loadBlocked();
+    } else {
+      _syncBlocked(user, event.blockers.contains(ChatRoom.blockedByMe));
+    }
+  }
+
+  final Map<String, ({List<ChatMessage> all, bool faction, int minute, List<ChatMessage> shown})> _visible = {};
 
   List<ChatMessage> visibleMessagesFor(String roomId) {
     final all = messagesFor(roomId);
+    final faction = _prefs.isFactionRoom(roomId);
+    final now = DateTime.now();
+    // Watch folding moves with the clock
+    final minute = now.millisecondsSinceEpoch ~/ 60000;
     final cached = _visible[roomId];
-    if (cached != null && identical(cached.$1, all)) return cached.$2;
-    final shown = all.where((m) => m.isSystem || !isHidden(m.sender)).toList();
-    _visible[roomId] = (all, shown);
+    if (cached != null && identical(cached.all, all) && cached.faction == faction && cached.minute == minute) {
+      return cached.shown;
+    }
+    final folded = faction ? {...chatJoinsFolded(all), ...chatWatchFolded(all, now)} : const <String>{};
+    final shown = all.where((m) => m.isSystem || (!isHidden(m.sender) && !folded.contains(m.id))).toList();
+    _visible[roomId] = (all: all, faction: faction, minute: minute, shown: shown);
     return shown;
+  }
+
+  /// Folded watch lines show as the card
+  String shownIdOf(String roomId, String id) {
+    final all = messagesFor(roomId);
+    final now = DateTime.now();
+    if (!_prefs.isFactionRoom(roomId) || !chatWatchFolded(all, now).contains(id)) return id;
+    return chatWatchAnchor(all, now) ?? id;
   }
 
   final Map<String, (List<ChatMessage>, List<ChatMessage>)> _filtered = {};
@@ -302,10 +438,22 @@ class ChatController extends ChangeNotifier {
   final Set<String> _loadedRooms = {};
   bool isLoaded(String roomId) => _loadedRooms.contains(roomId);
 
-  final Map<String, Timer> _openTimers = {};
+  Timer? _openTimer;
+  String? _openingRoom;
   final Set<String> _openFailed = {};
   bool openFailed(String roomId) => _openFailed.contains(roomId);
-  bool opening(String roomId) => _openTimers.containsKey(roomId);
+  bool opening(String roomId) => _openingRoom == roomId;
+
+  ChatRoomLoad loadOf(String roomId) {
+    if (isLoaded(roomId)) return ChatRoomLoad.loaded;
+    if (sessionIssue) return ChatRoomLoad.session;
+    if (_connection == ChatConnection.error || unreachable) return ChatRoomLoad.unreachable;
+    if (openFailed(roomId)) return ChatRoomLoad.timedOut;
+    return ChatRoomLoad.loading;
+  }
+
+  /// Another room may have taken the open
+  bool needsOpen(String roomId) => !isLoaded(roomId) && !openFailed(roomId) && !opening(roomId);
 
   final Map<String, bool> _hasOlder = {};
   bool hasOlder(String roomId) => _hasOlder[roomId] ?? false;
@@ -323,12 +471,14 @@ class ChatController extends ChangeNotifier {
   };
 
   /// Row count, last known until Torn answers
-  int listUnreadFor(String roomId) {
+  (int, bool) listUnreadFor(String roomId) {
+    final (shown, more) = unreadShown(roomId);
+    if (shown > 0) return (shown, more);
     final live = unreadFor(roomId);
     if (live > 0 || _unreadKnown || _neverRead.contains(roomId) || _inSight(roomId) || _prefs.isArchived(roomId)) {
-      return live;
+      return (live, more);
     }
-    return _savedUnread[roomId] ?? 0;
+    return (_savedUnread[roomId] ?? 0, more);
   }
 
   late final ChatTypingReport _typingReport = ChatTypingReport((id, on) => _source.typing(id, on));
@@ -356,6 +506,7 @@ class ChatController extends ChangeNotifier {
   bool get searching => _searchQuery != null && _searchResults == null;
 
   bool _inboxShown = false;
+  bool get inboxShown => _inboxShown;
   Timer? _syncTimer;
   final Map<String, Timer> _readTimers = {};
   final Map<String, Timer> _sendTimers = {};
@@ -363,6 +514,9 @@ class ChatController extends ChangeNotifier {
   String? _apiRoom;
   final Set<String> _asking = {};
   final Set<String> _covered = {};
+
+  // Answers from a forgotten account are dropped
+  int _generation = 0;
   bool _disposed = false;
 
   /// Most recent activity first
@@ -385,11 +539,26 @@ class ChatController extends ChangeNotifier {
   void restoreInbox(ChatInboxSnapshot? saved) {
     if (saved == null || _ready || _heldOrder != null) return;
     _rooms = [for (final r in saved.rooms) if (!r.isDm) r];
+    for (final r in _rooms) {
+      if (r.emblemUrl case final url?) _emblems[r.id] = url;
+    }
     _recent = [for (final r in saved.rooms) if (r.isDm) r];
     _last.addAll(saved.last);
     _hydrated.addAll(saved.last.keys);
     _savedUnread = saved.unread;
-    _heldOrder = saved.order;
+    _holdOrder(saved.order);
+  }
+
+  void _holdOrder(List<String> order, {List<String> waiting = const []}) {
+    _heldOrder ??= order;
+    _awaitingPeek
+      ..clear()
+      ..addAll(waiting);
+    _settleTimer?.cancel();
+    _settleTimer = null;
+    _settleCapTimer?.cancel();
+    // Otherwise the first event starts it
+    _settleCapTimer = waiting.isEmpty ? null : Timer(_peekCap, _releaseOrder);
   }
 
   void _releaseOrder() {
@@ -403,14 +572,28 @@ class ChatController extends ChangeNotifier {
   }
 
   void _settleOrder(ChatEvent event) {
+    final held = _heldOrder;
+    if (held == null) return;
+    _settleCapTimer ??= Timer(_settleCap, _releaseOrder);
+    if (_awaitingPeek.isNotEmpty) {
+      switch (event) {
+        case ChatHistoryEvent():
+          return _releaseOrder();
+        case ChatMessageEvent(:final message):
+          // Live line rises inside the held order
+          _heldOrder = [message.roomId, ...held.where((r) => r != message.roomId)];
+        case ChatPeekEvent():
+          _awaitingPeek.remove(event.roomId);
+        default:
+      }
+    }
     final data =
         event is ChatRoomsEvent ||
         event is ChatDmsEvent ||
         event is ChatRecentDmsEvent ||
         event is ChatUnreadEvent ||
         event is ChatPeekEvent;
-    if (event is ChatPeekEvent) _awaitingPeek.remove(event.roomId);
-    if (_heldOrder == null || !data || _listed.isEmpty || !_dmsLoaded || !_unreadKnown) return;
+    if (!data || _listed.isEmpty || !_dmsLoaded || !_unreadKnown) return;
     _settleTimer?.cancel();
     // One move after all lines arrive
     _settleTimer = _awaitingPeek.isEmpty ? Timer(_settleGrace, _releaseOrder) : null;
@@ -585,10 +768,6 @@ class ChatController extends ChangeNotifier {
   }
 
   void retry() {
-    if (sessionIssue) {
-      _source.reconnect();
-      return;
-    }
     final failed = _connection == ChatConnection.error;
     _connection = ChatConnection.connecting;
     _stallTimer?.cancel();
@@ -615,17 +794,21 @@ class ChatController extends ChangeNotifier {
   void _openRoom(String roomId) {
     _source.openRoom(roomId);
     // The source keeps one room open
-    for (final timer in _openTimers.values) {
-      timer.cancel();
-    }
-    _openTimers.clear();
+    _stopOpening();
     if (isLoaded(roomId)) return;
-    _openTimers[roomId] = Timer(_openTimeout, () {
-      _openTimers.remove(roomId);
+    _openingRoom = roomId;
+    _openTimer = Timer(_openTimeout, () {
+      _openingRoom = null;
       if (_disposed || isLoaded(roomId)) return;
       _openFailed.add(roomId);
       notifyListeners();
     });
+  }
+
+  void _stopOpening() {
+    _openTimer?.cancel();
+    _openTimer = null;
+    _openingRoom = null;
   }
 
   void _reopen() {
@@ -721,6 +904,7 @@ class ChatController extends ChangeNotifier {
       ..remove(roomId)
       ..add(roomId);
     _loadingOlder = false;
+    _watchPagesAsked.remove(roomId);
     _readOnSight(roomId);
     _syncApi();
     if ((_openUnread[roomId]?.$1 ?? 0) == 0) {
@@ -737,6 +921,7 @@ class ChatController extends ChangeNotifier {
     _openRoom(roomId);
     if (_foreground) _markRead(roomId);
     _refreshPresence();
+    _fillWatchWindow(roomId);
   }
 
   final Set<String> _peeked = {};
@@ -801,7 +986,8 @@ class ChatController extends ChangeNotifier {
     if (first == null) return null;
     final at = list.indexWhere((m) => m.id == first);
     if (at < 0) return null;
-    return list.skip(at).where((m) => m.isSystem || !isHidden(m.sender)).firstOrNull?.id;
+    final from = {for (final m in list.skip(at)) m.id};
+    return visibleMessagesFor(roomId).where((m) => from.contains(m.id)).firstOrNull?.id;
   }
 
   bool canMarkRead(String roomId) => !_neverRead.contains(roomId) && _count(roomId) > 0;
@@ -1004,19 +1190,49 @@ class ChatController extends ChangeNotifier {
     if (_searchQuery == name.trim()) search('');
   }
 
+  ChatMessage? _oldestSent(String roomId) =>
+      messagesFor(roomId).where((m) => m.state == ChatMessageState.sent).firstOrNull;
+
   Future<void> loadOlder([String? room]) async {
     final roomId = room ?? currentRoomId;
     if (roomId == null) return;
-    final oldest = messagesFor(roomId).where((m) => m.state == ChatMessageState.sent).firstOrNull;
+    final oldest = _oldestSent(roomId);
     if (_loadingOlder || !hasOlder(roomId) || oldest == null) return;
     _loadingOlder = true;
+    _olderAsked[roomId] = oldest.createdAt;
     notifyListeners();
     try {
       await _source.loadOlder(roomId, oldest.createdAt);
     } finally {
       _loadingOlder = false;
-      if (!_disposed) notifyListeners();
+      if (!_disposed) {
+        notifyListeners();
+        _fillWatchWindow(roomId);
+      }
     }
+  }
+
+  static const int _watchPages = 4;
+  final Map<String, int> _watchPagesAsked = {};
+  final Map<String, DateTime> _olderAsked = {};
+
+  bool _watchCovered(String roomId) {
+    final oldest = _oldestSent(roomId);
+    return !hasOlder(roomId) || oldest == null || !oldest.createdAt.isAfter(DateTime.now().subtract(chatWatchWindow));
+  }
+
+  /// Short of the window, pages still coming
+  bool watchHistoryShort(String roomId) =>
+      !_watchCovered(roomId) && ((_watchPagesAsked[roomId] ?? 0) < _watchPages || _loadingOlder);
+
+  /// One page per arrival, capped
+  void _fillWatchWindow(String roomId) {
+    if (!_prefs.isFactionRoom(roomId) || !isOnScreen(roomId) || _loadingOlder || _watchCovered(roomId)) return;
+    final pages = _watchPagesAsked[roomId] ?? 0;
+    // That page is already on its way
+    if (pages >= _watchPages || _olderAsked[roomId] == _oldestSent(roomId)!.createdAt) return;
+    _watchPagesAsked[roomId] = pages + 1;
+    unawaited(loadOlder(roomId));
   }
 
   void send(String text, {String? to}) {
@@ -1075,21 +1291,9 @@ class ChatController extends ChangeNotifier {
       for (final r in _rooms)
         if (r.lastMessage == null) r.id,
     ];
-    _holdForLines(ask);
+    if (ask.isNotEmpty) _holdOrder([for (final r in conversations) r.id], waiting: ask);
     _source.peek(ask);
     _source.loadBlocked();
-  }
-
-  void _holdForLines(List<String> ask) {
-    if (ask.isEmpty) return;
-    _heldOrder ??= [for (final r in conversations) r.id];
-    _awaitingPeek
-      ..clear()
-      ..addAll(ask);
-    _settleTimer?.cancel();
-    _settleTimer = null;
-    _settleCapTimer?.cancel();
-    _settleCapTimer = Timer(_peekCap, _releaseOrder);
   }
 
   void _refreshPresence() {
@@ -1103,9 +1307,14 @@ class ChatController extends ChangeNotifier {
     _syncApi();
   }
 
+  bool hasRoster(String roomId) => _prefs.isFactionRoom(roomId) || roomId == 'company';
+
+  Duration _pollEvery(String roomId) =>
+      _prefs.isFactionRoom(roomId) ? const Duration(minutes: 1) : const Duration(seconds: 30);
+
   void _syncApi() {
     final roomId = currentRoomId;
-    final polled = roomId != null && (ChatRoom.peerIdOf(roomId) != null || ChatApi.hasRoster(roomId));
+    final polled = roomId != null && (ChatRoom.peerIdOf(roomId) != null || hasRoster(roomId));
     final wanted = polled && !_covered.contains(roomId) ? roomId : null;
     if (wanted == _apiRoom) return;
     _apiTimer?.cancel();
@@ -1113,30 +1322,30 @@ class ChatController extends ChangeNotifier {
     _apiRoom = wanted;
     if (wanted == null || _api == null) return;
     _askApi(wanted);
-    _apiTimer = Timer.periodic(const Duration(seconds: 30), (_) => _askApi(wanted));
+    _apiTimer = Timer.periodic(_pollEvery(wanted), (_) => _askApi(wanted));
   }
 
   Future<void> _askApi(String roomId) async {
     final api = _api;
-    final state = WidgetsBinding.instance.lifecycleState;
     if (api == null || _asking.contains(roomId)) return;
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden || ChatLinkPreviews.busy) return;
+    if (appInBackground() || ChatLinkPreviews.busy) return;
     _asking.add(roomId);
+    final generation = _generation;
     try {
       final peer = ChatRoom.peerIdOf(roomId);
       if (peer != null) {
         final action = await api.lastAction(peer);
-        if (action == null || _disposed) return;
+        if (action == null || _disposed || generation != _generation) return;
         _lastAction[peer] = action;
       } else {
         final roster = await api.roster(roomId);
-        if (roster == null || _disposed) return;
+        if (roster == null || _disposed || generation != _generation) return;
         _roster[roomId] = _byPresence(roster);
       }
       _presenceRevision++;
       notifyListeners();
     } finally {
-      _asking.remove(roomId);
+      if (generation == _generation) _asking.remove(roomId);
     }
   }
 
@@ -1146,15 +1355,18 @@ class ChatController extends ChangeNotifier {
     if (!force && DateTime.now().difference(_friendsAt) < _friendsCache) return;
     _askingFriends = true;
     notifyListeners();
+    final generation = _generation;
     try {
       final friends = await api.friends();
-      if (_disposed) return;
+      if (_disposed || generation != _generation) return;
       _friendsAt = DateTime.now();
       _friendsFailed = friends == null;
       if (friends != null) _friends = _byPresence(friends, recentFirst: true);
     } finally {
-      _askingFriends = false;
-      if (!_disposed) notifyListeners();
+      if (generation == _generation) {
+        _askingFriends = false;
+        if (!_disposed) notifyListeners();
+      }
     }
   }
 
@@ -1284,16 +1496,6 @@ class ChatController extends ChangeNotifier {
   }
 
   void _onEvent(ChatEvent event) {
-    if (_heldOrder != null) _settleCapTimer ??= Timer(_settleCap, _releaseOrder);
-    if (_awaitingPeek.isNotEmpty) {
-      if (event is ChatHistoryEvent) {
-        _releaseOrder();
-      } else if (event is ChatMessageEvent && _heldOrder != null) {
-        // Live line rises inside the held order
-        final id = event.message.roomId;
-        _heldOrder = [id, ..._heldOrder!.where((r) => r != id)];
-      }
-    }
     final flows =
         event is ChatReadyEvent ||
         event is ChatConnectionEvent ||
@@ -1358,8 +1560,7 @@ class ChatController extends ChangeNotifier {
         // The stopped page still says disconnected
         if (_loggedOut) break;
         final unsure = event.tentative || event.state == ChatConnection.needsBrowser;
-        final trouble = event.state == ChatConnection.offline || event.state == ChatConnection.tornDown;
-        if (_graceTimer != null && (unsure || trouble)) {
+        if (_graceTimer != null && (unsure || _outage(event.state))) {
           _held = event.state;
           if (!_ready) _connection = ChatConnection.connecting;
           _trackStall();
@@ -1438,8 +1639,10 @@ class ChatController extends ChangeNotifier {
         _presence.addAll(event.users);
         _presenceRevision++;
       case ChatBlockedEvent():
-        _blocked = event.userIds;
+        _blocked = {for (final u in event.users) u.id: u};
         _visible.clear();
+      case ChatBlockersEvent():
+        _onBlockers(event);
       case ChatSearchEvent():
         if (event.query == _searchQuery) _searchResults = event.users;
       case ChatSendResultEvent():
@@ -1526,8 +1729,9 @@ class ChatController extends ChangeNotifier {
     merged.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     _messages[event.roomId] = merged;
     _loadedRooms.add(event.roomId);
-    _openTimers.remove(event.roomId)?.cancel();
+    if (opening(event.roomId)) _stopOpening();
     _openFailed.remove(event.roomId);
+    _fillWatchWindow(event.roomId);
   }
 
   void _addLive(ChatMessage message, int? unread) {
@@ -1553,7 +1757,8 @@ class ChatController extends ChangeNotifier {
 
     final list = messagesFor(roomId);
     if (list.any((m) => m.id == message.id)) return;
-    if (!mine && !message.isSystem) _checkAlert(message);
+    final folds = _prefs.isFactionRoom(roomId) && chatJoinFolds(message, list);
+    if (!mine && !message.isSystem && !folds) _checkAlert(message);
     if (message.reqId != null) _sendTimers.remove(message.reqId)?.cancel();
     final withoutEcho = message.reqId == null ? list : list.where((m) => m.reqId != message.reqId);
     var updated = [...withoutEcho, message];
@@ -1589,6 +1794,15 @@ class ChatController extends ChangeNotifier {
 
   /// Nothing from the previous account survives
   void _clearAccount() {
+    _generation++;
+    backTo = null;
+    unreadOnly = false;
+    waitingExpanded = false;
+    lastItem = null;
+    _userSchemes.clear();
+    _messageParts.clear();
+    _bankFor = null;
+    _bank = const {};
     _deferred.clear();
     _stale = false;
     _ready = false;
@@ -1615,6 +1829,11 @@ class ChatController extends ChangeNotifier {
     _recentHasMore = false;
     _draftDm = null;
     _onScreen.clear();
+    _apiTimer?.cancel();
+    _apiTimer = null;
+    _apiRoom = null;
+    _asking.clear();
+    _askingFriends = false;
     _peeked.clear();
     _messages.clear();
     _visible.clear();
@@ -1622,6 +1841,8 @@ class ChatController extends ChangeNotifier {
     _loadedRooms.clear();
     _openFailed.clear();
     _hasOlder.clear();
+    _watchPagesAsked.clear();
+    _olderAsked.clear();
     _last.clear();
     _dropInbox();
     _unread = {};
@@ -1643,12 +1864,12 @@ class ChatController extends ChangeNotifier {
     _searchResults = null;
     _typing.clear();
     _typingReport.clear();
-    for (final t in [..._typingExpiry.values, ..._readTimers.values, ..._sendTimers.values, ..._openTimers.values]) {
+    for (final t in [..._typingExpiry.values, ..._readTimers.values, ..._sendTimers.values]) {
       t.cancel();
     }
     _typingExpiry.clear();
     _readTimers.clear();
-    _openTimers.clear();
+    _stopOpening();
     _sendTimers.clear();
   }
 
@@ -1725,9 +1946,12 @@ class ChatController extends ChangeNotifier {
     _settleTimer?.cancel();
     _settleCapTimer?.cancel();
     _saveTimer?.cancel();
-    for (final t in [..._typingExpiry.values, ..._sendTimers.values, ..._readTimers.values, ..._openTimers.values]) {
+    _openTimer?.cancel();
+    for (final t in [..._typingExpiry.values, ..._sendTimers.values, ..._readTimers.values]) {
       t.cancel();
     }
+    sharePending.dispose();
+    heldToast.dispose();
     super.dispose();
   }
 }

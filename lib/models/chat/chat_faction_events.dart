@@ -1,4 +1,5 @@
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
+import 'package:torn_pda/models/chat/chat_html_text.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 
 const String chatFactionEventPrefix = 'local-news-';
@@ -9,7 +10,6 @@ final RegExp _private = RegExp(
   r'\$\d|money|cash|funds|deposit|withdr|armory|armoury|loaned|retrieved|\bpoints\b',
   caseSensitive: false,
 );
-final RegExp _tags = RegExp(r'<[^>]*>');
 
 bool isChatFactionEvent(ChatMessage m) => m.isLocal && m.id.startsWith(chatFactionEventPrefix);
 
@@ -19,7 +19,7 @@ List<ChatMessage> chatFactionEvents(List<FactionNews> news, {required DateTime n
   final lines = <ChatMessage>[];
   final latest = now.add(const Duration(minutes: 5));
   for (final n in news) {
-    final text = n.text.replaceAll(_tags, '').replaceAll(RegExp(r'\s+'), ' ').trim();
+    final text = chatHtmlText(n.text).replaceAll(RegExp(r'\s+'), ' ').trim();
     final at = DateTime.fromMillisecondsSinceEpoch(n.timestamp * 1000);
     if (text.isEmpty || n.timestamp <= 0 || at.isAfter(latest) || !seen.add(n.id)) continue;
     if (_private.hasMatch(text) && (myName == null || !text.contains(myName))) continue;

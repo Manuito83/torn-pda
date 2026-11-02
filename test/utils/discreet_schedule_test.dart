@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:torn_pda/utils/discreet_schedule.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 
 void main() {
   DateTime at(int hour, [int minute = 0]) => DateTime(2026, 1, 1, hour, minute);

@@ -16,10 +16,10 @@ class ChatArrivalTracker {
   int _count = 0;
   DateTime _since = DateTime.fromMillisecondsSinceEpoch(0);
 
-  /// Same key for a local message and its confirmed copy
+  /// Shared by the local and sent copy
   static String keyOf(ChatMessage m) => m.reqId ?? m.id;
 
-  /// [messages] oldest first, safe to call on every build
+  /// Oldest first, fine on every build
   void update(String roomId, List<ChatMessage> messages) {
     final tail = _tail;
     if (_room != roomId) return _seed(roomId, messages);

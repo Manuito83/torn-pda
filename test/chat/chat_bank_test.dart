@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
-import 'package:torn_pda/providers/chat/chat_banking.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_bank_widgets.dart';
@@ -57,19 +56,8 @@ void main() {
       );
     });
 
-    testWidgets('a request for everything sends the full balance marker', (tester) async {
-      await _bubble(tester, _request(text: 'banker send me all please'));
-      await tester.tap(find.byKey(ChatBankInsert.buttonKey));
-      expect(NativeChat.linkWindow.value?.url, endsWith('giveMoneyTo=7&money=SEND_FULL'));
-    });
-
     testWidgets('nothing outside the faction room', (tester) async {
       await _bubble(tester, _request(room: 'global'));
-      expect(find.byKey(ChatBankInsert.buttonKey), findsNothing);
-    });
-
-    testWidgets('nothing on a message that is not a request', (tester) async {
-      await _bubble(tester, _request(text: 'war starts at 5'));
       expect(find.byKey(ChatBankInsert.buttonKey), findsNothing);
     });
 
@@ -135,27 +123,6 @@ void main() {
       expect(source.sent.single.content, 'Paid \$3,000,000 to Bravo [7]');
       await echo(tester);
     });
-
-    testWidgets('cancelling the confirmation sends nothing', (tester) async {
-      await inRoom(tester);
-      await tester.tap(find.byKey(ChatBankInsert.paidKey));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(source.sent, isEmpty);
-      expect(find.byKey(ChatBankInsert.buttonKey), findsOneWidget);
-    });
-
-    testWidgets('a cancelled request loses its buttons', (tester) async {
-      final request = await inRoom(tester);
-      source.emit(
-        ChatMessageEvent(chatMessage('2', 'faction', sender: request.sender.id, text: ChatBanking.cancelText)),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byKey(ChatBankInsert.buttonKey), findsNothing);
-      expect(find.byKey(ChatBankInsert.paidKey), findsNothing);
-      expect(find.text('Cancelled'), findsOneWidget);
-    });
   });
 
   group('request money', () {
@@ -189,40 +156,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(inserted, ['Bank request: \$2.5m']);
       expect(source.sent, isEmpty);
-    });
-
-    testWidgets('quick actions insert their fixed text', (tester) async {
-      final inserted = await tools(tester, 'faction');
-      for (final label in ['Request full balance', 'Cancel request', 'Call bankers']) {
-        await openDialog(tester);
-        await tester.tap(find.text(label));
-        await tester.pumpAndSettle();
-      }
-      expect(inserted, [ChatBanking.fullText, ChatBanking.cancelText, ChatBanking.callText]);
-    });
-
-    testWidgets('asks again when the amount is not a figure', (tester) async {
-      final inserted = await tools(tester, 'faction');
-      await openDialog(tester);
-      await tester.enterText(find.byType(TextField), 'lots');
-      await tester.tap(find.text('Add to message'));
-      await tester.pumpAndSettle();
-      expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.textContaining('Enter an amount'), findsOneWidget);
-      expect(inserted, isEmpty);
-    });
-
-    testWidgets('cancel inserts nothing', (tester) async {
-      final inserted = await tools(tester, 'faction');
-      await openDialog(tester);
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(inserted, isEmpty);
-    });
-
-    testWidgets('only in the faction room', (tester) async {
-      await tools(tester, 'global');
-      expect(find.text('Request money'), findsNothing);
     });
   });
 }

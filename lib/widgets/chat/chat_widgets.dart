@@ -3,58 +3,45 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
-import 'package:file_picker/file_picker.dart' show PlatformFile;
-import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_format.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
-import 'package:torn_pda/models/chat/chat_mentions.dart';
 import 'package:torn_pda/models/chat/chat_player_color.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
+import 'package:torn_pda/models/chat/chat_retal.dart';
 import 'package:torn_pda/models/chat/chat_saved.dart';
-import 'package:torn_pda/models/chat/chat_share.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
+import 'package:torn_pda/models/chat/chat_watch.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
-import 'package:torn_pda/providers/chat/chat_image_upload.dart';
+import 'package:torn_pda/providers/chat/chat_image_store.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
 import 'package:torn_pda/providers/chat/chat_typing_report.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_appearance_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_bank_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_loading_phrases.dart';
 import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
-import 'package:torn_pda/widgets/chat/chat_send_check_dialog.dart';
-import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_color_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_company_icons.dart';
-import 'package:torn_pda/widgets/chat/chat_compose_tools.dart';
-import 'package:torn_pda/widgets/chat/chat_faction_ops_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_faction_cards.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_price_check_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_wiki_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
-final Map<String, ColorScheme> _userSchemes = {};
-
-ColorScheme chatUserScheme(BuildContext context, int userId) {
-  final brightness = Theme.of(context).brightness;
-  return _userSchemes.putIfAbsent(
-    '$userId-${brightness.name}',
-    () => ColorScheme.fromSeed(
-      seedColor: HSVColor.fromAHSV(1, (userId * 47) % 360, 0.6, 0.8).toColor(),
-      brightness: brightness,
-    ),
-  );
-}
+ColorScheme chatUserScheme(BuildContext context, int userId) =>
+    NativeChat.controller.userSchemeFor(userId, Theme.of(context).brightness);
 
 class ChatAvatar extends StatelessWidget {
   const ChatAvatar({super.key, required this.user, this.size = 34});
@@ -79,6 +66,7 @@ class ChatAvatar extends StatelessWidget {
         style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w600, fontSize: size * 0.36),
       ),
     );
+    if (user.avatarUrl case final url?) unawaited(ChatImageStore.instance.remember(url));
     return ExcludeSemantics(
       child: ClipOval(
         child: SizedBox(
@@ -86,10 +74,9 @@ class ChatAvatar extends StatelessWidget {
           height: size,
           child: user.avatarUrl == null
               ? fallback
-              : Image.network(
-                  user.avatarUrl!,
+              : Image(
+                  image: ChatImage(user.avatarUrl!),
                   fit: BoxFit.cover,
-                  cacheWidth: (size * 3).round(),
                   errorBuilder: (_, _, _) => fallback,
                   frameBuilder: (_, child, frame, sync) => sync || frame != null ? child : fallback,
                 ),
@@ -99,56 +86,38 @@ class ChatAvatar extends StatelessWidget {
   }
 }
 
-Future<TimeOfDay?> showChatTimePicker(BuildContext context, TimeOfDay initial) => showTimePicker(
-  context: context,
-  initialTime: initial,
-  builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: !NativeChat.prefs.app12h),
-    child: child!,
-  ),
-);
-
-/// Screen reader time, words instead of "5m"
-String _chatSpokenTime(DateTime at) {
-  final gap = DateTime.now().difference(at);
-  if (gap.inMinutes < 1) return 'just now';
-  if (gap.inMinutes < 60) return gap.inMinutes == 1 ? '1 minute ago' : '${gap.inMinutes} minutes ago';
-  if (gap.inHours < 24) return gap.inHours == 1 ? '1 hour ago' : '${gap.inHours} hours ago';
-  return NativeChat.prefs.stamp(at);
-}
-
-final _entity = RegExp(r'&(#\d{1,7}|#x[0-9a-f]{1,6}|[a-z]{2,6});', caseSensitive: false);
-const _entities = {'nbsp': ' ', 'amp': '&', 'lt': '<', 'gt': '>', 'quot': '"', 'apos': "'", 'hellip': '...'};
-
-String _decodeEntities(String text) => text.replaceAllMapped(_entity, (m) {
-  final name = m.group(1)!.toLowerCase();
-  final code = name.startsWith('#x')
-      ? int.tryParse(name.substring(2), radix: 16)
-      : name.startsWith('#')
-      ? int.tryParse(name.substring(1))
-      : null;
-  if (code != null) return code > 0 && code <= 0x10FFFF ? String.fromCharCode(code) : m.group(0)!;
-  return _entities[name] ?? m.group(0)!;
-});
-
-String _spokenLink(ChatLink link) {
-  final host = link.uri.host.replaceFirst(RegExp(r'^www\.'), '');
-  if (link.isImage) return 'image from $host';
-  if (link.label case final label?) return '$label link';
-  return switch (link.kind) {
-    ChatLinkKind.external => 'link to $host',
-    ChatLinkKind.torn => 'Torn link',
-    _ => 'link to ${link.title.replaceAll(RegExp(r'[\[\]]'), '')}',
+/// Chat times as the app settings say
+ChatClock chatClockOf(BuildContext context, {bool listen = true}) {
+  (bool, bool) appTime(SettingsProvider? s) =>
+      (s?.currentTimeZone == TimeZoneSetting.tornTime, s?.currentTimeFormat == TimeFormatSetting.h12);
+  final (appTornTime, h12) = listen
+      ? context.select<SettingsProvider?, (bool, bool)>(appTime)
+      : appTime(context.read<SettingsProvider?>());
+  final tornTime = switch (NativeChat.prefs.chatTimes) {
+    ChatTimes.app => appTornTime,
+    ChatTimes.tct => true,
+    ChatTimes.local => false,
   };
+  return ChatClock(tornTime: tornTime, h12: h12);
 }
 
-String chatSpokenText(String text) => [
-  for (final part in ChatLink.split(ChatFormat.plain(_decodeEntities(text))))
-    part is ChatLink ? _spokenLink(part) : part,
-].join().replaceAll(RegExp(r'\s+'), ' ').trim();
+/// Outside builds, TCT until the app starts
+ChatClock chatAppClock() {
+  final context = NativeChat.navigatorKey?.currentContext;
+  return context == null ? ChatClock(tornTime: true) : chatClockOf(context, listen: false);
+}
 
-Duration chatMotion(BuildContext context, Duration duration) =>
-    MediaQuery.disableAnimationsOf(context) ? Duration.zero : duration;
+Future<TimeOfDay?> showChatTimePicker(BuildContext context, TimeOfDay initial) {
+  final h12 = chatClockOf(context, listen: false).h12;
+  return showTimePicker(
+    context: context,
+    initialTime: initial,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: !h12),
+      child: child!,
+    ),
+  );
+}
 
 class ChatPopIn extends StatelessWidget {
   const ChatPopIn({super.key, required this.visible, required this.child});
@@ -235,9 +204,10 @@ class ChatMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final clock = chatClockOf(context);
 
     if (message.isSystem) {
-      return Padding(
+      final bubble = Padding(
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 32),
         child: Center(
           child: Container(
@@ -255,6 +225,12 @@ class ChatMessageBubble extends StatelessWidget {
                   ),
           ),
         ),
+      );
+      if (!message.isLocal || chatRetalLineOf(message.id) == null) return bubble;
+      void dismiss() => NativeChat.factionOps.dismissRetal(message.id);
+      return Semantics(
+        customSemanticsActions: {const CustomSemanticsAction(label: 'Dismiss'): dismiss},
+        child: Dismissible(key: ValueKey(message.id), onDismissed: (_) => dismiss(), child: bubble),
       );
     }
 
@@ -305,6 +281,22 @@ class ChatMessageBubble extends StatelessWidget {
     final forwarded = quote == null ? ChatQuote.forwarded(message.content) : null;
     final note = theme.textTheme.labelMedium?.copyWith(color: foreground.withValues(alpha: 0.75));
     final body = quote?.body ?? forwarded?.body ?? message.content;
+    final special = chatSpecialOf(
+      message,
+      factionRoom: NativeChat.prefs.isFactionRoom(message.roomId) && quote == null && forwarded == null,
+      now: DateTime.now(),
+    );
+    final card = switch (special) {
+      (hit: final call?, retal: _, watch: _) => ChatHitCard(
+        message: message,
+        call: call,
+        color: foreground,
+        isMine: isMine,
+      ),
+      (hit: _, retal: final call?, watch: _) => ChatRetalCard(message: message, call: call, color: foreground),
+      (hit: _, retal: _, watch: true) => ChatWatchCard(message: message, color: foreground),
+      _ => null,
+    };
     void copy() {
       Clipboard.setData(ClipboardData(text: message.content));
       chatToast('Message copied', seconds: 1);
@@ -317,7 +309,7 @@ class ChatMessageBubble extends StatelessWidget {
       if (forwarded != null) 'forwarded from ${forwarded.from}',
       chatSpokenText(body),
       if (translation?.text case final text?) 'translation: $text',
-      _chatSpokenTime(message.createdAt),
+      chatSpokenTime(clock, message.createdAt),
       if (highlighted) 'highlighted',
       if (pinned) 'pinned',
       if (saved) 'saved',
@@ -340,7 +332,7 @@ class ChatMessageBubble extends StatelessWidget {
         CustomSemanticsAction(label: translation!.failed ? 'Translate again' : 'Hide translation'): onTranslationTap!,
       if (hasPlayer && !isMine)
         CustomSemanticsAction(label: 'Options for ${message.sender.name}'): () =>
-            showChatPlayerActions(context, message.sender),
+            showChatPlayerActions(context, message.sender, roomId: message.roomId),
       for (final link in ChatLink.split(body).whereType<ChatLink>().take(3))
         CustomSemanticsAction(label: 'Open ${link.label ?? link.uri.host}'): () => openChatLink(context, link),
       for (final link in ChatLink.split(body).whereType<ChatLink>().take(3))
@@ -351,7 +343,7 @@ class ChatMessageBubble extends StatelessWidget {
           CustomSemanticsAction(label: 'Explain ${slang.term}'): () => showChatSlangSheet(context, slang),
       for (final ref in ChatPlayerRef.split(body).whereType<ChatPlayerRef>())
         CustomSemanticsAction(label: 'Options for ${ref.name}'): () =>
-            showChatPlayerActions(context, ChatUser(id: ref.id, name: ref.name)),
+            showChatPlayerActions(context, ChatUser(id: ref.id, name: ref.name), roomId: message.roomId),
       ...chatRefActions(
         context,
         body,
@@ -418,7 +410,9 @@ class ChatMessageBubble extends StatelessWidget {
             ? ChatPlayerColor.of(message.sender.id, background)
             : ChatPlayerColor.tinted(chatUserScheme(context, message.sender.id).primary, background),
     };
-    final showPlayer = hasPlayer ? () => showChatPlayerActions(context, message.sender) : null;
+    final showPlayer = hasPlayer
+        ? () => showChatPlayerActions(context, message.sender, roomId: message.roomId)
+        : null;
     final metaColor = foreground.withValues(alpha: 0.6);
     final compactRow = GestureDetector(
       excludeFromSemantics: true,
@@ -458,7 +452,7 @@ class ChatMessageBubble extends StatelessWidget {
                     if (quoteBox != null) ExcludeSemantics(child: quoteBox),
                     if (forwardedRow != null) ExcludeSemantics(child: forwardedRow),
                     ChatMessageText(
-                      content: body,
+                      content: card == null ? body : '',
                       color: foreground,
                       highlight: searchTerm,
                       slang: ChatWiki.slangIn(message.roomId, prefs.slangEverywhere),
@@ -504,6 +498,7 @@ class ChatMessageBubble extends StatelessWidget {
                               ],
                             ),
                     ),
+                    ?card,
                     if (translation != null)
                       ExcludeSemantics(
                         child: ChatTranslationText(
@@ -525,7 +520,7 @@ class ChatMessageBubble extends StatelessWidget {
                       if (saved) Icon(Icons.bookmark_rounded, size: 12, color: metaColor),
                       const SizedBox(width: 3),
                       Text(
-                        NativeChat.prefs.clock(message.createdAt),
+                        clock.clock(message.createdAt),
                         style: theme.textTheme.labelSmall?.copyWith(color: metaColor),
                       ),
                       if (isMine) ...[
@@ -565,7 +560,9 @@ class ChatMessageBubble extends StatelessWidget {
               if (isFirstInGroup && !isMine && showSender)
                 ExcludeSemantics(
                   child: GestureDetector(
-                    onTap: hasPlayer ? () => showChatPlayerActions(context, message.sender) : null,
+                    onTap: hasPlayer
+                        ? () => showChatPlayerActions(context, message.sender, roomId: message.roomId)
+                        : null,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 2),
                       child: Row(
@@ -591,13 +588,16 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
               if (quoteBox != null) ExcludeSemantics(child: quoteBox),
               if (forwardedRow != null) ExcludeSemantics(child: forwardedRow),
-              ChatMessageText(
-                content: body,
-                color: foreground,
-                highlight: searchTerm,
-                slang: ChatWiki.slangIn(message.roomId, NativeChat.prefs.slangEverywhere),
-                roomId: message.roomId,
-              ),
+              if (card != null)
+                card
+              else
+                ChatMessageText(
+                  content: body,
+                  color: foreground,
+                  highlight: searchTerm,
+                  slang: ChatWiki.slangIn(message.roomId, NativeChat.prefs.slangEverywhere),
+                  roomId: message.roomId,
+                ),
               if (translation != null)
                 ExcludeSemantics(
                   child: ChatTranslationText(translation: translation!, color: foreground, onTap: onTranslationTap),
@@ -625,7 +625,7 @@ class ChatMessageBubble extends StatelessWidget {
                         const SizedBox(width: 3),
                       ],
                       Text(
-                        NativeChat.prefs.clock(message.createdAt),
+                        clock.clock(message.createdAt),
                         style: theme.textTheme.labelSmall?.copyWith(color: foreground.withValues(alpha: 0.6)),
                       ),
                       if (isMine) ...[
@@ -704,9 +704,11 @@ class ChatMessageBubble extends StatelessWidget {
                             isLastInGroup
                                 ? GestureDetector(
                                     excludeFromSemantics: true,
-                                    onTap: hasPlayer ? () => showChatPlayerActions(context, message.sender) : null,
+                                    onTap: hasPlayer
+                                        ? () => showChatPlayerActions(context, message.sender, roomId: message.roomId)
+                                        : null,
                                     onLongPress: hasPlayer
-                                        ? () => showChatPlayerActions(context, message.sender)
+                                        ? () => showChatPlayerActions(context, message.sender, roomId: message.roomId)
                                         : null,
                                     child: ChatAvatar(user: message.sender),
                                   )
@@ -903,15 +905,14 @@ class ChatDaySeparator extends StatelessWidget {
   final DateTime day;
   final bool compact;
 
-  static bool sameDay(DateTime a, DateTime b) => NativeChat.prefs.daysFrom(a, b) == 0;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final label = switch (NativeChat.prefs.daysFrom(DateTime.now(), day)) {
+    final clock = chatClockOf(context);
+    final label = switch (clock.daysFrom(DateTime.now(), day)) {
       0 => 'Today',
       -1 => 'Yesterday',
-      _ => DateFormat.yMMMd().format(NativeChat.prefs.wallClock(day)),
+      _ => DateFormat.yMMMd().format(clock.wallClock(day)),
     };
     return Padding(
       padding: EdgeInsets.symmetric(vertical: compact ? 6 : 12),
@@ -930,13 +931,6 @@ class ChatDaySeparator extends StatelessWidget {
       ),
     );
   }
-}
-
-const Duration _groupGap = Duration(minutes: 5);
-
-bool chatSameGroup(ChatMessage? a, ChatMessage? b) {
-  if (a == null || b == null || a.isSystem || b.isSystem || a.sender.id != b.sender.id) return false;
-  return ChatDaySeparator.sameDay(a.createdAt, b.createdAt) && b.createdAt.difference(a.createdAt).abs() < _groupGap;
 }
 
 class ChatUnreadSeparator extends StatelessWidget {
@@ -1051,593 +1045,6 @@ class _ChatTypingBarState extends State<ChatTypingBar> with SingleTickerProvider
                 ],
               ),
             ),
-    );
-  }
-}
-
-class ChatComposer extends StatefulWidget {
-  const ChatComposer({
-    super.key,
-    required this.roomName,
-    required this.enabled,
-    required this.onSend,
-    this.draft = '',
-    this.onDraft,
-    this.replyTo,
-    this.onCancelReply,
-    this.chat,
-    this.roomId,
-    this.autofocus = false,
-    this.focusSignal,
-  });
-
-  final String roomName;
-  final bool enabled;
-  final ValueChanged<String> onSend;
-
-  /// Focus when built and on each ping
-  final bool autofocus;
-  final ValueListenable<int>? focusSignal;
-
-  final ChatMessage? replyTo;
-  final VoidCallback? onCancelReply;
-
-  final String draft;
-  final ValueChanged<String>? onDraft;
-
-  final ChatController? chat;
-  final String? roomId;
-
-  @override
-  State<ChatComposer> createState() => _ChatComposerState();
-}
-
-class _ChatComposerState extends State<ChatComposer> {
-  late final TextEditingController _text = ChatFormatController(text: widget.draft);
-  late bool _hasText = widget.draft.trim().isNotEmpty;
-  final FocusNode _focus = FocusNode();
-  Timer? _draftTimer;
-  String? _mention;
-  Timer? _mentionTimer;
-  String? _mentionSearched;
-  bool _attachOpen = false;
-  bool _toolsOpen = false;
-  bool _formatOpen = false;
-  double? _upload;
-  String? _uploadError;
-  String? _blockedError;
-  ChatImageHost? _blockedHost;
-
-  @override
-  void initState() {
-    super.initState();
-    _text.addListener(() {
-      final hasText = _text.text.trim().isNotEmpty;
-      if (hasText != _hasText) setState(() => _hasText = hasText);
-      final mention = ChatMentions.queryAt(_text.value);
-      if (mention != _mention) {
-        setState(() => _mention = mention);
-        _searchMention();
-      }
-      if (widget.onDraft == null) return;
-      _draftTimer?.cancel();
-      _draftTimer = Timer(const Duration(milliseconds: 600), _saveDraft);
-    });
-    ChatShareIn.pending.addListener(_takeShared);
-    widget.focusSignal?.addListener(_focus.requestFocus);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _takeShared());
-  }
-
-  @override
-  void didUpdateWidget(ChatComposer old) {
-    super.didUpdateWidget(old);
-    if (widget.replyTo != null && widget.replyTo?.id != old.replyTo?.id) {
-      if (_focus.hasFocus) {
-        SystemChannels.textInput.invokeMethod<void>('TextInput.show');
-      } else {
-        _focus.requestFocus();
-      }
-    }
-    if (widget.enabled && !old.enabled) _takeShared();
-    if (old.roomId != null && old.roomId != widget.roomId) old.chat?.typingStopped(old.roomId!);
-  }
-
-  void _saveDraft() {
-    _draftTimer?.cancel();
-    _draftTimer = null;
-    widget.onDraft?.call(_text.text);
-  }
-
-  List<ChatUser> _recent(String query) {
-    final chat = widget.chat;
-    final roomId = widget.roomId;
-    if (chat == null || roomId == null) return const [];
-    final roster = chat.rosterOf(roomId).where((u) => !chat.isHidden(u)).toList();
-    return ChatMentions.rank(ChatMentions.candidates(chat.visibleMessagesFor(roomId), chat.myUserId, roster), query);
-  }
-
-  List<ChatUser> _suggestions() {
-    final chat = widget.chat;
-    final query = _mention;
-    if (chat == null || query == null) return const [];
-    final found = chat.searchQuery == query ? chat.searchResults ?? const <ChatUser>[] : const <ChatUser>[];
-    return ChatMentions.rank([..._recent(query), ...found.where((u) => u.id != chat.myUserId)], query);
-  }
-
-  void _searchMention() {
-    _mentionTimer?.cancel();
-    final chat = widget.chat;
-    final query = _mention;
-    if (chat == null) return;
-    if (query == null || query.length < 2) {
-      if (_mentionSearched case final searched?) chat.endSearch(searched);
-      _mentionSearched = null;
-      return;
-    }
-    if (_recent(query).length >= 3) return;
-    _mentionTimer = Timer(const Duration(milliseconds: 400), () {
-      _mentionSearched = query;
-      chat.search(query);
-    });
-  }
-
-  Future<void> _uploadFrom({required bool fromFiles}) async {
-    setState(() => _uploadError = null);
-    final PlatformFile? file;
-    try {
-      file = await ChatImageUpload.pick(fromFiles: fromFiles);
-    } catch (_) {
-      if (mounted) setState(() => _uploadError = 'Could not open the picker');
-      return;
-    }
-    if (file == null || !mounted) return;
-    await _uploadBytes(file.bytes ?? Uint8List(0), file.name);
-  }
-
-  Future<void> _uploadBytes(Uint8List bytes, String name) async {
-    final host = NativeChat.prefs.imageHost;
-    setState(() => _upload = 0);
-    try {
-      final link = await ChatImageUpload.upload(
-        host,
-        bytes,
-        name,
-        NativeChat.prefs.credentialFor(host),
-        expiration: NativeChat.prefs.imgbbExpiration,
-        onProgress: (p) {
-          if (mounted) setState(() => _upload = p);
-        },
-      );
-      if (!mounted) return;
-      _insert(link);
-      setState(() {
-        _attachOpen = false;
-        _blockedHost = null;
-      });
-    } on ChatUploadError catch (e) {
-      if (mounted) {
-        setState(() {
-          _uploadError = e.message;
-          _blockedError = e.blocked ? e.message : null;
-          _blockedHost = e.blocked ? host : null;
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _upload = null);
-    }
-  }
-
-  Future<void> _takeShared() async {
-    final roomId = widget.roomId;
-    if (!mounted || !widget.enabled || roomId == null) return;
-    final shared = ChatShareIn.take(roomId);
-    if (shared == null) return;
-    if (shared.text.isNotEmpty) _insert(shared.text);
-    final image = shared.image;
-    if (image == null) return _focus.requestFocus();
-    final host = NativeChat.prefs.imageHost;
-    if (host.needsCredential && NativeChat.prefs.credentialFor(host).isEmpty) {
-      return setState(() => _attachOpen = true);
-    }
-    final upload = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Upload the shared image?'),
-        content: Text(
-          'It goes to ${host.label} and anyone with the link can see it. The link stays in the message box, '
-          'nothing is sent',
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Upload')),
-        ],
-      ),
-    );
-    if (upload != true || !mounted) return;
-    setState(() {
-      _attachOpen = true;
-      _uploadError = null;
-    });
-    final Uint8List bytes;
-    try {
-      bytes = await ChatShareIn.readImage(image);
-    } catch (e) {
-      if (mounted) setState(() => _uploadError = _sharedImageError(e is PlatformException ? e.code : ''));
-      return;
-    }
-    final ext = ChatShared.imageExtension(bytes);
-    if (!mounted) return;
-    if (ext == null) return setState(() => _uploadError = _sharedImageError(''));
-    await _uploadBytes(bytes, 'shared.$ext');
-  }
-
-  static String _sharedImageError(String code) => switch (code) {
-    'too_big' => 'The shared image is over 32 MB',
-    'rejected' => 'Only images shared from other apps can be uploaded',
-    _ => 'Could not read the shared image, only PNG, JPEG, GIF and WEBP',
-  };
-
-  void _insert(String text) {
-    final value = _text.value;
-    final at = value.selection.isValid ? value.selection.end : value.text.length;
-    final before = value.text.substring(0, at);
-    final insert = '${before.isEmpty || before.endsWith(' ') || before.endsWith('\n') ? '' : ' '}$text ';
-    _text.value = TextEditingValue(
-      text: before + insert + value.text.substring(at),
-      selection: TextSelection.collapsed(offset: at + insert.length),
-    );
-  }
-
-  String? get _replyName {
-    final id = widget.roomId;
-    final chat = widget.chat;
-    final reply = widget.replyTo?.sender;
-    if (reply != null && reply.id != chat?.myUserId && reply.name.isNotEmpty) return reply.name;
-    return id == null || chat == null || ChatRoom.peerIdOf(id) == null ? null : chat.roomById(id).name;
-  }
-
-  void _insertEmoji(String emoji) {
-    final value = _text.value;
-    final sel = value.selection.isValid ? value.selection : TextSelection.collapsed(offset: value.text.length);
-    _text.value = TextEditingValue(
-      text: value.text.replaceRange(sel.start, sel.end, emoji),
-      selection: TextSelection.collapsed(offset: sel.start + emoji.length),
-    );
-  }
-
-  void _insertTool(String text) {
-    _insert(text);
-    setState(() => _toolsOpen = false);
-    _focus.requestFocus();
-  }
-
-  @override
-  void dispose() {
-    final id = widget.roomId;
-    if (id != null) widget.chat?.typingStopped(id);
-    _mentionTimer?.cancel();
-    if (_mentionSearched case final searched?) {
-      final chat = widget.chat;
-      scheduleMicrotask(() => chat?.endSearch(searched));
-    }
-    _draftTimer?.cancel();
-    if (_draftTimer != null) {
-      final save = widget.onDraft;
-      final text = _text.text;
-      scheduleMicrotask(() => save?.call(text));
-    }
-    ChatShareIn.pending.removeListener(_takeShared);
-    widget.focusSignal?.removeListener(_focus.requestFocus);
-    _text.dispose();
-    _focus.dispose();
-    super.dispose();
-  }
-
-  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
-    final enter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
-    if (!enter || !widget.enabled || !_text.value.composing.isCollapsed) return KeyEventResult.ignored;
-    if (View.of(context).viewInsets.bottom > 0) return KeyEventResult.ignored;
-    if (!NativeChat.prefs.hardwareEnterSends(shift: HardwareKeyboard.instance.isShiftPressed)) {
-      return KeyEventResult.ignored;
-    }
-    if (event is KeyDownEvent) _send();
-    return KeyEventResult.handled;
-  }
-
-  void _send() {
-    if (!_hasText) return;
-    final name = widget.roomName;
-    sendChatChecked(context, _text.text, roomId: widget.roomId, roomName: name, onSend: widget.onSend).then((sent) {
-      if (!sent || !mounted) return;
-      _text.clear();
-      if (widget.onDraft != null) _saveDraft();
-    });
-  }
-
-  Widget _attachPanel(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final small = theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
-    final upload = _upload;
-    final host = NativeChat.prefs.imageHost;
-    final Widget content;
-    if (upload != null) {
-      content = Row(
-        children: [
-          Icon(Icons.cloud_upload_outlined, size: 20, color: scheme.primary),
-          const SizedBox(width: 10),
-          Expanded(child: LinearProgressIndicator(value: upload > 0 && upload < 1 ? upload : null)),
-          const SizedBox(width: 10),
-          Text(upload > 0 && upload < 1 ? 'Uploading ${(upload * 100).round()}%' : 'Uploading', style: small),
-        ],
-      );
-    } else if (host.needsCredential && NativeChat.prefs.credentialFor(host).isEmpty) {
-      content = ChatUploadSetupNotice(
-        host: host,
-        excluded: _blockedHost,
-        onPicked: () {
-          if (mounted) setState(() {});
-        },
-      );
-    } else {
-      final error = _uploadError;
-      content = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Wrap(
-            children: [
-              TextButton.icon(
-                onPressed: () => _uploadFrom(fromFiles: false),
-                icon: const Icon(Icons.photo_library_outlined, size: 20),
-                label: const Text('Gallery'),
-              ),
-              TextButton.icon(
-                onPressed: () => _uploadFrom(fromFiles: true),
-                icon: const Icon(Icons.folder_open_outlined, size: 20),
-                label: const Text('Files'),
-              ),
-            ],
-          ),
-          if (error != null && error == _blockedError && _blockedHost == host)
-            ChatUploadSetupNotice(
-              host: host,
-              blockedMessage: error,
-              onPicked: () {
-                if (mounted) {
-                  setState(() {
-                    _uploadError = null;
-                    _blockedError = null;
-                  });
-                }
-              },
-            )
-          else
-            Text(
-              error ?? 'The image goes to ${host.label} and anyone with the link can see it',
-              style: error == null ? small : small?.copyWith(color: scheme.error),
-            ),
-        ],
-      );
-    }
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 6, left: 6),
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-      decoration: BoxDecoration(color: scheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
-      child: content,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final reply = widget.replyTo;
-    final suggestions = _suggestions();
-    final chat = widget.chat;
-    final lookingUp = chat != null && _mention != null && chat.searching && chat.searchQuery == _mention;
-    final row = Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        IconButton(
-          tooltip: 'Attach an image',
-          onPressed: widget.enabled && _upload == null
-              ? () => setState(() {
-                  _attachOpen = !_attachOpen;
-                  _toolsOpen = false;
-                  _uploadError = null;
-                  _blockedHost = null;
-                })
-              : null,
-          icon: Icon(_attachOpen ? Icons.close_rounded : Icons.add_photo_alternate_outlined),
-          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-          padding: EdgeInsets.zero,
-        ),
-        IconButton(
-          tooltip: 'Quick actions',
-          onPressed: widget.enabled
-              ? () => setState(() {
-                  _toolsOpen = !_toolsOpen;
-                  _attachOpen = false;
-                })
-              : null,
-          icon: Icon(_toolsOpen ? Icons.close_rounded : Icons.bolt_rounded),
-          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-          padding: EdgeInsets.zero,
-        ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, box) => Focus(
-              canRequestFocus: false,
-              skipTraversal: true,
-              onKeyEvent: _onKey,
-              child: TextField(
-                controller: _text,
-                focusNode: _focus,
-                autofocus: widget.autofocus,
-                enabled: widget.enabled,
-                onChanged: (value) {
-                  NativeChat.touch();
-                  final id = widget.roomId;
-                  if (id != null) widget.chat?.typed(id, value);
-                },
-                minLines: 1,
-                maxLines: MediaQuery.textScalerOf(context).scale(1) >= 1.5 ? 3 : 5,
-                textCapitalization: TextCapitalization.sentences,
-                keyboardType: TextInputType.multiline,
-                textInputAction: NativeChat.prefs.softAction,
-                onEditingComplete: NativeChat.prefs.enterSendsSoft ? _send : null,
-                decoration: InputDecoration(
-                  hintText: !widget.enabled
-                      ? 'You can\'t write in ${widget.roomName}'
-                      : box.maxWidth < 220
-                      ? 'Message'
-                      : 'Message ${widget.roomName}',
-                  hintMaxLines: 1,
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: BorderSide.none),
-                  suffixIcon: IconButton(
-                    tooltip: 'Text format',
-                    onPressed: widget.enabled ? () => setState(() => _formatOpen = !_formatOpen) : null,
-                    icon: Icon(Icons.text_format_rounded, color: _formatOpen ? scheme.primary : null),
-                  ),
-                  suffixIconConstraints: const BoxConstraints.tightFor(width: 48, height: 48),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        AnimatedScale(
-          scale: _hasText ? 1 : 0.85,
-          duration: chatMotion(context, const Duration(milliseconds: 150)),
-          child: IconButton.filled(
-            tooltip: 'Send',
-            onPressed: _hasText && widget.enabled ? _send : null,
-            icon: const Icon(Icons.send_rounded),
-            iconSize: 22,
-            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-          ),
-        ),
-      ],
-    );
-    return Material(
-      color: scheme.surfaceContainerLow,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 8, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Scrolls when big text fills the screen
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.4),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_attachOpen || _upload != null) _attachPanel(context),
-                      if (_toolsOpen && widget.enabled)
-                        ChatComposeTools(
-                          onInsert: _insertTool,
-                          onEmoji: _insertEmoji,
-                          chat: widget.chat,
-                          name: _replyName,
-                          roomId: widget.roomId,
-                        ),
-                      if (_formatOpen && widget.enabled) ChatFormatBar(controller: _text, focus: _focus),
-                      if (_mention != null && (suggestions.isNotEmpty || lookingUp))
-                        Container(
-                          height: MediaQuery.textScalerOf(context).scale(48),
-                          margin: const EdgeInsets.only(bottom: 6, left: 6),
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              for (final user in suggestions)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 6),
-                                  child: MergeSemantics(
-                                    child: GestureDetector(
-                                      onLongPress: () => showChatPlayerActions(context, user),
-                                      child: ActionChip(
-                                        avatar: ChatAvatar(user: user, size: 24),
-                                        label: Text(user.name, semanticsLabel: 'Mention ${user.name}'),
-                                        onPressed: () {
-                                          _text.value = ChatMentions.insert(_text.value, user.name);
-                                          _focus.requestFocus();
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (lookingUp)
-                                const Padding(
-                                  padding: EdgeInsets.all(11),
-                                  child: SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              if (reply != null)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.only(left: 10),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    border: Border(left: BorderSide(color: scheme.primary, width: 3)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.reply_rounded, size: 18, color: scheme.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Replying to ${reply.sender.name}',
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              ChatQuote.excerpt(reply.content),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Cancel reply',
-                        icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: widget.onCancelReply,
-                      ),
-                    ],
-                  ),
-                ),
-              row,
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1837,40 +1244,55 @@ class ChatSessionMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final twoFactor = state == ChatConnection.twoFactor;
-    final browser = twoFactor || state == ChatConnection.needsBrowser;
-    if (state == ChatConnection.offline || state == ChatConnection.tornDown) {
-      final offline = state == ChatConnection.offline;
-      return ChatStateMessage(
-        icon: offline ? Icons.wifi_off_rounded : Icons.cloud_off_rounded,
-        title: offline ? 'No connection, retrying' : 'Torn is not responding, retrying',
-        subtitle: offline
-            ? 'The chat connects by itself as soon as the network is back'
-            : 'Torn may be down for maintenance. The chat tries again by itself',
-        action: TextButton(onPressed: () => NativeChat.setEnabled(false), child: const Text('Turn off chat')),
-      );
-    }
+    final outage = const [ChatConnection.offline, ChatConnection.tornDown, ChatConnection.slowLoad].contains(state);
+    final browser = state == ChatConnection.twoFactor || state == ChatConnection.needsBrowser;
+    final (icon, title, subtitle) = switch (state) {
+      ChatConnection.offline => (
+        Icons.wifi_off_rounded,
+        'No connection, retrying',
+        'The chat connects by itself as soon as the network is back',
+      ),
+      ChatConnection.tornDown => (
+        Icons.cloud_off_rounded,
+        'Torn is not responding, retrying',
+        'Torn may be down for maintenance. If torn.com asks for a check in the browser, complete it there. '
+            'The chat tries again by itself',
+      ),
+      ChatConnection.slowLoad => (
+        Icons.hourglass_empty_rounded,
+        'Torn takes too long to load, retrying',
+        'Your connection to torn.com may be slow. The chat tries again by itself',
+      ),
+      ChatConnection.twoFactor => (
+        Icons.password_rounded,
+        'Enter your 2FA code in the browser',
+        'Open the Torn PDA browser, enter the code there and the chat connects by itself',
+      ),
+      ChatConnection.needsBrowser => (
+        Icons.password_rounded,
+        'Finish logging in to Torn',
+        'Torn wants one more step. Open the browser, finish logging in there and the chat connects by itself',
+      ),
+      _ => (
+        Icons.lock_outline_rounded,
+        'Not logged in to Torn',
+        'The chat uses your Torn login, like the website. Go to Settings > Torn Authentication and sign in '
+            'with Google${Platform.isIOS ? ', Apple' : ''} or your Torn email and password. '
+            'The chat then connects by itself',
+      ),
+    };
     return ChatStateMessage(
-      icon: browser ? Icons.password_rounded : Icons.lock_outline_rounded,
-      title: twoFactor
-          ? 'Enter your 2FA code in the browser'
-          : browser
-          ? 'Finish logging in to Torn'
-          : 'Not logged in to Torn',
-      subtitle: twoFactor
-          ? 'Open the Torn PDA browser, enter the code there and the chat connects by itself'
-          : browser
-          ? 'Torn wants one more step. '
-                'Open the browser, finish logging in there and the chat connects by itself'
-          : 'The chat uses your Torn login, like the website. Go to Settings > Torn Authentication and sign in '
-                'with Google${Platform.isIOS ? ', Apple' : ''} or your Torn email and password. '
-                'The chat then connects by itself',
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
       action: Wrap(
         alignment: WrapAlignment.center,
         spacing: 8,
         runSpacing: 4,
         children: [
-          if (browser)
+          if (outage)
+            FilledButton.tonal(onPressed: NativeChat.controller.retry, child: const Text('Try again'))
+          else if (browser)
             const FilledButton.tonal(onPressed: NativeChat.openTornBrowser, child: Text('Open browser'))
           else ...[
             const FilledButton.tonal(onPressed: NativeChat.openSettings, child: Text('Open Settings')),
@@ -2073,6 +1495,7 @@ class ChatConnectionLine extends StatelessWidget {
       ChatConnection.twoFactor => ('2FA code pending', scheme.error),
       ChatConnection.offline => ('No connection, retrying…', scheme.error),
       ChatConnection.tornDown => ('Torn is not responding, retrying…', scheme.error),
+      ChatConnection.slowLoad => ('Torn takes too long to load, retrying…', scheme.error),
       ChatConnection.error => ('Connection problem', scheme.error),
     };
     return Row(
@@ -2190,8 +1613,8 @@ class ChatRoomGlyph extends StatelessWidget {
     if (emblemUrl == null) return icon;
     return ClipRRect(
       borderRadius: BorderRadius.circular(size * 0.14),
-      child: Image.network(
-        emblemUrl!,
+      child: Image(
+        image: ChatImage(emblemUrl!),
         width: size * 25 / 19,
         height: size,
         fit: BoxFit.contain,
@@ -2202,19 +1625,6 @@ class ChatRoomGlyph extends StatelessWidget {
       ),
     );
   }
-}
-
-String? chatTravelFlag(ChatRoom room) {
-  if (room.id != ChatRoom.travelId) return null;
-  final name = room.name.trim().toLowerCase().replaceAll(' ', '-');
-  final file = switch (name) {
-    'uk' || 'united-kingdom' => 'uk',
-    'uae' || 'united-arab-emirates' => 'uae',
-    'cayman' || 'cayman-islands' => 'cayman',
-    'argentina' || 'canada' || 'china' || 'hawaii' || 'japan' || 'mexico' || 'south-africa' || 'switzerland' => name,
-    _ => null,
-  };
-  return file == null ? null : 'images/flags/ball/ball_$file.png';
 }
 
 class ChatRoomAvatar extends StatelessWidget {
@@ -2274,7 +1684,7 @@ class ChatRoomAvatar extends StatelessWidget {
 
 (Color, Color) chatGroupColors(String group, Brightness brightness) {
   final dark = brightness == Brightness.dark;
-  final own = ChatRooms.remoteOf(group)?.color;
+  final own = ChatRooms.remoteOf(group, NativeChat.prefs.remoteRooms)?.color;
   if (own != null) {
     return (own, ThemeData.estimateBrightnessForColor(own) == Brightness.dark ? Colors.white : Colors.black);
   }
@@ -2329,10 +1739,10 @@ class ChatUnreadArc extends StatelessWidget {
           ? const {}
           : prefs.bubbleTotal
           ? {'total': groups.values.fold(0, (a, b) => a + b)}
-          : {for (final room in ChatPrefs.bubbleOptions) room: groups[room] ?? 0},
+          : {for (final room in prefs.bubbleOptions) room: groups[room] ?? 0},
       glyphs: prefs.bubbleTotal
           ? const {}
-          : {for (final room in ChatPrefs.bubbleOptions) room: room == 'dm' ? null : chat.roomById(room).icon},
+          : {for (final room in prefs.bubbleOptions) room: room == 'dm' ? null : chat.roomById(room).icon},
       ringColor: ringColor,
       row: row,
       child: child,
@@ -2436,9 +1846,13 @@ class ChatConversationTile extends StatelessWidget {
     this.expanded = false,
     this.hidePreview = false,
     this.onExpand,
+    this.footer,
   });
 
   final ChatRoom room;
+
+  /// Own taps and gap under the preview
+  final Widget? footer;
   final ChatMessage? last;
   final int unread;
 
@@ -2476,6 +1890,7 @@ class ChatConversationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final clock = chatClockOf(context);
     final m = last;
     final peer = room.isDm ? ChatRoom.peerIdOf(room.id) : null;
     final name = peer == null ? room.name : NativeChat.prefs.displayName(peer, room.name);
@@ -2486,25 +1901,24 @@ class ChatConversationTile extends StatelessWidget {
     String preview([String Function(String) text = ChatFormat.plain]) {
       if (awayLine != null) return awayLine!;
       if (m == null) return room.isDm ? 'Private chat' : 'Tap to read';
-      if (myUserId != null && m.sender.id == myUserId) return 'You: ${text(m.content)}';
+      final content = chatShortText(m.content, m.createdAt, clock: clock.clock);
+      if (myUserId != null && m.sender.id == myUserId) return 'You: ${text(content)}';
       if (!room.isDm && !m.isSystem) {
-        return '${NativeChat.prefs.displayName(m.sender.id, m.sender.name)}: ${text(m.content)}';
+        return '${NativeChat.prefs.displayName(m.sender.id, m.sender.name)}: ${text(content)}';
       }
-      return text(m.content);
+      return text(content);
     }
 
     final highlight = unread > 0;
     final hidden = hidePreview && !hasDraft;
     // Fades when the last message changes, not per draft key
-    final previewKey = typingLine != null
-        ? 'typing'
-        : hasDraft
-        ? 'draft'
-        : awayLine != null
-        ? 'away'
-        : m == null
-        ? 'none'
-        : m.reqId ?? m.id;
+    final previewKey = switch (m) {
+      _ when typingLine != null => 'typing',
+      _ when hasDraft => 'draft',
+      _ when awayLine != null => 'away',
+      null => 'none',
+      ChatMessage(:final reqId, :final id) => reqId ?? id,
+    };
     Widget line(Key? key) => Text.rich(
       key: key,
       TextSpan(
@@ -2548,7 +1962,7 @@ class ChatConversationTile extends StatelessWidget {
         'draft: $draft'
       else if (!hidden)
         preview(chatSpokenText),
-      if (m != null) _chatSpokenTime(m.createdAt),
+      if (m != null) chatSpokenTime(clock, m.createdAt),
       if (pinned) 'pinned',
       if (muted) snoozed ? 'snoozed' : 'muted',
       if (frozen) 'frozen',
@@ -2566,7 +1980,7 @@ class ChatConversationTile extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(16, 10, onExpand == null ? 16 : 0, 10),
+          padding: EdgeInsets.fromLTRB(16, 10, onExpand == null ? 16 : 0, footer == null ? 10 : 0),
           child: Row(
             children: [
               ChatRoomAvatar(room: room),
@@ -2597,7 +2011,7 @@ class ChatConversationTile extends StatelessWidget {
                         ),
                         if (m != null)
                           Text(
-                            _when(m.createdAt),
+                            _when(clock, m.createdAt),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: highlight ? scheme.primary : scheme.onSurfaceVariant,
                               fontWeight: highlight ? FontWeight.w700 : null,
@@ -2699,10 +2113,23 @@ class ChatConversationTile extends StatelessWidget {
         ),
       ),
     );
-    if (onExpand == null) return row;
+    final body = footer == null
+        ? row
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              row,
+              Padding(
+                padding: EdgeInsets.only(left: 78, right: onExpand == null ? 16 : 0),
+                child: footer,
+              ),
+            ],
+          );
+    if (onExpand == null) return body;
     return Row(
       children: [
-        Expanded(child: row),
+        Expanded(child: body),
         // Own node, not merged into the slidable
         Semantics(
           container: true,
@@ -2722,12 +2149,11 @@ class ChatConversationTile extends StatelessWidget {
     );
   }
 
-  String _when(DateTime at) {
+  String _when(ChatClock clock, DateTime at) {
     final now = DateTime.now();
-    final prefs = NativeChat.prefs;
-    if (prefs.daysFrom(now, at) == 0) return prefs.clock(at);
-    if (now.difference(at).inDays < 7) return DateFormat.E().format(prefs.wallClock(at));
-    return DateFormat.yMd().format(prefs.wallClock(at));
+    if (clock.daysFrom(now, at) == 0) return clock.clock(at);
+    if (now.difference(at).inDays < 7) return DateFormat.E().format(clock.wallClock(at));
+    return DateFormat.yMd().format(clock.wallClock(at));
   }
 }
 
@@ -2868,12 +2294,14 @@ class _ChatArrivalsState extends State<ChatArrivals> {
 class ChatWaitingStrip extends StatefulWidget {
   const ChatWaitingStrip({
     super.key,
+    required this.chat,
     required this.waiting,
     required this.onOpen,
     required this.onDismiss,
     required this.onDismissAll,
   });
 
+  final ChatController chat;
   final List<(ChatRoom, ChatMessage)> waiting;
   final void Function(String roomId) onOpen;
   final void Function(String roomId) onDismiss;
@@ -2884,14 +2312,13 @@ class ChatWaitingStrip extends StatefulWidget {
 }
 
 class _ChatWaitingStripState extends State<ChatWaitingStrip> {
-  static bool _expanded = false;
-
   @override
   Widget build(BuildContext context) {
     if (widget.waiting.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final now = DateTime.now();
+    final expanded = widget.chat.waitingExpanded;
     return Material(
       color: scheme.surfaceContainerLow,
       child: Column(
@@ -2903,13 +2330,13 @@ class _ChatWaitingStripState extends State<ChatWaitingStrip> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (_expanded) TextButton(onPressed: widget.onDismissAll, child: const Text('Dismiss all')),
-                Icon(_expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded),
+                if (expanded) TextButton(onPressed: widget.onDismissAll, child: const Text('Dismiss all')),
+                Icon(expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded),
               ],
             ),
-            onTap: () => setState(() => _expanded = !_expanded),
+            onTap: () => setState(() => widget.chat.waitingExpanded = !expanded),
           ),
-          if (_expanded)
+          if (expanded)
             for (final (room, last) in widget.waiting)
               Dismissible(
                 key: ValueKey('waiting-${room.id}-${last.id}'),

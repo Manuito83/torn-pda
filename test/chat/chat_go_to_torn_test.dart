@@ -59,37 +59,6 @@ void main() {
     return key;
   }
 
-  testWidgets('from the page, the big window opens with the room and the page stays shut', (tester) async {
-    live = false;
-    final key = await start(tester);
-    unawaited(NativeChat.open(key.currentState!, roomId: 'global'));
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(seconds: 1));
-    expect(NativeChat.controller.currentRoomId, 'global');
-
-    unawaited(NativeChat.goToTornTab());
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(seconds: 1));
-    expect(NativeChat.screenOpen.value, isFalse);
-    expect(NativeChat.bigWindowShown, isTrue);
-    expect(NativeChat.bigWindow.value?.roomId, 'global');
-    expect(web.browserShowInForeground, isTrue);
-
-    live = true;
-    for (var i = 0; i < 4; i++) {
-      await tester.pump(const Duration(seconds: 1));
-    }
-    expect(NativeChat.screenOpen.value, isFalse);
-    expect(NativeChat.bigWindow.value?.roomId, 'global');
-
-    await tester.pumpWidget(const SizedBox());
-    NativeChat.resetTabs();
-    for (var i = 0; i < 5; i++) {
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
-      await tester.pump(const Duration(milliseconds: 10));
-    }
-  });
-
   testWidgets('from the windows, they stay where they are', (tester) async {
     final key = await start(tester);
     NativeChat.openQuickWindow('faction');

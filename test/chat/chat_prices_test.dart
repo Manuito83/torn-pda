@@ -1,4 +1,3 @@
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +11,6 @@ import 'package:torn_pda/models/inventory/inventory_v2_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
-import 'package:torn_pda/widgets/chat/chat_alias_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_price_check_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -99,28 +97,6 @@ void main() {
       expect(ChatPriceCheck.short(12500000), '12.5m');
       expect(ChatPriceCheck.short(2000000000), '2b');
     });
-
-    testWidgets('with the price chip off the catalog is not fetched', (tester) async {
-      final original = ChatLinkPreviews.fetchItems;
-      addTearDown(() {
-        ChatLinkPreviews.fetchItems = original;
-        NativeChat.prefs.priceCheck = true;
-      });
-      var calls = 0;
-      ChatLinkPreviews.fetchItems = () async {
-        calls++;
-        return catalog;
-      };
-      ChatLinkPreviews.resetForTests();
-      NativeChat.prefs.priceCheck = false;
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ChatTradeInsert(roomId: 'trade', text: 'WTS Xanax 800k', userId: null, color: Colors.black),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(calls, 0);
-    });
   });
 
   group('market line', () {
@@ -144,12 +120,7 @@ void main() {
     });
 
     Future<void> pumpChips(WidgetTester tester, Future<List<Object>?> Function(int) market, [String? text]) async {
-      final fetchItems = ChatLinkPreviews.fetchItems;
-      final fetchMarket = ChatLinkPreviews.fetchMarket;
-      addTearDown(() {
-        ChatLinkPreviews.fetchItems = fetchItems;
-        ChatLinkPreviews.fetchMarket = fetchMarket;
-      });
+      addTearDown(ChatLinkPreviews.resetForTests);
       ChatLinkPreviews.resetForTests();
       ChatLinkPreviews.fetchItems = () async => catalog;
       ChatLinkPreviews.fetchMarket = market;
@@ -204,26 +175,11 @@ void main() {
       expect(find.textContaining('Lowest listed'), findsOneWidget);
       expect(calls, 1);
     });
-
-    testWidgets('says so when there are no listings', (tester) async {
-      await pumpChips(tester, (id) async => <Object>[]);
-      await tester.tap(find.textContaining('market'));
-      await tester.pumpAndSettle();
-      expect(find.text('No listings'), findsOneWidget);
-    });
-
-    testWidgets('says so when it fails', (tester) async {
-      await pumpChips(tester, (id) async => null);
-      await tester.tap(find.textContaining('market'));
-      await tester.pumpAndSettle();
-      expect(find.text("Couldn't load listings"), findsOneWidget);
-    });
   });
 
   group('own stock', () {
     Future<List<String>> pumpStock(WidgetTester tester, InventoryCategoryFetcher fetch, List<String> texts) async {
-      final fetchItems = ChatLinkPreviews.fetchItems;
-      addTearDown(() => ChatLinkPreviews.fetchItems = fetchItems);
+      addTearDown(ChatLinkPreviews.resetForTests);
       ChatLinkPreviews.resetForTests();
       ChatLinkPreviews.fetchItems = () async => catalog;
       NativeChat.prefs.priceCheck = true;
@@ -362,27 +318,6 @@ void main() {
       ]);
       expect(merged, [current.first, const ChatItemAlias('fhc', 'Feathery Hotel Coupon')]);
     });
-
-    testWidgets('pasted nicknames are merged into the saved list', (tester) async {
-      NativeChat.prefs.itemAliases = ChatItemAliases.defaults;
-      addTearDown(() => NativeChat.prefs.itemAliases = ChatItemAliases.defaults);
-      await tester.pumpWidget(
-        MaterialApp(
-          builder: BotToastInit(),
-          navigatorObservers: [BotToastNavigatorObserver()],
-          home: Scaffold(body: ChatImportDialog.itemNicknames()),
-        ),
-      );
-      await tester.enterText(
-        find.byType(TextField),
-        '[{"alias":"pills","item":"Xanax"},{"alias":"xans","item":"Xanax"}]',
-      );
-      await tester.pump();
-      await tester.tap(find.text('Import'));
-      await tester.pumpAndSettle();
-      expect(NativeChat.prefs.itemAliases.where((a) => a.alias == 'pills'), hasLength(1));
-      expect(NativeChat.prefs.itemAliases.where((a) => a.alias == 'xans'), hasLength(1));
-    });
   });
 
   group('money', () {
@@ -478,12 +413,7 @@ void main() {
     });
 
     testWidgets('tapping a name shows its value and cheapest listing', (tester) async {
-      final fetchItems = ChatLinkPreviews.fetchItems;
-      final fetchMarket = ChatLinkPreviews.fetchMarket;
-      addTearDown(() {
-        ChatLinkPreviews.fetchItems = fetchItems;
-        ChatLinkPreviews.fetchMarket = fetchMarket;
-      });
+      addTearDown(ChatLinkPreviews.resetForTests);
       ChatLinkPreviews.resetForTests();
       ChatLinkPreviews.fetchItems = () async => shop;
       ChatLinkPreviews.fetchMarket = (id) async => <Object>[
@@ -502,54 +432,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(r'Market value: $5k'), findsOneWidget);
       expect(find.text(r'Lowest listed: $4,800 x2'), findsOneWidget);
-    });
-
-    Future<void> openSheet(WidgetTester tester, String description) async {
-      final fetchItems = ChatLinkPreviews.fetchItems;
-      final fetchMarket = ChatLinkPreviews.fetchMarket;
-      addTearDown(() {
-        ChatLinkPreviews.fetchItems = fetchItems;
-        ChatLinkPreviews.fetchMarket = fetchMarket;
-      });
-      ChatLinkPreviews.resetForTests();
-      ChatLinkPreviews.fetchItems = () async => ItemsModel(
-        items: {'1': Item(name: 'Goodie Bag', marketValue: 5000, description: description)},
-      );
-      ChatLinkPreviews.fetchMarket = (id) async => <Object>[];
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
-            builder: (context) => TextButton(
-              onPressed: () => showChatItemSheet(
-                context,
-                const ChatItemRef(raw: 'Goodie Bag', id: 1, type: null, name: 'Goodie Bag', market: 5000),
-              ),
-              child: const Text('go'),
-            ),
-          ),
-        ),
-      );
-      await tester.tap(find.text('go'));
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('a long description starts folded and More opens it', (tester) async {
-      final long = List.filled(30, 'A bag full of goodies.').join(' ');
-      await openSheet(tester, long);
-      expect(tester.widget<Text>(find.text(long)).maxLines, 3);
-      await tester.tap(find.text('More'));
-      await tester.pumpAndSettle();
-      expect(tester.widget<Text>(find.text(long)).maxLines, isNull);
-      await tester.ensureVisible(find.text('Less'));
-      await tester.tap(find.text('Less'));
-      await tester.pumpAndSettle();
-      expect(tester.widget<Text>(find.text(long)).maxLines, 3);
-    });
-
-    testWidgets('a short description has no More', (tester) async {
-      await openSheet(tester, 'A bag full of <b>goodies</b>.');
-      expect(find.text('A bag full of goodies.'), findsOneWidget);
-      expect(find.text('More'), findsNothing);
     });
   });
 

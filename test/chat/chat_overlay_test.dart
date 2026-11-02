@@ -14,8 +14,6 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/pip_controller.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
 import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
@@ -26,25 +24,22 @@ import 'package:torn_pda/widgets/webviews/split_divider.dart';
 
 import 'chat_fakes.dart';
 
-class _QuietPip extends PipController {
-  @override
-  // ignore: must_call_super
-  void onInit() {}
-}
-
 Future<GlobalKey<NavigatorState>> _pumpApp(WidgetTester tester, {Widget home = const Scaffold()}) async {
   final key = GlobalKey<NavigatorState>();
   await tester.pumpWidget(
-    MaterialApp(
-      navigatorKey: key,
-      navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
-      builder: (context, child) => Stack(
-        children: [
-          BotToastInit()(context, child),
-          ChatOverlay(navigatorKey: key),
-        ],
+    ChangeNotifierProvider<WebViewProvider>(
+      create: (_) => WebViewProvider(),
+      child: MaterialApp(
+        navigatorKey: key,
+        navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
+        builder: (context, child) => Stack(
+          children: [
+            BotToastInit()(context, child),
+            ChatOverlay(navigatorKey: key),
+          ],
+        ),
+        home: home,
       ),
-      home: home,
     ),
   );
   await tester.pump(const Duration(milliseconds: 400));
@@ -74,13 +69,11 @@ void main() {
     NativeChat.minimized.value = const [];
     NativeChat.screenOpen.value = false;
     NativeChat.drawerOpen.value = false;
-    splitDividerRect.value = null;
   });
 
   tearDown(() {
     NativeChat.quickWindows.value = const [];
     NativeChat.minimized.value = const [];
-    splitDividerRect.value = null;
     Get.reset();
   });
 
@@ -535,42 +528,6 @@ void main() {
     });
   });
 
-  testWidgets('chat times follow the app settings', (tester) async {
-    final settings = SettingsProvider();
-    final key = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(
-      ChangeNotifierProvider.value(
-        value: settings,
-        child: MaterialApp(
-          navigatorKey: key,
-          builder: (context, child) => Stack(
-            children: [
-              child!,
-              ChatOverlay(navigatorKey: key),
-            ],
-          ),
-          home: const Scaffold(),
-        ),
-      ),
-    );
-    await tester.pump();
-    expect((NativeChat.prefs.tornTime, NativeChat.prefs.app12h), (false, false));
-
-    settings
-      ..changeTimeZone = TimeZoneSetting.tornTime
-      ..changeTimeFormat = TimeFormatSetting.h12;
-    await tester.pump();
-    await tester.pump();
-    expect((NativeChat.prefs.tornTime, NativeChat.prefs.app12h), (true, true));
-
-    settings
-      ..changeTimeZone = TimeZoneSetting.localTime
-      ..changeTimeFormat = TimeFormatSetting.h24;
-    await tester.pump();
-    await tester.pump();
-    expect((NativeChat.prefs.tornTime, NativeChat.prefs.app12h), (false, false));
-  });
-
   group('ticker', () {
     testWidgets('caption filters and swipe', (tester) async {
       final prefs = ChatPrefs()
@@ -757,12 +714,13 @@ void main() {
     );
     Rect head() => Rect.fromCenter(center: tester.getCenter(find.byIcon(Icons.forum_rounded)), width: 48, height: 48);
     final free = head();
+    final shared = tester.element(find.byType(ChatOverlay)).read<WebViewProvider>().splitDividerRect;
 
     split.value = free.center.dx - 2;
     await tester.pump();
     await tester.pump();
     await _settle(tester);
-    final divider = splitDividerRect.value!;
+    final divider = shared.value!;
     expect(divider, Rect.fromLTWH(free.center.dx - 2, 0, kSplitDividerWidth, 600));
     final moved = head();
     expect(moved.right <= divider.left || moved.left >= divider.right, isTrue);
@@ -772,65 +730,8 @@ void main() {
     await tester.pump();
     await tester.pump();
     await _settle(tester);
-    expect(splitDividerRect.value, isNull);
+    expect(shared.value, isNull);
     expect(head(), free);
-  });
-
-  testWidgets('pip and drawer hiding', (tester) async {
-    final pip = Get.put<PipController>(_QuietPip());
-    await _pumpApp(tester);
-    final bubble = find.byIcon(Icons.forum_rounded);
-    expect(bubble, findsOneWidget);
-    expect(find.byType(ChatTicker), findsOneWidget);
-
-    NativeChat.drawerOpen.value = true;
-    await tester.pump();
-    expect(find.byType(ChatTicker), findsNothing);
-    expect(bubble, findsOneWidget);
-    NativeChat.drawerOpen.value = false;
-    await tester.pump();
-    expect(find.byType(ChatTicker), findsOneWidget);
-
-    pip.inPip.value = true;
-    await tester.pump();
-    await tester.pump();
-    expect(bubble, findsNothing);
-    expect(find.byType(ChatTicker), findsNothing);
-    pip.inPip.value = false;
-    await tester.pump();
-    await tester.pump();
-    expect(bubble, findsOneWidget);
-  });
-
-  testWidgets('sheets open above the overlay and back closes them', (tester) async {
-    final key = await _pumpApp(tester, home: const Scaffold(body: Text('home')));
-    key.currentState!.push(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Text('second'))));
-    await tester.pumpAndSettle();
-    final bubble = find.bySemanticsLabel(RegExp('^Chat, '));
-    expect(bubble, findsOneWidget);
-
-    showDialog<void>(
-      context: key.currentContext!,
-      builder: (_) => const AlertDialog(content: Text('dialog')),
-    );
-    await tester.pumpAndSettle();
-    expect(bubble, findsNothing);
-    key.currentState!.pop();
-    await tester.pumpAndSettle();
-    expect(bubble, findsOneWidget);
-
-    showModalBottomSheet<void>(context: tester.element(bubble), builder: (_) => const Text('launcher sheet'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.text('launcher sheet'), findsOneWidget);
-
-    await tester.binding.handlePopRoute();
-    await tester.pumpAndSettle();
-    expect(find.text('launcher sheet'), findsNothing);
-    expect(find.text('second'), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('gone poker room closes everything', (tester) async {

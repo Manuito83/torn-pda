@@ -125,7 +125,8 @@ class ChatTickerDemo extends ChangeNotifier {
           type: ChatRoomType.dm,
           peer: const ChatUser(id: 0, name: 'Alex'),
         )
-      : ChatRoom(id: roomId, name: ChatRooms.labelOf(roomId));
+      // Demo rooms are never remote
+      : ChatRoom(id: roomId, name: ChatRooms.labelOf(roomId, const []));
 
   @override
   void dispose() {

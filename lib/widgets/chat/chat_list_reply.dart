@@ -5,10 +5,12 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_appearance_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_send_check_dialog.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -142,7 +144,11 @@ class _ChatListReplyState extends State<ChatListReply>
         : scheme.onSurfaceVariant;
     final mine = chat.myUserId != null && m.sender.id == chat.myUserId;
     final who = mine ? 'You' : prefs.displayName(m.sender.id, m.sender.name);
-    final body = quote?.body ?? forwarded?.body ?? m.content;
+    final body = chatShortText(
+      quote?.body ?? forwarded?.body ?? m.content,
+      m.createdAt,
+      clock: chatClockOf(context, listen: false).clock,
+    );
     final spoken = [
       who,
       if (quote != null) 'replying to ${quote.author}: ${chatSpokenText(quote.excerpt)}',
@@ -238,8 +244,11 @@ class _ChatListReplyState extends State<ChatListReply>
     final listed = all.isEmpty ? [?last] : all;
     final cut = _frozenAt == null ? -1 : listed.lastIndexWhere((m) => (m.reqId ?? m.id) == _frozenAt);
     final shown = cut < 0 ? listed : listed.sublist(0, cut + 1);
-    final loading = !chat.isLoaded(room.id);
-    final failed = chat.openFailed(room.id);
+    final load = chat.loadOf(room.id);
+    final loading = load != ChatRoomLoad.loaded;
+    final offline = load == ChatRoomLoad.unreachable || load == ChatRoomLoad.session;
+    final failed = offline || load == ChatRoomLoad.timedOut;
+    final reason = offline ? chatUnreachableReason(chat.connection, load) : null;
     if (!loading && _known == null) {
       _known = {for (final m in all) m.reqId ?? m.id};
       final last = all.lastOrNull?.createdAt;
@@ -297,10 +306,12 @@ class _ChatListReplyState extends State<ChatListReply>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 2, child: loading && !failed ? const LinearProgressIndicator(minHeight: 2) : null),
-          if (failed)
+          if (failed && (!offline || reason != null))
             Padding(
               padding: const EdgeInsets.fromLTRB(_indent, 0, 8, 0),
-              child: ChatLoadFailed(name: name, onRetry: () => chat.retryRoom(room.id), compact: true),
+              child: offline
+                  ? Text(reason!, style: small?.copyWith(color: scheme.onSurfaceVariant))
+                  : ChatLoadFailed(name: name, onRetry: () => chat.retryRoom(room.id), compact: true),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(_indent, 0, 16, 0),
@@ -407,10 +418,9 @@ class _ChatListReplyState extends State<ChatListReply>
         ],
       ),
     );
-    // Another room may have taken the open
     return Listener(
       onPointerDown: (_) {
-        if (loading && !failed && !chat.opening(room.id)) chat.peekRoom(room.id);
+        if (chat.needsOpen(room.id)) chat.peekRoom(room.id);
       },
       child: block,
     );

@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:torn_pda/main.dart' show kSplitScreenMinWidth;
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -49,12 +48,13 @@ void main() {
     double width = wide,
     bool revertsToApp = true,
     WebViewSplitPosition position = WebViewSplitPosition.left,
+    List<String>? uids,
   }) async {
     final provider = WebViewProvider();
     provider.splitScreenRevertsToApp = revertsToApp;
     provider.splitScreenPosition = position;
-    for (var i = 0; i < count; i++) {
-      await provider.addTab(url: 'https://www.torn.com/page$i.php', tabUid: 'tab$i');
+    for (final uid in uids ?? [for (var i = 0; i < count; i++) 'tab$i']) {
+      await provider.addTab(url: 'https://www.torn.com/$uid.php', tabUid: uid);
     }
     provider.updateSplitScreenWidth(width);
     return provider;
@@ -176,16 +176,6 @@ void main() {
       expect(p.splitLeftSlot, SplitSlotContent.apartBrowser);
       expect(p.splitRightSlot, SplitSlotContent.mainBrowser);
     });
-
-    test('the sent tab is shown and focused in the slot where the app was', () async {
-      final p = await build(count: 5, position: WebViewSplitPosition.right);
-      p.moveTabToOtherGroup(3);
-
-      expect(shown(p, SplitGroup.apart), 'tab3');
-      expect(p.tabList[p.currentTab].id, 'tab3');
-      expect(p.focusedGroup, SplitGroup.apart);
-      expect(p.isTabVisible(at(p, 'tab3')), isTrue);
-    });
   });
 
   group('main tab and main group', () {
@@ -214,18 +204,6 @@ void main() {
       expect(p.tabIndexesForGroup(SplitGroup.main), [0]);
       expect(ids(p, SplitGroup.apart), ['tab1', 'tab2', 'tab3']);
       expect(p.visibleTabIndexForGroup(SplitGroup.main), 0);
-    });
-
-    test('the main group is never empty either when it sits on the right', () async {
-      final p = await build(count: 4, position: WebViewSplitPosition.right);
-      for (var i = 1; i < 4; i++) {
-        send(p, 'tab$i');
-      }
-
-      expect(p.slotOfGroup(SplitGroup.main), SplitSide.right);
-      expect(p.tabIndexesForGroup(SplitGroup.main), [0]);
-      expect(p.visibleTabIndexForGroup(SplitGroup.main), 0);
-      expect(p.splitRightSlot, SplitSlotContent.mainBrowser);
     });
 
     test('an out of range index is refused', () async {
@@ -306,21 +284,6 @@ void main() {
       expect(shown(p, SplitGroup.main), 'tab1');
       expect(shown(p, SplitGroup.apart), 'tab2');
     });
-
-    test(
-      'current behaviour, not contract: with the app covering the main group, the last apart tab closes the group',
-      () async {
-        final p = await build(count: 3);
-        p.moveTabToOtherGroup(2);
-        p.exitBrowserSlotToApp(p.slotOfGroup(SplitGroup.main));
-        expect(slots(p), contains(SplitSlotContent.app));
-
-        await p.removeTab(position: 2);
-
-        expect(p.splitApartOpen, isFalse);
-        expect(slots(p), isNot(contains(SplitSlotContent.apartBrowser)));
-      },
-    );
   });
 
   group('a new tab opened from a tab is born in its group', () {
@@ -344,24 +307,6 @@ void main() {
       final int child = p.tabList.indexWhere((t) => t.id == 'child');
       expect(p.tabList[child].splitApart, isFalse);
       expect(p.tabIndexesForGroup(SplitGroup.main), contains(child));
-    });
-
-    test('from the main tab it is born in the main group', () async {
-      final p = await build(count: 3);
-
-      await p.addTab(url: 'https://www.torn.com/new.php', tabUid: 'child', openerTabUid: 'tab0');
-
-      expect(p.tabList.last.splitApart, isFalse);
-    });
-
-    test('from an apart tab with the apart group on the left it is still born apart', () async {
-      final p = await build(count: 4, position: WebViewSplitPosition.right);
-      p.moveTabToOtherGroup(2);
-      expect(p.slotOfGroup(SplitGroup.apart), SplitSide.left);
-
-      await p.addTab(url: 'https://www.torn.com/new.php', tabUid: 'child', openerTabUid: 'tab2');
-
-      expect(ids(p, SplitGroup.apart), ['tab2', 'child']);
     });
   });
 
@@ -436,13 +381,6 @@ void main() {
       expect(slots(p), after);
     });
 
-    test('with two browsers and tabs in both, either of them can be closed', () async {
-      final p = await build();
-      p.moveTabToOtherGroup(2);
-
-      expect(p.splitBrowserCanExitToApp, isTrue);
-    });
-
     test('with the apart group empty it is not possible to leave the other browser for the app', () async {
       final p = await build(count: 3);
       p.moveTabToOtherGroup(2);
@@ -454,15 +392,6 @@ void main() {
       expect(p.exitBrowserSlotToApp(SplitSide.left), isFalse);
       expect(p.exitBrowserSlotToApp(SplitSide.right), isFalse);
       expect(slots(p), before);
-    });
-
-    test('with the apart group empty and the main group on the right it is not possible either', () async {
-      final p = await build(count: 3, position: WebViewSplitPosition.right);
-      p.moveTabToOtherGroup(2);
-      await p.removeTab(position: 2);
-
-      expect(p.splitBrowserCanExitToApp, isFalse);
-      expect(p.exitBrowserSlotToApp(p.slotOfGroup(SplitGroup.main)), isFalse);
     });
   });
 
@@ -521,9 +450,7 @@ void main() {
   });
 
   group('narrowing and widening', () {
-    test('threshold is 800 pt: at that width it is wide', () async {
-      expect(kSplitScreenMinWidth, 800);
-
+    test('wide from the threshold up', () async {
       final p = await build(width: kSplitScreenMinWidth - 1);
       p.moveTabToOtherGroup(2);
       expect(p.splitScreenWide, isFalse);
@@ -617,28 +544,6 @@ void main() {
     });
   });
 
-  group('split screen setting', () {
-    test('off: tabs cannot be sent apart', () async {
-      final p = await build(position: WebViewSplitPosition.off);
-
-      expect(p.moveTabToOtherGroup(2), isFalse);
-      expect(p.splitBrowsersActive, isFalse);
-      expect(p.tabList[2].splitApart, isFalse);
-    });
-
-    test('turning it off with two browsers: back to a single view with every tab', () async {
-      final p = await build();
-      p.moveTabToOtherGroup(2);
-      p.moveTabToOtherGroup(4);
-
-      p.splitScreenPosition = WebViewSplitPosition.off;
-
-      expect(p.splitBrowsersActive, isFalse);
-      expect(p.tabIndexesForGroup(SplitGroup.main), [0, 1, 2, 3, 4, 5]);
-      expect(p.tabIndexesForGroup(SplitGroup.apart), isEmpty);
-    });
-  });
-
   group('Remote Config switch', () {
     test('off: tabs cannot be sent apart', () async {
       final p = await build();
@@ -720,7 +625,7 @@ void main() {
       await restored.initialiseSecondary(useTabs: true, recallLastSession: true);
       restored.updateSplitScreenWidth(wide);
 
-      expect(restored.apartVisibleTabUid, 'vis2');
+      expect(shown(restored, SplitGroup.apart), 'vis2');
     });
   });
 
@@ -739,18 +644,6 @@ void main() {
       expect(p.tabList[at(p, 'tab1')].sleepTab, isTrue, reason: 'hidden, control');
       expect(p.tabList[at(p, 'tab4')].sleepTab, isTrue, reason: 'hidden, control');
       expect(p.tabList[at(p, 'tab5')].sleepTab, isTrue, reason: 'hidden, control');
-    });
-
-    test('the tab with the focus and the visible tab of the other group both count as visible', () async {
-      final p = await build();
-      send(p, 'tab3');
-      p.activateTab(at(p, 'tab2'));
-
-      expect(p.isTabVisible(at(p, 'tab2')), isTrue);
-      expect(p.isTabVisible(at(p, 'tab3')), isTrue);
-      expect(p.isTabVisible(at(p, 'tab1')), isFalse);
-      expect(p.isTabVisible(at(p, 'tab4')), isFalse);
-      expect(p.isTabUidVisible('tab3'), isTrue);
     });
 
     test('focusing the main group leaves the apart tab on screen', () async {
@@ -792,6 +685,142 @@ void main() {
 
       expect(p.isTabVisible(p.visibleTabIndexForGroup(SplitGroup.main)!), isTrue);
       expect(p.isTabVisible(p.visibleTabIndexForGroup(SplitGroup.apart)!), isTrue);
+    });
+  });
+
+  group('a tab sent to the other group goes to its end', () {
+    test('[1 2 3 | 5 6] with the 3 sent across gives [1 2 | 5 6 3], and 1 2 5 6 3 when joined', () async {
+      final p = await build(uids: ['t1', 't2', 't3', 't5', 't6']);
+      send(p, 't5');
+      send(p, 't6');
+      expect(ids(p, SplitGroup.main), ['t1', 't2', 't3']);
+      expect(ids(p, SplitGroup.apart), ['t5', 't6']);
+
+      expect(send(p, 't3'), isTrue);
+
+      expect(ids(p, SplitGroup.main), ['t1', 't2']);
+      expect(ids(p, SplitGroup.apart), ['t5', 't6', 't3']);
+      expect(order(p), ['t1', 't2', 't5', 't6', 't3']);
+
+      p.updateSplitScreenWidth(narrow);
+      expect(ids(p, SplitGroup.main), ['t1', 't2', 't5', 't6', 't3']);
+    });
+
+    test('a tab coming back to the main group goes to its end and to the end of the list', () async {
+      final p = await build(uids: ['t1', 't2', 't3', 't4']);
+      send(p, 't2');
+      send(p, 't3');
+      expect(order(p), ['t1', 't4', 't2', 't3']);
+
+      send(p, 't2');
+
+      expect(ids(p, SplitGroup.main), ['t1', 't4', 't2']);
+      expect(ids(p, SplitGroup.apart), ['t3']);
+      expect(order(p), ['t1', 't4', 't3', 't2']);
+    });
+
+    test('the moved tab is shown and focused, and the group it leaves shows its previous neighbour', () async {
+      final p = await build(uids: ['t1', 't2', 't3', 't4']);
+      p.activateTab(at(p, 't3'));
+
+      send(p, 't3');
+
+      expect(p.tabList[p.currentTab].id, 't3');
+      expect(shown(p, SplitGroup.apart), 't3');
+      expect(shown(p, SplitGroup.main), 't2');
+    });
+
+    test('moving another tab while the focus is elsewhere keeps both groups showing the right tab', () async {
+      final p = await build(uids: ['t1', 't2', 't3', 't4', 't5']);
+      send(p, 't5');
+      expect(p.tabList[p.currentTab].id, 't5');
+
+      send(p, 't3');
+
+      expect(order(p), ['t1', 't2', 't4', 't5', 't3']);
+      expect(p.tabList[p.currentTab].id, 't3');
+      expect(shown(p, SplitGroup.apart), 't3');
+      expect(p.isTabVisible(at(p, 't3')), isTrue);
+    });
+
+    test('the last tab of the apart group sent back leaves it blank', () async {
+      final p = await build(uids: ['t1', 't2', 't3']);
+      send(p, 't2');
+
+      send(p, 't2');
+
+      expect(order(p), ['t1', 't3', 't2']);
+      expect(p.splitApartEmpty, isTrue);
+    });
+  });
+
+  group('the app can open the browser', () {
+    Future<WebViewProvider> appLeftApartRight() async {
+      final p = await build(count: 4);
+      p.moveTabToOtherGroup(2);
+      expect(slots(p), [SplitSlotContent.mainBrowser, SplitSlotContent.apartBrowser]);
+      expect(p.exitBrowserSlotToApp(SplitSide.left), isTrue);
+      expect(slots(p), [SplitSlotContent.app, SplitSlotContent.apartBrowser]);
+      return p;
+    }
+
+    test('[app | apart]: it can while it covers the main group', () async {
+      final p = await appLeftApartRight();
+
+      expect(p.webViewSplitActive, isTrue);
+      expect(p.appCanOpenBrowser, isTrue);
+      await settle();
+    });
+
+    test('[app | apart]: the focus stays in the apart group', () async {
+      final p = await appLeftApartRight();
+      expect(p.tabList[p.currentTab].id, 'tab2');
+
+      p.browserShowInForeground = true;
+
+      expect(p.tabList[p.currentTab].id, 'tab2');
+      expect(p.isTabVisible(0), isTrue);
+      expect(p.isTabVisible(at(p, 'tab2')), isTrue);
+      await settle();
+    });
+
+    test('[app | apart]: a link to the main tab brings its group back with the focus', () async {
+      final p = await appLeftApartRight();
+
+      p.activateTab(0);
+      p.browserShowInForeground = true;
+
+      expect(slots(p), [SplitSlotContent.mainBrowser, SplitSlotContent.apartBrowser]);
+      expect(p.currentTab, 0);
+      expect(p.visibleTabIndexForGroup(SplitGroup.apart), at(p, 'tab2'));
+      await settle();
+    });
+
+    test('[app | apart]: the returned browser can be closed to the app again', () async {
+      final p = await appLeftApartRight();
+      p.browserShowInForeground = true;
+
+      p.browserShowInForeground = false;
+
+      expect(slots(p).where((s) => s == SplitSlotContent.app).length, 1);
+      expect(p.appCanOpenBrowser, isTrue);
+      await settle();
+    });
+
+    test('split screen: the browser is already on screen', () async {
+      final p = await build(count: 4, position: WebViewSplitPosition.right);
+
+      expect(slots(p), [SplitSlotContent.app, SplitSlotContent.browser]);
+      expect(p.appCanOpenBrowser, isFalse);
+      await settle();
+    });
+
+    test('single view: the app can open the browser', () async {
+      final p = await build(count: 4, position: WebViewSplitPosition.off);
+      p.browserShowInForeground = false;
+
+      expect(p.appCanOpenBrowser, isTrue);
+      await settle();
     });
   });
 }

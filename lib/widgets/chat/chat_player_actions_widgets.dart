@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 enum ChatWatchCondition {
   online('Notify me when online'),
@@ -23,6 +26,35 @@ enum ChatWatchCondition {
     ChatStatusKind.travel => landed,
     _ => online,
   };
+}
+
+Future<void> confirmChatBlock(BuildContext context, ChatUser user) async {
+  final sure = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Block ${user.name}?'),
+      content: const Text(
+        'Torn stops their private messages and mail to you, on every device. '
+        'To hide them only in Torn PDA, use Ignore instead',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Block')),
+      ],
+    ),
+  );
+  if (sure == true) await _setChatBlocked(user, true);
+}
+
+Future<void> chatUnblock(ChatUser user) async {
+  if (!await _setChatBlocked(user, false)) return;
+  chatToast('${user.name} unblocked', seconds: 5, action: 'Undo', onAction: () => _setChatBlocked(user, true));
+}
+
+Future<bool> _setChatBlocked(ChatUser user, bool blocked) async {
+  final ok = await NativeChat.controller.setBlocked(user, blocked);
+  if (!ok) chatToast('Torn did not ${blocked ? 'block' : 'unblock'} ${user.name}, try again', seconds: 4);
+  return ok;
 }
 
 /// One tap toggles the stakeout

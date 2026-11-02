@@ -239,11 +239,7 @@ void main() {
     });
 
     testWidgets('inserts what was typed', (tester) async {
-      final fetchItems = ChatLinkPreviews.fetchItems;
-      addTearDown(() {
-        ChatLinkPreviews.fetchItems = fetchItems;
-        ChatLinkPreviews.resetForTests();
-      });
+      addTearDown(ChatLinkPreviews.resetForTests);
       ChatLinkPreviews.resetForTests();
       ChatLinkPreviews.fetchItems = () async => ItemsModel(items: {'206': Item(name: 'Xanax', marketValue: 830000)});
       String? inserted;

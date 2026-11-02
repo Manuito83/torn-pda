@@ -16,6 +16,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -28,7 +29,6 @@ import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
-import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/player_notes_list_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
@@ -45,7 +45,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/utils/discreet_schedule.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
@@ -467,7 +467,7 @@ class SettingsPageState extends State<SettingsPage> {
               const Text("Chat settings"),
               IconButton(
                 icon: const Icon(Icons.forum_rounded),
-                onPressed: () => showChatSettings(Navigator.of(context)),
+                onPressed: () => showChatSettingsFrom(context),
               ),
             ],
           ),
@@ -755,21 +755,24 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  bool get _h12 => _settingsProvider.currentTimeFormat == TimeFormatSetting.h12;
+
   Widget _discreetHourLabel(int minutes) {
-    if (!NativeChat.compiled) return Text(TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60).format(context));
-    return ListenableBuilder(
-      listenable: NativeChat.prefs,
-      builder: (context, _) => Text(NativeChat.prefs.minutesClock(minutes)),
-    );
+    final at = DateTime(2000, 1, 1, minutes ~/ 60, minutes % 60);
+    return Text(DateFormat(_h12 ? 'h:mm a' : 'HH:mm').format(at));
   }
 
   Future<void> _pickDiscreetHour({required bool from}) async {
     final current = _settingsProvider.discreetSchedule;
     final minutes = from ? current.from : current.to;
-    final initial = TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
-    final picked = NativeChat.compiled
-        ? await showChatTimePicker(context, initial)
-        : await showTimePicker(context: context, initialTime: initial);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: !_h12),
+        child: child!,
+      ),
+    );
     if (picked == null || !mounted) return;
     final value = picked.hour * 60 + picked.minute;
     setState(() {

@@ -140,7 +140,7 @@ class ChatIconWithBadge extends StatelessWidget {
             child: Row(
               spacing: 2,
               children: [
-                for (final group in ChatPrefs.bubbleOptions)
+                for (final group in NativeChat.prefs.bubbleOptions)
                   if ((counts[group] ?? 0) > 0)
                     Container(
                       width: 7,

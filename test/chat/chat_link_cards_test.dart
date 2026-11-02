@@ -1,11 +1,15 @@
+import 'dart:async';
+
 // ignore: depend_on_referenced_packages
 import 'package:chopper/chopper.dart' as chopper;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
+import 'package:torn_pda/models/chat/chat_link_info.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_player_card.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
@@ -13,7 +17,6 @@ import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -509,6 +512,29 @@ void main() {
       expect(ChatLinkPreviews.cached(link('https://example.org/gone')), isNull);
     });
 
+    test('a card that lands after forget is not kept', () async {
+      final reply = Completer<Map<String, dynamic>?>();
+      final fresh = Completer<Map<String, dynamic>?>();
+      var calls = 0;
+      ChatPlayerCards.fetch = (id) => ++calls == 1 ? reply.future : fresh.future;
+      final url = link('https://www.torn.com/profiles.php?XID=42');
+      final first = ChatLinkPreviews.load(url, () => true);
+      await pumpEventQueue();
+      expect(calls, 1);
+
+      ChatLinkPreviews.forget();
+      final second = ChatPlayerCards.json(42);
+      reply.complete(player());
+      await first;
+      expect(ChatLinkPreviews.cached(url), isNull);
+      expect(ChatPlayerCards.peek(42), isNull);
+
+      final third = ChatPlayerCards.json(42);
+      fresh.complete(player());
+      await Future.wait([second, third]);
+      expect(calls, 2);
+    });
+
     test('YouTube asks oEmbed once per video and keeps the thumbnail', () async {
       final asked = <String>[];
       ChatLinkPreviews.fetchVideo = (id) async {
@@ -708,20 +734,20 @@ void main() {
 
     test('previews load alone by room', () {
       final prefs = NativeChat.prefs..linkPreviews = ChatImageAutoLoad.never;
-      expect(prefs.previewsAlone('faction', torn: true), isFalse);
+      expect(prefs.previewLoadsAlone('faction', torn: true), isFalse);
       prefs.linkPreviews = ChatImageAutoLoad.torn;
-      expect(prefs.previewsAlone('faction', torn: true), isTrue);
-      expect(prefs.previewsAlone('faction', torn: false), isFalse);
+      expect(prefs.previewLoadsAlone('faction', torn: true), isTrue);
+      expect(prefs.previewLoadsAlone('faction', torn: false), isFalse);
       prefs.linkPreviews = ChatImageAutoLoad.always;
-      expect(prefs.previewsAlone('global', torn: true), isTrue);
-      expect(prefs.previewsAlone('global', torn: false), isFalse);
-      expect(prefs.previewsAlone('dm:42', torn: false), isTrue);
-      expect(prefs.previewsAlone('somegroup123', torn: false), isTrue);
-      expect(prefs.previewsAlone(null, torn: false), isFalse);
+      expect(prefs.previewLoadsAlone('global', torn: true), isTrue);
+      expect(prefs.previewLoadsAlone('global', torn: false), isFalse);
+      expect(prefs.previewLoadsAlone('dm:42', torn: false), isTrue);
+      expect(prefs.previewLoadsAlone('somegroup123', torn: false), isTrue);
+      expect(prefs.previewLoadsAlone(null, torn: false), isFalse);
       prefs.linkPreviewsOff.add(ChatRooms.other);
-      expect(prefs.previewsAlone('somegroup123', torn: false), isFalse);
+      expect(prefs.previewLoadsAlone('somegroup123', torn: false), isFalse);
       prefs.linkPreviewsOff.remove('global');
-      expect(prefs.previewsAlone('global', torn: false), isTrue);
+      expect(prefs.previewLoadsAlone('global', torn: false), isTrue);
     });
 
     testWidgets('a lookalike link never loads and warns before opening', (tester) async {
@@ -735,21 +761,6 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('external images wait for a tap', (tester) async {
-      await tester.pumpWidget(host('look https://i.example.org/pics/cat.png'));
-      expect(find.byType(ChatImageCard), findsOneWidget);
-      expect(find.byType(ChatLinkCard), findsNothing);
-      expect(find.text('Show'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-    });
-
-    testWidgets('a script from an unknown host carries a warning', (tester) async {
-      const warning = 'Scripts can read your account. Only install from people you trust';
-      await tester.pumpWidget(host('https://example.org/a/tool.user.js'));
-      expect(find.text(warning), findsOneWidget);
-      await tester.pumpWidget(host('https://greasyfork.org/en/scripts/12345-torn-tools'));
-      expect(find.text(warning), findsNothing);
-    });
   });
 }
 

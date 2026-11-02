@@ -6,11 +6,13 @@ import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_format.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/chat/chat_ticker_queue.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:vibration/vibration.dart';
 
@@ -46,7 +48,7 @@ String _tickerLabel(ChatController chat, ChatAlert alert) {
   return [
     if (alert.match != null) 'Mention',
     room.isDm ? m.sender.name : '${m.sender.name} in ${room.name}',
-    ChatFormat.plain(m.content),
+    ChatFormat.plain(chatShortText(m.content, m.createdAt, clock: chatAppClock().clock)),
   ].join(', ');
 }
 
@@ -163,6 +165,7 @@ class _ChatTickerState extends State<ChatTicker> {
             _TickerCaption(
               key: ObjectKey(e),
               chat: widget.chat,
+              remoteRooms: prefs.remoteRooms,
               alert: e.alert,
               leaving: e.leaving,
               expanded: e.expanded,
@@ -186,6 +189,7 @@ class _TickerCaption extends StatefulWidget {
   const _TickerCaption({
     super.key,
     required this.chat,
+    required this.remoteRooms,
     required this.alert,
     required this.leaving,
     required this.expanded,
@@ -201,6 +205,7 @@ class _TickerCaption extends StatefulWidget {
   });
 
   final ChatController chat;
+  final List<ChatRemoteRoom> remoteRooms;
   final ChatAlert alert;
   final bool leaving;
   final bool expanded;
@@ -230,10 +235,9 @@ class _TickerCaptionState extends State<_TickerCaption> with SingleTickerProvide
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final still = MediaQuery.disableAnimationsOf(context);
     _animation
-      ..duration = still ? Duration.zero : const Duration(milliseconds: 220)
-      ..reverseDuration = still ? Duration.zero : const Duration(milliseconds: 260);
+      ..duration = chatMotion(context, const Duration(milliseconds: 220))
+      ..reverseDuration = chatMotion(context, const Duration(milliseconds: 260));
     if (!_started) {
       _started = true;
       widget.leaving ? _leave() : _animation.forward();
@@ -277,7 +281,7 @@ class _TickerCaptionState extends State<_TickerCaption> with SingleTickerProvide
     final scheme = theme.colorScheme;
     final m = widget.alert.message;
     final room = widget.alert.demo ? ChatTickerDemo.roomOf(m.roomId) : widget.chat.roomById(m.roomId);
-    final accent = chatGroupColors(ChatRooms.group(m.roomId), theme.brightness).$1;
+    final accent = chatGroupColors(ChatRooms.group(m.roomId, widget.remoteRooms), theme.brightness).$1;
     final style = theme.textTheme.bodySmall?.copyWith(color: scheme.onInverseSurface, height: 1.25);
     final title = TextSpan(
       children: [
@@ -307,7 +311,10 @@ class _TickerCaptionState extends State<_TickerCaption> with SingleTickerProvide
                   TextSpan(
                     children: [
                       title,
-                      TextSpan(text: '  ${m.content.replaceAll('\n', ' ')}'),
+                      TextSpan(
+                        text: '  ${chatShortText(m.content, m.createdAt, clock: chatClockOf(context).clock)}'
+                            .replaceAll('\n', ' '),
+                      ),
                     ],
                   ),
                   maxLines: widget.lines,
@@ -388,7 +395,16 @@ class _TickerCaptionState extends State<_TickerCaption> with SingleTickerProvide
                       Text.rich(title, style: style),
                       const SizedBox(height: 2),
                       Flexible(
-                        child: SingleChildScrollView(child: Text(widget.alert.message.content, style: style)),
+                        child: SingleChildScrollView(
+                          child: Text(
+                            chatShortText(
+                              widget.alert.message.content,
+                              widget.alert.message.createdAt,
+                              clock: chatClockOf(context).clock,
+                            ),
+                            style: style,
+                          ),
+                        ),
                       ),
                     ],
                   ),

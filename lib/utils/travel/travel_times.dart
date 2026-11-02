@@ -4,8 +4,6 @@ import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 enum TravelTicket { standard, private, wlt, business }
 
 class TravelTimes {
-  static double reductionPercent = 0;
-
   static double parseReduction(Iterable<dynamic> perks) {
     final reg = RegExp(r'(\d+(?:\.\d+)?)\s*%\s*travel time reduction', caseSensitive: false);
     double total = 0;
@@ -44,13 +42,18 @@ class TravelTimes {
     return null;
   }
 
-  static String? inferOriginCountry({required int durationSeconds, required String? apiMethod}) {
+  static String? inferOriginCountry({
+    required int durationSeconds,
+    required String? apiMethod,
+    double reductionPercent = 0,
+  }) {
     final ticket = ticketFromApiMethod(apiMethod);
     if (ticket == null || durationSeconds <= 0) return null;
 
     String? match;
     for (final entry in _apiNames.entries) {
-      final expected = travelTimeMinutesOneWay(countryCode: entry.key, ticket: ticket) * 60;
+      final expected =
+          travelTimeMinutesOneWay(countryCode: entry.key, ticket: ticket, reductionPercent: reductionPercent) * 60;
       if (expected <= 0) continue;
       final band = expected * 0.03 + 60;
       if ((durationSeconds - expected).abs() <= band) {
@@ -72,6 +75,7 @@ class TravelTimes {
     String countryName = "",
     CountryName? countryCode = CountryName.TORN,
     required TravelTicket? ticket,
+    double reductionPercent = 0,
   }) {
     CountryName? code = countryCode;
 

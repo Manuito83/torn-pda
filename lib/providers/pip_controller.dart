@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/pip/pip_player.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
@@ -17,27 +18,8 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 enum PipMode { chain, player, stakeouts }
 
-class PipPlayer {
-  PipPlayer({required this.id, required this.name});
-
-  final int id;
-  String name;
-  String? state;
-  String description = '';
-  int until = 0;
-  DateTime? changedAt;
-  bool error = false;
-
-  bool get highlighted => changedAt != null && DateTime.now().difference(changedAt!) < PipController.highlightDuration;
-
-  bool get confined => const ['Hospital', 'Jail', 'Federal'].contains(state);
-
-  int get remaining => until - DateTime.now().millisecondsSinceEpoch ~/ 1000;
-}
-
 class PipController extends GetxController {
   static const _channel = MethodChannel('tornpda.pip');
-  static const highlightDuration = Duration(seconds: 30);
   static const bannerDuration = Duration(seconds: 10);
   static const maxPlayers = 4;
 
@@ -46,6 +28,9 @@ class PipController extends GetxController {
   PipMode mode = PipMode.chain;
 
   List<PipPlayer> players = [];
+
+  // Cancels the player pick on screen
+  final activePick = ValueNotifier<VoidCallback?>(null);
 
   int stakeoutPlayers = 0;
   int? stakeoutId;
@@ -79,9 +64,17 @@ class PipController extends GetxController {
   }
 
   bool get stakeoutHighlighted =>
-      stakeoutChangedAt != null && DateTime.now().difference(stakeoutChangedAt!) < highlightDuration;
+      stakeoutChangedAt != null && DateTime.now().difference(stakeoutChangedAt!) < pipHighlightDuration;
 
   bool get bannerVisible => bannerAt != null && DateTime.now().difference(bannerAt!) < bannerDuration;
+
+  // Back button handler in main
+  bool cancelPick() {
+    final cancel = activePick.value;
+    if (cancel == null) return false;
+    cancel();
+    return true;
+  }
 
   @override
   void onInit() {
@@ -106,8 +99,7 @@ class PipController extends GetxController {
   Future<void> openChain() async {
     mode = PipMode.chain;
     _playerTimer?.cancel();
-    final chain = Get.find<ChainStatusController>();
-    chain.pipVisible = true;
+    final chain = Get.find<ChainStatusController>()..pipShown();
     if (!chain.statusActive) await chain.activateChainWidgetStatusRequests();
     if (!await _enter()) _releaseChain();
   }
@@ -203,7 +195,7 @@ class PipController extends GetxController {
 
   void _refreshActionsLater(PipMode pipMode) {
     _actionsTimer?.cancel();
-    _actionsTimer = Timer(highlightDuration, () {
+    _actionsTimer = Timer(pipHighlightDuration, () {
       if (inPip.value && mode == pipMode) _enter();
     });
   }
@@ -247,18 +239,12 @@ class PipController extends GetxController {
     return entered;
   }
 
-  void _releaseChain() {
-    final chain = Get.find<ChainStatusController>();
-    if (!chain.pipVisible) return;
-    chain.pipVisible = false;
-    chain.tryToDeactivateStatus();
-  }
+  void _releaseChain() => Get.find<ChainStatusController>().pipHidden();
 
   void _autoEnterChain() {
     mode = PipMode.chain;
     _playerTimer?.cancel();
-    final chain = Get.find<ChainStatusController>();
-    chain.pipVisible = true;
+    final chain = Get.find<ChainStatusController>()..pipShown();
     if (!chain.statusActive) chain.activateChainWidgetStatusRequests();
     inPip.value = true;
     update();

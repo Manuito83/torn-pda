@@ -44,13 +44,16 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/oc/yata_members_model.dart';
+import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_profile_icon.dart';
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/models/webview/blank_page.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
-import 'package:torn_pda/config/webview_config.dart';
+import 'package:torn_pda/utils/torn_web.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
@@ -76,8 +79,9 @@ import 'package:torn_pda/widgets/chat/chat_icon_menu.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
-import 'package:torn_pda/widgets/webviews/chain_web.dart';
-import 'package:torn_pda/widgets/webviews/chat_profile_icon.dart';
+import 'package:torn_pda/utils/js_snippets/js_blank_probe.dart';
+import 'package:torn_pda/utils/js_snippets/js_chain_web.dart';
+import 'package:torn_pda/utils/js_snippets/js_chat_profile_icon.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -101,6 +105,7 @@ import "package:torn_pda/widgets/settings/userscripts_add_dialog.dart";
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/browser_reload_button.dart';
+import 'package:torn_pda/widgets/webviews/browser_zoom_live_panel.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
@@ -231,6 +236,10 @@ class WebViewFullState extends State<WebViewFull>
   String? _pageTitle = "";
   String _currentUrl = '';
   String _lastReportedUrl = '';
+  // From onLoadStart and onUpdateVisitedHistory
+  WebUri? _latestUrl;
+  bool _pullRefreshing = false;
+  Timer? _showCaseTimer;
   late final String _tabUid;
 
   bool _heightExtendInjected = false;
@@ -238,20 +247,20 @@ class WebViewFullState extends State<WebViewFull>
   // Serializes concurrent _addUserScriptsAvoidDuplicates calls so remove+add cant' cause issues
   Future<void> _scriptLock = Future.value();
 
+  // Userscript groups this tab may have registered
+  final Set<String> _registeredScriptGroups = {};
+
   // The handler bundle is constant for the life
   // of the webview, so we register it once and never remove or re-add it
   // to avoid collisions and ensure that they are active
   bool _handlersInjected = false;
   bool _browserUnderChat = false;
-  // Shared across tabs: one renderer death hits every webview, record ONE Crashlytics event per death
-  static DateTime? _lastRendererGoneRecorded;
-  static DateTime? _lastRendererGoneFgLogged;
-  static final Set<String> _failuresReported = <String>{};
   DateTime? _loadStartedAt;
-  static bool _blankTabReported = false;
+  OverlayEntry? _zoomPanel;
 
   // Scripts registered at webview construction (before the first load), computed once
   UnmodifiableListView<UserScript>? _initialUserScriptsCache;
+  List<String> _initialScriptGroups = const [];
   bool _initialUserScriptsComputed = false;
 
   bool _backButtonPopsContext = true;
@@ -378,7 +387,7 @@ class WebViewFullState extends State<WebViewFull>
   bool _wakingFromPark = false;
   String? _parkedUrl;
 
-  // Android delays the initial load until the view is shown, then overwrites earlier loads
+  // Android's initial load overwrites earlier loads
   bool _initialLoadStarted = false;
   String? _urlBeforeInitialLoad;
   Timer? _initialLoadTimer;
@@ -439,7 +448,7 @@ class WebViewFullState extends State<WebViewFull>
   // Animation variables for smooth progress bar
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
-  double _animatedProgress = 0;
+  final ValueNotifier<double> _animatedProgress = ValueNotifier(0);
 
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
@@ -619,7 +628,7 @@ class WebViewFullState extends State<WebViewFull>
 
     _findController.addListener(onFindInputTextChange);
 
-    final uaSuffix = _buildUserAgentSuffix();
+    final uaSuffix = webviewUserAgentSuffix;
 
     _initialWebViewSettings = InAppWebViewSettings(
       cacheEnabled: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
@@ -690,6 +699,7 @@ class WebViewFullState extends State<WebViewFull>
               distanceToTriggerSync: 300,
             ),
             onRefresh: () async {
+              _pullRefreshing = true;
               await _reload();
             },
           );
@@ -703,12 +713,6 @@ class WebViewFullState extends State<WebViewFull>
     ).animate(CurvedAnimation(parent: _progressController, curve: Curves.easeInOut));
 
     _progressAnimation.addListener(_onProgressAnimationUpdate);
-  }
-
-  String _buildUserAgentSuffix() {
-    const unknown = "##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##";
-    final deviceInfo = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
-    return "${WebviewConfig.agent} $deviceInfo".trim();
   }
 
   @override
@@ -741,11 +745,13 @@ class WebViewFullState extends State<WebViewFull>
     try {
       // Before anything that can throw, so the snapshot never stays in the image cache
       _recovery?.dispose();
+      _hideZoomPanel();
 
       _webViewCreatedWatchdog?.cancel();
       _reloadWatchdog?.cancel();
       _initialLoadTimer?.cancel();
       _blankTabCheckTimer?.cancel();
+      _showCaseTimer?.cancel();
 
       final Key? key = widget.key;
       final TerminalProvider terminal = _terminalProvider;
@@ -759,6 +765,7 @@ class WebViewFullState extends State<WebViewFull>
       );
 
       WidgetsBinding.instance.removeObserver(this);
+      NativeChat.screenOpen.removeListener(_onChatScreen);
       _findController.removeListener(onFindInputTextChange);
       _findController.dispose();
       _findFocus.dispose();
@@ -774,8 +781,8 @@ class WebViewFullState extends State<WebViewFull>
       // Dispose progress animation controller
       _progressAnimation.removeListener(_onProgressAnimationUpdate);
       _progressController.dispose();
+      _animatedProgress.dispose();
 
-      NativeChat.screenOpen.removeListener(_onChatScreen);
       webViewController?.dispose();
     } catch (e, t) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
@@ -820,11 +827,9 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  static bool _isTornHost(String? host) => host == 'torn.com' || (host ?? '').endsWith('.torn.com');
-
   void _refreshTornPage() {
     final String source = ChatEngine.pageResumeJS;
-    if (source.isEmpty || !_webViewProvider.tornPageRefreshRC || !_isTornHost(Uri.tryParse(_currentUrl)?.host)) {
+    if (source.isEmpty || !_webViewProvider.tornPageRefreshRC || !isTornHost(Uri.tryParse(_currentUrl)?.host)) {
       return;
     }
     webViewController?.evaluateJavascript(source: source).catchError((_) {});
@@ -833,7 +838,7 @@ class WebViewFullState extends State<WebViewFull>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    _terminalProvider = Provider.of<TerminalProvider>(context);
+    _terminalProvider = Provider.of<TerminalProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _settingsProvider = Provider.of<SettingsProvider>(context);
 
@@ -851,8 +856,16 @@ class WebViewFullState extends State<WebViewFull>
   // ! as the ones here need to fire first. Then only the others are allowed to fire.
   void launchShowCases(BuildContext ctx) {
     if (!_webViewProvider.browserShowInForeground) return;
+    if (_showCaseTimer?.isActive ?? false) return;
+    final List<String> seen = _settingsProvider.showCases;
+    final bool barSeen = seen.contains(
+      _webViewProvider.bottomBarStyleEnabled ? "webview_closeButton" : "webview_titleBar",
+    );
+    final bool chainSeen =
+        !(widget.isChainingBrowser && _webViewProvider.currentTab == 0) || seen.contains("webview_playPauseChain");
+    if (barSeen && chainSeen && seen.contains("webview_tradesOptions")) return;
 
-    Future.delayed(const Duration(seconds: 1), () async {
+    _showCaseTimer = Timer(const Duration(seconds: 1), () async {
       final List showCases = <GlobalKey<State<StatefulWidget>>>[];
 
       if (_webViewProvider.bottomBarStyleEnabled) {
@@ -907,7 +920,7 @@ class WebViewFullState extends State<WebViewFull>
             // Execute exit fullscreen script when entering fullscreen mode
             if (_previousUiMode != wv.currentUiMode && wv.currentUiMode == UiMode.fullScreen) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                _assessExitFullScreenScript(dom.Document());
+                _assessExitFullScreenScript();
               });
             }
             _previousUiMode = wv.currentUiMode;
@@ -1239,13 +1252,16 @@ class WebViewFullState extends State<WebViewFull>
         if (_settingsProvider.loadBarBrowser)
           SizedBox(
             height: 2,
-            child: _animatedProgress < 1.0
-                ? LinearProgressIndicator(
-                    value: _animatedProgress,
-                    backgroundColor: Colors.black,
-                    valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
-                  )
-                : Container(height: 2),
+            child: ValueListenableBuilder<double>(
+              valueListenable: _animatedProgress,
+              builder: (_, progress, _) => progress < 1.0
+                  ? LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.black,
+                      valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
+                    )
+                  : Container(height: 2),
+            ),
           )
         else
           const SizedBox.shrink(),
@@ -1439,6 +1455,7 @@ class WebViewFullState extends State<WebViewFull>
                 widget.windowId == null &&
                 (_initialUserScripts?.isNotEmpty ?? false)) {
               _handlersInjected = true;
+              _registeredScriptGroups.addAll(_initialScriptGroups);
             }
 
             // Userscripts initial load
@@ -1501,9 +1518,18 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addTornChatCacheTrimHandler(webview: webViewController!, webViewProvider: _webViewProvider);
 
-            addChatProfileIconHandler(webViewController!);
+            WebviewHandlers.addChatProfileIconHandler(
+              webview: webViewController!,
+              onClick: (userId) => handleChatProfileIcon(
+                userId,
+                choice: NativeChat.prefs.profileIcon,
+                usable: NativeChat.usable,
+                connected: NativeChat.controller.ready && NativeChat.controller.connection == ChatConnection.connected,
+                open: NativeChat.openQuickWindow,
+              ),
+            );
 
-            addChainWebHandler(webViewController!, onScreen: () => _chainWebOnScreen);
+            WebviewHandlers.addChainWebHandler(webview: webViewController!, onScreen: () => _chainWebOnScreen);
 
             WebviewHandlers.addLocalStorageMeasuredHandler(webview: webViewController!, webViewProvider: _webViewProvider);
 
@@ -1558,6 +1584,9 @@ class WebViewFullState extends State<WebViewFull>
               return NavigationActionPolicy.CANCEL;
             }
 
+            // Android ignores the answer for iframes
+            if (Platform.isAndroid && !action.isForMainFrame) return NavigationActionPolicy.ALLOW;
+
             if (_settingsProvider.hitInMiniProfileOpensNewTab) {
               if (await _hitShouldOpenNewTab(c, action)) {
                 return NavigationActionPolicy.CANCEL;
@@ -1583,6 +1612,10 @@ class WebViewFullState extends State<WebViewFull>
               // Userscripts load before webpage begins loading
               await _ensureHandlersInjected();
 
+              if (action.isForMainFrame && incomingUrl.startsWith("http") && !incomingUrl.endsWith(".user.js")) {
+                await _removeStaleUserScripts(incomingUrl);
+              }
+
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
                 pdaApiKey: UserHelper.apiKey,
@@ -1602,6 +1635,8 @@ class WebViewFullState extends State<WebViewFull>
 
             if (incomingUrl.contains("http://")) {
               _loadUrl(incomingUrl.replaceAll("http:", "https:"));
+              // Only the https copy should load
+              if (Platform.isAndroid && incomingUrl.startsWith("http://")) return NavigationActionPolicy.CANCEL;
               return NavigationActionPolicy.ALLOW;
             }
 
@@ -1682,6 +1717,7 @@ class WebViewFullState extends State<WebViewFull>
             // Ignore the parking placeholder; a real page taking over unparks the tab
             if (_isParkingBlank(uri)) return;
             if (_isParked && uri != null) _isParked = false;
+            if (uri != null) _latestUrl = uri;
             _recovery?.onLoadStart();
 
             _heightExtendInjected = false;
@@ -1709,7 +1745,7 @@ class WebViewFullState extends State<WebViewFull>
 
             // Reset animated progress for new page load
             setState(() {
-              _animatedProgress = 0;
+              _animatedProgress.value = 0;
             });
 
             if (Platform.isAndroid) {
@@ -1745,9 +1781,8 @@ class WebViewFullState extends State<WebViewFull>
 
               hideChatOnLoad();
 
-              final html = await webViewController!.getHtml();
-              final document = parse(html);
-
+              // Only the old loader check needs it
+              final document = _currentUrl.contains("loader.php") ? parse(await webViewController!.getHtml()) : null;
               _assessGeneral(document);
 
               assessGymAndHuntingEnergyWarning(uri.toString());
@@ -1769,7 +1804,7 @@ class WebViewFullState extends State<WebViewFull>
             // Check for URL changes during progress
             if (progress > 10) {
               // Wait for some progress to avoid initial load noise
-              final currentUri = await c.getUrl();
+              final currentUri = _latestUrl;
               if (currentUri != null && !_isParkingBlank(currentUri) && _lastReportedUrl != currentUri.toString()) {
                 log(
                   "🔄 onProgressChanged URL change detected: $_lastReportedUrl -> ${currentUri.toString()}",
@@ -1782,7 +1817,7 @@ class WebViewFullState extends State<WebViewFull>
             }
 
             try {
-              _removeTravelAirplaneIfEnabled(c);
+              _removeTravelAirplaneIfEnabled();
 
               hideChatOnLoad();
 
@@ -1791,8 +1826,11 @@ class WebViewFullState extends State<WebViewFull>
                 _animateProgressTo(_progress);
               }
 
-              if (progress > 75) {
-                _pullToRefreshController!.endRefreshing();
+              if (progress > 75 && !Platform.isWindows) {
+                if (_pullRefreshing) {
+                  _pullRefreshing = false;
+                  _pullToRefreshController!.endRefreshing();
+                }
 
                 // onProgressChanged gets called before onLoadStart, so it works
                 // both to add or remove widgets. It is much faster.
@@ -1824,7 +1862,7 @@ class WebViewFullState extends State<WebViewFull>
             if (!mounted) return;
             _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
-            if (_webViewProvider.tornPageRefreshRC && _isTornHost(uri?.host) && ChatEngine.pageLoadJS.isNotEmpty) {
+            if (_webViewProvider.tornPageRefreshRC && isTornHost(uri?.host) && ChatEngine.pageLoadJS.isNotEmpty) {
               c.evaluateJavascript(source: ChatEngine.pageLoadJS);
             }
             _loadStopTime = DateTime.now();
@@ -1869,7 +1907,7 @@ class WebViewFullState extends State<WebViewFull>
 
             if (_chainWebAllowed) {
               c.evaluateJavascript(
-                source: "window.__pdaChainShown = ${_webViewProvider.isTabUidOnScreen(_tabUid)};\n$chainWebReader",
+                source: chainWebInject(_webViewProvider.isTabUidOnScreen(_tabUid)),
               );
             }
 
@@ -1899,11 +1937,9 @@ class WebViewFullState extends State<WebViewFull>
               }
 
               // Userscripts remove those no longer necessary
-              List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(url: uri.toString());
+              List<String> scriptsToRemove = const [];
               if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
-                for (final group in scriptsToRemove) {
-                  await c.removeUserScriptsByGroupName(groupName: group!);
-                }
+                scriptsToRemove = await _removeStaleUserScripts(uri.toString());
               }
 
               // DEBUG
@@ -2031,6 +2067,7 @@ class WebViewFullState extends State<WebViewFull>
             if (!mounted) return;
             if (_isParkingBlank(uri)) return;
             if (_isParked && uri != null) _isParked = false;
+            if (uri != null) _latestUrl = uri;
 
             final sameUrl = uri?.toString() == _currentUrl;
             if (!sameUrl) {
@@ -2291,8 +2328,9 @@ class WebViewFullState extends State<WebViewFull>
             try {
               if (!Platform.isWindows) {
                 final DateTime now = DateTime.now();
-                if (_lastRendererGoneRecorded == null || now.difference(_lastRendererGoneRecorded!).inSeconds >= 2) {
-                  _lastRendererGoneRecorded = now;
+                final DateTime? lastRecorded = _webViewProvider.lastRendererGoneRecorded;
+                if (lastRecorded == null || now.difference(lastRecorded).inSeconds >= 2) {
+                  _webViewProvider.lastRendererGoneRecorded = now;
                   Prefs().setLastRendererGoneMs(now.millisecondsSinceEpoch);
 
                   // Every tab reports the same death but only one report is saved, so describe the
@@ -2335,9 +2373,9 @@ class WebViewFullState extends State<WebViewFull>
                   },
                 );
                 final DateTime now = DateTime.now();
-                if (rebuildNow &&
-                    (_lastRendererGoneFgLogged == null || now.difference(_lastRendererGoneFgLogged!).inSeconds >= 2)) {
-                  _lastRendererGoneFgLogged = now;
+                final DateTime? lastFgLogged = _webViewProvider.lastRendererGoneFgLogged;
+                if (rebuildNow && (lastFgLogged == null || now.difference(lastFgLogged).inSeconds >= 2)) {
+                  _webViewProvider.lastRendererGoneFgLogged = now;
                   analytics?.logEvent(
                     name: "webview_renderer_gone_fg",
                     parameters: {
@@ -2448,9 +2486,9 @@ class WebViewFullState extends State<WebViewFull>
     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
   }
 
-  Future<void> _removeTravelAirplaneIfEnabled(InAppWebViewController c) async {
+  void _removeTravelAirplaneIfEnabled() {
     if (_settingsProvider.removeAirplane) {
-      if ((await c.getUrl()).toString() == "https://www.torn.com/page.php?sid=travel") {
+      if (_latestUrl.toString() == "https://www.torn.com/page.php?sid=travel") {
         webViewController!.evaluateJavascript(source: travelRemovePlaneJS());
       }
     }
@@ -2704,10 +2742,25 @@ class WebViewFullState extends State<WebViewFull>
         if (group != null) groups.add(group);
       }
       await Future.wait(groups.map((g) => webViewController!.removeUserScriptsByGroupName(groupName: g)));
+      _registeredScriptGroups.addAll(groups);
       await webViewController!.addUserScripts(userScripts: guarded);
     });
     // Next caller waits for this one; swallow errors so a single failure doesn't break the chain
     _scriptLock = result.catchError((_) {});
+    return result;
+  }
+
+  // Drops scripts not meant for url
+  Future<List<String>> _removeStaleUserScripts(String url) {
+    final result = _scriptLock.then((_) async {
+      final c = webViewController;
+      if (c == null) return const <String>[];
+      final stale = _userScriptsProvider.getScriptsToRemove(url: url, registered: _registeredScriptGroups);
+      await Future.wait(stale.map((g) => c.removeUserScriptsByGroupName(groupName: g)));
+      _registeredScriptGroups.removeAll(stale);
+      return stale;
+    });
+    _scriptLock = result.then((_) {}, onError: (_) {});
     return result;
   }
 
@@ -2746,21 +2799,26 @@ class WebViewFullState extends State<WebViewFull>
     ];
   }
 
+  UnmodifiableListView<UserScript> _handlerSources() => _userScriptsProvider.getHandlerSources(
+    apiKey: UserHelper.apiKey,
+    tabUid: _tabUid,
+    activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
+  );
+
+  // Both registration paths use this
+  List<UserScript> _handlerScripts(bool chatRemovalActive) => [
+    ..._handlerSources(),
+    ..._tornChatCacheTrimScript(),
+    if (NativeChat.compiled) chatProfileIconScript,
+    if (NativeChat.compiled) bankVaultScript,
+    if (NativeChat.compiled && _webViewProvider.chatHidden(chatRemovalActive)) tchatGuardScript,
+  ];
+
   /// Registers the handler bundle (GM API, PDA API,...)
   /// These scripts never change, so unlike user scripts we must not remove them
   Future<void> _ensureHandlersInjected() async {
     if (webViewController == null || _handlersInjected) return;
-    final handlers = [
-      ..._userScriptsProvider.getHandlerSources(
-        apiKey: UserHelper.apiKey,
-        tabUid: _tabUid,
-        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
-      ),
-      ..._tornChatCacheTrimScript(),
-      if (NativeChat.compiled) chatProfileIconScript,
-      if (NativeChat.compiled) bankVaultScript,
-      if (NativeChat.compiled && _webViewProvider.chatHidden(_localChatRemovalActive)) tchatGuardScript,
-    ];
+    final handlers = _handlerScripts(_localChatRemovalActive);
     await webViewController!.addUserScripts(userScripts: handlers.map(_guardedOnce).toList());
     _handlersInjected = true;
   }
@@ -2784,14 +2842,7 @@ class WebViewFullState extends State<WebViewFull>
     final bool needsHandlers = startScripts.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(url).isNotEmpty;
     if (!needsHandlers) return;
 
-    final List<UserScript> expected = <UserScript>[
-      ..._userScriptsProvider.getHandlerSources(
-        apiKey: UserHelper.apiKey,
-        tabUid: _tabUid,
-        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
-      ),
-      ...startScripts,
-    ];
+    final List<UserScript> expected = <UserScript>[..._handlerSources(), ...startScripts];
     if (expected.isEmpty) return;
 
     final List<String> keys = expected.map((s) => s.groupName ?? "anon").toList();
@@ -2834,24 +2885,15 @@ class WebViewFullState extends State<WebViewFull>
     if (!((Platform.isAndroid || Platform.isIOS) && widget.windowId == null)) {
       return _initialUserScriptsCache = null;
     }
-    final scripts = <UserScript>[
-      ..._userScriptsProvider.getHandlerSources(
-        apiKey: UserHelper.apiKey,
-        tabUid: _tabUid,
-        activeTabFocusEnabled: _settingsProvider.browserRestoreWebViewFocusRemoteConfigAllowed,
-      ),
-      ..._tornChatCacheTrimScript(),
-      if (NativeChat.compiled) chatProfileIconScript,
-      if (NativeChat.compiled) bankVaultScript,
-      if (NativeChat.compiled && _webViewProvider.chatHidden(widget.chatRemovalActive))
-        tchatGuardScript,
-      if (_initialUrl?.url != null)
-        ..._userScriptsProvider.getCondSources(
-          url: _initialUrl!.url.toString(),
-          pdaApiKey: UserHelper.apiKey,
-          time: UserScriptTime.start,
-        ),
-    ];
+    final startScripts = _initialUrl?.url == null
+        ? const <UserScript>[]
+        : _userScriptsProvider.getCondSources(
+            url: _initialUrl!.url.toString(),
+            pdaApiKey: UserHelper.apiKey,
+            time: UserScriptTime.start,
+          );
+    _initialScriptGroups = [for (final s in startScripts) if (s.groupName != null) s.groupName!];
+    final scripts = <UserScript>[..._handlerScripts(widget.chatRemovalActive), ...startScripts];
     return _initialUserScriptsCache = UnmodifiableListView(scripts.map(_guardedOnce).toList());
   }
 
@@ -3005,27 +3047,12 @@ class WebViewFullState extends State<WebViewFull>
     final senderColor =
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
     final String hlMap = jsonEncode([UserHelper.playerName, ..._settingsProvider.highlightWordList]);
-    final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
       webViewController!.evaluateJavascript(source: chatHighlightJS(highlights: hlMap));
-
-      if (!Platform.isWindows) {
-        webViewController!.injectCSSCode(source: css);
-      } else {
-        // Inject CSS using JavaScript
-        final String jsToInjectCSS =
-            '''
-          (function() {
-            var style = document.createElement('style');
-            style.type = 'text/css';
-            style.innerHTML = `$css`;
-            document.head.appendChild(style);
-          })();
-        ''';
-
-        webViewController!.evaluateJavascript(source: jsToInjectCSS);
-      }
+      webViewController!.evaluateJavascript(
+        source: chatHighlightStyleJS(background: background, senderColor: senderColor),
+      );
     }
   }
 
@@ -3039,8 +3066,7 @@ class WebViewFullState extends State<WebViewFull>
   Future<bool> openWebChatDm(String userId) async {
     final controller = webViewController;
     if (controller == null) return false;
-    final host = (await controller.getUrl())?.host ?? '';
-    if (host != 'torn.com' && !host.endsWith('.torn.com')) return false;
+    if (!isTornHost((await controller.getUrl())?.host)) return false;
     if (await controller.isLoading()) return false;
     final hidden = _webViewProvider.chatHidden(_localChatRemovalActive) || _webViewProvider.chatRemovalWhileFullScreen;
     if (hidden) return true;
@@ -3146,37 +3172,35 @@ class WebViewFullState extends State<WebViewFull>
               ],
             ),
           ),
-          actions: _isChainingBrowser
-              ? _chainingActionButtons()
-              : <Widget>[
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: () {
+                _findPreviousText = _findController.text;
+                _findAll();
+                _findFocus.unfocus();
+              },
+            ),
+            if (_findFirstSubmitted)
+              Row(
+                children: [
                   IconButton(
-                    icon: const Icon(Icons.search, color: Colors.white),
+                    icon: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
                     onPressed: () {
-                      _findPreviousText = _findController.text;
-                      _findAll();
+                      _findNext(forward: false);
                       _findFocus.unfocus();
                     },
                   ),
-                  if (_findFirstSubmitted)
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
-                          onPressed: () {
-                            _findNext(forward: false);
-                            _findFocus.unfocus();
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-                          onPressed: () {
-                            _findNext(forward: true);
-                            _findFocus.unfocus();
-                          },
-                        ),
-                      ],
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                    onPressed: () {
+                      _findNext(forward: true);
+                      _findFocus.unfocus();
+                    },
+                  ),
                 ],
+              ),
+          ],
         ),
       );
     }
@@ -3503,8 +3527,7 @@ class WebViewFullState extends State<WebViewFull>
 
   // Only the chat may cover it
   bool get _chainWebOnScreen {
-    final host = Uri.tryParse(_currentUrl)?.host ?? '';
-    if (host != 'torn.com' && !host.endsWith('.torn.com')) return false;
+    if (!isTornHost(Uri.tryParse(_currentUrl)?.host)) return false;
     if (!mounted || WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return false;
     if (Get.find<PipController>().inPip.value || !_webViewProvider.isTabUidOnScreen(_tabUid)) return false;
     return ModalRoute.of(context)?.isCurrent == true || (NativeChat.screenOpen.value && _browserUnderChat);
@@ -3529,8 +3552,7 @@ class WebViewFullState extends State<WebViewFull>
     final Size size = box.size * ratio;
 
     try {
-      final dynamic raw =
-          await controller.evaluateJavascript(source: _blankProbeJs).timeout(const Duration(seconds: 3));
+      final dynamic raw = await controller.evaluateJavascript(source: blankProbeJs).timeout(const Duration(seconds: 3));
       if (raw is! String || !mounted || !_webViewProvider.isTabUidVisible(_tabUid)) return null;
       final Map<String, dynamic> page = jsonDecode(raw);
       if (page["ready"] != "complete") return null;
@@ -3564,7 +3586,7 @@ class WebViewFullState extends State<WebViewFull>
       }
       final int text = page["text"] ?? 0;
       return {
-        "blank": text > 500 && valid >= 4 && failed >= (valid < 10 ? (valid / 2).ceil() : 5),
+        "blank": blankPageDetected(text: text, valid: valid, failed: failed),
         "failed": failed,
         "valid": valid,
         "text": text,
@@ -3577,42 +3599,6 @@ class WebViewFullState extends State<WebViewFull>
       return null;
     }
   }
-
-  static const String _blankProbeJs = r"""
-(function () {
-  var style = document.createElement('style');
-  style.textContent = '* { pointer-events: auto !important; }';
-  document.documentElement.appendChild(style);
-  var vv = window.visualViewport;
-  var w = vv ? vv.width : window.innerWidth, h = vv ? vv.height : window.innerHeight;
-  var ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
-  var xs = [0.25, 0.75], ys = [0.1, 0.3, 0.5, 0.7, 0.9], points = [];
-  for (var j = 0; j < ys.length; j++) {
-    for (var i = 0; i < xs.length; i++) {
-      var el = document.elementsFromPoint(ox + xs[i] * w, oy + ys[j] * h)[0], color = null;
-      if (el && !/^(img|canvas|video|iframe|svg)$/i.test(el.tagName)) {
-        for (var e = el; e; e = e.parentElement) {
-          var m = getComputedStyle(e).backgroundColor.match(/[\d.]+/g);
-          if (m && (m.length < 4 || parseFloat(m[3]) > 0)) {
-            color = [+m[0], +m[1], +m[2]];
-            break;
-          }
-        }
-      }
-      points.push([xs[i], ys[j], color]);
-    }
-  }
-  style.remove();
-  var sim = window.__pdaSimulateBlank | 0;
-  if (sim > 0) window.__pdaSimulateBlank = sim - 1;
-  return JSON.stringify({
-    ready: document.readyState,
-    text: document.body ? document.body.textContent.length : 0,
-    points: points,
-    sim: sim
-  });
-})();
-""";
 
   /// Armed as soon as the spinner shows, so a platform channel that never answers
   /// (dead renderer) can't leave the spinner running forever
@@ -3755,15 +3741,15 @@ class WebViewFullState extends State<WebViewFull>
 
   /// Note: several other modules are called in onProgressChanged, since it's
   /// faster. The ones here probably would not benefit from it.
-  Future _assessGeneral(dom.Document document) async {
+  Future _assessGeneral(dom.Document? document) async {
     _assessBackButtonBehavior();
-    _assessBazaarOwn(document);
-    _assessBazaarOthers(document);
-    _assessBarsRedirect(document);
-    _assessExitFullScreenScript(document);
+    _assessBazaarOwn();
+    _assessBazaarOthers();
+    _assessBarsRedirect();
+    _assessExitFullScreenScript();
     _assessProfileAgeToWords();
     _assessBugReportsWarning();
-    _assessOldLoaderRedirect(document);
+    if (document != null) _assessOldLoaderRedirect(document);
     await _assessCityShopBuy100();
     await _assessCityShopPurchaseHook();
   }
@@ -3843,7 +3829,7 @@ class WebViewFullState extends State<WebViewFull>
 
     if (!_currentUrl.contains("jailview.php") && (_jailExpandable is JailWidget)) {
       // This is different to the others, here we call only so that jail is deactivated
-      _jailExpandable = const SizedBox.shrink();
+      if (mounted) setState(() => _jailExpandable = const SizedBox.shrink());
     } else if (_currentUrl.contains("jailview.php") && (_jailExpandable is! JailWidget)) {
       // Note: jail is also in onResource. This will make sure jail activates correctly
       // in some devices
@@ -3852,7 +3838,7 @@ class WebViewFullState extends State<WebViewFull>
 
     if (!_currentUrl.contains("bounties.php") && (_bountiesExpandable is BountiesWidget)) {
       // This is different to the others, here we call only so that bounties is deactivated
-      _bountiesExpandable = const SizedBox.shrink();
+      if (mounted) setState(() => _bountiesExpandable = const SizedBox.shrink());
     } else if (_currentUrl.contains("bounties.php") && (_bountiesExpandable is! BountiesWidget)) {
       // Note: bounties is also in onResource. This will make sure bounties activates correctly
       // in some devices
@@ -3876,11 +3862,9 @@ class WebViewFullState extends State<WebViewFull>
 
       const attackUrl = 'page.php?sid=attack&user2ID=';
       const attackUrl2 = 'loader2.php?sid=getInAttack&user2ID=';
-      if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
-          (!_currentUrl.contains(attackUrl2) && _attackTriggered) ||
-          (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
-          (_currentUrl.contains(attackUrl2) && !_attackTriggered) ||
-          (_currentUrl.contains(attackUrl) && _currentUrl != _lastProfileVisited)) {
+      final onAttack = _currentUrl.contains(attackUrl) || _currentUrl.contains(attackUrl2);
+      if ((!onAttack && _attackTriggered) ||
+          (onAttack && (!_attackTriggered || _currentUrl != _lastProfileVisited))) {
         anySectionTriggered = true;
         getAttack = true;
       }
@@ -4728,7 +4712,7 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   // BAZAAR (OWN)
-  Future _assessBazaarOwn(dom.Document document) async {
+  Future _assessBazaarOwn() async {
     final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('bazaar.php/add')) {
       _bazaarActiveOwn = true;
@@ -4738,7 +4722,7 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   // BAZAAR (OTHERS)
-  Future _assessBazaarOthers(dom.Document document) async {
+  Future _assessBazaarOthers() async {
     final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('bazaar.php?userId=')) {
       await webViewController!.evaluateJavascript(source: addOthersBazaarFillButtonsJS());
@@ -4957,8 +4941,10 @@ class WebViewFullState extends State<WebViewFull>
           !_currentUrl.contains('loader2.php?sid=getInAttack&user2ID=') &&
           !_currentUrl.contains('torn.com/profiles.php?XID=') &&
           !_currentUrl.contains('torn.com/profiles.php?NID=')) {
-        _profileTriggered = false;
-        _profileAttackWidget = const SizedBox.shrink();
+        setState(() {
+          _profileTriggered = false;
+          _profileAttackWidget = const SizedBox.shrink();
+        });
         return;
       }
 
@@ -5069,14 +5055,14 @@ class WebViewFullState extends State<WebViewFull>
     webViewController?.evaluateJavascript(source: hospitalTimerJS(until: until));
   }
 
-  Future _assessBarsRedirect(dom.Document document) async {
+  Future _assessBarsRedirect() async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
       webViewController?.evaluateJavascript(source: barsDoubleClickRedirectJS());
     }
   }
 
-  Future _assessExitFullScreenScript(dom.Document document) async {
+  Future _assessExitFullScreenScript() async {
     final inTorn = _currentUrl.contains("torn.com");
     final isFullScreen = _webViewProvider.currentUiMode == UiMode.fullScreen;
 
@@ -5223,18 +5209,49 @@ class WebViewFullState extends State<WebViewFull>
           webviewKey: widget.key,
           openDevTools: _openDevTools,
           onSoftCacheReset: _softCacheResetAndReload,
+          onZoom: _showZoomPanel,
         );
       },
     );
   }
 
+  // clearAllCache is HTTP cache only
   Future<void> _softCacheResetAndReload() async {
     if (webViewController == null) return;
-    await softCacheReset(
-      clearHttpCache: () => InAppWebViewController.clearAllCache(),
-      reload: _reloadWithFeedback,
-      notify: showSoftCacheResetToast,
+    try {
+      await InAppWebViewController.clearAllCache();
+    } catch (e) {
+      _softCacheToast('Could not clear the cache', success: false);
+      return;
+    }
+    _softCacheToast('Cache cleared, reloading', success: true);
+    await _reloadWithFeedback();
+  }
+
+  void _softCacheToast(String text, {required bool success}) {
+    BotToast.showText(
+      text: text,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: success ? Colors.grey[600]! : Colors.red[700]!,
+      duration: const Duration(seconds: 2),
+      contentPadding: const EdgeInsets.all(10),
     );
+  }
+
+  void _showZoomPanel() {
+    if (_zoomPanel != null) return;
+    for (final tab in _webViewProvider.tabList) {
+      tab.webViewKey?.currentState?._hideZoomPanel();
+    }
+    _zoomPanel = OverlayEntry(
+      builder: (_) => Positioned(left: 0, right: 0, bottom: 0, child: BrowserZoomLivePanel(onClose: _hideZoomPanel)),
+    );
+    Overlay.of(context, rootOverlay: true).insert(_zoomPanel!);
+  }
+
+  void _hideZoomPanel() {
+    _zoomPanel?.remove();
+    _zoomPanel = null;
   }
 
   /// We use this to open the DevTools page from the webview, so that we can
@@ -6258,8 +6275,7 @@ class WebViewFullState extends State<WebViewFull>
               }
             }
             root.tab.state = $payloadJson;
-            window.__pdaChainShown = ${_publishedOnScreen == true && _chainWebAllowed};
-            if (window.__pdaChainShown && window.__pdaChainReader) window.__pdaChainReader.check(true);
+            ${chainWebShown(_publishedOnScreen == true && _chainWebAllowed)}
             try {
               window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: $payloadJson }));
             } catch (_) {}
@@ -6316,6 +6332,7 @@ class WebViewFullState extends State<WebViewFull>
     if (_isParked) {
       _isParked = false;
       _lastReportedUrl = '';
+      _latestUrl = null;
       webViewController!.resume();
     }
 
@@ -6340,6 +6357,7 @@ class WebViewFullState extends State<WebViewFull>
     if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
       // Loads userscripts that are not triggered in shouldOverrideUrlLoading
       // (e.g.: when reloading a page or navigating back/forward)
+      await _removeStaleUserScripts(inputUrl);
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
         pdaApiKey: UserHelper.apiKey,
@@ -6375,7 +6393,7 @@ class WebViewFullState extends State<WebViewFull>
 
   void _recordBrowserFailure(String kind, String detail, {WebUri? url}) {
     if (Platform.isWindows) return;
-    if (!_failuresReported.add("$kind:$detail")) return;
+    if (!_webViewProvider.browserFailuresReported.add("$kind:$detail")) return;
     final int ms = _loadStartedAt == null ? -1 : DateTime.now().difference(_loadStartedAt!).inMilliseconds;
     try {
       FirebaseCrashlytics.instance.recordError(
@@ -6389,15 +6407,15 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   void _scheduleBlankTabCheck() {
-    if (_blankTabReported || Platform.isWindows) return;
+    if (_webViewProvider.blankTabReported || Platform.isWindows) return;
     _blankTabCheckTimer?.cancel();
     _blankTabCheckTimer = Timer(const Duration(seconds: 5), () {
-      if (!mounted || _blankTabReported || _isParked) return;
+      if (!mounted || _webViewProvider.blankTabReported || _isParked) return;
       if (!_webViewProvider.isTabUidVisible(_tabUid)) return;
       final String current = _currentUrl.trim();
       final bool dead = current.isEmpty || current == _blankUrl || current == "null";
       if (!dead) return;
-      _blankTabReported = true;
+      _webViewProvider.blankTabReported = true;
       try {
         FirebaseCrashlytics.instance.recordError(
           "Blank tab shown to the user: url=${current.isEmpty ? "<empty>" : current} "
@@ -7390,10 +7408,8 @@ class WebViewFullState extends State<WebViewFull>
       _webViewProvider.browserShowInForeground = false;
       return true;
     }
-    final bool apart = _webViewProvider.getTabByUid(_tabUid)?.splitApart ?? false;
-    return _webViewProvider.exitBrowserSlotToApp(
-      _webViewProvider.slotOfGroup(apart ? SplitGroup.apart : SplitGroup.main),
-    );
+    final SplitGroup group = _webViewProvider.getTabByUid(_tabUid)?.group ?? SplitGroup.main;
+    return _webViewProvider.exitBrowserSlotToApp(_webViewProvider.slotOfGroup(group));
   }
 
   void _exitFullScreenFromJS() {
@@ -7444,36 +7460,37 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   void _onProgressAnimationUpdate() {
-    if (mounted) {
-      setState(() {
-        _animatedProgress = _progressAnimation.value;
-      });
-    }
+    if (mounted) _animatedProgress.value = _progressAnimation.value;
   }
 
   void _animateProgressTo(double newProgress) {
     if (!mounted) return;
 
-    final currentProgress = _animatedProgress;
+    final currentProgress = _animatedProgress.value;
     final targetProgress = newProgress;
 
     if (targetProgress < currentProgress && currentProgress > 0.1) return;
 
-    _progressAnimation.removeListener(_onProgressAnimationUpdate);
-    _progressAnimation = Tween<double>(
-      begin: currentProgress,
-      end: targetProgress,
-    ).animate(CurvedAnimation(parent: _progressController, curve: Curves.easeOut));
-    _progressAnimation.addListener(_onProgressAnimationUpdate);
+    if (_settingsProvider.loadBarBrowser && _webViewProvider.isTabUidOnScreen(_tabUid)) {
+      _progressAnimation.removeListener(_onProgressAnimationUpdate);
+      _progressAnimation = Tween<double>(
+        begin: currentProgress,
+        end: targetProgress,
+      ).animate(CurvedAnimation(parent: _progressController, curve: Curves.easeOut));
+      _progressAnimation.addListener(_onProgressAnimationUpdate);
 
-    _progressController.reset();
-    _progressController.forward();
+      _progressController.reset();
+      _progressController.forward();
+    } else {
+      _progressController.stop();
+      _animatedProgress.value = targetProgress;
+    }
 
     if (targetProgress >= 1.0) {
       Future.delayed(const Duration(milliseconds: 400), () {
         if (mounted && _progress >= 1.0) {
           setState(() {
-            _animatedProgress = 1.0;
+            _animatedProgress.value = 1.0;
           });
         }
       });

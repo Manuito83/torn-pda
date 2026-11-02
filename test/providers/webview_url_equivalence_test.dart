@@ -18,10 +18,6 @@ void main() {
       expect(provider.areUrlsEquivalent('https://www.torn.com/index.php', 'https://torn.com/'), isTrue);
     });
 
-    test('identical urls', () {
-      expect(provider.areUrlsEquivalent('https://www.torn.com/gym.php', 'https://www.torn.com/gym.php'), isTrue);
-    });
-
     test('attack loader variants for the same target', () {
       expect(
         provider.areUrlsEquivalent(

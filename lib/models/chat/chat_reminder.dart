@@ -1,6 +1,7 @@
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
 import 'package:torn_pda/models/chat/chat_status.dart';
 
 class ChatReminder {
@@ -38,7 +39,7 @@ class ChatReminder {
     roomName: roomName,
     messageId: m.id,
     author: m.sender.name,
-    excerpt: ChatQuote.excerpt(m.content),
+    excerpt: ChatQuote.excerpt(chatShortText(m.content, m.createdAt)),
     at: at,
     label: label,
   );

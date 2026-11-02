@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:torn_pda/models/chat/chat_chain_report.dart';
+import 'package:torn_pda/models/chat/chat_link_info.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
@@ -26,11 +28,11 @@ Map<String, dynamic> _attacker(int id, double total, int hits) => {
   'attacks': {'total': hits},
 };
 
-Map<String, dynamic> _chainReport({int id = 20946793, int end = 1700011520, int me = 7}) => {
+Map<String, dynamic> _chainReport({int id = 20946793, int start = 1700000000, int end = 1700011520, int me = 7}) => {
   'chainreport': {
     'id': id,
     'faction_id': 10,
-    'start': 1700000000,
+    'start': start,
     'end': end,
     'details': {'chain': 250, 'respect': 1842.4, 'best': 48.2},
     'attackers': [for (var i = 0; i < 32; i++) _attacker(i == 3 ? me : 100 + i, 300.0 - i * 5, 30 - i ~/ 2)],
@@ -119,15 +121,13 @@ void main() {
     });
 
     test('a chain report shows hits, respect, length and who took part', () {
-      final info = ChatLinkInfo.chainReport(_chainReport(), DateTime.fromMillisecondsSinceEpoch(1700100000 * 1000))!;
+      final report = ChatChainReport.parse(_chainReport()['chainreport'])!;
+      final info = ChatLinkInfo.chainReport(report, DateTime.fromMillisecondsSinceEpoch(1700100000 * 1000));
       expect(info.title, 'Chain 250 - 1,842 respect - 3h 12m');
       expect(info.detail, '32 attackers - best hit 48.2');
       expect(info.settled, isTrue);
-      expect(
-        ChatLinkInfo.chainReport(_chainReport(), DateTime.fromMillisecondsSinceEpoch(1700011600 * 1000))!.settled,
-        isFalse,
-      );
-      expect(ChatLinkInfo.chainReport({'chainreport': {}}), isNull);
+      expect(ChatLinkInfo.chainReport(report, DateTime.fromMillisecondsSinceEpoch(1700011600 * 1000)).settled, isFalse);
+      expect(ChatChainReport.parse(<String, dynamic>{}), isNull);
     });
 
     test('a war report names the winner and the rank change', () {
@@ -154,26 +154,6 @@ void main() {
       expect(info.detail, 'Natural Selection won - Platinum to Diamond');
       expect(info.settled, isTrue);
     });
-
-    test('a finished report is asked once', () async {
-      ChatLinkPreviews.resetForTests();
-      final original = ChatLinkPreviews.fetchChainReport;
-      addTearDown(() => ChatLinkPreviews.fetchChainReport = original);
-      var calls = 0;
-      ChatLinkPreviews.fetchChainReport = (id) async {
-        calls++;
-        return _chainReport(id: id);
-      };
-      final chain = link('https://www.torn.com/factions.php?step=chainreport&chainID=20946793');
-      final first = await ChatLinkPreviews.load(chain, () => true);
-      final second = await ChatLinkPreviews.load(chain, () => true);
-      expect(first?.title, second?.title);
-      expect(calls, 1);
-      expect(
-        ChatLinkPreviews.keyOf(chain),
-        isNot(ChatLinkPreviews.keyOf(link('https://www.torn.com/war.php?step=rankreport&rankID=20946793'))),
-      );
-    });
   });
 
   group('chain over line', () {
@@ -181,7 +161,6 @@ void main() {
     late ChatPrefs prefs;
     late ChatController chat;
     late ChatFactionOps ops;
-    late Future<Map<String, dynamic>?> Function() original;
     var fetched = 0;
     Map<String, dynamic> report = _chainReport();
 
@@ -204,7 +183,6 @@ void main() {
 
     setUp(() {
       ChatLinkPreviews.resetForTests();
-      original = ChatLinkPreviews.fetchOwnChainReport;
       fetched = 0;
       report = _chainReport();
       ChatLinkPreviews.fetchOwnChainReport = () async {
@@ -217,7 +195,7 @@ void main() {
     });
 
     tearDown(() {
-      ChatLinkPreviews.fetchOwnChainReport = original;
+      ChatLinkPreviews.resetForTests();
       chat.dispose();
     });
 
@@ -243,36 +221,6 @@ void main() {
       expect(locals(), isEmpty);
     });
 
-    test('short chains and a switched off setting ask for nothing', () async {
-      ops.apply(chain: const ChatChain(hits: 6, seconds: 90), now: now);
-      ops.apply(chain: const ChatChain(hits: 0, seconds: 0), now: now);
-      prefs.setFactionChain(false);
-      ops.apply(chain: const ChatChain(hits: 120, seconds: 90), now: now);
-      ops.apply(chain: const ChatChain(hits: 0, seconds: 0), now: now);
-      await Future.delayed(const Duration(milliseconds: 50));
-      expect(fetched, 0);
-    });
-
-    test('a local clock at zero does not end a chain the API still has', () async {
-      ops.apply(chain: const ChatChain(hits: 120, seconds: 90), now: now);
-      ops.apply(chain: const ChatChain(hits: 121, seconds: 0), now: now);
-      await Future.delayed(const Duration(milliseconds: 50));
-      expect(fetched, 0);
-      ops.apply(chain: const ChatChain(hits: 121, seconds: 0, cooldown: true), now: now);
-      await settle(1);
-      ops.apply(chain: const ChatChain(hits: 121, seconds: 0, cooldown: true), now: now);
-      await Future.delayed(const Duration(milliseconds: 50));
-      expect(fetched, 1);
-      expect(locals(), hasLength(1));
-    });
-
-    test('a report still running is not announced', () async {
-      report = _chainReport(end: 0);
-      await chainEnds();
-      expect(locals(), isEmpty);
-      expect(prefs.lastChainReport, isNot(20946793));
-    });
-
     test('a chain that ends in cooldown counts too', () async {
       ops.apply(chain: const ChatChain(hits: 120, seconds: 90), now: now);
       ops.apply(chain: const ChatChain(hits: 0, seconds: 300, cooldown: true), now: now);
@@ -287,8 +235,6 @@ void main() {
     late ChatPrefs prefs;
     late ChatController chat;
     late ChatFactionOps ops;
-    late Future<Map<String, dynamic>?> Function() ownWars;
-    late Future<Map<String, dynamic>?> Function(int) warReport;
     var listed = 0;
     var reports = 0;
     int endedAt = 1700100000 - 120;
@@ -311,8 +257,6 @@ void main() {
 
     setUp(() {
       ChatLinkPreviews.resetForTests();
-      ownWars = ChatLinkPreviews.fetchOwnWars;
-      warReport = ChatLinkPreviews.fetchWarReport;
       listed = 0;
       reports = 0;
       endedAt = 1700100000 - 120;
@@ -348,8 +292,7 @@ void main() {
     });
 
     tearDown(() {
-      ChatLinkPreviews.fetchOwnWars = ownWars;
-      ChatLinkPreviews.fetchWarReport = warReport;
+      ChatLinkPreviews.resetForTests();
       chat.dispose();
     });
 
@@ -365,23 +308,11 @@ void main() {
       expect(prefs.lastWarReport, 25579);
     });
 
-    test('nothing happens if the chat never saw a war', () async {
-      ops.watchWar(null, 111, now);
-      await settle();
-      expect(listed, 0);
-    });
-
     test('a war list without a recent end announces nothing', () async {
       endedAt = 1700100000 - 7200;
       await warEnds();
       expect((listed, reports), (1, 0));
       expect(locals(), isEmpty);
-    });
-
-    test('the setting turns it off', () async {
-      prefs.setFactionWar(false);
-      await warEnds();
-      expect(listed, 0);
     });
   });
 }

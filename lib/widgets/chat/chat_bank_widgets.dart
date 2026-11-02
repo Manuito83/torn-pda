@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/models/chat/chat_banking.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
-import 'package:torn_pda/providers/chat/chat_banking.dart';
+import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -18,8 +20,7 @@ class ChatBankInsert extends StatelessWidget {
   static ChatController Function() chat = () => NativeChat.controller;
 
   ChatBankEntry? _entry() {
-    final list = chat().messagesFor(message.roomId);
-    return ChatBanking.states(list)[message.id] ?? ChatBanking.derive([message])[message.id];
+    return chat().bankStates(message.roomId)[message.id] ?? chatBankDerive([message])[message.id];
   }
 
   Future<void> _markPaid(BuildContext context, int? amount) async {
@@ -42,7 +43,7 @@ class ChatBankInsert extends StatelessWidget {
         ],
       ),
     );
-    if (go == true) NativeChat.openLink(ChatBanking.link(message.sender.id, entry.request));
+    if (go == true) NativeChat.openLink(chatBankLink(message.sender.id, entry.request));
   }
 
   @override
@@ -51,7 +52,7 @@ class ChatBankInsert extends StatelessWidget {
     return ListenableBuilder(
       listenable: prefs,
       builder: (context, _) {
-        if (!prefs.factionBanker || !ChatBanking.appliesTo(message.roomId)) return const SizedBox.shrink();
+        if (!prefs.factionBanker || !chatBankAppliesTo(message.roomId)) return const SizedBox.shrink();
         return ListenableBuilder(listenable: chat(), builder: (context, _) => _buttons(context));
       },
     );
@@ -66,7 +67,7 @@ class ChatBankInsert extends StatelessWidget {
     final muted = theme.textTheme.labelMedium?.copyWith(color: theme.hintColor);
     final paidBy = entry.paidBy;
     final paidName = paidBy == null ? 'Someone' : NativeChat.prefs.displayName(paidBy.id, paidBy.name);
-    final giveLabel = amount == null ? 'Give money' : 'Give ${ChatBanking.figure(amount)}';
+    final giveLabel = amount == null ? 'Give money' : 'Give ${ChatMoneyRef.format(amount)}';
     final children = switch (entry.status) {
       ChatBankStatus.open => [
         if (entry.safe)
@@ -78,7 +79,7 @@ class ChatBankInsert extends StatelessWidget {
           key: buttonKey,
           avatar: const Icon(Icons.account_balance_outlined, size: 18),
           label: Text(giveLabel),
-          onPressed: () => NativeChat.openLink(ChatBanking.link(message.sender.id, entry.request)),
+          onPressed: () => NativeChat.openLink(chatBankLink(message.sender.id, entry.request)),
         ),
         ActionChip(
           key: paidKey,
@@ -125,7 +126,7 @@ class _BankPaidDialog extends StatefulWidget {
 
 class _BankPaidDialogState extends State<_BankPaidDialog> {
   late final TextEditingController _text = TextEditingController(
-    text: widget.amount == null ? '' : ChatBanking.grouped(widget.amount!),
+    text: widget.amount == null ? '' : chatCount(widget.amount!),
   );
 
   @override
@@ -136,12 +137,12 @@ class _BankPaidDialogState extends State<_BankPaidDialog> {
 
   bool get _blank => _text.text.trim().isEmpty;
 
-  int? get _amount => ChatBanking.parseTyped(_text.text);
+  int? get _amount => chatBankParseTyped(_text.text);
 
   @override
   Widget build(BuildContext context) {
     final valid = _blank || _amount != null;
-    final text = ChatBanking.paidText(widget.to, _blank ? null : _amount);
+    final text = chatBankPaidText(widget.to, _blank ? null : _amount);
     return AlertDialog(
       title: const Text('Mark as paid'),
       content: Column(
@@ -194,9 +195,9 @@ class _BankRequestDialogState extends State<_BankRequestDialog> {
   }
 
   void _submit() {
-    final amount = ChatBanking.parseTyped(_text.text);
+    final amount = chatBankParseTyped(_text.text);
     if (amount == null) return setState(() => _invalid = true);
-    Navigator.of(context).pop(ChatBanking.requestText(amount));
+    Navigator.of(context).pop(chatBankRequestText(amount));
   }
 
   @override
@@ -233,9 +234,9 @@ class _BankRequestDialogState extends State<_BankRequestDialog> {
             spacing: 6,
             runSpacing: 4,
             children: [
-              quick(Icons.account_balance_wallet_outlined, 'Request full balance', ChatBanking.fullText),
-              quick(Icons.undo_rounded, 'Cancel request', ChatBanking.cancelText),
-              quick(Icons.campaign_outlined, 'Call bankers', ChatBanking.callText),
+              quick(Icons.account_balance_wallet_outlined, 'Request full balance', chatBankFullText),
+              quick(Icons.undo_rounded, 'Cancel request', chatBankCancelText),
+              quick(Icons.campaign_outlined, 'Call bankers', chatBankCallText),
             ],
           ),
         ],

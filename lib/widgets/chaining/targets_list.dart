@@ -18,6 +18,14 @@ import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
 import 'package:torn_pda/widgets/chaining/target_card.dart';
 import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
+/// Passes the page's word, color and sort filters
+bool targetShown(TargetsProvider targets, TargetModel target) {
+  final note = Get.find<PlayerNotesController>().getNoteForPlayer(target.playerId.toString());
+  return target.name!.toUpperCase().contains(targets.currentWordFilter.toUpperCase()) &&
+      !targets.currentColorFilterOut.contains(note?.color ?? PlayerNoteColor.none) &&
+      targets.targetPassesFilters(target);
+}
+
 class TargetsList extends StatefulWidget {
   final List<TargetModel> targets;
 
@@ -60,15 +68,8 @@ class TargetsListState extends State<TargetsList> {
   }
 
   Widget slidableCard(int index, BuildContext context) {
-    final playerNotesController = Get.find<PlayerNotesController>();
-    final playerNote = playerNotesController.getNoteForPlayer(widget.targets[index].playerId.toString());
-    final noteColor = playerNote?.color ?? PlayerNoteColor.none;
-
-    if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
-        _targetsProvider.currentColorFilterOut.contains(noteColor) ||
-        !_targetsProvider.targetPassesFilters(widget.targets[index])) {
-      return const SizedBox.shrink();
-    }
+    if (!targetShown(_targetsProvider, widget.targets[index])) return const SizedBox.shrink();
+    final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(widget.targets[index].playerId.toString());
 
     final slidable = Slidable(
       key: ValueKey(widget.targets[index].playerId),

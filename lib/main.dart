@@ -70,8 +70,11 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/background_inbox.dart';
+import 'package:torn_pda/utils/background_prefs.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/crashlytics_identity.dart';
 import 'package:torn_pda/utils/exit_info.dart';
@@ -96,10 +99,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '4.0.0';
-const String androidCompilation = '698';
-const String iosCompilation = '698';
-
-const double kSplitScreenMinWidth = 800;
+const String androidCompilation = '700';
+const String iosCompilation = '700';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -278,7 +279,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final GlobalKey _homeDrawerKey = GlobalKey();
   final List<NavigatorObserver> _homeObservers = [
     NativeChat.homeWatch,
-    if (_isFirebaseInitialized && analytics != null) StatsController.homeObserver,
+    if (_isFirebaseInitialized && analytics != null) Get.find<StatsController>().homeObserver,
   ];
   final GlobalKey _devToolsKey = GlobalKey();
   final FocusNode _devToolsFocusNode = FocusNode(canRequestFocus: false, skipTraversal: true);
@@ -307,7 +308,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
     });
 
-    // Key so layout changes don't rebuild the webviews
+    // Keeps the webviews across layout changes
     _mainBrowser = Consumer<WebViewProvider>(
       key: _mainBrowserKey,
       builder: (context, w, child) {
@@ -330,8 +331,10 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) StatsController.chat.flush();
-    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) UsageCounters.flush();
+    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) {
+      StatsController.chat.flush();
+      UsageCounters.flush();
+    }
   }
 
   @override
@@ -437,14 +440,14 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   valueListenable: NativeChat.remoteEnabled,
                   builder: (_, on, _) => on ? ChatOverlay(navigatorKey: navigatorKey) : const SizedBox.shrink(),
                 ),
-              if (chainMiniEnabled) const ChainMiniHost(),
+              const ChainMiniHost(),
             ],
           );
         },
         navigatorObservers: [
           BotToastNavigatorObserver(),
           NativeChat.rootWatch,
-          if (_isFirebaseInitialized && analytics != null) StatsController.rootObserver,
+          if (_isFirebaseInitialized && analytics != null) Get.find<StatsController>().rootObserver,
         ],
         scrollBehavior: !Platform.isWindows
             ? null
@@ -565,7 +568,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     if (w.browserShowInForeground) {
                       // Browser is in front, delegate the call
                       w.tryGoBack();
-                    } else if (!PipSelection.cancelActive()) {
+                    } else if (!Get.isRegistered<PipController>() || !Get.find<PipController>().cancelPick()) {
                       _openDrawerIfPossible();
                     }
                   },
@@ -591,7 +594,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void _setSplitScreenPosition() {
-    // Not post-frame, to avoid a frame with the old split state
+    // Not post-frame, avoids a stale split
     _webViewProvider.updateSplitScreenWidth(MediaQueryData.fromView(View.of(context)).size.width);
 
     SystemChrome.setSystemUIOverlayStyle(
@@ -610,6 +613,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   /// This is mostly needed in case we start the app with split screen or directly with the browser as main view
   Future _loadMainBrowserPreferences() async {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    Get.find<StatsController>().webViews = _webViewProvider;
     await _webViewProvider.restorePreferences();
 
     /// DOC
@@ -651,25 +655,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 }
 
-// Only way to swap iOS categories
-Future<void> registerTornChatCategories({required bool reply}) async {
-  try {
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.initialize(
-          DarwinInitializationSettings(
-            requestAlertPermission: false,
-            requestSoundPermission: false,
-            requestBadgePermission: false,
-            notificationCategories: darwinNotificationCategories(reply: reply),
-          ),
-          onDidReceiveNotificationResponse: _handleNotificationResponse,
-        );
-  } catch (e, stackTrace) {
-    logErrorToCrashlytics("Torn chat categories", "$e", stackTrace);
-  }
-}
-
 /// Initialize app compilation and detect updates
 Future<void> _initializeAppCompilation() async {
   final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
@@ -688,7 +673,7 @@ Future<void> _initializeAppCompilation() async {
   }
 }
 
-Future<void> _handleNotificationResponse(NotificationResponse notificationResponse) async {
+Future<void> handleNotificationResponse(NotificationResponse notificationResponse) async {
   try {
     final payload = notificationResponse.payload;
 
@@ -811,6 +796,8 @@ Future<void> _initializeHomeWidget() async {
 
 Future<void> _initializeGetXControllers() async {
   try {
+    Get.put(StatsController(), permanent: true);
+    Get.put(AppIconMenuController(), permanent: true);
     Get.put(UserController(), permanent: true);
     Get.put(AudioController(), permanent: true);
     Get.put(SpiesController(), permanent: true);
@@ -862,7 +849,7 @@ Future<void> _initializeNotifications() async {
 
     const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
     final initializationSettingsIOS = DarwinInitializationSettings(
-      notificationCategories: darwinNotificationCategories(reply: await Prefs().getNativeChatReplyEnabled()),
+      notificationCategories: darwinNotificationCategories(reply: await BackgroundPrefs().getNativeChatReplyEnabled()),
     );
     const initizationSettingsWindows = WindowsInitializationSettings(
       appName: 'Torn PDA',
@@ -878,7 +865,7 @@ Future<void> _initializeNotifications() async {
 
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: _handleNotificationResponse,
+      onDidReceiveNotificationResponse: handleNotificationResponse,
       onDidReceiveBackgroundNotificationResponse: tornChatBackgroundResponse,
     );
     if (Platform.isIOS) listenTornChatReplies();

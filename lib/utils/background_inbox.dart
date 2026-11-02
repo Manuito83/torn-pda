@@ -2,7 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
-import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 const String _kPendingStockUpdateInboxKey = 'pda_pending_stock_updates';

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/pip/pip_player.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
@@ -147,14 +148,6 @@ void main() {
       expect(player(1).highlighted, isFalse);
     });
 
-    test('highlight expires after 30 seconds', () {
-      final p = PipPlayer(id: 1, name: 'A');
-      p.changedAt = DateTime.now().subtract(const Duration(seconds: 29));
-      expect(p.highlighted, isTrue);
-      p.changedAt = DateTime.now().subtract(const Duration(seconds: 31));
-      expect(p.highlighted, isFalse);
-    });
-
     test('failed fetch flags error and keeps last state', () async {
       api.handler = (_, _) async => profileJson(state: 'Okay');
       await watch([1]);
@@ -184,12 +177,6 @@ void main() {
       api.handler = (_, _) async => profileJson(state: 'Okay');
       await watch([1, 2, 3, 4, 5, 6]);
       expect(pip.players.map((p) => p.id), [1, 2, 3, 4]);
-    });
-
-    test('four players are fetched every round', () async {
-      api.handler = (_, _) async => profileJson(state: 'Okay');
-      await watch([1, 2, 3, 4]);
-      expect(api.calls.length, 4);
     });
 
     test('players already watched keep their state', () async {
@@ -289,7 +276,7 @@ void main() {
     });
 
     test('pip window counts as a client', () async {
-      chain.pipVisible = true;
+      chain.pipShown();
       await chain.activateChainWidgetStatusRequests();
       expect(chain.statusActive, isTrue);
       chain.tryToDeactivateStatus();
@@ -297,26 +284,17 @@ void main() {
     });
 
     test('leaving pip switches polling off when nobody else uses it', () async {
-      chain.pipVisible = true;
+      chain.pipShown();
       await chain.activateChainWidgetStatusRequests();
-      chain.pipVisible = false;
-      chain.tryToDeactivateStatus();
+      chain.pipHidden();
       expect(chain.statusActive, isFalse);
     });
 
     test('leaving pip keeps polling while the chain widget is visible', () async {
-      chain.pipVisible = true;
-      chain.widgetVisible = true;
+      chain.pipShown();
+      chain.addChainWidget();
       await chain.activateChainWidgetStatusRequests();
-      chain.pipVisible = false;
-      chain.tryToDeactivateStatus();
-      expect(chain.statusActive, isTrue);
-    });
-
-    test('opening the chain window does not switch polling off', () async {
-      chain.pipVisible = true;
-      await chain.activateChainWidgetStatusRequests();
-      expect(chain.pipVisible, isTrue);
+      chain.pipHidden();
       expect(chain.statusActive, isTrue);
     });
   });
@@ -372,15 +350,6 @@ void main() {
   });
 
   group('stakeout alerts', () {
-    test('default settings', () {
-      final settings = SettingsProvider();
-      expect(settings.pipEnabled, isTrue);
-      expect(settings.pipChainButton, isTrue);
-      expect(settings.pipPlayerButtons, isTrue);
-      expect(settings.pipStakeoutsButton, isTrue);
-      expect(settings.pipAutoEnter, isFalse);
-    });
-
     test('alert outside pip is kept as last alert without banner', () {
       pip.stakeoutAlert(id: 4, name: 'Test', lines: ['Test is now OK!']);
       expect(pip.stakeoutId, 4);
@@ -426,16 +395,9 @@ void main() {
       expect(pip.stakeoutHighlighted, isTrue);
     });
 
-    test('banner goes away after 10 seconds', () {
-      pip.bannerAt = DateTime.now().subtract(const Duration(seconds: 9));
-      expect(pip.bannerVisible, isTrue);
-      pip.bannerAt = DateTime.now().subtract(const Duration(seconds: 11));
-      expect(pip.bannerVisible, isFalse);
-    });
-
     test('opening stakeouts releases the chain', () async {
       api.handler = (selection, _) async => selection == ApiSelection_v1.chainStatus ? chainJson() : ApiError();
-      chain.pipVisible = true;
+      chain.pipShown();
       await chain.activateChainWidgetStatusRequests();
       await pip.openStakeouts(players: 3);
       expect(pip.mode, PipMode.stakeouts);

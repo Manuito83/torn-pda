@@ -50,14 +50,14 @@ class _ChatSlideToPlaceState extends State<ChatSlideToPlace> with SingleTickerPr
     _moved = false;
     if (!moved || before == null || (before - now).abs() < 1) return;
     _shift = _current() + before - now;
+    final motion = chatMotionSet(context);
+    _move.duration = motion.slide;
+    _curve = motion.slideCurve;
     _move.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
-    final motion = chatMotionSet(context);
-    _move.duration = motion.slide;
-    _curve = motion.slideCurve;
     WidgetsBinding.instance.addPostFrameCallback((_) => _track());
     return AnimatedBuilder(
       animation: _move,

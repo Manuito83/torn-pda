@@ -42,28 +42,29 @@ class ChatRooms {
     'jail': 'Only while in jail',
   };
 
-  static List<ChatRemoteRoom> remote = const [];
+  static List<String> groups(List<ChatRemoteRoom> remote) => [...labels.keys, for (final r in remote) r.id];
 
-  static List<String> get groups => [...labels.keys, for (final r in remote) r.id];
-
-  static ChatRemoteRoom? remoteOf(String id) {
+  static ChatRemoteRoom? remoteOf(String id, List<ChatRemoteRoom> remote) {
     for (final r in remote) {
       if (r.id == id) return r;
     }
     return null;
   }
 
-  static bool isKnown(String id) =>
-      id.startsWith('dm:') || (id != 'dm' && labels.containsKey(id)) || remoteOf(id) != null;
+  static bool isKnown(String id, List<ChatRemoteRoom> remote) =>
+      id.startsWith('dm:') || (id != 'dm' && labels.containsKey(id)) || remoteOf(id, remote) != null;
 
-  static String group(String roomId) => roomId.startsWith('dm:') ? 'dm' : (isKnown(roomId) ? roomId : other);
+  static String group(String roomId, List<ChatRemoteRoom> remote) =>
+      roomId.startsWith('dm:') ? 'dm' : (isKnown(roomId, remote) ? roomId : other);
 
-  static String labelOf(String group) => labels[group] ?? remoteOf(group)?.label ?? 'Other rooms';
+  static String labelOf(String group, List<ChatRemoteRoom> remote) =>
+      labels[group] ?? remoteOf(group, remote)?.label ?? 'Other rooms';
 
   /// Null for rooms Torn always lists
-  static String? whenListed(String id) => _occasional[id] ?? (remoteOf(id) != null ? 'Only when Torn shows it' : null);
+  static String? whenListed(String id, List<ChatRemoteRoom> remote) =>
+      _occasional[id] ?? (remoteOf(id, remote) != null ? 'Only when Torn shows it' : null);
 
-  static List<String> get occasional => [..._occasional.keys, for (final r in remote) r.id];
+  static List<String> occasional(List<ChatRemoteRoom> remote) => [..._occasional.keys, for (final r in remote) r.id];
 
   static List<ChatRemoteRoom> parse(String raw) {
     Object? json;

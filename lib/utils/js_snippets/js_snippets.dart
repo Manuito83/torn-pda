@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 String easyCrimesJS({required String nerve, required String? crime, required String doCrime}) {
   return '''
     var first_load = true;
@@ -530,19 +532,27 @@ String chatHighlightJS({required String highlights}) {
     root.querySelectorAll("[class*='virtualItem___'] [class*='box___']").forEach(mark);
   }
 
+  function affectsMarks(record) {
+    return record.type !== "attributes" || record.target.matches("[class*='box___'], [class*='virtualItem___']");
+  }
+
   function watch(root) {
     markAll(root);
     window.pdaChatObserver?.disconnect();
-    clearInterval(window.pdaChatTimer);
-    window.pdaChatTimer = setInterval(() => markAll(root), 1000);
-    window.pdaChatObserver = new MutationObserver(() => {
-      if (frame) return;
+    window.pdaChatObserver = new MutationObserver((records) => {
+      if (frame || !records.some(affectsMarks)) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
         markAll(root);
       });
     });
-    window.pdaChatObserver.observe(root, { childList: true, subtree: true, characterData: true });
+    window.pdaChatObserver.observe(root, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
   }
 
   document.querySelectorAll(".pda-chat-highlight, .pda-chat-outline").forEach((el) => el.classList.remove("pda-chat-highlight", "pda-chat-outline"));
@@ -554,7 +564,6 @@ String chatHighlightJS({required String highlights}) {
       watch(root);
     } else if (++tries > 20) {
       clearInterval(id);
-      console.warn("PDA chat highlight: #chatRoot not found");
     }
   }, 500);
 })();
@@ -571,6 +580,21 @@ String chatHighlightCSS({required String background, required String senderColor
     box-shadow: 0 0 0 1px $senderColor;
   }
   """;
+}
+
+String chatHighlightStyleJS({required String background, required String senderColor}) {
+  final String css = jsonEncode(chatHighlightCSS(background: background, senderColor: senderColor));
+  return '''
+(() => {
+  let style = document.getElementById("pda-chat-highlight-style");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "pda-chat-highlight-style";
+    document.head.appendChild(style);
+  }
+  style.textContent = $css;
+})();
+  ''';
 }
 
 String jailJS({

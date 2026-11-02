@@ -83,7 +83,7 @@ class _ChatIntro extends StatelessWidget {
         ],
       ),
     );
-    final needs = welcome ? const <ChatNeed>{} : chatNeedsOf(MediaQuery.of(context));
+    final needs = welcome ? const <ChatNeed>{} : chatNeedsOf(context);
     Widget access() => Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -124,9 +124,10 @@ class _ChatIntro extends StatelessWidget {
           if (welcome)
             for (final e in chatHelp.where((e) => e.spots.contains(ChatHelpSpot.intro))) entry(e.icon, e.title, e.text)
           else ...[
-            if (needs.isNotEmpty) access(),
-            for (final group in ChatHelpGroup.values)
-              if (needs.isEmpty || group != ChatHelpGroup.accessibility)
+            for (final group in chatHelpGroupsOf(needs))
+              if (needs.isNotEmpty && group == ChatHelpGroup.accessibility)
+                access()
+              else
                 ExpansionTile(
                   title: Text(group.title, style: theme.textTheme.titleMedium),
                   initiallyExpanded: group == ChatHelpGroup.start,

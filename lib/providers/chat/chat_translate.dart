@@ -53,6 +53,7 @@ class ChatTranslator extends ChangeNotifier {
 
   final LinkedHashMap<String, ChatTranslation> _cache = LinkedHashMap();
   final Set<String> _shown = {};
+  int _generation = 0;
 
   static String deviceLanguage() => PlatformDispatcher.instance.locale.languageCode;
 
@@ -76,12 +77,14 @@ class ChatTranslator extends ChangeNotifier {
     }
     _cache[key] = ChatTranslation.loading;
     notifyListeners();
+    final generation = _generation;
     (String, String?)? result;
     try {
       result = await _fetch(text, target);
     } catch (_) {
       result = null;
     }
+    if (generation != _generation) return;
     _cache.remove(key);
     _cache[key] = result == null
         ? const ChatTranslation(failed: true)
@@ -89,6 +92,13 @@ class ChatTranslator extends ChangeNotifier {
     while (_cache.length > _maxCached) {
       _cache.remove(_cache.keys.first);
     }
+    notifyListeners();
+  }
+
+  void forget() {
+    _generation++;
+    _cache.clear();
+    _shown.clear();
     notifyListeners();
   }
 

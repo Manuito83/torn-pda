@@ -10,6 +10,7 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/chat/chat_api.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_faction_roster.dart';
+import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_friends_sheet.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -240,7 +241,7 @@ void main() {
       ),
     );
     addTearDown(Get.reset);
-    final rows = (await TornChatApi().roster('company'))!;
+    final rows = (await TornChatApi(ChatPrefs()).roster('company'))!;
     expect(rows.map((r) => (r.$1.id, r.$1.playerStatus?.state, r.$1.playerStatus?.until?.millisecondsSinceEpoch)), [
       (11, 'Hospital', 1760000120000),
       (12, 'Okay', null),

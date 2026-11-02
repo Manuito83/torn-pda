@@ -386,6 +386,7 @@ class ProfileApiCallsController extends GetxController {
         return;
       }
       final OwnProfileMisc miscApiResponse = result.misc;
+      if (result.travelTimeReduction != null) _settings!.travelTimeReduction = result.travelTimeReduction!;
 
       await _getEducationCatalog(miscApiResponse);
 

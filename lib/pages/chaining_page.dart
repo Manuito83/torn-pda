@@ -39,6 +39,7 @@ class ChainingPageState extends State<ChainingPage> {
   Future? _preferencesLoaded;
   late SettingsProvider _settingsProvider;
   late RetalsController _r;
+  final StatsController _stats = Get.find<StatsController>();
 
   int _currentPage = 0;
   late bool _isAppBarTop;
@@ -233,22 +234,22 @@ class ChainingPageState extends State<ChainingPage> {
 
     switch (_currentPage) {
       case 0:
-        StatsController.screen('targets');
+        _stats.screen('targets');
       case 1:
-        StatsController.screen('attacks');
+        _stats.screen('attacks');
       case 2:
-        StatsController.screen('war');
+        _stats.screen('war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
       case 3:
         if (UserHelper.factionId != 0 && _retaliationEnabled) {
-          StatsController.screen('retals');
+          _stats.screen('retals');
           _r.retrieveRetals(context);
         }
       case 4:
-        StatsController.screen('target_finder');
+        _stats.screen('target_finder');
     }
   }
 
@@ -273,24 +274,24 @@ class ChainingPageState extends State<ChainingPage> {
 
     switch (index) {
       case 0:
-        StatsController.screen('targets');
+        _stats.screen('targets');
         Prefs().setChainingCurrentPage(_currentPage);
       case 1:
-        StatsController.screen('attacks');
+        _stats.screen('attacks');
         Prefs().setChainingCurrentPage(_currentPage);
       case 2:
-        StatsController.screen('war');
+        _stats.screen('war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
         Prefs().setChainingCurrentPage(_currentPage);
       case 3:
-        StatsController.screen('retals');
+        _stats.screen('retals');
         Prefs().setChainingCurrentPage(_currentPage);
         _r.retrieveRetals(context);
       case 4:
-        StatsController.screen('target_finder');
+        _stats.screen('target_finder');
         Prefs().setChainingCurrentPage(_currentPage);
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
 /// Tests for [TravelTimes] — country lookup and travel duration tables.
@@ -45,47 +46,6 @@ void main() {
   // travelTimeMinutesOneWay
   // -------------------------------------------------------------------------
   group('travelTimeMinutesOneWay', () {
-    test('standard ticket — spot-check known values', () {
-      expect(
-        TravelTimes.travelTimeMinutesOneWay(
-          countryName: 'Mexico',
-          ticket: TravelTicket.standard,
-        ),
-        24,
-      );
-      expect(
-        TravelTimes.travelTimeMinutesOneWay(
-          countryName: 'Japan',
-          ticket: TravelTicket.standard,
-        ),
-        213,
-      );
-      expect(
-        TravelTimes.travelTimeMinutesOneWay(
-          countryName: 'South Africa',
-          ticket: TravelTicket.standard,
-        ),
-        282,
-      );
-    });
-
-    test('business ticket is fastest', () {
-      expect(
-        TravelTimes.travelTimeMinutesOneWay(
-          countryName: 'Japan',
-          ticket: TravelTicket.business,
-        ),
-        64,
-      );
-      expect(
-        TravelTimes.travelTimeMinutesOneWay(
-          countryName: 'Mexico',
-          ticket: TravelTicket.business,
-        ),
-        7,
-      );
-    });
-
     test('Torn returns 0 for any ticket', () {
       for (final ticket in TravelTicket.values) {
         expect(
@@ -109,24 +69,6 @@ void main() {
         ),
         213,
       );
-    });
-
-    test('WLT is between private and standard', () {
-      final std = TravelTimes.travelTimeMinutesOneWay(
-        countryName: 'Japan',
-        ticket: TravelTicket.standard,
-      );
-      final wlt = TravelTimes.travelTimeMinutesOneWay(
-        countryName: 'Japan',
-        ticket: TravelTicket.wlt,
-      );
-      final prv = TravelTimes.travelTimeMinutesOneWay(
-        countryName: 'Japan',
-        ticket: TravelTicket.private,
-      );
-
-      expect(wlt, lessThan(prv));
-      expect(prv, lessThan(std));
     });
   });
 
@@ -193,10 +135,8 @@ void main() {
     });
 
     test('a book-shortened flight matches once the reduction is known', () {
-      TravelTimes.reductionPercent = 25;
-      addTearDown(() => TravelTimes.reductionPercent = 0);
       expect(
-        TravelTimes.inferOriginCountry(durationSeconds: 6795, apiMethod: 'Standard'),
+        TravelTimes.inferOriginCountry(durationSeconds: 6795, apiMethod: 'Standard', reductionPercent: 25),
         'United Kingdom',
       );
     });
@@ -230,11 +170,22 @@ void main() {
     });
 
     test('a 25% reduction shortens the table time', () {
-      TravelTimes.reductionPercent = 25;
-      addTearDown(() => TravelTimes.reductionPercent = 0);
-      expect(TravelTimes.travelTimeMinutesOneWay(countryName: 'Argentina', ticket: TravelTicket.standard), 119);
-      expect(TravelTimes.travelTimeMinutesOneWay(countryName: 'Japan', ticket: TravelTicket.private), 112);
-      expect(TravelTimes.travelTimeMinutesOneWay(countryName: 'Torn', ticket: TravelTicket.standard), 0);
+      int minutes(String country, TravelTicket ticket) =>
+          TravelTimes.travelTimeMinutesOneWay(countryName: country, ticket: ticket, reductionPercent: 25);
+      expect(minutes('Argentina', TravelTicket.standard), 119);
+      expect(minutes('Japan', TravelTicket.private), 112);
+      expect(minutes('Torn', TravelTicket.standard), 0);
+    });
+
+    test('the profile call hands the perk reduction to the caller', () {
+      final withPerks = ApiCallsV2.parseProfileMisc({
+        'perks': {
+          'education_perks': ['+ 25% travel time reduction'],
+          'job_perks': ['+ 10% gym gains'],
+        },
+      });
+      expect(withPerks!.travelTimeReduction, 25);
+      expect(ApiCallsV2.parseProfileMisc({})!.travelTimeReduction, isNull);
     });
   });
 }

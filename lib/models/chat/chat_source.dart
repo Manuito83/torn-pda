@@ -36,9 +36,13 @@ abstract class ChatSource {
 
   Future<void> loadBlocked();
 
+  /// False when Torn refuses
+  Future<bool> block(int userId);
+
+  Future<bool> unblock(int userId);
+
   Future<void> closeDm(int userId);
 
-  /// Start or stop typing
   Future<void> typing(String roomId, bool on);
 
   Future<void> send(String roomId, String content, String reqId);

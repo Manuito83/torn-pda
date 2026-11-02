@@ -200,5 +200,5 @@ Future<String?> _askModeName(BuildContext context, UserScriptsProvider provider,
         ],
       ),
     ),
-  );
+  ).whenComplete(controller.dispose);
 }

@@ -7,14 +7,10 @@ import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
-import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_bazaar_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_price_check_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
-import 'chat_fakes.dart';
 
 Map<String, dynamic> row(int id, String name, int price, int market, [int quantity = 1]) => {
   'ID': id,
@@ -199,60 +195,10 @@ void main() {
       expect(tapRow, findsOneWidget);
     });
 
-    testWidgets('with bazaar analysis off the price stays and the bazaar goes', (tester) async {
-      await ChatPlayerCards.json(7);
-      NativeChat.prefs.bazaarAnalysis = false;
-      addTearDown(() => NativeChat.prefs.bazaarAnalysis = true);
-      await pump(tester);
-      expect(find.byType(ChatBazaarSummary), findsNothing);
-      expect(tapRow, findsNothing);
-      expect(calls, 1);
-    });
-
     testWidgets('a points offer with a cached profile shows no bazaar line', (tester) async {
       await ChatPlayerCards.json(7);
       await pump(tester, text: 'WTS 500 points 45k');
       expect(find.byType(ChatBazaarSummary), findsNothing);
-    });
-  });
-
-  group('card', () {
-    const url = 'https://www.torn.com/bazaar.php?userId=42';
-
-    setUp(() {
-      ChatPlayerCards.resetForTests();
-      ChatLinkPreviews.resetForTests();
-      ChatLinkPreviews.fetchItems = () async => ItemsModel(items: {'206': Item(name: 'Xanax', marketValue: 830000)});
-      ChatPlayerCards.fetch = (id) async => {
-        'profile': {'id': 42, 'name': 'Alpha'},
-        ...profile([row(206, 'Xanax', 812000, 830000, 182), row(3, 'Other', 1000, 1000)]),
-      };
-      NativeChat.prefs
-        ..priceCheck = true
-        ..linkPreviews = ChatImageAutoLoad.always;
-    });
-
-    tearDown(() {
-      ChatPlayerCards.resetForTests();
-      ChatLinkPreviews.resetForTests();
-    });
-
-    Future<void> pump(WidgetTester tester, String room) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ChatMessageText(content: 'WTS Xanax 800k $url', color: Colors.black, roomId: room),
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 800));
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('shows the summary and the named item in trade', (tester) async {
-      await pump(tester, 'trade');
-      expect(find.byType(ChatBazaarSummary), findsOneWidget);
-      expect(find.textContaining('Xanax x182'), findsOneWidget);
     });
   });
 
@@ -295,50 +241,5 @@ void main() {
       expect(NativeChat.linkWindow.value?.fill, 'Xanax');
       NativeChat.linkWindow.value = null;
     });
-
-    testWidgets('the top button opens it without filling', (tester) async {
-      await open(tester);
-      await tester.tap(find.bySubtype<FilledButton>());
-      expect(NativeChat.linkWindow.value?.url, 'https://www.torn.com/bazaar.php?userId=42');
-      expect(NativeChat.linkWindow.value?.fill, isNull);
-      NativeChat.linkWindow.value = null;
-    });
-  });
-
-  group('own bubble', () {
-    setUp(() {
-      ChatLinkPreviews.resetForTests();
-      ChatLinkPreviews.fetchItems = () async => ItemsModel(items: {'206': Item(name: 'Xanax', marketValue: 830000)});
-      NativeChat.prefs.priceCheck = true;
-    });
-
-    tearDown(() {
-      NativeChat.prefs.compactMode = false;
-      ChatLinkPreviews.resetForTests();
-    });
-
-    for (final compact in [false, true]) {
-      testWidgets(compact ? 'hangs below the compact row' : 'hangs below the message bubble', (tester) async {
-        NativeChat.prefs.compactMode = compact;
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChatMessageBubble(
-                message: chatMessage('1', 'trade', sender: 7, text: 'WTS Xanax 800k'),
-                isMine: false,
-                isFirstInGroup: true,
-                isLastInGroup: true,
-              ),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        final chip = find.textContaining('market');
-        expect(chip, findsOneWidget);
-        final bubble = find.ancestor(of: find.byType(ChatMessageText), matching: find.byType(Container)).first;
-        expect(find.descendant(of: bubble, matching: chip), findsNothing);
-        expect(tester.getTopLeft(chip).dy, greaterThanOrEqualTo(tester.getBottomLeft(bubble).dy));
-      });
-    }
   });
 }

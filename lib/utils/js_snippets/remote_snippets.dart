@@ -36,7 +36,7 @@ class RemoteSnippets {
   static const String pdaApi = 'pda_api';
 
   static final Map<String, RemoteSnippet> _registry = {
-    pdaApi: const RemoteSnippet(id: pdaApi, version: '1.0.0', buildBase: _pdaApiBaseJS),
+    pdaApi: const RemoteSnippet(id: pdaApi, version: '1.0.1', buildBase: _pdaApiBaseJS),
     cityItemsHighlight: const RemoteSnippet(
       id: cityItemsHighlight,
       version: '1.0.0',
@@ -99,57 +99,77 @@ class RemoteSnippets {
           });
         }
 
-        // Each helper de-duplicates identical calls fired within 2s
+        // Identical calls within 2s share one request
+        window.__pdaHttpPending = window.__pdaHttpPending || {};
+        var bodyKey = function(body) {
+          return typeof body === 'string' ? body : JSON.stringify(body);
+        };
+        var copyOf = function(p) {
+          return p.then(function(r) { return r && typeof r === 'object' ? Object.assign({}, r) : r; });
+        };
+        var sendOrShare = function(stamps, kind, key, fullKey, run) {
+          var pending = window.__pdaHttpPending;
+          var id = kind + ' ' + fullKey;
+          var now = Date.now();
+          if (stamps[key] && (now - stamps[key] < 2000)) {
+            if (!pending[id]) return;
+            return copyOf(pending[id]);
+          }
+          stamps[key] = now;
+          var p = run();
+          pending[id] = p;
+          setTimeout(function() { if (pending[id] === p) delete pending[id]; }, 2000);
+          return copyOf(p);
+        };
 
         window.loadedPdaApiGetUrls = window.loadedPdaApiGetUrls || {};
         window.PDA_httpGet = async function(url, headers) {
           headers = headers || {};
-          var now = Date.now();
-          if (window.loadedPdaApiGetUrls[url] && (now - window.loadedPdaApiGetUrls[url] < 2000)) return;
-          window.loadedPdaApiGetUrls[url] = now;
-          await window.__PDA_platformReadyPromise;
-          return window.flutter_inappwebview.callHandler('PDA_httpGet', url, headers);
+          var fullKey = url + '+' + JSON.stringify(headers);
+          return sendOrShare(window.loadedPdaApiGetUrls, 'GET', url, fullKey, async function() {
+            await window.__PDA_platformReadyPromise;
+            return window.flutter_inappwebview.callHandler('PDA_httpGet', url, headers);
+          });
         };
 
         window.loadedPdaApiPostUrls = window.loadedPdaApiPostUrls || {};
         window.PDA_httpPost = async function(url, headers, body) {
           var key = url + '+' + JSON.stringify(headers) + '+' + body;
-          var now = Date.now();
-          if (window.loadedPdaApiPostUrls[key] && (now - window.loadedPdaApiPostUrls[key] < 2000)) return;
-          window.loadedPdaApiPostUrls[key] = now;
-          await window.__PDA_platformReadyPromise;
-          return window.flutter_inappwebview.callHandler('PDA_httpPost', url, headers, body);
+          var fullKey = url + '+' + JSON.stringify(headers) + '+' + bodyKey(body);
+          return sendOrShare(window.loadedPdaApiPostUrls, 'POST', key, fullKey, async function() {
+            await window.__PDA_platformReadyPromise;
+            return window.flutter_inappwebview.callHandler('PDA_httpPost', url, headers, body);
+          });
         };
 
         window.loadedPdaApiPutUrls = window.loadedPdaApiPutUrls || {};
         window.PDA_httpPut = async function(url, headers, body) {
           var key = url + '+' + JSON.stringify(headers) + '+' + body;
-          var now = Date.now();
-          if (window.loadedPdaApiPutUrls[key] && (now - window.loadedPdaApiPutUrls[key] < 2000)) return;
-          window.loadedPdaApiPutUrls[key] = now;
-          await window.__PDA_platformReadyPromise;
-          return window.flutter_inappwebview.callHandler('PDA_httpPut', url, headers, body);
+          var fullKey = url + '+' + JSON.stringify(headers) + '+' + bodyKey(body);
+          return sendOrShare(window.loadedPdaApiPutUrls, 'PUT', key, fullKey, async function() {
+            await window.__PDA_platformReadyPromise;
+            return window.flutter_inappwebview.callHandler('PDA_httpPut', url, headers, body);
+          });
         };
 
         window.loadedPdaApiDeleteUrls = window.loadedPdaApiDeleteUrls || {};
         window.PDA_httpDelete = async function(url, headers) {
           headers = headers || {};
           var key = url + '+' + JSON.stringify(headers);
-          var now = Date.now();
-          if (window.loadedPdaApiDeleteUrls[key] && (now - window.loadedPdaApiDeleteUrls[key] < 2000)) return;
-          window.loadedPdaApiDeleteUrls[key] = now;
-          await window.__PDA_platformReadyPromise;
-          return window.flutter_inappwebview.callHandler('PDA_httpDelete', url, headers);
+          return sendOrShare(window.loadedPdaApiDeleteUrls, 'DELETE', key, key, async function() {
+            await window.__PDA_platformReadyPromise;
+            return window.flutter_inappwebview.callHandler('PDA_httpDelete', url, headers);
+          });
         };
 
         window.loadedPdaApiPatchUrls = window.loadedPdaApiPatchUrls || {};
         window.PDA_httpPatch = async function(url, headers, body) {
           var key = url + '+' + JSON.stringify(headers) + '+' + body;
-          var now = Date.now();
-          if (window.loadedPdaApiPatchUrls[key] && (now - window.loadedPdaApiPatchUrls[key] < 2000)) return;
-          window.loadedPdaApiPatchUrls[key] = now;
-          await window.__PDA_platformReadyPromise;
-          return window.flutter_inappwebview.callHandler('PDA_httpPatch', url, headers, body);
+          var fullKey = url + '+' + JSON.stringify(headers) + '+' + bodyKey(body);
+          return sendOrShare(window.loadedPdaApiPatchUrls, 'PATCH', key, fullKey, async function() {
+            await window.__PDA_platformReadyPromise;
+            return window.flutter_inappwebview.callHandler('PDA_httpPatch', url, headers, body);
+          });
         };
 
         // Per-script native storage

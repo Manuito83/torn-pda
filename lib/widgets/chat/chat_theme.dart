@@ -149,3 +149,15 @@ ThemeData chatDarkTheme(ThemeData base, {required bool extra}) {
   );
   return _readableButtons(dark, Colors.blueGrey[200]!);
 }
+
+ButtonStyle chatSecondaryButton(ColorScheme scheme) => ButtonStyle(
+  foregroundColor: WidgetStateProperty.resolveWith(
+    (states) => scheme.onSurface.withValues(alpha: states.contains(WidgetState.disabled) ? 0.38 : 1),
+  ),
+  side: WidgetStateProperty.resolveWith(
+    (states) => BorderSide(
+      width: 1.5,
+      color: scheme.onSurface.withValues(alpha: states.contains(WidgetState.disabled) ? 0.12 : 0.7),
+    ),
+  ),
+);

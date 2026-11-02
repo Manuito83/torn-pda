@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/bars_model.dart';
+import 'package:torn_pda/models/chaining/watch_notices.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -46,11 +47,15 @@ class ChainWidgetState extends State<ChainWidget> {
   final GlobalKey _showcasePip = GlobalKey();
 
   @override
+  void initState() {
+    super.initState();
+    _chainStatusProvider.addChainWidget();
+  }
+
+  @override
   void dispose() {
-    if (!_chainStatusProvider.watcherActive) {
-      _chainStatusProvider.widgetVisible = false;
-      _chainStatusProvider.tryToDeactivateStatus();
-    }
+    _chainStatusProvider.removeChainWidget();
+    if (!_chainStatusProvider.watcherActive) _chainStatusProvider.tryToDeactivateStatus();
     super.dispose();
   }
 
@@ -58,7 +63,6 @@ class ChainWidgetState extends State<ChainWidget> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
     initialise();
-    _chainStatusProvider.widgetVisible = true;
 
     Color? titleColor;
     if (widget.alwaysDarkBackground) {
@@ -68,7 +72,7 @@ class ChainWidgetState extends State<ChainWidget> {
     }
 
     final settings = Provider.of<SettingsProvider>(context);
-    final miniHidden = chainMiniEnabled && ChainMiniWindow.hiddenByBrowser(context);
+    final miniHidden = chainMiniHiddenByBrowser(context);
 
     return GetBuilder(
       builder: (ChainStatusController chainP) {
@@ -91,7 +95,7 @@ class ChainWidgetState extends State<ChainWidget> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (!chainP.panicModeEnabled)
-                    const SizedBox(width: chainMiniEnabled ? 5 : 35), // Centers the widget without P icon
+                    const SizedBox(width: 5), // Centers the widget without P icon
                   SizedBox(
                     width: 30,
                     child: !chainP.modelError || (chainP.modelError && chainP.chainWatcherDefcon == WatchDefcon.apiFail)
@@ -118,33 +122,32 @@ class ChainWidgetState extends State<ChainWidget> {
                           )
                         : const SizedBox.shrink(),
                   ),
-                  if (chainMiniEnabled)
-                    SizedBox(
-                      width: 30,
+                  SizedBox(
+                    width: 30,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: chainP.miniWindowAvailable,
+                      builder: (context, available, child) => available ? child! : const SizedBox.shrink(),
                       child: ValueListenableBuilder<bool>(
-                        valueListenable: ChainMiniWindow.available,
-                        builder: (context, available, child) => available ? child! : const SizedBox.shrink(),
-                        child: ValueListenableBuilder<bool>(
-                          valueListenable: ChainMiniWindow.open,
-                          builder: (context, open, _) => Tooltip(
-                            message: 'Live browser view',
-                            child: GestureDetector(
-                              onTap: () => _toggleMini(miniHidden),
-                              child: Icon(
-                                Icons.cell_tower,
-                                color: chainP.webLive || (open && !miniHidden)
-                                    ? widget.alwaysDarkBackground
-                                        ? Colors.orange[700]
-                                        : Colors.orange[900]
-                                    : widget.alwaysDarkBackground
-                                        ? Colors.grey
-                                        : _themeProvider.mainText,
-                              ),
+                        valueListenable: chainP.miniWindowOpen,
+                        builder: (context, open, _) => Tooltip(
+                          message: 'Live browser view',
+                          child: GestureDetector(
+                            onTap: () => _toggleMini(miniHidden),
+                            child: Icon(
+                              Icons.cell_tower,
+                              color: chainP.webLive || (open && !miniHidden)
+                                  ? widget.alwaysDarkBackground
+                                      ? Colors.orange[700]
+                                      : Colors.orange[900]
+                                  : widget.alwaysDarkBackground
+                                      ? Colors.grey
+                                      : _themeProvider.mainText,
                             ),
                           ),
                         ),
                       ),
                     ),
+                  ),
                   if (chainP.panicModeEnabled)
                     SizedBox(
                       width: 35,
@@ -390,7 +393,7 @@ class ChainWidgetState extends State<ChainWidget> {
                           )
                         : null,
                   ),
-                  if (chainMiniEnabled && chainP.panicModeEnabled) const SizedBox(width: 30),
+                  if (chainP.panicModeEnabled) const SizedBox(width: 30),
                 ],
               ),
             ),
@@ -434,31 +437,18 @@ class ChainWidgetState extends State<ChainWidget> {
     }
   }
 
-  void _activateChainWatcher({bool withPanic = false}) {
-    _chainStatusProvider.activateWatcher();
-
-    String message = 'Chain watcher activated!\n\nYour phone screen will remain on, consider plugging it in.';
-    if (withPanic) {
-      message = 'Panic mode activated!\n\nYour phone screen will remain on, consider plugging it in.';
-    }
-
-    BotToast.showText(
-      text: message,
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.green[700]!,
-      duration: const Duration(seconds: 7),
-      contentPadding: const EdgeInsets.all(10),
-    );
+  void _activateChainWatcher() {
+    _chainStatusProvider.setWatcher(true);
+    _notice(watcherNotice(true), Colors.green[700]!);
   }
 
   void _toggleMini(bool hidden) {
-    ChainMiniWindow.toggle();
+    _chainStatusProvider.toggleMiniWindow();
     if (!hidden) return;
     BotToast.showText(
-      text: ChainMiniWindow.open.value ? 'Live view opens when you leave the browser' : 'Live view closed',
+      text: _chainStatusProvider.miniWindowOpen.value
+          ? 'Live view opens when you leave the browser'
+          : 'Live view closed',
       textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.blue[700]!,
       duration: const Duration(seconds: 3),
@@ -467,57 +457,26 @@ class ChainWidgetState extends State<ChainWidget> {
   }
 
   void _deactivateChainWatcher() {
-    _chainStatusProvider.deactivateWatcher();
-
-    if (_chainStatusProvider.panicModeActive) {
-      _chainStatusProvider.deactivatePanicMode();
-    }
-
-    BotToast.showText(
-      text: 'Chain watcher deactivated!',
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.orange[700]!,
-      duration: const Duration(seconds: 5),
-      contentPadding: const EdgeInsets.all(10),
-    );
+    _chainStatusProvider.setWatcher(false);
+    _notice(watcherNotice(false), Colors.orange[700]!);
   }
 
   void _activatePanicMode() {
-    _chainStatusProvider.activatePanicMode();
-
-    String message = 'Panic mode activated!';
-    if (!_chainStatusProvider.watcherActive) {
-      message = 'Chain watcher and panic mode have been activated!'
-          '\n\nYour phone screen will remain on, consider plugging it in.';
-      _chainStatusProvider.activateWatcher();
-    }
-
-    BotToast.showText(
-      text: message,
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.green[700]!,
-      duration: const Duration(seconds: 7),
-      contentPadding: const EdgeInsets.all(10),
-    );
+    final withWatcher = _chainStatusProvider.setPanic(true);
+    _notice(panicNotice(true, withWatcher: withWatcher), Colors.green[700]!);
   }
 
   void _deactivatePanicMode() {
-    _chainStatusProvider.deactivatePanicMode();
+    _chainStatusProvider.setPanic(false);
+    _notice(panicNotice(false, withWatcher: false), Colors.orange[700]!);
+  }
 
+  void _notice(WatchNotice notice, Color color) {
     BotToast.showText(
-      text: 'Panic mode deactivated!',
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.orange[700]!,
-      duration: const Duration(seconds: 5),
+      text: notice.text,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: color,
+      duration: Duration(seconds: notice.seconds),
       contentPadding: const EdgeInsets.all(10),
     );
   }

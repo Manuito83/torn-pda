@@ -43,7 +43,10 @@ class _ChatSlotSheetState extends State<ChatSlotSheet> {
   late final Map<String, TextEditingController> _fields = {
     for (final key in widget.asks) key: TextEditingController(text: widget.values[key] ?? ''),
   };
-  late ChatItemPrice? _picked = ChatTemplate.lastItem?.name == widget.values['item'] ? ChatTemplate.lastItem : null;
+  late ChatItemPrice? _picked = switch (NativeChat.controller.lastItem) {
+    final item? when item.name == widget.values['item'] => item,
+    _ => null,
+  };
   ItemsModel? _catalog;
   bool _failed = false;
   int _percent = 0;

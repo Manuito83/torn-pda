@@ -44,7 +44,7 @@ class _MItem {
   final bool chatOnly;
   final String? docUrl;
   final List<FeatureDiagramScene> diagrams;
-  final bool Function(BuildContext)? pinOpenWhen;
+  final bool pinned;
 
   const _MItem(
     this.text, {
@@ -54,7 +54,7 @@ class _MItem {
     this.chatOnly = false,
     this.docUrl,
     this.diagrams = const [],
-    this.pinOpenWhen,
+    this.pinned = false,
   });
 
   bool get visibleOnThisPlatform =>
@@ -64,8 +64,6 @@ class _MItem {
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
   String get description => text.replaceAll(_creditTag, '').trim();
 }
-
-bool _always(BuildContext context) => true;
 
 class _MSection {
   final IconData icon;
@@ -114,7 +112,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem(
             "Chat: Torn's chat is now built into Torn PDA",
             chatOnly: true,
-            pinOpenWhen: _always,
+            pinned: true,
             detail:
                 'Chat without leaving the game. The chat floats over the browser in a window you can move, resize or '
                 'shrink to a bubble, and any conversation can pop out on its own.\n\n'
@@ -147,12 +145,12 @@ List<_MVersion> _modernChangelog() => [
               FeatureDiagramScene.copyMainTab,
               FeatureDiagramScene.linkCurrentTab,
             ],
-            pinOpenWhen: _always,
+            pinned: true,
           ),
           _MItem(
             'Floating window: keep watching the chain or up to 4 players over other apps',
             androidOnly: true,
-            pinOpenWhen: _always,
+            pinned: true,
             detail:
                 'The app shrinks into a small window that stays on top of other apps. Tap the window icon in the chain '
                 'widget to watch the chain (counter, chain watcher colors, blinking border and, in panic mode, a '
@@ -245,6 +243,8 @@ List<_MVersion> _modernChangelog() => [
           ),
           _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
           _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
+          _MItem('Browser: improved page load speed [Xentac]'),
+          _MItem('Scripts: more reliable injection and PDA_http requests [Xentac]'),
         ],
       ),
       _MSection(
@@ -255,6 +255,8 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Fixed alerts not loading or saving after the app recovers its session'),
           _MItem('Browser: rotating or resizing the screen no longer reloads your tabs'),
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
+          _MItem('Browser: find in page arrows are visible in chaining mode'),
+          _MItem('Calendar: fixed event dates'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Travel: flight times now include travel time reduction perks'),
           _MItem('Fixed unread messages count in the home screen widget', androidOnly: true),
@@ -4148,7 +4150,7 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
-    if (widget.item.pinOpenWhen?.call(context) ?? false) {
+    if (widget.item.pinned) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [_front(pinned: true), const SizedBox(height: 8), _back(pinned: true)],

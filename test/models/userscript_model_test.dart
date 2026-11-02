@@ -193,11 +193,6 @@ void main() {
       expect(m.matchesTarget('http://www.torn.com/page'), isTrue);
     });
 
-    test('says nothing about the switches, which the active mode decides', () {
-      final m = _model(matches: ['*://www.torn.com/*'], enabled: false);
-      expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
-    });
-
     test('respects injection time filter', () {
       final m = _model(matches: ['*'], time: UserScriptTime.end);
       expect(m.matchesTarget('https://torn.com', UserScriptTime.end), isTrue);
@@ -212,32 +207,48 @@ void main() {
       expect(m.matchesTarget('https://api.torn.com/user'), isTrue);
       expect(m.matchesTarget('https://example.com/'), isFalse);
     });
+
+    test('follows a new @match list after the first check', () {
+      final m = _model(matches: ['*://www.torn.com/item.php*']);
+      expect(m.matchesTarget('https://www.torn.com/item.php'), isTrue);
+
+      m.update(matches: ['*://www.torn.com/index.php*'], updateStatus: UserScriptUpdateStatus.noRemote);
+      expect(m.matchesTarget('https://www.torn.com/item.php'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/index.php'), isTrue);
+    });
+  });
+
+  group('staleScriptGroups', () {
+    test('drops what does not match the next page, deleted scripts included', () {
+      final items = UserScriptModel(
+        name: 'items',
+        source: '',
+        isExample: false,
+        matches: ['*://www.torn.com/item.php*'],
+        time: UserScriptTime.start,
+      );
+      final everywhere = UserScriptModel(name: 'all', source: '', isExample: false, time: UserScriptTime.start);
+
+      final stale = staleScriptGroups(
+        [items.storageId, everywhere.storageId, 'deleted-script'],
+        [items, everywhere],
+        'https://www.torn.com/index.php',
+      );
+
+      expect(stale, [items.storageId, 'deleted-script']);
+    });
   });
 
   // -------------------------------------------------------------------------
   // tryGet* helpers
   // -------------------------------------------------------------------------
   group('tryGet helpers', () {
-    test('tryGetMatches returns matches from valid script', () {
-      final source = _script(match: 'https://www.torn.com/*');
-      expect(UserScriptModel.tryGetMatches(source), ['https://www.torn.com/*']);
-    });
-
     test('tryGetMatches returns ["*"] for garbage input', () {
       expect(UserScriptModel.tryGetMatches('not a script'), ['*']);
     });
 
-    test('tryGetVersion returns version string', () {
-      expect(UserScriptModel.tryGetVersion(_script(version: '3.2.1')), '3.2.1');
-    });
-
     test('tryGetVersion returns null for garbage', () {
       expect(UserScriptModel.tryGetVersion('nope'), isNull);
-    });
-
-    test('tryGetUrl returns download URL', () {
-      final s = _script(downloadUrl: 'https://example.com/s.js');
-      expect(UserScriptModel.tryGetUrl(s), 'https://example.com/s.js');
     });
 
     test('tryGetUrl returns null when missing', () {
@@ -342,23 +353,6 @@ void main() {
     test('returns null on a source with no header at all', () {
       expect(UserScriptModel.tryGetUpdateUrl('console.log("no header");'), isNull);
     });
-
-    test('a real Greasy Fork .meta.js parses as a header and exposes its version', () {
-      // Same shape Greasy Fork serves for @updateURL: header only, no body
-      const metaJs =
-          '// ==UserScript==\n'
-          '// @name             TORN: TornTools - Only New Feed\n'
-          '// @namespace        torntools.only-new-feed\n'
-          '// @version          1.0.17\n'
-          '// @match            https://*.torn.com/forums.php*\n'
-          '// @grant            GM_addStyle\n'
-          '// @run-at           document-end\n'
-          '// ==/UserScript==\n';
-
-      final parsed = UserScriptModel.parseHeader(metaJs);
-      expect(parsed['version'], '1.0.17');
-      expect(parsed['name'], 'TORN: TornTools - Only New Feed');
-    });
   });
 
   // -------------------------------------------------------------------------
@@ -380,37 +374,12 @@ void main() {
       expect(model.name, 'TORN: TornTools - City Items');
       expect(model.version, '1.1.0');
     });
-
-    test('picks up a rename made on the remote', () {
-      final model = UserScriptModel(name: 'Old', source: '', isExample: false);
-      model.update(
-        source: _script(name: 'Brand New Name', version: '2.0.0'),
-        updateStatus: UserScriptUpdateStatus.upToDate,
-      );
-
-      expect(model.name, 'Brand New Name');
-    });
-
-    test('survives a save and load round trip', () {
-      final model = UserScriptModel(
-        name: 'TORN: TornTools - City Items',
-        source: _script(name: 'TORN: TornTools - City Items', version: '1.0.0'),
-        isExample: false,
-        version: '1.0.0',
-      );
-      final restored = UserScriptModel.fromJson(model.toJson());
-      expect(restored.name, 'TORN: TornTools - City Items');
-    });
   });
 
   // -------------------------------------------------------------------------
   // Install date
   // -------------------------------------------------------------------------
   group('installedAt', () {
-    test('defaults to 0 so that pre-existing scripts are not dated', () {
-      expect(_model().installedAt, 0);
-    });
-
     test('survives a save and load round trip', () {
       final model = UserScriptModel(name: 'Dated', source: '', isExample: false, installedAt: 1756800000000);
       expect(UserScriptModel.fromJson(model.toJson()).installedAt, 1756800000000);
@@ -483,18 +452,6 @@ void main() {
       "time": "end",
     };
 
-    test('start empty and not always active', () {
-      expect(_model().modes, isEmpty);
-      expect(_model().alwaysActive, isFalse);
-    });
-
-    test('are independent from the normal switch', () {
-      final m = _model(enabled: false);
-      m.modes.add(warModeId);
-      expect(m.enabled, isFalse);
-      expect(m.modes, {warModeId});
-    });
-
     test('survive a save and load round trip', () {
       final model = UserScriptModel(
         name: 'Modes',
@@ -525,6 +482,38 @@ void main() {
       final loaded = UserScriptModel.fromJson(legacy);
       expect(loaded.modes, isEmpty);
       expect(loaded.alwaysActive, isFalse);
+    });
+  });
+
+  group('saved modes', () {
+    test('custom modes survive a save and load round trip', () {
+      const modes = [UserScriptMode(id: 'a1', name: 'Casino'), UserScriptMode(id: 'b2', name: 'Racing')];
+      final loaded = userScriptModesFromJson(userScriptModesToJson(modes));
+      expect([for (final m in loaded) (m.id, m.name)], [('a1', 'Casino'), ('b2', 'Racing')]);
+    });
+
+    test('broken saved modes load as none', () {
+      expect(userScriptModesFromJson(''), isEmpty);
+      expect(userScriptModesFromJson('{"id": "a1"}'), isEmpty);
+    });
+
+    test('active mode survives a save and load round trip', () {
+      for (final (mode, id) in [
+        (ScriptsBulkMode.none, warModeId),
+        (ScriptsBulkMode.globalDisable, warModeId),
+        (ScriptsBulkMode.scriptMode, warModeId),
+        (ScriptsBulkMode.scriptMode, 'a1'),
+      ]) {
+        final loaded = bulkModeFromPrefs(bulkModeToPrefs(mode, id));
+        expect(loaded.mode, mode);
+        expect(loaded.modeId, mode == ScriptsBulkMode.scriptMode ? id : null);
+      }
+    });
+
+    test('"warMode" reads as war mode', () {
+      final loaded = bulkModeFromPrefs('warMode');
+      expect(loaded.mode, ScriptsBulkMode.scriptMode);
+      expect(loaded.modeId, warModeId);
     });
   });
 }

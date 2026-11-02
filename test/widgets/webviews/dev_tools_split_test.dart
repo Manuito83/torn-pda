@@ -106,7 +106,7 @@ void main() {
       terminal.addInstruction(keyOf('tab1'), 'from tab1');
       terminal.addInstruction(keyOf('tab2'), 'from tab2');
     });
-    expect(find.text('Dev Tools · Faction'), findsOneWidget);
+    expect(find.text('Dev Tools - Faction'), findsOneWidget);
     expect(find.text('from tab1'), findsOneWidget);
 
     await act(tester, () => provider.activateTab(at('tab2')));
@@ -120,20 +120,8 @@ void main() {
     expect(find.text('after rebuild'), findsOneWidget);
   });
 
-  testWidgets('in a slot the arrow closes them and there is no timer menu', (tester) async {
-    await pumpDevTools(tester, const DevToolsMainPage());
-    await act(tester, () => provider.openSplitDevTools(provider.tabList[provider.currentTab].id));
-    expect(find.byIcon(Icons.timer_outlined), findsNothing);
-
-    await tester.tap(find.byIcon(Icons.arrow_back));
-    await act(tester, () {});
-    expect(provider.splitDevToolsSlot, isNull);
-    expect(provider.splitLeftSlot, SplitSlotContent.app);
-  });
-
-  testWidgets('full screen they keep the timer menu and follow their tab after a rebuild', (tester) async {
+  testWidgets('full screen they follow their tab after a rebuild', (tester) async {
     await pumpDevTools(tester, const DevToolsMainPage(tabUid: 'tab3'));
-    expect(find.byIcon(Icons.timer_outlined), findsOneWidget);
 
     await act(tester, () {
       provider.rebuildUnresponsiveWebView(tabUid: 'tab3', isChainingBrowser: false, chainingPayload: null);

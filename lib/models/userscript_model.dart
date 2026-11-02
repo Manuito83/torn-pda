@@ -4,6 +4,9 @@
 
 // Dart imports:
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import "package:http/http.dart" as http;
 import 'package:uuid/uuid.dart';
 import 'userscripts/script_header_model.dart';
@@ -22,6 +25,54 @@ enum UserScriptUpdateStatus { upToDate, updateAvailable, localModified, noRemote
 enum UserScriptSort { name, dateNewest }
 
 const String warModeId = "war";
+
+enum ScriptsBulkMode { none, globalDisable, scriptMode }
+
+class UserScriptMode {
+  const UserScriptMode({required this.id, required this.name});
+
+  factory UserScriptMode.fromJson(Map<String, dynamic> json) => UserScriptMode(id: json["id"], name: json["name"]);
+
+  static const war = UserScriptMode(id: warModeId, name: "War mode");
+
+  final String id;
+  final String name;
+
+  bool get isWar => id == warModeId;
+  IconData get icon => isWar ? MdiIcons.swordCross : Icons.tune;
+  Color get color => isWar ? Colors.orange[800]! : Colors.indigo[600]!;
+
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
+}
+
+List<UserScriptMode> userScriptModesFromJson(String encoded) {
+  try {
+    return [for (final m in json.decode(encoded) as List) UserScriptMode.fromJson(m)];
+  } catch (_) {
+    return [];
+  }
+}
+
+String userScriptModesToJson(List<UserScriptMode> modes) => json.encode(modes);
+
+String bulkModeToPrefs(ScriptsBulkMode mode, String activeModeId) => switch (mode) {
+      ScriptsBulkMode.none => "none",
+      ScriptsBulkMode.globalDisable => "globalDisable",
+      ScriptsBulkMode.scriptMode => activeModeId == warModeId ? "warMode" : "mode:$activeModeId",
+    };
+
+({ScriptsBulkMode mode, String? modeId}) bulkModeFromPrefs(String saved) {
+  if (saved == "globalDisable") return (mode: ScriptsBulkMode.globalDisable, modeId: null);
+  if (saved == "warMode") return (mode: ScriptsBulkMode.scriptMode, modeId: warModeId);
+  if (saved.startsWith("mode:")) return (mode: ScriptsBulkMode.scriptMode, modeId: saved.substring(5));
+  return (mode: ScriptsBulkMode.none, modeId: null);
+}
+
+// Registered groups not meant for url
+List<String> staleScriptGroups(Iterable<String> registered, Iterable<UserScriptModel> active, String url) {
+  final keep = {for (final s in active) if (s.matchesTarget(url)) s.storageId};
+  return registered.where((g) => !keep.contains(g)).toList();
+}
 
 class UserScriptModel {
   UserScriptModel({
@@ -313,9 +364,43 @@ class UserScriptModel {
     return inSource && source.toLowerCase().contains(q);
   }
 
+  // Compiled @match patterns, rebuilt when matches changes
+  List<String>? _compiledFor;
+  List<RegExp?> _compiled = const [];
+
   /// Whether the script targets this url and injection time
-  bool matchesTarget(String url, [UserScriptTime? time]) =>
-      (this.time == time || time == null) && matches.any((match) => _matchPattern(match, url));
+  bool matchesTarget(String url, [UserScriptTime? time]) {
+    if (time != null && this.time != time) return false;
+    if (!listEquals(_compiledFor, matches)) {
+      _compiledFor = List.of(matches);
+      _compiled = [for (final m in _compiledFor!) m == '*' ? null : _tryPatternToRegex(m)];
+    }
+    String? withPath;
+    for (var i = 0; i < _compiledFor!.length; i++) {
+      final pattern = _compiledFor![i];
+      if (pattern == '*') return true;
+      withPath ??= _withPath(url);
+      final regex = _compiled[i];
+      // Non-standard pattern: old "contains" heuristic
+      final hit = regex != null ? regex.hasMatch(withPath) : withPath.contains(pattern.replaceAll('*', ''));
+      if (hit) return true;
+    }
+    return false;
+  }
+
+  static RegExp? _tryPatternToRegex(String pattern) {
+    try {
+      return _patternToRegex(pattern);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // The regex always needs a "/" after the host
+  static String _withPath(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null && uri.path.isEmpty ? '$url/' : url;
+  }
 
   /// Converts a Tampermonkey-style @match pattern to a [RegExp].
   ///
@@ -371,27 +456,6 @@ class UserScriptModel {
     final pathRe = RegExp.escape(path).replaceAll(r'\*', '.*');
 
     return RegExp('^$schemeRe://$hostRe/$pathRe\$');
-  }
-
-  /// Returns `true` when [url] satisfies the given @match [pattern].
-  ///
-  /// A bare `*` is kept as the universal wildcard for backwards compatibility.
-  /// Invalid patterns silently return `false` to avoid breaking the app.
-  static bool _matchPattern(String pattern, String url) {
-    if (pattern == '*') return true;
-    try {
-      // Normalise URLs without a path (e.g. "https://example.com") so
-      // the regex always has a "/" to match against.
-      final uri = Uri.tryParse(url);
-      if (uri != null && uri.path.isEmpty) {
-        url = '$url/';
-      }
-      return _patternToRegex(pattern).hasMatch(url);
-    } catch (_) {
-      // Fall back to the old "contains" heuristic so we don't break scripts
-      // that use a non-standard pattern we haven't accounted for.
-      return url.contains(pattern.replaceAll('*', ''));
-    }
   }
 
   void update({

@@ -13,11 +13,11 @@ import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/torn-pda-native/stats/app_settings_daily.dart';
-import 'package:torn_pda/utils/discreet_schedule.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
@@ -48,8 +48,8 @@ class FirestoreHelper {
     }
   }
 
-  // Null when there is no Firebase user yet, so callers never write to a random document
-  DocumentReference<Map<String, dynamic>>? get _playerDoc {
+  // Null without a Firebase user
+  DocumentReference<Map<String, dynamic>>? _playerDoc() {
     if (_uid == null || _uid!.isEmpty) {
       final currentUid = FirebaseAuth.instance.currentUser?.uid;
       if (currentUid == null) return null;
@@ -65,7 +65,7 @@ class FirestoreHelper {
       : "windows";
 
   Future<bool> _updateAlertField(String fieldName, Map<String, Object?> update) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
     try {
       await playerDoc.update(update);
@@ -79,7 +79,7 @@ class FirestoreHelper {
   // Settings, when user initialized after API key validated
   Future<FirebaseUserModel?> uploadUsersProfileDetail(OwnProfileBasic profile, {bool userTriggered = false}) async {
     if (_alreadyUploaded && !userTriggered) return null;
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return null;
     _alreadyUploaded = true;
 
@@ -290,7 +290,7 @@ class FirestoreHelper {
   }
 
   Future<bool> updateActiveRestockAlerts(Map restockMap) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
     return playerDoc
         .update({"restockActiveAlerts": restockMap})
@@ -348,7 +348,7 @@ class FirestoreHelper {
   // Sets every followed key to now, so restocks already seen are not notified
   // Returns false without writing anything if the current alerts can't be read
   Future<bool> _updateWithCityShopMarksNow(String fieldName, Map<String, Object?> update) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
     Map<String, dynamic> alerts;
     try {
@@ -373,7 +373,7 @@ class FirestoreHelper {
 
   // Single key, the server writes the others
   Future<bool> setCityShopActiveAlert(String key, bool active) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
     return playerDoc
         .update({
@@ -396,7 +396,7 @@ class FirestoreHelper {
 
   // Read from the player document, marks as milliseconds; null without a user
   Future<Map<String, dynamic>?> getCityShopActiveAlerts() async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return null;
     final doc = await playerDoc.get();
     final remote = doc.data()?["cityShopActiveAlerts"];
@@ -485,7 +485,7 @@ class FirestoreHelper {
   }
 
   Future<void> addToEventsFilter(String filter) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     final List currentFilter = _firebaseUserModel!.eventsFilter;
     currentFilter.add(filter);
@@ -493,7 +493,7 @@ class FirestoreHelper {
   }
 
   Future<void> removeFromEventsFilter(String filter) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     final List currentFilter = _firebaseUserModel!.eventsFilter;
     // Avoid duplicities by removing more than one item if they exist
@@ -514,7 +514,7 @@ class FirestoreHelper {
   }
 
   Future<void> addToRefillsRequested(String request) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     final List currentRequests = _firebaseUserModel!.refillsRequested;
     if (!currentRequests.contains(request)) {
@@ -524,7 +524,7 @@ class FirestoreHelper {
   }
 
   Future<void> removeFromRefillsRequested(String request) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     final List currentRequests = _firebaseUserModel!.refillsRequested;
     // Avoid duplicities by removing more than one item if they exist
@@ -537,7 +537,7 @@ class FirestoreHelper {
   }
 
   Future<bool> uploadLastActiveTimeAndTokensToFirebase(int timeStamp) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
 
     try {
@@ -554,7 +554,7 @@ class FirestoreHelper {
         updatePayload["apiKey"] = apiKey;
       }
 
-      // Keeps a token-recreated doc identifiable even when the profile call fails
+      // In case the profile call fails
       final playerId = UserHelper.playerId;
       if (playerId > 0) {
         updatePayload["playerId"] = playerId;
@@ -602,7 +602,7 @@ class FirestoreHelper {
   // Init State in alerts
   Future<FirebaseUserModel?> getUserProfile({bool force = false, bool fromServer = false}) async {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
-    final docRef = _playerDoc;
+    final docRef = _playerDoc();
     if (docRef == null) return null;
     DocumentSnapshot<Map<String, dynamic>> userReceived;
     if (fromServer) {
@@ -646,7 +646,7 @@ class FirestoreHelper {
   }
 
   Future<Map<String, dynamic>?> cloneUserProfileFromPayload(Map<String, dynamic> payload) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return null;
 
     try {
@@ -667,7 +667,7 @@ class FirestoreHelper {
   }
 
   Future<bool> applyAlertsFromPayload(Map<String, dynamic> payload, {bool resetRestockTimestamps = false}) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
 
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -714,13 +714,13 @@ class FirestoreHelper {
 
   Future deleteUserProfile() async {
     _alreadyUploaded = false;
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     await playerDoc.delete();
   }
 
   Future<void> setVibrationPattern(String? pattern) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     await playerDoc.update({"vibration": pattern});
   }
@@ -755,13 +755,13 @@ class FirestoreHelper {
   // ----------------------------
 
   Future<void> subscribeToStockMarketNotification(bool? subscribe) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     await playerDoc.update({"stockMarketNotification": subscribe});
   }
 
   Future<bool> addStockMarketShare(String? ticker, String action) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
     final List currentStocks = _firebaseUserModel!.stockMarketShares;
     // Format: ticker-gain-price-loss-price ('n' for empty)
@@ -803,7 +803,7 @@ class FirestoreHelper {
   }
 
   Future<void> toggleNpcAlert({required String id, required int level, required bool active}) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     if (active) {
       if (!_firebaseUserModel!.lootAlerts.contains("$id:$level")) {
@@ -859,7 +859,7 @@ class FirestoreHelper {
     if (Platform.isWindows) return;
     try {
       await uidCompleter.future;
-      final playerDoc = _playerDoc;
+      final playerDoc = _playerDoc();
       if (playerDoc == null) return;
 
       final token = await _getMessagingToken();
@@ -878,7 +878,7 @@ class FirestoreHelper {
     if (Platform.isWindows || newToken.isEmpty) return;
     try {
       await uidCompleter.future;
-      final playerDoc = _playerDoc;
+      final playerDoc = _playerDoc();
       if (playerDoc == null) return;
 
       Prefs().setFCMToken(newToken);
@@ -901,7 +901,7 @@ class FirestoreHelper {
   }
 
   Future<void> disableLiveActivityTravel() async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
 
     log("Disabling Live Activities for travel. Deleting token from Firestore");
@@ -912,7 +912,7 @@ class FirestoreHelper {
   }
 
   Future<void> disableLiveActivityRacing() async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
 
     log("Disabling Live Activities for racing. Deleting token from Firestore");
@@ -931,7 +931,7 @@ class FirestoreHelper {
     required int intelligence,
     required int endurance,
   }) async {
-    final playerDoc = _playerDoc;
+    final playerDoc = _playerDoc();
     if (playerDoc == null) return;
     await playerDoc.update({
       "workStatsManualLaborTarget": manualLabor,

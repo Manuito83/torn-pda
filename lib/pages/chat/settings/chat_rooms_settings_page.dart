@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
+import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
@@ -39,15 +40,15 @@ class ChatRoomsSettingsPage extends StatelessWidget {
     );
   }
 
-  String _state(String id) {
+  String _state(ChatClock clock, String id) {
     final prefs = NativeChat.prefs;
     final until = prefs.frozenUntilOf(id);
     final state = switch (prefs.roomState(id)) {
       ChatRoomState.live => 'Live',
-      ChatRoomState.frozen => until == null ? 'Frozen' : 'Frozen until ${NativeChat.prefs.stamp(until)}',
+      ChatRoomState.frozen => until == null ? 'Frozen' : 'Frozen until ${clock.stamp(until)}',
       ChatRoomState.hidden => 'Hidden',
     };
-    final listed = ChatRooms.whenListed(id);
+    final listed = ChatRooms.whenListed(id, prefs.remoteRooms);
     return listed == null ? state : '$state - $listed';
   }
 
@@ -58,11 +59,13 @@ class ChatRoomsSettingsPage extends StatelessWidget {
       builder: (context) {
         final prefs = NativeChat.prefs;
         final chat = NativeChat.controller;
+        final clock = chatClockOf(context);
         final listed = [
           for (final r in chat.rooms)
             if (!r.isDm) r.id,
         ];
-        final rooms = [...listed, ...ChatRooms.occasional.where((id) => !listed.contains(id))];
+        final remote = prefs.remoteRooms;
+        final rooms = [...listed, ...ChatRooms.occasional(remote).where((id) => !listed.contains(id))];
         return [
           const ChatSettingsHeading(
             'Where rooms go',
@@ -70,7 +73,7 @@ class ChatRoomsSettingsPage extends StatelessWidget {
                 'On top: first, above pinned chats. By activity: mixed with the rest. Social tab: a tab of their own',
           ),
           _placementRow(context, 'global', 'Rooms like Global and Trade'),
-          for (final room in ChatPrefs.placedRooms) _placementRow(context, room, ChatRooms.labelOf(room)),
+          for (final room in prefs.placedRooms) _placementRow(context, room, ChatRooms.labelOf(room, remote)),
           const SizedBox(height: 8),
           const ChatSettingsHeading(
             'Each room',
@@ -81,13 +84,15 @@ class ChatRoomsSettingsPage extends StatelessWidget {
           for (final id in rooms)
             ChatSettingsLink(
               leading: ChatRoomGlyphBox(chat.roomById(id)),
-              title: ChatRooms.isKnown(id) ? ChatRooms.labelOf(id) : chat.roomById(id).name,
-              subtitle: _state(id),
+              title: ChatRooms.isKnown(id, remote) ? ChatRooms.labelOf(id, remote) : chat.roomById(id).name,
+              subtitle: _state(clock, id),
               onTap: () {
                 final room = chat.roomById(id);
                 showChatRoomAlerts(
                   context,
-                  ChatRooms.isKnown(id) ? ChatRoom(id: id, name: ChatRooms.labelOf(id), type: room.type) : room,
+                  ChatRooms.isKnown(id, remote)
+                      ? ChatRoom(id: id, name: ChatRooms.labelOf(id, remote), type: room.type)
+                      : room,
                 );
               },
             ),
@@ -112,10 +117,10 @@ class ChatRoomsSettingsPage extends StatelessWidget {
             ),
           ),
           const ChatSettingsHeading('Unread counts shown'),
-          for (final room in ChatPrefs.bubbleOptions)
+          for (final room in prefs.bubbleOptions)
             CheckboxListTile(
               secondary: room == 'dm' ? Icon(chatRoomIcon(room)) : ChatRoomGlyphBox(chat.roomById(room)),
-              title: Text(ChatRooms.labelOf(room)),
+              title: Text(ChatRooms.labelOf(room, remote)),
               subtitle: ChatPrefs.globalRooms.contains(room) ? const Text('Torn never marks it as read') : null,
               value: prefs.bubbleRooms.contains(room),
               onChanged: (v) => prefs.setBubbleRoom(room, v ?? false),

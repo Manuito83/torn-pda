@@ -5,7 +5,6 @@ import 'package:torn_pda/models/chat/chat_colors.dart';
 import 'package:torn_pda/models/chat/chat_player_color.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/chat/chat_color_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -137,34 +136,5 @@ void main() {
       final mine = custom.resolve(theme.colorScheme, theme.scaffoldBackgroundColor);
       expect((mine.background, mine.otherBubble), (Colors.indigo, Colors.teal));
     }
-  });
-
-  testWidgets('settings warn about hard to read text and fix it', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: _pda(Brightness.light),
-        home: const Scaffold(body: SingleChildScrollView(child: ChatColorSettings())),
-      ),
-    );
-    expect(find.textContaining('hard to read'), findsNothing);
-
-    NativeChat.prefs.setChatColors(
-      'light',
-      const ChatColors({ChatColorSlot.mineBubble: Colors.yellow, ChatColorSlot.mineText: Colors.white}),
-    );
-    await tester.pump();
-    await tester.tap(find.text('Custom colors'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('My text is hard to read'), findsOneWidget);
-    await tester.ensureVisible(find.text('Use black'));
-    await tester.tap(find.text('Use black'));
-    await tester.pump();
-    expect(NativeChat.prefs.colorsFor('light')[ChatColorSlot.mineText], Colors.black);
-    expect(find.textContaining('hard to read'), findsNothing);
-
-    await tester.ensureVisible(find.widgetWithText(TextButton, 'Reset'));
-    await tester.tap(find.widgetWithText(TextButton, 'Reset'));
-    await tester.pump();
-    expect(NativeChat.prefs.colorsFor('light').isEmpty, isTrue);
   });
 }

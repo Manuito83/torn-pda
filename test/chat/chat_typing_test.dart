@@ -6,6 +6,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_typing_report.dart';
+import 'package:torn_pda/widgets/chat/chat_composer.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -119,40 +120,40 @@ void main() {
 
     tearDown(() => chat.dispose());
 
-    test('private chats and open rooms report', () {
-      connect();
-      chat.typed('dm:7', 'h');
-      chat.typed('faction', 'h');
-      expect(typingCalls(), ['typing dm:7 true', 'typing faction true']);
-    });
+    test('reports only where the room allows it, with a session and the app awake', () {
+      List<String> report(
+        String room, {
+        List<ChatRoom> rooms = const [_faction, _calm],
+        bool answered = true,
+        void Function()? before,
+      }) {
+        chat.dispose();
+        source = FakeChatSource();
+        chat = ChatController(source, ChatPrefs());
+        if (answered) {
+          connect(rooms: rooms);
+        } else {
+          source
+            ..emit(const ChatReadyEvent(1))
+            ..emit(const ChatConnectionEvent(ChatConnection.connected));
+        }
+        before?.call();
+        chat.typed(room, 'h');
+        return typingCalls();
+      }
 
-    test('rooms whose rule says no never report', () {
-      connect(rooms: const [_faction, _calm, ChatRoom(id: 'trade', name: 'Trade', reportTyping: false)]);
-      chat.typed('quiet', 'hello');
-      chat.typed('trade', 'hello');
+      expect(report('dm:7'), ['typing dm:7 true']);
+      expect(report('faction'), ['typing faction true']);
+      expect(report('quiet'), isEmpty);
+      expect(report('trade', rooms: const [ChatRoom(id: 'trade', name: 'Trade', reportTyping: false)]), isEmpty);
       chat.typingStopped('trade');
       expect(typingCalls(), isEmpty);
-    });
-
-    test('Global and Trade stay silent before Torn answers', () {
-      source
-        ..emit(const ChatReadyEvent(1))
-        ..emit(const ChatConnectionEvent(ChatConnection.connected));
-      chat.typed('global', 'hello');
-      chat.typed('trade', 'hello');
-      expect(typingCalls(), isEmpty);
-    });
-
-    test('a room nobody listed never reports', () {
-      connect();
-      chat.typed('mystery', 'hello');
-      expect(typingCalls(), isEmpty);
-    });
-
-    test('the rule of the server replaces the default', () {
-      connect(rooms: const [ChatRoom(id: 'global', name: 'Global')]);
-      chat.typed('global', 'hello');
-      expect(typingCalls(), ['typing global true']);
+      expect(report('mystery'), isEmpty);
+      expect(report('global', answered: false), isEmpty);
+      expect(report('trade', answered: false), isEmpty);
+      expect(report('global', rooms: const [ChatRoom(id: 'global', name: 'Global')]), ['typing global true']);
+      expect(report('dm:7', before: () => source.emit(const ChatConnectionEvent(ChatConnection.twoFactor))), isEmpty);
+      expect(report('dm:7', before: () => chat.paused()), isEmpty);
     });
 
     test('sending clears it', () {
@@ -160,20 +161,6 @@ void main() {
       chat.typed('dm:7', 'hi');
       chat.send('hi', to: 'dm:7');
       expect(typingCalls(), ['typing dm:7 true', 'typing dm:7 false']);
-    });
-
-    test('no session, no report', () {
-      connect();
-      source.emit(const ChatConnectionEvent(ChatConnection.twoFactor));
-      chat.typed('dm:7', 'h');
-      expect(typingCalls(), isEmpty);
-    });
-
-    test('a paused app does not report', () {
-      connect();
-      chat.paused();
-      chat.typed('dm:7', 'h');
-      expect(typingCalls(), isEmpty);
     });
 
     test('the saved inbox keeps the rule', () {

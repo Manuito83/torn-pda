@@ -44,29 +44,36 @@ enum ChatImageHost {
   bool get needsCredential => this != catbox;
 }
 
-class ChatImageUpload {
-  static const List<String> _extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tif', 'tiff'];
+typedef ChatImagePick = Future<PlatformFile?> Function({required bool fromFiles});
 
-  static Dio dio = Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 20),
-      sendTimeout: const Duration(minutes: 2),
-      receiveTimeout: const Duration(seconds: 60),
-    ),
+const List<String> _imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tif', 'tiff'];
+
+Future<PlatformFile?> _pickImageFile({required bool fromFiles}) async {
+  final result = await FilePicker.platform.pickFiles(
+    type: fromFiles ? FileType.custom : FileType.image,
+    allowedExtensions: fromFiles ? _imageExtensions : null,
+    withData: true,
   );
+  return result?.files.firstOrNull;
+}
 
-  static Future<PlatformFile?> Function({required bool fromFiles}) pick = _pick;
+Dio _uploadDio() => Dio(
+  BaseOptions(
+    connectTimeout: const Duration(seconds: 20),
+    sendTimeout: const Duration(minutes: 2),
+    receiveTimeout: const Duration(seconds: 60),
+  ),
+);
 
-  static Future<PlatformFile?> _pick({required bool fromFiles}) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: fromFiles ? FileType.custom : FileType.image,
-      allowedExtensions: fromFiles ? _extensions : null,
-      withData: true,
-    );
-    return result?.files.firstOrNull;
-  }
+class ChatImageUpload {
+  ChatImageUpload({Dio? dio, ChatImagePick pick = _pickImageFile}) : _dio = dio ?? _uploadDio(), _pick = pick;
 
-  static Future<String> upload(
+  final Dio _dio;
+  final ChatImagePick _pick;
+
+  Future<PlatformFile?> pick({required bool fromFiles}) => _pick(fromFiles: fromFiles);
+
+  Future<String> upload(
     ChatImageHost host,
     Uint8List bytes,
     String name,
@@ -86,7 +93,7 @@ class ChatImageUpload {
     final file = MultipartFile.fromBytes(bytes, filename: name);
     final Response response;
     try {
-      response = await dio.post(
+      response = await _dio.post(
         switch (host) {
           ChatImageHost.imgur => 'https://api.imgur.com/3/image',
           ChatImageHost.imgbb => 'https://api.imgbb.com/1/upload',

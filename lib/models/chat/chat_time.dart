@@ -1,4 +1,72 @@
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+
+/// Chat times in the zone and format shown
+class ChatClock {
+  ChatClock({required this.tornTime, this.h12 = false});
+
+  final bool tornTime;
+  final bool h12;
+
+  @visibleForTesting
+  Duration localOffset(DateTime at) => at.toLocal().timeZoneOffset;
+
+  /// Chat zone time, as UTC
+  DateTime wallClock(DateTime at) => at.toUtc().add(tornTime ? Duration.zero : localOffset(at));
+
+  String clock(DateTime at) => clockOf(wallClock(at));
+
+  /// [wall] already in the zone shown
+  String clockOf(DateTime wall) => DateFormat(h12 ? 'h:mm a' : 'HH:mm').format(wall);
+
+  String minutesClock(int minutes) => clockOf(DateTime.utc(2000, 1, 1, minutes ~/ 60, minutes % 60));
+
+  /// Time, with the date if not today
+  String stamp(DateTime at) {
+    final time = clock(at);
+    return switch (daysFrom(DateTime.now(), at)) {
+      0 => time,
+      1 => 'tomorrow $time',
+      _ => '${DateFormat.MMMd().format(wallClock(at))}, $time',
+    };
+  }
+
+  /// Device time, "tomorrow" if another day
+  String localClock(DateTime at, DateTime now) {
+    final here = at.toLocal();
+    final today = now.toLocal();
+    final days = DateTime(
+      here.year,
+      here.month,
+      here.day,
+    ).difference(DateTime(today.year, today.month, today.day)).inDays;
+    final day = switch (days) {
+      0 => '',
+      1 => ' tomorrow',
+      -1 => ' yesterday',
+      _ => ' (${DateFormat.MMMd().format(here)})',
+    };
+    return '${clockOf(here)}$day';
+  }
+
+  /// Next [hour]:[minute] in chat time
+  DateTime nextAt(int hour, int minute, DateTime now) {
+    final (wall, here) = (wallClock(now), now.toLocal());
+    var at = tornTime
+        ? DateTime.utc(wall.year, wall.month, wall.day, hour, minute).toLocal()
+        : DateTime(here.year, here.month, here.day, hour, minute);
+    if (!at.isAfter(now)) at = at.add(const Duration(days: 1));
+    return at;
+  }
+
+  /// Calendar days, negative if earlier
+  int daysFrom(DateTime now, DateTime at) {
+    final (x, y) = (wallClock(now), wallClock(at));
+    return DateTime.utc(y.year, y.month, y.day).difference(DateTime.utc(x.year, x.month, x.day)).inDays;
+  }
+
+  bool sameDay(DateTime a, DateTime b) => daysFrom(a, b) == 0;
+}
 
 /// An explicit "18:00 TCT" in a message
 class ChatTimeRef {
@@ -62,7 +130,23 @@ class ChatTimeRef {
         : '${minutes}m';
     return seconds > 0 ? 'in $text' : '$text ago';
   }
+}
 
-  /// Takes a time in the device's zone
-  static String insertText(DateTime time) => '${DateFormat('HH:mm').format(time.toUtc())} TCT';
+String _two(int n) => n.toString().padLeft(2, '0');
+
+String chatTct(DateTime at, {bool seconds = false}) {
+  final t = at.toUtc();
+  return '${_two(t.hour)}:${_two(t.minute)}${seconds ? ':${_two(t.second)}' : ''}';
+}
+
+/// Without the app clock
+String chatTctText(DateTime at) => '${chatTct(at)} TCT';
+
+/// Screen reader time, words instead of "5m"
+String chatSpokenTime(ChatClock clock, DateTime at) {
+  final gap = DateTime.now().difference(at);
+  if (gap.inMinutes < 1) return 'just now';
+  if (gap.inMinutes < 60) return gap.inMinutes == 1 ? '1 minute ago' : '${gap.inMinutes} minutes ago';
+  if (gap.inHours < 24) return gap.inHours == 1 ? '1 hour ago' : '${gap.inHours} hours ago';
+  return clock.stamp(at);
 }

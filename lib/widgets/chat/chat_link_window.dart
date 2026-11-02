@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/models/chat/chat_bazaar.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/torn_web.dart';
 import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -41,13 +41,10 @@ class _ChatLinkWindowState extends State<ChatLinkWindow> {
   void initState() {
     super.initState();
     final settings = context.read<SettingsProvider>();
-    final device = WebviewConfig.userAgentForUser.isNotEmpty
-        ? WebviewConfig.userAgentForUser
-        : '##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##';
     _settings = InAppWebViewSettings(
       javaScriptBridgeEnabled: false,
       hardwareAcceleration: context.read<WebViewProvider>().webViewHardwareLayerActive,
-      applicationNameForUserAgent: '${WebviewConfig.agent} $device'.trim(),
+      applicationNameForUserAgent: webviewUserAgentSuffix,
       initialScale: settings.androidBrowserScale,
       useWideViewPort: false,
       ignoresViewportScaleLimits: settings.iosBrowserPinch,
@@ -144,12 +141,9 @@ class _ChatLinkWindowState extends State<ChatLinkWindow> {
             area,
           );
     final host = Uri.tryParse(_url)?.host ?? '';
-    final moves = {
-      if (!_expanded)
-        for (final MapEntry(key: label, value: direction) in ChatWindowFrame.moves(frame, area).entries)
-          CustomSemanticsAction(label: label): () =>
-              setState(() => _frame = ChatWindowFrame.nudge(frame, area, direction)),
-    };
+    final moves = _expanded
+        ? const <CustomSemanticsAction, VoidCallback>{}
+        : ChatWindowFrame.semanticMoves(frame, area, (to) => setState(() => _frame = to));
     return Positioned.fromRect(
       rect: frame,
       child: MediaQuery.removePadding(

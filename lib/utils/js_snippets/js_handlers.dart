@@ -81,9 +81,22 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
           return { n: e.n.slice(0, 40), b: e.b };
         });
 
+        // Dart only keeps KB
+        var kb = function(b) { return Math.floor(b / 1024); };
+        var measuredKb = kb(total) + "|" + kb(chatBytes) + "|" + topKeys.map(function(e) {
+          return e.n + ":" + kb(e.b);
+        }).join(",");
+        var alreadyReported = false;
+        try {
+          alreadyReported = sessionStorage.getItem("pda_ls_measured") === measuredKb;
+        } catch (_) {}
+
         var reportMeasured = function() {
           try {
             window.flutter_inappwebview.callHandler("PDA_localStorageMeasured", total, chatBytes, topKeys);
+          } catch (_) {}
+          try {
+            sessionStorage.setItem("pda_ls_measured", measuredKb);
           } catch (_) {}
         };
 
@@ -101,6 +114,7 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
         }
 
         if (!shouldTrim) {
+          if (alreadyReported) return;
           if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
             reportMeasured();
           } else {

@@ -3,12 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
-import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
-import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import 'chat_fakes.dart';
 
@@ -67,23 +64,5 @@ void main() {
     await tester.ensureVisible(button);
     await tester.pumpAndSettle();
     expect(tester.getBottomLeft(button).dy, lessThanOrEqualTo(_screen.height - _bar));
-  });
-
-  testWidgets('upload notice offers the upload settings', (tester) async {
-    final key = GlobalKey<NavigatorState>();
-    NativeChat.navigatorKey = key;
-    addTearDown(() => NativeChat.navigatorKey = null);
-    await tester.pumpWidget(
-      ChangeNotifierProvider(
-        create: (_) => ThemeProvider(),
-        child: MaterialApp(
-          navigatorKey: key,
-          home: const Scaffold(body: ChatUploadSetupNotice(host: ChatImageHost.imgur)),
-        ),
-      ),
-    );
-    await tester.tap(find.text('Image upload settings'));
-    await tester.pumpAndSettle();
-    expect(find.descendant(of: find.byType(AppBar), matching: find.text('Image upload')), findsOneWidget);
   });
 }

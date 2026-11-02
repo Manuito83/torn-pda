@@ -6,8 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart' show flutterLocalNotificationsPlugin;
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_reminder.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
@@ -21,6 +23,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
       : ChatReminders.triggers(bars: chain!.barsAndStatusModel!, now: now.millisecondsSinceEpoch ~/ 1000);
   const waits = [('In 10 min', Duration(minutes: 10)), ('In 1 h', Duration(hours: 1))];
   final theme = Theme.of(context);
+  final clock = chatClockOf(context, listen: false);
   final picked = await showModalBottomSheet<ChatReminderOption>(
     context: context,
     showDragHandle: true,
@@ -39,7 +42,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
               child: Text(
-                '${message.sender.name}: ${message.content}',
+                '${message.sender.name}: ${chatShortText(message.content, message.createdAt, clock: clock.clock)}',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -50,7 +53,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
                 minTileHeight: 48,
                 leading: const Icon(Icons.alarm_rounded),
                 title: Text(label),
-                trailing: Text(NativeChat.prefs.stamp(now.add(wait))),
+                trailing: Text(clock.stamp(now.add(wait))),
                 onTap: () => Navigator.pop(sheet, ChatReminderOption(label, DateTime.now().add(wait))),
               ),
             for (final option in game)
@@ -58,7 +61,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
                 minTileHeight: 48,
                 leading: const Icon(Icons.alarm_rounded),
                 title: Text(option.label),
-                trailing: Text(NativeChat.prefs.stamp(option.at)),
+                trailing: Text(clock.stamp(option.at)),
                 onTap: () => Navigator.pop(sheet, option),
               ),
             ListTile(
@@ -66,13 +69,12 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
               leading: const Icon(Icons.schedule_rounded),
               title: const Text('Custom time'),
               onTap: () async {
-                final prefs = NativeChat.prefs;
                 final time = await showChatTimePicker(
                   sheet,
-                  TimeOfDay.fromDateTime(prefs.wallClock(now.add(const Duration(hours: 1)))),
+                  TimeOfDay.fromDateTime(clock.wallClock(now.add(const Duration(hours: 1)))),
                 );
                 if (time == null || !sheet.mounted) return;
-                final at = prefs.nextAt(time.hour, time.minute, DateTime.now());
+                final at = clock.nextAt(time.hour, time.minute, DateTime.now());
                 Navigator.pop(sheet, ChatReminderOption('Custom time', at));
               },
             ),
@@ -103,7 +105,7 @@ Future<void> showChatReminderSheet(BuildContext context, ChatMessage message, St
   }
   prefs.setReminders([...prefs.pendingReminders, reminder]);
   if (!context.mounted) return;
-  tell('Reminder set for ${NativeChat.prefs.stamp(picked.at)}');
+  tell('Reminder set for ${clock.stamp(picked.at)}');
 }
 
 Future<void> showChatRemindersList(BuildContext context) => showModalBottomSheet<void>(
@@ -137,7 +139,7 @@ Future<void> showChatRemindersList(BuildContext context) => showModalBottomSheet
               for (final r in pending)
                 ListTile(
                   title: Text(r.excerpt, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  subtitle: Text('${r.author} in ${r.roomName} - ${NativeChat.prefs.stamp(r.at)} (${r.label})'),
+                  subtitle: Text('${r.author} in ${r.roomName} - ${chatClockOf(sheet).stamp(r.at)} (${r.label})'),
                   trailing: IconButton(
                     tooltip: 'Delete reminder',
                     style: IconButton.styleFrom(minimumSize: const Size(48, 48)),

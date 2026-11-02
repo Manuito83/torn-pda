@@ -2,6 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/models/chat/chat_format.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
+import 'package:torn_pda/utils/torn_web.dart';
 
 /// Text or image shared into PDA
 class ChatShared {
@@ -25,8 +26,7 @@ class ChatShared {
 
   String? get tornLink {
     for (final match in _url.allMatches(text)) {
-      final host = Uri.tryParse(match.group(0)!)?.host.toLowerCase() ?? '';
-      if (host == 'torn.com' || host.endsWith('.torn.com')) return match.group(0);
+      if (isTornHost(Uri.tryParse(match.group(0)!)?.host.toLowerCase())) return match.group(0);
     }
     return null;
   }

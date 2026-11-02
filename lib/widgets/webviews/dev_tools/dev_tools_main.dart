@@ -106,7 +106,7 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text(
-        slotTab == null || (slotTab.pageTitle ?? "").isEmpty ? "Dev Tools" : "Dev Tools · ${slotTab.pageTitle}",
+        slotTab == null || (slotTab.pageTitle ?? "").isEmpty ? "Dev Tools" : "Dev Tools - ${slotTab.pageTitle}",
         style: const TextStyle(color: Colors.white),
       ),
       leading: IconButton(

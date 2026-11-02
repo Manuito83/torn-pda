@@ -1,13 +1,15 @@
 import 'package:intl/intl.dart';
 
+final NumberFormat _count = NumberFormat.decimalPattern('en_US');
+
+String chatCount(num n) => _count.format(n);
+
 /// Amount like "$1.5m" or "850k"
 class ChatMoneyRef {
   const ChatMoneyRef(this.amount, this.raw);
 
   final int amount;
   final String raw;
-
-  static final NumberFormat _money = NumberFormat.decimalPattern('en_US');
 
   static final RegExp _pattern = RegExp(
     r'(?<![\w.,#:/])(\$)?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?:(k|m|b)|\s?(mil|mill|million|bil|billion))?'
@@ -26,7 +28,7 @@ class ChatMoneyRef {
     'billion': 1000000000,
   };
 
-  static String format(int amount) => '\$${_money.format(amount)}';
+  static String format(int amount) => '\$${chatCount(amount)}';
 
   static List<Object> split(String text) {
     final parts = <Object>[];

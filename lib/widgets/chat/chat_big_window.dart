@@ -29,6 +29,7 @@ class ChatBigWindowView extends StatefulWidget {
     this.onResize,
     this.onResizeEnd,
     this.moves,
+    this.onSettings,
   });
 
   final ChatController chat;
@@ -44,6 +45,7 @@ class ChatBigWindowView extends StatefulWidget {
   final ValueChanged<Offset>? onResize;
   final VoidCallback? onResizeEnd;
   final Map<CustomSemanticsAction, VoidCallback>? moves;
+  final VoidCallback? onSettings;
 
   @override
   State<ChatBigWindowView> createState() => _ChatBigWindowViewState();
@@ -263,6 +265,7 @@ class _ChatBigWindowViewState extends State<ChatBigWindowView> {
       onDismiss: NativeChat.bigWindowBack,
       moves: widget.moves,
       onClose: widget.onClose,
+      onSettings: widget.onSettings,
       onMinimize: widget.onMinimize,
       onFullscreen: widget.onFullscreen,
       fullscreen: widget.fullscreen,
@@ -289,6 +292,7 @@ class _ChatBigWindowViewState extends State<ChatBigWindowView> {
                 onOpenRoom: NativeChat.setBigWindowRoom,
                 onGone: () => NativeChat.setBigWindowRoom(null),
                 onPopOut: NativeChat.popOutBigWindow,
+                narrowBelow: 280,
               ),
       ),
     );

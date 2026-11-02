@@ -2,12 +2,11 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/pip/pip_player.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 
 class PipSelection extends ChangeNotifier {
-  static final _active = ValueNotifier<PipSelection?>(null);
-
   List<PipPlayer>? _picked;
 
   bool get active => _picked != null;
@@ -19,27 +18,25 @@ class PipSelection extends ChangeNotifier {
     return settings.pipEnabled && settings.pipPlayerButtons && Get.find<PipController>().supported;
   }
 
-  // Back button handler in main
-  static bool cancelActive() {
-    final selection = _active.value;
-    if (selection == null) return false;
-    selection.cancel();
-    return true;
-  }
+  ValueNotifier<VoidCallback?> get _activePick => Get.find<PipController>().activePick;
 
   void start({required bool empty}) {
     if (empty) {
       _toast('No players to watch here');
       return;
     }
-    _active.value?.cancel();
-    _active.value = this;
+    _activePick.value?.call();
+    _activePick.value = cancel;
     _picked = [];
     notifyListeners();
   }
 
+  void _release() {
+    if (_activePick.value == cancel) _activePick.value = null;
+  }
+
   void cancel() {
-    if (_active.value == this) _active.value = null;
+    _release();
     if (_picked == null) return;
     _picked = null;
     notifyListeners();
@@ -77,7 +74,7 @@ class PipSelection extends ChangeNotifier {
 
   @override
   void dispose() {
-    if (_active.value == this) _active.value = null;
+    _release();
     super.dispose();
   }
 }
@@ -89,9 +86,10 @@ class PipSelectionBackGuard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<PipSelection?>(
-      valueListenable: PipSelection._active,
-      builder: (context, selection, child) => PopScope(canPop: selection == null, child: child!),
+    if (!Get.isRegistered<PipController>()) return child;
+    return ValueListenableBuilder<VoidCallback?>(
+      valueListenable: Get.find<PipController>().activePick,
+      builder: (context, cancelPick, child) => PopScope(canPop: cancelPick == null, child: child!),
       child: child,
     );
   }

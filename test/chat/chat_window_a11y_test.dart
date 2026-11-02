@@ -3,32 +3,35 @@ import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
 import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
-import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-import 'package:torn_pda/widgets/webviews/split_divider.dart';
 
 import 'chat_fakes.dart';
 
-Future<void> _pumpApp(WidgetTester tester, {GlobalKey<NavigatorState>? navigator}) async {
+Future<void> _pumpApp(WidgetTester tester, {GlobalKey<NavigatorState>? navigator, Widget? home}) async {
   final key = navigator ?? GlobalKey<NavigatorState>();
   await tester.pumpWidget(
-    MaterialApp(
-      navigatorKey: key,
-      navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
-      builder: (context, child) => Stack(
-        children: [
-          BotToastInit()(context, child),
-          ChatOverlay(navigatorKey: key),
-        ],
+    ChangeNotifierProvider<WebViewProvider>(
+      create: (_) => WebViewProvider(),
+      child: MaterialApp(
+        navigatorKey: key,
+        navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
+        builder: (context, child) => Stack(
+          children: [
+            BotToastInit()(context, child),
+            ChatOverlay(navigatorKey: key),
+          ],
+        ),
+        home: home ?? const Scaffold(body: Center(child: Text('page below'))),
       ),
-      home: const Scaffold(body: Center(child: Text('page below'))),
     ),
   );
   await _settle(tester);
@@ -45,17 +48,6 @@ FinderBase<SemanticsNode> _offering(String action) =>
     find.semantics.byPredicate((node) => _actions(node).contains(action));
 
 final _page = find.semantics.byLabel('page below');
-
-List<String> _listen(WidgetTester tester) {
-  final spoken = <String>[];
-  final messenger = tester.binding.defaultBinaryMessenger;
-  messenger.setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (message) async {
-    final map = message as Map<Object?, Object?>;
-    if (map['type'] == 'announce') spoken.add((map['data'] as Map<Object?, Object?>)['message']! as String);
-  });
-  addTearDown(() => messenger.setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, null));
-  return spoken;
-}
 
 void main() {
   useTempPathProvider();
@@ -77,7 +69,6 @@ void main() {
     NativeChat.screenOpen.value = false;
     NativeChat.drawerOpen.value = false;
     NativeChat.tornTabMissing.value = false;
-    splitDividerRect.value = null;
   });
 
   tearDown(() {
@@ -85,18 +76,24 @@ void main() {
     NativeChat.minimized.value = const [];
     NativeChat.bigWindow.value = null;
     NativeChat.tornTabMissing.value = false;
-    chatHeldToast.value = null;
+    NativeChat.dialOpen.value = false;
+    NativeChat.controller.heldToast.value = null;
     Get.reset();
   });
 
   test('a nudge takes half the free room, then stops at the edge', () {
     const area = Rect.fromLTWH(0, 0, 400, 800);
     const frame = Rect.fromLTWH(30, 200, 340, 400);
-    expect(ChatWindowFrame.moves(frame, area).keys, ['Move up', 'Move down', 'Move left', 'Move right']);
+    var moved = frame;
+    Map<String?, VoidCallback> moves(Rect from) => {
+      for (final e in ChatWindowFrame.semanticMoves(from, area, (to) => moved = to).entries) e.key.label: e.value,
+    };
+    expect(moves(frame).keys, ['Move up', 'Move down', 'Move left', 'Move right']);
 
-    final up = ChatWindowFrame.nudge(frame, area, ChatWindowFrame.moves(frame, area)['Move up']!);
+    moves(frame)['Move up']!();
+    final up = moved;
     expect(up, const Rect.fromLTWH(30, 0, 340, 400));
-    expect(ChatWindowFrame.moves(up, area).keys, isNot(contains('Move up')));
+    expect(moves(up).keys, isNot(contains('Move up')));
 
     final down = ChatWindowFrame.nudge(up, area, const Offset(0, 1));
     expect(down.top, 200);
@@ -207,74 +204,102 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('the paused notice is announced and closes from its own button', (tester) async {
+  testWidgets('the full chat, chat settings and the speed dial stay readable under a window', (tester) async {
     final semantics = tester.ensureSemantics();
-    final spoken = _listen(tester);
-    await _pumpApp(tester);
+    final key = GlobalKey<NavigatorState>();
+    // Like the drawer's own navigator
+    final drawer = Navigator(
+      onGenerateRoute: (_) => MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Center(child: Text('page below'))),
+      ),
+    );
+    await _pumpApp(tester, navigator: key, home: drawer);
     NativeChat.quickWindows.value = ['global'];
     await _settle(tester);
+    expect(_page, findsNothing);
 
-    NativeChat.tornTabMissing.value = true;
+    unawaited(NativeChat.open(key.currentState!));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(NativeChat.quickWindows.value, ['global']);
+    expect(find.semantics.byPredicate((node) => node.tooltip == 'Open in a window'), findsOne);
+
+    key.currentState!.pop();
     await _settle(tester);
-    expect(spoken, ['Chat paused. Back on a Torn tab to keep chatting']);
+    await _settle(tester);
+    expect(_page, findsNothing);
+    unawaited(showChatSettingsFrom(tester.element(find.text('page below'))));
+    await _settle(tester);
+    await _settle(tester);
+    expect(find.semantics.byLabel(RegExp('^In-app chat')), findsOne);
+
+    key.currentState!.pop();
+    await _settle(tester);
+    await _settle(tester);
+    NativeChat.dialOpen.value = true;
+    await _settle(tester);
     expect(_page, findsOne);
-    final notice = find.semantics.byLabel(RegExp('^Chat paused'));
-    expect(notice.evaluate().single.getSemanticsData().hasAction(SemanticsAction.tap), isFalse);
-
-    final close = find.semantics.byPredicate((node) => node.tooltip == 'Close chat windows');
-    expect(close.evaluate().single.rect.width, lessThan(100));
-    tester.semantics.tap(close);
-    await _settle(tester);
-    expect(NativeChat.quickWindows.value, isEmpty);
     semantics.dispose();
   });
 
-  testWidgets('with a screen reader, a toast with Undo waits above the windows', (tester) async {
+  testWidgets(
+    'on iOS only the big window takes the back swipe',
+    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    (tester) async {
+      final key = GlobalKey<NavigatorState>();
+      await _pumpApp(tester, navigator: key);
+      final route = MaterialPageRoute<void>(builder: (_) => const Scaffold());
+      unawaited(key.currentState!.push(route));
+      await _settle(tester);
+      await _settle(tester);
+      NativeChat.quickWindows.value = ['global'];
+      await _settle(tester);
+      expect(route.popGestureEnabled, isTrue);
+
+      NativeChat.openBigWindow();
+      await _settle(tester);
+      expect(route.popGestureEnabled, isFalse);
+    },
+  );
+
+  testWidgets('with a screen reader, Mark all as read goes out after 10 s', (tester) async {
     final semantics = tester.ensureSemantics();
-    final spoken = _listen(tester);
     tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
       accessibleNavigation: true,
     );
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await _pumpApp(tester);
-    NativeChat.quickWindows.value = ['global'];
+    final key = GlobalKey<NavigatorState>();
+    NativeChat.prefs.markedUnread = {};
+    NativeChat.prefs.setMarkedUnread('faction', true);
+    await _pumpApp(tester, navigator: key);
+    void markAll() => tester.semantics.customAction(
+      find.semantics.byLabel(RegExp(r'^Chat, ')),
+      const CustomSemanticsAction(label: 'Mark all as read'),
+    );
+
+    markAll();
+    await tester.pump(const Duration(seconds: 9));
+    expect(NativeChat.prefs.markedUnread, contains('faction'));
+    await tester.pump(const Duration(seconds: 2));
+    expect(NativeChat.prefs.markedUnread, isNot(contains('faction')));
+    expect(find.text('1 chat marked as read'), findsNothing);
+
+    NativeChat.prefs.setMarkedUnread('faction', true);
+    markAll();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('1 chat marked as read'), findsOne);
+    unawaited(key.currentState!.push(MaterialPageRoute<void>(builder: (_) => const Scaffold())));
+    await _settle(tester);
+    expect(find.text('1 chat marked as read'), findsNothing);
+    key.currentState!.pop();
     await _settle(tester);
 
-    final events = <String>[];
-    chatToast(
-      'Removed from targets',
-      seconds: 4,
-      action: 'Undo',
-      onAction: () => events.add('undo'),
-      onClose: () => events.add('close'),
-    );
-    await tester.pump(const Duration(seconds: 20));
-    expect(spoken, ['Removed from targets. Undo available']);
-    expect(find.semantics.byLabel('Removed from targets'), findsOne);
-
+    NativeChat.prefs.setMarkedUnread('faction', true);
+    markAll();
+    await tester.pump();
     tester.semantics.tap(find.semantics.byLabel('Undo'));
-    await tester.pump();
-    expect(events, ['undo', 'close']);
-    expect(find.text('Removed from targets'), findsNothing);
-
-    chatToast('1 chat marked as read', action: 'Undo', onClose: () => events.add('closed again'));
-    await tester.pump(const Duration(seconds: 20));
-    tester.semantics.tap(find.semantics.byPredicate((node) => node.tooltip == 'Dismiss'));
-    await tester.pump();
-    expect(events.last, 'closed again');
-    expect(find.text('1 chat marked as read'), findsNothing);
+    await tester.pump(const Duration(seconds: 11));
+    expect(NativeChat.prefs.markedUnread, contains('faction'));
     semantics.dispose();
-  });
-
-  testWidgets('with less motion, a minimized chat pops in at full size', (tester) async {
-    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
-    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await _pumpApp(tester);
-    NativeChat.minimized.value = const [ChatMinimized('faction', window: true)];
-    await tester.pump();
-    final scale = tester.widget<Transform>(
-      find.descendant(of: find.byKey(const ValueKey('mini:faction')), matching: find.byType(Transform)).first,
-    );
-    expect(scale.transform.storage.first, 1);
   });
 }

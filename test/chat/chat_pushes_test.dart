@@ -9,14 +9,14 @@ import 'package:shared_preferences_platform_interface/in_memory_shared_preferenc
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
+import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_reminder.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_push_rules.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
-import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/widgets/chat/chat_reminder_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -151,7 +151,7 @@ void main() {
 
     test('DM push gating', () async {
       await own();
-      await SharedPreferencesAsync().setBool('pda_tornChatDmPush', false);
+      await BackgroundPrefs().setTornChatDmPush(false);
       expect(await showTornChatNotification(push), isTrue);
       expect(shown, isEmpty);
 
@@ -160,7 +160,7 @@ void main() {
       expect(await showTornChatNotification(push, foreground: true), isTrue);
       expect(shown, hasLength(1));
       expect((shown.single['title'], shown.single['body']), ('Bravo', 'hello'));
-      expect(shown.single['id'], inInclusiveRange(677000, 677999));
+      expect(shown.single['id'], chatAlertId(ChatRoom.dmId(7)));
       expect(jsonDecode(shown.single['payload'] as String), {'tornChatDm': 7, 'name': 'Bravo', 'owner': 5});
 
       for (final rules in [
@@ -212,7 +212,7 @@ void main() {
       await handleTornChatResponse(reply('see you'));
       expect(shown.single['body'], 'Not sent: open the chat to reply');
       shown.clear();
-      await Prefs().setNativeChatReplyEnabled(true);
+      await BackgroundPrefs().setNativeChatReplyEnabled(true);
 
       await own(id: 6, key: 'abcdefghijklmnop');
       expect(await handleTornChatResponse(reply('see you')), (7, 'Bravo'));

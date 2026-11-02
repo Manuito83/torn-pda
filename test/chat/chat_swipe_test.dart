@@ -66,11 +66,7 @@ void main() {
     });
 
     testWidgets('what PDA added hides while dragging and comes back', (tester) async {
-      final fetchItems = ChatLinkPreviews.fetchItems;
-      addTearDown(() {
-        ChatLinkPreviews.fetchItems = fetchItems;
-        ChatLinkPreviews.resetForTests();
-      });
+      addTearDown(ChatLinkPreviews.resetForTests);
       ChatLinkPreviews.resetForTests();
       ChatLinkPreviews.fetchItems = () async => ItemsModel(items: {'206': Item(name: 'Xanax', marketValue: 830000)});
       NativeChat.prefs.priceCheck = true;

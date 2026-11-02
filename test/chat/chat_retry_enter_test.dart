@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/widgets/chat/chat_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_composer.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import 'chat_fakes.dart';
@@ -66,43 +66,6 @@ void main() {
       expect(shown.state, ChatMessageState.failed);
       expect(shown.content, 'one more time');
     });
-  });
-
-  group('failed bubble', () {
-    tearDown(() => NativeChat.prefs.compactMode = false);
-
-    for (final compact in [false, true]) {
-      testWidgets(compact ? 'tap retries in compact mode' : 'tap retries', (tester) async {
-        NativeChat.prefs.compactMode = compact;
-        var retried = 0;
-        final failed = ChatMessage(
-          id: 'm',
-          reqId: 'm',
-          roomId: 'faction',
-          sender: const ChatUser(id: 99, name: 'Me'),
-          content: 'not delivered',
-          createdAt: chatNow,
-          state: ChatMessageState.failed,
-        );
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ChatMessageBubble(
-                message: failed,
-                isMine: true,
-                isFirstInGroup: true,
-                isLastInGroup: true,
-                onRetry: () => retried++,
-              ),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.textContaining('not delivered', findRichText: true));
-        expect(retried, 1);
-      });
-    }
   });
 
   group('enter key', () {

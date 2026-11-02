@@ -21,26 +21,26 @@ import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chaining/chain_attack.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class RetalCard extends StatefulWidget {
   final Retal retalModel;
   final int expiryTimeStamp;
+
+  /// Replaces the chaining browser launch
+  final Future<void> Function(bool shortTap)? onAttack;
 
   // Key is needed to update at least the hospital counter individually
   const RetalCard({
     required this.retalModel,
     required this.expiryTimeStamp,
     required Key key,
+    this.onAttack,
   }) : super(key: key);
 
   @override
@@ -54,7 +54,6 @@ class RetalCardState extends State<RetalCard> {
 
   final _chainProvider = Get.find<ChainStatusController>();
   final _ffScouterCache = Get.find<FFScouterCacheController>();
-  late WebViewProvider _webViewProvider;
 
   Timer? _expiryTicker;
   Timer? _lifeTicker;
@@ -68,7 +67,6 @@ class RetalCardState extends State<RetalCard> {
   @override
   void initState() {
     super.initState();
-    _webViewProvider = context.read<WebViewProvider>();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
   }
 
@@ -1274,67 +1272,8 @@ class RetalCardState extends State<RetalCard> {
     }
   }
 
-  Future<void> _startAttack() async {
-    final browserType = _settingsProvider.currentBrowser;
-    switch (browserType) {
-      case BrowserSetting.app:
-        final List<RetalsCardDetails> myTargetList = List<RetalsCardDetails>.from(_r.orderedCardsDetails);
-
-        // Adjust the list (remove targets above the one selected)
-        final int selectedIndex = myTargetList.indexWhere((element) => element.retalId == _retal!.retalId);
-        if (selectedIndex > 0) {
-          myTargetList.removeRange(0, selectedIndex);
-        } else if (selectedIndex == -1) {
-          myTargetList.clear();
-        }
-
-        List<String> attacksIds = <String>[];
-        List<String?> attacksNames = <String?>[];
-        List<String?> attackNotes = <String?>[];
-        List<String?> attacksNotesColor = <String?>[];
-        for (final tar in myTargetList) {
-          attacksIds.add(tar.retalId.toString());
-          attacksNames.add(tar.name);
-          attackNotes.add(tar.personalNote);
-          attacksNotesColor.add(tar.personalNoteColor);
-        }
-
-        if (attacksIds.isEmpty) {
-          attacksIds.add(_retal!.retalId.toString());
-          attacksNames.add(_retal!.name);
-          attackNotes.add(_retal!.personalNote);
-          attacksNotesColor.add(_retal!.personalNoteColor);
-        }
-
-        final bool showNotes = await Prefs().getShowTargetsNotes();
-        final bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
-        final bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
-
-        _r.browserIsOpen = true;
-        await _webViewProvider.openBrowserPreference(
-          context: context,
-          url: 'https://www.torn.com/page.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: BrowserTapType.chainShort,
-          isChainingBrowser: true,
-          chainingPayload: ChainingPayload()
-            ..war = true
-            ..attackIdList = attacksIds
-            ..attackNameList = attacksNames
-            ..attackNotesList = attackNotes
-            ..attackNotesColorList = attacksNotesColor
-            ..showNotes = showNotes
-            ..showBlankNotes = showBlankNotes
-            ..showOnlineFactionWarning = showOnlineFactionWarning,
-        );
-        _r.browserIsOpen = false;
-
-      case BrowserSetting.external:
-        final url = 'https://www.torn.com/page.php?sid=attack&user2ID=${_retal!.retalId}';
-        if (await canLaunchUrl(Uri.parse(url))) {
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        }
-    }
-  }
+  Future<void> _startAttack() =>
+      widget.onAttack != null ? widget.onAttack!(true) : attackFromRetals(context, _retal!);
 
   Widget _lastOnlineWidget() {
     return Row(

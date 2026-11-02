@@ -2,23 +2,24 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart' show navigatorKey;
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
+import 'package:torn_pda/utils/js_snippets/js_chain_web.dart';
+import 'package:torn_pda/utils/torn_web.dart';
+import 'package:torn_pda/utils/webview/webview_handlers.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-import 'package:torn_pda/widgets/webviews/chain_web.dart';
+import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-
-const bool chainMiniEnabled = kDebugMode || bool.fromEnvironment('CHAIN_MINI');
 
 const String chainMiniUrl = 'https://www.torn.com/factions.php?step=your#/war/chain';
 
@@ -86,41 +87,24 @@ const String _isolateScript = r'''
 
 enum _MiniState { loading, live, reload }
 
-class ChainMiniWindow {
-  ChainMiniWindow._();
+bool chainMiniHiddenByBrowser(BuildContext context) =>
+    context.select<WebViewProvider?, bool>((w) => w?.browserShowInForeground ?? false);
 
-  static final open = ValueNotifier<bool>(false);
-
-  // Survive the unmount while browsing
-  static Offset? pos;
-  static int size = 1;
-
-  // Remote Config can only turn it off
-  static final available = ValueNotifier<bool>(chainMiniEnabled);
-
-  // Needs the page reader
-  static void setRemote({required bool mini, required bool web}) {
-    available.value = chainMiniEnabled && mini && web;
-    if (!available.value) open.value = false;
-  }
-
-  static void toggle() {
-    if (available.value) open.value = !open.value;
-  }
-
-  static bool hiddenByBrowser(BuildContext context) =>
-      context.select<WebViewProvider?, bool>((w) => w?.browserShowInForeground ?? false);
-}
+// No room over a full screen chat
+bool get _hiddenByChat => NativeChat.screenOpen.value || NativeChat.bigWindowFull;
 
 class ChainMiniHost extends StatelessWidget {
   const ChainMiniHost({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final hidden = ChainMiniWindow.hiddenByBrowser(context);
-    final mini = ValueListenableBuilder<bool>(
-      valueListenable: ChainMiniWindow.open,
-      builder: (context, open, _) => open && !hidden ? const _ChainMiniFrame() : const SizedBox.shrink(),
+    if (!Get.isRegistered<ChainStatusController>()) return const SizedBox.shrink();
+    final hidden = chainMiniHiddenByBrowser(context);
+    final open = Get.find<ChainStatusController>().miniWindowOpen;
+    final mini = ListenableBuilder(
+      listenable: Listenable.merge([open, NativeChat.bigWindow, NativeChat.screenOpen]),
+      builder: (context, _) =>
+          open.value && !hidden && !_hiddenByChat ? const _ChainMiniFrame() : const SizedBox.shrink(),
     );
     if (!Get.isRegistered<PipController>()) return mini;
     final pip = Get.find<PipController>();
@@ -143,26 +127,41 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   static const _barAspect = 5.5;
   static const _labelHeight = 12.0;
 
+  final _chain = Get.find<ChainStatusController>();
+  WebViewProvider? _web;
   int _generation = 0;
   _MiniState _state = _MiniState.loading;
   InAppWebViewController? _controller;
   Timer? _noBar;
+  bool _warm = !Platform.isAndroid;
+  bool _loadStopped = false;
+  String _loadError = '';
 
-  double get _width => _widths[ChainMiniWindow.size];
+  double get _width => _widths[_chain.miniWindowSize];
   double get _height => (_width - _closeWidth) / _barAspect + _labelHeight;
 
   @override
   void initState() {
     super.initState();
+    _web = context.read<WebViewProvider?>();
     WidgetsBinding.instance.addObserver(this);
     _armNoBar();
+    if (!_warm) _warmEngine();
+  }
+
+  // Same cold start guard as the browser
+  Future<void> _warmEngine() async {
+    if (context.read<SettingsProvider>().browserEnginePrewarmRemoteConfigAllowed) {
+      await BrowserEnginePrewarmController.instance.ensureWarm();
+    }
+    if (mounted) setState(() => _warm = true);
   }
 
   // Counts from opening, not from load stop
   void _armNoBar() {
     _noBar?.cancel();
     _noBar = Timer(const Duration(seconds: 30), () {
-      if (mounted && _state == _MiniState.loading) _toReload();
+      if (mounted && _state == _MiniState.loading) _toReload('no_bar');
     });
   }
 
@@ -170,6 +169,11 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _noBar?.cancel();
+    // Closed over a hidden browser: pause again
+    final WebViewProvider? web = _web;
+    if (Platform.isAndroid && !_chain.miniWindowOpen.value && web != null && !web.browserShowInForeground) {
+      web.pauseAllWebviews();
+    }
     super.dispose();
   }
 
@@ -177,31 +181,20 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   void didChangeAppLifecycleState(AppLifecycleState state) => _publishShown();
 
   bool get _visible {
-    if (!mounted || !ChainMiniWindow.open.value) return false;
+    if (!mounted || !_chain.miniWindowOpen.value) return false;
     if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) return false;
     return !(Get.isRegistered<PipController>() && Get.find<PipController>().inPip.value);
   }
 
-  // Stable identity for the controller
-  late final bool Function() _onScreen = _isOnScreen;
-
   bool _isOnScreen() => _visible && _state == _MiniState.live;
 
-  void _publishShown() {
-    final shown = _visible;
-    _controller?.evaluateJavascript(
-      source:
-          'window.__pdaChainShown = $shown; '
-          'if ($shown && window.__pdaChainReader) window.__pdaChainReader.check(true);',
-    );
-  }
+  void _publishShown() => _controller?.evaluateJavascript(source: chainWebShown(_visible));
 
-  void _onReading(JavaScriptHandlerFunctionData data) {
+  void _onReading(Object? raw) {
     if (!mounted) return;
-    final raw = data.args.isEmpty ? null : data.args.first;
     // The sidebar renders after load
     if (raw is Map && raw['none'] == true) {
-      if (_state == _MiniState.live) _toReload();
+      if (_state == _MiniState.live) _toReload('bar_lost');
       return;
     }
     _noBar?.cancel();
@@ -210,21 +203,36 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
       // The fit stops looking after 18 s
       _controller?.evaluateJavascript(source: _isolateScript);
     }
-    if (Get.isRegistered<ChainStatusController>()) {
-      Get.find<ChainStatusController>().applyWebChain(raw, onScreen: _onScreen);
-    }
   }
 
-  void _toReload() => setState(() {
-    _controller = null;
-    _state = _MiniState.reload;
-  });
+  void _toReload(String why) {
+    _reportFailure(why);
+    setState(() {
+      _controller = null;
+      _state = _MiniState.reload;
+    });
+  }
+
+  void _reportFailure(String why) {
+    if (_chain.miniWindowFailureReported || Platform.isWindows) return;
+    _chain.miniWindowFailureReported = true;
+    try {
+      FirebaseCrashlytics.instance.recordError(
+        'Chain mini window $why created=${_controller != null} loadStop=$_loadStopped error=$_loadError',
+        null,
+        reason: 'Chain mini window failure',
+        fatal: false,
+      );
+    } catch (_) {}
+  }
 
   void _reload() {
     setState(() {
       _controller = null;
       _state = _MiniState.loading;
       _generation++;
+      _loadStopped = false;
+      _loadError = '';
     });
     _armNoBar();
   }
@@ -243,7 +251,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   Widget build(BuildContext context) {
     final screen = MediaQuery.sizeOf(context);
     final pad = MediaQuery.paddingOf(context);
-    var pos = ChainMiniWindow.pos ?? Offset(screen.width - _width - 12, screen.height - pad.bottom - _height - 96);
+    var pos = _chain.miniWindowPos ?? Offset(screen.width - _width - 12, screen.height - pad.bottom - _height - 96);
     pos = Offset(
       pos.dx.clamp(0, (screen.width - _width).clamp(0, double.infinity)),
       pos.dy.clamp(pad.top, (screen.height - _height - pad.bottom).clamp(pad.top, double.infinity)),
@@ -266,8 +274,8 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
                 behavior: HitTestBehavior.opaque,
                 onTap: _state == _MiniState.reload ? _reload : _openInBrowser,
                 onLongPress: () =>
-                    setState(() => ChainMiniWindow.size = (ChainMiniWindow.size + 1) % _widths.length),
-                onPanUpdate: (d) => setState(() => ChainMiniWindow.pos = pos + d.delta),
+                    setState(() => _chain.miniWindowSize = (_chain.miniWindowSize + 1) % _widths.length),
+                onPanUpdate: (d) => setState(() => _chain.miniWindowPos = pos + d.delta),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -285,7 +293,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          if (_state != _MiniState.reload) IgnorePointer(child: _webView()),
+                          if (_warm && _state != _MiniState.reload) IgnorePointer(child: _webView()),
                           if (_state != _MiniState.live)
                             ColoredBox(
                               color: const Color(0xFF1E1E1E),
@@ -305,7 +313,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
             ),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => ChainMiniWindow.open.value = false,
+              onTap: () => _chain.miniWindowOpen.value = false,
               child: const SizedBox(
                 width: _closeWidth,
                 child: Icon(Icons.close, size: 16, color: Colors.white70),
@@ -315,12 +323,6 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
         ),
       ),
     );
-  }
-
-  String get _userAgentSuffix {
-    const unknown = '##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##';
-    final device = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
-    return '${WebviewConfig.agent} $device'.trim();
   }
 
   Widget _webView() {
@@ -340,7 +342,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
         disableHorizontalScroll: true,
         overScrollMode: OverScrollMode.NEVER,
         preferredContentMode: Platform.isIOS ? UserPreferredContentMode.DESKTOP : UserPreferredContentMode.RECOMMENDED,
-        applicationNameForUserAgent: _userAgentSuffix,
+        applicationNameForUserAgent: webviewUserAgentSuffix,
         textZoom: 100,
         mediaPlaybackRequiresUserGesture: true,
         isInspectable: kDebugMode || settings.browserRemoteDebugging,
@@ -352,23 +354,32 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
       ]),
       onWebViewCreated: (c) {
         _controller = c;
-        c.addJavaScriptHandler(handlerName: chainWebHandler, callback: _onReading);
+        // Closing the browser pauses every webview
+        if (Platform.isAndroid) c.resumeTimers();
+        WebviewHandlers.addChainWebHandler(webview: c, onScreen: _isOnScreen, onReading: _onReading);
       },
       shouldOverrideUrlLoading: (c, action) async {
         final url = action.request.url;
         final isBarsPage = url?.host == 'www.torn.com' && url?.path == Uri.parse(_barsPageUrl).path;
         return isBarsPage && action.isForMainFrame ? NavigationActionPolicy.ALLOW : NavigationActionPolicy.CANCEL;
       },
+      onReceivedError: (c, request, error) {
+        if (request.isForMainFrame ?? false) _loadError = '${error.type}';
+      },
+      onReceivedHttpError: (c, request, response) {
+        if (request.isForMainFrame ?? false) _loadError = 'http_${response.statusCode}';
+      },
       onLoadStop: (c, url) async {
+        _loadStopped = true;
         if (url?.path != Uri.parse(_barsPageUrl).path) {
-          if (mounted) _toReload();
+          if (mounted) _toReload('page ${url?.path}');
           return;
         }
         await c.evaluateJavascript(source: _isolateScript);
-        await c.evaluateJavascript(source: 'window.__pdaChainShown = true;\n$chainWebReader');
+        await c.evaluateJavascript(source: chainWebInject(true));
       },
       onRenderProcessGone: (c, detail) {
-        if (mounted) _toReload();
+        if (mounted) _toReload('gone');
       },
     );
   }

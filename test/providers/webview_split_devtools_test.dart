@@ -250,13 +250,6 @@ void main() {
       expect(p.splitDevToolsSlot, isNull);
       expect(slots(p), [SplitSlotContent.app, SplitSlotContent.browser]);
     });
-
-    test('with split screen off in Settings they open full screen', () async {
-      final p = await build(position: WebViewSplitPosition.off);
-      p.browserShowInForeground = true;
-      expect(p.openSplitDevTools(focused(p)), isFalse);
-      expect(p.splitDevToolsSlot, isNull);
-    });
   });
 
   group('the DevTools slot is always painted', () {

@@ -49,8 +49,8 @@ void main() {
   group('expiration', () {
     Future<RequestOptions> sent(ChatImageHost host, int expiration) async {
       final recorder = _Recorder();
-      ChatImageUpload.dio.httpClientAdapter = recorder;
-      await ChatImageUpload.upload(host, Uint8List(4), 'a.png', 'k', expiration: expiration);
+      final uploads = ChatImageUpload(dio: Dio()..httpClientAdapter = recorder);
+      await uploads.upload(host, Uint8List(4), 'a.png', 'k', expiration: expiration);
       return recorder.requests.single;
     }
 

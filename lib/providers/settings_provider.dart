@@ -17,10 +17,10 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 
 // Project imports:
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
-import 'package:torn_pda/utils/discreet_schedule.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -340,8 +340,11 @@ class SettingsProvider extends ChangeNotifier {
   bool get discreetNotificationsOption => _discreetNotifications;
 
   // Includes the schedule
-  bool get discreetNotifications =>
-      isDiscreetAt(always: _discreetNotifications, schedule: _discreetSchedule, time: DateTime.now());
+  bool get discreetNotifications => discreetAt(DateTime.now());
+
+  // Scheduled alerts pass their fire time
+  bool discreetAt(DateTime time) =>
+      isDiscreetAt(always: _discreetNotifications, schedule: _discreetSchedule, time: time);
   set discreetNotifications(bool value) {
     _discreetNotifications = value;
     Prefs().setDiscreetNotifications(value);
@@ -1288,6 +1291,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  double _travelTimeReduction = 0;
+  double get travelTimeReduction => _travelTimeReduction;
+  set travelTimeReduction(double value) {
+    if (value == _travelTimeReduction) return;
+    _travelTimeReduction = value;
+    Prefs().setTravelTimeReduction(value);
+    notifyListeners();
+  }
+
   String _foreignStocksDataProvider = "yata";
   String get foreignStocksDataProvider => _foreignStocksDataProvider;
   set foreignStocksDataProvider(String provider) {
@@ -2013,7 +2025,7 @@ class SettingsProvider extends ChangeNotifier {
       case "business":
         _travelTicket = TravelTicket.business;
     }
-    TravelTimes.reductionPercent = await Prefs().getTravelTimeReduction();
+    _travelTimeReduction = await Prefs().getTravelTimeReduction();
 
     _foreignStocksDataProvider = await Prefs().getForeignStocksDataProvider();
 

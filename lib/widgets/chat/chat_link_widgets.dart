@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_cache_model.dart';
 import 'package:torn_pda/models/chat/chat_format.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
+import 'package:torn_pda/models/chat/chat_link_info.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_script_link.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
@@ -46,14 +47,9 @@ import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-final _partsCache = <(String, ItemsModel?, List<ChatItemAlias>, bool), List<(Object, int)>>{};
-
 List<(Object, int)> chatMessageParts(String text, {ItemsModel? catalog, bool slang = false}) {
   final key = (text, catalog, NativeChat.prefs.itemAliases, slang);
-  final parts = _partsCache.remove(key) ?? List<(Object, int)>.unmodifiable(_split(text, catalog, slang));
-  _partsCache[key] = parts;
-  if (_partsCache.length > 400) _partsCache.remove(_partsCache.keys.first);
-  return parts;
+  return NativeChat.controller.messageParts(key, () => _split(text, catalog, slang));
 }
 
 List<(Object, int)> _split(String text, ItemsModel? catalog, bool slang) => [
@@ -329,7 +325,8 @@ class _ChatMessageTextState extends State<ChatMessageText> {
         continue;
       }
       if (part is ChatPlayerRef) {
-        tap.onTap = () => showChatPlayerActions(context, ChatUser(id: part.id, name: part.name));
+        tap.onTap = () =>
+            showChatPlayerActions(context, ChatUser(id: part.id, name: part.name), roomId: widget.roomId);
         spans.add(
           TextSpan(
             text: part.raw,
@@ -580,7 +577,7 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
     super.dispose();
   }
 
-  bool get _auto => NativeChat.prefs.previewsAlone(widget.roomId, torn: widget.link.isTorn);
+  bool get _auto => NativeChat.prefs.previewLoadsAlone(widget.roomId, torn: widget.link.isTorn);
 
   void _prepare() {
     final key = _key;
@@ -830,6 +827,7 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
                   onPressed: () => showChatPlayerActions(
                     context,
                     ChatUser(id: link.id!, name: info?.title.replaceFirst(' [${link.id}]', '') ?? 'Player'),
+                    roomId: widget.roomId,
                   ),
                   icon: Icon(Icons.more_vert_rounded, color: color.withValues(alpha: 0.7)),
                 ),
@@ -889,7 +887,7 @@ Future<void> showChatTimeSheet(BuildContext context, ChatTimeRef ref) async {
     builder: (context) => SafeArea(
       child: ListTile(
         leading: const Icon(Icons.schedule_rounded),
-        title: Text('${NativeChat.prefs.localClock(at, now)} your time'),
+        title: Text('${chatClockOf(context).localClock(at, now)} your time'),
         subtitle: Text(ChatTimeRef.relative(at, now)),
       ),
     ),
@@ -929,6 +927,7 @@ String? chatPlayerUrl(String action, int id) => switch (action) {
   'trade' => 'https://www.torn.com/trade.php#step=start&userID=$id',
   'bazaar' => 'https://www.torn.com/bazaar.php?userId=$id',
   'mail' => 'https://www.torn.com/messages.php#/p=compose&XID=$id',
+  'report' => 'https://www.torn.com/playerreport.php?step=add&area=chat&userID=$id',
   _ => null,
 };
 
@@ -950,9 +949,12 @@ VoidCallback? chatSwipeLeft(ChatMessage m, {required bool mine}) {
   };
 }
 
-Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
+Future<void> showChatPlayerActions(BuildContext context, ChatUser user, {String? roomId}) async {
   final id = user.id;
+  final inTheirChat = roomId == ChatRoom.dmId(id);
   final ignored = NativeChat.prefs.isIgnored(id);
+  final blocked = NativeChat.controller.isBlocked(id);
+  final me = id == NativeChat.controller.myUserId;
   final friend = NativeChat.prefs.isChatFriend(id);
   final dm = ChatRoom.dmId(id);
   final until = NativeChat.prefs.mutedUntilOf(dm);
@@ -964,23 +966,30 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
     useSafeArea: true,
     constraints: BoxConstraints(maxWidth: 640, maxHeight: MediaQuery.sizeOf(context).height * 0.85),
     builder: (context) {
-      Widget action(ChatSwipeAction a) => Expanded(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => Navigator.of(context).pop((a.name, false)),
-          onLongPress: a == ChatSwipeAction.message ? null : () => Navigator.of(context).pop((a.name, true)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Column(
-              children: [
-                Icon(chatSwipeLook[a]!.$1),
-                const SizedBox(height: 4),
-                Text(chatSwipeLook[a]!.$2, style: Theme.of(context).textTheme.labelMedium),
-              ],
+      Widget action(ChatSwipeAction a) {
+        final here = a == ChatSwipeAction.message && inTheirChat;
+        final color = here ? Theme.of(context).disabledColor : null;
+        return Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: here ? null : () => Navigator.of(context).pop((a.name, false)),
+            onLongPress: a == ChatSwipeAction.message ? null : () => Navigator.of(context).pop((a.name, true)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                children: [
+                  Icon(chatSwipeLook[a]!.$1, color: color),
+                  const SizedBox(height: 4),
+                  Text(
+                    here ? 'You are here' : chatSwipeLook[a]!.$2,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(color: color),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      );
+        );
+      }
       return SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -991,6 +1000,14 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
                 leading: ChatAvatar(user: user, size: 40),
                 title: Text(NativeChat.prefs.displayName(id, user.name)),
                 subtitle: Text(NativeChat.prefs.personOf(id).nickname.isEmpty ? '[$id]' : '${user.name} [$id]'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.copy_rounded, size: 20),
+                  tooltip: 'Copy ID',
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: '$id'));
+                    chatToast('ID copied', seconds: 1);
+                  },
+                ),
               ),
               ChatPlayerCardView(id: id),
               ChatPlayerNotes(id: id, name: user.name),
@@ -1035,7 +1052,7 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
                             : Icons.notifications_active_rounded),
                 ),
                 title: const Text('Alerts and mute'),
-                subtitle: until == null ? null : Text('Muted until ${NativeChat.prefs.stamp(until)}'),
+                subtitle: until == null ? null : Text('Muted until ${chatClockOf(context).stamp(until)}'),
                 onTap: () => Navigator.of(context).pop(('alerts', false)),
               ),
               if (notes != null)
@@ -1080,6 +1097,20 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
                 subtitle: Text(ignored ? 'Show their messages again' : 'Hide their messages, only in Torn PDA'),
                 onTap: () => Navigator.of(context).pop(('ignore', false)),
               ),
+              if (!me) ...[
+                ListTile(
+                  leading: const Icon(Icons.block_rounded),
+                  title: Text(blocked ? 'Unblock in Torn' : 'Block in Torn'),
+                  subtitle: Text(blocked ? 'They can message and mail you again' : 'Torn stops their messages and mail'),
+                  onTap: () => Navigator.of(context).pop(('block', false)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.flag_outlined),
+                  title: const Text('Report'),
+                  subtitle: const Text('Open Torn\'s report form'),
+                  onTap: () => Navigator.of(context).pop(('report', false)),
+                ),
+              ],
             ],
           ),
         ),
@@ -1097,6 +1128,10 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user) async {
     }
   } else if (action == 'ignore') {
     NativeChat.prefs.setIgnored(id, user.name, !ignored);
+  } else if (action == 'block' && blocked) {
+    await chatUnblock(user);
+  } else if (context.mounted && action == 'block') {
+    await confirmChatBlock(context, user);
   } else if (action == 'chatfriend') {
     NativeChat.prefs.setChatFriend(id, user.name, !friend);
   } else if (context.mounted && action == 'alerts') {

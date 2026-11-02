@@ -46,22 +46,7 @@ jobs:
       # Copy config stubs so the analyzer can resolve all imports
       # Guarded ([ ! -f ]) so running this locally never overwrites real private files
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
-                   chat/chat_engine chat/chat_push chat/torn_chat_source \
-                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
-            target="torn-pda-native/$f.dart"
-            mkdir -p "$(dirname "$target")"
-            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
-          done
-          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
+        run: bash .github/ci_stubs.sh
 
       - name: Install dependencies
         run: flutter pub get
@@ -84,22 +69,7 @@ jobs:
           cache: true
 
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
-                   chat/chat_engine chat/chat_push chat/torn_chat_source \
-                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
-            target="torn-pda-native/$f.dart"
-            mkdir -p "$(dirname "$target")"
-            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
-          done
-          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
+        run: bash .github/ci_stubs.sh
 
       - name: Install dependencies
         run: flutter pub get
@@ -158,22 +128,7 @@ jobs:
           cache: true
 
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
-                   chat/chat_engine chat/chat_push chat/torn_chat_source \
-                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
-            target="torn-pda-native/$f.dart"
-            mkdir -p "$(dirname "$target")"
-            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
-          done
-          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
+        run: bash .github/ci_stubs.sh
 
       - name: Create iOS CI stubs
         run: |
@@ -235,24 +190,7 @@ jobs:
           java-version: "21"
 
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          for f in auth/native_auth_models auth/native_auth_provider auth/native_user_provider auth/native_login_widget \
-                   chat/chat_engine chat/chat_push chat/torn_chat_source \
-                   stats/stats_controller stats/usage_counters stats/app_settings_daily; do
-            target="torn-pda-native/$f.dart"
-            mkdir -p "$(dirname "$target")"
-            if [ ! -f "$target" ]; then cp "config/$(basename "$f").dart.example" "$target"; fi
-          done
-          if [ ! -f utils/env/env.g.dart ]; then cp utils/env/env.g.dart.example utils/env/env.g.dart; fi
-          # Android Firebase config stub for APK build
-          if [ ! -f ../android/app/google-services.json ]; then cp ../android/app/google-services.json.example ../android/app/google-services.json; fi
+        run: bash .github/ci_stubs.sh --android
 
       - name: Install dependencies
         run: flutter pub get

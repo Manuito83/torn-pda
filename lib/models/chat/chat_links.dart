@@ -1,5 +1,11 @@
 import 'dart:io';
 
+import 'package:torn_pda/models/chat/chat_format.dart';
+import 'package:torn_pda/models/chat/chat_html_text.dart';
+import 'package:torn_pda/utils/torn_web.dart';
+
+const String chatAttackUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
+
 enum ChatLinkKind {
   player,
   bazaar,
@@ -26,7 +32,6 @@ class ChatLink {
   /// Player, item, thread, faction, company or report
   final int? id;
 
-  /// Forum section of a forum link
   final int? forumId;
 
   final String? label;
@@ -154,7 +159,7 @@ class ChatLink {
     if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http') || uri.host.isEmpty) return null;
     if (!uri.host.contains('.')) return null;
     final host = uri.host.toLowerCase();
-    final torn = uri.userInfo.isEmpty && (host == 'torn.com' || host.endsWith('.torn.com'));
+    final torn = uri.userInfo.isEmpty && isTornHost(host);
     if (!torn) {
       final path = uri.path.length > 1 || uri.hasQuery ? '${uri.path}${uri.hasQuery ? '?${uri.query}' : ''}' : null;
       return ChatLink(
@@ -178,6 +183,12 @@ class ChatLink {
     ChatLink card(ChatLinkKind kind, String title, [String? detail, int? id, int? forumId]) =>
         ChatLink(uri: uri, raw: raw, kind: kind, title: title, detail: detail, id: id, forumId: forumId);
 
+    final attacked = id('user2id');
+    if ((page == 'loader.php' || page == 'page.php') && p['sid']?.toLowerCase() == 'attack' && attacked != null) {
+      final attack = Uri.parse('$chatAttackUrl$attacked');
+      return ChatLink(uri: attack, raw: raw, kind: ChatLinkKind.attack, title: 'Attack [$attacked]', id: attacked);
+    }
+
     switch (page) {
       case 'profiles.php':
         final player = id('xid') ?? id('userid');
@@ -186,10 +197,9 @@ class ChatLink {
         final player = id('userid');
         if (player != null) return card(ChatLinkKind.bazaar, 'Bazaar of [$player]', null, player);
       case 'loader.php':
-        final player = id('user2id');
-        final sid = p['sid']?.toLowerCase();
-        if (sid == 'attack' && player != null) return card(ChatLinkKind.attack, 'Attack [$player]', null, player);
-        if (sid == 'attacklog' && _codeOf(uri) != null) return card(ChatLinkKind.attackLog, 'Attack log');
+        if (p['sid']?.toLowerCase() == 'attacklog' && _codeOf(uri) != null) {
+          return card(ChatLinkKind.attackLog, 'Attack log');
+        }
       case 'war.php':
         final war = id('rankid');
         if (p['step']?.toLowerCase() == 'rankreport' && war != null) {
@@ -318,3 +328,19 @@ class ChatPlayerRef {
     return parts;
   }
 }
+
+String _spokenLink(ChatLink link) {
+  final host = link.uri.host.replaceFirst(RegExp(r'^www\.'), '');
+  if (link.isImage) return 'image from $host';
+  if (link.label case final label?) return '$label link';
+  return switch (link.kind) {
+    ChatLinkKind.external => 'link to $host',
+    ChatLinkKind.torn => 'Torn link',
+    _ => 'link to ${link.title.replaceAll(RegExp(r'[\[\]]'), '')}',
+  };
+}
+
+String chatSpokenText(String text) => [
+  for (final part in ChatLink.split(ChatFormat.plain(chatHtmlUnescape(text))))
+    part is ChatLink ? _spokenLink(part) : part,
+].join().replaceAll(RegExp(r'\s+'), ' ').trim();

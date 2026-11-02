@@ -13,8 +13,6 @@ import 'chat_fakes.dart';
 void main() {
   useTempPathProvider();
 
-  tearDown(() => ChatRooms.remote = const []);
-
   group('Remote Config rooms', () {
     test('valid entries keep label and color, the rest is dropped', () {
       final rooms = ChatRooms.parse('''[

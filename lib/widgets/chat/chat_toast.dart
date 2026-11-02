@@ -3,17 +3,13 @@ import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
-
-typedef ChatHeldToast = ({String text, String action, VoidCallback? onAction, VoidCallback? onClose});
-
-final ValueNotifier<ChatHeldToast?> chatHeldToast = ValueNotifier(null);
-
-bool chatToastHosted = false;
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 void dropChatToast() {
-  final toast = chatHeldToast.value;
+  final held = NativeChat.controller.heldToast;
+  final toast = held.value;
   if (toast == null) return;
-  chatHeldToast.value = null;
+  held.value = null;
   // After its action ran
   scheduleMicrotask(() => toast.onClose?.call());
 }
@@ -26,9 +22,10 @@ void chatToast(String text, {int seconds = 2, String? action, VoidCallback? onAc
     SemanticsService.sendAnnouncement(view, action == null ? text : '$text. $action available', TextDirection.ltr);
   }
   final held = action != null && platform.accessibilityFeatures.accessibleNavigation;
-  if (held && chatToastHosted) {
+  // The overlay hides BotToast from readers
+  if (held && NativeChat.sheetsKey?.currentState != null) {
     dropChatToast();
-    chatHeldToast.value = (text: text, action: action, onAction: onAction, onClose: onClose);
+    NativeChat.controller.heldToast.value = (text: text, action: action, onAction: onAction, onClose: onClose);
     return;
   }
   BotToast.showCustomText(

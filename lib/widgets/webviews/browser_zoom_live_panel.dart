@@ -10,21 +10,6 @@ class BrowserZoomLivePanel extends StatefulWidget {
 
   const BrowserZoomLivePanel({required this.onClose, super.key});
 
-  static OverlayEntry? _entry;
-
-  static void show(OverlayState overlay) {
-    if (_entry != null) return;
-    _entry = OverlayEntry(
-      builder: (_) => const Positioned(left: 0, right: 0, bottom: 0, child: BrowserZoomLivePanel(onClose: hide)),
-    );
-    overlay.insert(_entry!);
-  }
-
-  static void hide() {
-    _entry?.remove();
-    _entry = null;
-  }
-
   @override
   BrowserZoomLivePanelState createState() => BrowserZoomLivePanelState();
 }
@@ -40,9 +25,20 @@ class BrowserZoomLivePanelState extends State<BrowserZoomLivePanel> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    _webViewProvider.addListener(_closeWithBrowser);
   }
 
-  // initialScale ignores screen density, so 100% of the page is devicePixelRatio * 100
+  @override
+  void dispose() {
+    _webViewProvider.removeListener(_closeWithBrowser);
+    super.dispose();
+  }
+
+  void _closeWithBrowser() {
+    if (!_webViewProvider.browserShowInForeground) widget.onClose();
+  }
+
+  // initialScale ignores screen density
   int get _neutral => (MediaQuery.devicePixelRatioOf(context) * 100).round();
 
   int get _percent {

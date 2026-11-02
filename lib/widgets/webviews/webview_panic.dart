@@ -12,7 +12,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -23,6 +22,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/torn_web.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
@@ -170,15 +170,9 @@ class WebViewPanicState extends State<WebViewPanic> {
 
   Future<void> _setUserAgentWithSuffix() async {
     final defaultUa = await InAppWebViewController.getDefaultUserAgent();
-    final uaParts = <String?>[defaultUa, _buildUserAgentSuffix()];
+    final uaParts = <String?>[defaultUa, webviewUserAgentSuffix];
     final ua = uaParts.where((value) => value != null && value.trim().isNotEmpty).join(' ').trim();
     await _webViewController?.setUserAgent(ua.isEmpty ? null : ua);
-  }
-
-  String _buildUserAgentSuffix() {
-    const unknown = "##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##";
-    final deviceInfo = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
-    return "${WebviewConfig.agent} $deviceInfo".trim();
   }
 
   @override

@@ -1,11 +1,35 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
+import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
+
+import '../chat/chat_fakes.dart';
+
+class TestChain extends ChainStatusController {
+  bool watching = false;
+
+  @override
+  bool get watcherActive => watching;
+
+  @override
+  void activateWatcher({bool fromChat = false}) => watching = true;
+
+  @override
+  void deactivateWatcher() => watching = false;
+}
+
+class BarReader {
+  bool isOnScreen() => true;
+}
 
 class SlowApi extends ApiCallerController {
   var answer = Completer<dynamic>();
@@ -26,6 +50,7 @@ class SlowApi extends ApiCallerController {
     dynamic apiCall,
     String? forcedApiKey = '',
   }) {
+    if (apiSelection != ApiSelection_v1.chainStatus) return Future.value(ApiError());
     calls++;
     return answer.future;
   }
@@ -36,9 +61,12 @@ Map<String, dynamic> apiChain(int current, int timeout, {int cooldown = 0}) => {
 };
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  useTempPathProvider();
+
   final t = DateTime(2026, 10, 25, 18);
   late SlowApi api;
-  late ChainStatusController chain;
+  late TestChain chain;
   late DateTime now;
   late bool onScreen;
   late bool Function() page;
@@ -73,10 +101,17 @@ void main() {
     await chain.getChainStatus();
   }
 
+  Future<void> chatPolling([Map<String, dynamic>? answer]) async {
+    api.answer = Completer()..complete(answer ?? apiChain(100, 290));
+    await chain.chatInView(true);
+    api.answer = Completer();
+  }
+
   setUp(() {
     Get.reset();
     api = Get.put<ApiCallerController>(SlowApi()) as SlowApi;
-    chain = Get.put(ChainStatusController());
+    chain = Get.put<ChainStatusController>(TestChain()) as TestChain;
+    Get.put(PipController());
     now = t;
     chain.clock = () => now;
     onScreen = true;
@@ -96,6 +131,13 @@ void main() {
 
   test('time left counts from the page reading, not from ticks', () {
     fromPage(current: 120, timeout: 200, at: t);
+    now = t.add(const Duration(seconds: 13, milliseconds: 400));
+
+    expect(chain.currentSecondsCounter, 187);
+  });
+
+  test('time left from the API counts from the answer, not from ticks', () async {
+    await fromApi(apiChain(120, 200));
     now = t.add(const Duration(seconds: 13, milliseconds: 400));
 
     expect(chain.currentSecondsCounter, 187);
@@ -159,12 +201,28 @@ void main() {
   test('the chat sees a live chain without the chain widget open', () {
     fromPage(current: 120, timeout: 200, at: t);
     now = t.add(const Duration(seconds: 5));
-    final live = ChatFactionOps.chainOf(chain)!;
+    final live = chatBarChain(chain)!;
     expect(live.hits, 120);
     expect(live.seconds, 195);
 
     now = t.add(const Duration(seconds: 16));
-    expect(ChatFactionOps.chainOf(chain), isNull);
+    expect(chatBarChain(chain), isNull);
+  });
+
+  test('a simulated chain reaches the chat, never the chain controller', () {
+    final prefs = ChatPrefs();
+    final chat = ChatController(FakeChatSource(), prefs);
+    final ops = ChatFactionOps(chat, prefs);
+    addTearDown(chat.dispose);
+    addTearDown(() => ops.simulate(null));
+    fromPage(current: 120, timeout: 200, at: t);
+    ops.simulate(const ChatChain(hits: 7, seconds: 40, bonus: 10), live: true);
+
+    expect(ops.chainOf(chain)!.hits, 7);
+    expect((chain.chainModel!.chain!.current, chain.currentSecondsCounter), (120, 200));
+
+    ops.simulate(null);
+    expect(ops.chainOf(chain)!.hits, 120);
   });
 
   test('a page out of sight is ignored', () {
@@ -175,72 +233,210 @@ void main() {
   });
 
   testWidgets('losing sight of the page hands over to the API at once', (tester) async {
+    await chatPolling();
     fromPage(current: 120, timeout: 200, at: t);
     expect(chain.webLive, isTrue);
+    final calls = api.calls;
 
     onScreen = false;
     now = t.add(const Duration(seconds: 3));
     expect(chain.webLive, isFalse);
     await tester.pump(const Duration(seconds: 1));
-    expect(api.calls, 1);
+    expect(api.calls, calls + 1);
     expect(chain.currentSecondsCounter, 197);
 
     api.answer.complete(apiChain(121, 300));
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     expect(chain.chainModel!.chain!.current, 121);
     expect(chain.currentSecondsCounter, 300);
+    chain.deactivateStatus();
   });
 
-  testWidgets('a cached API answer older than the page does not replace it', (tester) async {
+  test('a cached API answer older than the page does not replace it', () async {
     fromPage(current: 120, timeout: 290, at: t);
     onScreen = false;
     now = t.add(const Duration(seconds: 3));
-    await tester.pump(const Duration(seconds: 1));
+    await fromApi(apiChain(118, 100));
 
-    api.answer.complete(apiChain(118, 100));
-    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     expect(chain.chainModel!.chain!.current, 120);
     expect(chain.currentSecondsCounter, 287);
   });
 
-  testWidgets('a fresh API answer arriving late with the same hits is applied', (tester) async {
+  test('a fresh API answer arriving late with the same hits is applied', () async {
     fromPage(current: 120, timeout: 290, at: t);
     onScreen = false;
-    now = t.add(const Duration(seconds: 3));
-    await tester.pump(const Duration(seconds: 1));
-
     now = t.add(const Duration(seconds: 15));
-    api.answer.complete(apiChain(120, 280));
-    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await fromApi(apiChain(120, 280));
+
     expect(chain.chainModel!.chain!.timeout, 280);
     expect(chain.currentSecondsCounter, 275);
   });
 
-  testWidgets('an expired page anchor accepts a dropped chain', (tester) async {
+  test('an expired page anchor accepts a dropped chain', () async {
     fromPage(current: 120, timeout: 290, at: t);
     onScreen = false;
     now = t.add(const Duration(seconds: 291));
-    await tester.pump(const Duration(seconds: 1));
+    await fromApi(apiChain(0, 0));
 
-    api.answer.complete(apiChain(0, 0));
-    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     expect(chain.chainModel!.chain!.current, 0);
   });
 
-  test('a Torn page without the chain bar hands over at once', () {
+  testWidgets('the watcher keeps counting from the page while the API lags', (tester) async {
+    chain.watching = true;
+    api.answer.complete(apiChain(119, 290));
+    fromPage(current: 120, timeout: 140, at: t);
+    onScreen = false;
+    now = t.add(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+
+    expect(api.calls, 1);
+    expect(chain.chainModel!.chain!.current, 120);
+    expect(chain.chainWatcherDefcon, WatchDefcon.green2);
+    chain.watching = false;
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  test('a Torn page without the chain bar hands over at once', () async {
+    await chatPolling();
+    fromPage(current: 120, timeout: 200, at: t);
+    final calls = api.calls;
+    chain.applyWebChain({'none': true}, onScreen: page);
+
+    expect(chain.webLive, isFalse);
+    expect(api.calls, calls + 1);
+  });
+
+  test('a second tear-off still hands over without the bar', () async {
+    final reader = BarReader();
+    page = reader.isOnScreen;
+    await chatPolling();
+    fromPage(current: 120, timeout: 200, at: t);
+    final calls = api.calls;
+    chain.applyWebChain({'none': true}, onScreen: reader.isOnScreen);
+
+    expect(chain.webLive, isFalse);
+    expect(api.calls, calls + 1);
+  });
+
+  test('with nobody polling, leaving the page asks the API nothing', () {
     fromPage(current: 120, timeout: 200, at: t);
     chain.applyWebChain({'none': true}, onScreen: page);
 
     expect(chain.webLive, isFalse);
-    expect(api.calls, 1);
+    expect(api.calls, 0);
   });
 
-  test('another page without the chain bar does not stop the live one', () {
+  test('another page without the chain bar does not stop the live one', () async {
+    await chatPolling();
     fromPage(current: 120, timeout: 200, at: t);
+    final calls = api.calls;
     chain.applyWebChain({'none': true}, onScreen: () => true);
 
     expect(chain.webLive, isTrue);
-    expect(api.calls, 0);
+    expect(api.calls, calls);
+  });
+
+  test('the faction room in view keeps the chain without the page', () async {
+    await chatPolling(apiChain(120, 200));
+    now = t.add(const Duration(seconds: 5));
+    final live = chatBarChain(chain)!;
+    expect(live.hits, 120);
+    expect(live.seconds, 195);
+
+    await chain.chatInView(false);
+    expect(chain.statusActive, isFalse);
+  });
+
+  test('leaving the faction room keeps polling for another client', () async {
+    chain.pipShown();
+    await chatPolling(apiChain(120, 200));
+    await chain.chatInView(false);
+
+    expect(chain.statusActive, isTrue);
+  });
+
+  test('closing one chain widget while another lives keeps polling after the chat', () async {
+    chain
+      ..addChainWidget()
+      ..addChainWidget();
+    api.answer = Completer()..complete(apiChain(120, 200));
+    await chain.activateChainWidgetStatusRequests();
+    chain.removeChainWidget();
+    chain.tryToDeactivateStatus();
+    await chain.chatInView(true);
+    await chain.chatInView(false);
+
+    expect(chain.statusActive, isTrue);
+  });
+
+  testWidgets('the faction room stops polling when the app goes to the background', (tester) async {
+    final prefs = ChatPrefs();
+    final chat = ChatController(FakeChatSource(), prefs)..openConversation(ChatFactionOps.roomId);
+    final ops = ChatFactionOps(chat, prefs)..start();
+    api.answer = Completer()..complete(apiChain(120, 200));
+    await tester.pump(const Duration(seconds: 1));
+    expect(chain.statusActive, isTrue);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(seconds: 1));
+    expect(chain.statusActive, isFalse);
+
+    ops.stop();
+    chat.dispose();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+  });
+
+  testWidgets('a restart on a chain in cooldown polls slowly again', (tester) async {
+    chain.pipShown();
+    Future<void> start() async {
+      api.answer = Completer()..complete(apiChain(100, 0, cooldown: 3000));
+      await chain.activateChainWidgetStatusRequests();
+    }
+
+    await start();
+    await tester.pump(const Duration(seconds: 10));
+    chain.deactivateStatus();
+    await start();
+    final calls = api.calls;
+    await tester.pump(const Duration(seconds: 40));
+
+    expect(api.calls, calls + 2);
+    chain.deactivateStatus();
+  });
+
+  testWidgets('back from the background the chat waits for a fresh chain', (tester) async {
+    final prefs = ChatPrefs();
+    final chat = ChatController(FakeChatSource(), prefs)..openConversation(ChatFactionOps.roomId);
+    final ops = ChatFactionOps(chat, prefs)..start();
+    api.answer = Completer()..complete(apiChain(120, 290));
+    await tester.pump(const Duration(seconds: 1));
+    expect(ops.chainOf(chain)?.seconds, 290);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump(const Duration(seconds: 1));
+    api.answer = Completer();
+    now = t.add(const Duration(seconds: 180));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(seconds: 2));
+    expect(ops.chainOf(chain), isNull);
+    expect(chat.messagesFor(ChatFactionOps.roomId).where((m) => m.isLocal), isEmpty);
+
+    api.answer.complete(apiChain(125, 280));
+    await tester.pump(const Duration(seconds: 1));
+    expect(ops.chainOf(chain)?.hits, 125);
+
+    ops.stop();
+    chat.dispose();
+  });
+
+  testWidgets('a stopped chain with nobody watching starts no polling', (tester) async {
+    api.answer = Completer()..complete(apiChain(0, 0));
+    await chain.activateChainWidgetStatusRequests();
+    await tester.pump(const Duration(seconds: 30));
+
+    expect(chain.statusActive, isFalse);
+    expect(api.calls, 1);
   });
 
   test('a late message from another tab is ignored', () {
@@ -276,7 +472,7 @@ void main() {
     });
 
     test('a dropped chain hands over to the API once', () async {
-      await fromApi(apiChain(100, 290));
+      await chatPolling();
       fromAttack(current: 120, timeout: 200, at: t);
       final calls = api.calls;
       chain.applyWebChain({'none': true}, onScreen: page);
@@ -314,13 +510,22 @@ void main() {
   });
 
   group('switched off from Remote Config', () {
-    test('the page reading is dropped and the API takes over', () {
+    test('the page reading is dropped and the API takes over', () async {
+      await chatPolling();
       fromPage(current: 120, timeout: 200, at: t);
+      final calls = api.calls;
       chain.webLiveAllowed = false;
 
       expect(chain.webLive, isFalse);
-      expect(ChatFactionOps.chainOf(chain), isNull);
-      expect(api.calls, 1);
+      expect(api.calls, calls + 1);
+    });
+
+    test('a page reading alone stops reaching the chat', () {
+      fromPage(current: 120, timeout: 200, at: t);
+      chain.webLiveAllowed = false;
+
+      expect(chatBarChain(chain), isNull);
+      expect(api.calls, 0);
     });
 
     test('readings that arrive afterwards are ignored', () {
@@ -339,13 +544,25 @@ void main() {
 
       expect(chain.chainModel!.chain!.current, 100);
     });
+  });
 
-    test('switching it back on accepts readings again', () {
-      chain.webLiveAllowed = false;
-      chain.webLiveAllowed = true;
-      fromPage(current: 120, timeout: 200, at: t);
+  group('watcher and panic', () {
+    test('switching the watcher off takes panic mode down too', () {
+      chain.watching = true;
+      chain.activatePanicMode();
 
-      expect(chain.webLive, isTrue);
+      expect(chain.setWatcher(false), isTrue);
+      expect(chain.panicModeActive, isFalse);
+      expect(chain.watcherActive, isFalse);
+    });
+
+    test('panic mode brings the watcher up, and says so only then', () {
+      expect(chain.setPanic(true), isTrue);
+      expect(chain.watcherActive, isTrue);
+
+      expect(chain.setPanic(false), isFalse);
+      expect(chain.setPanic(true), isFalse);
+      expect(chain.panicModeActive, isTrue);
     });
   });
 }

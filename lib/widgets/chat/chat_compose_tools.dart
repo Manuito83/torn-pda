@@ -3,17 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chat/chat_banking.dart';
 import 'package:torn_pda/models/chat/chat_emoji.dart';
 import 'package:torn_pda/models/chat/chat_format.dart';
 import 'package:torn_pda/models/chat/chat_item_price.dart';
+import 'package:torn_pda/models/chat/chat_link_info.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_quick_rows.dart';
 import 'package:torn_pda/models/chat/chat_template.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
-import 'package:torn_pda/providers/chat/chat_banking.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -146,7 +148,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
     final picked = await showChatTimePicker(context, TimeOfDay.now());
     if (picked == null) return;
     final today = DateTime.now();
-    widget.onInsert(ChatTimeRef.insertText(DateTime(today.year, today.month, today.day, picked.hour, picked.minute)));
+    widget.onInsert(chatTctText(DateTime(today.year, today.month, today.day, picked.hour, picked.minute)));
   }
 
   Future<void> _requestMoney() async {
@@ -230,7 +232,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
 
   Widget _replies(BuildContext context) {
     final prefs = NativeChat.prefs;
-    final split = ChatPrefs.splitQuickRows(prefs.quickOrder, rows: prefs.actionRows);
+    final split = chatQuickRowsSplit(prefs.quickOrder, rows: prefs.actionRows);
     var action = 0;
     final rows = [
       for (final type in prefs.quickRowsShown)
@@ -391,7 +393,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
           onPressed: tap(_insertTime),
         ),
       ],
-      'bank' when ChatBanking.appliesTo(widget.roomId ?? '') => [
+      'bank' when chatBankAppliesTo(widget.roomId ?? '') => [
         ActionChip(
           avatar: const Icon(Icons.account_balance_outlined, size: 18),
           label: const Text('Request money'),
@@ -551,7 +553,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
             label: Text(item.price.isEmpty ? item.name : '${item.name} ${item.price}'),
             visualDensity: VisualDensity.compact,
             onPressed: () {
-              ChatTemplate.lastItem = item;
+              NativeChat.controller.lastItem = item;
               widget.onInsert(item.text(link: _withLink));
             },
           ),
@@ -837,7 +839,7 @@ class ChatQuickActionsEditor extends StatelessWidget {
                 title: const Text('Rows'),
                 trailing: SegmentedButton<int>(
                   showSelectedIcon: false,
-                  segments: [for (final n in ChatPrefs.quickRowsOptions) ButtonSegment(value: n, label: Text('$n'))],
+                  segments: [for (final n in chatQuickRowsOptions) ButtonSegment(value: n, label: Text('$n'))],
                   selected: {prefs.quickRows},
                   onSelectionChanged: (v) => prefs.setQuickRows(v.first),
                 ),
@@ -860,11 +862,11 @@ class ChatQuickActionsEditor extends StatelessWidget {
                   onReorderItem: prefs.moveQuickAction,
                   children: [
                     for (final (i, id) in order.indexed)
-                      if (id == ChatPrefs.rowBreak2)
+                      if (id == chatQuickRowBreak2)
                         rule(id, 'Row ${actionRow[1]}', drag: i)
-                      else if (id == ChatPrefs.rowBreak3)
+                      else if (id == chatQuickRowBreak3)
                         rule(id, 'Row ${actionRow[2]}', drag: i)
-                      else if (id == ChatPrefs.offBreak)
+                      else if (id == chatQuickOffBreak)
                         rule(id, 'Disabled by you')
                       else
                         SwitchListTile(

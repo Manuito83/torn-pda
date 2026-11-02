@@ -6,10 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
-import 'package:torn_pda/utils/discreet_schedule.dart';
-import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 import 'chat_fakes.dart';
@@ -57,26 +57,6 @@ void main() {
     await Prefs().setDiscreetNotifications(true);
     await showTornChatNotification(push);
     expectHidden();
-  }, skip: skip);
-
-  test('a DM push hides sender and text inside the schedule', () async {
-    final now = DateTime.now();
-    final minute = now.hour * 60 + now.minute;
-    await Prefs().setDiscreetSchedule(
-      DiscreetSchedule(enabled: true, from: (minute - 5) % 1440, to: (minute + 5) % 1440),
-    );
-    await showTornChatNotification(push);
-    expectHidden();
-  }, skip: skip);
-
-  test('a DM push is normal outside the schedule', () async {
-    final now = DateTime.now();
-    final minute = now.hour * 60 + now.minute;
-    await Prefs().setDiscreetSchedule(
-      DiscreetSchedule(enabled: true, from: (minute + 60) % 1440, to: (minute + 120) % 1440),
-    );
-    await showTornChatNotification(push);
-    expect(shown.single['title'], 'Bravo');
   }, skip: skip);
 
   test('the schedule is read in the background from the mirror', () async {

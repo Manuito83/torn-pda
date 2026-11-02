@@ -1,4 +1,5 @@
 import 'package:torn_pda/models/chat/chat_status.dart';
+import 'package:torn_pda/models/chat/chat_time.dart';
 
 class ChatUser {
   final int id;
@@ -57,7 +58,9 @@ class ChatRoom {
   final String id;
   final String name;
   final ChatRoomType type;
-  final bool canWrite;
+
+  /// Torn's input blockers, empty when writable
+  final List<String> blockers;
   final int? messageSeq;
   final ChatUser? peer;
   final ChatMessage? lastMessage;
@@ -66,14 +69,13 @@ class ChatRoom {
 
   final String? emblemUrl;
 
-  /// Torn's reportTyping rule
   final bool reportTyping;
 
   const ChatRoom({
     required this.id,
     required this.name,
     this.type = ChatRoomType.official,
-    this.canWrite = true,
+    this.blockers = const [],
     this.messageSeq,
     this.peer,
     this.lastMessage,
@@ -87,16 +89,38 @@ class ChatRoom {
 
   bool get isDm => type == ChatRoomType.dm;
 
-  ChatRoom withEmblem(String? url) => ChatRoom(
+  bool get canWrite => blockers.isEmpty;
+
+  static const String blockedByMe = 'blocked_by_me';
+
+  // Torn's order and wording
+  static const Map<String, String> _blockerTexts = {
+    'you_room_banned': 'You have been banned from this room',
+    'room_frozen': 'This room is frozen',
+    'invited_only': 'Accept the invitation to chat in this room',
+    'not_member': 'You are not a member of this room',
+    'user_banned': 'This person has been chat banned',
+    blockedByMe: 'You have blocked this person',
+    'blocked_by_other': 'This person has blocked you',
+    'stranger_declined': 'This person does not want to talk to strangers',
+  };
+
+  String? get blockerText => _blockerTexts.entries.where((e) => blockers.contains(e.key)).firstOrNull?.value;
+
+  ChatRoom withEmblem(String? url) => _copy(emblemUrl: url, blockers: blockers);
+
+  ChatRoom withBlockers(List<String> value) => _copy(emblemUrl: emblemUrl, blockers: value);
+
+  ChatRoom _copy({required String? emblemUrl, required List<String> blockers}) => ChatRoom(
     id: id,
     name: name,
     type: type,
-    canWrite: canWrite,
+    blockers: blockers,
     messageSeq: messageSeq,
     peer: peer,
     lastMessage: lastMessage,
     icon: icon,
-    emblemUrl: url,
+    emblemUrl: emblemUrl,
     reportTyping: reportTyping,
   );
 
@@ -105,7 +129,19 @@ class ChatRoom {
   static int? peerIdOf(String id) => id.startsWith('dm:') ? int.tryParse(id.substring(3)) : null;
 }
 
-enum ChatConnection { starting, connecting, connected, disconnected, noSession, needsBrowser, twoFactor, offline, tornDown, error }
+enum ChatConnection {
+  starting,
+  connecting,
+  connected,
+  disconnected,
+  noSession,
+  needsBrowser,
+  twoFactor,
+  offline,
+  tornDown,
+  slowLoad,
+  error,
+}
 
 sealed class ChatEvent {
   const ChatEvent();
@@ -206,8 +242,14 @@ class ChatPresenceEvent extends ChatEvent {
 }
 
 class ChatBlockedEvent extends ChatEvent {
-  final Set<int> userIds;
-  const ChatBlockedEvent(this.userIds);
+  final List<ChatUser> users;
+  const ChatBlockedEvent(this.users);
+}
+
+class ChatBlockersEvent extends ChatEvent {
+  final String roomId;
+  final List<String> blockers;
+  const ChatBlockersEvent(this.roomId, this.blockers);
 }
 
 class ChatSendResultEvent extends ChatEvent {
@@ -241,4 +283,35 @@ class ChatTypingEvent extends ChatEvent {
   final String roomId;
   final List<ChatUser> users;
   const ChatTypingEvent(this.roomId, this.users);
+}
+
+enum ChatRoomLoad { loaded, loading, timedOut, unreachable, session }
+
+/// Null when the session line says it
+String? chatUnreachableReason(ChatConnection connection, ChatRoomLoad load) => switch (connection) {
+  ChatConnection.noSession => 'Log in to Torn in the browser',
+  ChatConnection.needsBrowser => 'Finish logging in to Torn in the browser',
+  ChatConnection.twoFactor => 'Enter your 2FA code in the browser',
+  _ => load == ChatRoomLoad.session ? null : 'Could not reach the chat',
+};
+
+const Duration _groupGap = Duration(minutes: 5);
+
+bool chatSameGroup(ChatClock clock, ChatMessage? a, ChatMessage? b) {
+  if (a == null || b == null || a.isSystem || b.isSystem || a.sender.id != b.sender.id) return false;
+  return clock.sameDay(a.createdAt, b.createdAt) && b.createdAt.difference(a.createdAt).abs() < _groupGap;
+}
+
+String? chatTravelFlag(ChatRoom room) => room.id == ChatRoom.travelId ? chatCountryFlag(room.name) : null;
+
+String? chatCountryFlag(String country) {
+  final name = country.trim().toLowerCase().replaceAll(' ', '-');
+  final file = switch (name) {
+    'uk' || 'united-kingdom' => 'uk',
+    'uae' || 'united-arab-emirates' => 'uae',
+    'cayman' || 'cayman-islands' => 'cayman',
+    'argentina' || 'canada' || 'china' || 'hawaii' || 'japan' || 'mexico' || 'south-africa' || 'switzerland' => name,
+    _ => null,
+  };
+  return file == null ? null : 'images/flags/ball/ball_$file.png';
 }

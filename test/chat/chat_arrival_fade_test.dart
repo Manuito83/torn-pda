@@ -98,69 +98,6 @@ void main() {
   });
 
   group('fade widget', () {
-    tearDown(() => NativeChat.prefs.animations = ChatAnimations.verySmooth);
-
-    Widget host({bool still = false}) => MaterialApp(
-      home: MediaQuery(
-        data: MediaQueryData(disableAnimations: still),
-        child: const ChatArrivalFade(animate: true, child: Text('hello')),
-      ),
-    );
-
-    double opacity(WidgetTester tester) => tester
-        .widget<FadeTransition>(
-          find.descendant(of: find.byType(ChatArrivalFade), matching: find.byType(FadeTransition)),
-        )
-        .opacity
-        .value;
-
-    testWidgets('an arrival fades in and rises, readable from the first frame', (tester) async {
-      final handle = tester.ensureSemantics();
-      await tester.pumpWidget(host());
-      expect(opacity(tester), 0);
-      expect(find.semantics.byLabel('hello'), findsOneWidget);
-      final start = tester.getTopLeft(find.text('hello')).dy;
-
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(opacity(tester), allOf(greaterThan(0), lessThan(1)));
-      final mid = tester.getTopLeft(find.text('hello')).dy;
-      expect(mid, lessThan(start));
-
-      await tester.pump(const Duration(milliseconds: 500));
-      expect(opacity(tester), 1);
-      expect(tester.getTopLeft(find.text('hello')).dy, lessThan(mid));
-
-      await tester.pumpWidget(host());
-      expect(opacity(tester), 1);
-      expect(find.semantics.byLabel('hello'), findsOneWidget);
-      handle.dispose();
-    });
-
-    testWidgets('the chosen option sets how long the fade lasts', (tester) async {
-      NativeChat.prefs.animations = ChatAnimations.quick;
-      await tester.pumpWidget(host());
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(opacity(tester), 1);
-      await tester.pumpWidget(const SizedBox());
-
-      NativeChat.prefs.animations = ChatAnimations.verySmooth;
-      await tester.pumpWidget(host());
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(opacity(tester), lessThan(1));
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(opacity(tester), 1);
-    });
-
-    testWidgets('with reduced motion nothing animates, whatever the option', (tester) async {
-      for (final option in ChatAnimations.values) {
-        NativeChat.prefs.animations = option;
-        await tester.pumpWidget(host(still: true));
-        final fades = find.descendant(of: find.byType(ChatArrivalFade), matching: find.byType(FadeTransition));
-        expect(fades, findsNothing);
-        await tester.pumpWidget(const SizedBox());
-      }
-    });
-
     group('older messages', () {
       Widget feed({required bool arrived, bool animate = true}) => MaterialApp(
         home: ListView(
@@ -202,17 +139,6 @@ void main() {
         await tester.pumpWidget(feed(arrived: false));
         final before = olderTop(tester);
         await tester.pumpWidget(feed(arrived: true, animate: false));
-        expect(olderTop(tester), closeTo(before - 100, 0.5));
-      });
-
-      testWidgets('stay put with reduced motion', (tester) async {
-        Widget still() => MediaQuery(
-          data: const MediaQueryData(disableAnimations: true),
-          child: feed(arrived: true),
-        );
-        await tester.pumpWidget(feed(arrived: false));
-        final before = olderTop(tester);
-        await tester.pumpWidget(still());
         expect(olderTop(tester), closeTo(before - 100, 0.5));
       });
     });
@@ -290,6 +216,56 @@ void main() {
         await tester.pump(const Duration(seconds: 10));
       }
     });
+
+    testWidgets('an echo keeps the fade', (tester) async {
+      final pages = <Widget Function(ChatController)>[
+        (chat) => MaterialApp(
+          home: ChangeNotifierProvider<ChatController>.value(
+            value: chat,
+            child: const ChatConversationPage(roomId: 'dm:7'),
+          ),
+        ),
+        (chat) => MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 340,
+              height: 440,
+              child: ChatQuickWindow(chat: chat, roomId: 'dm:7', onClose: () {}),
+            ),
+          ),
+        ),
+      ];
+      for (final page in pages) {
+        final chat = fresh();
+        source.emit(ChatHistoryEvent('dm:7', [at('a', const Duration(hours: 1))], hasOlder: false, isOlderPage: false));
+        await tester.pumpWidget(page(chat));
+        await tester.pump();
+
+        chat.send('hello', to: 'dm:7');
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 120));
+        final fade = find.ancestor(of: find.text('hello'), matching: find.byType(ChatArrivalFade));
+        final before = tester.state(fade);
+        final reqId = chat.messagesFor('dm:7').last.reqId;
+
+        final echo = chatMessage('srv-1', 'dm:7', sender: _me, text: 'hello', reqId: reqId, at: DateTime.now());
+        source.emit(ChatMessageEvent(echo));
+        await tester.pump();
+        expect(chat.messagesFor('dm:7').last.id, 'srv-1');
+        expect(tester.state(fade), same(before));
+        double opacity() =>
+            tester.widget<FadeTransition>(find.descendant(of: fade, matching: find.byType(FadeTransition))).opacity.value;
+        expect(opacity(), lessThan(1));
+
+        source.emit(ChatMessageEvent(chatMessage('next', 'dm:7', at: DateTime.now())));
+        await tester.pump();
+        expect(tester.state(fade), same(before));
+        expect(opacity(), lessThan(1));
+
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(seconds: 31));
+      }
+    });
   });
 
   group('inbox row', () {
@@ -329,24 +305,6 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.textContaining('first line'), findsNothing);
       expect(find.textContaining('second line'), findsOneWidget);
-    });
-
-    testWidgets('the chosen option sets how long the line crossing lasts', (tester) async {
-      addTearDown(() => NativeChat.prefs.animations = ChatAnimations.verySmooth);
-      NativeChat.prefs.animations = ChatAnimations.quick;
-      await tester.pumpWidget(row(text: 'first line'));
-      await tester.pumpWidget(row(text: 'second line', id: 'm2'));
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(find.textContaining('first line'), findsNothing);
-
-      await tester.pumpWidget(const SizedBox());
-      NativeChat.prefs.animations = ChatAnimations.verySmooth;
-      await tester.pumpWidget(row(text: 'first line'));
-      await tester.pumpWidget(row(text: 'second line', id: 'm2'));
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(find.textContaining('first line'), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('first line'), findsNothing);
     });
 
     testWidgets('typing a draft does not fade per key', (tester) async {

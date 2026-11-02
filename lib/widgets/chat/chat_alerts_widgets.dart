@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
+import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
@@ -59,6 +61,7 @@ class _ChatAlertsSheet extends StatelessWidget {
       listenable: chat,
       builder: (context, _) {
         final alerts = chat.alerts;
+        final clock = chatClockOf(context);
         return SizedBox(
           height: MediaQuery.sizeOf(context).height * 0.7,
           child: Column(
@@ -85,7 +88,7 @@ class _ChatAlertsSheet extends StatelessWidget {
                         padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom),
                         itemCount: alerts.length,
                         separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
-                        itemBuilder: (context, index) => _alertTile(context, alerts[index]),
+                        itemBuilder: (context, index) => _alertTile(context, clock, alerts[index]),
                       ),
               ),
             ],
@@ -95,7 +98,7 @@ class _ChatAlertsSheet extends StatelessWidget {
     );
   }
 
-  Widget _alertTile(BuildContext context, ChatAlert alert) {
+  Widget _alertTile(BuildContext context, ChatClock clock, ChatAlert alert) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final m = alert.message;
@@ -109,12 +112,16 @@ class _ChatAlertsSheet extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(fontWeight: alert.seen ? null : FontWeight.w700),
       ),
-      subtitle: Text(m.content.replaceAll('\n', ' '), maxLines: 3, overflow: TextOverflow.ellipsis),
+      subtitle: Text(
+        chatShortText(m.content, m.createdAt, clock: clock.clock).replaceAll('\n', ' '),
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(NativeChat.prefs.clock(m.createdAt), style: theme.textTheme.labelSmall),
+          Text(clock.clock(m.createdAt), style: theme.textTheme.labelSmall),
           const SizedBox(height: 4),
           if (match != null)
             Container(
@@ -182,7 +189,7 @@ Future<void> showChatRoomAlerts(BuildContext context, ChatRoom room) {
                         ? effect
                         : (until == null
                               ? 'Muted until you unmute. $effect'
-                              : 'Until ${NativeChat.prefs.stamp(until)}. $effect'),
+                              : 'Until ${chatClockOf(context).stamp(until)}. $effect'),
                   ),
                 ),
                 Padding(
@@ -396,7 +403,8 @@ class ChatAlertSettings extends StatelessWidget {
             SwitchListTile(
               title: const Text('Quiet hours'),
               subtitle: Text(
-                'No chat notifications from ${prefs.minutesClock(prefs.quietFrom)} to ${prefs.minutesClock(prefs.quietTo)}. '
+                'No chat notifications from ${chatClockOf(context).minutesClock(prefs.quietFrom)} '
+                'to ${chatClockOf(context).minutesClock(prefs.quietTo)}. '
                 'The ticker, the counts and the list of mentions keep working',
               ),
               value: prefs.quietHours,
@@ -410,7 +418,7 @@ class ChatAlertSettings extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.bedtime_rounded, size: 18),
-                        label: Text('From ${prefs.minutesClock(prefs.quietFrom)}'),
+                        label: Text('From ${chatClockOf(context).minutesClock(prefs.quietFrom)}'),
                         onPressed: () => _pickTime(context, prefs.quietFrom, (m) => prefs.setQuietRange(from: m)),
                       ),
                     ),
@@ -418,7 +426,7 @@ class ChatAlertSettings extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.wb_sunny_rounded, size: 18),
-                        label: Text('To ${prefs.minutesClock(prefs.quietTo)}'),
+                        label: Text('To ${chatClockOf(context).minutesClock(prefs.quietTo)}'),
                         onPressed: () => _pickTime(context, prefs.quietTo, (m) => prefs.setQuietRange(to: m)),
                       ),
                     ),
@@ -642,7 +650,7 @@ class ChatTickerSettings extends StatelessWidget {
                 'Muted chats and ignored players stay out. @ means only when you are mentioned',
               ),
             ),
-            for (final group in ChatPrefs.tickerOptions)
+            for (final group in prefs.tickerOptions)
               ChatGroupLevelRow(
                 group: group,
                 level: prefs.tickerLevel(group),
@@ -674,7 +682,7 @@ class ChatGroupLevelRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final room = ChatRooms.labelOf(group);
+    final room = ChatRooms.labelOf(group, NativeChat.prefs.remoteRooms);
     final name = ExcludeSemantics(
       child: Row(
         children: [
@@ -741,7 +749,7 @@ class ChatGlowSettings extends StatelessWidget {
             ),
           ),
           if (prefs.glowMode == ChatGlowMode.custom)
-            for (final group in ChatPrefs.tickerOptions)
+            for (final group in prefs.tickerOptions)
               ChatGroupLevelRow(
                 group: group,
                 level: prefs.glowLevel(group),
@@ -769,7 +777,7 @@ class ChatRoomStatePicker extends StatelessWidget {
       ChatRoomState.frozen =>
         until == null
             ? 'Frozen until you unfreeze it. No messages, alerts or counts'
-            : 'Frozen until ${NativeChat.prefs.stamp(until)}. No messages, alerts or counts',
+            : 'Frozen until ${chatClockOf(context).stamp(until)}. No messages, alerts or counts',
       ChatRoomState.hidden => 'Out of the chat list and the counts',
     };
     return Column(

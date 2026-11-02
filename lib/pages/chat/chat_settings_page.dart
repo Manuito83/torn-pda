@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/pages/chat/settings/chat_alerts_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_appearance_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_faction_settings_page.dart';
@@ -7,38 +9,39 @@ import 'package:torn_pda/pages/chat/settings/chat_messages_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_people_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_rooms_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
+import 'package:torn_pda/pages/chat/settings/chat_testing_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_upload_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_writing_settings_page.dart';
-import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/providers/chat/chat_backup.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_alias_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_reminder_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
+import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 Future<void> showChatSettings(NavigatorState navigator, {bool alerts = false, bool imageUpload = false}) {
-  final opened = navigator.push(MaterialPageRoute(builder: (_) => const ChatTheme(child: ChatSettingsPage())));
-  if (alerts) {
-    navigator.push(MaterialPageRoute(builder: (_) => const ChatTheme(child: ChatAlertsSettingsPage())));
-  }
-  if (imageUpload) {
-    navigator.push(MaterialPageRoute(builder: (_) => const ChatTheme(child: ChatUploadSettingsPage())));
-  }
+  final opened = navigator.push(ChatSettingsRoute(const ChatSettingsPage()));
+  if (alerts) navigator.push(ChatSettingsRoute(const ChatAlertsSettingsPage()));
+  if (imageUpload) navigator.push(ChatSettingsRoute(const ChatUploadSettingsPage()));
   return opened;
 }
+
+/// From any page, above the chat windows
+Future<void> showChatSettingsFrom(BuildContext context, {bool alerts = false}) =>
+    showChatSettings(NativeChat.navigatorKey?.currentState ?? Navigator.of(context), alerts: alerts);
 
 class ChatSettingsPage extends StatelessWidget {
   const ChatSettingsPage({super.key});
 
-  String _alertsSummary() {
+  String _alertsSummary(ChatClock clock) {
     final prefs = NativeChat.prefs;
     return [
       prefs.mentions ? 'Mentions on' : 'Mentions off',
       prefs.ticker ? 'Ticker ${prefs.tickerTop ? 'top' : 'bottom'}' : 'Ticker off',
-      if (prefs.quietHours && prefs.alertNotify) 'Quiet ${prefs.minutesClock(prefs.quietFrom)} to ${prefs.minutesClock(prefs.quietTo)}',
+      if (prefs.quietHours && prefs.alertNotify) 'Quiet ${clock.minutesClock(prefs.quietFrom)} to ${clock.minutesClock(prefs.quietTo)}',
     ].join(' - ');
   }
 
@@ -53,7 +56,7 @@ class ChatSettingsPage extends StatelessWidget {
     if (replace && backup.inAppEnabled != null && backup.inAppEnabled != NativeChat.prefs.inAppEnabled) {
       NativeChat.setEnabled(backup.inAppEnabled!);
     }
-    AppIconMenu.publish();
+    Get.find<AppIconMenuController>().publish();
     chatToast('Chat settings imported', seconds: 2);
     return null;
   }
@@ -87,7 +90,7 @@ class ChatSettingsPage extends StatelessWidget {
           ChatSettingsLink(
             leading: const Icon(Icons.notifications_rounded),
             title: 'Alerts',
-            subtitle: _alertsSummary(),
+            subtitle: _alertsSummary(chatClockOf(context)),
             page: const ChatAlertsSettingsPage(),
           ),
           const ChatSettingsLink(
@@ -123,7 +126,7 @@ class ChatSettingsPage extends StatelessWidget {
           const ChatSettingsLink(
             leading: Icon(Icons.shield_rounded),
             title: 'Faction room',
-            subtitle: 'Chain, war, who is online',
+            subtitle: 'Chain, war, events',
             page: ChatFactionSettingsPage(),
           ),
           const ChatSettingsHeading('More'),
@@ -148,7 +151,11 @@ class ChatSettingsPage extends StatelessWidget {
               children: [
                 ChatExportMenu(
                   tooltip: 'Export chat settings',
-                  text: () => ChatBackup.export(prefs, DateTime.now()),
+                  text: () => ChatBackup.export(
+                    prefs,
+                    DateTime.now(),
+                    appIconMenu: Get.find<AppIconMenuController>().slots.value,
+                  ),
                   copied: 'Chat settings copied',
                 ),
                 IconButton(
@@ -169,6 +176,15 @@ class ChatSettingsPage extends StatelessWidget {
               ],
             ),
           ),
+          if (prefs.testingFor(NativeChat.controller.myUserId)) ...[
+            const ChatSettingsHeading('Testing'),
+            ChatSettingsLink(
+              leading: const Icon(Icons.science_outlined),
+              title: 'Faction room tests',
+              subtitle: prefs.testFactionRoom == null ? 'Test faction room, simulated chain' : 'Test faction room on',
+              page: const ChatTestingSettingsPage(),
+            ),
+          ],
         ];
       },
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/models/chat/chat_quick_rows.dart';
 import 'package:torn_pda/models/chat/chat_template.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
@@ -32,13 +33,17 @@ enum ChatNeed {
 
 bool chatLargeText(TextScaler scaler) => scaler.scale(14) > 14 * 1.3;
 
-Set<ChatNeed> chatNeedsOf(MediaQueryData media) => {
-  if (media.accessibleNavigation) ChatNeed.screenReader,
-  if (chatLargeText(media.textScaler)) ChatNeed.largeText,
-  if (media.boldText) ChatNeed.boldText,
-  if (media.highContrast) ChatNeed.highContrast,
-  if (media.disableAnimations) ChatNeed.fewerAnimations,
+Set<ChatNeed> chatNeedsOf(BuildContext context) => {
+  if (MediaQuery.accessibleNavigationOf(context)) ChatNeed.screenReader,
+  if (chatLargeText(MediaQuery.textScalerOf(context))) ChatNeed.largeText,
+  if (MediaQuery.boldTextOf(context)) ChatNeed.boldText,
+  if (MediaQuery.highContrastOf(context)) ChatNeed.highContrast,
+  if (MediaQuery.disableAnimationsOf(context)) ChatNeed.fewerAnimations,
 };
+
+List<ChatHelpGroup> chatHelpGroupsOf(Set<ChatNeed> needs) => needs.isEmpty
+    ? ChatHelpGroup.values
+    : [ChatHelpGroup.accessibility, ...ChatHelpGroup.values.where((g) => g != ChatHelpGroup.accessibility)];
 
 String chatNeedsText(Set<ChatNeed> needs) {
   final names = [
@@ -93,7 +98,7 @@ class ChatHelpEntry {
 }) {
   final quick = chatHelp.where((e) => e.spots.contains(ChatHelpSpot.quick));
   final actionRows = rows.where((t) => t == ChatQuickRow.actions).length;
-  final split = ChatPrefs.splitQuickRows(order, rows: actionRows);
+  final split = chatQuickRowsSplit(order, rows: actionRows);
   final shown = <ChatHelpEntry>{};
   List<ChatHelpEntry> pick(Iterable<String> ids) => [
     for (final id in ids)
@@ -461,8 +466,31 @@ const chatHelp = <ChatHelpEntry>[
     ChatHelpGroup.rooms,
     Icons.link_rounded,
     'Chain and war',
-    'The faction chat shows your chain and ranked war on top, with a note when the chain gets low and one for '
-        'each retal. Choose what shows in Chat settings > Faction room',
+    'The faction chat shows your chain and ranked war on top, with a note when the chain gets low, and who is '
+        'online under them. The crossed swords open targets, war, retals and the finder at any time. Watch retals, '
+        'in the Retals tab, adds a line for each retal. Choose what shows in Chat settings > Faction room',
+  ),
+  ChatHelpEntry(
+    ChatHelpGroup.rooms,
+    Icons.shield_outlined,
+    'Chain watch',
+    'Tap the chain on top, then Take watch to tell your faction you are watching the chain. The shield shows how '
+        'many are on watch: orange when someone needs relief, red when nobody watches a chain that can break. A '
+        'watch ends at its time or when the chain goes into cooldown. The Watcher is your own alarm, separate from '
+        'watch',
+  ),
+  ChatHelpEntry(
+    ChatHelpGroup.rooms,
+    Icons.keyboard_outlined,
+    'Faction room',
+    'Torn PDA reads these lines when typed exactly in the faction chat, also from the web. '
+        '"[PDA] Hitting Name in 30s - at 14:05:19 TCT": the TCT time when the seconds end, 600s at most. '
+        '"[PDA] Joining Name" and "[PDA] Not joining Name". '
+        '"[PDA] Watching the chain until 14:30 TCT", "[PDA] Done watching the chain" and '
+        '"[PDA] Need a chain watcher from 15:10 TCT", the time being optional in the last one. '
+        '"[PDA] Retal available: Name - 1.2B (spy) - until 14:05:19 TCT - '
+        'https://www.torn.com/page.php?sid=attack&user2ID=1234567": the stats part is optional and the TCT time '
+        'is when the retal ends, 5 minutes at most',
   ),
   ChatHelpEntry(
     ChatHelpGroup.rooms,

@@ -5,8 +5,9 @@ import 'package:torn_pda/models/chat/chat_colors.dart';
 import 'package:torn_pda/models/chat/chat_filter.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
 import 'package:torn_pda/models/chat/chat_person.dart';
+import 'package:torn_pda/models/chat/chat_quick_rows.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
-import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 
@@ -134,10 +135,13 @@ class ChatBackup {
   final Set<String>? linkPreviewsOff;
   final String? translateTo;
 
-  /// Shortcut types, empty for none
   final List<String>? appIconMenu;
 
-  static String export(ChatPrefs prefs, DateTime now) => const JsonEncoder.withIndent('  ').convert({
+  static String export(
+    ChatPrefs prefs,
+    DateTime now, {
+    List<String>? appIconMenu,
+  }) => const JsonEncoder.withIndent('  ').convert({
     'version': version,
     'prefs': {
       'itemNicknames': [for (final a in prefs.itemAliases) a.toJson()],
@@ -204,7 +208,7 @@ class ChatBackup {
       'imageHost': prefs.imageHost.name,
       'imgbbExpiration': prefs.imgbbExpiration,
       'muted': prefs.muted.toList(),
-      'appIconMenu': AppIconMenu.slots.value,
+      'appIconMenu': ?appIconMenu,
     },
   });
 
@@ -323,7 +327,7 @@ class ChatBackup {
       quietFrom: minutes('quietFrom'),
       quietTo: minutes('quietTo'),
       quickOrder: strings('quickOrder'),
-      quickRows: option('quickRows', ChatPrefs.quickRowsOptions),
+      quickRows: option('quickRows', chatQuickRowsOptions),
       quickRowTypes: strings('quickRowTypes'),
       quickHidden: strings('quickHidden')?.toSet(),
       messageActionOrder: strings('messageActionOrder'),
@@ -332,7 +336,7 @@ class ChatBackup {
       imageHost: named('imageHost', ChatImageHost.values),
       imgbbExpiration: option('imgbbExpiration', ChatPrefs.imgbbExpirationOptions),
       muted: strings('muted')?.where((r) => r.isNotEmpty).toSet(),
-      appIconMenu: strings('appIconMenu')?.length == AppIconMenu.size ? strings('appIconMenu') : null,
+      appIconMenu: strings('appIconMenu')?.length == AppIconMenuController.size ? strings('appIconMenu') : null,
     );
   }
 }

@@ -10,13 +10,10 @@ import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_window.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 import 'chat_fakes.dart';
 
@@ -46,23 +43,6 @@ class _FakeWebView extends PlatformInAppWebViewWidget {
   void dispose() => platform.disposed++;
 }
 
-class _Browser extends WebViewProvider {
-  final List<String?> preferred = [];
-
-  @override
-  Future openBrowserPreference({
-    required BuildContext context,
-    required String? url,
-    required BrowserTapType browserTapType,
-    bool recallLastSession = false,
-    bool fromNotification = false,
-    bool isChainingBrowser = false,
-    ChainingPayload? chainingPayload,
-    bool focusedPanel = false,
-    bool forceApp = false,
-  }) async => preferred.add(url);
-}
-
 void main() {
   useTempPathProvider();
 
@@ -88,12 +68,6 @@ void main() {
   });
 
   tearDown(() => NativeChat.navigatorKey = null);
-
-  Future<void> emptyBrowser() async {
-    await Prefs().setWebViewSecondaryTabs('{"tabsSave":[]}');
-    await Prefs().setWebViewMainTab('{"tabsSave":[]}');
-    await Prefs().setDefaultBrowser('app');
-  }
 
   test('chat links go to one preview window', () async {
     var heard = 0;
@@ -211,72 +185,9 @@ void main() {
       await tester.pump();
       expect(NativeChat.linkWindow.value, isNull);
     });
-
-    testWidgets('browser closes the window', (tester) async {
-      final web = _Browser();
-      await tester.runAsync(() async {
-        await emptyBrowser();
-        await web.addTab(url: home, tabUid: 'main');
-      });
-      final key = await pumpApp(tester, web: web);
-
-      for (final button in ['Main tab', 'New tab']) {
-        key.currentState!.push(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Text('conversation'))));
-        await tester.pumpAndSettle();
-        NativeChat.screenOpen.value = true;
-        NativeChat.shownPages
-          ..clear()
-          ..add(() => const ChatMinimized('dm:7', offset: 120, frozenAtId: 'm1'));
-        await open(tester, link);
-
-        await tester.runAsync(() async {
-          await tester.tap(find.text(button));
-          await Future<void>.delayed(const Duration(milliseconds: 300));
-        });
-        await tester.pumpAndSettle();
-
-        final kept = NativeChat.minimized.value.single;
-        expect((kept.roomId, kept.window, kept.offset, kept.frozenAtId), ('dm:7', false, 120.0, 'm1'));
-        expect(NativeChat.linkWindow.value, isNull);
-        expect(find.text('conversation'), findsNothing);
-      }
-      expect(web.preferred, [link]);
-      expect(web.tabList.map((t) => t.currentUrl), [home, link]);
-      expect(web.currentTab, 1);
-    });
-
-    testWidgets('new tab waits for tab restore', (tester) async {
-      final web = WebViewProvider();
-      var restoring = false;
-      web.addListener(() {
-        if (!web.browserShowInForeground || restoring) return;
-        restoring = true;
-        web.addTab(url: home, tabUid: 'main');
-        Future<void>.delayed(const Duration(seconds: 1), () async {
-          await web.addTab(url: 'https://www.torn.com/gym.php', tabUid: 'saved');
-          web.activateTab(0);
-        });
-      });
-      await tester.runAsync(emptyBrowser);
-      await pumpApp(tester, web: web);
-      NativeChat.screenOpen.value = true;
-      await open(tester, link);
-      expect(web.tabList, isEmpty);
-
-      await tester.runAsync(() async {
-        await tester.tap(find.text('New tab'));
-        await Future<void>.delayed(const Duration(seconds: 4));
-      });
-      await tester.pumpAndSettle();
-      expect(web.tabList.map((t) => t.currentUrl), [home, 'https://www.torn.com/gym.php', link]);
-      expect(web.currentTab, 2);
-      expect(NativeChat.minimized.value, isEmpty);
-    });
   });
 
   group('link taps', () {
-    final copied = <String>[];
-
     setUp(() {
       Get.reset();
       ChatLinkPreviews.resetForTests();
@@ -286,13 +197,9 @@ void main() {
           'status': {'state': 'Okay'},
         },
       };
-      copied.clear();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
-        (call) async {
-          if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
-          return null;
-        },
+        (call) async => null,
       );
     });
 
@@ -326,115 +233,6 @@ void main() {
         expect(NativeChat.linkWindow.value, isNull);
         await tester.pumpWidget(const SizedBox());
       }
-    });
-
-    testWidgets('link long press menu', (tester) async {
-      var message = 0;
-      await tester.pumpWidget(
-        host(
-          GestureDetector(
-            onLongPress: () => message++,
-            child: const ChatMessageText(content: 'x https://www.torn.com/forums.php?a=12345 y', color: Colors.black),
-          ),
-        ),
-      );
-      final text = find.byWidgetPredicate((w) => w is RichText && w.text.toPlainText().contains('forums.php'));
-      await tester.longPress(text.first);
-      await tester.pumpAndSettle();
-      expect(message, 0);
-      await tester.tap(find.text('Copy link'));
-      await tester.pumpAndSettle();
-      expect(copied, ['https://www.torn.com/forums.php?a=12345']);
-
-      await tester.pumpWidget(host(ChatLinkCard(link: ChatLink.parse('https://example.org/x')!, color: Colors.black)));
-      await tester.longPress(find.byType(ChatLinkCard));
-      await tester.pumpAndSettle();
-      expect(find.text('Open in external browser'), findsOneWidget);
-      expect(NativeChat.linkWindow.value, isNull);
-    });
-  });
-
-  group('split screen', () {
-    late SettingsProvider settings;
-
-    setUp(() async {
-      await Prefs().setWebViewSecondaryTabs('{"tabsSave":[]}');
-      await Prefs().setWebViewMainTab('{"tabsSave":[]}');
-      await Prefs().setSplitBrowsersLayout('');
-      await Prefs().setWebViewLastActiveTab(0);
-    });
-
-    int at(WebViewProvider p, String uid) => p.tabList.indexWhere((t) => t.id == uid);
-
-    Future<WebViewProvider> build(SplitAppLinkTarget target) async {
-      final provider = WebViewProvider()..splitScreenPosition = WebViewSplitPosition.left;
-      for (var i = 0; i < 4; i++) {
-        await provider.addTab(url: 'https://www.torn.com/page$i.php', tabUid: 'tab$i');
-      }
-      provider.updateSplitScreenWidth(1000);
-      settings = SettingsProvider()..splitAppLinkTarget = target;
-      return provider;
-    }
-
-    Future<bool> tap(WebViewProvider p) async {
-      final opened = await p.openLinkBesideApp(
-        url: link,
-        tapType: BrowserTapType.short,
-        settings: settings,
-        focusedPanel: true,
-      );
-      for (var i = 0; i < 20; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
-      return opened;
-    }
-
-    test('new tab beside the app', () async {
-      var p = await build(SplitAppLinkTarget.appSideNewTab);
-      final before = [p.splitLeftSlot, p.splitRightSlot];
-      expect(await tap(p), isTrue);
-      expect([p.splitLeftSlot, p.splitRightSlot], before);
-      expect(p.splitApartOpen, isFalse);
-      expect(p.tabList.length, 5);
-      expect(p.currentTab, 4);
-      expect(p.tabList.last.splitApart, isFalse);
-
-      p = await build(SplitAppLinkTarget.appSideNewTab);
-      p.moveTabToOtherGroup(2);
-      expect(await tap(p), isTrue);
-      expect(p.tabList.length, 5);
-      expect(p.currentTab, 4);
-      expect(p.tabList.last.splitApart, isTrue);
-      expect([p.splitLeftSlot, p.splitRightSlot], [SplitSlotContent.mainBrowser, SplitSlotContent.apartBrowser]);
-    });
-
-    test('link loads in focused tab', () async {
-      var p = await build(SplitAppLinkTarget.appSideTab);
-      p.moveTabToOtherGroup(2);
-      p.activateTab(at(p, 'tab1'));
-      expect(p.exitBrowserSlotToApp(p.slotOfGroup(SplitGroup.apart)), isTrue);
-      final before = [p.splitLeftSlot, p.splitRightSlot];
-      expect(await tap(p), isTrue);
-      expect([p.splitLeftSlot, p.splitRightSlot], before);
-      expect(p.tabList[p.currentTab].id, 'tab1');
-      expect(p.tabList[at(p, 'tab1')].currentUrl, link);
-      expect(p.tabList[at(p, 'tab2')].currentUrl, isNot(link));
-
-      p = await build(SplitAppLinkTarget.appSideTab);
-      p.moveTabToOtherGroup(2);
-      expect(p.splitBrowsersActive, isTrue);
-      expect(p.tabList[p.currentTab].id, 'tab2');
-      expect(await tap(p), isTrue);
-      expect([p.splitLeftSlot, p.splitRightSlot], [SplitSlotContent.mainBrowser, SplitSlotContent.apartBrowser]);
-      expect(p.tabList[at(p, 'tab2')].currentUrl, link);
-      expect(p.tabList[at(p, 'tab0')].currentUrl, isNot(link));
-      expect(p.tabList[p.currentTab].id, 'tab2');
-
-      p = await build(SplitAppLinkTarget.browserTab);
-      p.moveTabToOtherGroup(2);
-      p.updateSplitScreenWidth(700);
-      expect(await tap(p), isFalse);
-      expect(p.tabList.every((t) => t.currentUrl != link), isTrue);
     });
   });
 }

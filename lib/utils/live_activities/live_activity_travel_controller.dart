@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
@@ -20,6 +21,7 @@ class LiveActivityTravelController extends GetxController {
   final _chainStatusProvider = Get.find<ChainStatusController>();
   final _bridgeController = Get.find<LiveActivityBridgeController>();
   final _prefs = Prefs();
+  late SettingsProvider _settings;
 
   // Ensure that special "initial check" logic (like ignoring stale old arrivals)
   // is applied only once, specifically during the first processing run that has valid API data
@@ -69,7 +71,8 @@ class LiveActivityTravelController extends GetxController {
   @visibleForTesting
   String? get activeSessionIdForTest => _activeSessionId;
 
-  Future<void> activate() async {
+  Future<void> activate(SettingsProvider settings) async {
+    _settings = settings;
     if (_isMonitoring) {
       log("TravelLiveActivityHandler: Already active and monitoring.");
       return;
@@ -404,6 +407,7 @@ class LiveActivityTravelController extends GetxController {
         routeCountry = TravelTimes.inferOriginCountry(
           durationSeconds: travelDuration,
           apiMethod: apiTravelData['method'],
+          reductionPercent: _settings.travelTimeReduction,
         );
         currentDestinationDisplayName = "Torn";
         currentDestinationFlagAsset = "ball_torn";

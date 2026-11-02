@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +12,8 @@ import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_upload_settings_page.dart';
+import 'package:torn_pda/providers/chat/chat_image_store.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
-import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/download_error.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
@@ -125,15 +124,7 @@ class ChatImages {
   static final Map<String, Future<Uint8List>> _loading = {};
 
   static final Set<String> shown = {};
-
-  static final Dio _dio = Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 30),
-      responseType: ResponseType.bytes,
-      maxRedirects: 3,
-    ),
-  );
+  static int _generation = 0;
 
   // Hosts here can see the viewer's IP
   static final RegExp autoLoadHosts = RegExp(
@@ -157,26 +148,24 @@ class ChatImages {
     return bytes;
   }
 
-  static Future<Uint8List> load(String url) => _loading[url] ??= _fetch(url).whenComplete(() {
-    _loading.remove(url);
-  });
+  static Future<Uint8List> load(String url, {ChatImageFetch download = chatImageDownload}) {
+    final generation = _generation;
+    return _loading[url] ??= _fetch(url, download, generation).whenComplete(() {
+      if (generation == _generation) _loading.remove(url);
+    });
+  }
 
-  static Future<Uint8List> _fetch(String url) async {
-    final cancel = CancelToken();
-    final response = await ChatLinkPreviews.getPublic<List<int>>(
-      _dio,
-      Uri.parse(url.replaceFirst(RegExp('^http:', caseSensitive: false), 'https:')),
-      cancelToken: cancel,
-      onReceiveProgress: (received, total) {
-        if (total > maxBytes || received > maxBytes) cancel.cancel('too big');
-      },
-    );
-    final type = response.headers.value(Headers.contentTypeHeader)?.toLowerCase() ?? '';
-    if (!type.startsWith('image/') && !type.startsWith('application/octet-stream')) {
-      throw const FormatException('not an image');
-    }
-    final bytes = Uint8List.fromList(response.data ?? const []);
-    if (bytes.isEmpty) throw const FormatException('empty');
+  static void forget() {
+    _generation++;
+    _cache.clear();
+    _loading.clear();
+    shown.clear();
+  }
+
+  static Future<Uint8List> _fetch(String url, ChatImageFetch download, int generation) async {
+    final bytes = await download(url, maxBytes);
+    if (bytes == null) throw const FormatException('not an image');
+    if (generation != _generation) return bytes;
     _cache[url] = bytes;
     var total = _cache.values.fold<int>(0, (sum, b) => sum + b.length);
     while (total > _cacheBytes && _cache.length > 1) {

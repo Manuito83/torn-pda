@@ -34,9 +34,9 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/chaining/chain_attack.dart';
 import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
@@ -538,23 +538,15 @@ class LootPageState extends State<LootPage> {
                         });
                         _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
 
-                        if (_settingsProvider.discreetNotifications) {
-                          _scheduleNotification(
-                            levelDateTime,
-                            int.parse('400$npcId$levelNumber'),
-                            '400-$npcId',
-                            "L",
-                            "${npcDetails.name} - $levelNumber!",
-                          );
-                        } else {
-                          _scheduleNotification(
-                            levelDateTime,
-                            int.parse('400$npcId$levelNumber'),
-                            '400-$npcId',
-                            "${npcDetails.name} loot",
-                            "Approaching level $levelNumber!",
-                          );
-                        }
+                        _scheduleNotification(
+                          levelDateTime,
+                          int.parse('400$npcId$levelNumber'),
+                          '400-$npcId',
+                          title: "${npcDetails.name} loot",
+                          subtitle: "Approaching level $levelNumber!",
+                          discreetTitle: "L",
+                          discreetSubtitle: "${npcDetails.name} - $levelNumber!",
+                        );
 
                         BotToast.showText(
                           clickClose: true,
@@ -934,23 +926,15 @@ class LootPageState extends State<LootPage> {
                 timeZoneSetting: _settingsProvider.currentTimeZone,
               ).formatHour;
 
-              if (_settingsProvider.discreetNotifications) {
-                _scheduleNotification(
-                  DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
-                  499,
-                  '499-${_lootRangersIdOrder.join(",")}-${_lootRangersNameOrder.join(",")}-$time',
-                  "LR",
-                  "",
-                );
-              } else {
-                _scheduleNotification(
-                  DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
-                  499,
-                  '499-${_lootRangersIdOrder.join(",")}-${_lootRangersNameOrder.join(",")}-$time',
-                  "Loot Rangers attack!",
-                  "Order: ${_lootRangersNameOrder.join(", ")}",
-                );
-              }
+              _scheduleNotification(
+                DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+                499,
+                '499-${_lootRangersIdOrder.join(",")}-${_lootRangersNameOrder.join(",")}-$time',
+                title: "Loot Rangers attack!",
+                subtitle: "Order: ${_lootRangersNameOrder.join(", ")}",
+                discreetTitle: "LR",
+                discreetSubtitle: "",
+              );
 
               BotToast.showText(
                 clickClose: true,
@@ -1116,33 +1100,13 @@ class LootPageState extends State<LootPage> {
                       color: minutesRemaining > 0 && minutesRemaining < 2 ? Colors.red : _themeProvider!.mainText,
                     ),
                     onTap: () async {
-                      // This is a Loot Rangers alert for one or more NPCs
-                      final notes = <String>[];
-                      final colors = <String>[];
-                      for (var i = 0; i < _lootRangersNameOrder.length; i++) {
-                        colors.add("green");
-                        if (i == 0) {
-                          notes.add("Attacks due to commence $timeString!");
-                        } else {
-                          notes.add("");
-                        }
-                      }
-
                       // Open chaining browser for Loot Rangers
-                      context.read<WebViewProvider>().openBrowserPreference(
-                            context: context,
-                            url: "https://www.torn.com/page.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
-                            browserTapType: BrowserTapType.chainShort,
-                            isChainingBrowser: true,
-                            chainingPayload: ChainingPayload()
-                              ..attackIdList = _lootRangersIdOrder
-                              ..attackNameList = _lootRangersNameOrder
-                              ..attackNotesList = notes
-                              ..attackNotesColorList = colors
-                              ..showNotes = true
-                              ..showBlankNotes = false
-                              ..showOnlineFactionWarning = false,
-                          );
+                      attackFromLootRangers(
+                        context,
+                        _lootRangersIdOrder,
+                        _lootRangersNameOrder,
+                        "Attacks due to commence $timeString!",
+                      );
                     },
                   ),
                 ),
@@ -1497,15 +1461,19 @@ class LootPageState extends State<LootPage> {
   Future<void> _scheduleNotification(
     DateTime notificationTime,
     int id,
-    String payload,
-    String title,
-    String subtitle,
-  ) async {
+    String payload, {
+    required String title,
+    required String subtitle,
+    required String discreetTitle,
+    required String discreetSubtitle,
+  }) async {
     const String channelTitle = 'Manual loot';
     const String channelSubtitle = 'Manual loot';
     const String channelDescription = 'Manual notifications for loot';
-    final String notificationTitle = title;
-    final String notificationSubtitle = subtitle;
+    final fireTime = notificationTime.subtract(Duration(seconds: _lootNotificationAhead));
+    final discreet = _settingsProvider.discreetAt(fireTime);
+    final String notificationTitle = discreet ? discreetTitle : title;
+    final String notificationSubtitle = discreet ? discreetSubtitle : subtitle;
     final int notificationId = id;
     final String notificationPayload = payload;
 
@@ -1542,7 +1510,7 @@ class LootPageState extends State<LootPage> {
       notificationTitle,
       notificationSubtitle,
       //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-      tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
+      tz.TZDateTime.from(fireTime, tz.local),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidScheduleMode: exactAlarmsPermissionAndroid
@@ -1653,7 +1621,7 @@ class LootPageState extends State<LootPage> {
 
     final int hour = scheduledAlarmTime.hour;
     final int minute = scheduledAlarmTime.minute;
-    final String message = _settingsProvider.discreetNotifications ? "L" : title;
+    final String message = _settingsProvider.discreetAt(scheduledAlarmTime) ? "L" : title;
 
     String thisSound;
     if (_alarmSound) {
@@ -1681,7 +1649,9 @@ class LootPageState extends State<LootPage> {
 
     final int totalSeconds = alarmTime.difference(DateTime.now()).inSeconds;
 
-    final String message = _settingsProvider.discreetNotifications ? "L" : title;
+    final String message = _settingsProvider.discreetAt(alarmTime.subtract(Duration(seconds: _lootTimerAhead)))
+        ? "L"
+        : title;
 
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',

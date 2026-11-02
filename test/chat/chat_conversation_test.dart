@@ -12,7 +12,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chat/chat_filter.dart';
+import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_player_card.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
@@ -29,6 +31,7 @@ import 'package:torn_pda/widgets/chat/chat_player_actions_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_status_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_message_actions.dart';
 import 'package:torn_pda/widgets/chat/chat_next_unread.dart';
+import 'package:torn_pda/widgets/chat/chat_composer.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -127,6 +130,11 @@ Future<void> _show(WidgetTester tester, ChatController chat, Widget page) => tes
     home: ChangeNotifierProvider<ChatController>.value(value: chat, child: page),
   ),
 );
+
+Widget _withUploads(ChatImageUpload uploads, Widget page) => Provider<ChatImageUpload>.value(value: uploads, child: page);
+
+Future<PlatformFile?> _pickPng({required bool fromFiles}) async =>
+    PlatformFile(name: 'a.png', size: 3, bytes: Uint8List.fromList([1, 2, 3]));
 
 void _connect(FakeChatSource source, [List<ChatRoom> dms = const [_bravo]]) => source
   ..emit(const ChatReadyEvent(99, myName: 'Me'))
@@ -808,6 +816,8 @@ void main() {
     await tester.enterText(find.byType(TextField), '');
 
     await tester.pump(const Duration(seconds: 30));
+    expect(api.rosters, ['faction']);
+    await tester.pump(const Duration(seconds: 30));
     expect(api.rosters, ['faction', 'faction']);
     chat.closeConversation('faction');
     await tester.pump(const Duration(seconds: 60));
@@ -837,27 +847,75 @@ void main() {
     await close(tester);
   });
 
-  testWidgets('the full screen chat minimizes only where a bubble takes it', (tester) async {
+  testWidgets('offline, the faction bar follows the chain without a page rebuild', (tester) async {
+    start();
+    final chain = NativeChat.prefs.factionChain;
+    addTearDown(() => NativeChat.prefs.factionChain = chain);
+    addTearDown(() => NativeChat.factionOps.simulate(null));
+    NativeChat.prefs.factionChain = true;
+    await _show(tester, chat, const ChatConversationPage(roomId: 'faction'));
+    source.emit(const ChatReadyEvent(99, myName: 'Me'));
+    await tester.pump();
+    double bar() => tester.getSize(find.byType(AppBar)).height;
+    final short = bar();
+
+    NativeChat.factionOps.simulate(const ChatChain(hits: 10, seconds: 200, cooldown: false, bonus: 25));
+    await tester.pump();
+    expect(bar(), greaterThan(short));
+
+    NativeChat.factionOps.simulate(null);
+    await tester.pump();
+    expect(bar(), short);
+    await close(tester);
+  });
+
+  testWidgets('narrow bar moves window buttons to the menu', (tester) async {
     start();
     final enabled = NativeChat.prefs.inAppEnabled;
-    addTearDown(
-      () => NativeChat.prefs
-        ..inAppEnabled = enabled
-        ..launcher = ChatLauncher.bubble
-        ..miniBubbles = true,
-    );
-    Future<Finder> minimize(ChatLauncher launcher, {required bool miniBubbles}) async {
-      NativeChat.prefs
-        ..inAppEnabled = true
-        ..launcher = launcher
-        ..miniBubbles = miniBubbles;
-      await _show(tester, chat, ChatConversationPage(key: UniqueKey(), roomId: 'global'));
-      return find.byTooltip('Minimize to the bubble');
-    }
+    addTearDown(() => NativeChat.prefs.inAppEnabled = enabled);
+    addTearDown(tester.view.reset);
+    NativeChat.prefs.inAppEnabled = true;
+    source
+      ..emit(const ChatReadyEvent(99))
+      ..emit(const ChatUnreadEvent({'faction': 3}));
+    tester.view.devicePixelRatio = 1;
+    for (final (width, bigWindow) in [(320.0, false), (400.0, false), (260.0, true), (300.0, true)]) {
+      final narrow = width < (bigWindow ? 280 : 360);
+      final reason = 'width $width${bigWindow ? ' in the big window' : ''}';
+      tester.view.physicalSize = Size(width, 800);
+      await _show(
+        tester,
+        chat,
+        bigWindow
+            ? ChatConversationPage(
+                key: UniqueKey(),
+                roomId: 'global',
+                embedded: true,
+                onPopOut: () {},
+                narrowBelow: 280,
+              )
+            : ChatConversationPage(key: UniqueKey(), roomId: 'global'),
+      );
+      await tester.pump();
+      final name = chat.roomById('global').name;
+      expect(tester.getSize(find.text(name).first).width, greaterThan(40), reason: reason);
+      expect(find.byTooltip('Open in a small window'), narrow ? findsNothing : findsOneWidget, reason: reason);
+      expect(
+        find.byWidgetPredicate((w) => w is Tooltip && (w.message ?? '').startsWith('Next unread')),
+        narrow || bigWindow ? findsNothing : findsOneWidget,
+        reason: reason,
+      );
 
-    expect(await minimize(ChatLauncher.browser, miniBubbles: false), findsNothing);
-    expect(await minimize(ChatLauncher.menuBar, miniBubbles: true), findsOneWidget);
-    expect(await minimize(ChatLauncher.bubble, miniBubbles: false), findsOneWidget);
+      await tester.tap(find.byTooltip('More'));
+      await tester.pump(const Duration(milliseconds: 400));
+      final inMenu = find.descendant(
+        of: find.byType(PopupMenuItem<VoidCallback>),
+        matching: find.textContaining(RegExp('small window|Next unread')),
+      );
+      expect(inMenu, findsNWidgets((narrow ? 2 : 0) + (bigWindow && !narrow ? 1 : 0)), reason: reason);
+      await tester.tapAt(const Offset(5, 790));
+      await tester.pump(const Duration(milliseconds: 400));
+    }
     await close(tester);
   });
 
@@ -912,10 +970,8 @@ void main() {
     NativeChat.prefs
       ..quickReplies = ['Price?']
       ..itemPrice = true;
-    final fetchItems = ChatLinkPreviews.fetchItems;
     final fetchStatus = chatStatusFetch;
     addTearDown(() {
-      ChatLinkPreviews.fetchItems = fetchItems;
       ChatLinkPreviews.resetForTests();
       chatStatusFetch = fetchStatus;
     });
@@ -1026,15 +1082,11 @@ void main() {
     NativeChat.prefs
       ..imageHost = ChatImageHost.imgur
       ..imgurClientId = '';
-    final pick = ChatImageUpload.pick;
-    final adapter = ChatImageUpload.dio.httpClientAdapter;
-    addTearDown(() {
-      ChatImageUpload.pick = pick;
-      ChatImageUpload.dio.httpClientAdapter = adapter;
-      NativeChat.prefs.imgurClientId = '';
-    });
+    addTearDown(() => NativeChat.prefs.imgurClientId = '');
+    final dio = Dio();
+    final uploads = ChatImageUpload(dio: dio, pick: _pickPng);
     start();
-    await _show(tester, chat, const ChatConversationPage(roomId: 'global'));
+    await _show(tester, chat, _withUploads(uploads, const ChatConversationPage(roomId: 'global')));
     _connect(source);
     await tester.pump();
 
@@ -1044,14 +1096,12 @@ void main() {
     expect(find.text('Gallery'), findsNothing);
 
     NativeChat.prefs.imgurClientId = 'fake-client-id';
-    ChatImageUpload.pick = ({required bool fromFiles}) async =>
-        PlatformFile(name: 'a.png', size: 3, bytes: Uint8List.fromList([1, 2, 3]));
     final imgur = _Host(200, {
       'data': {'link': 'https://i.imgur.com/abc.png'},
       'success': true,
       'status': 200,
     });
-    ChatImageUpload.dio.httpClientAdapter = imgur;
+    dio.httpClientAdapter = imgur;
     await tester.tap(find.byTooltip('Attach an image'));
     await tester.pump();
     await tester.tap(find.byTooltip('Attach an image'));
@@ -1067,7 +1117,7 @@ void main() {
     expect(source.sent, isEmpty);
 
     const limited = 'imgur is limiting uploads right now, try again later';
-    ChatImageUpload.dio.httpClientAdapter = _Host(429, {'success': false, 'status': 429});
+    dio.httpClientAdapter = _Host(429, {'success': false, 'status': 429});
     await tester.tap(find.byTooltip('Attach an image'));
     await tester.pump();
     await tester.tap(find.text('Files'));
@@ -1079,7 +1129,7 @@ void main() {
 
     for (final (bytes, id) in [(Uint8List(ChatImageHost.imgur.maxBytes + 1), 'fake-client-id'), (Uint8List(1), ' ')]) {
       await expectLater(
-        ChatImageUpload.upload(ChatImageHost.imgur, bytes, 'a.png', id),
+        uploads.upload(ChatImageHost.imgur, bytes, 'a.png', id),
         throwsA(isA<ChatUploadError>()),
       );
     }
@@ -1087,44 +1137,18 @@ void main() {
     await close(tester);
   });
 
-  testWidgets('picking Catbox in the upload notice shows the pickers', (tester) async {
-    NativeChat.prefs
-      ..imageHost = ChatImageHost.imgur
-      ..imgurClientId = '';
-    addTearDown(() => NativeChat.prefs.imageHost = ChatImageHost.imgur);
-    start();
-    await _show(tester, chat, const ChatConversationPage(roomId: 'global'));
-    _connect(source);
-    await tester.pump();
-
-    await tester.tap(find.byTooltip('Attach an image'));
-    await tester.pump();
-    expect(find.text('Gallery'), findsNothing);
-    await tester.tap(find.text('Catbox'));
-    await tester.pump();
-    expect(find.text('Gallery'), findsOneWidget);
-    expect(find.text('Files'), findsOneWidget);
-    await close(tester);
-  });
-
   testWidgets('picking another service after a blocked upload clears the notice', (tester) async {
     NativeChat.prefs
       ..imageHost = ChatImageHost.imgur
       ..imgurClientId = 'fake-client-id';
-    final pick = ChatImageUpload.pick;
-    final adapter = ChatImageUpload.dio.httpClientAdapter;
     addTearDown(() {
-      ChatImageUpload.pick = pick;
-      ChatImageUpload.dio.httpClientAdapter = adapter;
       NativeChat.prefs
         ..imageHost = ChatImageHost.imgur
         ..imgurClientId = '';
     });
-    ChatImageUpload.pick = ({required bool fromFiles}) async =>
-        PlatformFile(name: 'a.png', size: 3, bytes: Uint8List.fromList([1, 2, 3]));
-    ChatImageUpload.dio.httpClientAdapter = _Host(451, {});
+    final uploads = ChatImageUpload(dio: Dio()..httpClientAdapter = _Host(451, {}), pick: _pickPng);
     start();
-    await _show(tester, chat, const ChatConversationPage(roomId: 'global'));
+    await _show(tester, chat, _withUploads(uploads, const ChatConversationPage(roomId: 'global')));
     _connect(source);
     await tester.pump();
 
@@ -1145,13 +1169,9 @@ void main() {
   });
 
   test('ImgBB and Catbox uploads and their errors', () async {
-    final adapter = ChatImageUpload.dio.httpClientAdapter;
-    addTearDown(() => ChatImageUpload.dio.httpClientAdapter = adapter);
     final bytes = Uint8List.fromList([1, 2, 3]);
-    Future<String> up(ChatImageHost host, _Host fake, [String credential = '']) {
-      ChatImageUpload.dio.httpClientAdapter = fake;
-      return ChatImageUpload.upload(host, bytes, 'a.png', credential);
-    }
+    Future<String> up(ChatImageHost host, _Host fake, [String credential = '']) =>
+        ChatImageUpload(dio: Dio()..httpClientAdapter = fake).upload(host, bytes, 'a.png', credential);
 
     Future<void> fails(ChatImageHost host, _Host fake, String message, [String credential = 'k']) => expectLater(
       up(host, fake, credential),
@@ -1200,7 +1220,7 @@ void main() {
     }
     await fails(ChatImageHost.imgbb, _Host(200, {}), 'Add the ImgBB API key in the chat settings first', ' ');
     await expectLater(
-      ChatImageUpload.upload(ChatImageHost.imgbb, Uint8List(ChatImageHost.imgbb.maxBytes + 1), 'big.png', 'k'),
+      ChatImageUpload().upload(ChatImageHost.imgbb, Uint8List(ChatImageHost.imgbb.maxBytes + 1), 'big.png', 'k'),
       throwsA(
         isA<ChatUploadError>().having((e) => e.message, 'message', 'The image is too big, ImgBB takes up to 32 MB'),
       ),

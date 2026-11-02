@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_saved.dart';
+import 'package:torn_pda/models/chat/chat_short_text.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
@@ -167,7 +168,7 @@ class _ChatSearchPageState extends State<ChatSearchPage> {
           for (final m in _expanded.contains(room.id) ? hits : hits.take(_collapsed))
             _ChatFoundTile(
               title: m.isSystem ? room.name : m.sender.name,
-              text: m.content,
+              text: chatShortText(m.content, m.createdAt, clock: chatClockOf(context).clock),
               term: _query,
               at: m.createdAt,
               onTap: () => widget.onOpen(room.id, messageId: m.id),
@@ -270,7 +271,7 @@ class _ChatFoundTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(NativeChat.prefs.stamp(at), style: theme.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+          Text(chatClockOf(context).stamp(at), style: theme.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
         ],
       ),
       subtitle: Text.rich(

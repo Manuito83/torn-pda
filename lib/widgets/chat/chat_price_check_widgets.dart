@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:torn_pda/models/chat/chat_bazaar.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
+import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chat/chat_bazaar_widgets.dart';
+import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -479,10 +480,7 @@ class _ChatItemSheetState extends State<_ChatItemSheet> {
                         Text(_lowest!, style: style),
                       if (_have case final owned?) ...[
                         const SizedBox(height: 4),
-                        Text(
-                          'You have ${owned == 0 ? 'none' : NumberFormat.decimalPattern('en_US').format(owned)}',
-                          style: style,
-                        ),
+                        Text('You have ${owned == 0 ? 'none' : chatCount(owned)}', style: style),
                       ],
                     ],
                   ),

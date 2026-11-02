@@ -30,7 +30,6 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
-import 'package:torn_pda/widgets/webviews/browser_zoom_live_panel.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
@@ -41,33 +40,6 @@ import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-/// Clears HTTP cache only, then reloads
-Future<bool> softCacheReset({
-  required Future<void> Function() clearHttpCache,
-  required Future<void> Function() reload,
-  required void Function(String text, bool success) notify,
-}) async {
-  try {
-    await clearHttpCache();
-  } catch (e) {
-    notify('Could not clear the cache', false);
-    return false;
-  }
-  notify('Cache cleared, reloading', true);
-  await reload();
-  return true;
-}
-
-void showSoftCacheResetToast(String text, bool success) {
-  BotToast.showText(
-    text: text,
-    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-    contentColor: success ? Colors.grey[600]! : Colors.red[700]!,
-    duration: const Duration(seconds: 2),
-    contentPadding: const EdgeInsets.all(10),
-  );
-}
-
 class WebviewUrlDialog extends StatefulWidget {
   final Function? callFindInPage;
   final String? title;
@@ -77,6 +49,7 @@ class WebviewUrlDialog extends StatefulWidget {
   final Key? webviewKey;
   final Function? openDevTools;
   final Future<void> Function()? onSoftCacheReset;
+  final VoidCallback? onZoom;
 
   const WebviewUrlDialog({
     this.callFindInPage,
@@ -87,6 +60,7 @@ class WebviewUrlDialog extends StatefulWidget {
     this.webviewKey,
     this.openDevTools,
     this.onSoftCacheReset,
+    this.onZoom,
   });
 
   @override
@@ -552,7 +526,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           },
                         ),
                       ),
-                    if (widget.inAppWebview != null && Platform.isAndroid)
+                    if (widget.onZoom != null && Platform.isAndroid)
                       Padding(
                         padding: const EdgeInsets.only(top: 5),
                         child: Column(
@@ -570,9 +544,8 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 ],
                               ),
                               onPressed: () {
-                                final OverlayState overlay = Overlay.of(context, rootOverlay: true);
                                 Navigator.of(context).pop();
-                                BrowserZoomLivePanel.show(overlay);
+                                widget.onZoom!();
                               },
                             ),
                           ],

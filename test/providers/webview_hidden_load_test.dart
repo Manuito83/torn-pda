@@ -66,16 +66,13 @@ void main() {
     expect(await restore([torn, other, torn], 2), [false, false, true]);
   });
 
-  test('other sites wait', () async {
+  test('a restored site that is not Torn waits', () async {
     expect(await restore([torn, other, torn], 1), [false, false, false]);
   });
 
   group('browser closed before the shown tab loads', () {
-    tearDown(() => WebViewProvider.isAndroid = () => Platform.isAndroid);
-
     Future<bool> closeEarly(String url, {bool android = true}) async {
-      WebViewProvider.isAndroid = () => android;
-      final web = WebViewProvider();
+      final web = WebViewProvider()..isAndroid = () => android;
       await web.addTab(url: url, tabUid: 't0');
       web.browserShowInForeground = true;
       web.browserShowInForeground = false;
@@ -87,7 +84,7 @@ void main() {
       expect(await closeEarly(torn), isTrue);
     });
 
-    test('other sites wait', () async {
+    test('other sites do not rebuild hidden', () async {
       expect(await closeEarly(other), isFalse);
     });
 

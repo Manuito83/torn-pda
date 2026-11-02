@@ -66,13 +66,10 @@ class ChatShareIn {
   ChatShareIn._();
 
   static const MethodChannel _channel = MethodChannel('tornpda.share');
-  static final ValueNotifier<({String roomId, ChatShared shared, DateTime at})?> pending = ValueNotifier(null);
   static const Duration expiry = Duration(minutes: 2);
-  static bool _started = false;
 
   static void start() {
-    if (_started || !Platform.isAndroid) return;
-    _started = true;
+    if (!Platform.isAndroid) return;
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'shared') unawaited(_receive(ChatShared.from(call.arguments)));
     });
@@ -80,7 +77,7 @@ class ChatShareIn {
   }
 
   static void offer(String roomId, ChatShared shared) {
-    pending.value = (roomId: roomId, shared: shared, at: DateTime.now());
+    NativeChat.controller.sharePending.value = (roomId: roomId, shared: shared, at: DateTime.now());
   }
 
   /// Picks a chat, leaves [text], never sends
@@ -106,6 +103,7 @@ class ChatShareIn {
   }
 
   static ChatShared? take(String roomId) {
+    final pending = NativeChat.controller.sharePending;
     final drop = pending.value;
     if (drop == null || drop.roomId != roomId) return null;
     pending.value = null;

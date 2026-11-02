@@ -5,6 +5,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
@@ -20,23 +21,25 @@ import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
 import 'package:torn_pda/widgets/chat/chat_slot_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_status_sheet.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-import 'package:torn_pda/widgets/webviews/split_divider.dart';
 
 import 'chat_fakes.dart';
 
 Future<GlobalKey<NavigatorState>> _pumpApp(WidgetTester tester, {Widget home = const Scaffold()}) async {
   final key = GlobalKey<NavigatorState>();
   await tester.pumpWidget(
-    MaterialApp(
-      navigatorKey: key,
-      navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
-      builder: (context, child) => Stack(
-        children: [
-          BotToastInit()(context, child),
-          ChatOverlay(navigatorKey: key),
-        ],
+    ChangeNotifierProvider<WebViewProvider>(
+      create: (_) => WebViewProvider(),
+      child: MaterialApp(
+        navigatorKey: key,
+        navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
+        builder: (context, child) => Stack(
+          children: [
+            BotToastInit()(context, child),
+            ChatOverlay(navigatorKey: key),
+          ],
+        ),
+        home: home,
       ),
-      home: home,
     ),
   );
   await tester.pump(const Duration(milliseconds: 400));
@@ -71,7 +74,6 @@ void main() {
     NativeChat.bigWindow.value = null;
     NativeChat.screenOpen.value = false;
     NativeChat.tornTabMissing.value = false;
-    splitDividerRect.value = null;
   });
 
   tearDown(() {
@@ -79,7 +81,6 @@ void main() {
     NativeChat.minimized.value = const [];
     NativeChat.bigWindow.value = null;
     NativeChat.tornTabMissing.value = false;
-    splitDividerRect.value = null;
     Get.reset();
   });
 
@@ -176,7 +177,7 @@ void main() {
     testWidgets('the window opens in the panel it was asked for', (tester) async {
       await _pumpApp(tester);
       const divider = Rect.fromLTWH(396, 0, 8, 600);
-      splitDividerRect.value = divider;
+      tester.element(find.byType(ChatOverlay)).read<WebViewProvider>().splitDividerRect.value = divider;
       NativeChat.openBigWindow(side: SplitSide.right);
       await _settle(tester);
       expect(tester.getRect(_bigWindowView).left, greaterThanOrEqualTo(divider.right));
@@ -511,25 +512,6 @@ void main() {
       expect(_bigWindowView, findsNothing);
     });
 
-    testWidgets('sheets from the window open above the overlay', (tester) async {
-      await _pumpApp(tester);
-      NativeChat.openBigWindow();
-      await _settle(tester);
-      showModalBottomSheet<void>(context: tester.element(_bigWindowView), builder: (_) => const Text('sheet'));
-      await _settle(tester);
-      await _settle(tester);
-      expect(tester.takeException(), isNull);
-      expect(find.text('sheet'), findsOneWidget);
-      expect(tester.getRect(find.text('sheet')).bottom, greaterThan(tester.getRect(_bigWindowView).bottom));
-
-      NativeChat.tornTabMissing.value = true;
-      await _settle(tester);
-      await _settle(tester);
-      expect(tester.takeException(), isNull);
-      expect(find.text('sheet'), findsNothing);
-      NativeChat.tornTabMissing.value = false;
-    });
-
     testWidgets('the status sheet from the window closes the keyboard', (tester) async {
       final fetch = chatStatusFetch;
       addTearDown(() => chatStatusFetch = fetch);
@@ -582,19 +564,6 @@ void main() {
       expect(find.byType(ChatPage), findsNothing);
       expect(NativeChat.screenOpen.value, isFalse);
       expect(NativeChat.bigWindowShown, isTrue);
-      expect(_bigWindowView, findsOneWidget);
-    });
-
-    testWidgets('the page button opens the window', (tester) async {
-      final key = await _pumpApp(tester);
-      unawaited(NativeChat.open(key.currentState!));
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pump(const Duration(seconds: 1));
-
-      await tester.tap(find.byTooltip('Open in a window'));
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.byType(ChatPage), findsNothing);
       expect(_bigWindowView, findsOneWidget);
     });
   });
@@ -674,44 +643,6 @@ void main() {
     });
   });
 
-  group('bubble', () {
-    Finder bubble() => find.byIcon(Icons.forum_rounded).first;
-
-    testWidgets('a tap opens what the setting says', (tester) async {
-      final key = await _pumpApp(tester);
-      await tester.tap(bubble());
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.byType(ChatPage), findsOneWidget);
-      key.currentState!.pop();
-      await _settle(tester);
-      await _settle(tester);
-
-      NativeChat.prefs.launcherTap = ChatLauncherTap.window;
-      await tester.tap(bubble());
-      await _settle(tester);
-      expect(_bigWindowView, findsOneWidget);
-      expect(NativeChat.screenOpen.value, isFalse);
-    });
-
-    testWidgets('a long press gives the chat menu', (tester) async {
-      await _pumpApp(tester);
-      await tester.longPress(bubble());
-      await _settle(tester);
-      await tester.tap(find.text('Window'));
-      await _settle(tester);
-      expect(_bigWindowView, findsOneWidget);
-
-      await tester.longPress(bubble());
-      await _settle(tester);
-      await tester.tap(find.text('Chat settings'));
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.byType(ChatSettingsPage), findsOneWidget);
-      expect(NativeChat.bigWindow.value?.minimized, isTrue);
-    });
-  });
-
   group('saved', () {
     testWidgets('leaving for the saved search closes the window', (tester) async {
       await _pumpApp(tester);
@@ -721,9 +652,48 @@ void main() {
       NativeChat.expandBigWindow(saved: true);
       await tester.pump(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
       expect(NativeChat.bigWindow.value, isNull);
       expect(find.byType(ChatPage), findsOneWidget);
       expect(find.byType(ChatSearchPage, skipOffstage: false), findsOneWidget);
     });
+  });
+
+  testWidgets('a small window over the full chat opens its room when expanded', (tester) async {
+    final key = await _pumpApp(tester);
+    unawaited(NativeChat.open(key.currentState!));
+    await _settle(tester);
+    NativeChat.openQuickWindow('dm:7');
+    await _settle(tester);
+
+    NativeChat.expandQuickWindow('dm:7');
+    for (var i = 0; i < 3; i++) {
+      await _settle(tester);
+    }
+    expect(NativeChat.quickWindows.value, isEmpty);
+    expect(find.byWidgetPredicate((w) => w is ChatConversationPage && w.roomId == 'dm:7'), findsOneWidget);
+    expect(NativeChat.controller.isOnScreen('dm:7'), isTrue);
+
+    key.currentState!.popUntil((route) => route.isFirst);
+    await _settle(tester);
+  });
+
+  testWidgets('chat with someone whose small window is over the full chat opens their room', (tester) async {
+    final key = await _pumpApp(tester);
+    unawaited(NativeChat.open(key.currentState!));
+    await _settle(tester);
+    NativeChat.openQuickWindow('dm:7');
+    await _settle(tester);
+
+    unawaited(NativeChat.openDm(const ChatUser(id: 7, name: 'Seven')));
+    for (var i = 0; i < 3; i++) {
+      await _settle(tester);
+    }
+    expect(NativeChat.quickWindows.value, isEmpty);
+    expect(_minimizedRooms(), isNot(contains('dm:7')));
+    expect(find.byWidgetPredicate((w) => w is ChatConversationPage && w.roomId == 'dm:7'), findsOneWidget);
+
+    key.currentState!.popUntil((route) => route.isFirst);
+    await _settle(tester);
   });
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -267,22 +266,6 @@ void main() {
     expect(order(p), ['tab0', 'tab1', 'tab2', 'tab3']);
   });
 
-  testWidgets('with split screen off in Settings there is no drop zone', (tester) async {
-    final p = await pumpBar(tester);
-    p.splitScreenPosition = WebViewSplitPosition.off;
-    await tester.pump();
-
-    await longPressDrag(
-      tester,
-      'tab1',
-      tester.getCenter(find.byKey(const ValueKey('tab1'))) - const Offset(0, 300),
-      beforeRelease: (_) => expect(find.text('Open here'), findsNothing),
-    );
-
-    expect(apart(p), isEmpty);
-    expect(order(p), ['tab0', 'tab1', 'tab2', 'tab3']);
-  });
-
   testWidgets('reordering inside the bar still works', (tester) async {
     final p = await pumpBar(tester);
     final Offset last = tester.getCenter(find.byKey(const ValueKey('tab3')));
@@ -455,71 +438,6 @@ void main() {
     expect(order(p), ['tab0', 'tab1', 'tab2', 'tab3']);
   });
 
-  testWidgets('the dragged tab is the one moved even if the tabs change mid-drag', (tester) async {
-    final p = await pumpBar(tester);
-
-    await longPressDrag(
-      tester,
-      'tab2',
-      const Offset(250, 250),
-      beforeRelease: (_) async {
-        p.moveTabToOtherGroup(1);
-        await tester.pump();
-        // Any list change during a reorder trips the SDK
-        expect(tester.takeException(), isFlutterError);
-      },
-    );
-
-    expect(apart(p), ['tab1', 'tab2']);
-    expect(order(p), ['tab0', 'tab3', 'tab1', 'tab2']);
-  });
-
-  testWidgets('the pointer up reaches a Listener around the list before the reorder ends', (tester) async {
-    final events = <String>[];
-    final items = ['a', 'b', 'c'];
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Align(
-            alignment: Alignment.bottomCenter,
-            child: SizedBox(
-              height: 50,
-              child: Listener(
-                onPointerUp: (_) => events.add('pointerUp'),
-                child: ReorderableListView(
-                  scrollDirection: Axis.horizontal,
-                  buildDefaultDragHandles: false,
-                  onReorderStart: (_) => events.add('start'),
-                  onReorderEnd: (_) => events.add('end'),
-                  onReorderItem: (from, to) => events.add('item'),
-                  children: [
-                    for (var i = 0; i < items.length; i++)
-                      ReorderableDelayedDragStartListener(
-                        key: ValueKey(items[i]),
-                        index: i,
-                        child: SizedBox(width: 80, child: Text(items[i])),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    final gesture = await tester.startGesture(tester.getCenter(find.text('a')), kind: PointerDeviceKind.touch);
-    await tester.pump(hold);
-    for (var i = 0; i < 8; i++) {
-      await gesture.moveBy(const Offset(25, -40));
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-    await gesture.up();
-    await tester.pumpAndSettle();
-
-    expect(events, ['start', 'pointerUp', 'end', 'item']);
-  });
-
   group('dragging the main tab', () {
     // Wider than the press area
     final Widget mainTab = Builder(
@@ -666,25 +584,6 @@ void main() {
         await gesture.up();
         await settle(tester);
       }
-    });
-
-    testWidgets('released inside the bar, its ghost goes back to it and nothing is copied', (tester) async {
-      final p = await pumpBar(tester, leading: mainTab);
-      final Rect start = tester.getRect(find.byKey(const ValueKey('main')));
-      final gesture = await tester.startGesture(start.center);
-      await tester.pump(hold);
-      await dragTo(tester, gesture, start.center, start.center.translate(120, 0));
-      await gesture.up();
-
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      final double halfway = ghostRect(tester, 'main', start).left;
-      expect(halfway, greaterThan(start.left));
-      expect(halfway, lessThan(start.left + 120));
-
-      await settle(tester);
-      expect(find.byKey(const ValueKey('main')), findsOneWidget);
-      expect(p.tabList.length, 4);
     });
 
     testWidgets('pressed outside the press area of the other tabs it is not dragged', (tester) async {

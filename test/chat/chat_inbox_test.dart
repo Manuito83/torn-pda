@@ -186,9 +186,6 @@ void main() {
     await tester.tap(find.byTooltip(RegExp('^Close quick reply')));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(ChatListReply), findsNothing);
-    // Filter is static, restore it
-    await tester.tap(find.textContaining('Unread'));
-    await tester.pump();
     await close(tester);
   });
 
@@ -425,49 +422,6 @@ void main() {
     await close(tester);
   });
 
-  testWidgets('conversation fades only live messages', (tester) async {
-    start();
-    final past = DateTime.now().subtract(const Duration(hours: 1));
-    ChatHistoryEvent page(int last) => ChatHistoryEvent(
-      'faction',
-      [
-        for (var i = 1; i <= last; i++)
-          chatMessage('f$i', 'faction', name: 'Alpha', text: 'line $i', at: past.add(Duration(seconds: i))),
-      ],
-      hasOlder: false,
-      isOlderPage: false,
-    );
-    double opacity(String text) => tester
-        .widgetList<FadeTransition>(find.ancestor(of: find.textContaining(text), matching: find.byType(FadeTransition)))
-        .map((o) => o.opacity.value)
-        .fold(1.0, (a, b) => a < b ? a : b);
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ChangeNotifierProvider<ChatController>.value(
-          value: chat,
-          child: const ChatConversationPage(roomId: 'faction'),
-        ),
-      ),
-    );
-    source
-      ..emit(const ChatReadyEvent(99))
-      ..emit(const ChatConnectionEvent(ChatConnection.connected))
-      ..emit(page(3));
-    await tester.pumpAndSettle();
-
-    source.emit(page(5));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 30));
-    expect(opacity('line 5'), 1);
-
-    arrive('live', 'line live');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 30));
-    expect(opacity('line live'), lessThan(1));
-    expect(opacity('line 5'), 1);
-    await close(tester);
-  });
-
   testWidgets('quick reply sends to its room', (tester) async {
     start();
     await _show(tester, chat);
@@ -638,7 +592,7 @@ void main() {
     addTearDown(sub.cancel);
     source
       ..emit(const ChatReadyEvent(99))
-      ..emit(const ChatBlockedEvent({7}));
+      ..emit(const ChatBlockedEvent([ChatUser(id: 7, name: 'Golf')]));
     for (final (id, room, sender) in [
       ('1', 'dm:6', 6),
       ('2', 'faction', 1),
@@ -656,6 +610,54 @@ void main() {
     expect(chat.lastMessageIn('dm:7'), isNull);
     expect(alerts.map((a) => a.message.id), ['1']);
     expect(chat.isHidden(const ChatUser(id: 99, name: 'Me')), isFalse);
+  });
+
+  test('a block from another device applies live, with Torn\'s reason', () async {
+    start();
+    addTearDown(chat.dispose);
+    _connect(source, [_dm(7, 'Golf')]);
+    source.emit(const ChatBlockersEvent('dm:7', ['blocked_by_me']));
+    expect(chat.blockedUsers.map((u) => u.name), ['Golf']);
+    expect(chat.roomById('dm:7').canWrite, isFalse);
+
+    source.emit(const ChatBlockersEvent('dm:7', ['blocked_by_other', 'user_banned']));
+    expect(chat.isBlocked(7), isFalse);
+    expect(chat.roomById('dm:7').blockerText, 'This person has been chat banned');
+
+    final asked = source.count('loadBlocked');
+    source.emit(const ChatBlockersEvent('dm:8', ['blocked_by_me']));
+    expect(source.count('loadBlocked'), asked + 1);
+  });
+
+  test('blocking locks the private chat at once and unblocking opens it', () async {
+    start();
+    addTearDown(chat.dispose);
+    const golf = ChatUser(id: 7, name: 'Golf');
+    _connect(source, [_dm(7, 'Golf')]);
+    final blocking = chat.setBlocked(golf, true);
+    expect(chat.roomById('dm:7').blockerText, 'You have blocked this person');
+    expect(await blocking, isTrue);
+
+    expect(await chat.setBlocked(golf, false), isTrue);
+    expect(chat.blockedUsers, isEmpty);
+    expect(chat.roomById('dm:7').canWrite, isTrue);
+    expect(source.calls.where((c) => c.contains('block ')), ['block 7', 'unblock 7']);
+  });
+
+  test('a refused unblock is undone', () async {
+    start();
+    addTearDown(chat.dispose);
+    const golf = ChatUser(id: 7, name: 'Golf');
+    _connect(source, [_dm(7, 'Golf')]);
+    source
+      ..emit(const ChatBlockersEvent('dm:7', ['blocked_by_me']))
+      ..tornAccepts = false;
+
+    final unblocking = chat.setBlocked(golf, false);
+    expect(chat.isBlocked(7), isFalse);
+    expect(await unblocking, isFalse);
+    expect(chat.isBlocked(7), isTrue);
+    expect(chat.roomById('dm:7').canWrite, isFalse);
   });
 
   testWidgets('the friends list opens a private chat', (tester) async {

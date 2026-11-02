@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:torn_pda/models/pip/pip_player.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
@@ -136,11 +137,8 @@ class _PipViewState extends State<PipView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text('No chain data', style: TextStyle(color: Colors.white, fontSize: 22)),
-                if (chain.watcherActive)
-                  Text(
-                    chain.chainWatcherDefcon.name.toUpperCase(),
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
+                if (chain.watcherActive && _watchLabel(chain).isNotEmpty)
+                  Text(_watchLabel(chain), style: const TextStyle(color: Colors.white70, fontSize: 16)),
               ],
             ),
           );
@@ -176,17 +174,17 @@ class _PipViewState extends State<PipView> {
                   style: TextStyle(color: accent, fontSize: 58, fontWeight: FontWeight.bold),
                 ),
               ),
-              if (chain.watcherActive)
-                Text(
-                  chain.chainWatcherDefcon.name.toUpperCase(),
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
+              if (chain.watcherActive && _watchLabel(chain).isNotEmpty)
+                Text(_watchLabel(chain), style: const TextStyle(color: Colors.white70, fontSize: 16)),
             ],
           ),
         );
       },
     );
   }
+
+  String _watchLabel(ChainStatusController chain) =>
+      pipWatchLabel(chain.chainWatcherDefcon, panicMode: chain.panicModeActive, panicValue: chain.panicValue);
 
   Widget _player(PipController pip) {
     (String, Color) status(PipPlayer player) {

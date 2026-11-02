@@ -17,8 +17,8 @@ import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
+import 'package:torn_pda/widgets/chat/chat_composer.dart';
 import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import 'chat_fakes.dart';
@@ -56,7 +56,7 @@ void main() {
   useTempPathProvider();
 
   tearDown(() {
-    ChatShareIn.pending.value = null;
+    NativeChat.controller.sharePending.value = null;
     NativeChat.prefs.imageHost = ChatImageHost.imgur;
     NativeChat.debugCanShareToFaction = null;
     NativeChat.closeQuickWindow();
@@ -236,24 +236,24 @@ void main() {
       ChatShareIn.offer('global', const ChatShared(text: 'hi'));
       final sent = await _composer(tester);
       expect(_box(tester), isEmpty);
-      expect(ChatShareIn.pending.value, isNotNull);
+      expect(NativeChat.controller.sharePending.value, isNotNull);
 
       ChatShareIn.offer('faction', const ChatShared(text: 'https://www.torn.com/x'));
       await tester.pumpAndSettle();
       expect(_box(tester).trim(), 'https://www.torn.com/x');
       expect(sent, isEmpty);
-      expect(ChatShareIn.pending.value, isNull);
+      expect(NativeChat.controller.sharePending.value, isNull);
     });
 
     testWidgets('a share older than two minutes is dropped', (tester) async {
-      ChatShareIn.pending.value = (
+      NativeChat.controller.sharePending.value = (
         roomId: 'faction',
         shared: const ChatShared(text: 'old'),
         at: DateTime.now().subtract(const Duration(minutes: 3)),
       );
       await _composer(tester);
       expect(_box(tester), isEmpty);
-      expect(ChatShareIn.pending.value, isNull);
+      expect(NativeChat.controller.sharePending.value, isNull);
     });
 
     testWidgets('a shared image asks before uploading', (tester) async {
@@ -282,13 +282,13 @@ void main() {
   group('faction share', () {
     test('attack share to faction', () {
       NativeChat.shareToFaction('Target: Alpha [1]\nURL: u\n');
-      expect(ChatShareIn.pending.value!.roomId, 'faction');
-      expect(ChatShareIn.pending.value!.shared.text, 'Target: Alpha [1]\nURL: u');
+      expect(NativeChat.controller.sharePending.value!.roomId, 'faction');
+      expect(NativeChat.controller.sharePending.value!.shared.text, 'Target: Alpha [1]\nURL: u');
       expect(NativeChat.quickWindows.value, ['faction']);
 
       NativeChat.shareToFaction('Target: Bravo [2]');
       expect(NativeChat.quickWindows.value, ['faction']);
-      expect(ChatShareIn.pending.value!.shared.text, 'Target: Bravo [2]');
+      expect(NativeChat.controller.sharePending.value!.shared.text, 'Target: Bravo [2]');
     });
 
     testWidgets('faction chat button only when allowed', (tester) async {
@@ -329,9 +329,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(ShareAttackDialog), findsNothing);
       expect(settings.shareOptions, isEmpty);
-      expect(ChatShareIn.pending.value!.roomId, 'faction');
+      expect(NativeChat.controller.sharePending.value!.roomId, 'faction');
       expect(
-        ChatShareIn.pending.value!.shared.text,
+        NativeChat.controller.sharePending.value!.shared.text,
         'Target: Bravo [42]\nURL: https://www.torn.com/page.php?sid=attack&user2ID=42',
       );
       expect(NativeChat.quickWindows.value, ['faction']);

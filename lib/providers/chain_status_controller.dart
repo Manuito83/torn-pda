@@ -5,17 +5,19 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
+import 'package:torn_pda/models/chaining/chain_bonus.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
+import 'package:torn_pda/models/chaining/watch_defcon.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/notification.dart';
 
@@ -26,7 +28,7 @@ import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNote
 import 'package:vibration/vibration.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
-enum WatchDefcon { cooldown, green1, green2, orange1, orange2, red1, red2, panic, off, apiFail }
+export 'package:torn_pda/models/chaining/watch_defcon.dart';
 
 enum PlayerStatusColor { ok, hospital, jail, travel }
 
@@ -136,15 +138,19 @@ class ChainStatusController extends GetxController {
     return _modelError;
   }
 
+  // Polling stopped, kept until fresh data
+  bool _chainStale = false;
+  bool get chainStale => _chainStale;
+
   String _currentChainTimeString = '';
   String get currentChainTimeString {
     return _currentChainTimeString;
   }
 
-  int _currentSecondsCounter = 0;
-  int get currentSecondsCounter {
-    return _webAnchored ? _webSecondsLeft : _currentSecondsCounter;
-  }
+  int _endsAt = 0;
+  int get currentSecondsCounter => math.max(0, ((_endsAt - clock().millisecondsSinceEpoch) / 1000).ceil());
+
+  void _countFrom(int seconds) => _endsAt = clock().millisecondsSinceEpoch + seconds * 1000;
 
   // MARK: - Watcher & Status Active Flags
   /// Gets the API everywhere for the watcher
@@ -176,14 +182,29 @@ class ChainStatusController extends GetxController {
     return _panicModeActive;
   }
 
-  bool widgetVisible = false;
-  bool pipVisible = false;
+  int _chainWidgets = 0;
+  bool get widgetVisible => _chainWidgets > 0;
+  void addChainWidget() => _chainWidgets++;
+  void removeChainWidget() => _chainWidgets = math.max(0, _chainWidgets - 1);
+
+  bool _pipVisible = false;
+  bool get pipVisible => _pipVisible;
+  void pipShown() => _pipVisible = true;
+
+  void pipHidden() {
+    if (!_pipVisible) return;
+    _pipVisible = false;
+    tryToDeactivateStatus();
+  }
+
+  bool _chatInView = false;
+  bool _chatPolling = false;
 
   // MARK: - Chain State & Timers
   int _lastChainCount = 0;
   bool _wereWeChaining = false;
 
-  Timer? _tickerDecreaseCount;
+  Timer? _ticker;
 
   bool _chainIdling = false;
   bool _chainOngoing = true;
@@ -194,11 +215,9 @@ class ChainStatusController extends GetxController {
   // MARK: - Chain From Torn Pages
   static const int webFreshMs = 15000;
   int _webTs = 0;
-  int _webEndsAt = 0;
   bool _webAnchored = false;
   bool _webFromStore = false;
   bool Function()? _webOnScreen;
-  Timer? _webWatch;
 
   @visibleForTesting
   DateTime Function() clock = DateTime.now;
@@ -212,7 +231,6 @@ class ChainStatusController extends GetxController {
     _webLiveAllowed = value;
     if (value || _webTs == 0) return;
     _webTs = 0;
-    _webEndsAt = 0;
     _webAnchored = false;
     _webFromStore = false;
     _handOverWhenUnseen();
@@ -221,13 +239,32 @@ class ChainStatusController extends GetxController {
   bool get webLive =>
       _webLiveAllowed && clock().millisecondsSinceEpoch - _webTs < webFreshMs && (_webOnScreen?.call() ?? false);
 
-  int get _webSecondsLeft => math.max(0, ((_webEndsAt - clock().millisecondsSinceEpoch) / 1000).ceil());
+  // MARK: - Chain Mini Window
+  final miniWindowOpen = ValueNotifier<bool>(false);
+
+  // Remote Config can only turn it off
+  final miniWindowAvailable = ValueNotifier<bool>(true);
+
+  // Survive the unmount while browsing
+  Offset? miniWindowPos;
+  int miniWindowSize = 1;
+  bool miniWindowFailureReported = false;
+
+  // Needs the page reader
+  void setMiniRemote({required bool mini, required bool web}) {
+    miniWindowAvailable.value = mini && web;
+    if (!miniWindowAvailable.value) miniWindowOpen.value = false;
+  }
+
+  void toggleMiniWindow() {
+    if (miniWindowAvailable.value) miniWindowOpen.value = !miniWindowOpen.value;
+  }
 
   void applyWebChain(Object? raw, {required bool Function() onScreen}) {
     if (!_webLiveAllowed || raw is! Map || !onScreen()) return;
     // The page has no chain bar
     if (raw['none'] == true) {
-      if (!identical(onScreen, _webOnScreen)) return;
+      if (onScreen != _webOnScreen) return;
       _webOnScreen = null;
       return _handOverWhenUnseen();
     }
@@ -241,7 +278,7 @@ class ChainStatusController extends GetxController {
     if (raw['attack'] == true) {
       final api = _chainModel?.chain;
       if (current == null || api?.max == null) return;
-      max = (api!.cooldown ?? 0) == 0 && current < api.max! ? api.max : _nextChainBonus(current);
+      max = (api!.cooldown ?? 0) == 0 && current < api.max! ? api.max : nextChainBonus(current);
       cooldown = 0;
     }
     // Narrow pages without the store hide the timer
@@ -252,11 +289,11 @@ class ChainStatusController extends GetxController {
     final running = raw['active'] == true && cooldown == 0;
     final timeout = running ? pageTimeout : 0;
     _webTs = ts;
-    _webEndsAt = ts + (cooldown > 0 ? cooldown : timeout) * 1000;
+    _endsAt = ts + (cooldown > 0 ? cooldown : timeout) * 1000;
     _webAnchored = true;
     _webFromStore = raw['store'] == true;
     _webOnScreen = onScreen;
-    _webWatch ??= Timer.periodic(const Duration(seconds: 1), (_) => _handOverWhenUnseen());
+    _tickWhileNeeded();
     _chainModel = ChainModel(
       chain: ChainDetails(
         current: current,
@@ -268,29 +305,50 @@ class ChainStatusController extends GetxController {
       ),
     );
     _modelError = false;
+    _chainStale = false;
     _accumulatedErrors = 0;
     _lastChainCount = current;
     _wereWeChaining = running && current >= 10;
-    _currentSecondsCounter = _webSecondsLeft;
-    if (cooldown > 0) {
-      _refreshCooldownClock(_currentSecondsCounter);
-    } else {
-      _refreshChainClock(_currentSecondsCounter);
-    }
-  }
-
-  static int _nextChainBonus(int hits) {
-    const bonuses = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
-    return bonuses.firstWhere((b) => b > hits, orElse: () => hits);
+    _refreshClock();
   }
 
   void _handOverWhenUnseen() {
     if (webLive) return;
-    _webWatch?.cancel();
-    _webWatch = null;
     _webOnScreen = null;
     update();
-    getChainStatus();
+    if (statusActive || watcherActive) getChainStatus();
+  }
+
+  bool get _ticking => statusActive || watcherActive || _webOnScreen != null;
+
+  void _tickWhileNeeded() => _ticker ??= Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+
+  void _stopTickerIfUnused() {
+    if (_ticking) return;
+    _ticker?.cancel();
+    _ticker = null;
+  }
+
+  void _tick() {
+    if (_webOnScreen != null) _handOverWhenUnseen();
+    if (!_ticking) return _stopTickerIfUnused();
+    _refreshClock();
+    if (watcherActive) _chainWatchCheck();
+  }
+
+  /// Faction room shown, app in front
+  Future<void> chatInView(bool shown) async {
+    if (_chatInView == shown) return;
+    _chatInView = shown;
+    if (shown) {
+      if (statusActive) return;
+      _chatPolling = true;
+      return activateChainWidgetStatusRequests();
+    }
+    final mine = _chatPolling;
+    _chatPolling = false;
+    if (mine && !widgetVisible && !_pipVisible && !watcherActive && !panicModeActive) return deactivateStatus();
+    tryToDeactivateStatus();
   }
 
   // MARK: - Initialization
@@ -327,39 +385,40 @@ class ChainStatusController extends GetxController {
     await getChainStatus();
     await getOrSetStatus();
 
+    if (!_chainWidgetRequestsActive) return;
+
     // Activate timers
     _tickerCallFullChainApi?.cancel();
-    _tickerDecreaseCount?.cancel();
     _tickerCallFullChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
-    _tickerDecreaseCount = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      _decreaseTimer();
-      if (_watcherActive) {
-        _chainWatchCheck();
-      }
-    });
+    _tickWhileNeeded();
 
     log("Chain watcher timers activated!");
   }
 
   void deactivateStatus() {
     _tickerCallFullChainApi?.cancel();
-    _tickerDecreaseCount?.cancel();
     _chainWidgetRequestsActive = false;
+    _chatPolling = false;
+    _chainIdling = false;
+    _chainOngoing = true;
+    _chainStale = true;
+    _stopTickerIfUnused();
     log("Chain watcher timers deactivated!");
   }
 
   @override
   void onClose() {
-    _tickerDecreaseCount?.cancel();
+    _ticker?.cancel();
     _tickerCallFullChainApi?.cancel();
     _tickerCallOnlyStatusColorApi?.cancel();
-    _webWatch?.cancel();
     super.onClose();
   }
 
   // MARK: - Watcher Control
-  void activateWatcher() {
+  void activateWatcher({bool fromChat = false}) {
+    if (!_watcherActive) unawaited(UsageCounters.feature(fromChat ? 'chain_watcher_chat' : 'chain_watcher_chaining'));
     _watcherActive = true;
+    _tickWhileNeeded();
     _enableWakelock();
 
     Get.find<AudioController>().play(file: '../sounds/alerts/tick.wav');
@@ -385,6 +444,30 @@ class ChainStatusController extends GetxController {
   void deactivatePanicMode() {
     _panicModeActive = false;
     update();
+  }
+
+  /// Returns whether panic mode went down too
+  bool setWatcher(bool on, {bool fromChat = false}) {
+    if (on) {
+      activateWatcher(fromChat: fromChat);
+      return false;
+    }
+    deactivateWatcher();
+    final panicWasOn = panicModeActive;
+    if (panicWasOn) deactivatePanicMode();
+    return panicWasOn;
+  }
+
+  /// Returns whether the watcher came up too
+  bool setPanic(bool on, {bool fromChat = false}) {
+    if (!on) {
+      deactivatePanicMode();
+      return false;
+    }
+    activatePanicMode();
+    if (watcherActive) return false;
+    activateWatcher(fromChat: fromChat);
+    return true;
   }
 
   void addPanicTarget(PanicTargetModel target) {
@@ -450,18 +533,12 @@ class ChainStatusController extends GetxController {
     update();
   }
 
-  void _decreaseTimer() {
-    if (_webAnchored) {
-      _currentSecondsCounter = _webSecondsLeft;
-    } else if (currentSecondsCounter > 0) {
-      _currentSecondsCounter--;
-    }
-    if (!_modelError) {
-      if (chainModel!.chain!.cooldown! > 0) {
-        _refreshCooldownClock(currentSecondsCounter);
-      } else {
-        _refreshChainClock(currentSecondsCounter);
-      }
+  void _refreshClock() {
+    if (_modelError) return;
+    if (chainModel!.chain!.cooldown! > 0) {
+      _refreshCooldownClock(currentSecondsCounter);
+    } else {
+      _refreshChainClock(currentSecondsCounter);
     }
   }
 
@@ -595,13 +672,13 @@ class ChainStatusController extends GetxController {
         final web = _chainModel!.chain!;
         final api = chainResponse.chain!;
         final bothRunning = (web.cooldown ?? 0) == 0 && (api.cooldown ?? 0) == 0;
-        if (_webFromStore && bothRunning && _webSecondsLeft > 0 && (api.current ?? 0) < _lastChainCount) return;
-        _currentSecondsCounter = _webSecondsLeft;
+        if (_webFromStore && bothRunning && currentSecondsCounter > 0 && (api.current ?? 0) < _lastChainCount) return;
         _webAnchored = false;
       }
       _accumulatedErrors = 0;
       _chainModel = chainResponse;
       _modelError = false;
+      _chainStale = false;
 
       if (kDebugMode) {
         // For timer debugging
@@ -623,20 +700,20 @@ class ChainStatusController extends GetxController {
       if ((chainModel!.chain!.current == 0 || chainModel!.chain!.timeout == 0) && chainModel!.chain!.cooldown == 0) {
         // If we are not chaining, reset everything
         _lastChainCount = 0;
-        _currentSecondsCounter = 0;
+        _endsAt = 0;
         _refreshChainClock(currentSecondsCounter);
       } else if (chainModel!.chain!.cooldown! > 0) {
         // OPTION 2, WE ARE WITH COOLDOWN
         // If current seconds is zero, is because we are entering the app,
         // so, perform an update
         if (currentSecondsCounter == 0) {
-          _currentSecondsCounter = chainModel!.chain!.cooldown!;
+          _countFrom(chainModel!.chain!.cooldown!);
           _refreshCooldownClock(chainModel!.chain!.cooldown!);
         }
         // Thereafter, only update if what we get from the API is below the
         // current automatic timer, or the last thing we have is chaining
         if (chainModel!.chain!.cooldown! < currentSecondsCounter || _wereWeChaining) {
-          _currentSecondsCounter = chainModel!.chain!.cooldown!;
+          _countFrom(chainModel!.chain!.cooldown!);
           _refreshCooldownClock(chainModel!.chain!.cooldown!);
           _wereWeChaining = false;
         }
@@ -645,14 +722,14 @@ class ChainStatusController extends GetxController {
         // Update if for some reason the count in the app is delayed
         // and the real timer is less in Torn
         if (chainModel!.chain!.timeout! < currentSecondsCounter) {
-          _currentSecondsCounter = chainModel!.chain!.timeout!;
+          _countFrom(chainModel!.chain!.timeout!);
           _refreshChainClock(currentSecondsCounter);
         }
         // Below 10, update count but only update timer if it was at 0
         // at the beginning (otherwise count won't start)
         if (chainModel!.chain!.current! > _lastChainCount) {
           if (currentSecondsCounter == 0) {
-            _currentSecondsCounter = chainModel!.chain!.timeout!;
+            _countFrom(chainModel!.chain!.timeout!);
           }
           _lastChainCount = chainModel!.chain!.current!;
           _refreshChainClock(currentSecondsCounter);
@@ -662,14 +739,14 @@ class ChainStatusController extends GetxController {
         // Check if counts are different
         _wereWeChaining = true;
         if (chainModel!.chain!.current! > _lastChainCount) {
-          _currentSecondsCounter = chainModel!.chain!.timeout!;
+          _countFrom(chainModel!.chain!.timeout!);
           _lastChainCount = chainModel!.chain!.current!;
           _refreshChainClock(currentSecondsCounter);
         } else {
           // Else, even if the count has not changed,
           // take a look at the timer, in case it's delayed and update
           if (chainModel!.chain!.timeout! < currentSecondsCounter) {
-            _currentSecondsCounter = chainModel!.chain!.timeout!;
+            _countFrom(chainModel!.chain!.timeout!);
             _refreshChainClock(currentSecondsCounter);
           }
         }
@@ -728,9 +805,6 @@ class ChainStatusController extends GetxController {
       }
       return;
     }
-
-    // Page out of sight, wait for the API
-    if (_webAnchored && !webLive) return;
 
     // If under cooldown, apply blue color and return
     if (chainModel!.chain!.cooldown! > 0) {
@@ -962,46 +1036,14 @@ class ChainStatusController extends GetxController {
   }
 
   // MARK: - Notifications
-  Future<void> showNotification(int id, String payload, String title, String subtitle, {String? tag}) async {
-    final bool stakeout = tag == 'stakeout';
-    final String channelTitle = stakeout ? 'Stakeouts' : 'Manual chain';
-    final String channelSubtitle = channelTitle;
-    final String channelDescription = stakeout ? 'Stakeout alerts' : 'Manual notifications for chain';
-    final String notificationTitle = title;
-    final String notificationSubtitle = subtitle;
-    final int notificationId = id;
-    final String notificationPayload = payload;
-
-    final modifier = await getNotificationChannelsModifiers();
-    final androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      "$channelTitle ${modifier.channelIdModifier}",
-      "$channelSubtitle ${modifier.channelIdModifier}",
-      channelDescription: channelDescription,
-      priority: Priority.high,
-      visibility: NotificationVisibility.public,
-      icon: 'notification_chain',
-      tag: tag,
-      color: Colors.red,
-      ledColor: const Color.fromARGB(255, 255, 0, 0),
-      ledOnMs: 1000,
-      ledOffMs: 500,
-    );
-
-    const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
-
-    final platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-      iOS: iOSPlatformChannelSpecifics,
-    );
-
-    await flutterLocalNotificationsPlugin.show(
-      notificationId,
-      notificationTitle,
-      notificationSubtitle,
-      platformChannelSpecifics,
-      payload: notificationPayload,
-    );
-  }
+  Future<void> showNotification(int id, String payload, String title, String subtitle) => showChainStyleNotification(
+    id,
+    title,
+    subtitle,
+    channel: 'Manual chain',
+    description: 'Manual notifications for chain',
+    payload: payload,
+  );
 
   // MARK: - Panic Mode Settings
   /// ##########################
@@ -2171,7 +2213,8 @@ class ChainStatusController extends GetxController {
   void tryToDeactivateStatus() {
     if (chainModel == null ||
         (!widgetVisible &&
-            !pipVisible &&
+            !_pipVisible &&
+            !_chatInView &&
             !watcherActive &&
             ((chainModel!.chain!.current == 0 && chainModel!.chain!.timeout == 0) ||
                 _chainModel!.chain!.cooldown! > 0))) {

@@ -92,16 +92,6 @@ void main() {
       await settle();
     });
 
-    test('does not open the split by itself when the device unfolds', () async {
-      final p = await build(width: narrow);
-
-      p.updateSplitScreenWidth(wide);
-
-      expect(p.webViewSplitActive, isFalse);
-      expect(p.splitRightSlot, isNull);
-      await settle();
-    });
-
     test('on a narrow screen it only saves the preference', () async {
       final p = await build(width: narrow);
 

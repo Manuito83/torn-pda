@@ -6,12 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
-import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/alerts/alert_cards.dart';
-import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_appearance_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
+import 'package:torn_pda/widgets/chat/chat_help.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -73,16 +71,6 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('each ticker level button names its room', (tester) async {
-    final semantics = tester.ensureSemantics();
-    await pump(tester, ChatSettingsSubpage(title: 'Ticker', builder: (_) => const [ChatTickerSettings()]));
-
-    tester.semantics.tap(find.semantics.byLabel('Faction: mentions only'));
-    await tester.pump();
-    expect(NativeChat.prefs.tickerLevel('faction'), ChatAlertLevel.mentions);
-    semantics.dispose();
-  });
-
   testWidgets('chat text size slider has a name and steps by 10%', (tester) async {
     final semantics = tester.ensureSemantics();
     await pump(tester, const Scaffold(body: ChatTextSizeSetting()));
@@ -95,37 +83,16 @@ void main() {
     semantics.dispose();
   });
 
-  group('chat help', () {
-    Future<void> openHelp(WidgetTester tester) async {
-      await pump(
-        tester,
-        Scaffold(
-          body: Builder(
-            builder: (context) =>
-                TextButton(onPressed: () => showChatIntro(context, always: true), child: const Text('Help')),
-          ),
-        ),
-      );
-      await tester.tap(find.text('Help'));
-      await tester.pumpAndSettle();
-    }
+  test('accessibility help goes first only when the phone needs it', () {
+    expect(chatHelpGroupsOf({}).last, ChatHelpGroup.accessibility);
+    final needed = chatHelpGroupsOf({ChatNeed.largeText});
+    expect(needed.first, ChatHelpGroup.accessibility);
+    expect(needed.toSet(), ChatHelpGroup.values.toSet());
+    expect(needed, hasLength(ChatHelpGroup.values.length));
+  });
 
-    double top(WidgetTester tester, String title) => tester.getTopLeft(find.text(title)).dy;
-
-    testWidgets('with large text, accessibility comes first, open, with the text size slider', (tester) async {
-      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      await openHelp(tester);
-
-      expect(top(tester, 'Accessibility'), lessThan(top(tester, 'Start here')));
-      expect(find.byType(ChatTextSizeSetting), findsOneWidget);
-    });
-
-    testWidgets('without accessibility settings, it stays last and closed', (tester) async {
-      await openHelp(tester);
-
-      expect(top(tester, 'Accessibility'), greaterThan(top(tester, 'Start here')));
-      expect(find.text('Screen readers'), findsNothing);
-    });
+  test('help entries that fit the phone come first in their group', () {
+    final entries = chatHelpOf(ChatHelpGroup.accessibility, {ChatNeed.largeText});
+    expect(entries.first.needs, contains(ChatNeed.largeText));
   });
 }

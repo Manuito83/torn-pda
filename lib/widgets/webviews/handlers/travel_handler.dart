@@ -17,6 +17,33 @@ import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
+const _travelHomeSelector = ".travel-home, .travel-home-header-button";
+const _stockRowsSelector = 'div[class*="stockTableWrapper"] div[class*="row___"]';
+
+// Answers once, also on page exit
+const _waitForSelectorJS = '''
+  return await new Promise((resolve) => {
+    let done = false;
+    let observer = null;
+    let timer = null;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (observer) observer.disconnect();
+      clearTimeout(timer);
+      window.removeEventListener("pagehide", finish);
+      resolve(document.querySelector(selector) !== null);
+    };
+    if (document.querySelector(selector)) return finish();
+    observer = new MutationObserver(() => {
+      if (document.querySelector(selector)) finish();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    timer = setTimeout(finish, timeout);
+    window.addEventListener("pagehide", finish);
+  });
+''';
+
 class ForeignStocksWebviewHandler {
   final InAppWebViewController? webViewController;
   final Function(bool) onTravelStatusChanged;
@@ -49,23 +76,33 @@ class ForeignStocksWebviewHandler {
     return (value * multiplier).toInt();
   }
 
+  Future<bool> _pageShows(String selector, Duration timeout) async {
+    try {
+      final result = await webViewController
+          ?.callAsyncJavaScript(
+            functionBody: _waitForSelectorJS,
+            arguments: {"selector": selector, "timeout": timeout.inMilliseconds},
+          )
+          .timeout(timeout + const Duration(seconds: 2));
+      return result?.value == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<dom.Document> _freshDocument(dom.Document fallback) async {
+    final html = await webViewController?.getHtml();
+    return html != null ? parse(html) : fallback;
+  }
+
   Future<void> assessTravel(dom.Document document) async {
-    var abroad = document.querySelectorAll(".travel-home, .travel-home-header-button");
-    if (abroad.isEmpty) {
-      int attempts = 0;
-      while (attempts < 10) {
-        await Future.delayed(const Duration(milliseconds: 200));
-        final html = await webViewController?.getHtml();
-        if (html != null) {
-          document = parse(html);
-          abroad = document.querySelectorAll(".travel-home, .travel-home-header-button");
-          if (abroad.isNotEmpty) break;
-        }
-        attempts++;
-      }
+    bool abroad = document.querySelectorAll(_travelHomeSelector).isNotEmpty;
+    if (!abroad && await _pageShows(_travelHomeSelector, const Duration(seconds: 6))) {
+      abroad = true;
+      document = await _freshDocument(document);
     }
 
-    if (abroad.isNotEmpty) {
+    if (abroad) {
       _handleTravelUI();
       _sendStockInformation(document);
       onTravelStatusChanged(true);
@@ -86,34 +123,25 @@ class ForeignStocksWebviewHandler {
     }
   }
 
-  Future<void> _sendStockInformation(dom.Document document) async {
+  List<dom.Element> _stockRows(dom.Document document) {
     // Find item elements
-    var elements = <dom.Element>[];
+    final elements = <dom.Element>[];
 
     // Find wrappers
-    var wrappers = document.querySelectorAll('div[class*="stockTableWrapper"]');
-    for (var wrapper in wrappers) {
+    for (final wrapper in document.querySelectorAll('div[class*="stockTableWrapper"]')) {
       // Find rows (divs with class row___)
       elements.addAll(wrapper.querySelectorAll('div[class*="row___"]'));
     }
+    return elements;
+  }
+
+  Future<void> _sendStockInformation(dom.Document document) async {
+    var elements = _stockRows(document);
 
     // Retry if empty as it might take additional time to load after [assessTravel] is called
-    if (elements.isEmpty) {
-      int attempts = 0;
-      while (attempts < 10) {
-        await Future.delayed(const Duration(milliseconds: 250));
-        final html = await webViewController?.getHtml();
-        if (html != null) {
-          document = parse(html);
-          elements.clear();
-          wrappers = document.querySelectorAll('div[class*="stockTableWrapper"]');
-          for (var wrapper in wrappers) {
-            elements.addAll(wrapper.querySelectorAll('div[class*="row___"]'));
-          }
-          if (elements.isNotEmpty) break;
-        }
-        attempts++;
-      }
+    if (elements.isEmpty && await _pageShows(_stockRowsSelector, const Duration(seconds: 7))) {
+      document = await _freshDocument(document);
+      elements = _stockRows(document);
     }
 
     if (elements.isNotEmpty) {

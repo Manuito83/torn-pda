@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
-/// Timings of the chat animations for one option
 class ChatMotionSet {
   const ChatMotionSet({
     required this.fade,
@@ -74,3 +73,6 @@ class ChatMotionSet {
 
 ChatMotionSet chatMotionSet(BuildContext context) =>
     ChatMotionSet.of(NativeChat.prefs.animations, disabled: MediaQuery.disableAnimationsOf(context));
+
+Duration chatMotion(BuildContext context, Duration duration) =>
+    MediaQuery.disableAnimationsOf(context) ? Duration.zero : duration;

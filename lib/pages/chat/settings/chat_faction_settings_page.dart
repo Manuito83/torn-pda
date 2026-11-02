@@ -21,8 +21,14 @@ class ChatFactionSettingsPage extends StatelessWidget {
             onChanged: prefs.setFactionChain,
           ),
           SwitchListTile(
+            title: const Text('Taking watch turns on the Watcher'),
+            subtitle: const Text('Leaving watch turns it off again if taking watch turned it on'),
+            value: prefs.watchTurnsOnWatcher,
+            onChanged: prefs.setWatchTurnsOnWatcher,
+          ),
+          SwitchListTile(
             title: const Text('War in faction chat'),
-            subtitle: const Text('Ranked war score on top, a note for each retal, a summary when it ends'),
+            subtitle: const Text('Ranked war score on top and a summary when it ends'),
             value: prefs.factionWar,
             onChanged: prefs.setFactionWar,
           ),
@@ -31,12 +37,6 @@ class ChatFactionSettingsPage extends StatelessWidget {
             subtitle: const Text('Hits and time left of the enemy chain during a ranked war'),
             value: prefs.factionEnemyChain,
             onChanged: prefs.setFactionEnemyChain,
-          ),
-          SwitchListTile(
-            title: const Text('Who is online in faction chat'),
-            subtitle: const Text('Online, hospital and abroad count, tap for the member list'),
-            value: prefs.factionRoster,
-            onChanged: prefs.setFactionRoster,
           ),
           SwitchListTile(
             title: const Text("I'm a banker"),

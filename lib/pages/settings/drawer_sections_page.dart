@@ -1,6 +1,3 @@
-// Dart imports:
-import 'dart:math' as math;
-
 // Flutter imports:
 import 'package:flutter/material.dart';
 // Package imports:
@@ -12,18 +9,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class DrawerSectionsPage extends StatefulWidget {
-  static const chatId = 'chat';
-
-  /// New sections join, chat above Profile
-  static List<String> fullOrder(List<String> saved) {
-    final order = [...saved.where((id) => id == chatId || DrawerSection.fromId(id) != null)];
-    if (!order.contains(chatId)) order.insert(math.max(0, order.indexOf(DrawerSection.profile.name)), chatId);
-    for (final section in DrawerSection.values) {
-      if (!order.contains(section.name)) order.add(section.name);
-    }
-    return order;
-  }
-
   @override
   DrawerSectionsPageState createState() => DrawerSectionsPageState();
 }
@@ -37,7 +22,7 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
   void initState() {
     super.initState();
     _settingsProvider = context.read<SettingsProvider>();
-    _order = DrawerSectionsPage.fullOrder(_settingsProvider.drawerSectionOrder);
+    _order = drawerFullOrder(_settingsProvider.drawerSectionOrder);
   }
 
   void _save() {
@@ -46,7 +31,7 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
 
   void _resetToDefaults() {
     setState(() {
-      _order = DrawerSectionsPage.fullOrder(const []);
+      _order = drawerFullOrder(const []);
     });
     _settingsProvider.changeDisableTravelSection = false;
     _settingsProvider.changeRankedWarsInMenu = false;
@@ -155,11 +140,11 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
             _save();
           },
           itemBuilder: (context, index) {
-            if (_order[index] == DrawerSectionsPage.chatId) {
-              if (!NativeChat.compiled) return const SizedBox.shrink(key: ValueKey(DrawerSectionsPage.chatId));
+            if (_order[index] == drawerChatId) {
+              if (!NativeChat.compiled) return const SizedBox.shrink(key: ValueKey(drawerChatId));
               final shown = NativeChat.prefs.launcher == ChatLauncher.menuBar;
               return Card(
-                key: const ValueKey(DrawerSectionsPage.chatId),
+                key: const ValueKey(drawerChatId),
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 child: ListTile(
                   leading: const Icon(Icons.forum_rounded),

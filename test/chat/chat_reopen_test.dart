@@ -4,29 +4,33 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/pages/chat/chat_page.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
 import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
-import 'package:torn_pda/widgets/webviews/split_divider.dart';
 
 import 'chat_fakes.dart';
 
 Future<GlobalKey<NavigatorState>> _pumpApp(WidgetTester tester, {Widget home = const Scaffold()}) async {
   final key = GlobalKey<NavigatorState>();
   await tester.pumpWidget(
-    MaterialApp(
-      navigatorKey: key,
-      navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
-      builder: (context, child) => Stack(
-        children: [
-          BotToastInit()(context, child),
-          ChatOverlay(navigatorKey: key),
-        ],
+    ChangeNotifierProvider<WebViewProvider>(
+      create: (_) => WebViewProvider(),
+      child: MaterialApp(
+        navigatorKey: key,
+        navigatorObservers: [BotToastNavigatorObserver(), NativeChat.rootWatch],
+        builder: (context, child) => Stack(
+          children: [
+            BotToastInit()(context, child),
+            ChatOverlay(navigatorKey: key),
+          ],
+        ),
+        home: home,
       ),
-      home: home,
     ),
   );
   await tester.pump(const Duration(milliseconds: 400));
@@ -80,7 +84,6 @@ void main() {
     NativeChat.bigWindow.value = null;
     NativeChat.screenOpen.value = false;
     NativeChat.tornTabMissing.value = false;
-    splitDividerRect.value = null;
   });
 
   tearDown(() {
@@ -102,21 +105,21 @@ void main() {
       NativeChat.saveOnScreen();
       final back = ChatOnScreen.decode(NativeChat.prefs.onScreen);
       expect(back.stack, ['global', NativeChat.bigWindowId, 'faction']);
-      expect(back.full, isTrue);
-      expect(back.screen, isFalse);
+      expect(back.bigFull, isTrue);
+      expect(back.page, isFalse);
 
       NativeChat.screenOpen.value = true;
       NativeChat.saveOnScreen();
-      expect(ChatOnScreen.decode(NativeChat.prefs.onScreen).screen, isTrue);
-      expect(ChatOnScreen.decode(NativeChat.prefs.onScreen).screenRoom, isNull);
+      expect(ChatOnScreen.decode(NativeChat.prefs.onScreen).page, isTrue);
+      expect(ChatOnScreen.decode(NativeChat.prefs.onScreen).pageRoom, isNull);
     });
 
     test('room ids with colons survive, junk is dropped', () {
-      const shown = ChatOnScreen(stack: ['dm:7', NativeChat.bigWindowId], screen: true, screenRoom: 'dm:9');
+      const shown = ChatOnScreen(stack: ['dm:7', NativeChat.bigWindowId], page: true, pageRoom: 'dm:9');
       final back = ChatOnScreen.decode([...shown.encode(), '', ':other', 'dm:7']);
       expect(back.stack, ['dm:7', NativeChat.bigWindowId]);
-      expect(back.screenRoom, 'dm:9');
-      expect(back.full, isFalse);
+      expect(back.pageRoom, 'dm:9');
+      expect(back.bigFull, isFalse);
       expect(ChatOnScreen.decode(const []).isEmpty, isTrue);
     });
   });
@@ -239,7 +242,7 @@ void main() {
     });
 
     testWidgets('the full chat reopens on its room once dialogs are gone', (tester) async {
-      _leftOpen(const ChatOnScreen(screen: true, screenRoom: 'dm:3').encode());
+      _leftOpen(const ChatOnScreen(page: true, pageRoom: 'dm:3').encode());
       final key = await _pumpApp(tester);
       NativeChat.restoreWindows();
       unawaited(showDialog<void>(context: key.currentContext!, builder: (_) => const AlertDialog(content: Text('news'))));
@@ -258,7 +261,7 @@ void main() {
     });
 
     testWidgets('the full chat waits for a dialog in the side menu navigator', (tester) async {
-      _leftOpen(const ChatOnScreen(screen: true).encode());
+      _leftOpen(const ChatOnScreen(page: true).encode());
       final inner = GlobalKey<NavigatorState>();
       final key = await _pumpApp(
         tester,

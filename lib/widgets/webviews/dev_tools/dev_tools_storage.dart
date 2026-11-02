@@ -1023,7 +1023,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
       tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
       title: Text(name ?? "Unknown script", maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        "${_formatBytes(_namespaceUsed(namespace))} / ${_formatBytes(quota)} · ${_namespaceCount(namespace)} keys",
+        "${_formatBytes(_namespaceUsed(namespace))} / ${_formatBytes(quota)} - ${_namespaceCount(namespace)} keys",
         style: const TextStyle(fontSize: 12, color: Colors.grey),
       ),
       onExpansionChanged: (expanded) {

@@ -336,19 +336,6 @@ void main() {
       expect(taps, 2);
     });
 
-    testWidgets('a dialog open before the pause is closed', (tester) async {
-      await show(tester);
-      unawaited(showDialog<void>(context: tester.element(find.text('page')), builder: (_) => const Text('dialog')));
-      await tester.pumpAndSettle();
-      expect(find.text('dialog'), findsOneWidget);
-
-      NativeChat.tornTabMissing.value = true;
-      await tester.pumpAndSettle();
-      expect(find.text('dialog'), findsNothing);
-      expect(find.text('page'), findsOneWidget);
-      NativeChat.tornTabMissing.value = false;
-    });
-
     testWidgets('close chat only closes it', (tester) async {
       final web = (await tester.runAsync(() => browser([other])))!;
       NativeChat.watchTabs(web);

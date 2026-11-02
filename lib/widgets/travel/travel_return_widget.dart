@@ -31,6 +31,7 @@ class TravelReturnWidget extends StatelessWidget {
         tornBackSeconds = TravelTimes.travelTimeMinutesOneWay(
               countryName: destination!,
               ticket: settingsProvider!.travelTicket,
+              reductionPercent: settingsProvider!.travelTimeReduction,
             ) *
             60;
       }
