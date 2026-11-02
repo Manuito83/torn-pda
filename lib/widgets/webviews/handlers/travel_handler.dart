@@ -50,6 +50,8 @@ class ForeignStocksWebviewHandler {
   final SettingsProvider settingsProvider;
 
   DateTime? _foreignStocksSentTime;
+  // Counts the travel checks, so that a check that ends after the next page load is ignored
+  int _travelCheck = 0;
 
   ForeignStocksWebviewHandler({
     required this.webViewController,
@@ -96,11 +98,14 @@ class ForeignStocksWebviewHandler {
   }
 
   Future<void> assessTravel(dom.Document document) async {
+    final check = ++_travelCheck;
     bool abroad = document.querySelectorAll(_travelHomeSelector).isNotEmpty;
     if (!abroad && await _pageShows(_travelHomeSelector, const Duration(seconds: 6))) {
       abroad = true;
       document = await _freshDocument(document);
     }
+    // A newer page started its own check while this one waited
+    if (check != _travelCheck) return;
 
     if (abroad) {
       _handleTravelUI();
