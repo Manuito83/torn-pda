@@ -17,6 +17,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 
@@ -46,6 +47,8 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   double _totalValue = 0;
   double _totalProfit = 0;
+
+  bool _hideBenefitBlocks = false;
 
   Future? _stocksInitialised;
   bool _errorInitializing = false;
@@ -114,6 +117,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                                     const Divider(),
                                   ],
                                 ),
+                              _benefitBlockFilter(),
                               const Text("Traded Companies"),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -262,11 +266,51 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     );
   }
 
+  Widget _benefitBlockFilter() {
+    final benefitBlockCount = _stockList.where((s) => s.hasBenefitBlock).length;
+    // Only show the filter if it's relevant (or if it's active, so that it can be turned off)
+    if (benefitBlockCount == 0 && !_hideBenefitBlocks) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+          child: Material(
+            type: MaterialType.transparency,
+            child: CheckboxListTile(
+              checkColor: Colors.white,
+              activeColor: Colors.blueGrey,
+              value: _hideBenefitBlocks,
+              title: const Text(
+                "Hide stocks with a benefit block",
+                style: TextStyle(fontSize: 14),
+              ),
+              subtitle: Text(
+                "Hides companies in which you already own enough shares for at least one benefit block"
+                "${_hideBenefitBlocks && benefitBlockCount > 0 ? ' ($benefitBlockCount hidden)' : ''}",
+                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _hideBenefitBlocks = value ?? false;
+                });
+                Prefs().setStockExchangeHideBenefitBlocks(_hideBenefitBlocks);
+              },
+            ),
+          ),
+        ),
+        const Divider(),
+      ],
+    );
+  }
+
   ListView _allStocksList() {
     final stockCards = <Widget>[];
     bool insideUserStocks = false;
 
     for (final stock in _stockList) {
+      if (_hideBenefitBlocks && stock.hasBenefitBlock) continue;
+
       if (stock.owned == 0 && insideUserStocks == true) {
         stockCards.add(
           const Column(
@@ -294,6 +338,8 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   Future _initialiseStocks() async {
     try {
+      _hideBenefitBlocks = await Prefs().getStockExchangeHideBenefitBlocks();
+
       // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
       // the alerts pages, like in other cases
       if (widget.calledFromMenu && !Platform.isWindows) {
