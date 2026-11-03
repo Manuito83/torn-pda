@@ -130,6 +130,25 @@ void main() {
       expect(ChatChainReport.parse(<String, dynamic>{}), isNull);
     });
 
+    test('attackers sort by each column', () {
+      ChatChainAttacker who(int id, double respect, int hits, {double best = 0}) => ChatChainAttacker(
+        id: id,
+        respect: respect,
+        average: respect / hits,
+        best: best,
+        hits: ChatChainHits(total: hits, leave: hits),
+      );
+      final list = [who(1, 30, 10, best: 9), who(2, 90, 40, best: 2), who(3, 50, 40, best: 5), who(4, 70, 10, best: 1)];
+      List<int> ids(ChatAttackerSort by, bool down) => [for (final a in sortAttackers(list, by, down)) a.id];
+
+      expect(ids(ChatAttackerSort.hits, true), [2, 3, 4, 1]);
+      expect(ids(ChatAttackerSort.hits, false), [1, 4, 3, 2]);
+      expect(ids(ChatAttackerSort.respect, true), [2, 4, 3, 1]);
+      expect(ids(ChatAttackerSort.best, true), [1, 3, 2, 4]);
+      expect(ids(ChatAttackerSort.average, true), [4, 1, 2, 3]);
+      expect(list.map((a) => a.id), [1, 2, 3, 4]);
+    });
+
     test('a war report names the winner and the rank change', () {
       Map<String, dynamic> side(int id, String name, int score, String before, String after) => {
         'id': id,

@@ -74,6 +74,23 @@ class ChatChainAttacker {
   final ChatChainHits hits;
 }
 
+enum ChatAttackerSort { hits, respect, average, best }
+
+/// Ties go by respect
+List<ChatChainAttacker> sortAttackers(List<ChatChainAttacker> list, ChatAttackerSort by, bool descending) {
+  num key(ChatChainAttacker a) => switch (by) {
+    ChatAttackerSort.hits => a.hits.won,
+    ChatAttackerSort.respect => a.respect,
+    ChatAttackerSort.average => a.average,
+    ChatAttackerSort.best => a.best,
+  };
+  final sign = descending ? 1 : -1;
+  return [...list]..sort((a, b) {
+    final order = key(b).compareTo(key(a));
+    return sign * (order != 0 ? order : b.respect.compareTo(a.respect));
+  });
+}
+
 class ChatChainBonus {
   const ChatChainBonus({required this.chain, required this.attackerId, required this.defenderId, required this.respect});
 

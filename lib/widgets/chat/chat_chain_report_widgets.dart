@@ -170,6 +170,65 @@ class _ReportShown extends StatefulWidget {
 
 class _ReportShownState extends State<_ReportShown> {
   bool _nonAttackersOpen = false;
+  ChatAttackerSort _sort = ChatAttackerSort.hits;
+  bool _descending = true;
+
+  void _sortBy(ChatAttackerSort by) => setState(() {
+    _descending = by == _sort ? !_descending : true;
+    _sort = by;
+  });
+
+  Widget _sortHeader(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    const labels = {
+      ChatAttackerSort.hits: 'Hits',
+      ChatAttackerSort.respect: 'Respect',
+      ChatAttackerSort.average: 'Avg',
+      ChatAttackerSort.best: 'Best',
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Wrap(
+        children: [
+          for (final MapEntry(key: by, value: label) in labels.entries)
+            Semantics(
+              button: true,
+              selected: by == _sort,
+              label: by == _sort
+                  ? 'Sort by $label, sorted ${_descending ? 'high to low' : 'low to high'}, tap to reverse'
+                  : 'Sort by $label',
+              excludeSemantics: true,
+              onTap: () => _sortBy(by),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(6),
+                onTap: () => _sortBy(by),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: by == _sort ? scheme.primary : scheme.onSurfaceVariant,
+                          fontWeight: by == _sort ? FontWeight.w700 : null,
+                        ),
+                      ),
+                      if (by == _sort)
+                        Icon(
+                          _descending ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                          size: 14,
+                          color: scheme.primary,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -253,7 +312,7 @@ class _ReportShownState extends State<_ReportShown> {
             children: [
               tile(chatRespect(report.respect), 'respect', ''),
               tile(chatCount(attackers.length), 'attacked ', 'of ${chatCount(members)}'),
-              tile(you == null ? '0' : chatRespect(you.respect), 'you', you == null ? '' : ' #${rank + 1}'),
+              tile(you == null ? '0' : chatRespect(you.respect), 'you', ''),
             ],
           ),
         ),
@@ -268,7 +327,7 @@ class _ReportShownState extends State<_ReportShown> {
                   text: you == null
                       ? "Didn't attack"
                       : [
-                          '#${rank + 1} of ${attackers.length}',
+                          '#${rank + 1} of ${attackers.length} by respect',
                           _hitsText(you.hits.won),
                           if (you.hits.bonuses > 0) '${you.hits.bonuses} bonus',
                           'avg ${chatRespect(you.average)}',
@@ -394,13 +453,14 @@ class _ReportShownState extends State<_ReportShown> {
           ),
         ),
         _Section(
-          title: 'Attackers by respect',
+          title: 'Attackers',
           sum: '${attackers.length} - ${chatRespect(report.respect)}',
           fullWidth: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final (i, a) in attackers.indexed)
+              _sortHeader(theme),
+              for (final (i, a) in sortAttackers(attackers, _sort, _descending).indexed)
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
                   color: a.id == me ? tint : null,
