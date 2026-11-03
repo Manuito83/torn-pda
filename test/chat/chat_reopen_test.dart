@@ -102,14 +102,14 @@ void main() {
       NativeChat.setBigWindowRoom('dm:7');
       NativeChat.toggleBigWindowFull();
       NativeChat.openQuickWindow('faction');
-      NativeChat.saveOnScreen();
+      NativeChat.windows.saveOnScreen();
       final back = ChatOnScreen.decode(NativeChat.prefs.onScreen);
       expect(back.stack, ['global', NativeChat.bigWindowId, 'faction']);
       expect(back.bigFull, isTrue);
       expect(back.page, isFalse);
 
       NativeChat.screenOpen.value = true;
-      NativeChat.saveOnScreen();
+      NativeChat.windows.saveOnScreen();
       expect(ChatOnScreen.decode(NativeChat.prefs.onScreen).page, isTrue);
       expect(ChatOnScreen.decode(NativeChat.prefs.onScreen).pageRoom, isNull);
     });
@@ -129,9 +129,9 @@ void main() {
       NativeChat.prefs.reopenChats = false;
       _leftOpen(['global', NativeChat.bigWindowId], windows: ['global'], bigRoom: 'dm:7');
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, isEmpty);
       expect(NativeChat.bigWindow.value?.minimized, isTrue);
@@ -141,13 +141,13 @@ void main() {
     testWidgets('bubbles while the chat connects, then windows as they were', (tester) async {
       _leftOpen(['global', NativeChat.bigWindowId, 'dm:3'], windows: ['trade', 'global', 'dm:3'], bigRoom: 'dm:7');
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       await tester.pump(const Duration(seconds: 5));
       expect(NativeChat.quickWindows.value, isEmpty);
       expect(NativeChat.minimized.value.map((m) => m.roomId), ['trade', 'global', 'dm:3']);
 
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, ['global', 'dm:3']);
       expect(NativeChat.stackOrder, ['global', NativeChat.bigWindowId, 'dm:3']);
@@ -159,10 +159,10 @@ void main() {
     testWidgets('past the wait it stays as bubbles and never opens late', (tester) async {
       _leftOpen(['global'], windows: ['global']);
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       await tester.pump(const Duration(seconds: 21));
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, isEmpty);
       expect(NativeChat.minimized.value.map((m) => m.roomId), ['global']);
@@ -171,11 +171,11 @@ void main() {
     testWidgets('nothing is saved over it until the player changes something', (tester) async {
       _leftOpen(['global'], windows: ['global']);
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
-      NativeChat.saveOnScreen();
+      NativeChat.windows.restoreWindows();
+      NativeChat.windows.saveOnScreen();
       expect(NativeChat.prefs.onScreen, ['global']);
       await tester.pump(const Duration(seconds: 21));
-      NativeChat.saveOnScreen();
+      NativeChat.windows.saveOnScreen();
       expect(NativeChat.prefs.onScreen, ['global']);
 
       NativeChat.openQuickWindow('dm:3');
@@ -187,9 +187,9 @@ void main() {
       NativeChat.isUnlisted = (id) => id == 'poker';
       _leftOpen(['poker', 'global'], windows: ['poker', 'global']);
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, ['global']);
       await _closeAll(tester);
@@ -201,14 +201,14 @@ void main() {
         ..miniBubbles = false;
       _leftOpen(['global'], windows: ['global']);
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       expect(NativeChat.minimized.value, isEmpty);
       NativeChat.openQuickWindow('dm:3');
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.prefs.windows.map((e) => ChatWindowFrame.decode(e).frame), contains(_frame));
 
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, ['global', 'dm:3']);
       await _closeAll(tester);
@@ -217,10 +217,10 @@ void main() {
     testWidgets('a window asked meanwhile stays in front and the cap holds', (tester) async {
       _leftOpen(['global', 'dm:3', 'trade'], windows: ['global', 'dm:3', 'trade']);
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       NativeChat.openQuickWindow('dm:5');
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, ['dm:3', 'trade', 'dm:5']);
       expect(NativeChat.minimized.value.map((m) => m.roomId), contains('global'));
@@ -233,9 +233,9 @@ void main() {
         ..ignored = {8: 'someone'};
       _leftOpen(['dm:7', 'dm:8'], windows: ['dm:7', 'dm:8']);
       await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, ['dm:7', 'dm:8']);
       await _closeAll(tester);
@@ -244,11 +244,11 @@ void main() {
     testWidgets('the full chat reopens on its room once dialogs are gone', (tester) async {
       _leftOpen(const ChatOnScreen(page: true, pageRoom: 'dm:3').encode());
       final key = await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       unawaited(showDialog<void>(context: key.currentContext!, builder: (_) => const AlertDialog(content: Text('news'))));
       await tester.pump(const Duration(milliseconds: 400));
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.screenOpen.value, isFalse);
 
@@ -271,7 +271,7 @@ void main() {
           onGenerateRoute: (_) => MaterialPageRoute<void>(builder: (_) => const Scaffold()),
         ),
       );
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       unawaited(
         showDialog<void>(
           context: inner.currentContext!,
@@ -281,7 +281,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.screenOpen.value, isFalse);
 
@@ -295,11 +295,11 @@ void main() {
     testWidgets('a chat opened from a notification wins over the saved one', (tester) async {
       _leftOpen(['global'], windows: ['global']);
       final key = await _pumpApp(tester);
-      NativeChat.restoreWindows();
+      NativeChat.windows.restoreWindows();
       unawaited(NativeChat.open(key.currentState!, roomId: 'dm:3'));
       await tester.pump(const Duration(milliseconds: 400));
       ready = true;
-      NativeChat.tryReopen();
+      NativeChat.windows.tryReopen();
       await tester.pump(const Duration(milliseconds: 400));
       expect(NativeChat.quickWindows.value, isEmpty);
       key.currentState!.pop();

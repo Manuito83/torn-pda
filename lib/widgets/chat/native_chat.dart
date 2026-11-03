@@ -1,53 +1,34 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart' show selectNotificationStream;
-import 'package:torn_pda/models/chat/chat_alerts.dart';
-import 'package:torn_pda/models/chat/chat_inbox_snapshot.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
-import 'package:torn_pda/models/chat/chat_reminder.dart';
 import 'package:torn_pda/models/chat/chat_share.dart';
-import 'package:torn_pda/models/chat/chat_short_text.dart';
-import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
-import 'package:torn_pda/pages/chat/chat_page.dart';
-import 'package:torn_pda/utils/app_icon_menu.dart';
-import 'package:torn_pda/utils/app_lifecycle.dart';
-import 'package:torn_pda/providers/api/api_v2_calls.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/chat/chat_api.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_faction_events.dart';
 import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
-import 'package:torn_pda/providers/chat/chat_faction_roster.dart';
-import 'package:torn_pda/providers/chat/chat_image_store.dart';
-import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
-import 'package:torn_pda/providers/chat/chat_push_rules.dart';
-import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/chat/chat_ticker_queue.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/torn-pda-native/chat/torn_chat_source.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
 import 'package:torn_pda/utils/chat_notifications.dart';
-import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/torn_web.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/chat/chat_hit_targets.dart';
-import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
+import 'package:torn_pda/widgets/chat/chat_session.dart';
 import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
+import 'package:torn_pda/widgets/chat/chat_torn_tab.dart';
+import 'package:torn_pda/widgets/chat/chat_windows.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -140,38 +121,10 @@ class ChatOnScreen {
   }
 }
 
-class _TopWatch extends NavigatorObserver {
-  _TopWatch(this._out);
-
-  final ValueNotifier<Route<dynamic>?> _out;
-  Route<dynamic>? _top;
-
-  void _set(Route<dynamic>? route) {
-    _top = route;
-    scheduleMicrotask(() => _out.value = _top);
-  }
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) => _set(route);
-
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) => _set(previousRoute);
-
-  @override
-  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    if (route == _top) _set(previousRoute);
-  }
-
-  @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    if (oldRoute == _top) _set(newRoute);
-  }
-}
-
 class NativeChat {
   NativeChat._();
 
-  static final ChatPrefs prefs = ChatPrefs()..addListener(_dropBubbles);
+  static final ChatPrefs prefs = ChatPrefs()..addListener(() => windows.dropBubbles());
   static final TornChatSource _source = TornChatSource(ChatEngine.instance);
   static final ChatController controller = ChatController(_source, prefs, TornChatApi(prefs));
   static final ChatTranslator translator = ChatTranslator();
@@ -187,119 +140,104 @@ class NativeChat {
   static void _offerAttack(ChatHitJoin join) =>
       chatToast('Attack ${join.name} now', seconds: 10, action: 'Attack', onAction: factionOps.takeOffer);
   static final ChatFactionEvents factionEvents = ChatFactionEvents(controller, prefs);
-  static final ValueNotifier<bool> screenOpen = ValueNotifier(false);
-  static final ChatTickerDemo tickerDemo = ChatTickerDemo();
 
-  /// Pinged when a reply asks for focus
-  static final ValueNotifier<int> composerFocus = ValueNotifier(0);
-  static String? _focusRoom;
-
-  /// Top route of the app navigator
-  static final ValueNotifier<Route<dynamic>?> rootTop = ValueNotifier(null);
-  static final NavigatorObserver rootWatch = _TopWatch(rootTop);
-
-  /// Top route of the drawer navigator
-  static final ValueNotifier<Route<dynamic>?> homeTop = ValueNotifier(null);
-  static final NavigatorObserver homeWatch = _TopWatch(homeTop);
-
-  /// Dialog on top, root or drawer
-  static bool get popupOnTop {
-    final root = rootTop.value;
-    if (root is PopupRoute) return true;
-    return homeTop.value is PopupRoute && (root == null || root.isFirst);
-  }
-
-  // Profile speed dial open, bubble hides
-  static final ValueNotifier<bool> dialOpen = ValueNotifier(false);
-
-  static final ValueNotifier<bool> drawerOpen = ValueNotifier(false);
-
-  static const int _maxWindows = 3;
-  static const int _maxMinimized = 8;
+  static final ChatWindows windows = ChatWindows(
+    sessionOk: () => sessionOk(),
+    unlisted: (id) => isUnlisted(id),
+  );
+  static ValueNotifier<bool> get screenOpen => windows.screenOpen;
+  static ChatTickerDemo get tickerDemo => windows.tickerDemo;
+  static ValueNotifier<Route<dynamic>?> get rootTop => windows.rootTop;
+  static NavigatorObserver get rootWatch => windows.rootWatch;
+  static ValueNotifier<Route<dynamic>?> get homeTop => windows.homeTop;
+  static NavigatorObserver get homeWatch => windows.homeWatch;
+  static bool get popupOnTop => windows.popupOnTop;
+  static ValueNotifier<bool> get dialOpen => windows.dialOpen;
+  static ValueNotifier<bool> get drawerOpen => windows.drawerOpen;
+  static ValueNotifier<({String url, int tap, String? fill})?> get linkWindow => windows.linkWindow;
+  static GlobalKey<NavigatorState>? get navigatorKey => windows.navigatorKey;
+  static set navigatorKey(GlobalKey<NavigatorState>? key) => windows.navigatorKey = key;
+  static GlobalKey<NavigatorState>? get sheetsKey => windows.sheetsKey;
+  static set sheetsKey(GlobalKey<NavigatorState>? key) => windows.sheetsKey = key;
+  static BuildContext? get sheetsContext => windows.sheetsContext;
+  static Future<void> openLink(String url, {bool always = false, String? fill}) =>
+      windows.openLink(url, always: always, fill: fill);
+  static void closeLinkWindow() => windows.closeLinkWindow();
+  static ValueNotifier<int> get composerFocus => windows.composerFocus;
+  static bool takeComposerFocus(String roomId) => windows.takeComposerFocus(roomId);
+  static ValueNotifier<ChatBigWindow?> get bigWindow => windows.bigWindow;
+  static ValueNotifier<List<String>> get quickWindows => windows.quickWindows;
+  static ValueNotifier<List<ChatMinimized>> get minimized => windows.minimized;
+  static List<ChatMinimized Function()> get shownPages => windows.shownPages;
+  static bool Function()? get bigWindowConversationBack => windows.bigWindowConversationBack;
+  static set bigWindowConversationBack(bool Function()? back) => windows.bigWindowConversationBack = back;
+  static List<String> get stackOrder => windows.stackOrder;
+  static bool get bigWindowShown => windows.bigWindowShown;
+  static bool get bigWindowFull => windows.bigWindowFull;
+  static bool bigWindowHolds(String roomId) => windows.bigWindowHolds(roomId);
+  static Iterable<String> get reopening => windows.reopening;
+  static void openQuickWindow(String roomId, {bool reply = false}) => windows.openQuickWindow(roomId, reply: reply);
+  static void swapQuickWindow(String from, String to) => windows.swapQuickWindow(from, to);
+  static void focusQuickWindow(String roomId) => windows.focusQuickWindow(roomId);
+  static void closeQuickWindow([String? roomId]) => windows.closeQuickWindow(roomId);
+  static void minimizeQuickWindow([String? roomId]) => windows.minimizeQuickWindow(roomId);
+  static void expandQuickWindow([String? roomId]) => windows.expandQuickWindow(roomId);
+  static void hideQuickWindows() => windows.hideQuickWindows();
+  static void openBigWindow({SplitSide? side}) => windows.openBigWindow(side: side);
+  static void launch(NavigatorState navigator, {SplitSide? side, bool toggle = false}) =>
+      windows.launch(navigator, side: side, toggle: toggle);
+  static void bigWindowBack() => windows.bigWindowBack();
+  static void setBigWindowRoom(String? roomId) => windows.setBigWindowRoom(roomId);
+  static void focusBigWindow() => windows.focusBigWindow();
+  static void minimizeBigWindow() => windows.minimizeBigWindow();
+  static void restoreBigWindow() => windows.restoreBigWindow();
+  static void closeBigWindow() => windows.closeBigWindow();
+  static void toggleBigWindowFull() => windows.toggleBigWindowFull();
+  static void popOutBigWindow() => windows.popOutBigWindow();
+  static void expandBigWindow({bool saved = false}) => windows.expandBigWindow(saved: saved);
+  static void minimize(String roomId, {double offset = 0, String? frozenAtId}) =>
+      windows.minimize(roomId, offset: offset, frozenAtId: frozenAtId);
+  static void dropMinimized(String roomId) => windows.dropMinimized(roomId);
+  static void popOut(String roomId) => windows.popOut(roomId);
+  static void restore([ChatMinimized? item]) => windows.restore(item);
+  static ChatMinimized? takeResume(String roomId) => windows.takeResume(roomId);
+  static NavigatorState? leaveForBrowser({String? backTo}) => windows.leaveForBrowser(backTo: backTo);
+  static Future<void> openDm(ChatUser user) => windows.openDm(user);
+  static Future<void> open(NavigatorState navigator, {String? roomId, String? messageId, bool saved = false}) =>
+      windows.open(navigator, roomId: roomId, messageId: messageId, saved: saved);
 
   /// The big window in [stackOrder]
   static const String bigWindowId = ':bigWindow';
-
-  static final ValueNotifier<ChatBigWindow?> bigWindow = ValueNotifier(null);
-
-  /// Front one last
-  static final ValueNotifier<List<String>> quickWindows = ValueNotifier(const []);
-
-  /// Newest last
-  static final ValueNotifier<List<ChatMinimized>> minimized = ValueNotifier(const []);
-  static ChatMinimized? _resume;
-  static Route<void>? _screens;
-
-  /// Conversation pages on screen, top last
-  static final List<ChatMinimized Function()> shownPages = [];
-
-  /// The one link preview window
-  static final ValueNotifier<({String url, int tap, String? fill})?> linkWindow = ValueNotifier(null);
-  static int _linkTaps = 0;
-
-  static GlobalKey<NavigatorState>? navigatorKey;
-
-  /// Overlay navigator, above the windows
-  static GlobalKey<NavigatorState>? sheetsKey;
-  static BuildContext? get sheetsContext => sheetsKey?.currentState?.overlay?.context;
 
   static const String _tapPrefix = 'pdachat:';
   static const String settingsPayload = 'pdachat-settings';
   static const String alertsPayload = 'pdachat-alerts';
   static const String _chainingPrefix = 'pdachat-chaining:';
-  static bool _emblemDone = false;
-  static DateTime _emblemNext = DateTime(0);
-  static int _emblemTries = 0;
-  static int? _emblemFor;
-  static AppLifecycleListener? _lifecycle;
-  static WebViewProvider? _web;
-  static String _webUrls = '';
-  static NativeUserProvider? _login;
-  static bool _hadLogin = false;
-  static SettingsProvider? _settings;
-  static String _roomKeys = '';
-  static String _pushRules = '';
-  static int? _owner;
-  static bool _pushTap = false;
 
-  /// Remote Config native_chat_enabled
-  static final ValueNotifier<bool> remoteEnabled = ValueNotifier(true);
-  static bool _started = false;
+  static final ChatSession session = ChatSession();
+  static ValueNotifier<bool> get remoteEnabled => session.remoteEnabled;
+  static ValueNotifier<bool> get keyValid => session.keyValid;
+  static bool get engineEnabled => session.engineEnabled;
+  static bool get compiled => session.compiled;
+  static bool get usable => session.usable;
+  static bool get listens => session.listens;
+  static Future<void> start({NativeUserProvider? login}) => session.start(login: login);
+  static void forgetAccount() => session.forgetAccount();
+  static String dmTapPayload(int userId, [String? name]) => session.dmTapPayload(userId, name);
+  static void setEnabled(bool value) => session.setEnabled(value);
+  static Future<void> setRemoteEnabled(bool value) => session.setRemoteEnabled(value);
 
-  @visibleForTesting
-  static bool? engineOverride;
+  static final ChatTornTab tornTab = ChatTornTab(
+    shown: windows.shown,
+    running: () => session.shouldRun,
+    onScreen: () => windows.onScreen,
+    live: (tab) => isLive(tab),
+    sessionOk: () => sessionOk(),
+  );
 
-  static bool get engineEnabled => engineOverride ?? ChatEngine.enabled;
+  static ValueNotifier<bool> get tornTabMissing => tornTab.missing;
 
-  static bool get compiled => engineEnabled && remoteEnabled.value;
-
-  static final ValueNotifier<bool> keyValid = ValueNotifier(false);
-
-  /// No live Torn tab for a while
-  static final ValueNotifier<bool> tornTabMissing = ValueNotifier(false)..addListener(_syncFreeze);
-
-  /// Awake or not
-  static final ValueNotifier<bool> tornTabExists = ValueNotifier(false);
-  static int _tabGrace = 30;
-  static const int _tabSettle = 2;
-  static WebViewProvider? _tabs;
-  static final Listenable _chatShown = Listenable.merge([screenOpen, quickWindows, bigWindow]);
-  static Future<void>? _restore;
-  static bool _restoreTried = false;
-  // Waiting for the restored Torn tab to load
-  static bool _holding = false;
-  static Timer? _tabTimer;
-  static int _tabLostFor = 0;
-  static bool _hadLive = false;
-  static bool _pauseReported = false;
-  static bool _opening = false;
-  static String? _madeTab;
-  static ({ChatOnScreen shown, String? bigRoom})? _reopen;
-  static Timer? _reopenTimer;
-  // Kept until the player changes something
-  static bool _saveHeld = false;
-
-  static const Duration _reopenWait = Duration(seconds: 20);
+  static ValueNotifier<bool> get tornTabExists => tornTab.exists;
 
   @visibleForTesting
   static bool Function(TabDetails) isLive = tabAlive;
@@ -315,14 +253,6 @@ class NativeChat {
 
   @visibleForTesting
   static bool Function(String) isUnlisted = (id) => controller.isUnlisted(id);
-
-  /// Bubble, ticker, drawer logo and shortcuts
-  static bool get usable => compiled && prefs.inAppEnabled && keyValid.value;
-
-  static bool get listens => compiled && keyValid.value && (prefs.inAppEnabled || prefs.dmPush);
-
-  /// Chat connection runs
-  static bool get _shouldRun => listens && !controller.loggedOut;
 
   static bool get tickerOn =>
       prefs.ticker &&
@@ -340,329 +270,9 @@ class NativeChat {
       controller.connection == ChatConnection.connected &&
       WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
-  static Future<void> _publishAppIconMenu() => Get.find<AppIconMenuController>().publish();
-
-  static Future<void> start({NativeUserProvider? login}) async {
-    ChatShareIn.start();
-    if (!engineEnabled) return;
-    _login ??= login;
-    remoteEnabled.value = await Prefs().getNativeChatRemoteEnabled();
-    if (!compiled) {
-      _reportMode();
-      return _publishAppIconMenu();
-    }
-    if (_started) return;
-    _started = true;
-    await prefs.load();
-    prefs.unknownRoomSink = StatsController.chat.unknownRoom;
-    _owner = await Prefs().getNativeChatOwner();
-    if (_owner! > 0) controller.restoreUserId(_owner!);
-    final saved = ChatInboxSnapshot.decode(await Prefs().getNativeChatInbox(), _owner!);
-    controller.restoreInbox(saved);
-    unawaited(_warmImages(saved));
-    controller.onInboxChanged = Prefs().setNativeChatInbox;
-    prefs.addListener(_syncPush);
-    prefs.addListener(_syncRun);
-    prefs.addListener(_reportMode);
-    _syncPush();
-    controller.restorePaused();
-    restoreWindows();
-    // Before the page sends its first rooms
-    controller.alertStream.listen(_notify);
-    controller.addListener(_askEmblem);
-    controller.addListener(_watchWeb);
-    controller.addListener(_watchTabs);
-    controller.addListener(_watchSettings);
-    controller.addListener(_watchOwner);
-    controller.addListener(_watchRooms);
-    controller.goneStream.listen(onRoomGone);
-    ChatEngine.instance.data.where((m) => m['k'] == 'health').listen(StatsController.chat.health);
-    selectNotificationStream.stream.listen(_onNotificationTap);
-    factionOps.start();
-    factionEvents.start();
-    _lifecycle ??= AppLifecycleListener(
-      onResume: () {
-        controller.resumed();
-        _reportMode();
-        _checkTabs();
-        _syncFreeze();
-      },
-      onPause: () {
-        controller.paused();
-        _publishAppIconMenu();
-        _syncFreeze();
-      },
-    );
-    _watchKey();
-    _login?.addListener(_onLogin);
-    await _publishAppIconMenu();
-    _reportMode();
-    if (!_shouldRun) return;
-    // After the drawer's first frame
-    await WidgetsBinding.instance.endOfFrame;
-    _syncRun();
-  }
-
-  static void _reportMode() => unawaited(StatsController.chat.report(prefs,
-      remote: remoteEnabled.value, loaded: _started, hideWeb: _tabs?.chatRemovalActiveGlobal ?? false));
-
-  static void _watchKey() {
-    if (!Get.isRegistered<UserController>()) return;
-    final user = Get.find<UserController>();
-    keyValid.value = user.isApiKeyValid;
-    user.addListener(() => keyValid.value = user.isApiKeyValid);
-    keyValid.addListener(_onKey);
-  }
-
-  static void _onKey() {
-    if (!keyValid.value) {
-      hideQuickWindows();
-      closeLinkWindow();
-    }
-    _syncRun();
-    _publishAppIconMenu();
-  }
-
-  // Every login and logout, never cold start
-  static void _onLogin() {
-    if (!_started) return;
-    // By name, the enum moves between builds
-    final none = _login?.playerLastLoginMethod.name == 'none';
-    final had = _hadLogin;
-    _hadLogin = !none;
-    if (!none) {
-      final id = _login?.playerId;
-      final mine = controller.myUserId;
-      final changed = id != null && mine != null && id != mine;
-      if (changed) {
-        factionOps.dropJoin();
-        prefs.setTestFactionRoom(null);
-      }
-      controller.onLogin(accountChanged: changed);
-    } else if (logoutStops(controller, hadLogin: had)) {
-      controller.onLogout();
-    } else {
-      return;
-    }
-    _syncRun();
-  }
-
-  /// Failed logins also say none
-  @visibleForTesting
-  static bool logoutStops(ChatController chat, {required bool hadLogin}) {
-    if (chat.loggedOut || chat.needsLogin) return false;
-    return hadLogin || chat.connection == ChatConnection.connected;
-  }
-
-  /// Starts or stops the chat engine
-  static void _syncRun() {
-    final engine = ChatEngine.instance;
-    if (_shouldRun && !engine.active) {
-      engine.start();
-      controller.resetStall();
-    } else if (!_shouldRun && engine.active) {
-      engine.stop();
-    }
-    _checkTabs();
-  }
-
   /// The browser wiped Torn cookies
   static void recheckSession() => Timer(const Duration(seconds: 8), ChatEngine.instance.recheck);
 
-  // Shortcuts follow the rooms Torn lists
-  static void _watchRooms() {
-    final keys = controller.rooms.map((r) => r.id).join(',');
-    if (keys == _roomKeys) return;
-    _roomKeys = keys;
-    for (final id in {...minimized.value.map((m) => m.roomId), ...quickWindows.value}.where(controller.isUnlisted)) {
-      closeQuickWindow(id);
-      dropMinimized(id);
-    }
-    if (bigWindow.value?.roomId case final id? when controller.isUnlisted(id)) setBigWindowRoom(null);
-    _publishAppIconMenu();
-  }
-
-  @visibleForTesting
-  static void onRoomGone(ChatRoom room) {
-    final open =
-        quickWindows.value.contains(room.id) ||
-        bigWindow.value?.roomId == room.id ||
-        minimized.value.any((m) => m.roomId == room.id) ||
-        controller.isOnScreen(room.id);
-    closeQuickWindow(room.id);
-    dropMinimized(room.id);
-    if (bigWindow.value?.roomId == room.id) setBigWindowRoom(null);
-    if (open) chatToast('${room.name} chat closed: you left the ${room.id == 'poker' ? 'table' : 'room'}');
-  }
-
-  static void _watchSettings() {
-    final context = navigatorKey?.currentContext;
-    if (_settings != null || context == null) return;
-    _settings = context.read<SettingsProvider>()..addListener(_syncBrowser);
-    prefs.wordsSink = (words) => _settings!.changeHighlightWordList = words;
-    _syncBrowser();
-  }
-
-  static void _syncBrowser() => prefs.syncBrowser(
-    enabled: _settings!.highlightChat,
-    words: _settings!.highlightWordList,
-    color: _settings!.highlightColor,
-  );
-
-  // Browser Torn pages bring the session
-  static void _watchWeb() {
-    final context = navigatorKey?.currentContext;
-    if (controller.needsLogin && _web == null && context != null) {
-      _web = context.read<WebViewProvider>()..addListener(_onWeb);
-      _webUrls = _tornUrls(_web!);
-    } else if (!controller.needsLogin && _web != null) {
-      _web!.removeListener(_onWeb);
-      _web = null;
-    }
-  }
-
-  static String _tornUrls(WebViewProvider web) =>
-      web.tabList.map((t) => t.currentUrl ?? '').where((u) => u.contains('torn.com')).join(' ');
-
-  static void _onWeb() {
-    final web = _web;
-    if (web == null) return;
-    final urls = _tornUrls(web);
-    if (urls == _webUrls) return;
-    _webUrls = urls;
-    if (!controller.loggedOut) return controller.retrySession();
-    // Maybe a login in the browser
-    controller.onLogin();
-    _syncRun();
-  }
-
-  static void _watchTabs() {
-    final context = navigatorKey?.currentContext;
-    if (_tabs == null && context != null) watchTabs(context.read<WebViewProvider>());
-  }
-
-  @visibleForTesting
-  static void watchTabs(WebViewProvider web) {
-    _tabs?.removeListener(_checkTabs);
-    _tabs = web..addListener(_checkTabs);
-    _chatShown
-      ..removeListener(_onChatShown)
-      ..addListener(_onChatShown);
-    _checkTabs();
-  }
-
-  static bool get _chatOnScreen => screenOpen.value || quickWindows.value.isNotEmpty || bigWindowShown;
-
-  static void _onChatShown() {
-    _checkTabs();
-    final web = _tabs;
-    if (web == null || !_shouldRun || !_chatOnScreen) return;
-    // Cold restore lifts the pause
-    if (web.tabList.isNotEmpty || _restoreTried) _reportPause(web);
-    unawaited(restoreTornBehind(web));
-  }
-
-  static void _reportPause(WebViewProvider web) {
-    if (!tornTabMissing.value || _pauseReported) return;
-    _pauseReported = true;
-    StatsController.chat.health({'fact': 'paused', 'kind': pauseKind(web), 'cold': !_hadLive});
-  }
-
-  /// Cold browser: saved tabs come back asleep, hidden
-  static Future<void> restoreTornBehind(WebViewProvider web) {
-    if (web.tabList.isNotEmpty || _restoreTried) return _restore ?? Future.value();
-    _restoreTried = true;
-    return _restore = _restoreBehind(web).whenComplete(() => _restore = null);
-  }
-
-  static Future<void> _restoreBehind(WebViewProvider web) async {
-    _holding = true;
-    _tabLostFor = 0;
-    tornTabMissing.value = false;
-    // Out of the notifier that called
-    await Future<void>.microtask(() {});
-    await web.restoreBehind();
-    final index = tornTabIndex(
-      [for (final tab in web.tabList) tab.webViewKey == null ? null : tab.currentUrl],
-      [web.currentTab, for (var i = 0; i < web.tabList.length; i++) i],
-    );
-    if (index == null) {
-      _holding = false;
-      _tabLostFor = _tabSettle;
-      chatToast('No Torn tab to reopen');
-      return _checkTabs();
-    }
-    if (_isTorn(web.tabList[index].currentUrl)) web.allowHiddenLoad(index);
-    final current = index == web.currentTab;
-    current ? web.wakeTab(index) : web.activateTab(index);
-    chatToast(current ? 'Torn opened in the background' : 'Switched to your Torn tab in the background');
-    _checkTabs();
-  }
-
-  @visibleForTesting
-  static void resetTabs() {
-    _tabs?.removeListener(_checkTabs);
-    _tabs = null;
-    _chatShown.removeListener(_onChatShown);
-    _restore = null;
-    _restoreTried = false;
-    _holding = false;
-    _tabTimer?.cancel();
-    _tabTimer = null;
-    _tabLostFor = 0;
-    _hadLive = false;
-    _pauseReported = false;
-    tornTabMissing.value = false;
-    tornTabExists.value = false;
-  }
-
-  // Background keeps its alerts
-  static void _syncFreeze() => controller.setFrozen(tornTabMissing.value && !appInBackground());
-
-  static void _checkTabs() {
-    final web = _tabs;
-    if (web == null) return;
-    tornTabExists.value =
-        tornTabIndex(
-          [for (final tab in web.tabList) tab.currentUrl],
-          [for (var i = 0; i < web.tabList.length; i++) i],
-          made: web.tabList.indexWhere((tab) => tab.id == _madeTab),
-        ) !=
-        null;
-    final open = tornTabOpen(web);
-    ChatEngine.instance.scene(shown: _chatOnScreen, tabLive: open && !appInBackground());
-    if (!_shouldRun || appInBackground()) {
-      _tabTimer?.cancel();
-      _tabTimer = null;
-      _tabLostFor = 0;
-      _holding = false;
-      if (!_shouldRun) {
-        _hadLive = false;
-        tornTabMissing.value = false;
-      }
-    } else if (open) {
-      _tabTimer?.cancel();
-      _tabTimer = null;
-      _tabLostFor = 0;
-      _holding = false;
-      _hadLive = true;
-      tornTabMissing.value = false;
-    } else {
-      _tabTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
-        _tabLostFor++;
-        _checkTabs();
-      });
-      // Never live: no margin
-      final settled = !_hadLive && !_holding && _tabLostFor >= _tabSettle && sessionOk();
-      if (settled || _tabLostFor >= _tabGrace) {
-        tornTabMissing.value = true;
-        if (_chatOnScreen) _reportPause(web);
-      }
-    }
-    if (!tornTabMissing.value) _pauseReported = false;
-  }
-
-  @visibleForTesting
   static String pauseKind(WebViewProvider web) {
     final shown = _shownTornTabs(web);
     if (shown.isEmpty) return 'no_tab';
@@ -698,7 +308,7 @@ class NativeChat {
       web.visibleTabIndexForGroup(SplitGroup.main),
       if (web.splitBrowsersActive) web.visibleTabIndexForGroup(SplitGroup.apart),
     ])
-      if (i != null && i < web.tabList.length && _isTorn(web.tabList[i].currentUrl)) web.tabList[i],
+      if (i != null && i < web.tabList.length && isTornUrl(web.tabList[i].currentUrl)) web.tabList[i],
   ];
 
   static bool tornTabOpen(WebViewProvider web, {bool loaded = false}) {
@@ -711,24 +321,6 @@ class NativeChat {
     unawaited(sendTouch());
   }
 
-  static void _notify(ChatAlert alert) {
-    final m = alert.message;
-    final room = controller.roomById(m.roomId);
-    // Chat off still alerts DMs
-    final wanted = prefs.inAppEnabled ? prefs.alertNotify : prefs.dmPush && room.isDm;
-    if (!wanted || prefs.isQuietAt(DateTime.now())) return;
-    final foreground = WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
-    if (foreground && tornTabMissing.value) return;
-    if (foreground && tickerOn && prefs.tickerShows(m.roomId, alert.match)) return;
-    final title = room.isDm ? m.sender.name : '${m.sender.name} in ${room.name}';
-    showNotification({
-      'tornChat': true,
-      'message': '${title.replaceAll(':', ' ')}: ${chatShortText(m.content, m.createdAt, clock: chatAppClock().clock)}',
-      'nativeChatTap': tapPayload(m.roomId),
-      'chatTone': prefs.toneForAlert(alert).code,
-    }, chatAlertId(m.roomId));
-  }
-
   // Letters only, payloads match by substring
   static String tapPayload(String roomId) =>
       _tapPrefix + roomId.codeUnits.expand((c) => [c >> 4, c & 15]).map((n) => String.fromCharCode(65 + n)).join();
@@ -736,13 +328,6 @@ class NativeChat {
   // Read fresh at tap time
   static Future<bool> tapsOpenChat() async =>
       engineEnabled && await Prefs().getNativeChatRemoteEnabled() && await Prefs().getNativeChatEnabled();
-
-  static String dmTapPayload(int userId, [String? name]) {
-    final room = ChatRoom.dmId(userId);
-    if (name != null && name.isNotEmpty) controller.noteSender(room, name);
-    _pushTap = true;
-    return tapPayload(room);
-  }
 
   // Adds the DM sender when known
   static String webChatPayload(String roomId) {
@@ -760,33 +345,6 @@ class NativeChat {
     final letters = payload.substring(_tapPrefix.length).codeUnits.map((c) => c - 65).toList();
     if (letters.isEmpty || letters.length.isOdd || letters.any((n) => n < 0 || n > 15)) return null;
     return String.fromCharCodes([for (var i = 0; i < letters.length; i += 2) letters[i] << 4 | letters[i + 1]]);
-  }
-
-  static Future<void> _onNotificationTap(String? payload) async {
-    final source = _pushTap ? 'push' : 'in_app_alert';
-    _pushTap = false;
-    if (!compiled) return;
-    final reminder = ChatReminders.fromPayload(payload);
-    final reminderNav = navigatorKey?.currentState;
-    if (reminder != null && reminderNav != null) {
-      hideQuickWindows();
-      StatsController.chat.notificationOpen('reminder', 'inbox');
-      StatsController.chat.count('open_notification');
-      open(reminderNav, roomId: reminder.$1, messageId: reminder.$2);
-      return;
-    }
-    final roomId = roomFromTap(payload);
-    if (roomId == null || !await tapsOpenChat()) return;
-    final navigator = navigatorKey?.currentState;
-    final inbox = prefs.notificationTap == ChatNotificationTap.inbox && navigator != null;
-    StatsController.chat.notificationOpen(source, inbox ? 'inbox' : 'window');
-    StatsController.chat.count('open_notification');
-    if (inbox) {
-      hideQuickWindows();
-      open(navigator, roomId: roomId);
-    } else {
-      openQuickWindow(roomId);
-    }
   }
 
   static String get translateTarget => prefs.translateTo.isEmpty ? ChatTranslator.deviceLanguage() : prefs.translateTo;
@@ -811,465 +369,6 @@ class NativeChat {
     openQuickWindow(ChatFactionOps.roomId);
   }
 
-  /// True once, for the window asked
-  static bool takeComposerFocus(String roomId) {
-    final mine = _focusRoom == roomId;
-    if (mine) _focusRoom = null;
-    return mine;
-  }
-
-  /// Over the cap, the back one goes
-  static void openQuickWindow(String roomId, {bool reply = false}) {
-    StatsController.chat.count('open_window');
-    _focusRoom = reply ? roomId : null;
-    if (reply) composerFocus.value++;
-    _leaveBigWindow(roomId);
-    dropMinimized(roomId);
-    final open = [...quickWindows.value.where((r) => r != roomId), roomId];
-    while (open.length > _maxWindows) {
-      _pushMinimized(ChatMinimized(open.removeAt(0), window: true));
-    }
-    quickWindows.value = open;
-  }
-
-  static void swapQuickWindow(String from, String to) {
-    _leaveBigWindow(to);
-    final now = bigWindow.value;
-    if (now != null && now.below.contains(from)) bigWindow.value = now.copyWith(below: {...now.below}..remove(from));
-    dropMinimized(to);
-    quickWindows.value = [for (final r in quickWindows.value) r == from ? to : r];
-  }
-
-  static void focusQuickWindow(String roomId) {
-    final open = quickWindows.value;
-    if (!open.contains(roomId)) return;
-    final now = bigWindow.value;
-    if (now != null && now.below.contains(roomId)) {
-      bigWindow.value = now.copyWith(below: {...now.below}..remove(roomId));
-    }
-    if (open.last != roomId) quickWindows.value = [...open.where((r) => r != roomId), roomId];
-  }
-
-  /// Back to front, bigWindow as [bigWindowId]
-  static List<String> get stackOrder {
-    final now = bigWindow.value;
-    final open = quickWindows.value;
-    if (now == null || now.minimized) return open;
-    return [...open.where(now.below.contains), bigWindowId, ...open.where((r) => !now.below.contains(r))];
-  }
-
-  static bool get bigWindowShown => bigWindow.value?.minimized == false;
-
-  static bool get bigWindowFull => bigWindowShown && bigWindow.value!.full;
-
-  static bool bigWindowHolds(String roomId) => bigWindowShown && bigWindow.value?.roomId == roomId;
-
-  static void _leaveBigWindow(String roomId) {
-    final now = bigWindow.value;
-    if (now == null || (now.roomId != roomId && !now.below.contains(roomId))) return;
-    bigWindow.value = ChatBigWindow(
-      roomId: now.roomId == roomId ? null : now.roomId,
-      minimized: now.minimized,
-      full: now.full,
-      below: {...now.below}..remove(roomId),
-      side: now.side,
-    );
-  }
-
-  static void openBigWindow({SplitSide? side}) {
-    _leaveScreens();
-    final now = bigWindow.value;
-    bigWindow.value =
-        ChatBigWindow(roomId: now?.roomId, full: now?.full ?? false, below: {...quickWindows.value}, side: side);
-  }
-
-  /// False when it closed
-  static bool toggleBigWindow({SplitSide? side}) {
-    final now = bigWindow.value;
-    final sameSide = now?.side == null || side == null || now?.side == side;
-    if (now != null && !now.minimized && sameSide) {
-      if (quickWindows.value.every(now.below.contains)) {
-        closeBigWindow();
-        return false;
-      }
-      focusBigWindow();
-      return true;
-    }
-    openBigWindow(side: side);
-    return true;
-  }
-
-  /// Tap on the chat button
-  static void launch(NavigatorState navigator, {SplitSide? side, bool toggle = false}) {
-    final room = controller.backTo;
-    if (prefs.launcherTap == ChatLauncherTap.full) {
-      open(navigator, roomId: room);
-      return;
-    }
-    if (!toggle) {
-      openBigWindow(side: side);
-    } else if (!toggleBigWindow(side: side)) {
-      return;
-    }
-    if (room != null) setBigWindowRoom(room);
-    StatsController.chat.count('open_big_window');
-  }
-
-  /// Conversation's Back, true when used
-  static bool Function()? bigWindowConversationBack;
-
-  static void bigWindowBack() {
-    if (bigWindowConversationBack?.call() ?? false) return;
-    bigWindow.value?.roomId == null ? minimizeBigWindow() : setBigWindowRoom(null);
-  }
-
-  static void setBigWindowRoom(String? roomId) {
-    final now = bigWindow.value;
-    if (now == null || now.roomId == roomId) return;
-    if (roomId != null) _freeRoom(roomId);
-    bigWindow.value = now.inRoom(roomId);
-  }
-
-  // Kept as a bubble if drafted
-  static void _freeRoom(String roomId) {
-    if (!quickWindows.value.contains(roomId)) return;
-    prefs.draftFor(roomId).isEmpty ? closeQuickWindow(roomId) : minimizeQuickWindow(roomId);
-  }
-
-  static void focusBigWindow() {
-    final now = bigWindow.value;
-    if (now == null || quickWindows.value.every(now.below.contains)) return;
-    bigWindow.value = now.copyWith(below: {...quickWindows.value});
-  }
-
-  static void minimizeBigWindow() {
-    final now = bigWindow.value;
-    if (now == null || now.minimized) return;
-    if (!prefs.canMinimize) return closeBigWindow();
-    bigWindow.value = now.copyWith(minimized: true);
-  }
-
-  static void restoreBigWindow() {
-    final now = bigWindow.value;
-    if (now == null || !now.minimized) return;
-    _leaveScreens();
-    bigWindow.value = now.copyWith(minimized: false, below: {...quickWindows.value});
-  }
-
-  static void closeBigWindow() => bigWindow.value = null;
-
-  static void toggleBigWindowFull() {
-    final now = bigWindow.value;
-    if (now != null) bigWindow.value = now.copyWith(full: !now.full);
-  }
-
-  static void popOutBigWindow() {
-    final room = bigWindow.value?.roomId;
-    if (room != null) openQuickWindow(room);
-  }
-
-  static void expandBigWindow({bool saved = false}) {
-    final room = bigWindow.value?.roomId;
-    closeBigWindow();
-    unawaited(_openOnceClosed(room, saved: saved));
-  }
-
-  // Closing window holds the room until disposed
-  static Future<void> _openOnceClosed(String? roomId, {bool saved = false}) async {
-    final navigator = navigatorKey?.currentState;
-    if (navigator == null) return;
-    await WidgetsBinding.instance.endOfFrame;
-    if (navigator.mounted) await open(navigator, roomId: roomId, saved: saved);
-  }
-
-  // Back as a bubble, never a room
-  @visibleForTesting
-  static void loadBigWindow() => bigWindow.value = ChatBigWindow.decode(prefs.bigWindow).bigWindow;
-
-  /// Bubbles now, open ones when ready
-  @visibleForTesting
-  static void restoreWindows() {
-    _chatShown.removeListener(_onShownChanged);
-    controller.removeListener(saveOnScreen);
-    if (prefs.canMinimize) {
-      minimized.value = [
-        for (final entry in prefs.windows) ChatMinimized(ChatWindowFrame.decode(entry).roomId, window: true),
-      ];
-      loadBigWindow();
-    }
-    _saveHeld = false;
-    _armReopen();
-    _chatShown.addListener(_onShownChanged);
-    controller.addListener(saveOnScreen);
-  }
-
-  static void _onShownChanged() {
-    if (_chatOnScreen) controller.backTo = null;
-    _saveHeld = false;
-    saveOnScreen();
-  }
-
-  static Iterable<String> get reopening => _reopen?.shown.stack.where((id) => id != bigWindowId) ?? const [];
-
-  @visibleForTesting
-  static void saveOnScreen() {
-    if (_reopen != null || _saveHeld) return;
-    final now = ChatOnScreen(
-      stack: stackOrder,
-      bigFull: bigWindowFull,
-      page: screenOpen.value,
-      pageRoom: screenOpen.value ? shownPages.lastOrNull?.call().roomId : null,
-    ).encode();
-    if (!listEquals(now, prefs.onScreen)) prefs.setOnScreen(now);
-  }
-
-  static void _armReopen() {
-    _dropReopen();
-    if (!prefs.reopenChats) return;
-    final shown = ChatOnScreen.decode(prefs.onScreen);
-    if (shown.isEmpty) return;
-    _reopen = (shown: shown, bigRoom: ChatBigWindow.decode(prefs.bigWindow).bigWindow?.roomId);
-    _reopenTimer = Timer(_reopenWait, () {
-      _dropReopen();
-      _saveHeld = true;
-    });
-    controller.addListener(tryReopen);
-    rootTop.addListener(tryReopen);
-    homeTop.addListener(tryReopen);
-    tryReopen();
-  }
-
-  static void _dropReopen() {
-    _reopen = null;
-    _reopenTimer?.cancel();
-    _reopenTimer = null;
-    controller.removeListener(tryReopen);
-    rootTop.removeListener(tryReopen);
-    homeTop.removeListener(tryReopen);
-  }
-
-  @visibleForTesting
-  static void tryReopen() {
-    final pending = _reopen;
-    if (pending == null || !usable || !sessionOk()) return;
-    final shown = pending.shown;
-    final navigator = navigatorKey?.currentState;
-    final page = shown.page && !screenOpen.value;
-    // The full chat waits for dialogs
-    if (page && (navigator == null || popupOnTop || !(rootTop.value?.isFirst ?? true))) return;
-    _dropReopen();
-    // Asked from a notification, it wins
-    if (screenOpen.value) return;
-    final rooms = [
-      for (final id in shown.stack)
-        if (id != bigWindowId && !isUnlisted(id)) id,
-    ];
-    final asked = quickWindows.value;
-    for (final id in rooms) {
-      _leaveBigWindow(id);
-      dropMinimized(id);
-    }
-    final windows = [...rooms.where((id) => !asked.contains(id)), ...asked];
-    while (windows.length > _maxWindows) {
-      _pushMinimized(ChatMinimized(windows.removeAt(0), window: true));
-    }
-    quickWindows.value = windows;
-    if (shown.stack.contains(bigWindowId) && !bigWindowShown) {
-      final room = bigWindow.value == null ? pending.bigRoom : bigWindow.value!.roomId;
-      final keep = room != null && !windows.contains(room) && !isUnlisted(room);
-      bigWindow.value = ChatBigWindow(
-        roomId: keep ? room : null,
-        full: shown.bigFull,
-        below: {...shown.stack.takeWhile((id) => id != bigWindowId).where(windows.contains)},
-      );
-    }
-    if (page) {
-      final room = shown.pageRoom;
-      unawaited(open(navigator!, roomId: room == null || isUnlisted(room) ? null : room));
-    }
-  }
-
-  /// Without [roomId], all of them
-  static void closeQuickWindow([String? roomId]) {
-    quickWindows.value = roomId == null ? const [] : [...quickWindows.value.where((r) => r != roomId)];
-  }
-
-  /// Without [roomId], the front one
-  static void minimizeQuickWindow([String? roomId]) {
-    final room = roomId ?? quickWindows.value.lastOrNull;
-    if (room == null || !quickWindows.value.contains(room)) return;
-    _pushMinimized(ChatMinimized(room, window: true));
-    closeQuickWindow(room);
-  }
-
-  static void hideQuickWindows() {
-    minimizeBigWindow();
-    if (quickWindows.value.isEmpty) return;
-    for (final roomId in quickWindows.value) {
-      _pushMinimized(ChatMinimized(roomId, window: true));
-    }
-    quickWindows.value = const [];
-  }
-
-  static void minimize(String roomId, {double offset = 0, String? frozenAtId}) {
-    _leaveScreens();
-    _pushMinimized(ChatMinimized(roomId, offset: offset, frozenAtId: frozenAtId));
-  }
-
-  // Switched off, the bubbles close
-  static void _dropBubbles() {
-    if (prefs.canMinimize) return;
-    if (minimized.value.isNotEmpty) minimized.value = const [];
-    if (bigWindow.value?.minimized ?? false) closeBigWindow();
-  }
-
-  static void _pushMinimized(ChatMinimized item) {
-    if (!prefs.canMinimize) return;
-    final list = [...minimized.value.where((m) => m.roomId != item.roomId), item];
-    minimized.value = list.sublist(math.max(0, list.length - _maxMinimized));
-  }
-
-  static void dropMinimized(String roomId) {
-    if (!minimized.value.any((m) => m.roomId == roomId)) return;
-    minimized.value = [...minimized.value.where((m) => m.roomId != roomId)];
-  }
-
-  static void popOut(String roomId) {
-    _leaveScreens();
-    openQuickWindow(roomId);
-  }
-
-  /// Without [item], the newest
-  static void restore([ChatMinimized? item]) {
-    final last = item ?? minimized.value.lastOrNull;
-    final navigator = navigatorKey?.currentState;
-    if (last == null) return;
-    if (last.window) return openQuickWindow(last.roomId);
-    if (navigator == null) return;
-    _resume = last;
-    open(navigator, roomId: last.roomId);
-  }
-
-  /// Once, for the page that reopens it
-  static ChatMinimized? takeResume(String roomId) {
-    final resume = _resume;
-    _resume = null;
-    return resume?.roomId == roomId ? resume : null;
-  }
-
-  static void _leaveScreens() {
-    final navigator = navigatorKey?.currentState;
-    final screens = _screens;
-    if (navigator == null || screens == null || !screens.isActive) return;
-    navigator.popUntil((route) => route == screens);
-    navigator.pop();
-  }
-
-  static void expandQuickWindow([String? roomId]) {
-    final room = roomId ?? quickWindows.value.lastOrNull;
-    if (room == null) return;
-    closeQuickWindow(room);
-    unawaited(_openOnceClosed(room));
-  }
-
-  static void _syncPush() {
-    if (!compiled) return;
-    final rules = ChatPushRules.of(prefs).encode();
-    if (rules == _pushRules) return;
-    _pushRules = rules;
-    BackgroundPrefs().setChatPushRules(rules);
-  }
-
-  static void _watchOwner() {
-    final id = controller.myUserId;
-    final owner = _owner;
-    if (id == null || owner == null || id == owner) return;
-    _owner = id;
-    Prefs().setNativeChatOwner(id);
-    if (owner != 0) _wipeAccount();
-  }
-
-  /// Next account starts clean
-  static void forgetAccount() {
-    Prefs().setNativeChatInbox('');
-    if (!compiled) return;
-    _owner = 0;
-    Prefs().setNativeChatOwner(0);
-    _wipeAccount();
-    // A stopped page ignores the reconnect
-    controller.forgetAccount();
-  }
-
-  static void _wipeAccount() {
-    unawaited(ChatImageStore.instance.clear());
-    ChatImages.forget();
-    _dropReopen();
-    prefs.forgetAccount();
-    quickWindows.value = const [];
-    minimized.value = const [];
-    bigWindow.value = null;
-    controller.backTo = null;
-    ChatFactionRoster.shared.clear();
-    factionOps.forget();
-    ChatLinkPreviews.forget();
-    translator.forget();
-    controller.sharePending.value = null;
-    _publishAppIconMenu();
-    cancelChatNotifications();
-  }
-
-  @visibleForTesting
-  static Future<String?> Function() fetchEmblem = () async => (await ApiCallsV2.getOwnFactionBasic_v2())?.tagImage;
-
-  static void _askEmblem() {
-    if (usable) askEmblem(controller, DateTime.now());
-  }
-
-  /// Five tries a session, foreground only
-  @visibleForTesting
-  static void askEmblem(ChatController chat, DateTime now) {
-    if (chat.myUserId != _emblemFor) {
-      _emblemFor = chat.myUserId;
-      _emblemDone = false;
-      _emblemNext = DateTime(0);
-      _emblemTries = 0;
-    }
-    if (_emblemDone || _emblemTries >= 5 || now.isBefore(_emblemNext)) return;
-    if (!chat.ready || !chat.rooms.any((r) => r.id == 'faction')) return;
-    if (appInBackground()) return;
-    // API key may still be loading
-    _emblemNext = now.add(Duration(seconds: 15 << _emblemTries++));
-    fetchEmblem().then((image) {
-      if (image == null) return;
-      _emblemDone = true;
-      final url = image.startsWith('http') ? image : 'https://factiontags.torn.com/$image';
-      chat.setEmblem('faction', image.isEmpty ? null : url);
-    });
-  }
-
-  static Future<void> _warmImages(ChatInboxSnapshot? saved) async {
-    try {
-      final store = ChatImageStore.instance;
-      final urls = [
-        if (saved != null) ...[
-          for (final r in saved.rooms) ?r.emblemUrl,
-          for (final r in saved.rooms) ?r.peer?.avatarUrl,
-        ],
-        ...await store.recent(),
-      ];
-      await store.warm(urls.take(48));
-    } catch (_) {}
-  }
-
-  /// By the preview setting unless [always]
-  static Future<void> openLink(String url, {bool always = false, String? fill}) async {
-    if (!always && !prefs.linkWindow) return openUrl(url, newTab: prefs.linkNewTab);
-    FocusManager.instance.primaryFocus?.unfocus();
-    linkWindow.value = (url: url, tap: ++_linkTaps, fill: fill);
-  }
-
-  static void closeLinkWindow() => linkWindow.value = null;
-
   static Future<void> openUrl(
     String url, {
     BrowserTapType tap = BrowserTapType.short,
@@ -1280,24 +379,10 @@ class NativeChat {
   }) async {
     final navigator = leaveForBrowser();
     if (navigator == null) return;
-    await _inBrowser(navigator.context, url, tap, newTab, app: app, pdaIcon: pdaIcon, reuse: reuse);
+    await inBrowser(navigator.context, url, tap, newTab, app: app, pdaIcon: pdaIcon, reuse: reuse);
   }
 
-  /// Chat to bubbles, app on its first route
-  static NavigatorState? leaveForBrowser({String? backTo}) {
-    final navigator = navigatorKey?.currentState;
-    if (navigator == null) return null;
-    closeLinkWindow();
-    // Back to this conversation, not the list
-    final page = screenOpen.value ? shownPages.lastOrNull?.call() : null;
-    if (page != null) _pushMinimized(page);
-    hideQuickWindows();
-    navigator.popUntil((route) => route.isFirst);
-    controller.backTo = backTo;
-    return navigator;
-  }
-
-  static Future<void> _inBrowser(
+  static Future<void> inBrowser(
     BuildContext context,
     String url,
     BrowserTapType tap,
@@ -1312,9 +397,9 @@ class NativeChat {
       pdaIcon
           ? web.pdaIconActivation(shortTap: true, context: context, automaticLogin: false)
           : web.browserShowInForeground = true;
-      if (cold) await _settledTabs(web);
+      if (cold) await settledTabs(web);
       final found = reuse?.call();
-      if (found != null) return _showTab(web, found);
+      if (found != null) return showTab(web, found);
       if (web.tabList.isNotEmpty) {
         await web.addTab(url: url, splitApart: web.splitBrowsersActive && web.focusedGroup == SplitGroup.apart);
         web.activateTab(web.tabList.length - 1);
@@ -1326,7 +411,7 @@ class NativeChat {
   }
 
   // A cold browser restores its tabs first
-  static Future<void> _settledTabs(WebViewProvider web) async {
+  static Future<void> settledTabs(WebViewProvider web) async {
     for (var i = 0, still = 0, count = -1; i < 80 && still < 20; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 100));
       still = web.tabList.isNotEmpty && web.tabList.length == count ? still + 1 : 0;
@@ -1334,7 +419,7 @@ class NativeChat {
     }
   }
 
-  static void _showTab(WebViewProvider web, int index) {
+  static void showTab(WebViewProvider web, int index) {
     if (index != web.currentTab) {
       web.activateTab(index);
     } else if (!isLive(web.tabList[index])) {
@@ -1368,62 +453,12 @@ class NativeChat {
     };
   }
 
-  static int? _findTornTab(WebViewProvider web) {
-    final made = web.tabList.indexWhere((tab) => tab.id == _madeTab);
-    final index = tornTabIndex(
-      [for (final tab in web.tabList) tab.currentUrl],
-      [web.currentTab, ...web.tabIndexesForGroup(web.focusedGroup), for (var i = 0; i < web.tabList.length; i++) i],
-      live: (i) => isLive(web.tabList[i]),
-      made: made,
-    );
-    if (index != made) _madeTab = null;
-    return index;
-  }
-
-  static Future<void> openTornBrowser({bool keepChat = false}) async {
-    final navigator = navigatorKey?.currentState;
-    if (navigator == null || _opening) return;
-    _opening = true;
-    try {
-      final web = navigator.context.read<WebViewProvider>();
-      if (web.tabList.isEmpty) {
-        await restoreTornBehind(web);
-        if (web.tabList.isEmpty) await _settledTabs(web);
-      }
-      final index = _findTornTab(web);
-      navigator.popUntil((route) => route.isFirst);
-      if (keepChat) chatToast(index == null ? 'Opening a Torn tab' : 'Switching to your Torn tab');
-      if (index == null) {
-        const home = 'https://www.torn.com';
-        final before = web.tabList.length;
-        keepChat
-            ? await _inBrowser(
-                navigator.context,
-                home,
-                BrowserTapType.short,
-                true,
-                app: true,
-                pdaIcon: true,
-                reuse: () => _findTornTab(web),
-              )
-            : await openUrl(home, newTab: true, app: true, pdaIcon: true, reuse: () => _findTornTab(web));
-        if (web.tabList.length > before) _madeTab = web.tabList.last.id;
-        return;
-      }
-      if (!keepChat) hideQuickWindows();
-      _showTab(web, index);
-      web.browserShowInForeground = true;
-    } finally {
-      _opening = false;
-    }
-  }
-
-  static bool _isTorn(String? url) => isTornHost(Uri.tryParse(url ?? '')?.host);
+  static Future<void> openTornBrowser({bool keepChat = false}) => tornTab.openBrowser(keepChat: keepChat);
 
   static int? tornTabIndex(List<String?> urls, Iterable<int> order, {bool Function(int)? live, int made = -1}) {
     final torn = [
       for (final i in order)
-        if (i >= 0 && i < urls.length && _isTorn(urls[i])) i,
+        if (i >= 0 && i < urls.length && isTornUrl(urls[i])) i,
     ];
     final found = torn.where((i) => live?.call(i) ?? true).firstOrNull ?? torn.firstOrNull;
     if (found != null || made < 0 || made >= urls.length) return found;
@@ -1469,16 +504,6 @@ class NativeChat {
     selectNotificationStream.add(payload);
   }
 
-  static Future<void> openDm(ChatUser user) async {
-    final navigator = navigatorKey?.currentState;
-    if (navigator == null) return;
-    final roomId = ChatRoom.dmId(user.id);
-    closeQuickWindow(roomId);
-    hideQuickWindows();
-    controller.addDraftDm(user);
-    await _openOnceClosed(roomId);
-  }
-
   static const String shortcutPrefix = 'chat:';
 
   /// Null when the chat can't open it
@@ -1491,81 +516,13 @@ class NativeChat {
     return cached?.substring(roomId.length + 1);
   }
 
-  static void setEnabled(bool value) {
-    // Back to the default safe spot
-    if (value && !prefs.inAppEnabled) prefs.setBubbleSpot(const []);
-    prefs.setInAppEnabled(value);
-    _syncRun();
-    _publishAppIconMenu();
-  }
-
-  // Off hides the chat entirely
-  static Future<void> setRemoteEnabled(bool value) async {
-    if (value == remoteEnabled.value) return;
-    remoteEnabled.value = value;
-    await Prefs().setNativeChatRemoteEnabled(value);
-    if (!engineEnabled) return;
-    if (value && !_started) return start();
-    _pushRules = '';
-    if (value) {
-      _syncPush();
-      factionOps.start();
-      factionEvents.start();
-      _syncRun();
-    } else {
-      BackgroundPrefs().setChatPushRules('');
-      _syncRun();
-      factionOps.stop();
-      factionEvents.stop();
-      closeLinkWindow();
-      _leaveScreens();
-    }
-    _reportMode();
-    _publishAppIconMenu();
-  }
-
   /// Remote Config native_chat_tab_grace_seconds
-  static void setTabGrace(int seconds) => _tabGrace = seconds;
+  static void setTabGrace(int seconds) => tornTab.setGrace(seconds);
 
   /// Remote Config native_chat_reply_enabled
   static Future<void> setReplyEnabled(bool value) async {
     if (value == await BackgroundPrefs().getNativeChatReplyEnabled()) return;
     await BackgroundPrefs().setNativeChatReplyEnabled(value);
     if (Platform.isIOS) await registerTornChatCategories(reply: value);
-  }
-
-  static Future<void> open(NavigatorState navigator, {String? roomId, String? messageId, bool saved = false}) async {
-    if (!compiled) return;
-    if (screenOpen.value) {
-      if (roomId == null || controller.isOnScreen(roomId)) return;
-      await navigator.push(
-        MaterialPageRoute(
-          builder: (_) => ChangeNotifierProvider<ChatController>.value(
-            value: controller,
-            child: ChatTheme(
-              child: ChatConversationPage(roomId: roomId, focusMessageId: messageId),
-            ),
-          ),
-        ),
-      );
-      controller.closeConversation(roomId);
-      return;
-    }
-    if (!prefs.inAppEnabled) setEnabled(true);
-    minimized.value = [...minimized.value.where((m) => m.window && m.roomId != roomId)];
-    minimizeBigWindow();
-    screenOpen.value = true;
-    final route = MaterialPageRoute<void>(
-      builder: (_) => ChangeNotifierProvider<ChatController>.value(
-        value: controller,
-        child: ChatTheme(
-          child: ChatPage(initialRoomId: roomId, initialMessageId: messageId, openSaved: saved),
-        ),
-      ),
-    );
-    _screens = route;
-    await navigator.push(route);
-    if (_screens == route) _screens = null;
-    screenOpen.value = false;
   }
 }

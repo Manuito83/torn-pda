@@ -25,14 +25,14 @@ void main() {
     await Prefs().setWebViewMainTab('{"tabsSave":[]}');
     await Prefs().setSplitBrowsersLayout('');
     await Prefs().setWebViewLastActiveTab(0);
-    NativeChat.resetTabs();
+    NativeChat.tornTab.reset();
     NativeChat.isLive = (_) => true;
     NativeChat.prefs.inAppEnabled = true;
     NativeChat.keyValid.value = true;
   });
 
   tearDown(() {
-    NativeChat.resetTabs();
+    NativeChat.tornTab.reset();
     NativeChat.isLive = NativeChat.tabAlive;
     NativeChat.sendTouch = original;
     NativeChat.sessionOk = originalSession;
@@ -104,7 +104,7 @@ void main() {
     test('any Torn tab is known, awake or not', () async {
       NativeChat.isLive = (_) => false;
       final web = await browser([other]);
-      NativeChat.watchTabs(web);
+      NativeChat.tornTab.watch(web);
       expect(NativeChat.tornTabExists.value, isFalse);
       await web.addTab(url: torn, tabUid: 'tabT');
       expect(NativeChat.tornTabExists.value, isTrue);
@@ -142,7 +142,7 @@ void main() {
 
     void change({required bool torn}) {
       live = torn;
-      NativeChat.watchTabs(web);
+      NativeChat.tornTab.watch(web);
     }
 
     setUp(() => live = true);
@@ -150,8 +150,8 @@ void main() {
     Future<void> open(WidgetTester tester) async {
       web = (await tester.runAsync(() => browser([torn])))!;
       NativeChat.isLive = (_) => live;
-      addTearDown(NativeChat.resetTabs);
-      NativeChat.watchTabs(web);
+      addTearDown(NativeChat.tornTab.reset);
+      NativeChat.tornTab.watch(web);
     }
 
     testWidgets('comes after the margin and ends at once', (tester) async {
@@ -338,7 +338,7 @@ void main() {
 
     testWidgets('close chat only closes it', (tester) async {
       final web = (await tester.runAsync(() => browser([other])))!;
-      NativeChat.watchTabs(web);
+      NativeChat.tornTab.watch(web);
       await show(tester);
       NativeChat.tornTabMissing.value = true;
       await tester.pump();
@@ -348,7 +348,7 @@ void main() {
       expect(find.text('chat'), findsOneWidget);
       expect(web.browserShowInForeground, isFalse);
       expect(web.tabList.length, 1);
-      NativeChat.resetTabs();
+      NativeChat.tornTab.reset();
     });
   });
 
@@ -356,8 +356,8 @@ void main() {
     testWidgets('does not count as losing the tab', (tester) async {
       final web = (await tester.runAsync(() => browser([torn])))!;
       NativeChat.isLive = (_) => false;
-      addTearDown(NativeChat.resetTabs);
-      NativeChat.watchTabs(web);
+      addTearDown(NativeChat.tornTab.reset);
+      NativeChat.tornTab.watch(web);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       await tester.pump(const Duration(seconds: 20));
       expect(NativeChat.tornTabMissing.value, isFalse);
@@ -368,8 +368,8 @@ void main() {
       final web = (await tester.runAsync(() => browser([torn])))!;
       NativeChat.isLive = (_) => false;
       NativeChat.keyValid.value = false;
-      addTearDown(NativeChat.resetTabs);
-      NativeChat.watchTabs(web);
+      addTearDown(NativeChat.tornTab.reset);
+      NativeChat.tornTab.watch(web);
       await tester.pump(const Duration(seconds: 20));
       expect(NativeChat.tornTabMissing.value, isFalse);
     });

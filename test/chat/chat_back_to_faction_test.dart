@@ -23,7 +23,7 @@ void main() {
       ..windows = []
       ..bigWindow = [];
     NativeChat.keyValid.value = true;
-    NativeChat.restoreWindows();
+    NativeChat.windows.restoreWindows();
   });
 
   tearDown(() {

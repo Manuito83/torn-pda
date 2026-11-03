@@ -21,7 +21,7 @@ void main() {
     await Prefs().setWebViewMainTab('{"tabsSave":[]}');
     await Prefs().setSplitBrowsersLayout('');
     await Prefs().setWebViewLastActiveTab(0);
-    NativeChat.resetTabs();
+    NativeChat.tornTab.reset();
     NativeChat.prefs.inAppEnabled = true;
     NativeChat.keyValid.value = true;
     live = true;
@@ -30,7 +30,7 @@ void main() {
   tearDown(() {
     NativeChat.bigWindow.value = null;
     NativeChat.quickWindows.value = const [];
-    NativeChat.resetTabs();
+    NativeChat.tornTab.reset();
     NativeChat.isLive = NativeChat.tabAlive;
   });
 
@@ -41,7 +41,7 @@ void main() {
       return provider;
     }))!;
     NativeChat.isLive = (_) => live;
-    NativeChat.watchTabs(web);
+    NativeChat.tornTab.watch(web);
     final key = GlobalKey<NavigatorState>();
     NativeChat.navigatorKey = key;
     addTearDown(() => NativeChat.navigatorKey = null);

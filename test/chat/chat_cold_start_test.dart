@@ -43,7 +43,7 @@ void main() {
     await Prefs().setWebViewMainTab('{"tabsSave":[]}');
     await Prefs().setSplitBrowsersLayout('');
     await Prefs().setWebViewLastActiveTab(0);
-    NativeChat.resetTabs();
+    NativeChat.tornTab.reset();
     NativeChat.prefs.inAppEnabled = true;
     NativeChat.keyValid.value = true;
     NativeChat.sessionOk = () => true;
@@ -54,7 +54,7 @@ void main() {
   tearDown(() {
     NativeChat.bigWindow.value = null;
     NativeChat.quickWindows.value = const [];
-    NativeChat.resetTabs();
+    NativeChat.tornTab.reset();
     NativeChat.isLive = NativeChat.tabAlive;
     NativeChat.setTabGrace(30);
   });
@@ -77,7 +77,7 @@ void main() {
         ),
       ),
     );
-    NativeChat.watchTabs(web);
+    NativeChat.tornTab.watch(web);
     return key;
   }
 
@@ -90,7 +90,7 @@ void main() {
   Future<void> end(WidgetTester tester) async {
     await secs(tester, 3);
     await tester.pumpWidget(const SizedBox());
-    NativeChat.resetTabs();
+    NativeChat.tornTab.reset();
     // Saved prefs queue behind each other: wait until the line is empty
     var flushed = false;
     unawaited(Prefs().getWebViewLastActiveTab().then((_) => flushed = true));
@@ -125,7 +125,7 @@ void main() {
     final web = ColdBrowser([other, torn, torn], active: 0);
     await mount(tester, web);
 
-    unawaited(NativeChat.restoreTornBehind(web));
+    unawaited(NativeChat.tornTab.restoreBehind(web));
     await secs(tester, 1);
 
     expect(loadsHidden(web), [false, true, false]);
@@ -136,7 +136,7 @@ void main() {
     final web = ColdBrowser([other, torn, other], active: 1);
     await mount(tester, web);
 
-    unawaited(NativeChat.restoreTornBehind(web));
+    unawaited(NativeChat.tornTab.restoreBehind(web));
     await secs(tester, 1);
 
     expect(asleep(web), [true, false, true]);
@@ -150,7 +150,7 @@ void main() {
     final web = ColdBrowser([other, other, torn], active: 0);
     await mount(tester, web);
 
-    unawaited(NativeChat.restoreTornBehind(web));
+    unawaited(NativeChat.tornTab.restoreBehind(web));
     await secs(tester, 1);
 
     expect(web.currentTab, 2);
@@ -163,7 +163,7 @@ void main() {
     final web = ColdBrowser([other, other], active: 1);
     await mount(tester, web);
 
-    unawaited(NativeChat.restoreTornBehind(web));
+    unawaited(NativeChat.tornTab.restoreBehind(web));
     await secs(tester, 1);
 
     expect(asleep(web), [true, true]);
@@ -178,7 +178,7 @@ void main() {
     final web = ColdBrowser([torn]);
     await mount(tester, web);
 
-    unawaited(NativeChat.restoreTornBehind(web));
+    unawaited(NativeChat.tornTab.restoreBehind(web));
     await secs(tester, 5);
     expect(NativeChat.tornTabMissing.value, isFalse);
 
@@ -195,7 +195,7 @@ void main() {
     final web = ColdBrowser([torn]);
     await mount(tester, web);
 
-    unawaited(NativeChat.restoreTornBehind(web));
+    unawaited(NativeChat.tornTab.restoreBehind(web));
     await secs(tester, 5);
     expect(NativeChat.tornTabMissing.value, isFalse);
     await secs(tester, 5);
@@ -222,7 +222,7 @@ void main() {
     await tester.runAsync(() => web.addTab(url: other, tabUid: 'open'));
     await mount(tester, web);
 
-    unawaited(NativeChat.restoreTornBehind(web));
+    unawaited(NativeChat.tornTab.restoreBehind(web));
     await secs(tester, 1);
 
     expect(web.restoreCalls, 0);
@@ -285,7 +285,7 @@ void main() {
         ),
       ),
     );
-    NativeChat.watchTabs(web);
+    NativeChat.tornTab.watch(web);
 
     unawaited(NativeChat.openTornBrowser(keepChat: true));
     await secs(tester, 2);

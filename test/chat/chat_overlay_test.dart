@@ -778,7 +778,7 @@ void main() {
 
     NativeChat.quickWindows.value = ['poker', 'faction'];
     NativeChat.minimized.value = const [ChatMinimized('poker'), ChatMinimized('company', window: true)];
-    NativeChat.onRoomGone(poker);
+    NativeChat.session.onRoomGone(poker);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(NativeChat.quickWindows.value, ['faction']);
@@ -786,7 +786,7 @@ void main() {
     expect(find.text(notice), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 3));
-    NativeChat.onRoomGone(poker);
+    NativeChat.session.onRoomGone(poker);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text(notice), findsNothing);

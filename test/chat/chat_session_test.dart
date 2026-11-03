@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/widgets/chat/chat_session.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import 'chat_fakes.dart';
@@ -65,12 +66,12 @@ void main() {
   });
 
   session('failed login stops a live chat', (tester) async {
-    expect(NativeChat.logoutStops(chat, hadLogin: false), isFalse);
+    expect(ChatSession.logoutStops(chat, hadLogin: false), isFalse);
     emit(ChatConnection.noSession);
-    expect(NativeChat.logoutStops(chat, hadLogin: true), isFalse);
+    expect(ChatSession.logoutStops(chat, hadLogin: true), isFalse);
     source.emit(const ChatReadyEvent(1));
     emit(ChatConnection.connected);
-    expect(NativeChat.logoutStops(chat, hadLogin: false), isTrue);
+    expect(ChatSession.logoutStops(chat, hadLogin: false), isTrue);
   });
 
   session('no login at all shows right away', (tester) async {
@@ -264,12 +265,12 @@ void main() {
   test('the faction emblem gives up after five tries', () async {
     TestWidgetsFlutterBinding.ensureInitialized();
     var tries = 0;
-    final fetch = NativeChat.fetchEmblem;
+    final fetch = NativeChat.session.fetchEmblem;
     addTearDown(() {
-      NativeChat.fetchEmblem = fetch;
+      NativeChat.session.fetchEmblem = fetch;
       chat.dispose();
     });
-    NativeChat.fetchEmblem = () async {
+    NativeChat.session.fetchEmblem = () async {
       tries++;
       return null;
     };
@@ -278,7 +279,7 @@ void main() {
       ..emit(const ChatRoomsEvent([ChatRoom(id: 'faction', name: 'Faction')]));
     var now = chatNow;
     for (var i = 0; i < 60; i++) {
-      NativeChat.askEmblem(chat, now);
+      NativeChat.session.askEmblem(chat, now);
       await Future<void>.delayed(Duration.zero);
       now = now.add(const Duration(minutes: 1));
     }

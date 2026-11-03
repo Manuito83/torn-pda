@@ -62,10 +62,10 @@ void main() {
     });
 
     test('opens when closed and closes when shown', () {
-      expect(NativeChat.toggleBigWindow(), isTrue);
+      expect(NativeChat.windows.toggleBigWindow(), isTrue);
       expect(NativeChat.bigWindowShown, isTrue);
 
-      expect(NativeChat.toggleBigWindow(), isFalse);
+      expect(NativeChat.windows.toggleBigWindow(), isFalse);
       expect(NativeChat.bigWindow.value, isNull);
     });
 
@@ -74,14 +74,14 @@ void main() {
       NativeChat.setBigWindowRoom('dm:7');
       NativeChat.minimizeBigWindow();
 
-      expect(NativeChat.toggleBigWindow(), isTrue);
+      expect(NativeChat.windows.toggleBigWindow(), isTrue);
       expect(NativeChat.bigWindowShown, isTrue);
       expect(NativeChat.bigWindow.value?.roomId, 'dm:7');
     });
 
     test('closes a window that no panel owns, from either panel', () {
       NativeChat.openBigWindow();
-      expect(NativeChat.toggleBigWindow(side: SplitSide.right), isFalse);
+      expect(NativeChat.windows.toggleBigWindow(side: SplitSide.right), isFalse);
       expect(NativeChat.bigWindow.value, isNull);
     });
 
@@ -90,19 +90,19 @@ void main() {
       NativeChat.openQuickWindow('dm:9');
       expect(NativeChat.stackOrder.last, 'dm:9');
 
-      expect(NativeChat.toggleBigWindow(), isTrue);
+      expect(NativeChat.windows.toggleBigWindow(), isTrue);
       expect(NativeChat.stackOrder.last, NativeChat.bigWindowId);
 
-      expect(NativeChat.toggleBigWindow(), isFalse);
+      expect(NativeChat.windows.toggleBigWindow(), isFalse);
       expect(NativeChat.bigWindow.value, isNull);
     });
 
     test('the other panel moves the window instead of closing it', () {
       NativeChat.openBigWindow(side: SplitSide.left);
-      expect(NativeChat.toggleBigWindow(side: SplitSide.right), isTrue);
+      expect(NativeChat.windows.toggleBigWindow(side: SplitSide.right), isTrue);
       expect(NativeChat.bigWindow.value?.side, SplitSide.right);
 
-      expect(NativeChat.toggleBigWindow(side: SplitSide.right), isFalse);
+      expect(NativeChat.windows.toggleBigWindow(side: SplitSide.right), isFalse);
       expect(NativeChat.bigWindow.value, isNull);
     });
   });

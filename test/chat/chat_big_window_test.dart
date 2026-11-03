@@ -139,7 +139,7 @@ void main() {
       await _pumpApp(tester);
       NativeChat.openBigWindow();
       NativeChat.setBigWindowRoom('poker');
-      NativeChat.onRoomGone(const ChatRoom(id: 'poker', name: 'Poker'));
+      NativeChat.session.onRoomGone(const ChatRoom(id: 'poker', name: 'Poker'));
       await tester.pump(const Duration(seconds: 4));
       expect(NativeChat.bigWindow.value?.roomId, isNull);
       expect(NativeChat.bigWindowShown, isTrue);
@@ -280,7 +280,7 @@ void main() {
         const ChatBigWindow(roomId: 'dm:7'),
         const Rect.fromLTWH(0, 0, 300, 400),
       );
-      NativeChat.loadBigWindow();
+      NativeChat.windows.loadBigWindow();
       expect(NativeChat.bigWindow.value?.minimized, isTrue);
       expect(NativeChat.bigWindow.value?.roomId, 'dm:7');
       expect(NativeChat.quickWindows.value, isEmpty);
@@ -288,7 +288,7 @@ void main() {
       expect(NativeChat.prefs.windows, isEmpty);
 
       NativeChat.prefs.bigWindow = ChatBigWindow.encode(null, const Rect.fromLTWH(0, 0, 300, 400));
-      NativeChat.loadBigWindow();
+      NativeChat.windows.loadBigWindow();
       expect(NativeChat.bigWindow.value, isNull);
     });
   });
