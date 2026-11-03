@@ -95,7 +95,20 @@ class RemoteSnippets {
         if (typeof window.__PDA_platformReadyPromise === 'undefined') {
           window.__PDA_platformReadyPromise = new Promise(function(resolve) {
             if (window.flutter_inappwebview && window.flutter_inappwebview._platformReady) return resolve();
-            window.addEventListener('flutterInAppWebViewPlatformReady', resolve);
+            var ready = false;
+            var done = function() { ready = true; resolve(); };
+            window.addEventListener('flutterInAppWebViewPlatformReady', done);
+            // Handlers are usually registered long before load, the bridge can come after document start
+            var tries = 0;
+            (function ping() {
+              if (ready) return;
+              var b = window.flutter_inappwebview;
+              if (b && typeof b.callHandler === 'function') {
+                b.callHandler('PDA_handlersReady').then(function(r) { if (r === true) done(); }, function() {});
+              } else if (++tries < 100) {
+                setTimeout(ping, 10);
+              }
+            })();
           });
         }
 

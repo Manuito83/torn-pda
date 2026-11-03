@@ -11,7 +11,20 @@ String handler_flutterPlatformReady() {
     if (typeof window.__PDA_platformReadyPromise === 'undefined') {
         window.__PDA_platformReadyPromise = new Promise(resolve => {
             if (window.flutter_inappwebview?._platformReady) return resolve();
-            window.addEventListener("flutterInAppWebViewPlatformReady", resolve);
+            let ready = false;
+            const done = () => { ready = true; resolve(); };
+            window.addEventListener("flutterInAppWebViewPlatformReady", done);
+            // Handlers are usually registered long before load, the bridge can come after document start
+            let tries = 0;
+            (function ping() {
+                if (ready) return;
+                const b = window.flutter_inappwebview;
+                if (b && typeof b.callHandler === "function") {
+                    b.callHandler("PDA_handlersReady").then(r => { if (r === true) done(); }, () => {});
+                } else if (++tries < 100) {
+                    setTimeout(ping, 10);
+                }
+            })();
         });
     }
   ''';

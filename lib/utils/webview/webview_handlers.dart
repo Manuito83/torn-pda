@@ -518,6 +518,12 @@ class WebviewHandlers {
         logToUser("GM storage full (browser localStorage), '$key' was not saved", duration: 5);
       },
     );
+
+    // Registered last, so true means all of the above exist
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_handlersReady',
+      callback: (JavaScriptHandlerFunctionData data) => true,
+    );
   }
 
   static void addTornChatCacheTrimHandler({
