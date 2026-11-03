@@ -244,7 +244,15 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
           _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
           _MItem('Browser: improved page load speed [Xentac]'),
-          _MItem('Scripts: more reliable injection and PDA_http requests [Xentac]'),
+          _MItem(
+            'Scripts: faster and more reliable injection and PDA_http requests [Xentac]',
+            detail:
+                'Scripts start sooner after a page loads, and PDA_http requests can go out before the page has '
+                'finished loading, as in Tampermonkey.\n\n'
+                'For script developers: a script that runs at document-start and changes the page with the '
+                'response should wait for the elements it needs. The developer guide is linked below.',
+            docUrl: 'https://github.com/Manuito83/torn-pda/blob/master/docs/webview/http-handlers.md',
+          ),
         ],
       ),
       _MSection(

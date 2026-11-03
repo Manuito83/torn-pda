@@ -36,7 +36,7 @@ class RemoteSnippets {
   static const String pdaApi = 'pda_api';
 
   static final Map<String, RemoteSnippet> _registry = {
-    pdaApi: const RemoteSnippet(id: pdaApi, version: '1.0.1', buildBase: _pdaApiBaseJS),
+    pdaApi: const RemoteSnippet(id: pdaApi, version: '1.0.2', buildBase: _pdaApiBaseJS),
     cityItemsHighlight: const RemoteSnippet(
       id: cityItemsHighlight,
       version: '1.0.0',
@@ -87,18 +87,19 @@ class RemoteSnippets {
     return over != null && over.js.isNotEmpty && UserScriptModel.isNewerVersion(over.version, base.version);
   }
 
+  // pda_api with or without the early ready check
+  static String resolvePdaApi({required bool early}) =>
+      usingOverride(pdaApi) ? _overrides[pdaApi]!.js : _pdaApiBaseJS(early: early);
+
   // pda_api base
   // RC keys: snippet_pda_api_js + snippet_pda_api_version
-  static String _pdaApiBaseJS() {
-    return '''
-      (function() {
-        if (typeof window.__PDA_platformReadyPromise === 'undefined') {
-          window.__PDA_platformReadyPromise = new Promise(function(resolve) {
-            if (window.flutter_inappwebview && window.flutter_inappwebview._platformReady) return resolve();
+  static String _pdaApiBaseJS({bool early = true}) {
+    final String wait = early
+        ? '''
             var ready = false;
             var done = function() { ready = true; resolve(); };
             window.addEventListener('flutterInAppWebViewPlatformReady', done);
-            // Handlers are usually registered long before load, the bridge can come after document start
+            // Ask the app before the ready event
             var tries = 0;
             (function ping() {
               if (ready) return;
@@ -108,7 +109,15 @@ class RemoteSnippets {
               } else if (++tries < 100) {
                 setTimeout(ping, 10);
               }
-            })();
+            })();'''
+        : '''
+            window.addEventListener('flutterInAppWebViewPlatformReady', resolve);''';
+    return '''
+      (function() {
+        if (typeof window.__PDA_platformReadyPromise === 'undefined') {
+          window.__PDA_platformReadyPromise = new Promise(function(resolve) {
+            if (window.flutter_inappwebview && window.flutter_inappwebview._platformReady) return resolve();
+$wait
           });
         }
 

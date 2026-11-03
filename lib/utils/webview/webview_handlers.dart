@@ -519,7 +519,7 @@ class WebviewHandlers {
       },
     );
 
-    // Registered last, so true means all of the above exist
+    // Last one: true means the above exist
     webview.addJavaScriptHandler(
       handlerName: 'PDA_handlersReady',
       callback: (JavaScriptHandlerFunctionData data) => true,

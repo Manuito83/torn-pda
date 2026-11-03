@@ -72,6 +72,9 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Remote Config: scripts_early_http_allowed
+  bool earlyHttpAllowedRC = true;
+
   var _userScriptsNotifyUpdates = true;
   bool get userScriptsNotifyUpdates => _userScriptsNotifyUpdates;
   set setUserScriptsNotifyUpdates(bool enabled) {
@@ -330,7 +333,7 @@ class UserScriptsProvider extends ChangeNotifier {
         UserScript(
           groupName: "__TornPDA_ReadyEvent__",
           injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: handler_flutterPlatformReady(),
+          source: handler_flutterPlatformReady(early: earlyHttpAllowedRC),
         ),
       );
 
@@ -339,7 +342,7 @@ class UserScriptsProvider extends ChangeNotifier {
         UserScript(
           groupName: "__TornPDA_API__",
           injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: handler_pdaAPI(),
+          source: handler_pdaAPI(early: earlyHttpAllowedRC),
         ),
       );
 

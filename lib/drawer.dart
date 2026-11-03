@@ -769,6 +769,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // Connectivity check
         "pda_connectivity_check": false,
         "network_strict_mode": true,
+        "scripts_early_http_allowed": true,
       });
 
       // Wait for preferences to be loaded before fetching Remote Config
@@ -914,6 +915,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (httpOverrides is MyHttpOverrides) {
         httpOverrides.strictMode = remoteConfig.getBool("network_strict_mode");
       }
+
+      _userScriptsProvider.earlyHttpAllowedRC = remoteConfig.getBool("scripts_early_http_allowed");
 
       // JS Snippets RC overrides: snippet_<id>_js (raw JS) + snippet_<id>_version
       for (final id in RemoteSnippets.ids) {

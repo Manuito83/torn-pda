@@ -3,18 +3,13 @@
 // Project imports:
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 
-String handler_flutterPlatformReady() {
-  return '''
-    // Initialize event listener for other handlers
-    // Attached to window so it survives injection-time scope wrapping: some webviews wrap
-    // document-start scripts in a block/closure, which would keep bare declarations local
-    if (typeof window.__PDA_platformReadyPromise === 'undefined') {
-        window.__PDA_platformReadyPromise = new Promise(resolve => {
-            if (window.flutter_inappwebview?._platformReady) return resolve();
+String handler_flutterPlatformReady({required bool early}) {
+  final String wait = early
+      ? '''
             let ready = false;
             const done = () => { ready = true; resolve(); };
             window.addEventListener("flutterInAppWebViewPlatformReady", done);
-            // Handlers are usually registered long before load, the bridge can come after document start
+            // Ask the app before the ready event
             let tries = 0;
             (function ping() {
                 if (ready) return;
@@ -24,7 +19,17 @@ String handler_flutterPlatformReady() {
                 } else if (++tries < 100) {
                     setTimeout(ping, 10);
                 }
-            })();
+            })();'''
+      : '''
+            window.addEventListener("flutterInAppWebViewPlatformReady", resolve);''';
+  return '''
+    // Initialize event listener for other handlers
+    // Attached to window so it survives injection-time scope wrapping: some webviews wrap
+    // document-start scripts in a block/closure, which would keep bare declarations local
+    if (typeof window.__PDA_platformReadyPromise === 'undefined') {
+        window.__PDA_platformReadyPromise = new Promise(resolve => {
+            if (window.flutter_inappwebview?._platformReady) return resolve();
+$wait
         });
     }
   ''';
@@ -172,9 +177,9 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
   ''';
 }
 
-String handler_pdaAPI() {
+String handler_pdaAPI({required bool early}) {
   // PDA HTTP helpers (PDA_httpGet/Post/Put/Delete/Patch)
-  return RemoteSnippets.resolve(RemoteSnippets.pdaApi);
+  return RemoteSnippets.resolvePdaApi(early: early);
 }
 
 String handler_evaluateJS() {
