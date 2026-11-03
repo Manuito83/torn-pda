@@ -364,6 +364,20 @@ class UserScriptModel {
     return inSource && source.toLowerCase().contains(q);
   }
 
+  // Adapted source, rebuilt when source or key changes
+  String? _bodyFor;
+  String? _bodyKey;
+  String _body = "";
+
+  String adaptedBody(String apiKey, String Function(String source, String apiKey) adapt) {
+    if (!identical(_bodyFor, source) || _bodyKey != apiKey) {
+      _body = adapt(source, apiKey);
+      _bodyFor = source;
+      _bodyKey = apiKey;
+    }
+    return _body;
+  }
+
   // Compiled @match patterns, rebuilt when matches changes
   List<String>? _compiledFor;
   List<RegExp?> _compiled = const [];

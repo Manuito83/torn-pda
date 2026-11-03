@@ -327,6 +327,32 @@ void main() {
       expect(adapted, contains('const text = "value";'));
       expect(adapted, contains("const other = 'x';"));
     });
+
+    test('keeps a source without key or smart quotes as the same string', () {
+      const source = 'const a = "b";';
+      expect(identical(UserScriptsProvider.adaptBody(source, 'k'), source), isTrue);
+    });
+
+    test('caches the adapted source until the source or the key changes', () {
+      final model = _model();
+      var calls = 0;
+      String adapt(String s, String k) {
+        calls++;
+        return UserScriptsProvider.adaptBody(s, k);
+      }
+
+      model.source = 'key = "###PDA-APIKEY###";';
+      expect(model.adaptedBody('k1', adapt), 'key = "k1";');
+      expect(model.adaptedBody('k1', adapt), 'key = "k1";');
+      expect(calls, 1);
+
+      expect(model.adaptedBody('k2', adapt), 'key = "k2";');
+      expect(calls, 2);
+
+      model.source = 'key = “###PDA-APIKEY###”;';
+      expect(model.adaptedBody('k2', adapt), 'key = "k2";');
+      expect(calls, 3);
+    });
   });
 
   // -------------------------------------------------------------------------
