@@ -1960,9 +1960,13 @@ class WebViewFullState extends State<WebViewFull>
 
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               // Guard once-per-document so hash navigation (which re-fire onLoadStop) don't re-run END scripts
-              for (final script in scriptsToAdd) {
-                await webViewController!.evaluateJavascript(source: _oncePerDocument(script.groupName, script.source));
-              }
+              // Sent together, they still run in order
+              await Future.wait(
+                scriptsToAdd.map(
+                  (script) =>
+                      webViewController!.evaluateJavascript(source: _oncePerDocument(script.groupName, script.source)),
+                ),
+              );
 
               // DEBUG
               if (_debugScriptsInjection) {
