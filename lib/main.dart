@@ -406,8 +406,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         theme: theme,
         debugShowCheckedModeBanner: false,
         builder: (context, child) {
-          final botToastWrappedChild = BotToastInit()(context, child);
-
           final Widget content = (enableAccessibilityTools && kDebugMode)
               ? AccessibilityTools(
                   // Set to null to disable tap area checking
@@ -424,24 +422,28 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   buttonsAlignment: ButtonsAlignment.bottomRight,
                   // Enable or disable draging the buttons around
                   enableButtonsDrag: true,
-                  child: botToastWrappedChild,
+                  child: child!,
                 )
-              : botToastWrappedChild;
+              : child!;
 
           // Warm the Android WebView engine offstage (1x1, behind content, non-blocking) to avoid the
           // #2843 cold-start onWebViewCreated drop. Can be changed via RC
-          return Stack(
-            alignment: Alignment.topLeft,
-            children: [
-              const BrowserEnginePrewarm(),
-              PipHost(child: content),
-              if (NativeChat.engineEnabled)
-                ValueListenableBuilder(
-                  valueListenable: NativeChat.remoteEnabled,
-                  builder: (_, on, _) => on ? ChatOverlay(navigatorKey: navigatorKey) : const SizedBox.shrink(),
-                ),
-              const ChainMiniHost(),
-            ],
+          // Notices above the chat windows
+          return BotToastInit()(
+            context,
+            Stack(
+              alignment: Alignment.topLeft,
+              children: [
+                const BrowserEnginePrewarm(),
+                PipHost(child: content),
+                if (NativeChat.engineEnabled)
+                  ValueListenableBuilder(
+                    valueListenable: NativeChat.remoteEnabled,
+                    builder: (_, on, _) => on ? ChatOverlay(navigatorKey: navigatorKey) : const SizedBox.shrink(),
+                  ),
+                const ChainMiniHost(),
+              ],
+            ),
           );
         },
         navigatorObservers: [
