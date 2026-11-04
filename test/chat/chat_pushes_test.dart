@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -117,6 +120,9 @@ void main() {
 
     Future<void> own({int id = 5, String key = ''}) =>
         SharedPreferencesAsync().setString('pda_ownDetails', jsonEncode({'player_id': id, 'userApiKey': key}));
+    String loginToken(int id) => 'h.${base64Url.encode(utf8.encode(jsonEncode({'userID': id})))}.s';
+    void loggedIn(int? id) =>
+        FlutterSecureStorage.setMockInitialValues({if (id != null) 'pda_nativeApiToken': loginToken(id)});
 
     NotificationResponse reply(String text, {int? owner = 5}) => NotificationResponse(
       notificationResponseType: NotificationResponseType.selectedNotificationAction,
@@ -141,6 +147,7 @@ void main() {
     setUp(() {
       shown.clear();
       SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
+      loggedIn(5);
     });
 
     test('anything but a Torn chat DM is left alone', () async {
@@ -207,23 +214,63 @@ void main() {
       expect(shown, isEmpty);
     });
 
+    test('Reply is offered only with a native login', () async {
+      await own(key: 'abcdefghijklmnop');
+      await BackgroundPrefs().setNativeChatReplyEnabled(true);
+      List actions() => (shown.last['platformSpecifics'] as Map)['actions'] as List;
+
+      await showTornChatNotification(push);
+      expect(actions(), hasLength(1));
+      loggedIn(null);
+      await showTornChatNotification(push);
+      expect(actions(), isEmpty);
+      expect(jsonDecode(shown.last['payload'] as String), {'tornChatDm': 7, 'name': 'Bravo'});
+    }, skip: skip);
+
     test('notification reply checks', () async {
-      await own();
-      await handleTornChatResponse(reply('see you'));
+      final sent = <http.Request>[];
+      var status = 201;
+      Future<void> answer(NotificationResponse response) => http.runWithClient(
+        () => handleTornChatResponse(response),
+        () => MockClient((request) async {
+          sent.add(request);
+          return http.Response('', status);
+        }),
+      );
+
+      await own(key: 'abcdefghijklmnop');
+      await answer(reply('see you'));
       expect(shown.single['body'], 'Not sent: open the chat to reply');
       shown.clear();
       await BackgroundPrefs().setNativeChatReplyEnabled(true);
 
-      await own(id: 6, key: 'abcdefghijklmnop');
-      expect(await handleTornChatResponse(reply('see you')), (7, 'Bravo'));
+      loggedIn(6);
+      await answer(reply('see you'));
       expect(shown.single['body'], 'Not sent: account changed');
       shown.clear();
-      await handleTornChatResponse(reply('see you', owner: null));
+      await answer(reply('see you', owner: null));
       expect(shown.single['body'], 'Not sent: account changed');
 
       shown.clear();
-      await own();
-      await handleTornChatResponse(reply('see you at the bank'));
+      loggedIn(null);
+      await answer(reply('see you'));
+      expect(shown.single['body'], 'Open Torn PDA to reply');
+      expect(sent, isEmpty);
+
+      shown.clear();
+      loggedIn(5);
+      await answer(reply('see you'));
+      expect(shown, isEmpty);
+      expect(sent.single.headers['Authorization'], 'Bearer ${loginToken(5)}');
+      expect(jsonDecode(sent.single.body), {'content': 'see you', 'reqId': isNotEmpty});
+
+      status = 401;
+      await answer(reply('see you'));
+      expect(shown.single['body'], 'Open Torn PDA to reply');
+
+      shown.clear();
+      status = 500;
+      await answer(reply('see you at the bank'));
       expect((shown.single['title'], shown.single['body']), ('Bravo', 'Reply failed: see you at the bank'));
     });
   });

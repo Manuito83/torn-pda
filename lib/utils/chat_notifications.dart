@@ -17,6 +17,8 @@ import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/models/chat/chat_watch.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/chat/chat_push_rules.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_push.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
@@ -29,13 +31,18 @@ const String discreetChatTitle = 'C';
 const String discreetChatBody = ' ';
 const String _kTornChatReply = 'tchat_reply_action';
 
-Future<({int id, String key})> _ownAccount() async {
+Future<String> _ownApiKey() async {
   try {
-    final own = ownProfileBasicFromJson(await BackgroundPrefs().getOwnDetails());
-    return (id: own.playerId ?? 0, key: own.userApiKey ?? '');
+    return ownProfileBasicFromJson(await BackgroundPrefs().getOwnDetails()).userApiKey ?? '';
   } catch (_) {
-    return (id: 0, key: '');
+    return '';
   }
+}
+
+Future<({int id, String token})?> _replySender() async {
+  final token = await readNativeApiToken();
+  final id = token == null ? null : playerIdFromApiToken(token);
+  return id == null ? null : (id: id, token: token!);
 }
 
 Future<AndroidNotificationDetails> tornChatAndroidDetails(
@@ -128,8 +135,8 @@ Future<bool> showTornChatNotification(Map<String, dynamic> data, {bool foregroun
     return true;
   }
   final tone = rules.toneFor(push.senderId);
-  final own = await _ownAccount();
-  final reply = own.key.isNotEmpty && await BackgroundPrefs().getNativeChatReplyEnabled();
+  final sender = await _replySender();
+  final reply = sender != null && await BackgroundPrefs().getNativeChatReplyEnabled();
   final discreet = await BackgroundPrefs().getDiscreetAt();
   final body = discreet ? discreetChatBody : chatShortText(push.message, DateTime.now());
   final android = await tornChatAndroidDetails(body, reply: reply, tone: tone);
@@ -142,7 +149,7 @@ Future<bool> showTornChatNotification(Map<String, dynamic> data, {bool foregroun
       android: android,
       iOS: tornChatIosDetails(tone, reply: reply),
     ),
-    payload: jsonEncode({_kTornChatDm: push.senderId, 'name': push.senderName, 'owner': own.id}),
+    payload: jsonEncode({_kTornChatDm: push.senderId, 'name': push.senderName, 'owner': ?sender?.id}),
   );
   await StatsController.chat.push('shown');
   return true;
@@ -262,6 +269,7 @@ Future<String?> _tornChatReplyStatus(
     'disabled' => 'Not sent: open the chat to reply',
     'account_changed' => 'Not sent: account changed',
     'key_risk' => 'Not sent: looks like an API key. Open the chat to send it',
+    'no_token' || 'expired' => 'Open Torn PDA to reply',
     _ => 'Reply failed: $text',
   };
 }
@@ -274,13 +282,12 @@ Future<String> _tornChatReply(
   required bool prefsReadable,
 }) async {
   if (!await BackgroundPrefs().getNativeChatReplyEnabled()) return 'disabled';
-  final own = await _ownAccount();
+  final sender = await _replySender();
+  if (sender == null) return 'no_token';
+  if (checkOwner && owner != sender.id) return 'account_changed';
   final warn = !prefsReadable || await Prefs().getNativeChatWarnApiKey();
-  final keyRisk = warn ? ChatSendCheck.keyRisk(text, ownKey: own.key) : ChatKeyRisk.none;
-  if (checkOwner && owner != own.id) return 'account_changed';
-  if (keyRisk != ChatKeyRisk.none) return 'key_risk';
-  if (own.key.isEmpty) return 'no_key';
-  return ChatPush.reply(userId, text, own.key);
+  if (warn && ChatSendCheck.keyRisk(text, ownKey: await _ownApiKey()) != ChatKeyRisk.none) return 'key_risk';
+  return ChatPush.reply(userId, text, sender.token);
 }
 
 Future<void> _showTornChatReplyStatus(int id, String name, String status, String? payload) async {
@@ -348,12 +355,12 @@ Future<void> _handleIosTornChatReply(Map<String, dynamic> args, {required bool p
     );
     counted = true;
     if (status == null) return;
-    final own = await _ownAccount();
+    final sender = await _replySender();
     await _showTornChatReplyStatus(
       chatAlertId(ChatRoom.dmId(userId)),
       name,
       status,
-      jsonEncode({_kTornChatDm: userId, 'name': name, 'owner': own.id}),
+      jsonEncode({_kTornChatDm: userId, 'name': name, 'owner': ?sender?.id}),
     );
   } catch (_) {
     if (!counted) await StatsController.chat.reply('error', main: prefsReadable);
