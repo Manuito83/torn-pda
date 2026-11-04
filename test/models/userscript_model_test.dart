@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/userscript_model.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
 
 /// Tests for [UserScriptModel]: header parsing, version comparison and URL
 /// matching logic
@@ -208,6 +207,13 @@ void main() {
       expect(m.matchesTarget('https://www.torn.com/factions.php#/sid=attack'), isFalse);
     });
 
+    test('pattern with # keeps the hash', () {
+      final m = _model(matches: ['https://www.torn.com/factions.php?step=your#/tab=armoury']);
+      expect(m.matchesTarget('https://www.torn.com/factions.php?step=your#/tab=armoury'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/factions.php?step=your#/tab=info'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/factions.php?step=your'), isFalse);
+    });
+
     test('http*:// matches http and https', () {
       final m = _model(matches: ['http*://www.torn.com/*']);
       expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
@@ -333,12 +339,7 @@ void main() {
 
   group('source adaptation', () {
     test('replaces the PDA API key placeholder before injection', () {
-      final provider = UserScriptsProvider();
-      final adapted = provider.adaptSource(
-        source: 'const key = "###PDA-APIKEY###";',
-        scriptFinalApiKey: 'abc123',
-        storageId: 'test-sid',
-      );
+      final adapted = wrapSource(adaptBody('const key = "###PDA-APIKEY###";', 'abc123'), 'test-sid');
 
       expect(adapted, contains('const key = "abc123";'));
       expect(adapted, isNot(contains('###PDA-APIKEY###')));
@@ -347,12 +348,7 @@ void main() {
     });
 
     test('normalizes smart quotes before injection', () {
-      final provider = UserScriptsProvider();
-      final adapted = provider.adaptSource(
-        source: 'const text = “value”; const other = ‘x’;',
-        scriptFinalApiKey: 'unused',
-        storageId: 'test-sid',
-      );
+      final adapted = wrapSource(adaptBody('const text = “value”; const other = ‘x’;', 'unused'), 'test-sid');
 
       expect(adapted, contains('const text = "value";'));
       expect(adapted, contains("const other = 'x';"));
@@ -360,28 +356,23 @@ void main() {
 
     test('keeps a source without key or smart quotes as the same string', () {
       const source = 'const a = "b";';
-      expect(identical(UserScriptsProvider.adaptBody(source, 'k'), source), isTrue);
+      expect(identical(adaptBody(source, 'k'), source), isTrue);
     });
 
     test('caches the adapted source until the source or the key changes', () {
       final model = _model();
-      var calls = 0;
-      String adapt(String s, String k) {
-        calls++;
-        return UserScriptsProvider.adaptBody(s, k);
-      }
-
       model.source = 'key = "###PDA-APIKEY###";';
-      expect(model.adaptedBody('k1', adapt), 'key = "k1";');
-      expect(model.adaptedBody('k1', adapt), 'key = "k1";');
-      expect(calls, 1);
+      final first = model.adaptedBody('k1');
+      expect(first, 'key = "k1";');
+      expect(identical(model.adaptedBody('k1'), first), isTrue);
 
-      expect(model.adaptedBody('k2', adapt), 'key = "k2";');
-      expect(calls, 2);
+      final second = model.adaptedBody('k2');
+      expect(second, 'key = "k2";');
 
       model.source = 'key = “###PDA-APIKEY###”;';
-      expect(model.adaptedBody('k2', adapt), 'key = "k2";');
-      expect(calls, 3);
+      final third = model.adaptedBody('k2');
+      expect(third, 'key = "k2";');
+      expect(identical(third, second), isFalse);
     });
   });
 

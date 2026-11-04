@@ -129,9 +129,9 @@ List<String> requires;    // List of @require headers
 - `parseHeader()` - Now parses @grant and @require headers
 - `fromJson()` - Deserializes grants and requires
 - `toJson()` - Serializes grants and requires
-- `shouldInject()` - Improved pattern matching with URL normalization
+- `matchesTarget()` - Pattern matching with URL normalization
 - `isNewerVersion()` - Uses VersionModel for better version comparison
-- `adaptSource()` in `UserScriptsProvider` replaces `###PDA-APIKEY###` at injection time
+- `adaptBody()` and `wrapSource()` in `userscript_model.dart` replace `###PDA-APIKEY###` and wrap the script at injection time
 
 ### ScriptHeaderModel
 

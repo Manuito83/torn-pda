@@ -50,6 +50,8 @@ class UserScriptsProvider extends ChangeNotifier {
   final List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
 
+  final Set<String> _hashMatchReported = {};
+
   // Safety lock to prevent overwriting data with empty lists if load fails
   bool _isSafeToSave = false;
   bool get isInSafeMode => !_isSafeToSave;
@@ -375,15 +377,12 @@ class UserScriptsProvider extends ChangeNotifier {
     if (_userScriptsEnabled) {
       try {
         return UnmodifiableListView(
-          _userScriptList.where((s) => isActive(s) && s.matchesTarget(url, time)).map((s) {
+          _userScriptList.where((s) => isActive(s) && _injectsInto(s, url, time)).map((s) {
             return UserScript(
               groupName: s.storageId,
               injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
               // If the script is a custom API key script, we need to replace the API key
-              source: _wrapSource(
-                s.adaptedBody(s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey, adaptBody),
-                s.storageId,
-              ),
+              source: wrapSource(s.adaptedBody(s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey), s.storageId),
             );
           }).toList(),
         );
@@ -408,28 +407,25 @@ class UserScriptsProvider extends ChangeNotifier {
     return staleScriptGroups(registered, _userScriptList.where(isActive), url);
   }
 
-  static final _anyQuotes = RegExp(r'[“”‘’]');
-  static final _doubleQuotes = RegExp(r'[“”]');
-  static final _singleQuotes = RegExp(r'[‘’]');
-
-  static String _normalizeQuotes(String s) => s.replaceAll(_doubleQuotes, '"').replaceAll(_singleQuotes, "'");
-
-  String adaptSource({required String source, required String scriptFinalApiKey, required String storageId}) {
-    return _wrapSource(adaptBody(source, scriptFinalApiKey), storageId);
+  bool _injectsInto(UserScriptModel s, String url, UserScriptTime time) {
+    final pattern = s.matchingPattern(url, time);
+    if (pattern == null) return false;
+    if (pattern.contains('#') && _hashMatchReported.add(s.storageId)) {
+      analytics?.logEvent(
+        name: "userscript_match_hash",
+        parameters: {
+          "pattern": _anonymous(pattern),
+          "origin": s.isExample ? "example" : "installed",
+        },
+      ).catchError((_) {});
+    }
+    return true;
   }
 
-  // The script part of adaptSource; the same string when nothing changes
-  static String adaptBody(String source, String apiKey) {
-    if (!source.contains("###PDA-APIKEY###") && !source.contains(_anyQuotes)) return source;
-    return _normalizeQuotes(source.replaceAll("###PDA-APIKEY###", apiKey));
-  }
-
-  String _wrapSource(String body, String storageId) {
-    // Bind PDA_storage to this script's namespace inside its own closure (sid not reachable elsewhere)
-    // jsonEncode the id: it can come from imported/restored data, so never interpolate it raw into JS
-    final String bind =
-        'const PDA_storage = window.__pdaStorageFactory && window.__pdaStorageFactory(${jsonEncode(storageId)});';
-    return "(function() {${_normalizeQuotes(bind)}$body}());";
+  // No player or item ids in Analytics
+  String _anonymous(String pattern) {
+    final clean = pattern.replaceAll(RegExp(r'\d{3,}'), 'N');
+    return clean.length > 100 ? clean.substring(0, 100) : clean;
   }
 
   void addUserScriptByModel(UserScriptModel model) {

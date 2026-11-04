@@ -74,6 +74,26 @@ List<String> staleScriptGroups(Iterable<String> registered, Iterable<UserScriptM
   return registered.where((g) => !keep.contains(g)).toList();
 }
 
+final _anyQuotes = RegExp(r'[“”‘’]');
+final _doubleQuotes = RegExp(r'[“”]');
+final _singleQuotes = RegExp(r'[‘’]');
+
+String _normalizeQuotes(String s) => s.replaceAll(_doubleQuotes, '"').replaceAll(_singleQuotes, "'");
+
+// Same string back when nothing changes
+String adaptBody(String source, String apiKey) {
+  if (!source.contains("###PDA-APIKEY###") && !source.contains(_anyQuotes)) return source;
+  return _normalizeQuotes(source.replaceAll("###PDA-APIKEY###", apiKey));
+}
+
+String wrapSource(String body, String storageId) {
+  // Bind PDA_storage to this script's namespace inside its own closure (sid not reachable elsewhere)
+  // jsonEncode the id: it can come from imported/restored data, so never interpolate it raw into JS
+  final String bind =
+      'const PDA_storage = window.__pdaStorageFactory && window.__pdaStorageFactory(${jsonEncode(storageId)});';
+  return "(function() {${_normalizeQuotes(bind)}$body}());";
+}
+
 class UserScriptModel {
   UserScriptModel({
     this.enabled = true,
@@ -364,14 +384,14 @@ class UserScriptModel {
     return inSource && source.toLowerCase().contains(q);
   }
 
-  // Adapted source, rebuilt when source or key changes
+  // Rebuilt when source or key changes
   String? _bodyFor;
   String? _bodyKey;
   String _body = "";
 
-  String adaptedBody(String apiKey, String Function(String source, String apiKey) adapt) {
+  String adaptedBody(String apiKey) {
     if (!identical(_bodyFor, source) || _bodyKey != apiKey) {
-      _body = adapt(source, apiKey);
+      _body = adaptBody(source, apiKey);
       _bodyFor = source;
       _bodyKey = apiKey;
     }
@@ -383,23 +403,28 @@ class UserScriptModel {
   List<RegExp?> _compiled = const [];
 
   /// Whether the script targets this url and injection time
-  bool matchesTarget(String url, [UserScriptTime? time]) {
-    if (time != null && this.time != time) return false;
+  bool matchesTarget(String url, [UserScriptTime? time]) => matchingPattern(url, time) != null;
+
+  /// The @match pattern that hits, if any
+  String? matchingPattern(String url, [UserScriptTime? time]) {
+    if (time != null && this.time != time) return null;
     if (!listEquals(_compiledFor, matches)) {
       _compiledFor = List.of(matches);
       _compiled = [for (final m in _compiledFor!) m == '*' ? null : _tryPatternToRegex(m)];
     }
-    String? withPath;
+    String? withHash;
+    String? noHash;
     for (var i = 0; i < _compiledFor!.length; i++) {
       final pattern = _compiledFor![i];
-      if (pattern == '*') return true;
-      withPath ??= _matchUrl(url);
+      if (pattern == '*') return pattern;
+      // Keep hash only if pattern has one
+      final target = pattern.contains('#') ? (withHash ??= _withPath(url)) : (noHash ??= _withPath(_withoutHash(url)));
       final regex = _compiled[i];
       // Non-standard pattern: old "contains" heuristic
-      final hit = regex != null ? regex.hasMatch(withPath) : withPath.contains(pattern.replaceAll('*', ''));
-      if (hit) return true;
+      final hit = regex != null ? regex.hasMatch(target) : target.contains(pattern.replaceAll('*', ''));
+      if (hit) return pattern;
     }
-    return false;
+    return null;
   }
 
   static RegExp? _tryPatternToRegex(String pattern) {
@@ -410,10 +435,13 @@ class UserScriptModel {
     }
   }
 
-  // No #hash, as in Tampermonkey, and the regex always needs a "/" after the host
-  static String _matchUrl(String url) {
+  static String _withoutHash(String url) {
     final hash = url.indexOf('#');
-    if (hash >= 0) url = url.substring(0, hash);
+    return hash < 0 ? url : url.substring(0, hash);
+  }
+
+  // Regex needs "/" after host
+  static String _withPath(String url) {
     final uri = Uri.tryParse(url);
     return uri != null && uri.path.isEmpty ? '$url/' : url;
   }

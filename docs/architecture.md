@@ -236,12 +236,14 @@ sequenceDiagram
 
 ### @match Pattern Matching
 
-When a page loads, `UserScriptsProvider` calls `shouldInject(url)` on each script. The matching follows the [Tampermonkey @match standard](https://www.tampermonkey.net/documentation.php?locale=en#meta:match):
+When a page loads, `UserScriptsProvider` calls `matchesTarget(url)` on each script. The matching follows the [Tampermonkey @match standard](https://www.tampermonkey.net/documentation.php?locale=en#meta:match):
 
 - `*` alone matches everything
-- `*://` matches http and https
+- `*://` and `http*://` match http and https
 - `*.example.com` matches the domain with or without a subdomain
+- Any port matches, unless the pattern names one
 - `*` in the path matches any characters
+- The `#hash` is left out of the URL, as Tampermonkey does. For compatibility, a pattern that contains `#` is still compared with the full URL, hash included
 - Legacy patterns without a protocol are auto-prefixed with `*://`
 
 ---

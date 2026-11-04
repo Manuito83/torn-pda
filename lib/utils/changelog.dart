@@ -265,6 +265,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
           _MItem('Browser: find in page arrows are visible in chaining mode'),
           _MItem('Calendar: fixed event dates'),
+          _MItem('Scripts: @match now follows Tampermonkey rules (http*, any port, pages with #) [Xentac]'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Travel: flight times now include travel time reduction perks'),
           _MItem('Fixed unread messages count in the home screen widget', androidOnly: true),
