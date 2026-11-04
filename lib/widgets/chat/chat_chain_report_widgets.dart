@@ -265,7 +265,11 @@ class _ReportShownState extends State<_ReportShown> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: chatBigStyle(theme)),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, maxLines: 1, style: chatBigStyle(theme)),
+          ),
           Text.rich(
             TextSpan(
               text: label,
@@ -350,11 +354,15 @@ class _ReportShownState extends State<_ReportShown> {
                     child: Row(
                       children: [
                         SizedBox(
-                          width: 44,
-                          child: Text(
-                            chatCount(b.chain),
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          width: 60,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              chatCount(b.chain),
+                              maxLines: 1,
+                              style: const TextStyle(fontWeight: FontWeight.w700),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
