@@ -380,13 +380,12 @@ class UserScriptsProvider extends ChangeNotifier {
               groupName: s.storageId,
               injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
               // If the script is a custom API key script, we need to replace the API key
-              source: adaptSource(
-                source: s.source,
-                scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
-                storageId: s.storageId,
+              source: _wrapSource(
+                s.adaptedBody(s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey, adaptBody),
+                s.storageId,
               ),
             );
-          }),
+          }).toList(),
         );
       } catch (e, trace) {
         if (!Platform.isWindows) {
@@ -409,15 +408,28 @@ class UserScriptsProvider extends ChangeNotifier {
     return staleScriptGroups(registered, _userScriptList.where(isActive), url);
   }
 
+  static final _anyQuotes = RegExp(r'[“”‘’]');
+  static final _doubleQuotes = RegExp(r'[“”]');
+  static final _singleQuotes = RegExp(r'[‘’]');
+
+  static String _normalizeQuotes(String s) => s.replaceAll(_doubleQuotes, '"').replaceAll(_singleQuotes, "'");
+
   String adaptSource({required String source, required String scriptFinalApiKey, required String storageId}) {
-    final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
+    return _wrapSource(adaptBody(source, scriptFinalApiKey), storageId);
+  }
+
+  // The script part of adaptSource; the same string when nothing changes
+  static String adaptBody(String source, String apiKey) {
+    if (!source.contains("###PDA-APIKEY###") && !source.contains(_anyQuotes)) return source;
+    return _normalizeQuotes(source.replaceAll("###PDA-APIKEY###", apiKey));
+  }
+
+  String _wrapSource(String body, String storageId) {
     // Bind PDA_storage to this script's namespace inside its own closure (sid not reachable elsewhere)
     // jsonEncode the id: it can come from imported/restored data, so never interpolate it raw into JS
     final String bind =
         'const PDA_storage = window.__pdaStorageFactory && window.__pdaStorageFactory(${jsonEncode(storageId)});';
-    String anonFunction = "(function() {$bind$withApiKey}());";
-    anonFunction = anonFunction.replaceAll(RegExp(r'[“”]'), '"').replaceAll(RegExp(r'[‘’]'), "'");
-    return anonFunction;
+    return "(function() {${_normalizeQuotes(bind)}$body}());";
   }
 
   void addUserScriptByModel(UserScriptModel model) {
