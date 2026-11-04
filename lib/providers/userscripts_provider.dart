@@ -378,11 +378,19 @@ class UserScriptsProvider extends ChangeNotifier {
       try {
         return UnmodifiableListView(
           _userScriptList.where((s) => isActive(s) && _injectsInto(s, url, time)).map((s) {
+            // If the script is a custom API key script, we need to replace the API key
+            final String body = s.adaptedBody(s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey);
             return UserScript(
               groupName: s.storageId,
               injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-              // If the script is a custom API key script, we need to replace the API key
-              source: wrapSource(s.adaptedBody(s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey), s.storageId),
+              // Start scripts come ready to register, the same string while nothing changes
+              source: time == UserScriptTime.start
+                  ? s.startSource(
+                      body,
+                      s.matchGuardJs,
+                      () => oncePerDocument(s.storageId, wrapSource(body, s.storageId), guard: s.matchGuardJs),
+                    )
+                  : wrapSource(body, s.storageId),
             );
           }).toList(),
         );
@@ -400,6 +408,15 @@ class UserScriptsProvider extends ChangeNotifier {
   List<UserScriptModel> getActiveScriptsForUrl(String url) {
     if (!_userScriptsEnabled) return [];
     return _userScriptList.where((s) => isActive(s) && s.matchesTarget(url)).toList();
+  }
+
+  // Wraps injected JS so it runs once per document (window lifetime): a real navigation/reload gets a
+  // fresh window and a same-document hash nav keeps it. A start script registered for another page
+  // skips itself where its [guard] (@match) fails
+  static String oncePerDocument(String? key, String source, {String? guard}) {
+    final String k = jsonEncode(key ?? 'anon');
+    final String g = guard == null ? '' : '($guard)&&';
+    return "if($g!(window.__pdaOnce=window.__pdaOnce||{})[$k]){window.__pdaOnce[$k]=1;\n$source\n}";
   }
 
   List<String> getScriptsToRemove({required String url, required Iterable<String> registered}) {

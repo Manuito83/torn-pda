@@ -249,6 +249,8 @@ class WebViewFullState extends State<WebViewFull>
 
   // Userscript groups this tab may have registered
   final Set<String> _registeredScriptGroups = {};
+  // Source string of each registered userscript group
+  final Map<String, String> _registeredSources = {};
 
   // The handler bundle is constant for the life
   // of the webview, so we register it once and never remove or re-add it
@@ -260,7 +262,7 @@ class WebViewFullState extends State<WebViewFull>
 
   // Scripts registered at webview construction (before the first load), computed once
   UnmodifiableListView<UserScript>? _initialUserScriptsCache;
-  List<String> _initialScriptGroups = const [];
+  Map<String, String> _initialStartSources = const {};
   bool _initialUserScriptsComputed = false;
 
   bool _backButtonPopsContext = true;
@@ -1455,7 +1457,8 @@ class WebViewFullState extends State<WebViewFull>
                 widget.windowId == null &&
                 (_initialUserScripts?.isNotEmpty ?? false)) {
               _handlersInjected = true;
-              _registeredScriptGroups.addAll(_initialScriptGroups);
+              _registeredScriptGroups.addAll(_initialStartSources.keys);
+              _registeredSources.addAll(_initialStartSources);
             }
 
             // Userscripts initial load
@@ -2309,12 +2312,14 @@ class WebViewFullState extends State<WebViewFull>
             // The restart drops the registered document-start scripts,
             // so allow the handler bundle to be re-injected on the next navigation
             _handlersInjected = false;
+            _registeredSources.clear();
             c.reload();
           },
           onRenderProcessGone: (c, detail) {
             // Android renderer process died (crash or OS-killed under memory)
             // Tells Android we dealt with it, so it does not kill the whole app
             _handlersInjected = false;
+            _registeredSources.clear();
 
             // Renderer deaths occur mostly on background (OOM kills)
             // Rebuild now only if the app is foreground AND this is a visible tab
@@ -2722,6 +2727,8 @@ class WebViewFullState extends State<WebViewFull>
     if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
       try {
         await webViewController?.removeAllUserScripts();
+        _registeredScriptGroups.clear();
+        _registeredSources.clear();
         // This wipes the GM/PDA API too, so we need to allow it to be re-registered
         // Otherwise scripts run without GM_*/PDA_* after the browser is backgrounded
         _handlersInjected = false;
@@ -2737,17 +2744,25 @@ class WebViewFullState extends State<WebViewFull>
   /// in a child tab) accumulate multiple copies of the same script in the store,
   /// causing each to be injected several times on the next page load
   Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) {
-    final List<UserScript> guarded = scripts.map(_guardedOnce).toList();
     final result = _scriptLock.then((_) async {
       if (webViewController == null) return;
+      // A group already registered with the same source string stays as it is
+      final changed = [
+        for (final s in scripts)
+          if (s.groupName == null || !identical(_registeredSources[s.groupName], s.source)) s,
+      ];
+      if (changed.isEmpty) return;
       final groups = <String>{};
-      for (final s in guarded) {
+      for (final s in changed) {
         final group = s.groupName;
         if (group != null) groups.add(group);
       }
       await Future.wait(groups.map((g) => webViewController!.removeUserScriptsByGroupName(groupName: g)));
       _registeredScriptGroups.addAll(groups);
-      await webViewController!.addUserScripts(userScripts: guarded);
+      for (final s in changed) {
+        if (s.groupName != null) _registeredSources[s.groupName!] = s.source;
+      }
+      await webViewController!.addUserScripts(userScripts: changed);
     });
     // Next caller waits for this one; swallow errors so a single failure doesn't break the chain
     _scriptLock = result.catchError((_) {});
@@ -2762,22 +2777,18 @@ class WebViewFullState extends State<WebViewFull>
       final stale = _userScriptsProvider.getScriptsToRemove(url: url, registered: _registeredScriptGroups);
       await Future.wait(stale.map((g) => c.removeUserScriptsByGroupName(groupName: g)));
       _registeredScriptGroups.removeAll(stale);
+      stale.forEach(_registeredSources.remove);
       return stale;
     });
     _scriptLock = result.then((_) {}, onError: (_) {});
     return result;
   }
 
-  // Wraps injected JS so it runs once per document (window lifetime): a real navigation/reload gets a
-  // fresh window and a same-document hash nav keeps it
-  String _oncePerDocument(String? key, String source) {
-    final String k = jsonEncode(key ?? 'anon');
-    return "if(!(window.__pdaOnce=window.__pdaOnce||{})[$k]){window.__pdaOnce[$k]=1;\n$source\n}";
-  }
+  String _oncePerDocument(String? key, String source) => UserScriptsProvider.oncePerDocument(key, source);
 
-  /// Every document-start script is registered with the once-per-document wrapper, so a copy
+  /// Every handler script is registered with the once-per-document wrapper, so a copy
   /// evaluated later (see [_injectMissingDocumentStartScripts]) or a second registration of the
-  /// same script can never run it twice in the same page
+  /// same script can never run it twice in the same page. Userscripts come wrapped from getCondSources
   UserScript _guardedOnce(UserScript script) {
     return UserScript(
       groupName: script.groupName,
@@ -2846,7 +2857,8 @@ class WebViewFullState extends State<WebViewFull>
     final bool needsHandlers = startScripts.isNotEmpty || _userScriptsProvider.getActiveScriptsForUrl(url).isNotEmpty;
     if (!needsHandlers) return;
 
-    final List<UserScript> expected = <UserScript>[..._handlerSources(), ...startScripts];
+    final List<UserScript> handlers = _handlerSources();
+    final List<UserScript> expected = <UserScript>[...handlers, ...startScripts];
     if (expected.isEmpty) return;
 
     final List<String> keys = expected.map((s) => s.groupName ?? "anon").toList();
@@ -2859,9 +2871,13 @@ class WebViewFullState extends State<WebViewFull>
     final Set<String> missing = _decodeMissingKeys(probe);
     if (missing.isEmpty) return;
 
-    for (final s in expected) {
+    for (final s in handlers) {
       if (!missing.contains(s.groupName ?? "anon")) continue;
       await c.evaluateJavascript(source: _oncePerDocument(s.groupName, s.source));
+    }
+    for (final s in startScripts) {
+      if (!missing.contains(s.groupName ?? "anon")) continue;
+      await c.evaluateJavascript(source: s.source);
     }
 
     if (_debugScriptsInjection) {
@@ -2896,9 +2912,9 @@ class WebViewFullState extends State<WebViewFull>
             pdaApiKey: UserHelper.apiKey,
             time: UserScriptTime.start,
           );
-    _initialScriptGroups = [for (final s in startScripts) if (s.groupName != null) s.groupName!];
-    final scripts = <UserScript>[..._handlerScripts(widget.chatRemovalActive), ...startScripts];
-    return _initialUserScriptsCache = UnmodifiableListView(scripts.map(_guardedOnce).toList());
+    _initialStartSources = {for (final s in startScripts) if (s.groupName != null) s.groupName!: s.source};
+    final scripts = <UserScript>[..._handlerScripts(widget.chatRemovalActive).map(_guardedOnce), ...startScripts];
+    return _initialUserScriptsCache = UnmodifiableListView(scripts);
   }
 
   Future assessErrorCases({dom.Document? document}) async {
