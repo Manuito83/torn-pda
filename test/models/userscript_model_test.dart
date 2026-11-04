@@ -193,6 +193,36 @@ void main() {
       expect(m.matchesTarget('http://www.torn.com/page'), isTrue);
     });
 
+    test('ignores the #hash, as Tampermonkey does', () {
+      final m = _model(matches: ['https://www.torn.com/page.php?sid=slots']);
+      expect(m.matchesTarget('https://www.torn.com/page.php?sid=slots'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/page.php?sid=slots#/spin'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/page.php?sid=slotsX'), isFalse);
+      final legacy = _model(matches: ['www.torn.com/gym.php']);
+      expect(legacy.matchesTarget('https://www.torn.com/gym.php#x'), isTrue);
+    });
+
+    test('a pattern cannot match inside the #hash', () {
+      final m = _model(matches: ['*://www.torn.com/*sid=attack*']);
+      expect(m.matchesTarget('https://www.torn.com/loader.php?sid=attack&user2ID=1'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/factions.php#/sid=attack'), isFalse);
+    });
+
+    test('http*:// matches http and https', () {
+      final m = _model(matches: ['http*://www.torn.com/*']);
+      expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('http://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('ftp://www.torn.com/page'), isFalse);
+    });
+
+    test('matches any port unless the pattern has one', () {
+      final m = _model(matches: ['*://*.torn.com/*']);
+      expect(m.matchesTarget('https://www.torn.com:443/page'), isTrue);
+      final withPort = _model(matches: ['http://localhost:8080/*']);
+      expect(withPort.matchesTarget('http://localhost:8080/a'), isTrue);
+      expect(withPort.matchesTarget('http://localhost:9090/a'), isFalse);
+    });
+
     test('respects injection time filter', () {
       final m = _model(matches: ['*'], time: UserScriptTime.end);
       expect(m.matchesTarget('https://torn.com', UserScriptTime.end), isTrue);

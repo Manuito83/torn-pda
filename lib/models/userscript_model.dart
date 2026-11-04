@@ -393,7 +393,7 @@ class UserScriptModel {
     for (var i = 0; i < _compiledFor!.length; i++) {
       final pattern = _compiledFor![i];
       if (pattern == '*') return true;
-      withPath ??= _withPath(url);
+      withPath ??= _matchUrl(url);
       final regex = _compiled[i];
       // Non-standard pattern: old "contains" heuristic
       final hit = regex != null ? regex.hasMatch(withPath) : withPath.contains(pattern.replaceAll('*', ''));
@@ -410,8 +410,10 @@ class UserScriptModel {
     }
   }
 
-  // The regex always needs a "/" after the host
-  static String _withPath(String url) {
+  // No #hash, as in Tampermonkey, and the regex always needs a "/" after the host
+  static String _matchUrl(String url) {
+    final hash = url.indexOf('#');
+    if (hash >= 0) url = url.substring(0, hash);
     final uri = Uri.tryParse(url);
     return uri != null && uri.path.isEmpty ? '$url/' : url;
   }
@@ -426,26 +428,26 @@ class UserScriptModel {
   /// For backwards compatibility, patterns without a protocol get `*://`
   /// prepended, and patterns without a path get `/*` appended.
   static RegExp _patternToRegex(String pattern) {
-    final fullMatch = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+    final fullMatch = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
     RegExpMatch? match = fullMatch;
 
     if (match == null) {
       // Try without a path (e.g. "https://example.com")
-      final noPath = RegExp(r'^(https?|file|\*):\/\/([^/]*)$').firstMatch(pattern);
+      final noPath = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)$').firstMatch(pattern);
       if (noPath != null) {
         pattern = '$pattern/*';
-        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+        match = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
       }
     }
 
     if (match == null) {
       // Legacy pattern without protocol – prepend *://
       pattern = '*://$pattern';
-      match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      match = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
       if (match == null) {
         // Still no path component
         pattern = '$pattern/*';
-        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+        match = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
       }
     }
 
@@ -457,7 +459,7 @@ class UserScriptModel {
     final host = match.group(2)!;
     final path = match.group(3)!;
 
-    final schemeRe = scheme == '*' ? 'https?' : RegExp.escape(scheme);
+    final schemeRe = scheme == '*' || scheme == 'http*' ? 'https?' : RegExp.escape(scheme);
 
     String hostRe = RegExp.escape(host);
     // Handle *.example.com  →  optional subdomain prefix
@@ -466,6 +468,8 @@ class UserScriptModel {
     } else {
       hostRe = hostRe.replaceAll(r'\*', '[^/]*');
     }
+    // Any port, unless the pattern has one
+    if (!host.contains(':')) hostRe = '$hostRe(?::\\d+)?';
 
     final pathRe = RegExp.escape(path).replaceAll(r'\*', '.*');
 
