@@ -243,6 +243,8 @@ class WebViewFullState extends State<WebViewFull>
   late final String _tabUid;
 
   bool _heightExtendInjected = false;
+  // Bumped on each load start
+  int _loadGen = 0;
 
   // Serializes concurrent _addUserScriptsAvoidDuplicates calls so remove+add cant' cause issues
   Future<void> _scriptLock = Future.value();
@@ -1709,6 +1711,7 @@ class WebViewFullState extends State<WebViewFull>
             if (closedIndex > 0) _webViewProvider.removeTab(position: closedIndex);
           },
           onLoadStart: (c, uri) async {
+            _loadGen++;
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
             if (_markInitialLoadStarted()) return;
             _loadStartedAt = DateTime.now();
@@ -1862,6 +1865,7 @@ class WebViewFullState extends State<WebViewFull>
             if (!mounted) return;
             _setReloadInProgress(false);
             if (_isParkingBlank(uri)) return;
+            final int gen = _loadGen;
             if (_webViewProvider.tornPageRefreshRC && isTornHost(uri?.host) && ChatEngine.pageLoadJS.isNotEmpty) {
               c.evaluateJavascript(source: ChatEngine.pageLoadJS);
             }
@@ -1911,7 +1915,7 @@ class WebViewFullState extends State<WebViewFull>
               );
             }
 
-            await _maybeEnsureMinHeight(c);
+            _quiet(_maybeEnsureMinHeight(c));
 
             _firstLoadCompleted = true;
 
@@ -1956,15 +1960,32 @@ class WebViewFullState extends State<WebViewFull>
 
               // Guarantee the handler bundle and this page's document-start scripts
               // are present whenever the page runs any userscript (start or end)
-              await _injectMissingDocumentStartScripts(c, uri.toString());
+              // Not awaited: the page runs our calls in order
+              _quiet(
+                _injectMissingDocumentStartScripts(
+                  c,
+                  uri.toString(),
+                  isCurrent: () => mounted && gen == _loadGen,
+                  afterRecovery: () => Future.wait(
+                    scriptsToAdd.map(
+                      (script) => webViewController!.evaluateJavascript(
+                        source: _oncePerDocument(script.groupName, script.source),
+                      ),
+                    ),
+                  ),
+                ),
+              );
 
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               // Guard once-per-document so hash navigation (which re-fire onLoadStop) don't re-run END scripts
               // Sent together, they still run in order
-              await Future.wait(
-                scriptsToAdd.map(
-                  (script) =>
-                      webViewController!.evaluateJavascript(source: _oncePerDocument(script.groupName, script.source)),
+              _quiet(
+                Future.wait(
+                  scriptsToAdd.map(
+                    (script) => webViewController!.evaluateJavascript(
+                      source: _unlessMissing(_oncePerDocument(script.groupName, script.source)),
+                    ),
+                  ),
                 ),
               );
 
@@ -2833,6 +2854,8 @@ class WebViewFullState extends State<WebViewFull>
     InAppWebViewController c,
     String url, {
     String at = "loadStop",
+    bool Function()? isCurrent,
+    Future<void> Function()? afterRecovery,
   }) async {
     if (!(Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null))) return;
 
@@ -2853,21 +2876,29 @@ class WebViewFullState extends State<WebViewFull>
     final probe = await c.evaluateJavascript(
       source:
           "(function(){var o=window.__pdaOnce||{};var k=${jsonEncode(keys)};var m=[];"
-          "for(var i=0;i<k.length;i++){if(!o[k[i]])m.push(k[i]);}return JSON.stringify(m);})()",
+          "for(var i=0;i<k.length;i++){if(!o[k[i]])m.push(k[i]);}window.__pdaMiss=m.length>0;return JSON.stringify(m);})()",
     );
 
     final Set<String> missing = _decodeMissingKeys(probe);
     if (missing.isEmpty) return;
+    if (isCurrent != null && !isCurrent()) return;
 
     for (final s in expected) {
       if (!missing.contains(s.groupName ?? "anon")) continue;
       await c.evaluateJavascript(source: _oncePerDocument(s.groupName, s.source));
     }
+    await c.evaluateJavascript(source: "window.__pdaMiss=false;");
+    if (afterRecovery != null) await afterRecovery();
 
     if (_debugScriptsInjection) {
       log("Recovered missing document-start scripts in $at: $missing");
     }
   }
+
+  void _quiet(Future<dynamic> f) => f.then((_) {}, onError: (_) {});
+
+  // Skipped while the probe's recovery runs
+  String _unlessMissing(String source) => "if(!window.__pdaMiss){\n$source\n}";
 
   /// A failed probe returns nothing: never inject blindly, as that is what duplicates scripts
   Set<String> _decodeMissingKeys(dynamic probe) {
