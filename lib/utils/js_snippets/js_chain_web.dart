@@ -198,7 +198,7 @@ const String chainWebReader = r"""
   }
 
   var pending = false;
-  var observing = false;
+  var watched = null;
   var observer = new MutationObserver(function () {
     if (pending) return;
     pending = true;
@@ -208,14 +208,13 @@ const String chainWebReader = r"""
     }, 100);
   });
 
+  // Only the bar; the interval finds a new one
   function observe(on) {
-    if (on === observing) return;
-    observing = on;
-    if (on) {
-      observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
-    } else {
-      observer.disconnect();
-    }
+    var el = on ? document.querySelector(BAR) : null;
+    if (el === watched) return;
+    observer.disconnect();
+    watched = el;
+    if (el) observer.observe(el, { subtree: true, childList: true, characterData: true });
   }
 
   var saidNone = false;
