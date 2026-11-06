@@ -1175,8 +1175,14 @@ String hospitalTimerJS({required int until}) {
       if (window.__pdaHospitalTimer) clearInterval(window.__pdaHospitalTimer);
       if (window.__pdaHospitalObserver) window.__pdaHospitalObserver.disconnect();
 
+      const PANEL = '[class*="defender___"]';
+      const TITLE = '[class*="title___"]';
+      let panel = null;
+
       const find = () => {
-        const nodes = document.querySelectorAll('[class*="defender___"] [class*="title___"]');
+        // Search the known panel first
+        const scope = panel && panel.isConnected ? panel : document;
+        const nodes = scope.querySelectorAll('[class*="defender___"] [class*="title___"]');
         for (const n of nodes) {
           if (/in hospital/i.test(n.textContent)) return n;
         }
@@ -1202,6 +1208,16 @@ String hospitalTimerJS({required int until}) {
         return true;
       };
 
+      // Observe only the defender panel, and its parent for a new panel
+      const watch = (el) => {
+        const p = el.closest(PANEL);
+        if (!p || p === panel) return;
+        panel = p;
+        window.__pdaHospitalObserver.disconnect();
+        window.__pdaHospitalObserver.observe(p, { childList: true, subtree: true, characterData: true });
+        if (p.parentNode) window.__pdaHospitalObserver.observe(p.parentNode, { childList: true });
+      };
+
       let misses = 0;
       window.__pdaHospitalTimer = setInterval(() => {
         const el = find();
@@ -1210,15 +1226,34 @@ String hospitalTimerJS({required int until}) {
           return;
         }
         misses = 0;
+        watch(el);
         if (!paint(el)) stop();
       }, 1000);
 
       // React re-renders put the original text back for up to a second
-      window.__pdaHospitalObserver = new MutationObserver(() => {
-        const el = find();
-        if (el && !/In hospital for/.test(el.textContent)) paint(el);
+      window.__pdaHospitalObserver = new MutationObserver((records) => {
+        const titles = new Set();
+        for (const r of records) {
+          const t = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+          const own = t && t.closest(TITLE);
+          if (own) titles.add(own);
+          for (const n of r.addedNodes) {
+            if (n.nodeType !== 1) continue;
+            if (n.matches(TITLE)) titles.add(n);
+            n.querySelectorAll(TITLE).forEach((x) => titles.add(x));
+          }
+        }
+        for (const el of titles) {
+          if (!el.closest(PANEL)) continue;
+          if (/in hospital/i.test(el.textContent) && !/In hospital for/.test(el.textContent)) {
+            watch(el);
+            paint(el);
+          }
+        }
       });
-      window.__pdaHospitalObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+      const first = find();
+      if (first) watch(first);
     })();
   """;
 }
