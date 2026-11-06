@@ -429,6 +429,14 @@ class ChatLinkPreviews {
   static Future<Map<String, dynamic>?> _ownChainReport() =>
       _get('/faction/chainreport', ApiSelection_v2.factionBasic, null, null, true);
 
+  /// The faction's finished chains, API errors kept
+  static Future<Map<String, dynamic>?> pastChains(Map<String, String> query) => queued(
+    () => _get('/faction/chains', ApiSelection_v2.factionBasic, null, query, true),
+    () => true,
+  );
+
+  static Future<Map<String, dynamic>?> pastChainReport(int id) => queued(() => fetchChainReport(id), () => true);
+
   static Future<ForumThreadExtended?> _thread(int id) async {
     final response = await Get.find<ApiCallerController>().enqueueApiCall<ForumThreadResponse>(
       apiSelection_v2: ApiSelection_v2.forumThread,

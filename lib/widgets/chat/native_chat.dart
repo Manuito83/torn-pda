@@ -12,6 +12,8 @@ import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_faction_events.dart';
 import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
+import 'package:torn_pda/providers/chat/chat_link_info.dart';
+import 'package:torn_pda/providers/chat/chat_past_chains.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_ticker_queue.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
@@ -140,6 +142,10 @@ class NativeChat {
   static void _offerAttack(ChatHitJoin join) =>
       chatToast('Attack ${join.name} now', seconds: 10, action: 'Attack', onAction: factionOps.takeOffer);
   static final ChatFactionEvents factionEvents = ChatFactionEvents(controller, prefs);
+  static final ChatPastChains pastChains = ChatPastChains(
+    fetchList: ChatLinkPreviews.pastChains,
+    fetchReport: ChatLinkPreviews.pastChainReport,
+  );
 
   static final ChatWindows windows = ChatWindows(
     sessionOk: () => sessionOk(),

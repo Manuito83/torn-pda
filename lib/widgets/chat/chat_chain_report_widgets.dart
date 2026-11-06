@@ -74,7 +74,7 @@ class ChatChainReportSection extends StatelessWidget {
   Widget build(BuildContext context) => ValueListenableBuilder<ChatReportView?>(
     valueListenable: NativeChat.factionOps.chainReport,
     builder: (context, view, _) => view?.report != null
-        ? _ReportShown(report: view!.report!)
+        ? ChatChainReportBody(report: view!.report!)
         : _ReportWaiting(view: view ?? const ChatReportView(ChatReportStatus.waiting)),
   );
 }
@@ -159,16 +159,16 @@ class _ReportWaiting extends StatelessWidget {
   }
 }
 
-class _ReportShown extends StatefulWidget {
-  const _ReportShown({required this.report});
+class ChatChainReportBody extends StatefulWidget {
+  const ChatChainReportBody({super.key, required this.report});
 
   final ChatChainReport report;
 
   @override
-  State<_ReportShown> createState() => _ReportShownState();
+  State<ChatChainReportBody> createState() => _ChatChainReportBodyState();
 }
 
-class _ReportShownState extends State<_ReportShown> {
+class _ChatChainReportBodyState extends State<ChatChainReportBody> {
   bool _nonAttackersOpen = false;
   ChatAttackerSort _sort = ChatAttackerSort.hits;
   bool _descending = true;

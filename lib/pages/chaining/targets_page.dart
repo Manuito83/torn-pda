@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/pages/chaining/past_chains_page.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/pages/chaining/targets_options_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -42,6 +43,8 @@ class TargetsOptions {
         iconData = Icons.delete_forever_outlined;
       case "Watch players":
         iconData = Icons.picture_in_picture_alt_outlined;
+      case "Past chains":
+        iconData = Icons.history;
     }
   }
 }
@@ -87,6 +90,7 @@ class TargetsPageState extends State<TargetsPage> {
     TargetsOptions(description: "Options"),
     TargetsOptions(description: "Filter Color"),
     TargetsOptions(description: "Backup"),
+    TargetsOptions(description: "Past chains"),
     TargetsOptions(description: "Wipe"),
     TargetsOptions(description: "Watch players"),
   ];
@@ -553,6 +557,8 @@ class TargetsPageState extends State<TargetsPage> {
         );
       case "Backup":
         Navigator.push(context, MaterialPageRoute(builder: (context) => TargetsBackupPage()));
+      case "Past chains":
+        unawaited(openPastChains(context));
       case "Wipe":
         _openWipeDialog();
       case "Watch players":

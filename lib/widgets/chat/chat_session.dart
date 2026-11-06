@@ -376,6 +376,7 @@ class ChatSession {
     _chat.backTo = null;
     ChatFactionRoster.shared.clear();
     NativeChat.factionOps.forget();
+    NativeChat.pastChains.forget();
     ChatLinkPreviews.forget();
     NativeChat.translator.forget();
     _chat.sharePending.value = null;

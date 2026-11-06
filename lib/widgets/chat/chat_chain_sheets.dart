@@ -20,6 +20,7 @@ import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_watch.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/pages/chaining/past_chains_page.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
@@ -564,25 +565,42 @@ class _ChainHead extends StatelessWidget {
     final big = chatBigStyle(theme);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: Semantics(
-        container: true,
-        label: chain == null ? 'No chain' : chatChainSpoken(chain, now, roomId),
-        excludeSemantics: true,
-        child: Row(
-          children: [
-            if (chain == null)
-              Text('No chain', style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant))
-            else ...[
-              Text(chatChainCount(chain), style: big),
-              const SizedBox(width: 12),
-              Text(
-                chatClock(Duration(seconds: chain.seconds)),
-                style: big?.copyWith(color: chatChainColor(context, chain.level)),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              container: true,
+              label: chain == null ? 'No chain' : chatChainSpoken(chain, now, roomId),
+              excludeSemantics: true,
+              child: Row(
+                children: [
+                  if (chain == null)
+                    Text(
+                      'No chain',
+                      style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    )
+                  else ...[
+                    Text(chatChainCount(chain), style: big),
+                    const SizedBox(width: 12),
+                    Text(
+                      chatClock(Duration(seconds: chain.seconds)),
+                      style: big?.copyWith(color: chatChainColor(context, chain.level)),
+                    ),
+                  ],
+                  ...chatChainFlags(context, now, roomId: roomId, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                ],
               ),
-            ],
-            ...chatChainFlags(context, now, roomId: roomId, size: 18, color: theme.colorScheme.onSurfaceVariant),
-          ],
-        ),
+            ),
+          ),
+          if (chain == null)
+            TextButton(
+              onPressed: () => unawaited(openPastChains(context)),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [Text('Past chains'), Icon(Icons.chevron_right_rounded, size: 18)],
+              ),
+            ),
+        ],
       ),
     );
   }
