@@ -110,26 +110,13 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                         child: SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
-                              if (!Platform.isWindows)
-                                Column(
-                                  children: [
-                                    _alertActivator(),
-                                    const Divider(),
-                                  ],
-                                ),
-                              _benefitBlockFilter(),
+                              _optionsCard(),
                               const Text("Traded Companies"),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Text(
-                                    "Value: ",
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                  Text(
-                                    formatProfit(inputDouble: _totalValue),
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
+                                  const Text("Value: ", style: TextStyle(fontSize: 10)),
+                                  Text(formatProfit(inputDouble: _totalValue), style: const TextStyle(fontSize: 10)),
                                   Text(
                                     " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
                                     style: const TextStyle(fontSize: 10),
@@ -176,9 +163,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                       );
                     }
                   } else {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return const Center(child: CircularProgressIndicator());
                   }
                 },
               ),
@@ -223,9 +208,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       ),
       actions: [
         GestureDetector(
-          child: const Icon(
-            MdiIcons.openInApp,
-          ),
+          child: const Icon(MdiIcons.openInApp),
           onTap: () {
             _launchBrowser(shortTap: true);
           },
@@ -238,69 +221,77 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     );
   }
 
-  Padding _alertActivator() {
+  Widget _optionsCard() {
+    final benefitBlockCount = _stockList.where((s) => s.hasBenefitBlock).length;
+    final showFilter = benefitBlockCount > 0 || _hideBenefitBlocks;
+    final showAlerts = !Platform.isWindows;
+    if (!showFilter && !showAlerts) return const SizedBox.shrink();
+
+    final summary = <String>[
+      if (showAlerts) (_fbUser!.stockMarketNotification ?? false) ? "Alerts on" : "Alerts off",
+      if (showFilter && _hideBenefitBlocks) "$benefitBlockCount hidden",
+    ].join(" · ");
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-      child: Material(
-        type: MaterialType.transparency,
-        child: CheckboxListTile(
-          checkColor: Colors.white,
-          activeColor: Colors.blueGrey,
-          value: _fbUser!.stockMarketNotification ?? false,
-          title: const Text(
-            "Stock Market notification",
-            style: TextStyle(fontSize: 14),
+      padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            dividerColor: Colors.transparent,
+            listTileTheme: const ListTileThemeData(titleAlignment: ListTileTitleAlignment.center),
           ),
-          subtitle: const Text(
-            "Main toggle for the custom price alerts you set up below",
-            style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+            childrenPadding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+            leading: const Icon(Icons.settings, size: 20),
+            title: const Text("OPTIONS", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            subtitle: summary.isEmpty ? null : Text(summary, style: const TextStyle(fontSize: 11)),
+            children: [if (showAlerts) _alertActivator(), if (showFilter) _benefitBlockFilter(benefitBlockCount)],
           ),
-          onChanged: (value) {
-            setState(() {
-              _fbUser?.stockMarketNotification = value;
-            });
-            FirestoreHelper().subscribeToStockMarketNotification(value);
-          },
         ),
       ),
     );
   }
 
-  Widget _benefitBlockFilter() {
-    final benefitBlockCount = _stockList.where((s) => s.hasBenefitBlock).length;
-    // Only show the filter if it's relevant (or if it's active, so that it can be turned off)
-    if (benefitBlockCount == 0 && !_hideBenefitBlocks) return const SizedBox.shrink();
+  Widget _alertActivator() {
+    return CheckboxListTile(
+      checkColor: Colors.white,
+      activeColor: Colors.blueGrey,
+      contentPadding: EdgeInsets.zero,
+      value: _fbUser!.stockMarketNotification ?? false,
+      title: const Text("Stock Market notification", style: TextStyle(fontSize: 14)),
+      subtitle: const Text(
+        "Main toggle for the custom price alerts you set up below",
+        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+      ),
+      onChanged: (value) {
+        setState(() {
+          _fbUser?.stockMarketNotification = value;
+        });
+        FirestoreHelper().subscribeToStockMarketNotification(value);
+      },
+    );
+  }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-          child: Material(
-            type: MaterialType.transparency,
-            child: CheckboxListTile(
-              checkColor: Colors.white,
-              activeColor: Colors.blueGrey,
-              value: _hideBenefitBlocks,
-              title: const Text(
-                "Hide stocks with a benefit block",
-                style: TextStyle(fontSize: 14),
-              ),
-              subtitle: Text(
-                "Hides companies in which you already own enough shares for at least one benefit block"
-                "${_hideBenefitBlocks && benefitBlockCount > 0 ? ' ($benefitBlockCount hidden)' : ''}",
-                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _hideBenefitBlocks = value ?? false;
-                });
-                Prefs().setStockExchangeHideBenefitBlocks(_hideBenefitBlocks);
-              },
-            ),
-          ),
-        ),
-        const Divider(),
-      ],
+  Widget _benefitBlockFilter(int benefitBlockCount) {
+    return CheckboxListTile(
+      checkColor: Colors.white,
+      activeColor: Colors.blueGrey,
+      contentPadding: EdgeInsets.zero,
+      value: _hideBenefitBlocks,
+      title: const Text("Hide stocks with a benefit block", style: TextStyle(fontSize: 14)),
+      subtitle: Text(
+        "Hides companies in which you already own enough shares for at least one benefit block"
+        "${_hideBenefitBlocks && benefitBlockCount > 0 ? ' ($benefitBlockCount hidden)' : ''}",
+        style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+      ),
+      onChanged: (value) {
+        setState(() {
+          _hideBenefitBlocks = value ?? false;
+        });
+        Prefs().setStockExchangeHideBenefitBlocks(_hideBenefitBlocks);
+      },
     );
   }
 
@@ -329,11 +320,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       stockCards.add(SharePriceCard(stock: stock));
     }
 
-    return ListView(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: stockCards,
-    );
+    return ListView(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), children: stockCards);
   }
 
   Future _initialiseStocks() async {
