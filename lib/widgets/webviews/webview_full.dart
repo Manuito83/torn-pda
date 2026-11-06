@@ -1871,6 +1871,7 @@ class WebViewFullState extends State<WebViewFull>
             if (_webViewProvider.tornPageRefreshRC && isTornHost(uri?.host) && ChatEngine.pageLoadJS.isNotEmpty) {
               c.evaluateJavascript(source: ChatEngine.pageLoadJS);
             }
+            if (isTornHost(uri?.host)) _nativeUser.refreshPushAfterTwoFA().ignore();
             _loadStopTime = DateTime.now();
             if (_webViewProvider.isTabUidVisible(_tabUid)) _webViewProvider.scheduleBlankCheck();
             _recovery?.onLoadStopBegin();
