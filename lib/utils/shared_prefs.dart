@@ -441,6 +441,7 @@ class Prefs with ChatPrefsStorage {
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
+  final String _kStockExchangeHideBenefitBlocks = "pda_stockExchangeHideBenefitBlocks";
 
   // WebView Tabs
   final String _kChatRemovalEnabled = "pda_chatIconEnabled";
@@ -4139,6 +4140,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setStockExchangeInMenu(bool value) async {
     return await PrefsDatabase.setBool(_kStockExchangeInMenu, value);
+  }
+
+  Future<bool> getStockExchangeHideBenefitBlocks() async {
+    return await PrefsDatabase.getBool(_kStockExchangeHideBenefitBlocks, false);
+  }
+
+  Future setStockExchangeHideBenefitBlocks(bool value) async {
+    return await PrefsDatabase.setBool(_kStockExchangeHideBenefitBlocks, value);
   }
 
   Future<int> getForeignStockSellingFee() async {

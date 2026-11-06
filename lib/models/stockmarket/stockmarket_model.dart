@@ -54,6 +54,14 @@ class StockMarketStock {
   int? totalShares;
   Benefit? benefit;
 
+  /// Whether the user owns enough shares for at least one benefit block of this stock
+  bool get hasBenefitBlock {
+    final requirement = benefit?.requirement;
+    final shares = sharesOwned;
+    if (requirement == null || requirement <= 0 || shares == null) return false;
+    return shares >= requirement;
+  }
+
   factory StockMarketStock.fromJson(Map<String, dynamic> json) => StockMarketStock(
         stockId: json["stock_id"],
         name: json["name"],
