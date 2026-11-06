@@ -74,6 +74,17 @@ List<String> staleScriptGroups(Iterable<String> registered, Iterable<UserScriptM
   return registered.where((g) => !keep.contains(g)).toList();
 }
 
+// Unchanged groups stay registered
+bool needsRegistering(String? group, String source, Map<String, String> registered) =>
+    group == null || registered[group] != source;
+
+// Runs once per document, where guard holds
+String oncePerDocument(String? key, String source, {String? guard}) {
+  final String k = jsonEncode(key ?? 'anon');
+  final String g = guard == null ? '' : '($guard)&&';
+  return "if($g!(window.__pdaOnce=window.__pdaOnce||{})[$k]){window.__pdaOnce[$k]=1;\n$source\n}";
+}
+
 final _anyQuotes = RegExp(r'[“”‘’]');
 final _doubleQuotes = RegExp(r'[“”]');
 final _singleQuotes = RegExp(r'[‘’]');
@@ -398,14 +409,16 @@ class UserScriptModel {
     return _body;
   }
 
-  // Registered start source, rebuilt when the body or the guard changes
+  // Rebuilt when body or @match changes
   String? _startFor;
   String? _startGuard;
   String _start = "";
 
-  String startSource(String body, String? guard, String Function() build) {
+  String startSource(String apiKey) {
+    final body = adaptedBody(apiKey);
+    final guard = matchGuardJs;
     if (!identical(_startFor, body) || !identical(_startGuard, guard)) {
-      _start = build();
+      _start = oncePerDocument(storageId, wrapSource(body, storageId), guard: guard);
       _startFor = body;
       _startGuard = guard;
     }
@@ -447,24 +460,28 @@ class UserScriptModel {
 
   String? _matchGuard;
 
-  /// A JS expression with the same result as [matchesTarget] for location.href,
-  /// or null when every URL matches
+  // matchesTarget in JS, null if any URL
   String? get matchGuardJs {
     _compile();
     if (_compiledFor!.contains('*')) return null;
-    return _matchGuard ??= () {
-      final tests = [
-        for (var i = 0; i < _compiledFor!.length; i++)
-          () {
-            // Same hash rule as [matchingPattern]
-            final t = _compiledFor![i].contains('#') ? 'h' : 'u';
-            return _compiled[i] != null
-                ? "new RegExp(${jsonEncode(_compiled[i]!.pattern)}).test($t)"
-                : "$t.indexOf(${jsonEncode(_compiledFor![i].replaceAll('*', ''))})>=0";
-          }(),
-      ];
-      return "(function(h){var u=h.split('#')[0];return ${tests.isEmpty ? 'false' : tests.join('||')};})(location.href)";
-    }();
+    return _matchGuard ??= _buildMatchGuard();
+  }
+
+  String _buildMatchGuard() {
+    final tests = <String>[];
+    for (var i = 0; i < _compiledFor!.length; i++) {
+      final pattern = _compiledFor![i];
+      // Same hash rule as matchingPattern
+      final target = pattern.contains('#') ? 'h' : 'u';
+      final regex = _compiled[i];
+      tests.add(
+        regex != null
+            ? "new RegExp(${jsonEncode(regex.pattern)}).test($target)"
+            : "$target.indexOf(${jsonEncode(pattern.replaceAll('*', ''))})>=0",
+      );
+    }
+    final hit = tests.isEmpty ? 'false' : tests.join('||');
+    return "(function(h){var u=h.split('#')[0];return $hit;})(location.href)";
   }
 
   static RegExp? _tryPatternToRegex(String pattern) {

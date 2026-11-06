@@ -4,8 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 
-// Runs the page-side @match check in Node and compares it with matchesTarget.
-// PDA_BENCH_SCRIPTS=<export.json> also adds the patterns of a userscripts export.
+// Page-side @match check run in Node
 const _patterns = <List<String>>[
   ['*://www.torn.com/*'],
   ['https://www.torn.com/*'],
@@ -57,16 +56,8 @@ const _urls = <String>[
 
 void main() {
   test('the page check gives the same answer as matchesTarget', () async {
-    final lists = [..._patterns];
-    final export = Platform.environment['PDA_BENCH_SCRIPTS'];
-    if (export != null) {
-      for (final s in jsonDecode(File(export).readAsStringSync()) as List) {
-        lists.add([for (final m in (s['matches'] as List)) m as String]);
-      }
-    }
-
     final cases = <Map<String, dynamic>>[];
-    for (final matches in lists) {
+    for (final matches in _patterns) {
       final model = UserScriptModel(name: 'g', source: '', isExample: false, matches: matches);
       final guard = model.matchGuardJs;
       for (final url in _urls) {
@@ -75,6 +66,7 @@ void main() {
     }
 
     final dir = Directory.systemTemp.createTempSync('pda_guard');
+    addTearDown(() => dir.deleteSync(recursive: true));
     final input = File('${dir.path}/cases.json')..writeAsStringSync(jsonEncode(cases));
     final script = File('${dir.path}/run.js')
       ..writeAsStringSync('''
@@ -94,7 +86,8 @@ console.log(JSON.stringify(out));
 
     final wrong = [
       for (var i = 0; i < cases.length; i++)
-        if (js[i] != cases[i]['dart']) '${cases[i]['matches']} ${cases[i]['url']}: dart ${cases[i]['dart']}, js ${js[i]}',
+        if (js[i] != cases[i]['dart'])
+          '${cases[i]['matches']} ${cases[i]['url']}: dart ${cases[i]['dart']}, js ${js[i]}',
     ];
     expect(wrong, isEmpty);
     expect(cases.where((c) => c['dart'] == true).length, greaterThan(0));

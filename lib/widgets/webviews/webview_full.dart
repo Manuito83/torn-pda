@@ -264,7 +264,7 @@ class WebViewFullState extends State<WebViewFull>
 
   // Scripts registered at webview construction (before the first load), computed once
   UnmodifiableListView<UserScript>? _initialUserScriptsCache;
-  Map<String, String> _initialStartSources = const {};
+  List<String> _initialScriptGroups = const [];
   bool _initialUserScriptsComputed = false;
 
   bool _backButtonPopsContext = true;
@@ -1459,8 +1459,7 @@ class WebViewFullState extends State<WebViewFull>
                 widget.windowId == null &&
                 (_initialUserScripts?.isNotEmpty ?? false)) {
               _handlersInjected = true;
-              _registeredScriptGroups.addAll(_initialStartSources.keys);
-              _registeredSources.addAll(_initialStartSources);
+              _registeredScriptGroups.addAll(_initialScriptGroups);
             }
 
             // Userscripts initial load
@@ -1918,7 +1917,7 @@ class WebViewFullState extends State<WebViewFull>
               );
             }
 
-            _quiet(_maybeEnsureMinHeight(c));
+            _maybeEnsureMinHeight(c).ignore();
 
             _firstLoadCompleted = true;
 
@@ -1963,34 +1962,30 @@ class WebViewFullState extends State<WebViewFull>
 
               // Guarantee the handler bundle and this page's document-start scripts
               // are present whenever the page runs any userscript (start or end)
-              // Not awaited: the page runs our calls in order
-              _quiet(
-                _injectMissingDocumentStartScripts(
-                  c,
-                  uri.toString(),
-                  isCurrent: () => mounted && gen == _loadGen,
-                  afterRecovery: () => Future.wait(
-                    scriptsToAdd.map(
-                      (script) => webViewController!.evaluateJavascript(
-                        source: _oncePerDocument(script.groupName, script.source),
-                      ),
+              // The page runs our calls in order
+              _injectMissingDocumentStartScripts(
+                c,
+                uri.toString(),
+                isCurrent: () => mounted && gen == _loadGen,
+                afterRecovery: () => Future.wait(
+                  scriptsToAdd.map(
+                    (script) => webViewController!.evaluateJavascript(
+                      source: oncePerDocument(script.groupName, script.source),
                     ),
                   ),
                 ),
-              );
+              ).ignore();
 
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               // Guard once-per-document so hash navigation (which re-fire onLoadStop) don't re-run END scripts
               // Sent together, they still run in order
-              _quiet(
-                Future.wait(
-                  scriptsToAdd.map(
-                    (script) => webViewController!.evaluateJavascript(
-                      source: _unlessMissing(_oncePerDocument(script.groupName, script.source)),
-                    ),
+              Future.wait(
+                scriptsToAdd.map(
+                  (script) => webViewController!.evaluateJavascript(
+                    source: oncePerDocument(script.groupName, script.source, guard: '!window.__pdaMiss'),
                   ),
                 ),
-              );
+              ).ignore();
 
               // DEBUG
               if (_debugScriptsInjection) {
@@ -2746,13 +2741,17 @@ class WebViewFullState extends State<WebViewFull>
 
   Future removeAllUserScripts() async {
     if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
-      try {
+      final result = _scriptLock.then((_) async {
         await webViewController?.removeAllUserScripts();
         _registeredScriptGroups.clear();
         _registeredSources.clear();
         // This wipes the GM/PDA API too, so we need to allow it to be re-registered
         // Otherwise scripts run without GM_*/PDA_* after the browser is backgrounded
         _handlersInjected = false;
+      });
+      _scriptLock = result.catchError((_) {});
+      try {
+        await result;
       } catch (e) {
         log("Webview controller is null at userscripts removal");
       }
@@ -2767,10 +2766,9 @@ class WebViewFullState extends State<WebViewFull>
   Future<void> _addUserScriptsAvoidDuplicates(Iterable<UserScript> scripts) {
     final result = _scriptLock.then((_) async {
       if (webViewController == null) return;
-      // A group already registered with the same source string stays as it is
       final changed = [
         for (final s in scripts)
-          if (s.groupName == null || !identical(_registeredSources[s.groupName], s.source)) s,
+          if (needsRegistering(s.groupName, s.source, _registeredSources)) s,
       ];
       if (changed.isEmpty) return;
       final groups = <String>{};
@@ -2778,12 +2776,13 @@ class WebViewFullState extends State<WebViewFull>
         final group = s.groupName;
         if (group != null) groups.add(group);
       }
+      groups.forEach(_registeredSources.remove);
       await Future.wait(groups.map((g) => webViewController!.removeUserScriptsByGroupName(groupName: g)));
       _registeredScriptGroups.addAll(groups);
+      await webViewController!.addUserScripts(userScripts: changed);
       for (final s in changed) {
         if (s.groupName != null) _registeredSources[s.groupName!] = s.source;
       }
-      await webViewController!.addUserScripts(userScripts: changed);
     });
     // Next caller waits for this one; swallow errors so a single failure doesn't break the chain
     _scriptLock = result.catchError((_) {});
@@ -2796,25 +2795,23 @@ class WebViewFullState extends State<WebViewFull>
       final c = webViewController;
       if (c == null) return const <String>[];
       final stale = _userScriptsProvider.getScriptsToRemove(url: url, registered: _registeredScriptGroups);
+      stale.forEach(_registeredSources.remove);
       await Future.wait(stale.map((g) => c.removeUserScriptsByGroupName(groupName: g)));
       _registeredScriptGroups.removeAll(stale);
-      stale.forEach(_registeredSources.remove);
       return stale;
     });
     _scriptLock = result.then((_) {}, onError: (_) {});
     return result;
   }
 
-  String _oncePerDocument(String? key, String source) => UserScriptsProvider.oncePerDocument(key, source);
-
-  /// Every handler script is registered with the once-per-document wrapper, so a copy
+  /// Every document-start script is registered with the once-per-document wrapper, so a copy
   /// evaluated later (see [_injectMissingDocumentStartScripts]) or a second registration of the
-  /// same script can never run it twice in the same page. Userscripts come wrapped from getCondSources
+  /// same script can never run it twice in the same page
   UserScript _guardedOnce(UserScript script) {
     return UserScript(
       groupName: script.groupName,
       injectionTime: script.injectionTime,
-      source: _oncePerDocument(script.groupName, script.source),
+      source: oncePerDocument(script.groupName, script.source),
       forMainFrameOnly: script.forMainFrameOnly,
       allowedOriginRules: script.allowedOriginRules,
       contentWorld: script.contentWorld,
@@ -2891,41 +2888,48 @@ class WebViewFullState extends State<WebViewFull>
           "for(var i=0;i<k.length;i++){if(!o[k[i]])m.push(k[i]);}window.__pdaMiss=m.length>0;return JSON.stringify(m);})()",
     );
 
-    final Set<String> missing = _decodeMissingKeys(probe);
+    final Set<String>? missing = _decodeMissingKeys(probe);
+    if (missing == null) {
+      if (probe != null) await c.evaluateJavascript(source: "window.__pdaMiss=false;");
+      return;
+    }
     if (missing.isEmpty) return;
-    if (isCurrent != null && !isCurrent()) return;
 
-    for (final s in handlers) {
-      if (!missing.contains(s.groupName ?? "anon")) continue;
-      await c.evaluateJavascript(source: _oncePerDocument(s.groupName, s.source));
+    // The fork can skip a registration silently
+    final lost = [for (final s in startScripts) if (missing.contains(s.groupName ?? "anon")) s.groupName];
+    _scriptLock = _scriptLock.then((_) => lost.forEach(_registeredSources.remove));
+
+    try {
+      if (isCurrent != null && !isCurrent()) return;
+      for (final s in handlers) {
+        if (!missing.contains(s.groupName ?? "anon")) continue;
+        await c.evaluateJavascript(source: oncePerDocument(s.groupName, s.source));
+      }
+      for (final s in startScripts) {
+        if (!missing.contains(s.groupName ?? "anon")) continue;
+        await c.evaluateJavascript(source: s.source);
+      }
+    } finally {
+      // Reset even when cut short
+      await c.evaluateJavascript(source: "window.__pdaMiss=false;");
     }
-    for (final s in startScripts) {
-      if (!missing.contains(s.groupName ?? "anon")) continue;
-      await c.evaluateJavascript(source: s.source);
-    }
-    await c.evaluateJavascript(source: "window.__pdaMiss=false;");
-    if (afterRecovery != null) await afterRecovery();
+    if (afterRecovery != null && (isCurrent?.call() ?? true)) await afterRecovery();
 
     if (_debugScriptsInjection) {
       log("Recovered missing document-start scripts in $at: $missing");
     }
   }
 
-  void _quiet(Future<dynamic> f) => f.then((_) {}, onError: (_) {});
-
-  // Skipped while the probe's recovery runs
-  String _unlessMissing(String source) => "if(!window.__pdaMiss){\n$source\n}";
-
   /// A failed probe returns nothing: never inject blindly, as that is what duplicates scripts
-  Set<String> _decodeMissingKeys(dynamic probe) {
-    if (probe == null) return const <String>{};
+  Set<String>? _decodeMissingKeys(dynamic probe) {
+    if (probe == null) return null;
     try {
       final dynamic decoded = probe is String ? jsonDecode(probe) : probe;
       if (decoded is List) return decoded.map((e) => e.toString()).toSet();
     } catch (_) {
       //
     }
-    return const <String>{};
+    return null;
   }
 
   /// Handler bundle + the initial URL's document-start userscripts, registered natively at
@@ -2943,7 +2947,7 @@ class WebViewFullState extends State<WebViewFull>
             pdaApiKey: UserHelper.apiKey,
             time: UserScriptTime.start,
           );
-    _initialStartSources = {for (final s in startScripts) if (s.groupName != null) s.groupName!: s.source};
+    _initialScriptGroups = [for (final s in startScripts) if (s.groupName != null) s.groupName!];
     final scripts = <UserScript>[..._handlerScripts(widget.chatRemovalActive).map(_guardedOnce), ...startScripts];
     return _initialUserScriptsCache = UnmodifiableListView(scripts);
   }

@@ -208,7 +208,7 @@ const String chainWebReader = r"""
     }, 100);
   });
 
-  // Only the bar; the interval finds a new one
+  // Interval picks up a replaced bar
   function observe(on) {
     var el = on ? document.querySelector(BAR) : null;
     if (el === watched) return;
