@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 
 /// Tests for [UserScriptModel]: header parsing, version comparison and URL
 /// matching logic
@@ -352,6 +353,32 @@ void main() {
 
       expect(adapted, contains('const text = "value";'));
       expect(adapted, contains("const other = 'x';"));
+    });
+
+    test('gives the same start source until the key or @match changes', () {
+      final provider = UserScriptsProvider();
+      final model = UserScriptModel(
+        name: 'start',
+        source: 'const key = "###PDA-APIKEY###";',
+        isExample: false,
+        matches: ['https://www.torn.com/gym.php'],
+        time: UserScriptTime.start,
+      );
+      provider.userScriptList.add(model);
+      String start(String url, String key) =>
+          provider.getCondSources(url: url, pdaApiKey: key, time: UserScriptTime.start).single.source;
+
+      final first = start('https://www.torn.com/gym.php', 'k1');
+      expect(first, contains('const key = "k1";'));
+      expect(first, contains('new RegExp('));
+      expect(identical(start('https://www.torn.com/gym.php#x', 'k1'), first), isTrue);
+
+      final newKey = start('https://www.torn.com/gym.php', 'k2');
+      expect(identical(newKey, first), isFalse);
+      expect(newKey, contains('const key = "k2";'));
+
+      model.matches = ['https://www.torn.com/gym.php*'];
+      expect(identical(start('https://www.torn.com/gym.php', 'k2'), newKey), isFalse);
     });
 
     test('keeps a source without key or smart quotes as the same string', () {
