@@ -27,3 +27,5 @@ class TornLoginResponseContainer {
     this.transientError = false,
   });
 }
+
+int? playerIdFromApiToken(String apiToken) => null;

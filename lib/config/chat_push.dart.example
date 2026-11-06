@@ -8,5 +8,5 @@ class ChatPush {
 
   static ChatPush? fromData(Map<String, dynamic> data) => null;
 
-  static Future<String> reply(int userId, String content, String apiKey) async => '';
+  static Future<String> reply(int userId, String content, String apiToken) async => '';
 }

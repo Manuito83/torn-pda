@@ -5,8 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
@@ -228,23 +226,27 @@ void main() {
     }, skip: skip);
 
     test('notification reply checks', () async {
-      final sent = <http.Request>[];
-      var status = 201;
-      Future<void> answer(NotificationResponse response) => http.runWithClient(
-        () => handleTornChatResponse(response),
-        () => MockClient((request) async {
-          sent.add(request);
-          return http.Response('', status);
-        }),
+      final sent = <(int, String, String)>[];
+      int? account;
+      var result = 'sent';
+      Future<void> answer(NotificationResponse response) => handleTornChatResponse(
+        response,
+        sender: () async => account == null ? null : (id: account, token: 'token-$account'),
+        post: (userId, content, token) async {
+          sent.add((userId, content, token));
+          return result;
+        },
       );
 
+      account = 5;
       await own(key: 'abcdefghijklmnop');
       await answer(reply('see you'));
       expect(shown.single['body'], 'Not sent: open the chat to reply');
+      expect(sent, isEmpty);
       shown.clear();
       await BackgroundPrefs().setNativeChatReplyEnabled(true);
 
-      loggedIn(6);
+      account = 6;
       await answer(reply('see you'));
       expect(shown.single['body'], 'Not sent: account changed');
       shown.clear();
@@ -252,24 +254,23 @@ void main() {
       expect(shown.single['body'], 'Not sent: account changed');
 
       shown.clear();
-      loggedIn(null);
+      account = null;
       await answer(reply('see you'));
       expect(shown.single['body'], 'Open Torn PDA to reply');
       expect(sent, isEmpty);
 
       shown.clear();
-      loggedIn(5);
+      account = 5;
       await answer(reply('see you'));
       expect(shown, isEmpty);
-      expect(sent.single.headers['Authorization'], 'Bearer ${loginToken(5)}');
-      expect(jsonDecode(sent.single.body), {'content': 'see you', 'reqId': isNotEmpty});
+      expect(sent.single, (7, 'see you', 'token-5'));
 
-      status = 401;
+      result = 'expired';
       await answer(reply('see you'));
       expect(shown.single['body'], 'Open Torn PDA to reply');
 
       shown.clear();
-      status = 500;
+      result = 'http_5xx';
       await answer(reply('see you at the bank'));
       expect((shown.single['title'], shown.single['body']), ('Bravo', 'Reply failed: see you at the bank'));
     });

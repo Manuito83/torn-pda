@@ -39,6 +39,9 @@ Future<String> _ownApiKey() async {
   }
 }
 
+typedef ChatReplySender = Future<({int id, String token})?> Function();
+typedef ChatReplyPost = Future<String> Function(int userId, String content, String token);
+
 Future<({int id, String token})?> _replySender() async {
   final token = await readNativeApiToken();
   final id = token == null ? null : playerIdFromApiToken(token);
@@ -227,7 +230,12 @@ Future<void> setChatWatchAlarm(ChatWatcher? watch, String roomId, String until) 
 }
 
 // Null when not a Torn chat notification
-Future<(int, String?)?> handleTornChatResponse(NotificationResponse response, {bool prefsReadable = true}) async {
+Future<(int, String?)?> handleTornChatResponse(
+  NotificationResponse response, {
+  bool prefsReadable = true,
+  ChatReplySender sender = _replySender,
+  ChatReplyPost post = ChatPush.reply,
+}) async {
   final Object? decoded;
   try {
     decoded = jsonDecode(response.payload ?? '');
@@ -239,7 +247,14 @@ Future<(int, String?)?> handleTornChatResponse(NotificationResponse response, {b
 
   final text = response.input?.trim() ?? '';
   if (response.actionId == _kTornChatReply && text.isNotEmpty && response.id != null) {
-    final status = await _tornChatReplyStatus(userId, text, owner: decoded['owner'], prefsReadable: prefsReadable);
+    final status = await _tornChatReplyStatus(
+      userId,
+      text,
+      owner: decoded['owner'],
+      prefsReadable: prefsReadable,
+      sender: sender,
+      post: post,
+    );
     if (status != null) {
       await _showTornChatReplyStatus(response.id!, '${decoded['name'] ?? 'Torn chat'}', status, response.payload);
     }
@@ -261,8 +276,18 @@ Future<String?> _tornChatReplyStatus(
   Object? owner,
   bool checkOwner = true,
   bool prefsReadable = true,
+  ChatReplySender sender = _replySender,
+  ChatReplyPost post = ChatPush.reply,
 }) async {
-  final result = await _tornChatReply(userId, text, owner: owner, checkOwner: checkOwner, prefsReadable: prefsReadable);
+  final result = await _tornChatReply(
+    userId,
+    text,
+    owner: owner,
+    checkOwner: checkOwner,
+    prefsReadable: prefsReadable,
+    sender: sender,
+    post: post,
+  );
   await StatsController.chat.reply(result, main: prefsReadable);
   return switch (result) {
     'sent' => null,
@@ -280,14 +305,16 @@ Future<String> _tornChatReply(
   required Object? owner,
   required bool checkOwner,
   required bool prefsReadable,
+  required ChatReplySender sender,
+  required ChatReplyPost post,
 }) async {
   if (!await BackgroundPrefs().getNativeChatReplyEnabled()) return 'disabled';
-  final sender = await _replySender();
-  if (sender == null) return 'no_token';
-  if (checkOwner && owner != sender.id) return 'account_changed';
+  final account = await sender();
+  if (account == null) return 'no_token';
+  if (checkOwner && owner != account.id) return 'account_changed';
   final warn = !prefsReadable || await Prefs().getNativeChatWarnApiKey();
   if (warn && ChatSendCheck.keyRisk(text, ownKey: await _ownApiKey()) != ChatKeyRisk.none) return 'key_risk';
-  return ChatPush.reply(userId, text, sender.token);
+  return post(userId, text, account.token);
 }
 
 Future<void> _showTornChatReplyStatus(int id, String name, String status, String? payload) async {

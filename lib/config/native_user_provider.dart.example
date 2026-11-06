@@ -10,3 +10,5 @@ class NativeUserProvider extends ChangeNotifier {
   Future<void> loadPreferences() async {}
   void eraseUserPreferences() {}
 }
+
+Future<String?> readNativeApiToken() async => null;
