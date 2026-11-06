@@ -16,8 +16,8 @@ class ChatShareOut {
       null || '' => 'Unknown',
       'Hospital' when left > 0 => 'Hospital, out in ${ChatStatus.duration(left)}',
       'Jail' when left > 0 => 'Jail, out in ${ChatStatus.duration(left)}',
-      'Traveling' when left > 0 => '${_text(description, 'Traveling')}, lands in ${ChatStatus.duration(left)}',
-      'Traveling' || 'Abroad' => _text(description, state),
+      'Traveling' => ChatPlayerStatus.trip(description ?? '') ?? _text(description, state),
+      'Abroad' => _text(description, state),
       _ => state,
     };
   }

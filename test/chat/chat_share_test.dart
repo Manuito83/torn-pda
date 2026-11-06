@@ -103,8 +103,8 @@ void main() {
       expect(ChatShareOut.player(name: 'Bravo', id: 7, level: 0, now: now).split('\n').first, 'Bravo [7], Unknown');
       expect(ChatShareOut.condition(state: 'Hospital', until: now - 5, now: now), 'Hospital');
       expect(
-        ChatShareOut.condition(state: 'Traveling', description: 'Traveling to Mexico', until: now + 480, now: now),
-        'Traveling to Mexico, lands in 8m',
+        ChatShareOut.condition(state: 'Traveling', description: 'Traveling from Torn to Mexico', now: now),
+        'Traveling to Mexico',
       );
       expect(ChatShareOut.condition(state: 'Abroad', description: 'In Mexico', now: now), 'In Mexico');
     });

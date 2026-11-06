@@ -615,12 +615,11 @@ void main() {
       expect(ChatPlayerCard.fromJson({'x': 1}), isNull);
     });
 
-    test('counts down hospital, jail and flights from the profile', () {
+    test('counts down hospital and jail from the profile', () {
       String? text(String state, int left) =>
           ChatPlayerCard.fromJson(profile(state: state, until: 1000000 + left))!.statusText(now);
       expect(text('Hospital', 760), 'In hospital - out in 12:40');
       expect(text('Jail', 59), 'In jail - out in 0:59');
-      expect(text('Traveling', 3700), 'Traveling to Mexico - lands in 1:01:40');
       expect(text('Hospital', 2 * 86400 + 3 * 3600), 'In hospital - out in 2d 3h');
       expect(text('Hospital', -5), 'Hospital');
       expect(ChatPlayerCard.fromJson(profile(until: 1000000 + 760))!.clock, isNull);
@@ -640,6 +639,17 @@ void main() {
       expect(info.detailAt(now.add(const Duration(minutes: 10))), 'Lvl 15 - In hospital - out in 2:40');
       expect(info.detailAt(now.add(const Duration(minutes: 13))), 'Lvl 15');
       expect(ChatLinkInfo.player(ChatLinkKind.player, player())!.detailAt(now), 'Lvl 15 - Okay');
+    });
+
+    test('a flight back reads short in the card and the link preview', () {
+      final json = player();
+      (json['profile'] as Map)['status'] = {
+        'state': 'Traveling',
+        'description': 'Traveling from Switzerland to Torn',
+        'until': 1000600,
+      };
+      expect(ChatPlayerCard.fromJson(json)!.statusText(now), 'Traveling from Switzerland');
+      expect(ChatLinkInfo.player(ChatLinkKind.player, json)!.detailAt(now), 'Lvl 15 - Traveling from Switzerland');
     });
 
     test('one call per player within two minutes', () async {

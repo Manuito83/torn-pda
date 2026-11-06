@@ -51,12 +51,7 @@ String chatRosterCountry(FactionMember m) => countryCheck(state: m.status.state,
   final description = m.status.description.trim();
   switch (m.status.state) {
     case 'Traveling':
-      const back = 'Returning to Torn from ';
-      if (description.startsWith(back)) return (description.substring(back.length), TravelDirection.returning);
-      if (description.startsWith('Traveling from ') && description.endsWith(' to Torn')) {
-        return (description.substring(15, description.length - 8), TravelDirection.returning);
-      }
-      return (chatRosterCountry(m), TravelDirection.outbound);
+      return parseTrip(description) ?? (chatRosterCountry(m), TravelDirection.outbound);
     case 'Abroad' || 'Hospital':
       final country = chatRosterCountry(m);
       return country == 'Torn' || country == 'error' ? null : (country, TravelDirection.none);

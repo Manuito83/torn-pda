@@ -1,6 +1,7 @@
 import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_money.dart';
+import 'package:torn_pda/models/chat/chat_status.dart';
 
 enum ChatStatusKind { okay, hospital, jail, travel, other }
 
@@ -14,11 +15,9 @@ class ChatStatusClock {
   static ChatStatusClock? parse(Map? status) {
     final until = status?['until'];
     if (until is! int || until <= 0) return null;
-    final description = status!['description'];
-    final (label, verb) = switch ('${status['state']}'.toLowerCase()) {
+    final (label, verb) = switch ('${status!['state']}'.toLowerCase()) {
       'hospital' => ('In hospital', 'out in'),
       'jail' => ('In jail', 'out in'),
-      'traveling' => (description is String && description.isNotEmpty ? description : 'Traveling', 'lands in'),
       _ => ('', ''),
     };
     return label.isEmpty ? null : ChatStatusClock(label, verb, DateTime.fromMillisecondsSinceEpoch(until * 1000));
@@ -119,6 +118,7 @@ class ChatPlayerCard {
     ChatStatusKind.okay => 'Okay',
     ChatStatusKind.hospital => clock?.at(now) ?? 'Hospital',
     ChatStatusKind.jail => clock?.at(now) ?? 'Jail',
+    ChatStatusKind.travel => ChatPlayerStatus.trip(description ?? '') ?? description ?? state,
     _ => clock?.at(now) ?? description ?? state,
   };
 

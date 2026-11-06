@@ -1,4 +1,17 @@
 import 'package:torn_pda/models/chaining/bars_model.dart';
+import 'package:torn_pda/utils/country_check.dart';
+
+final _outbound = RegExp(r'^Traveling (?:from Torn )?to (.+)$');
+final _returning = RegExp(r'^(?:Returning to Torn from (.+)|Traveling from (.+) to Torn)$');
+
+/// Trip country, null if none
+(String, TravelDirection)? parseTrip(String description) {
+  final text = description.trim();
+  final back = _returning.firstMatch(text);
+  if (back != null) return (back[1] ?? back[2]!, TravelDirection.returning);
+  final out = _outbound.firstMatch(text);
+  return out == null ? null : (out[1]!, TravelDirection.outbound);
+}
 
 class ChatStatusPiece {
   const ChatStatusPiece(this.key, this.label, this.text);
@@ -119,15 +132,19 @@ class ChatPlayerStatus {
 
   /// "Hospital 12m 30s", "To Japan", "From Japan", "In Japan"
   String label(DateTime now) {
-    const back = 'Returning to Torn from ';
-    if (state == 'Traveling' && description.startsWith(back)) return 'From ${description.substring(back.length)}';
-    if (state == 'Traveling' && description.contains(' to ')) {
-      return 'To ${description.substring(description.lastIndexOf(' to ') + 4)}';
-    }
+    final trip = state == 'Traveling' ? parseTrip(description) : null;
+    if (trip != null) return trip.$2 == TravelDirection.returning ? 'From ${trip.$1}' : 'To ${trip.$1}';
     if (state == 'Abroad' && description.startsWith('In ')) return description;
     final seconds = left(now)?.inSeconds;
     return seconds == null ? state : '$state ${ChatStatus.duration(seconds)}';
   }
+
+  /// "Traveling to Mexico", "Traveling from Switzerland"
+  static String? trip(String description) => switch (parseTrip(description)) {
+    null => null,
+    (final country, TravelDirection.returning) => 'Traveling from $country',
+    (final country, _) => 'Traveling to $country',
+  };
 
   static int compare(ChatPlayerStatus? a, ChatPlayerStatus? b, DateTime now) {
     final ranks = (a?.rank ?? _ranked.length).compareTo(b?.rank ?? _ranked.length);

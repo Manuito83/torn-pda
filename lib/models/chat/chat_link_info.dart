@@ -9,6 +9,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/chat/chat_player_card.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
+import 'package:torn_pda/models/chat/chat_status.dart';
 import 'package:torn_pda/models/items_model.dart';
 
 class ChatBounty {
@@ -78,7 +79,8 @@ class ChatLinkInfo {
     if (name is! String || name.isEmpty) return null;
     final id = profile['id'] ?? profile['player_id'];
     final level = profile['level'];
-    final status = profile['status'] is Map ? profile['status']['description'] : null;
+    final description = profile['status'] is Map ? profile['status']['description'] : null;
+    final status = description is String ? ChatPlayerStatus.trip(description) ?? description : null;
     final presence = ChatPresence.parse(profile['last_action'] is Map ? profile['last_action']['status'] : null);
     final title = id == null ? name : '$name [$id]';
     if (kind == ChatLinkKind.bazaar) {

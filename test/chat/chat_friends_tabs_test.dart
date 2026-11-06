@@ -201,6 +201,19 @@ void main() {
     expect(ChatPlayerStatus.compare(out, ChatPlayerStatus.from('Okay', 'Okay', null), now), isPositive);
   });
 
+  test('a flight back says where it comes from', () {
+    final now = DateTime.utc(2026, 11, 6);
+    expect(ChatPlayerStatus.from('Traveling', 'Traveling from UAE to Torn', null)!.label(now), 'From UAE');
+  });
+
+  test('short trip line', () {
+    expect(ChatPlayerStatus.trip('Traveling from Torn to Japan'), 'Traveling to Japan');
+    expect(ChatPlayerStatus.trip('Traveling to Mexico'), 'Traveling to Mexico');
+    expect(ChatPlayerStatus.trip('Returning to Torn from Switzerland'), 'Traveling from Switzerland');
+    expect(ChatPlayerStatus.trip('Traveling from United Kingdom to Torn'), 'Traveling from United Kingdom');
+    expect(ChatPlayerStatus.trip('In Mexico'), isNull);
+  });
+
   test('company rows carry the employee status', () async {
     Get.put<ApiCallerController>(
       FakeApiCaller(
