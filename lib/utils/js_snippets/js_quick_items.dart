@@ -1240,6 +1240,7 @@ String quickItemPickerJS({required bool enable}) {
       const BTN_CLASS = 'pda-item-picker-btn';
       const WRAP_CLASS = 'pda-item-picker-wrap';
       const OBSERVER_KEY = '_pdaPickerObserver';
+      const RESIZE_KEY = '_pdaPickerResize';
       const ACTIVE_KEY = '_pdaPickerActive';
       const CLEANUP_FLAG = '_pdaPickerCleanupAdded';
       const QUICK_ITEM_CATEGORIES = ['Medical', 'Drug', 'Energy Drink', 'Alcohol', 'Candy', 'Booster', 'Supply Pack', 'Special'];
@@ -1247,9 +1248,11 @@ String quickItemPickerJS({required bool enable}) {
       const EXCEPTION_ITEMS = ['403', '283'];
       const HIGHLIGHT_CLASS = 'pda-picker-eligible';
       const NARROW_WIDTH_PX = 785; // fallback only
+      const root = document.getElementById('category-wrap') || document.body;
+      let narrow = false;
 
       function getFirstActionsWrap() {
-        return document.querySelector('li[data-item] ul.actions-wrap, li[data-item] ul.actions, li[data-item] .actions-wrap ul, li[data-item] .actions ul, li[data-item] .action-wrap ul, li[data-item] .item-actions ul, li[data-item] .actions-wrap, li[data-item] .actions, li[data-item] .action-wrap, li[data-item] .item-actions');
+        return root.querySelector('li[data-item] ul.actions-wrap, li[data-item] ul.actions, li[data-item] .actions-wrap ul, li[data-item] .actions ul, li[data-item] .action-wrap ul, li[data-item] .item-actions ul, li[data-item] .actions-wrap, li[data-item] .actions, li[data-item] .action-wrap, li[data-item] .item-actions');
       }
 
       function isNarrow() {
@@ -1307,8 +1310,10 @@ String quickItemPickerJS({required bool enable}) {
           window[OBSERVER_KEY].disconnect();
           window[OBSERVER_KEY] = null;
         }
-        window.removeEventListener('scroll', addButtons);
-        window.removeEventListener('resize', addButtons);
+        if (window[RESIZE_KEY]) {
+          window.removeEventListener('resize', window[RESIZE_KEY]);
+          window[RESIZE_KEY] = null;
+        }
         window[ACTIVE_KEY] = false;
         window[CLEANUP_FLAG] = false;
 
@@ -1320,13 +1325,40 @@ String quickItemPickerJS({required bool enable}) {
       }
 
       function addButtons() {
-        // Update highlights, insert buttons when eligible
+        // Full pass over the list
         if (!window[ACTIVE_KEY]) {
           return; // If picker was deactivated, ignore stray observer/resize callbacks
         }
-        const narrow = isNarrow();
-        let addedCount = 0;
-        document.querySelectorAll('li[data-item]').forEach(function(li) {
+        narrow = isNarrow();
+        root.querySelectorAll('li[data-item]').forEach(processItem);
+      }
+
+      function refreshNarrow() {
+        // Highlights follow narrow changes
+        if (!window[ACTIVE_KEY]) return;
+        const next = isNarrow();
+        if (next === narrow) return;
+        narrow = next;
+        root.querySelectorAll('li[data-item]').forEach(processItem);
+      }
+
+      function onMutations(mutations) {
+        // Only items in the changed nodes
+        if (!window[ACTIVE_KEY]) return;
+        const items = new Set();
+        mutations.forEach(function(m) {
+          m.addedNodes.forEach(function(node) {
+            if (node.nodeType !== 1 || node.classList.contains(WRAP_CLASS)) return;
+            if (node.matches('li[data-item]')) items.add(node);
+            node.querySelectorAll('li[data-item]').forEach(function(li) { items.add(li); });
+            const owner = m.target.closest && m.target.closest('li[data-item]');
+            if (owner) items.add(owner);
+          });
+        });
+        items.forEach(processItem);
+      }
+
+      function processItem(li) {
           const itemNum = li.dataset.item;
           if (!itemNum) return;
           // Use getAttribute as fallback for dataset issues
@@ -1469,11 +1501,6 @@ String quickItemPickerJS({required bool enable}) {
           actionsWrap.style.alignItems = 'center';
           actionsWrap.style.padding = '6px 0';
           actionsWrap.appendChild(wrap);
-          addedCount++;
-        });
-        if (typeof console !== 'undefined') {
-          //console.debug('[PDA picker] added buttons:', addedCount);
-        }
       }
 
       if ($enabled === false) {
@@ -1555,13 +1582,23 @@ String quickItemPickerJS({required bool enable}) {
       }
 
       addButtons();
+      refreshNarrow();
 
-      const observer = new MutationObserver(addButtons);
-      observer.observe(document.body, { childList: true, subtree: true });
+      const observer = new MutationObserver(onMutations);
+      observer.observe(root, { childList: true, subtree: true });
       window[OBSERVER_KEY] = observer;
 
-      window.addEventListener('scroll', addButtons, { passive: true });
-      window.addEventListener('resize', addButtons, { passive: true });
+      // One check per frame
+      let resizeFrame = 0;
+      const onResize = function() {
+        if (resizeFrame) return;
+        resizeFrame = requestAnimationFrame(function() {
+          resizeFrame = 0;
+          refreshNarrow();
+        });
+      };
+      window.addEventListener('resize', onResize, { passive: true });
+      window[RESIZE_KEY] = onResize;
 
       if (!window[CLEANUP_FLAG]) {
         const cleanup = () => removeAll();
