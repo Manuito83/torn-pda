@@ -1452,10 +1452,8 @@ String quickItemPickerJS({required bool enable}) {
 
           wrap.appendChild(btn);
 
-          // Replace action list with our button; cache original for restoration
-          if (!actionsWrap.hasAttribute('data-pda-actions-html')) {
-            actionsWrap.setAttribute('data-pda-actions-html', actionsWrap.innerHTML);
-          }
+          // Replace action list with our button; cache Torn's latest for restoration
+          actionsWrap.setAttribute('data-pda-actions-html', actionsWrap.innerHTML);
           while (actionsWrap.firstChild) {
             actionsWrap.removeChild(actionsWrap.firstChild);
           }
