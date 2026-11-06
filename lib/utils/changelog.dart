@@ -101,7 +101,7 @@ class _MVersion {
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
     version: 'v4.0.0',
-    date: '05 November 2026',
+    date: '10 November 2026',
     hotfixes: [],
     sections: [
       _MSection(
@@ -223,6 +223,7 @@ List<_MVersion> _modernChangelog() => [
                 'In Settings, Shortcuts, App icon menu. Each of the four slots can be a Torn page or one of your '
                 'chats, shown when you long press the Torn PDA icon.',
           ),
+          _MItem("Chaining: browse your faction's past chain reports"),
         ],
       ),
       _MSection(
@@ -243,6 +244,7 @@ List<_MVersion> _modernChangelog() => [
           ),
           _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
           _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
+          _MItem('Stock market alerts: option to hide stocks where you already own a benefit block [EdoSag]'),
           _MItem('Browser: improved page load speed [Xentac]'),
           _MItem(
             'Scripts: faster and more reliable injection and PDA_http requests [Xentac]',
@@ -266,6 +268,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Browser: find in page arrows are visible in chaining mode'),
           _MItem('Calendar: fixed event dates'),
           _MItem('Scripts: @match now follows Tampermonkey rules (http*, any port, pages with #) [Xentac]'),
+          _MItem('Scripts: a script no longer runs on the previous page after going back [Xentac]'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Travel: flight times now include travel time reduction perks'),
           _MItem('Fixed unread messages count in the home screen widget', androidOnly: true),
