@@ -13,8 +13,8 @@ import 'package:torn_pda/widgets/chat/chat_edge_back.dart';
 import 'package:torn_pda/widgets/chat/chat_friends_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_theme.dart';
 import 'package:torn_pda/widgets/chat/chat_inbox_view.dart';
+import 'package:torn_pda/widgets/chat/chat_screen_route.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -56,13 +56,9 @@ class _ChatPageState extends State<ChatPage> {
     _inbox.currentState?.closeReplies();
     if (newPeer != null) _chat.addDraftDm(newPeer);
     await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider<ChatController>.value(
-          value: _chat,
-          child: ChatTheme(
-            child: ChatConversationPage(roomId: roomId, focusMessageId: messageId, focusAt: at),
-          ),
-        ),
+      ChatScreenRoute(
+        chat: _chat,
+        page: ChatConversationPage(roomId: roomId, focusMessageId: messageId, focusAt: at),
       ),
     );
     _chat.closeConversation(roomId);
@@ -70,17 +66,13 @@ class _ChatPageState extends State<ChatPage> {
 
   void _openSearch({bool saved = false}) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider<ChatController>.value(
-          value: _chat,
-          child: ChatTheme(
-            child: ChatPausedGate(
-              child: ChatSearchPage(
-                saved: saved,
-                onOpen: (roomId, {messageId, at}) => _open(roomId, messageId: messageId, at: at),
-                onPlayer: (user) => _open(ChatRoom.dmId(user.id), newPeer: user),
-              ),
-            ),
+      ChatScreenRoute(
+        chat: _chat,
+        page: ChatPausedGate(
+          child: ChatSearchPage(
+            saved: saved,
+            onOpen: (roomId, {messageId, at}) => _open(roomId, messageId: messageId, at: at),
+            onPlayer: (user) => _open(ChatRoom.dmId(user.id), newPeer: user),
           ),
         ),
       ),

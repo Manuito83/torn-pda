@@ -33,7 +33,7 @@ import 'package:torn_pda/widgets/chat/chat_player_card_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_reminder_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_send_check_dialog.dart';
 import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_theme.dart';
+import 'package:torn_pda/widgets/chat/chat_screen_route.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -159,14 +159,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     if (widget.embedded) return widget.onOpenRoom?.call(next.id);
     final chat = _chat;
     Navigator.of(context)
-        .pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider<ChatController>.value(
-              value: chat,
-              child: ChatTheme(child: ChatConversationPage(roomId: next.id)),
-            ),
-          ),
-        )
+        .pushReplacement(ChatScreenRoute(chat: chat, page: ChatConversationPage(roomId: next.id)))
         .then((_) => chat.closeConversation(next.id));
   }
 

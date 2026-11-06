@@ -872,7 +872,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     HapticFeedback.lightImpact();
     if (count == 0) {
       return chatToast(
-        'Nothing to mark as read. Rooms like Global and Trade, hidden rooms and archived chats stay as they are',
+        'Nothing to mark as read. Global, Trade, hidden and archived chats are skipped',
       );
     }
     var undone = false;

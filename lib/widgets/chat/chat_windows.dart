@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/webview/split_layout.dart';
 import 'package:torn_pda/pages/chat/chat_conversation_page.dart';
@@ -13,7 +12,7 @@ import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/chat/chat_ticker_queue.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_quick_window.dart';
-import 'package:torn_pda/widgets/chat/chat_theme.dart';
+import 'package:torn_pda/widgets/chat/chat_screen_route.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class _TopWatch extends NavigatorObserver {
@@ -529,13 +528,9 @@ class ChatWindows {
     if (screenOpen.value) {
       if (roomId == null || _controller.isOnScreen(roomId)) return;
       await navigator.push(
-        MaterialPageRoute(
-          builder: (_) => ChangeNotifierProvider<ChatController>.value(
-            value: _controller,
-            child: ChatTheme(
-              child: ChatConversationPage(roomId: roomId, focusMessageId: messageId),
-            ),
-          ),
+        ChatScreenRoute(
+          chat: _controller,
+          page: ChatConversationPage(roomId: roomId, focusMessageId: messageId),
         ),
       );
       _controller.closeConversation(roomId);
@@ -545,13 +540,9 @@ class ChatWindows {
     minimized.value = [...minimized.value.where((m) => m.window && m.roomId != roomId)];
     minimizeBigWindow();
     screenOpen.value = true;
-    final route = MaterialPageRoute<void>(
-      builder: (_) => ChangeNotifierProvider<ChatController>.value(
-        value: _controller,
-        child: ChatTheme(
-          child: ChatPage(initialRoomId: roomId, initialMessageId: messageId, openSaved: saved),
-        ),
-      ),
+    final route = ChatScreenRoute<void>(
+      chat: _controller,
+      page: ChatPage(initialRoomId: roomId, initialMessageId: messageId, openSaved: saved),
     );
     _screens = route;
     await navigator.push(route);

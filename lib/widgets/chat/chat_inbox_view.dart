@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
@@ -50,8 +51,10 @@ class ChatInboxViewState extends State<ChatInboxView> {
   @override
   Widget build(BuildContext context) {
     final chat = widget.chat;
+    // Through the provider, held while entering
+    context.watch<ChatController>();
     return ListenableBuilder(
-      listenable: Listenable.merge([chat, NativeChat.prefs]),
+      listenable: NativeChat.prefs,
       builder: (context, _) {
         final prefs = NativeChat.prefs;
         final status = _statusMessage(chat);
@@ -316,7 +319,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
         title: const Text('Mark all as read'),
         content: Text(
           '${count == 1 ? 'One conversation has' : '$count conversations have'} unread messages. '
-          'Rooms like Global and Trade, hidden rooms and archived chats stay as they are',
+          'Global, Trade, hidden and archived chats are skipped',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),

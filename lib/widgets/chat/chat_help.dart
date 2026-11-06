@@ -127,11 +127,10 @@ const chatHelp = <ChatHelpEntry>[
     Icons.forum_rounded,
     'The bubble',
     'Tap it to open the full chat, or a chat window if you pick Window in Chat settings > Chat button. Long press '
-        'it for Window, Full chat and Chat settings. Drag it anywhere, or push it against an edge to tuck it away and '
-        'tap it to bring it back. A double tap marks your chats as read, with Undo. Rooms like Global and Trade, '
-        'hidden rooms and archived chats stay as they are. A red cloud means the chat is not connected. To have the '
-        'chat button in the browser or the side menu instead, pick Browser, Menu header or Menu bar in Chat '
-        'settings > Chat button',
+        'it for Window, Full chat and Chat settings. Drag it anywhere, or push it against an edge to tuck it away '
+        'and tap it to bring it back. A double tap marks your chats as read, with Undo. Global, Trade, hidden and '
+        'archived chats are skipped. A red cloud means the chat is not connected. To have the chat button in the '
+        'browser or the side menu instead, pick Browser, Menu header or Menu bar in Chat settings > Chat button',
     spots: {ChatHelpSpot.intro},
     scenes: [FeatureDiagramScene.chatBubble, FeatureDiagramScene.chatWindow],
   ),
