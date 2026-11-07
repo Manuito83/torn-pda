@@ -1417,7 +1417,6 @@ String quickItemPickerJS({required bool enable}) {
           const btn = document.createElement('button');
           btn.className = BTN_CLASS + ' pda-picker-main-btn';
           btn.setAttribute('aria-label', 'Add ' + name + ' to quick items');
-          btn.title = 'Add to quick items';
           btn.innerHTML = '<span class="pda-picker-label">ADD QUICK</span>';
           btn.addEventListener('click', function(ev) {
             ev.stopPropagation();
@@ -1452,10 +1451,8 @@ String quickItemPickerJS({required bool enable}) {
 
           wrap.appendChild(btn);
 
-          // Replace action list with our button; cache original for restoration
-          if (!actionsWrap.hasAttribute('data-pda-actions-html')) {
-            actionsWrap.setAttribute('data-pda-actions-html', actionsWrap.innerHTML);
-          }
+          // Replace action list with our button; cache Torn's latest for restoration
+          actionsWrap.setAttribute('data-pda-actions-html', actionsWrap.innerHTML);
           while (actionsWrap.firstChild) {
             actionsWrap.removeChild(actionsWrap.firstChild);
           }
