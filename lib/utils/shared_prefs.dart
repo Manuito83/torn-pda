@@ -294,6 +294,7 @@ class Prefs with ChatPrefsStorage {
   final String _kTravelBoosterCooldownWarningThreshold = "pda_travelBoosterCooldownWarningThreshold";
   final String _kTravelWalletMoneyWarning = "pda_travelWalletMoneyWarning";
   final String _kTravelWalletMoneyWarningThreshold = "pda_travelWalletMoneyWarningThreshold";
+  final String _kTravelOrganizedCrimeWarning = "pda_travelOrganizedCrimeWarning";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
   final String _kMessagesShowNumber = "pda_messagesShowNumber";
@@ -2738,6 +2739,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setTravelWalletMoneyWarning(bool value) async {
     return await PrefsDatabase.setBool(_kTravelWalletMoneyWarning, value);
+  }
+
+  Future<bool> getTravelOrganizedCrimeWarning() async {
+    return await PrefsDatabase.getBool(_kTravelOrganizedCrimeWarning, true);
+  }
+
+  Future setTravelOrganizedCrimeWarning(bool value) async {
+    return await PrefsDatabase.setBool(_kTravelOrganizedCrimeWarning, value);
   }
 
   Future<int> getTravelWalletMoneyWarningThreshold() async {

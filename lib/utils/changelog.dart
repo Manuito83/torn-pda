@@ -224,6 +224,7 @@ List<_MVersion> _modernChangelog() => [
                 'chats, shown when you long press the Torn PDA icon.',
           ),
           _MItem("Chaining / Chat: browse your faction's past chain reports"),
+          _MItem('Travel: warning when your OC is ready before a round trip is back, with the destinations that fit'),
         ],
       ),
       _MSection(

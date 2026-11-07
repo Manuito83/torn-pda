@@ -1180,6 +1180,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _travelOrganizedCrimeWarning = true;
+  bool get travelOrganizedCrimeWarning => _travelOrganizedCrimeWarning;
+  set travelOrganizedCrimeWarning(bool choice) {
+    _travelOrganizedCrimeWarning = choice;
+    Prefs().setTravelOrganizedCrimeWarning(_travelOrganizedCrimeWarning);
+    notifyListeners();
+  }
+
   var _travelWalletMoneyWarningThreshold = 50000;
   int get travelWalletMoneyWarningThreshold => _travelWalletMoneyWarningThreshold;
   set travelWalletMoneyWarningThreshold(int choice) {
@@ -2000,6 +2008,7 @@ class SettingsProvider extends ChangeNotifier {
     _travelBoosterCooldownWarningThreshold = await Prefs().getTravelBoosterCooldownWarningThreshold();
     _travelWalletMoneyWarning = await Prefs().getTravelWalletMoneyWarning();
     _travelWalletMoneyWarningThreshold = await Prefs().getTravelWalletMoneyWarningThreshold();
+    _travelOrganizedCrimeWarning = await Prefs().getTravelOrganizedCrimeWarning();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
 

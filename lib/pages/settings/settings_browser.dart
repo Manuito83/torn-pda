@@ -2549,6 +2549,39 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       SearchableRow(
+        label: "Organized crime warning",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Organized crime warning"),
+                  Switch(
+                    value: _settingsProvider.travelOrganizedCrimeWarning,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.travelOrganizedCrimeWarning = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "If enabled, you'll get a warning when you access the Travel Agency if your OC will be ready "
+                "before some round trips are back, with the destinations that make it in time",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
         label: "Drug cooldown warning",
         searchText: _searchText,
         child: Padding(

@@ -56,6 +56,10 @@ import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/utils/torn_web.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/models/travel/oc_travel_check.dart';
+import 'package:torn_pda/models/travel/foreign_stock_in.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
@@ -5453,6 +5457,7 @@ class WebViewFullState extends State<WebViewFull>
         return;
       }
 
+      final ocCall = _settingsProvider.travelOrganizedCrimeWarning ? ApiCallsV2.getUserOC2Crime_v2() : null;
       final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
 
@@ -5781,6 +5786,64 @@ class WebViewFullState extends State<WebViewFull>
         }
       }
 
+      if (ocCall != null) {
+        final ocResponse = await ocCall;
+        final oc = checkOcBeforeTravel(
+          crime: ocResponse?.organizedCrime,
+          playerId: UserHelper.playerId,
+          now: DateTime.now(),
+          ticket: _settingsProvider.travelTicket ?? TravelTicket.private,
+          reductionPercent: _settingsProvider.travelTimeReduction,
+        );
+        if (oc != null) {
+          final hours = oc.untilReady.inHours;
+          final minutes = oc.untilReady.inMinutes % 60;
+          final readyText = oc.untilReady == Duration.zero
+              ? "OC '${oc.name}' is ready, traveling now delays it!"
+              : "OC '${oc.name}' ${oc.incomplete ? "could be ready" : "ready"} in ${hours}h ${minutes}m!";
+          final fitsText = oc.fits.isEmpty
+              ? "No round trip is back in time"
+              : "Back in time: ${oc.fits.map(CountryHelper.getFullName).join(", ")}";
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Icon(MdiIcons.accountGroup, size: 24, color: Colors.orange),
+                        const SizedBox(width: 20),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(readyText),
+                              if (oc.untilReady > Duration.zero)
+                                Text(fitsText, style: const TextStyle(fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    child: Icon(MdiIcons.accountGroup, size: 24, color: _themeProvider.mainText),
+                    onTap: () {
+                      _loadUrl("https://www.torn.com/factions.php?step=your#/tab=crimes");
+                      toastification.dismiss(wasteToast);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
       if (warnRows.isNotEmpty || cooldownRows.isNotEmpty) {
         wasteToast = toastification.showCustom(
           autoCloseDuration: const Duration(seconds: 8),
@@ -5847,6 +5910,7 @@ class WebViewFullState extends State<WebViewFull>
                                   _settingsProvider.travelDrugCooldownWarning = false;
                                   _settingsProvider.travelBoosterCooldownWarning = false;
                                   _settingsProvider.travelWalletMoneyWarning = false;
+                                  _settingsProvider.travelOrganizedCrimeWarning = false;
                                 },
                                 child: Text("DISABLE", style: TextStyle(color: _themeProvider.mainText, fontSize: 10)),
                                 style: TextButton.styleFrom(
