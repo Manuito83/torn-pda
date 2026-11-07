@@ -244,10 +244,10 @@ List<_MVersion> _modernChangelog() => [
           ),
           _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
           _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
-          _MItem('Stock market alerts: option to hide stocks where you already own a benefit block [EdoSag]'),
-          _MItem('Browser: improved page load speed [Xentac]'),
+          _MItem('Stock market alerts: option to hide stocks where you already own a benefit block [Juoku]'),
+          _MItem('Browser: improved page load speed [xentac]'),
           _MItem(
-            'Scripts: faster and more reliable injection and PDA_http requests [Xentac]',
+            'Scripts: faster and more reliable injection and PDA_http requests [xentac]',
             detail:
                 'Scripts start sooner after a page loads, and PDA_http requests can go out before the page has '
                 'finished loading, as in Tampermonkey.\n\n'
@@ -267,8 +267,9 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
           _MItem('Browser: find in page arrows are visible in chaining mode'),
           _MItem('Calendar: fixed event dates'),
-          _MItem('Scripts: @match now follows Tampermonkey rules (http*, any port, pages with #) [Xentac]'),
-          _MItem('Scripts: a script no longer runs on the previous page after going back [Xentac]'),
+          _MItem('Scripts: @match now follows Tampermonkey rules (http*, any port, pages with #) [xentac]'),
+          _MItem('Scripts: a script no longer runs on the previous page after going back [xentac]'),
+          _MItem('Quick items: item icons no longer go missing after closing the picker [xentac]'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Travel: flight times now include travel time reduction perks'),
           _MItem('Fixed unread messages count in the home screen widget', androidOnly: true),
@@ -803,6 +804,8 @@ const _contributorXids = <String, String>{
   'Kwack': '2190604',
   'DarXide': '4059250',
   'bombel': '2362436',
+  'xentac': '3354782',
+  'Juoku': '2545301',
 };
 
 const _contributorColors = <Color>[

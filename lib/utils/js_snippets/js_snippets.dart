@@ -1182,7 +1182,7 @@ String hospitalTimerJS({required int until}) {
       const find = () => {
         // Search the known panel first
         const scope = panel && panel.isConnected ? panel : document;
-        const nodes = scope.querySelectorAll('[class*="defender___"] [class*="title___"]');
+        const nodes = scope.querySelectorAll(PANEL + ' ' + TITLE);
         for (const n of nodes) {
           if (/in hospital/i.test(n.textContent)) return n;
         }
@@ -1208,7 +1208,7 @@ String hospitalTimerJS({required int until}) {
         return true;
       };
 
-      // Observe only the defender panel, and its parent for a new panel
+      // Panel, plus its parent for replacements
       const watch = (el) => {
         const p = el.closest(PANEL);
         if (!p || p === panel) return;
@@ -1254,6 +1254,7 @@ String hospitalTimerJS({required int until}) {
 
       const first = find();
       if (first) watch(first);
+      else window.__pdaHospitalObserver.observe(document.body, { childList: true, subtree: true });
     })();
   """;
 }

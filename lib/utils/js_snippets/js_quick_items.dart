@@ -1248,11 +1248,11 @@ String quickItemPickerJS({required bool enable}) {
       const EXCEPTION_ITEMS = ['403', '283'];
       const HIGHLIGHT_CLASS = 'pda-picker-eligible';
       const NARROW_WIDTH_PX = 785; // fallback only
-      const root = document.getElementById('category-wrap') || document.body;
+      const root = document.body;
       let narrow = false;
 
       function getFirstActionsWrap() {
-        return root.querySelector('li[data-item] ul.actions-wrap, li[data-item] ul.actions, li[data-item] .actions-wrap ul, li[data-item] .actions ul, li[data-item] .action-wrap ul, li[data-item] .item-actions ul, li[data-item] .actions-wrap, li[data-item] .actions, li[data-item] .action-wrap, li[data-item] .item-actions');
+        return root.querySelector('li[data-item] ul.actions-wrap:not(.pda-picker-actions), li[data-item] ul.actions:not(.pda-picker-actions), li[data-item] .actions-wrap:not(.pda-picker-actions) ul, li[data-item] .actions:not(.pda-picker-actions) ul, li[data-item] .action-wrap:not(.pda-picker-actions) ul, li[data-item] .item-actions:not(.pda-picker-actions) ul, li[data-item] .actions-wrap:not(.pda-picker-actions), li[data-item] .actions:not(.pda-picker-actions), li[data-item] .action-wrap:not(.pda-picker-actions), li[data-item] .item-actions:not(.pda-picker-actions)');
       }
 
       function isNarrow() {
@@ -1330,7 +1330,7 @@ String quickItemPickerJS({required bool enable}) {
           return; // If picker was deactivated, ignore stray observer/resize callbacks
         }
         narrow = isNarrow();
-        root.querySelectorAll('li[data-item]').forEach(processItem);
+        root.querySelectorAll('li[data-item]').forEach(updateItem);
       }
 
       function refreshNarrow() {
@@ -1339,7 +1339,7 @@ String quickItemPickerJS({required bool enable}) {
         const next = isNarrow();
         if (next === narrow) return;
         narrow = next;
-        root.querySelectorAll('li[data-item]').forEach(processItem);
+        root.querySelectorAll('li[data-item]').forEach(updateItem);
       }
 
       function onMutations(mutations) {
@@ -1355,10 +1355,10 @@ String quickItemPickerJS({required bool enable}) {
             if (owner) items.add(owner);
           });
         });
-        items.forEach(processItem);
+        items.forEach(updateItem);
       }
 
-      function processItem(li) {
+      function updateItem(li) {
           const itemNum = li.dataset.item;
           if (!itemNum) return;
           // Use getAttribute as fallback for dataset issues
@@ -1483,8 +1483,10 @@ String quickItemPickerJS({required bool enable}) {
 
           wrap.appendChild(btn);
 
-          // Replace action list with our button; cache Torn's latest for restoration
-          actionsWrap.setAttribute('data-pda-actions-html', actionsWrap.innerHTML);
+          // Torn's latest actions, restored on close
+          if (actionsWrap.firstElementChild || !actionsWrap.hasAttribute('data-pda-actions-html')) {
+            actionsWrap.setAttribute('data-pda-actions-html', actionsWrap.innerHTML);
+          }
           while (actionsWrap.firstChild) {
             actionsWrap.removeChild(actionsWrap.firstChild);
           }
