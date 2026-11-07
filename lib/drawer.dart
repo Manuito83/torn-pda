@@ -197,6 +197,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   // Script updates check rate limiting (1 hour between checks)
   DateTime _lastScriptUpdateCheck = DateTime.now().subtract(const Duration(hours: 2));
+  DateTime _lastPushTokenRegister = DateTime.now();
 
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
@@ -411,9 +412,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
 
         // Heal tokens that rotated before we listened
-        if (appHasBeenUpdated) {
-          FirestoreHelper().reconcileMessagingToken();
-        }
+        FirestoreHelper().reconcileMessagingToken();
         _messaging.onTokenRefresh.listen((newToken) {
           FirestoreHelper().onMessagingTokenRefreshed(newToken);
         });
@@ -1001,6 +1000,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Update Firebase active parameter
       _updateLastActiveTime();
       FirestoreHelper().syncDiscreetScheduleOffset();
+      FirestoreHelper().reconcileMessagingToken();
 
       // Execute periodic tasks
       Get.find<PeriodicExecutionController>().checkAndExecuteTasks();
@@ -1029,6 +1029,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       final nativeUserProvider = Provider.of<NativeUserProvider>(context, listen: false);
       if (nativeUserProvider.keychainAccessDenied) {
         nativeUserProvider.loadPreferences();
+      }
+      if (DateTime.now().difference(_lastPushTokenRegister).inMinutes >= 10) {
+        _lastPushTokenRegister = DateTime.now();
+        nativeUserProvider.registerPushToken();
       }
 
       _syncThemeWithDeviceSettings();

@@ -9,6 +9,7 @@ class NativeUserProvider extends ChangeNotifier {
 
   Future<void> loadPreferences() async {}
   void eraseUserPreferences() {}
+  Future<void> registerPushToken({String? fcmToken}) async {}
   Future<void> refreshPushToken() async {}
   Future<void> refreshPushAfterTwoFA() async {}
 }

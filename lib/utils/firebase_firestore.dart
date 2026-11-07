@@ -37,6 +37,8 @@ class FirestoreHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;
+  DateTime? _lastTokenReconcile;
+  bool _reconcilingToken = false;
   FirebaseUserModel? _firebaseUserModel;
   FirebaseUserModel? get cachedUserModel => _firebaseUserModel;
 
@@ -841,7 +843,9 @@ class FirestoreHelper {
       await FirebaseMessaging.instance.getAPNSToken();
     }
 
-    final String? currentToken = await _messaging.getToken().onError((error, stackTrace) {
+    // getToken can block on network
+    final String? currentToken =
+        await _messaging.getToken().timeout(const Duration(seconds: 20)).onError((error, stackTrace) {
       log("TOKEN ERROR!");
       return "error";
     });
@@ -856,7 +860,10 @@ class FirestoreHelper {
   // FCM only fires onTokenRefresh when the token rotates, so tokens that rotated
   // before we had a listener stay stale in Firestore (server sees NotRegistered)
   Future<void> reconcileMessagingToken() async {
-    if (Platform.isWindows) return;
+    if (Platform.isWindows || _reconcilingToken) return;
+    final last = _lastTokenReconcile;
+    if (last != null && DateTime.now().difference(last).inMinutes < 10) return;
+    _reconcilingToken = true;
     try {
       await uidCompleter.future;
       final playerDoc = _playerDoc();
@@ -864,12 +871,19 @@ class FirestoreHelper {
 
       final token = await _getMessagingToken();
       if (token == "error") return;
-      if (token == await Prefs().getFCMTokenSynced()) return;
+      _lastTokenReconcile = DateTime.now();
+      final synced = await Prefs().getFCMTokenSynced();
+      if (token == synced) return;
 
-      await _writeMessagingToken(playerDoc, token);
+      final written = await _writeMessagingToken(playerDoc, token);
+      if (written && synced.isNotEmpty) {
+        analytics?.logEvent(name: "fcm_token_healed");
+      }
     } catch (e, s) {
       log("Failed to reconcile FCM token: $e");
       logErrorToCrashlytics("Failed to reconcile FCM token", e, s);
+    } finally {
+      _reconcilingToken = false;
     }
   }
 
@@ -890,13 +904,15 @@ class FirestoreHelper {
   }
 
   // Writes the token and marks it synced only on success
-  Future<void> _writeMessagingToken(DocumentReference<Map<String, dynamic>> playerDoc, String token) async {
+  Future<bool> _writeMessagingToken(DocumentReference<Map<String, dynamic>> playerDoc, String token) async {
     try {
       await playerDoc.set({"token": token, "tokenErrors": 0}, SetOptions(merge: true));
       Prefs().setFCMTokenSynced(token);
+      return true;
     } catch (e, s) {
       log("Failed to sync FCM token: $e");
       logErrorToCrashlytics("Failed to sync FCM token", e, s);
+      return false;
     }
   }
 

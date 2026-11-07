@@ -223,7 +223,7 @@ List<_MVersion> _modernChangelog() => [
                 'In Settings, Shortcuts, App icon menu. Each of the four slots can be a Torn page or one of your '
                 'chats, shown when you long press the Torn PDA icon.',
           ),
-          _MItem("Chaining: browse your faction's past chain reports"),
+          _MItem("Chaining / Chat: browse your faction's past chain reports"),
         ],
       ),
       _MSection(
@@ -263,6 +263,7 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF2E7D32),
         items: [
           _MItem('Fixed alerts not loading or saving after the app recovers its session'),
+          _MItem('Fixed automatic alerts stopping after a few days until a Soft Reset'),
           _MItem('Browser: rotating or resizing the screen no longer reloads your tabs'),
           _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
           _MItem('Browser: find in page arrows are visible in chaining mode'),
