@@ -30,6 +30,7 @@ const privateKey = require("../key/torn_key");
 
 import { handleTravelLiveActivity } from "./la_travel_handler";
 import { handleRacingLiveActivity } from "./la_racing_handler";
+import { handleWidgetPush } from "./widget_push";
 
 export async function getStockMarket(apiKey: string) {
   const response = await fetch(
@@ -105,19 +106,35 @@ export const checkIOS = onSchedule(
         .where("la_racing_push_token", ">", "")
         .get();
 
-      const [alertsUsersSnapshot, laTravelOnlyUsersSnapshot, laRacingOnlyUsersSnapshot] = await Promise.all([
-        alertsUsersQuery,
-        laTravelOnlyUsersQuery,
-        laRacingOnlyUsersQuery,
-      ]);
+      const widgetOnlyUsersQuery = admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("platform", "==", "ios")
+        .where("alertsEnabled", "==", false)
+        .where("widget_push_token", ">", "")
+        .get()
+        .catch((e) => {
+          logger.warn(`Widget-only users query failed: ${e}`);
+          return { docs: [] as admin.firestore.QueryDocumentSnapshot[] };
+        });
+
+      const [alertsUsersSnapshot, laTravelOnlyUsersSnapshot, laRacingOnlyUsersSnapshot, widgetOnlyUsersSnapshot] =
+        await Promise.all([alertsUsersQuery, laTravelOnlyUsersQuery, laRacingOnlyUsersQuery, widgetOnlyUsersQuery]);
 
       const alertsUsers = alertsUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
       const laTravelOnlyUsers = laTravelOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
       const laRacingOnlyUsers = laRacingOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      const widgetOnlyUsers = widgetOnlyUsersSnapshot.docs
+        .map((d) => ({ uid: d.id, ...d.data() }) as any)
+        .filter((subscriber) => subscriber.widget_push_token !== subscriber.widget_push_bad_token);
 
       const subscribers = Array.from(
         new Map(
-          [...alertsUsers, ...laTravelOnlyUsers, ...laRacingOnlyUsers].map((subscriber) => [subscriber.uid, subscriber])
+          [...alertsUsers, ...laTravelOnlyUsers, ...laRacingOnlyUsers, ...widgetOnlyUsers].map((subscriber) => [
+            subscriber.uid,
+            subscriber,
+          ])
         ).values()
       );
       const cityItems = await readCityShopItems(subscribers);
@@ -151,7 +168,7 @@ export const checkIOS = onSchedule(
       const difference = (millisAfterFinish - millisAtStart) / 1000;
 
       logger.info(
-        `Processing ${subscribers.length} iOS users (${alertsUsers.length} with alerts, ${subscribers.length - alertsUsers.length} with LA only). Blocks: ${iOSBlocks}. Time: ${difference}s`
+        `Processing ${subscribers.length} iOS users (${alertsUsers.length} with alerts, ${subscribers.length - alertsUsers.length} with LA or widget only). Blocks: ${iOSBlocks}. Time: ${difference}s`
       );
     }
 
@@ -353,6 +370,9 @@ async function sendNotificationForProfile(
       }
       if (subscriber.la_racing_push_token) {
         allPromises.push(handleRacingLiveActivity(userStats, subscriber));
+      }
+      if (subscriber.widget_push_token && subscriber.widget_push_token !== subscriber.widget_push_bad_token) {
+        allPromises.push(handleWidgetPush(userStats, subscriber));
       }
 
       // 2. Prepare an array to collect results conditionally

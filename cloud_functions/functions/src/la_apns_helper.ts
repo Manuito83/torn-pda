@@ -210,3 +210,33 @@ export async function sendRacingEnd(
     return false;
   }
 }
+
+export type WidgetPushResult = "sent" | "invalid-token" | "failed";
+
+export async function sendWidgetPush(widgetPushToken: string): Promise<WidgetPushResult> {
+  const notification = new apn.Notification();
+  notification.topic = `${apnsConfig.bundleId}.push-type.widgets`;
+  notification.pushType = "widgets" as apn.NotificationPushType;
+  notification.expiry = Math.floor(Date.now() / 1000) + 60 * 60;
+  notification.rawPayload = { aps: { "content-changed": true } };
+
+  try {
+    const result = await apnProvider.send(notification, widgetPushToken);
+
+    if (result.failed.length > 0) {
+      const failure = result.failed[0];
+      const reason = failure.response?.reason || failure.error?.message || "unknown";
+      logger.warn(`@parse/node-apn - Widget push failed (status: ${failure.status}, reason: ${reason})`);
+      const invalidReasons = ["BadDeviceToken", "Unregistered", "DeviceTokenNotForTopic"];
+      if (Number(failure.status) === 410 || invalidReasons.includes(reason)) {
+        return "invalid-token";
+      }
+      return "failed";
+    }
+
+    return result.sent.length > 0 ? "sent" : "failed";
+  } catch (error) {
+    logger.error("@parse/node-apn - An unexpected error occurred while sending widget push:", error);
+    return "failed";
+  }
+}
