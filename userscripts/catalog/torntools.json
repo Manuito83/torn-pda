@@ -913,6 +913,43 @@
       "matches": [
         "https://*.torn.com/page.php?sid=crimes*"
       ]
+    },
+    {
+      "id": "torntools.hide-icons",
+      "greasyforkId": 604453,
+      "name": "Hide Icons",
+      "description": "Hide selected icons in Torn's sidebar.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/604453/TORN%3A%20TornTools%20-%20Hide%20Icons.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/604453-torn-torntools-hide-icons",
+      "matches": [
+        "https://*.torn.com/*"
+      ]
+    },
+    {
+      "id": "torntools.company-specials",
+      "greasyforkId": 604460,
+      "name": "Company Specials",
+      "description": "Show the potential mug amount and help with stat spies on company specials.",
+      "category": "jobs",
+      "usesApiKey": true,
+      "downloadUrl": "https://update.greasyfork.org/scripts/604460/TORN%3A%20TornTools%20-%20Company%20Specials.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/604460-torn-torntools-company-specials",
+      "matches": [
+        "https://*.torn.com/companies.php*"
+      ]
+    },
+    {
+      "id": "torntools.align-left",
+      "greasyforkId": 604461,
+      "name": "Align Left",
+      "description": "Align the content of Torn's pages to the left.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/604461/TORN%3A%20TornTools%20-%20Align%20Left.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/604461-torn-torntools-align-left",
+      "matches": [
+        "https://*.torn.com/*"
+      ]
     }
   ]
 }
