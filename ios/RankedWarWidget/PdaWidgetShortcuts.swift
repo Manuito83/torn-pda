@@ -58,7 +58,7 @@ struct PdaShortcutGrid: View {
     if visible.isEmpty {
       Link(destination: pdaLink("empty:shortcuts:clicked")) {
         VStack(spacing: 6) {
-          PdaIcon(name: "shortcut_icon", size: 22)
+          PdaIcon(name: "shortcut_icon", size: 22, template: true)
           Text("No shortcuts configured, add some?")
             .font(.system(size: 11))
             .foregroundStyle(.secondary)

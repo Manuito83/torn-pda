@@ -199,7 +199,7 @@ struct PdaChainChip: View {
   var body: some View {
     Link(destination: pdaLink("chain:box:clicked")) {
       HStack(spacing: 4) {
-        PdaIcon(name: "chain_mini", size: 12)
+        PdaIcon(name: "chain_mini", size: 12, template: true)
         if snapshot.chainOnCooldown {
           Text("COOLDOWN").font(.system(size: 10, weight: .semibold))
         } else {
