@@ -311,6 +311,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Scripts: a script no longer runs on the previous page after going back [xentac]'),
           _MItem('Quick items: item icons no longer go missing after closing the picker [xentac]'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
+          _MItem('Profile: manual hospital and jail notifications now follow changes in your release time'),
           _MItem('Travel: flight times now include travel time reduction perks'),
           _MItem('Fixed unread messages count in the home screen widget', androidOnly: true),
           _MItem('Fixed crashes when a web page shows an alert while another dialog is open', iosOnly: true),

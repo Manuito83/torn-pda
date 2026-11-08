@@ -5638,7 +5638,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle = discreet()
             ? "App"
             : 'You are about to be released from hospital!';
-        notificationPayload += 'hospital';
+        final myTimeStamp = (_hospitalReleaseTime.millisecondsSinceEpoch / 1000).floor() - _hospitalNotificationAhead;
+        notificationPayload += 'hospital-$myTimeStamp';
         notificationIconAndroid = "notification_hospital";
         notificationIconColor = Colors.yellow;
       case ProfileNotification.jail:
@@ -5651,7 +5652,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle = discreet()
             ? "App"
             : 'You are about to be released from jail!';
-        notificationPayload += 'jail';
+        final myTimeStamp = (_jailReleaseTime.millisecondsSinceEpoch / 1000).floor() - _jailNotificationAhead;
+        notificationPayload += 'jail-$myTimeStamp';
         notificationIconAndroid = "notification_events";
         notificationIconColor = Colors.purple;
       case ProfileNotification.rankedWar:
@@ -6097,6 +6099,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           updatedTypes.add('booster');
           final boosterCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.cooldowns!.booster!));
           updatedTimes.add(formatter.format(boosterCurrentSchedule));
+        }
+        // HOSPITAL AND JAIL
+      } else if (notification.id == 107 || notification.id == 108) {
+        final isHospital = notification.id == 107;
+        final type = isHospital ? ProfileNotification.hospital : ProfileNotification.jail;
+        final until = _user!.status!.until ?? 0;
+        final newTimeStamp = until - (isHospital ? _hospitalNotificationAhead : _jailNotificationAhead);
+        final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+        if (_user!.status!.state != (isHospital ? 'Hospital' : 'Jail') || newTimeStamp <= now + 1) {
+          _cancelNotifications(type);
+          BotToast.showText(
+            text: '${isHospital ? 'Hospital' : 'Jail'} notification expired, removing!',
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+            contentColor: Colors.grey[700]!,
+            duration: const Duration(seconds: 5),
+            contentPadding: const EdgeInsets.all(10),
+          );
+          continue;
+        }
+        if ((newTimeStamp - oldTimeStamp).abs() > 120) {
+          final releaseTime = DateTime.fromMillisecondsSinceEpoch(until * 1000);
+          if (isHospital) {
+            _hospitalReleaseTime = releaseTime;
+          } else {
+            _jailReleaseTime = releaseTime;
+          }
+          _cancelNotifications(type);
+          _scheduleNotification(type);
+          triggered = true;
+          updatedTypes.add(isHospital ? 'hospital' : 'jail');
+          updatedTimes.add(formatter.format(DateTime.fromMillisecondsSinceEpoch(newTimeStamp * 1000)));
         }
       }
     }

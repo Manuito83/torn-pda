@@ -1933,7 +1933,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (tradeId[1] != "0") {
           browserUrl = "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
         }
-      } else if (payload.contains('211')) {
+      } else if (payload == '211') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
       } else if (payload.contains('refills') && (!payload.contains("Xanax"))) {
