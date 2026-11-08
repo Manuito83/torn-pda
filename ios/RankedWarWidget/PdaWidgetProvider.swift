@@ -68,7 +68,7 @@ struct PdaBarsProvider: AppIntentTimelineProvider {
       } catch PdaApiError.noKey {
         snapshot = nil
         PdaWidgetStore.clearSnapshot()
-        failure = "Open Torn PDA to set up your API key"
+        failure = PdaWidgetStore.missingKeyMessage
       } catch PdaApiError.torn(let code, let reason) {
         if [2, 13, 16, 18].contains(code) {
           snapshot = nil
@@ -113,6 +113,13 @@ enum PdaWidgetStore {
   static func cachedSnapshot() -> PdaSnapshot? {
     guard let data = prefs?.data(forKey: "widget_snapshot") else { return nil }
     return try? JSONDecoder().decode(PdaSnapshot.self, from: data)
+  }
+
+  // Nil: app has shared nothing yet
+  static var missingKeyMessage: String {
+    prefs?.string(forKey: "widget_api_key") == nil
+      ? "Open Torn PDA once and come back. Still here? Tap Reload."
+      : "Add your API key in Torn PDA"
   }
 
   static func clearSnapshot() {

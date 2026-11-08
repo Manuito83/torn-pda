@@ -310,6 +310,7 @@ Future<void> syncBackgroundRefreshWithWidgetInstallation() async {
     await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
     await HomeWidget.updateWidget(name: 'HomeWidgetRankedWar', iOSName: 'HomeWidgetRankedWar');
   } else {
+    if (Platform.isIOS) await shareSetupWithIosWidget();
     await HomeWidget.saveWidgetData<bool>('reloading', false);
     await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
     await HomeWidget.updateWidget(name: 'HomeWidgetRankedWar', iOSName: 'HomeWidgetRankedWar');
