@@ -154,7 +154,7 @@ class SettingsPageState extends State<SettingsPage> {
       _shortcutsSection(),
       _timeSection(),
       _notificationsSection(),
-      if (Platform.isAndroid) _appWidgetSection(),
+      if (Platform.isAndroid || Platform.isIOS) _appWidgetSection(),
       if (Platform.isAndroid && Get.find<PipController>().supported) _floatingWindowSection(),
       _spiesSection(),
       _playerNotesSection(),
@@ -1173,6 +1173,15 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _appWidgetSection() {
+    final destinationRow = SearchableRow(
+      label: "Cooldown tap destination",
+      searchText: _searchText,
+      child: _appWidgetCooldownTapDestinationSelector(),
+    );
+    if (Platform.isIOS) {
+      return buildSectionWithRows(title: "HOME SCREEN WIDGET", rows: [destinationRow], searchText: _searchText);
+    }
+
     List<SearchableRow> rows = [
       SearchableRow(
         label: "Dark mode",
@@ -1295,12 +1304,7 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
-      if (_settingsProvider.appwidgetCooldownTapOpenBrowser)
-        SearchableRow(
-          label: "Cooldown tap destination",
-          searchText: _searchText,
-          child: _appWidgetCooldownTapDestinationSelector(),
-        ),
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowser) destinationRow,
       SearchableRow(
         label: "Racing tap opens browser",
         searchText: _searchText,
@@ -4639,6 +4643,8 @@ class SettingsPageState extends State<SettingsPage> {
             if ((await pdaWidget_numberInstalled()).isNotEmpty) {
               fetchAndPersistWidgetData();
             }
+          } else if (Platform.isIOS) {
+            refreshIosWidget();
           }
         }
       } else if (myProfile is ApiError) {

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "racing_completed.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

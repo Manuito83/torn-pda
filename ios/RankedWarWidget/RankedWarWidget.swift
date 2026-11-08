@@ -54,7 +54,7 @@ struct RankedWarProvider: AppIntentTimelineProvider {
   }
 
   private func loadData(configuration: PdaWidgetMainIntent) -> RankedWarEntry {
-    guard let prefs = UserDefaults(suiteName: "group.com.manuito.tornpda") else {
+    guard let prefs = UserDefaults(suiteName: pdaAppGroup) else {
       return RankedWarEntry(
         date: Date(),
         state: "error",
@@ -117,22 +117,24 @@ struct RankedWarProvider: AppIntentTimelineProvider {
 }
 
 struct RankedWarWidgetEntryView: View {
+  @Environment(\.colorScheme) private var colorScheme
   var entry: RankedWarProvider.Entry
 
   var body: some View {
-    let primaryTextColor = entry.darkMode ? Color.white : Color.black
+    let darkMode = entry.darkMode || colorScheme == .dark
+    let primaryTextColor = darkMode ? Color.white : Color.black
 
     if !entry.widgetVisible {
       NoWarView(
         message: "No ranked war data", lastUpdated: entry.lastUpdated, reloading: entry.reloading,
-        darkMode: entry.darkMode,
+        darkMode: darkMode,
         playerChain: entry.activePlayerChain
       )
       .foregroundColor(primaryTextColor)
     } else {
       VStack(spacing: 8) {
         HeaderView(
-          lastUpdated: entry.lastUpdated, reloading: entry.reloading, darkMode: entry.darkMode,
+          lastUpdated: entry.lastUpdated, reloading: entry.reloading, darkMode: darkMode,
           playerChain: entry.activePlayerChain)
 
         switch entry.state {
@@ -143,7 +145,7 @@ struct RankedWarWidgetEntryView: View {
             playerTag: entry.activePlayerTag,
             enemyName: entry.activeEnemyName,
             isUpcomingSoon: entry.upcomingSoon,
-            darkMode: entry.darkMode,
+            darkMode: darkMode,
           )
         case "active":
           ActiveWarView(
@@ -159,7 +161,7 @@ struct RankedWarWidgetEntryView: View {
             playerTag: entry.finishedPlayerTag,
             enemyName: entry.finishedEnemyName,
             endDate: entry.finishedEndDate,
-            darkMode: entry.darkMode
+            darkMode: darkMode
           )
         default:
           Spacer()

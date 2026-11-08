@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "new_messages_green.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

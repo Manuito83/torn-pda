@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "energy_mini.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

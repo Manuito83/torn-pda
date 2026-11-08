@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
@@ -590,6 +591,11 @@ class FirestoreHelper {
             }
           }
         }
+      }
+
+      if (Platform.isIOS) {
+        final widgetToken = await HomeWidget.getWidgetData<String>('widget_push_token') ?? "";
+        updatePayload['widget_push_token'] = widgetToken.isEmpty ? FieldValue.delete() : widgetToken;
       }
 
       log("Uploading data to Firestore: $updatePayload");

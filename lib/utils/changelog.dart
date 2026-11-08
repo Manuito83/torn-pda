@@ -36,6 +36,13 @@ class ComplexFeature {
 
 // Modern changelog model (v3.14.0+)
 
+class _MImage {
+  final String light;
+  final String? dark;
+
+  const _MImage(this.light, {this.dark});
+}
+
 class _MItem {
   final String text;
   final String? detail;
@@ -44,6 +51,7 @@ class _MItem {
   final bool chatOnly;
   final String? docUrl;
   final List<FeatureDiagramScene> diagrams;
+  final List<_MImage> images;
   final bool pinned;
 
   const _MItem(
@@ -54,6 +62,7 @@ class _MItem {
     this.chatOnly = false,
     this.docUrl,
     this.diagrams = const [],
+    this.images = const [],
     this.pinned = false,
   });
 
@@ -146,6 +155,34 @@ List<_MVersion> _modernChangelog() => [
               FeatureDiagramScene.linkCurrentTab,
             ],
             pinned: true,
+          ),
+          _MItem(
+            'Home screen widget for iOS',
+            iosOnly: true,
+            pinned: true,
+            detail:
+                'Add Torn PDA to your home screen in small, medium or large size, or to the lock screen. It shows your '
+                'status, bars, cooldowns, chain, messages, events, money and shortcuts, and tapping any of them opens '
+                'the right page.\n\n'
+                'Note: bars and timers keep moving on their own between updates. iOS decides how often widgets refresh, '
+                'usually every 15 to 30 minutes, but leaving Torn PDA or tapping the refresh icon updates it right '
+                'away. Press and hold the widget and choose Edit Widget to show or hide shortcuts and money.\n\n'
+                'Your shortcuts can also be added to Control Center (iOS 18 or later). Requires iOS 17 or later.',
+            images: [
+              _MImage(
+                'images/changelog/widget_ios/large_light.png',
+                dark: 'images/changelog/widget_ios/large_dark.png',
+              ),
+              _MImage(
+                'images/changelog/widget_ios/medium_light.png',
+                dark: 'images/changelog/widget_ios/medium_dark.png',
+              ),
+              _MImage(
+                'images/changelog/widget_ios/small_light.png',
+                dark: 'images/changelog/widget_ios/small_dark.png',
+              ),
+              _MImage('images/changelog/widget_ios/lockscreen.png'),
+            ],
           ),
           _MItem(
             'Floating window: keep watching the chain or up to 4 players over other apps',
@@ -4273,6 +4310,10 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
                     const SizedBox(height: 12),
                     FeatureDiagram(scenes: widget.item.diagrams),
                   ],
+                  if (widget.item.images.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _ChangelogImages(images: widget.item.images),
+                  ],
                 ],
               ),
             ),
@@ -4280,6 +4321,80 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ChangelogImages extends StatefulWidget {
+  final List<_MImage> images;
+
+  const _ChangelogImages({required this.images});
+
+  @override
+  State<_ChangelogImages> createState() => _ChangelogImagesState();
+}
+
+class _ChangelogImagesState extends State<_ChangelogImages> {
+  final _controller = PageController();
+  Timer? _timer;
+  int _page = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.images.length < 2) return;
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!_controller.hasClients) return;
+      final next = (_page + 1) % widget.images.length;
+      _controller.animateToPage(next, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 130,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.images.length,
+            onPageChanged: (page) => setState(() => _page = page),
+            itemBuilder: (_, index) {
+              final image = widget.images[index];
+              return Image.asset(isDark ? image.dark ?? image.light : image.light, fit: BoxFit.contain);
+            },
+          ),
+        ),
+        if (widget.images.length > 1) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              widget.images.length,
+              (index) => Container(
+                width: 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: ink.withValues(alpha: index == _page ? 0.8 : 0.25),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

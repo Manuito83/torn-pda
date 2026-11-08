@@ -76,6 +76,7 @@ import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_push.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
+import 'package:torn_pda/utils/appwidget/installed_widgets_info.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
@@ -612,10 +613,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Enqueue all other dialogs to be shown sequentially
       // NOTE: the update-available-dialog is in remote config with priority 90!
 
-      // 1. Appwidget dialog (Android only) - Priority 300
-      if (Platform.isAndroid) {
+      // 1. Appwidget dialog - Priority 300
+      if (Platform.isAndroid || Platform.isIOS) {
         if (_debugShowAllDialogs || !await Prefs().getAppwidgetExplanationShown()) {
-          if ((await pdaWidget_numberInstalled()).isNotEmpty && mounted) {
+          final widgets = await getInstalledWidgetsInfo();
+          final bool explain = Platform.isIOS ? widgets.isPdaWidgetInstalled : widgets.anyWidgetInstalled;
+          if (explain && mounted) {
             DialogQueue.enqueue(
               dialogFunction: () async {
                 await _showAppwidgetExplanationDialog(context);
@@ -993,6 +996,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _statsController.logCheckOut();
 
       // Refresh widget to have up to date info when we exit
+      if (Platform.isIOS) refreshIosWidget();
       if ((await getInstalledHomeWidgets()).isNotEmpty) {
         startBackgroundRefresh();
       }
@@ -1043,15 +1047,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future<void> _initIntentReceiverOnLaunch() async {
     final intent = await ReceiveIntent.getInitialIntent();
     if (!mounted || intent!.data == null) return;
-    log("Intent received: ${intent.data}");
-    await _assessIntent(intent);
+    await _assessWidgetLink(intent.data!);
   }
 
   Future<void> _initIntentListenerSubscription() async {
     _intentListenerSub = ReceiveIntent.receivedIntentStream.listen(
       (Intent? intent) async {
         if (!mounted || intent!.data == null) return;
-        await _assessIntent(intent);
+        await _assessWidgetLink(intent.data!);
       },
       onError: (err) {
         log(err);
@@ -1059,68 +1062,74 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     );
   }
 
-  Future<void> _assessIntent(Intent intent) async {
-    log("Intent received: ${intent.data}");
+  Future<void> _assessWidgetLink(String link) async {
+    log("Widget link received: $link");
 
     bool launchBrowser = false;
     var browserUrl = "https://www.torn.com";
-    if (intent.data!.contains("pdaWidget://energy:box:clicked")) {
+    if (link.contains("pdaWidget://energy:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
-    } else if (intent.data!.contains("pdaWidget://nerve:box:clicked")) {
+    } else if (link.contains("pdaWidget://nerve:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
-    } else if (intent.data!.contains("pdaWidget://happy:box:clicked")) {
+    } else if (link.contains("pdaWidget://happy:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#candy-items";
-    } else if (intent.data!.contains("pdaWidget://life:box:clicked")) {
+    } else if (link.contains("pdaWidget://life:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#medical-items";
-    } else if (intent.data!.contains("pdaWidget://blue:status:clicked") ||
-        intent.data!.contains("pdaWidget://blue:status:icon:clicked")) {
+    } else if (link.contains("pdaWidget://blue:status:clicked") ||
+        link.contains("pdaWidget://blue:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com";
-    } else if (intent.data!.contains("pdaWidget://hospital:status:icon:clicked")) {
+    } else if (link.contains("pdaWidget://hospital:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/hospitalview.php";
-    } else if (intent.data!.contains("pdaWidget://jail:status:icon:clicked")) {
+    } else if (link.contains("pdaWidget://jail:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/jailview.php";
-    } else if (intent.data!.contains("pdaWidget://messages:clicked")) {
+    } else if (link.contains("pdaWidget://messages:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/messages.php";
-    } else if (intent.data!.contains("pdaWidget://events:clicked")) {
+    } else if (link.contains("pdaWidget://events:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/events.php";
-    } else if (intent.data!.contains("pdaWidget://shortcut:")) {
-      final String shortcutUrl = intent.data!.split("pdaWidget://shortcut:")[1];
+    } else if (link.contains("pdaWidget://shortcut:")) {
+      final String shortcutUrl = link.split("pdaWidget://shortcut:")[1];
       launchBrowser = true;
       browserUrl = shortcutUrl;
-    } else if (intent.data!.contains("pdaWidget://drug:clicked")) {
+    } else if (link.contains("pdaWidget://drug:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#drugs-items";
       if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
         browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs";
       }
-    } else if (intent.data!.contains("pdaWidget://medical:clicked")) {
+    } else if (link.contains("pdaWidget://medical:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#medical-items";
       if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
         browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical";
       }
-    } else if (intent.data!.contains("pdaWidget://booster:clicked")) {
+    } else if (link.contains("pdaWidget://booster:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#boosters-items";
       if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
         browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters";
       }
-    } else if (intent.data!.contains("pdaWidget://racing:clicked")) {
+    } else if (link.contains("pdaWidget://education:clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/education.php";
+    } else if (link.contains("pdaWidget://bank:clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/bank.php";
+    } else if (link.contains("pdaWidget://racing:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/page.php?sid=racing";
-    } else if (intent.data!.contains("pdaWidget://chain:box:clicked")) {
+    } else if (link.contains("pdaWidget://chain:box:clicked")) {
       _callSectionFromOutside(DrawerSection.chaining); // Chaining
       return;
-    } else if (intent.data!.contains("pdaWidget://empty:shortcuts:clicked")) {
+    } else if (link.contains("pdaWidget://empty:shortcuts:clicked")) {
       if (!_webViewProvider.webViewSplitActive) {
         setState(() {
           _webViewProvider.browserShowInForeground = false;
@@ -1197,6 +1206,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } catch (e) {
         log("Error reading file: $e");
       }
+    }
+
+    if (link != null && link.toLowerCase().startsWith("pdawidget://widget")) {
+      if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
+        return;
+      }
+      _deepLinkSubTriggeredTime = DateTime.now();
+      final action = Uri.parse(link).queryParameters["action"];
+      if (action != null) await _assessWidgetLink(action);
+      return;
     }
 
     if (link != null && link.startsWith("tornpda://travel/")) {
