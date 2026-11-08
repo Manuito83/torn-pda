@@ -110,6 +110,19 @@ void main() {
       expect((t.state, t.place), (ChatHitState.abroad, 'Japan'));
       expect(ChatHitTarget.fromStatus(id: 2, name: 'Oscar', state: 'Federal').state, ChatHitState.other);
     });
+
+    test('seconds until out round up and stay inside the call limit', () {
+      int? left(ChatHitState state, {Duration? after}) =>
+          chatSecondsUntilOut(_target(1, 'Kilo', state, until: after == null ? null : _sent.add(after)), _sent);
+      expect(left(ChatHitState.hospital, after: const Duration(milliseconds: 44200)), 45);
+      expect(left(ChatHitState.jail, after: const Duration(milliseconds: 200)), 1);
+      expect(left(ChatHitState.hospital, after: Duration.zero), isNull);
+      expect(left(ChatHitState.hospital, after: const Duration(seconds: -3)), isNull);
+      expect(left(ChatHitState.hospital, after: const Duration(seconds: chatHitCallMax)), chatHitCallMax);
+      expect(left(ChatHitState.hospital, after: const Duration(seconds: chatHitCallMax + 1)), isNull);
+      expect(left(ChatHitState.hospital), isNull);
+      expect(left(ChatHitState.ok, after: const Duration(seconds: 30)), isNull);
+    });
   });
 
   test('chain pill count', () {

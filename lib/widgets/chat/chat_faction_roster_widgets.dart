@@ -83,6 +83,18 @@ class _ChatFactionRosterLinesState extends State<ChatFactionRosterLines> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               children: [
+                ChatFactionOpsBuilder(
+                  prefs: widget.prefs,
+                  builder: (context, now) => now.isEmpty
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: ChatFactionPills(now: now, roomId: widget.roomId),
+                          ),
+                        ),
+                ),
                 if (chain != null)
                   Semantics(
                     label: chain,

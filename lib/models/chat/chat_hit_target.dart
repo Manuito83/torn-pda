@@ -54,6 +54,14 @@ class ChatHitTarget {
       ((state == ChatHitState.hospital || state == ChatHitState.jail) && until != null && !until!.isAfter(now));
 }
 
+/// Null unless a hit call fits
+int? chatSecondsUntilOut(ChatHitTarget target, DateTime now) {
+  final until = target.until;
+  if (until == null || (target.state != ChatHitState.hospital && target.state != ChatHitState.jail)) return null;
+  final seconds = (until.difference(now).inMilliseconds / 1000).ceil();
+  return seconds < 1 || seconds > chatHitCallMax ? null : seconds;
+}
+
 /// Id Join opens, null when doubtful
 int? chatJoinTargetOf(ChatHitCall call, Iterable<ChatHitTarget> known) {
   bool sameName(ChatHitTarget t) => t.name.toLowerCase() == call.name.toLowerCase();

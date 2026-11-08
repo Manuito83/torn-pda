@@ -8,6 +8,7 @@ import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/models/chat/chat_hit_target.dart';
 import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/widgets/chat/chat_player_card_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_theme.dart';
 
 class ChatHitPicker extends StatefulWidget {
@@ -52,6 +53,7 @@ class _ChatHitPickerState extends State<ChatHitPicker> {
   int? _picked;
   int _seconds = 30;
   bool _custom = false;
+  bool _whenOut = false;
   final TextEditingController _customText = TextEditingController(text: '45');
   Timer? _refresh;
 
@@ -63,7 +65,8 @@ class _ChatHitPickerState extends State<ChatHitPicker> {
   }
 
   /// Null when empty or 0
-  int? get _secs {
+  int? _secsFor(int? out) {
+    if (_whenOut && out != null) return out;
     if (!_custom) return _seconds;
     final typed = int.tryParse(_customText.text) ?? 0;
     return typed < 1 ? null : math.min(typed, chatHitCallMax);
@@ -94,7 +97,6 @@ class _ChatHitPickerState extends State<ChatHitPicker> {
     final target =
         list.where((t) => t.id == _picked).firstOrNull ?? (list.isEmpty ? null : list[chatFirstReady(list, now)]);
     _planRefresh(chatNextReadyChange(list, now));
-    final seconds = _secs;
     final header = widget.header;
     final empty = Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
@@ -119,87 +121,120 @@ class _ChatHitPickerState extends State<ChatHitPicker> {
                   : _row(list[i - header.length], list[i - header.length].id == target?.id),
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text('in', style: muted),
-              for (final s in _choices)
-                ChoiceChip(
-                  label: Text('${s}s'),
-                  selected: !_custom && _seconds == s,
-                  onSelected: (_) => setState(() {
-                    _custom = false;
-                    _seconds = s;
-                  }),
-                ),
-              if (_custom)
-                SizedBox(
-                  width: 76,
-                  child: TextField(
-                    controller: _customText,
-                    autofocus: true,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      labelText: 'Seconds',
-                      suffixText: 's',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(999)),
-                    ),
-                  ),
-                )
-              else
-                ChoiceChip(
-                  label: const Text('...', semanticsLabel: 'Other time'),
-                  selected: false,
-                  onSelected: (_) => setState(() => _custom = true),
-                ),
-              FilterChip(
-                label: const Text('Link'),
-                tooltip: 'Attack link for the web chat. Without it, PDA joins only targets in Targets or War',
-                selected: widget.prefs.hitCallLink,
-                onSelected: (on) => setState(() => widget.prefs.setHitCallLink(on)),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: chatSecondaryButton(scheme),
-                  onPressed: !widget.canCall || target == null || seconds == null || !widget.ops.chat.available
-                      ? null
-                      : () => _announce(target, seconds),
-                  icon: const Icon(Icons.chat_bubble_outline_rounded),
-                  label: Text(
-                    seconds == null ? 'Hitting' : 'Hitting in ${seconds}s',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: target == null ? null : () => widget.onAttack(target),
-                  icon: const Icon(MaterialCommunityIcons.sword_cross),
-                  label: Text(
-                    target == null ? 'Attack' : 'Attack ${target.name}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+        ChatTicking(
+          until: target?.until,
+          builder: (context) {
+            final out = target == null ? null : chatSecondsUntilOut(target, DateTime.now());
+            final whenOut = _whenOut && out != null;
+            final seconds = _secsFor(out);
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text('in', style: muted),
+                      for (final s in _choices)
+                        ChoiceChip(
+                          label: Text('${s}s'),
+                          selected: !_custom && !whenOut && _seconds == s,
+                          onSelected: (_) => setState(() {
+                            _custom = false;
+                            _whenOut = false;
+                            _seconds = s;
+                          }),
+                        ),
+                      if (out != null)
+                        ChoiceChip(
+                          label: Text('When out (${out}s)'),
+                          selected: whenOut,
+                          onSelected: (_) => setState(() {
+                            _custom = false;
+                            _whenOut = true;
+                          }),
+                        ),
+                      if (_custom)
+                        SizedBox(
+                          width: 76,
+                          child: TextField(
+                            controller: _customText,
+                            autofocus: true,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(3),
+                            ],
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              isDense: true,
+                              labelText: 'Seconds',
+                              suffixText: 's',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(999)),
+                            ),
+                          ),
+                        )
+                      else
+                        ChoiceChip(
+                          label: const Text('...', semanticsLabel: 'Other time'),
+                          selected: false,
+                          onSelected: (_) => setState(() {
+                            _custom = true;
+                            _whenOut = false;
+                          }),
+                        ),
+                      FilterChip(
+                        label: const Text('Link'),
+                        tooltip: 'Attack link for the web chat. Without it, PDA joins only targets in Targets or War',
+                        selected: widget.prefs.hitCallLink,
+                        onSelected: (on) => setState(() => widget.prefs.setHitCallLink(on)),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: chatSecondaryButton(scheme),
+                          onPressed: !widget.canCall || target == null || seconds == null || !widget.ops.chat.available
+                              ? null
+                              : () => _announce(
+                                  target,
+                                  _whenOut ? chatSecondsUntilOut(target, DateTime.now()) ?? seconds : seconds,
+                                ),
+                          icon: const Icon(Icons.chat_bubble_outline_rounded),
+                          label: Text(
+                            seconds == null ? 'Hitting' : 'Hitting in ${seconds}s',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: target == null ? null : () => widget.onAttack(target),
+                          icon: const Icon(MaterialCommunityIcons.sword_cross),
+                          label: Text(
+                            target == null ? 'Attack' : 'Attack ${target.name}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         SizedBox(height: 12 + MediaQuery.paddingOf(context).bottom),
       ],

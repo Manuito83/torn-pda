@@ -32,6 +32,7 @@ import 'package:torn_pda/widgets/chat/chat_status_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_message_actions.dart';
 import 'package:torn_pda/widgets/chat/chat_next_unread.dart';
 import 'package:torn_pda/widgets/chat/chat_composer.dart';
+import 'package:torn_pda/widgets/chat/chat_faction_roster_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -847,7 +848,7 @@ void main() {
     await close(tester);
   });
 
-  testWidgets('offline, the faction bar follows the chain without a page rebuild', (tester) async {
+  testWidgets('chain pills sit in the faction bar, the header keeps its height', (tester) async {
     start();
     final chain = NativeChat.prefs.factionChain;
     addTearDown(() => NativeChat.prefs.factionChain = chain);
@@ -858,14 +859,17 @@ void main() {
     await tester.pump();
     double bar() => tester.getSize(find.byType(AppBar)).height;
     final short = bar();
+    final pill = find.descendant(of: find.byType(ChatFactionRosterLines), matching: find.byIcon(Icons.link_rounded));
+    expect(pill, findsNothing);
 
     NativeChat.factionOps.simulate(const ChatChain(hits: 10, seconds: 200, cooldown: false, bonus: 25));
     await tester.pump();
-    expect(bar(), greaterThan(short));
+    expect(pill, findsOneWidget);
+    expect(bar(), short);
 
     NativeChat.factionOps.simulate(null);
     await tester.pump();
-    expect(bar(), short);
+    expect(pill, findsNothing);
     await close(tester);
   });
 

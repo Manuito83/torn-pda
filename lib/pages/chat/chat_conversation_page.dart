@@ -570,11 +570,6 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       short: true,
     );
     final faction = NativeChat.prefs.isFactionRoom(room.id);
-    final threeLines =
-        faction &&
-        !compact &&
-        chat.connection != ChatConnection.connected &&
-        !(factionNow?.isEmpty ?? true);
     final page = Scaffold(
       appBar: selecting
           ? AppBar(
@@ -674,8 +669,6 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
               foregroundColor: barText,
               toolbarHeight: room.isDm && !compact
                   ? toolbar + MediaQuery.textScalerOf(context).scale(_hasNote ? 34 : 18)
-                  : threeLines
-                  ? toolbar + MediaQuery.textScalerOf(context).scale(20)
                   : toolbar,
               titleSpacing: 0,
               title: InkWell(
@@ -737,18 +730,8 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
                               ),
                             ],
                           ),
-                          if (factionNow case final now?)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (!compact && (now.isEmpty || chat.connection != ChatConnection.connected))
-                                  Row(children: [Flexible(child: connection)]),
-                                if (!now.isEmpty)
-                                  Row(children: [Flexible(child: ChatFactionPills(now: now, roomId: room.id))]),
-                              ],
-                            )
-                          else if (!compact && (room.isDm || chat.connection != ChatConnection.connected))
+                          if (!compact &&
+                              (room.isDm || chat.connection != ChatConnection.connected || (factionNow?.isEmpty ?? false)))
                             Row(children: [Flexible(child: connection)]),
                           if (!compact && room.isDm && ChatRoom.peerIdOf(room.id) != null)
                             ChatPlayerCardView(
