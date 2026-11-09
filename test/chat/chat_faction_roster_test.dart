@@ -272,6 +272,7 @@ void main() {
         'From Japan',
       );
       expect(line(_member(4, 'Online', 10, 'Traveling', description: 'Traveling to Japan')), 'To Japan');
+      expect(line(_member(6, 'Online', 10, 'Traveling', description: 'Traveling')), 'Traveling');
       expect(
         line(_member(5, 'Online', 10, 'Federal', description: 'In federal jail for 2 days')),
         'In federal jail for 2 days',

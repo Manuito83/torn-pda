@@ -51,7 +51,8 @@ String chatRosterCountry(FactionMember m) => countryCheck(state: m.status.state,
   final description = m.status.description.trim();
   switch (m.status.state) {
     case 'Traveling':
-      return parseTrip(description) ?? (chatRosterCountry(m), TravelDirection.outbound);
+      final country = chatRosterCountry(m);
+      return parseTrip(description) ?? (country == 'error' ? null : (country, TravelDirection.outbound));
     case 'Abroad' || 'Hospital':
       final country = chatRosterCountry(m);
       return country == 'Torn' || country == 'error' ? null : (country, TravelDirection.none);
@@ -142,7 +143,10 @@ String chatRosterStatus(FactionMember m, DateTime now, {bool spoken = false}) {
         if (left <= 0) 'out now' else 'out in ${_minutes(left)}',
       ].join(' - ');
     case 'Traveling':
-      final (country, direction) = chatRosterTrip(m)!;
+      final trip = chatRosterTrip(m);
+      // Destination can be hidden
+      if (trip == null) return description.isEmpty ? 'Traveling' : description;
+      final (country, direction) = trip;
       if (direction == TravelDirection.outbound) return 'To $country';
       return spoken ? 'Returning from $country' : 'From $country';
     case 'Abroad':
