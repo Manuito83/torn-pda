@@ -3829,6 +3829,7 @@ class ChangeLogState extends State<ChangeLog> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 5),
@@ -3842,7 +3843,7 @@ class ChangeLogState extends State<ChangeLog> {
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
+                      padding: const EdgeInsets.fromLTRB(8, 25, 10, 15),
                       child: TickerMode(
                         enabled: !underBrowser,
                         child: Column(
@@ -4162,7 +4163,7 @@ class _ModernSectionTile extends StatelessWidget {
           section.title,
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: accent),
         ),
-        childrenPadding: const EdgeInsets.only(left: 16, right: 4, bottom: 8),
+        childrenPadding: const EdgeInsets.only(left: 6, right: 4, bottom: 8),
         children: [
           for (final item in visibleItems)
             Padding(
