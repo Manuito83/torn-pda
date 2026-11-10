@@ -68,6 +68,13 @@ void main() {
       expect(bazaar.items, isEmpty);
     });
 
+    test('open without a list is open, not empty', () {
+      final bazaar = ChatBazaar.parse({'bazaar_is_open': true})!;
+      expect(bazaar.listed, isFalse);
+      expect(bazaar.summary, 'Open');
+      expect(ChatBazaar.parse(profile([]))!.summary, 'Empty');
+    });
+
     test('no bazaar in the profile is null', () {
       expect(ChatBazaar.parse({'profile': {}}), isNull);
     });

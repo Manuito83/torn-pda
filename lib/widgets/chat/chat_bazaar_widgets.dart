@@ -32,9 +32,13 @@ class ChatBazaarSummary extends StatelessWidget {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     final soft = color.withValues(alpha: 0.8);
-    final tappable = bazaar.open && bazaar.items.isNotEmpty;
+    final tappable = bazaar.open && (bazaar.items.isNotEmpty || !bazaar.listed);
     return InkWell(
-      onTap: tappable ? () => showChatBazaarSheet(context, userId: userId, bazaar: bazaar, named: named) : null,
+      onTap: !tappable
+          ? null
+          : bazaar.listed
+          ? () => showChatBazaarSheet(context, userId: userId, bazaar: bazaar, named: named)
+          : () => NativeChat.openLink(chatPlayerUrl('bazaar', userId)!, always: true),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: framed ? 6 : 0),
         child: ConstrainedBox(

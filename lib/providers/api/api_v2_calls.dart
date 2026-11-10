@@ -233,7 +233,7 @@ class ApiCallsV2 {
       apiCall: (client, apiKey) {
         return client.userGet(
           id: payload["id"],
-          selections: "profile,personalstats,bazaar,faction,job,icons",
+          selections: "profile,personalstats,faction,job,icons",
           cat: "all",
         );
       },

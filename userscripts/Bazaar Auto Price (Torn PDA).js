@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Market Auto Price
 // @namespace    dev.kwack.torn.imarket-auto-price
-// @version      1.0.3
+// @version      1.0.4
 // @description  Automatically set the price of items relative to the current market
 // @author       Kwack [2190604]
 // @match        https://www.torn.com/page.php?sid=ItemMarket*
@@ -39,7 +39,7 @@ const key = "###PDA-APIKEY###";
 /**
  * Calls the API and returns the lowest priced item currently on the market.
  * @param {string} itemId - the item ID to check
- * @returns {Promise<number>} the lowest price for the item
+ * @returns {Promise<{ price: number, cachedAt: number | null }>} the lowest price and its cache time (epoch s)
  */
 function getLowestPrice(itemId) {
   const baseURL = "https://api.torn.com/v2/market";
@@ -55,9 +55,61 @@ function getLowestPrice(itemId) {
     .then((data) => {
       if ("error" in data) throw new Error(data.error.error);
       const price = data?.itemmarket?.listings?.[0]?.price;
-      if (typeof price === "number" && price >= 1) return price;
+      const stamp = data?.itemmarket?.cache_timestamp;
+      const cachedAt = typeof stamp === "number" && stamp > 0 ? stamp : null;
+      if (typeof price === "number" && price >= 1) return { price, cachedAt };
       throw new Error(`Invalid price: ${price}`);
     });
+}
+
+/**
+ * Short age of the market data, for the toast.
+ * @param {number | null} cachedAt - epoch seconds
+ * @returns {string}
+ */
+function dataAge(cachedAt) {
+  if (cachedAt === null) return "";
+  const minutes = Math.floor((Date.now() / 1000 - cachedAt) / 60);
+  if (minutes < 1) return " (market data under 1m old)";
+  if (minutes < 120) return ` (market data ${minutes}m old)`;
+  return ` (market data ${Math.floor(minutes / 60)}h old)`;
+}
+
+/**
+ * Toast through PDA or on the page.
+ * @param {string} text
+ * @returns {void}
+ */
+function showToast(text) {
+  try {
+    const pda = window.flutter_inappwebview;
+    if (pda && typeof pda.callHandler === "function") {
+      Promise.resolve(pda.callHandler("showToast", { text, seconds: 4 }))
+        .then((res) => {
+          if (res?.status !== "success") pageToast(text);
+        })
+        .catch(() => pageToast(text));
+      return;
+    }
+  } catch {
+    pageToast(text);
+    return;
+  }
+  pageToast(text);
+}
+
+/**
+ * @param {string} text
+ * @returns {void}
+ */
+function pageToast(text) {
+  const toast = document.createElement("div");
+  toast.textContent = text;
+  toast.style.cssText =
+    "position:fixed;left:50%;bottom:70px;transform:translateX(-50%);max-width:90%;padding:8px 12px;" +
+    "border-radius:6px;background:#333;color:#fff;font-size:13px;text-align:center;z-index:2147483647;pointer-events:none";
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
 }
 
 /**
@@ -87,12 +139,13 @@ async function addPrice(input) {
     throw new Warning("Skipping a glowing RW item");
   const itemId = image.src?.match(/\/images\/items\/([\d]+)\//)?.[1];
   if (!itemId) throw new Error("Could not find item ID");
-  const currentLowestPrice = await getLowestPrice(itemId);
+  const { price: currentLowestPrice, cachedAt } = await getLowestPrice(itemId);
   if (!currentLowestPrice) throw new Error("Could not get lowest price");
   // Sets price to either 1 or the current lowest price minus 5, whichever is higher. This prevents negative prices
   const priceToSet = Math.max(1, currentLowestPrice - diff);
   updateInput(input, priceToSet);
   input.classList.add("kw--price-set");
+  showToast(`Price set to $${priceToSet.toLocaleString("en-US")}${dataAge(cachedAt)}`);
 }
 
 /**

@@ -521,13 +521,6 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
 
         if (_networthWidgetEnabled) {
-          int bazaar = 0;
-          if (otherProfile.bazaar != null && otherProfile.bazaar!.isNotEmpty) {
-            for (final item in otherProfile.bazaar!) {
-              bazaar += item.totalValue;
-            }
-          }
-
           _networthWidget = Container(
             color: Colors.grey[900],
             child: Padding(
@@ -549,29 +542,6 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                       ),
                     ),
                   ),
-                  if (bazaar > 0)
-                    Flexible(
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 30),
-                          Image.asset(
-                            "images/icons/inventory/bazaar.png",
-                            color: Colors.green,
-                            width: 14,
-                          ),
-                          const SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              formatBigNumbers(bazaar),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ),

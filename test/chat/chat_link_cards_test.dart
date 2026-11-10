@@ -17,6 +17,7 @@ import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
@@ -103,6 +104,7 @@ void main() {
       };
       expect(ChatLinkInfo.player(ChatLinkKind.player, flat)!.title, 'Alpha [42]');
       expect(ChatLinkInfo.player(ChatLinkKind.bazaar, flat)!.detail, 'Closed');
+      expect(ChatLinkInfo.player(ChatLinkKind.bazaar, {...player(), 'bazaar_is_open': true})!.detail, 'Open');
       expect(ChatLinkInfo.player(ChatLinkKind.player, {'error': 'x'}), isNull);
       expect(
         ChatLinkInfo.player(ChatLinkKind.player, {
@@ -251,7 +253,7 @@ void main() {
         for (final reward in rewards)
           {'target_id': 42, 'target_name': 'Alpha', 'reward': reward, 'quantity': 1, 'is_anonymous': false},
       ],
-      'bounties_timestamp': 1,
+      'bounties_timestamp': DateTime.now().millisecondsSinceEpoch ~/ 1000,
     };
 
     test('adds up what is listed', () {
@@ -259,6 +261,13 @@ void main() {
       expect(ChatBounty.parse(listed([250000]))!.text, r'Bounty $250,000');
       expect(ChatBounty.parse(listed([])), isNull);
       expect(ChatBounty.parse({'error': 'x'}), isNull);
+    });
+
+    test('says how old the listing is once it passes a minute', () {
+      int ago(int minutes) => DateTime.now().subtract(Duration(minutes: minutes)).millisecondsSinceEpoch ~/ 1000;
+      final old = ChatBounty.parse({...listed([250000]), 'bounties_timestamp': ago(8)});
+      expect(old!.text, endsWith(' - 8m ago'));
+      expect(ChatBounty.parse({...listed([250000]), 'bounties_timestamp': ago(0)})!.text, r'Bounty $250,000');
     });
 
     test('shows on player and attack cards but not on bazaars', () async {
@@ -310,6 +319,33 @@ void main() {
       expect((await ChatLinkPreviews.bountyOf(42))!.total, 4000000);
       expect((await ChatPlayerCards.load(42))!.levelText, 'Lvl 15');
       expect(api.urls.map((u) => u.queryParameters['selections']), ['profile,bazaar,bounties,discord']);
+    });
+  });
+
+  group('bazaar of other players', () {
+    test('the list is dropped and open or closed is kept', () async {
+      final api = FakeApiCaller(
+        (url) => {
+          ...player(bazaar: [{}, {}]),
+          'bazaar_is_open': true,
+        },
+      );
+      Get.put<ApiCallerController>(api);
+      addTearDown(Get.reset);
+      ChatPlayerCards.resetForTests();
+      final json = (await ChatPlayerCards.json(42))!;
+      expect(json.containsKey('bazaar'), isFalse);
+      expect(json['bazaar_is_open'], isTrue);
+      expect(ChatLinkInfo.player(ChatLinkKind.bazaar, json)!.detail, 'Open');
+    });
+
+    test('the own list is kept', () async {
+      final api = FakeApiCaller((url) => player(bazaar: [{}, {}]));
+      Get.put<ApiCallerController>(api);
+      Get.put<UserController>(UserController()..playerId = 42);
+      addTearDown(Get.reset);
+      ChatPlayerCards.resetForTests();
+      expect(ChatLinkInfo.player(ChatLinkKind.bazaar, (await ChatPlayerCards.json(42))!)!.detail, '2 items');
     });
   });
 

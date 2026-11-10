@@ -12,6 +12,7 @@ import 'package:torn_pda/models/chat/chat_link_info.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_cache_model.dart';
+import 'package:torn_pda/models/data_age.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
@@ -143,7 +144,7 @@ class ChatLinkPreviews {
   static Future<ForumThreadExtended?> Function(int id) fetchThread = _thread;
   static Future<String?> Function(Uri uri) fetchPage = _page;
   static Future<Map<String, dynamic>?> Function(String id) fetchVideo = _video;
-  static Future<List<Object>?> Function(int id) fetchMarket = _market;
+  static Future<(List<Object>, int?)?> Function(int id) fetchMarket = _market;
   static Future<Map<String, dynamic>?> Function(String code) fetchAttackLog = _attackLog;
   static Future<Map<String, dynamic>?> Function(int id) fetchChainReport = _chainReport;
   static Future<Map<String, dynamic>?> Function(int id) fetchWarReport = _warReport;
@@ -153,8 +154,8 @@ class ChatLinkPreviews {
   static final LinkedHashMap<String, (DateTime, ChatLinkInfo?)> _cache = LinkedHashMap();
   static final Map<String, _Job<ChatLinkInfo>> _loading = {};
   static final Map<int, DateTime> _ffAsked = {};
-  static final Map<int, (DateTime, List<Object>?)> _markets = {};
-  static final Map<int, _Job<List<Object>>> _marketLoading = {};
+  static final Map<int, (DateTime, List<Object>?, int?)> _markets = {};
+  static final Map<int, _Job<(List<Object>, int?)>> _marketLoading = {};
   static final Map<String, DateTime> _inventoryTried = {};
   static final Map<String, Future<void>> _inventoryRunning = {};
   static int _generation = 0;
@@ -459,17 +460,20 @@ class ChatLinkPreviews {
     final running = _marketLoading[id];
     if (running != null) {
       running.wanted.add(wanted);
-      return running.done.future;
+      return running.done.future.then((r) => r?.$1);
     }
-    final job = _Job<List<Object>>(() => fetchMarket(id), wanted);
+    final job = _Job<(List<Object>, int?)>(() => fetchMarket(id), wanted);
     _marketLoading[id] = job;
     _torn.add(job);
     return _settle(
       job,
-      (listings) => _markets[id] = (DateTime.now().add(const Duration(minutes: 2)), listings),
+      (r) => _markets[id] = (DateTime.now().add(Duration(minutes: r == null ? 2 : 10)), r?.$1, r?.$2),
       () => _marketLoading.remove(id),
-    );
+    ).then((r) => r?.$1);
   }
+
+  /// Null when fresh or unknown
+  static String? marketAge(int id) => dataAgeText(_markets[id]?.$3);
 
   static Future<void> askInventory(String category, Future<void> Function() load, bool Function() wanted) {
     final running = _inventoryRunning[category];
@@ -492,12 +496,14 @@ class ChatLinkPreviews {
         });
   }
 
-  static Future<List<Object>?> _market(int id) async {
+  static Future<(List<Object>, int?)?> _market(int id) async {
     if (id == ChatPriceCheck.pointsId) {
-      return ChatPriceCheck.pointsListings(await _get('/market', ApiSelection_v2.marketItem, 'pointsmarket'));
+      final listings = ChatPriceCheck.pointsListings(await _get('/market', ApiSelection_v2.marketItem, 'pointsmarket'));
+      return listings == null ? null : (listings, null);
     }
     final response = await ApiCallsV2.getMarketItemApi_v2(payload: {'id': id});
-    return response is MarketItemMarketResponse ? response.itemmarket.listings : null;
+    if (response is! MarketItemMarketResponse) return null;
+    return (response.itemmarket.listings, response.itemmarket.cacheTimestamp);
   }
 
   static Future<ItemsModel?> _items() async {

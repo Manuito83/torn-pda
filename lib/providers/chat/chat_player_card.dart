@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/models/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 
 class ChatPlayerCards {
   static const Duration _ttl = Duration(minutes: 3);
@@ -67,7 +68,10 @@ class ChatPlayerCards {
       response = await ask(_base);
       if (generation == _generation) _discordRejected = response is Map<String, dynamic>;
     }
-    return response is Map<String, dynamic> ? response : null;
+    if (response is! Map<String, dynamic>) return null;
+    final mine = Get.isRegistered<UserController>() && Get.find<UserController>().playerId == id;
+    // Torn hides other players' bazaar items
+    return mine ? response : ({...response}..remove('bazaar'));
   }
 
   /// Nothing cached from the old account

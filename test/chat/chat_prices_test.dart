@@ -113,13 +113,18 @@ void main() {
 
     test('shows the three cheapest, cheapest first', () {
       expect(ChatPriceCheck.lowestListed(listings), r'$812,000 x3 - $815,000 x10 - $818,500 x4');
+      expect(ChatPriceCheck.lowestLine(listings, '1h 13m ago'), startsWith('Lowest listed 1h 13m ago: '));
     });
 
     test('is null without listings', () {
       expect(ChatPriceCheck.lowestListed(const []), isNull);
     });
 
-    Future<void> pumpChips(WidgetTester tester, Future<List<Object>?> Function(int) market, [String? text]) async {
+    Future<void> pumpChips(
+      WidgetTester tester,
+      Future<(List<Object>, int?)?> Function(int) market, [
+      String? text,
+    ]) async {
       addTearDown(ChatLinkPreviews.resetForTests);
       ChatLinkPreviews.resetForTests();
       ChatLinkPreviews.fetchItems = () async => catalog;
@@ -144,11 +149,12 @@ void main() {
       final asked = <int>[];
       await pumpChips(tester, (id) async {
         asked.add(id);
-        return ChatPriceCheck.pointsListings({
+        final points = ChatPriceCheck.pointsListings({
           'pointsmarket': [
             {'cost': 44600, 'quantity': 1200},
           ],
         });
+        return (points!, null);
       }, 'selling 500 pts @ 46k');
       expect(find.text(r'3% over market - lowest $44.6k'), findsOneWidget);
       await tester.tap(find.textContaining('lowest'));
@@ -161,7 +167,7 @@ void main() {
       var calls = 0;
       await pumpChips(tester, (id) async {
         calls++;
-        return listings;
+        return (listings, null);
       });
       expect(calls, 0);
       await tester.tap(find.textContaining('market'));
@@ -416,9 +422,9 @@ void main() {
       addTearDown(ChatLinkPreviews.resetForTests);
       ChatLinkPreviews.resetForTests();
       ChatLinkPreviews.fetchItems = () async => shop;
-      ChatLinkPreviews.fetchMarket = (id) async => <Object>[
+      ChatLinkPreviews.fetchMarket = (id) async => (<Object>[
         {'price': 4800, 'amount': 2},
-      ];
+      ], null);
       NativeChat.prefs.priceCheck = true;
       await tester.pumpWidget(
         const MaterialApp(

@@ -10,13 +10,15 @@ import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/chat/chat_player_card.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:torn_pda/models/chat/chat_status.dart';
+import 'package:torn_pda/models/data_age.dart';
 import 'package:torn_pda/models/items_model.dart';
 
 class ChatBounty {
   final int total;
   final int count;
+  final int? stamp;
 
-  const ChatBounty(this.total, this.count);
+  const ChatBounty(this.total, this.count, [this.stamp]);
 
   static ChatBounty? parse(Map<String, dynamic> json) {
     final list = json['bounties'];
@@ -29,10 +31,14 @@ class ChatBounty {
       total += reward.toInt();
       count++;
     }
-    return count == 0 ? null : ChatBounty(total, count);
+    final stamp = json['bounties_timestamp'];
+    return count == 0 ? null : ChatBounty(total, count, stamp is int ? stamp : null);
   }
 
-  String get text => 'Bounty ${ChatMoneyRef.format(total)}${count > 1 ? ' ($count listed)' : ''}';
+  String get text {
+    final age = dataAgeText(stamp);
+    return 'Bounty ${ChatMoneyRef.format(total)}${count > 1 ? ' ($count listed)' : ''}${age == null ? '' : ' - $age'}';
+  }
 }
 
 class ChatLinkInfo {
@@ -85,12 +91,13 @@ class ChatLinkInfo {
     final title = id == null ? name : '$name [$id]';
     if (kind == ChatLinkKind.bazaar) {
       final parsed = ChatBazaar.parse(json);
-      final count = parsed?.items.length;
-      final detail = switch (count) {
+      final detail = switch (parsed) {
         null => null,
-        0 => parsed!.open ? 'Empty' : 'Closed',
-        1 => '1 item',
-        _ => '$count items',
+        ChatBazaar(open: false) => 'Closed',
+        ChatBazaar(listed: false) => 'Open',
+        ChatBazaar(items: []) => 'Empty',
+        ChatBazaar(items: [_]) => '1 item',
+        _ => '${parsed.items.length} items',
       };
       return ChatLinkInfo('Bazaar of $title', detail: detail, presence: presence, bazaar: parsed);
     }

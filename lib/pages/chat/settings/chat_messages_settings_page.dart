@@ -123,8 +123,8 @@ class ChatMessagesSettingsPage extends StatelessWidget {
             onChanged: prefs.setPriceCheck,
           ),
           SwitchListTile(
-            title: const Text('Bazaar analysis'),
-            subtitle: const Text('Checks the bazaar of whoever offers an item, in the bubble and in bazaar links'),
+            title: const Text('Bazaar status'),
+            subtitle: const Text("Shows below trade offers if the seller's bazaar is open"),
             value: prefs.bazaarAnalysis,
             onChanged: prefs.priceCheck ? prefs.setBazaarAnalysis : null,
           ),

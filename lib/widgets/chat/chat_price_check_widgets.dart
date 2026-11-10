@@ -151,7 +151,7 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
     });
     final listings = await ChatLinkPreviews.marketListings(id, () => mounted && _open.contains(id));
     if (!mounted || !_open.contains(id)) return;
-    setState(() => _lines[id] = ChatPriceCheck.lowestLine(listings));
+    setState(() => _lines[id] = ChatPriceCheck.lowestLine(listings, ChatLinkPreviews.marketAge(id)));
   }
 
   Future<void> _check() async {
@@ -237,7 +237,7 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              [if (_checks.isNotEmpty) 'Price check', if (bazaarShown) 'Bazaar analysis'].join(' - '),
+                              [if (_checks.isNotEmpty) 'Price check', if (bazaarShown) 'Bazaar'].join(' - '),
                               textAlign: TextAlign.end,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -415,7 +415,9 @@ class _ChatItemSheetState extends State<_ChatItemSheet> {
 
   Future<void> _loadLowest() async {
     final listings = await ChatLinkPreviews.marketListings(widget.item.id, () => mounted);
-    if (mounted) setState(() => _lowest = ChatPriceCheck.lowestLine(listings));
+    if (mounted) {
+      setState(() => _lowest = ChatPriceCheck.lowestLine(listings, ChatLinkPreviews.marketAge(widget.item.id)));
+    }
   }
 
   Future<void> _loadHave() async {

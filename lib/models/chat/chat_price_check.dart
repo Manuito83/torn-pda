@@ -62,10 +62,10 @@ class ChatPriceCheck {
     return cheapest.take(3).map((l) => '\$${chatCount(l.$1)} x${l.$2}').join(' - ');
   }
 
-  static String lowestLine(List<Object>? listings) {
+  static String lowestLine(List<Object>? listings, [String? age]) {
     if (listings == null) return "Couldn't load listings";
     final lowest = lowestListed(listings);
-    return lowest == null ? 'No listings' : 'Lowest listed: $lowest';
+    return lowest == null ? 'No listings' : 'Lowest listed${age == null ? '' : ' $age'}: $lowest';
   }
 
   static String haveLine(int amount, [String unit = '']) {

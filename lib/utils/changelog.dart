@@ -282,6 +282,8 @@ List<_MVersion> _modernChangelog() => [
           ),
           _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
           _MItem('Chat: hit calls can count down until the target is out', chatOnly: true),
+          _MItem('Chat: bazaars of other players only show open or closed, following Torn API changes', chatOnly: true),
+          _MItem('Items / Chat: market prices show how old they are, Torn now updates them hourly'),
           _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
           _MItem('Stock market alerts: option to hide stocks where you already own a benefit block [Juoku]'),
           _MItem('Browser: improved page load speed [xentac]'),

@@ -5,10 +5,13 @@ import 'package:torn_pda/models/chat/chat_share_out.dart';
 import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 
 class ChatBazaar {
-  const ChatBazaar(this.open, this.items);
+  const ChatBazaar(this.open, this.items, {this.listed = true});
 
   final bool open;
   final List<BazaarItem> items;
+
+  /// False when only the state is known
+  final bool listed;
 
   static const int _maxNamed = 3;
 
@@ -17,7 +20,7 @@ class ChatBazaar {
     final open = json['bazaar_is_open'];
     if (open == false || open == 0) return const ChatBazaar(false, []);
     final rows = json['bazaar'];
-    if (rows is! List) return null;
+    if (rows is! List) return open == true || open == 1 ? const ChatBazaar(true, [], listed: false) : null;
     final items = <BazaarItem>[];
     for (final row in rows) {
       if (row is! Map) continue;
@@ -57,6 +60,7 @@ class ChatBazaar {
 
   String get summary {
     if (!open) return 'Closed';
+    if (!listed) return 'Open';
     if (items.isEmpty) return 'Empty';
     final count = items.length == 1 ? '1 item' : '${items.length} items';
     final typical = median;

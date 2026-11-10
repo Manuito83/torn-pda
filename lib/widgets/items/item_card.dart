@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
+import 'package:torn_pda/models/data_age.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -363,9 +364,10 @@ class ItemCardState extends State<ItemCard> {
 
     if (_footerSuccessful) {
       // Market
-      const Widget marketHeader = Text(
-        "Market",
-        style: TextStyle(
+      final marketAge = dataAgeText(_marketItem.cacheTimestamp);
+      final Widget marketHeader = Text(
+        marketAge == null ? "Market" : "Market ($marketAge)",
+        style: const TextStyle(
           fontSize: 12,
         ),
       );
