@@ -5381,9 +5381,16 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
+  // Background tabs load too
+  bool get _tabShown =>
+      mounted &&
+      (!widget.useTabs ||
+          (_webViewProvider.isTabUidVisible(_tabUid) &&
+              (_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive)));
+
   // ASSESS GYM AND HUNTING WARNINGS FOR ENERGY
   Future assessGymAndHuntingEnergyWarning(String targetUrl) async {
-    if (!mounted) return;
+    if (!_tabShown) return;
 
     if (_assessGymAndHuntingEnergyWarningTriggerTime != null &&
         DateTime.now().difference(_assessGymAndHuntingEnergyWarningTriggerTime!).inSeconds < 2) {
@@ -5404,7 +5411,7 @@ class WebViewFullState extends State<WebViewFull>
           message = 'Caution: high energy detected, you might be stacking!';
         }
 
-        if (message.isNotEmpty) {
+        if (message.isNotEmpty && _tabShown) {
           if (widget.useTabs) {
             // This avoid repeated BotToast messages if several tabs are open to the gym
             _webViewProvider.showEnergyWarningMessage(message, widget.key);
@@ -5425,7 +5432,7 @@ class WebViewFullState extends State<WebViewFull>
 
   // ASSESS GYM AND HUNTING WARNINGS FOR ENERGY
   Future assessTravelAgencyEnergyNerveLifeWarning(String targetUrl) async {
-    if (!mounted) return;
+    if (!_tabShown) return;
 
     if (_assessTravelAgencyEnergyNerveLifeWarningTriggerTime != null &&
         DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 30) {
@@ -5844,6 +5851,10 @@ class WebViewFullState extends State<WebViewFull>
         }
       }
 
+      if (!_tabShown) {
+        _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = null;
+        return;
+      }
       if (warnRows.isNotEmpty || cooldownRows.isNotEmpty) {
         wasteToast = toastification.showCustom(
           autoCloseDuration: const Duration(seconds: 8),
