@@ -12,7 +12,7 @@ publish_to: none
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 4.0.0+708
+version: 4.0.0+709
 
 environment:
   sdk: ">=3.10.0"
@@ -115,7 +115,7 @@ dependencies:
   vibration: 3.1.8
   wakelock_plus: 1.4.0
   webview_flutter: 4.13.0
-  workmanager: 0.9.0+3
+  workmanager: ^0.10.10
 
 # Fork of flutter_inappwebview 6.2.0-beta.3 (branch torn-pda-dev, which merges
 # several independent fixes, each tracked in its own branch and upstream PR):
