@@ -79,11 +79,9 @@ import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:vibration/vibration.dart';
 
 class SettingsPage extends StatefulWidget {
-  final Function changeUID;
   final StatsController statsController;
 
   const SettingsPage({
-    required this.changeUID,
     required this.statsController,
     super.key,
   });
@@ -360,7 +358,6 @@ class SettingsPageState extends State<SettingsPage> {
                           apiKeyInputController: _apiKeyInputController,
                           expandableController: _expandableController,
                           getApiDetails: _getApiDetails,
-                          changeUID: (value) => widget.changeUID(value),
                           setStateOnParent: () => setState(() {}),
                           changeApiError: (val) => setState(() => _apiError = val),
                           changeUserProfile: (val) => setState(() => _userProfile = val),
@@ -4606,7 +4603,9 @@ class SettingsPageState extends State<SettingsPage> {
           if (!Platform.isWindows) {
             try {
               // See note in [firebase_auth.dart]
+              final reusedSession = await FirestoreHelper().waitForKeyRemoval();
               final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
+              bool newSession = reusedSession;
               // Only sign in if there is currently no user registered (to avoid duplicates)
               if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
                 final User? newFirebaseUser = await (firebaseAuth.signInAnon());
@@ -4614,13 +4613,26 @@ class SettingsPageState extends State<SettingsPage> {
                 if (newFirebaseUser == null) {
                   log("Settings: Firebase anonymous sign-in failed, continuing without Firebase");
                 } else {
-                  await FirestoreHelper().setUID(newFirebaseUser.uid);
-                  // Returns UID to Drawer so that it can be passed to settings
-                  widget.changeUID(newFirebaseUser.uid);
+                  newSession = true;
+                  FirestoreHelper().markSignedIn();
                   log("Settings: signed in with UID ${newFirebaseUser.uid}");
                 }
               } else {
                 log("Settings: existing user UID ${firebaseUser.uid}");
+              }
+
+              final restored = await FirestoreHelper().restoreAlertsFromLocalSnapshot(
+                myProfile.playerId,
+                newSession: newSession,
+              );
+              if (restored != null && restored.activeAlerts.isNotEmpty) {
+                BotToast.showText(
+                  text: "Your alerts have been restored",
+                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                  contentColor: Colors.green,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
               }
 
               await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);

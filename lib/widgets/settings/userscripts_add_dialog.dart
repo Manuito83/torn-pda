@@ -36,8 +36,6 @@ class UserScriptsAddDialog extends StatefulWidget {
 }
 
 class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerProviderStateMixin {
-  final pdaKeyWord = "###PDA-APIKEY###";
-
   double hPad = 15;
   double vPad = 20;
   double frame = 10;
@@ -94,7 +92,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
           _originalName = script.name;
           _originalTime = script.time;
           _customApiKey = script.customApiKey;
-          _isCurrentScriptCandidateForCustomApiKey = script.source.contains(pdaKeyWord);
+          _isCurrentScriptCandidateForCustomApiKey = script.source.contains(apiKeyPlaceholder);
           _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
 
           _remoteNameController.text = script.name;
@@ -117,7 +115,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
   void _onMainTabSourceChanged() {
     // Only main tab
     if (_tabController.index == 0) {
-      final pdaLogicFound = _addSourceController.text.contains(pdaKeyWord);
+      final pdaLogicFound = _addSourceController.text.contains(apiKeyPlaceholder);
 
       // Update state if the candidate status changes or needs to be corrected
       if (pdaLogicFound != _isCurrentScriptCandidateForCustomApiKey || pdaLogicFound != _showCustomApiKeyButton) {
@@ -564,7 +562,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                         _remoteSourceController.text = resultModel.source;
                         _remoteNameController.text = resultModel.name;
                         _remoteRunTimeController.text = resultModel.time.name;
-                        newRemoteSourceIsCandidate = resultModel.source.contains(pdaKeyWord);
+                        newRemoteSourceIsCandidate = resultModel.source.contains(apiKeyPlaceholder);
 
                         if (mounted) {
                           setState(() {
@@ -662,13 +660,13 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
                             if (widget.editingExistingScript && widget.scriptBeingEdited != null) {
                               // If editing, candidate status based on the source currently in the main tab editor
-                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(pdaKeyWord);
+                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(apiKeyPlaceholder);
                               _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
                               // Allow main tab to prompt again if needed by resetting its first save press flag
                               _mainTabFirstSavePress = true;
                             } else {
                               // If we were adding a new script, the main tab's source determines candidate status
-                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(pdaKeyWord);
+                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(apiKeyPlaceholder);
                               _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
                             }
                           });
@@ -832,7 +830,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         }
       }
 
-      _isCurrentScriptCandidateForCustomApiKey = inputSource.contains(pdaKeyWord);
+      _isCurrentScriptCandidateForCustomApiKey = inputSource.contains(apiKeyPlaceholder);
 
       if (_isCurrentScriptCandidateForCustomApiKey && _mainTabFirstSavePress && _customApiKey.isEmpty) {
         setState(() {

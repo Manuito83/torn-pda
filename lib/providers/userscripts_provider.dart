@@ -593,12 +593,7 @@ class UserScriptsProvider extends ChangeNotifier {
       }
 
       if (defaultToDisabled) {
-        for (final script in _userScriptList) {
-          script.enabled = false;
-          // Avoid that scripts run as soon as war mode is on when restoring
-          script.modes.clear();
-          script.alwaysActive = false;
-        }
+        _userScriptList.forEach(disableRestoredScript);
       }
     } else {
       // We add the scripts that don't already exist
@@ -1079,7 +1074,7 @@ class UserScriptsProvider extends ChangeNotifier {
   void _checkForCustomApiKeyCandidates() {
     try {
       for (final script in _userScriptList) {
-        if (script.source.contains("###PDA-APIKEY###")) {
+        if (script.source.contains(apiKeyPlaceholder)) {
           script.customApiKeyCandidate = true;
         } else {
           script.customApiKeyCandidate = false;
@@ -1256,7 +1251,7 @@ class UserScriptsProvider extends ChangeNotifier {
           manuallyEdited: false,
           matches: UserScriptModel.tryGetMatches(remote.source),
           customApiKey: script.customApiKey,
-          customApiKeyCandidate: remote.source.contains("###PDA-APIKEY###"),
+          customApiKeyCandidate: remote.source.contains(apiKeyPlaceholder),
           updateStatus: UserScriptUpdateStatus.upToDate,
         );
         script.grants = remote.grants;

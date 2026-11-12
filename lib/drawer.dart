@@ -165,7 +165,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Tracks the enqueued PDA update version to avoid duplicate dialogs in a session
   int? _pdaUpdateDialogEnqueuedVersion;
 
-  String _userUID = "";
   bool _drawerUserChecked = false;
   bool _authRecoveryEnabledRC = true;
 
@@ -2563,9 +2562,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (Platform.isWindows) return AlertsSettingsWindows();
         return AlertsSettings(_onChangeStockMarketInMenu);
       case DrawerSection.settings:
-        return SettingsPage(changeUID: changeUID, statsController: _statsController);
+        return SettingsPage(statsController: _statsController);
       case DrawerSection.about:
-        return AboutPage(uid: _userUID);
+        return AboutPage(uid: Platform.isWindows ? "" : FirebaseAuth.instance.currentUser?.uid ?? "");
       case DrawerSection.tips:
         return TipsPage();
       case DrawerSection.divider1:
@@ -2664,7 +2663,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // UserController handles its own initialization
     }
 
-    if (!userController.isApiKeyValid) return;
+    if (!userController.isApiKeyValid) {
+      if (!Platform.isWindows) FirestoreHelper().resumePendingProfileDeletion();
+      return;
+    }
 
     await _initializeAndHandleFirebaseAuth();
 
@@ -2706,26 +2708,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           ));
 
           if (newAnonUser != null) {
-            _userUID = newAnonUser.uid;
-            FirestoreHelper().setUID(_userUID);
-            await _updateFirebaseDetails();
+            FirestoreHelper().markSignedIn();
 
             // Try to restore alerts from local snapshot (included in the backup)
-            bool alertsRestored = false;
-            try {
-              final snapshot = await FirestoreHelper().loadLocalSnapshot();
-              if (snapshot != null) {
-                alertsRestored = await FirestoreHelper().applyAlertsFromPayload(
-                  snapshot.toMap(),
-                  resetRestockTimestamps: true,
-                );
-                if (alertsRestored) {
-                  log("🔒 Drawer: Alerts restored from local snapshot after import.", name: "AUTH CHECKS");
-                }
-              }
-            } catch (e) {
-              log("🔒 Drawer: Failed to restore alerts from snapshot: $e", name: "AUTH CHECKS");
+            final alertsRestored =
+                await FirestoreHelper().restoreAlertsFromLocalSnapshot(UserHelper.playerId, newSession: true) != null;
+            if (alertsRestored) {
+              log("🔒 Drawer: Alerts restored from local snapshot after import.", name: "AUTH CHECKS");
             }
+            await _updateFirebaseDetails();
 
             // Show dialog only if alerts could NOT be restored (no snapshot or failed)
             // This dialog can be shown here with no postframe callback as it is inside
@@ -2797,8 +2788,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           "🔒 Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
           name: "AUTH CHECKS",
         );
-        _userUID = FirebaseAuth.instance.currentUser!.uid;
-        FirestoreHelper().setUID(_userUID);
+        FirestoreHelper().markSignedIn();
       }
 
       justImportedFromLocalBackup = false;
@@ -2813,8 +2803,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (user != null && !_debugForceFirebaseAuthMissing) {
       log("🔒 Drawer: Session found immediately. UID: ${user.uid}", name: "AUTH CHECKS");
-      _userUID = user.uid;
-      FirestoreHelper().setUID(_userUID);
+      FirestoreHelper().markSignedIn();
       _drawerUserChecked = true;
       return;
     }
@@ -2852,14 +2841,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _updateFirebaseDetails() async {
-    // Realign FirestoreHelper UID with the currently authenticated user
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
+    if (FirebaseAuth.instance.currentUser == null) {
       log("Drawer: skip _updateFirebaseDetails, no Firebase user", name: "AUTH CHECKS");
       return;
     }
-    _userUID = currentUser.uid;
-    FirestoreHelper().setUID(_userUID);
 
     // We save the key because the API call will reset it
     // Then get user's profile and update
@@ -3467,9 +3452,5 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } catch (e) {
       log('Error configuring refresh rate: $e');
     }
-  }
-
-  void changeUID(String uid) {
-    _userUID = uid;
   }
 }

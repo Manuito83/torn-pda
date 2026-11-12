@@ -13,6 +13,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
+import 'package:torn_pda/models/backup/prefs_backup_model.dart';
 import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
@@ -24,6 +25,9 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+
+part 'firebase_firestore_profile_deletion.dart';
+part 'firebase_firestore_snapshot.dart';
 
 class FirestoreHelper {
   static final FirestoreHelper _instance = FirestoreHelper._internal();
@@ -40,25 +44,24 @@ class FirestoreHelper {
   bool _alreadyUploaded = false;
   DateTime? _lastTokenReconcile;
   bool _reconcilingToken = false;
+  Future<void> _keyRemoval = Future.value();
+  Future<void>? _profileDeletion;
   FirebaseUserModel? _firebaseUserModel;
   FirebaseUserModel? get cachedUserModel => _firebaseUserModel;
 
-  String? _uid;
-  Future setUID(String userUID) async {
-    _uid = userUID;
+  void markSignedIn() {
     if (!uidCompleter.isCompleted) {
       uidCompleter.complete();
     }
   }
 
-  // Null without a Firebase user
+  // Null while signed out or deleting
   DocumentReference<Map<String, dynamic>>? _playerDoc() {
-    if (_uid == null || _uid!.isEmpty) {
-      final currentUid = FirebaseAuth.instance.currentUser?.uid;
-      if (currentUid == null) return null;
-      setUID(currentUid);
-    }
-    return _firestore.collection("players").doc(_uid);
+    if (_profileDeletion != null) return null;
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid == null) return null;
+    markSignedIn();
+    return _firestore.collection("players").doc(currentUid);
   }
 
   String get _platform => Platform.isAndroid
@@ -100,7 +103,9 @@ class FirestoreHelper {
     final bool validToken = token.isNotEmpty && token != "error";
 
     // Fetch existing Firebase profile or return a default empty model
-    _firebaseUserModel = await getUserProfile(force: true);
+    final existingModel = await getUserProfile(force: true);
+    if (existingModel == null) return null;
+    _firebaseUserModel = existingModel;
 
     final payload = {
       "uid": playerDoc.id,
@@ -135,6 +140,7 @@ class FirestoreHelper {
     final offset = DateTime.now().timeZoneOffset.inMinutes;
     if (schedule.enabled) payload["discreetSchedule"] = schedule.toFirestore(offset);
 
+    if (_playerDoc()?.id != playerDoc.id || profile.userApiKey != UserHelper.apiKey) return null;
     await playerDoc.set(payload, SetOptions(merge: true));
     if (schedule.enabled) await Prefs().setDiscreetScheduleSynced(offset);
 
@@ -598,6 +604,7 @@ class FirestoreHelper {
         updatePayload['widget_push_token'] = widgetToken.isEmpty ? FieldValue.delete() : widgetToken;
       }
 
+      if (_playerDoc()?.id != playerDoc.id) return false;
       log("Uploading data to Firestore: $updatePayload");
       await playerDoc.update(updatePayload);
       return true;
@@ -634,44 +641,6 @@ class FirestoreHelper {
       analytics?.setUserProperty(name: "alerts_on", value: AppSettingsDaily.countBucket(_firebaseUserModel!.activeAlerts.length));
     }
     return _firebaseUserModel;
-  }
-
-  Future<String?> findMostRecentUidByApiKey(String apiKey) async {
-    try {
-      final query = await _firestore
-          .collection("players")
-          .where("apiKey", isEqualTo: apiKey)
-          .orderBy("lastActive", descending: true)
-          .limit(1)
-          .get();
-
-      if (query.docs.isEmpty) return null;
-      return query.docs.first.id;
-    } catch (e, s) {
-      log("Error finding UID by apiKey: $e", stackTrace: s);
-      return null;
-    }
-  }
-
-  Future<Map<String, dynamic>?> cloneUserProfileFromPayload(Map<String, dynamic> payload) async {
-    final playerDoc = _playerDoc();
-    if (playerDoc == null) return null;
-
-    try {
-      final cloned = Map<String, dynamic>.from(payload);
-      cloned.remove("uid");
-      cloned.remove("token");
-      cloned.remove("tokenErrors");
-
-      await playerDoc.set(cloned);
-
-      cloned["uid"] = playerDoc.id;
-      _firebaseUserModel = FirebaseUserModel.fromMap(cloned);
-      return cloned;
-    } catch (e, s) {
-      log("Error cloning profile from payload into ${playerDoc.id}: $e", stackTrace: s);
-      return null;
-    }
   }
 
   Future<bool> applyAlertsFromPayload(Map<String, dynamic> payload, {bool resetRestockTimestamps = false}) async {
@@ -720,47 +689,12 @@ class FirestoreHelper {
     return true;
   }
 
-  Future deleteUserProfile() async {
-    _alreadyUploaded = false;
-    final playerDoc = _playerDoc();
-    if (playerDoc == null) return;
-    await playerDoc.delete();
-  }
-
   Future<void> setVibrationPattern(String? pattern) async {
     final playerDoc = _playerDoc();
     if (playerDoc == null) return;
+    _firebaseUserModel?.vibration = pattern;
     await playerDoc.update({"vibration": pattern});
   }
-
-  // --- Local Snapshot Logic ---
-  static const String _kLocalUserSnapshot = "_local_user_model_snapshot";
-
-  Future<void> persistLocalSnapshot() async {
-    if (_firebaseUserModel == null) return;
-    try {
-      final jsonStr = jsonEncode(
-        _firebaseUserModel!.toMap(),
-        toEncodable: (value) => value is Timestamp ? value.millisecondsSinceEpoch : value,
-      );
-      await PrefsDatabase.setString(_kLocalUserSnapshot, jsonStr);
-    } catch (e) {
-      log("Snapshot save failed: $e");
-    }
-  }
-
-  Future<FirebaseUserModel?> loadLocalSnapshot() async {
-    try {
-      final jsonStr = await PrefsDatabase.getString(_kLocalUserSnapshot, "");
-      if (jsonStr.isEmpty) return null;
-      final map = jsonDecode(jsonStr);
-      return FirebaseUserModel.fromMap(map);
-    } catch (e) {
-      log("Snapshot load failed: $e");
-      return null;
-    }
-  }
-  // ----------------------------
 
   Future<void> subscribeToStockMarketNotification(bool? subscribe) async {
     final playerDoc = _playerDoc();
@@ -798,6 +732,7 @@ class FirestoreHelper {
   Future<bool> toggleRetaliationNotification(bool active, {bool host = true}) {
     bool isHost = host;
     if (!active) isHost = false;
+    _firebaseUserModel?.retalsNotificationHost = isHost;
 
     return _updateAlertField("retalsNotification", {
       "retalsNotification": active,
@@ -872,11 +807,11 @@ class FirestoreHelper {
     _reconcilingToken = true;
     try {
       await uidCompleter.future;
-      final playerDoc = _playerDoc();
-      if (playerDoc == null) return;
-
+      if (_playerDoc() == null) return;
       final token = await _getMessagingToken();
       if (token == "error") return;
+      final playerDoc = _playerDoc();
+      if (playerDoc == null) return;
       _lastTokenReconcile = DateTime.now();
       final synced = await Prefs().getFCMTokenSynced();
       if (token == synced) return;
