@@ -314,6 +314,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Calendar: fixed event dates'),
           _MItem('Faction assistance: a request that cannot reach the server now shows an error'),
           _MItem('API key: re-entering it restores your alerts'),
+          _MItem('Network fixes [bombel]'),
           _MItem('Faction assistance: explains why a request failed, including when your key hits the Torn rate limit'),
           _MItem('Scripts: @match now follows Tampermonkey rules (http*, any port, pages with #) [xentac]'),
           _MItem('Scripts: a script no longer runs on the previous page after going back [xentac]'),
