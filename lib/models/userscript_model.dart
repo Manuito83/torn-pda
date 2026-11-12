@@ -91,10 +91,19 @@ final _singleQuotes = RegExp(r'[‘’]');
 
 String _normalizeQuotes(String s) => s.replaceAll(_doubleQuotes, '"').replaceAll(_singleQuotes, "'");
 
+const String apiKeyPlaceholder = '###PDA-APIKEY###';
+
+void disableRestoredScript(UserScriptModel script) {
+  script.enabled = false;
+  // Avoid that scripts run as soon as war mode is on when restoring
+  script.modes.clear();
+  script.alwaysActive = false;
+}
+
 // Same string back when nothing changes
 String adaptBody(String source, String apiKey) {
-  if (!source.contains("###PDA-APIKEY###") && !source.contains(_anyQuotes)) return source;
-  return _normalizeQuotes(source.replaceAll("###PDA-APIKEY###", apiKey));
+  if (!source.contains(apiKeyPlaceholder) && !source.contains(_anyQuotes)) return source;
+  return _normalizeQuotes(source.replaceAll(apiKeyPlaceholder, apiKey));
 }
 
 String wrapSource(String body, String storageId) {

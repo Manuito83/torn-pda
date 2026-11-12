@@ -13,6 +13,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
@@ -105,6 +106,7 @@ const String iosCompilation = '708';
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
 /// (add new alert fields here when implementing new alerts)
+// In sync with RECOVERY_FIELDS in players.ts
 const List<String> kAlertFirestoreFields = [
   "discrete",
   "vibration",
@@ -891,6 +893,7 @@ Future<void> _initializeFirebase() async {
     _isFirebaseInitialized = true;
 
     if (!Platform.isWindows) {
+      unawaited(_activateAppCheck());
       FirebaseMessaging.onBackgroundMessage(messagingBackgroundHandler);
 
       // Before the rest of the startup, which is where the fatals we cannot attribute happen
@@ -913,6 +916,19 @@ Future<void> _initializeFirebase() async {
   } catch (e) {
     log("Error initializing Firebase: $e");
     _isFirebaseInitialized = false;
+  }
+}
+
+// Silent on failure, not enforced yet
+Future<void> _activateAppCheck() async {
+  try {
+    await FirebaseAppCheck.instance.activate(
+      providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
+      providerApple: kDebugMode ? const AppleDebugProvider() : const AppleDeviceCheckProvider(),
+    );
+    await FirebaseAppCheck.instance.setTokenAutoRefreshEnabled(true);
+  } catch (e) {
+    log("Error activating App Check: $e");
   }
 }
 

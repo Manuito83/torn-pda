@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
@@ -14,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
+import 'package:torn_pda/models/faction/faction_assist_result.dart';
 import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -138,6 +140,18 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             ],
                           ),
                           onPressed: () async {
+                            final String? attackId = attackIdFromUrl(widget.url);
+                            if (attackId == null) {
+                              BotToast.showText(
+                                text: factionAssistResultMessage(null),
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: Colors.orange[700]!,
+                                duration: const Duration(seconds: 5),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                              return;
+                            }
+
                             // Show a loading toast while fetching data
                             BotToast.showText(
                               text: "Fetching target info…",
@@ -145,8 +159,6 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               contentColor: Colors.grey[700]!,
                               contentPadding: const EdgeInsets.all(10),
                             );
-
-                            final String attackId = widget.url.split("user2ID=")[1];
 
                             final dynamic t = await ApiCallsV2.getOtherUserProfile_v2(payload: {"id": attackId});
 
@@ -243,47 +255,40 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
                             if (result == null) return; // User cancelled
 
-                            BotToast.showText(
+                            final hideRequesting = BotToast.showText(
                               text: "Requesting assistance from faction members!",
                               textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                               contentColor: Colors.green,
+                              duration: firebaseFunctions.assistTimeout,
                               contentPadding: const EdgeInsets.all(10),
                             );
 
-                            final int membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                              attackId: result.attackId,
-                              attackName: result.attackName,
-                              attackLevel: result.attackLevel,
-                              attackLife: result.attackLife,
-                              attackAge: result.attackAge,
-                              estimatedStats: result.estimatedStats,
-                              xanax: result.xanax,
-                              refills: result.refills,
-                              drinks: result.drinks,
-                              exactStats: result.exactStats,
-                              ffsStats: result.ffsStats,
-                              fairFight: result.fairFight,
-                            );
-
-                            String membersMessage =
-                                "$membersNotified faction member${membersNotified == 1 ? " has" : "s have"} been notified!";
-                            Color? membersColor = Colors.green;
-
-                            if (membersNotified == 0) {
-                              membersMessage =
-                                  "No faction member could be notified (not using Torn PDA or "
-                                  "assists messages deactivated)!";
-                              membersColor = Colors.orange[700];
-                            } else if (membersNotified == -1) {
-                              membersMessage = "There was a problem locating your faction's details, please try again!";
-                              membersColor = Colors.orange[700];
+                            int? membersNotified;
+                            try {
+                              membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                                attackId: result.attackId,
+                                attackName: result.attackName,
+                                attackLevel: result.attackLevel,
+                                attackLife: result.attackLife,
+                                attackAge: result.attackAge,
+                                estimatedStats: result.estimatedStats,
+                                xanax: result.xanax,
+                                refills: result.refills,
+                                drinks: result.drinks,
+                                exactStats: result.exactStats,
+                                ffsStats: result.ffsStats,
+                                fairFight: result.fairFight,
+                              );
+                            } catch (e) {
+                              log("Faction assist request failed: $e");
                             }
+                            hideRequesting();
 
                             BotToast.showText(
-                              text: membersMessage,
+                              text: factionAssistResultMessage(membersNotified),
                               textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                              contentColor: membersColor!,
-                              duration: const Duration(seconds: 5),
+                              contentColor: (membersNotified ?? 0) > 0 ? Colors.green : Colors.orange[700]!,
+                              duration: Duration(seconds: factionAssistToastSeconds(membersNotified)),
                               contentPadding: const EdgeInsets.all(10),
                             );
                           },

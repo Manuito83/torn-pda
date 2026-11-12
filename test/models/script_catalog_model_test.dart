@@ -79,9 +79,17 @@ void main() {
       final catalog = ScriptCatalog.tryParse(
         _catalogJson(
           scripts: [
-            {"id": "good", "name": "Good", "downloadUrl": "https://x/y.user.js", "category": "items"},
-            {"id": "", "name": "No id", "downloadUrl": "https://x/y.user.js"},
+            {"id": "good", "name": "Good", "downloadUrl": "https://update.greasyfork.org/y.user.js", "category": "items"},
+            {"id": "", "name": "No id", "downloadUrl": "https://update.greasyfork.org/y.user.js"},
             {"id": "no-url", "name": "No url", "downloadUrl": ""},
+            {"id": "http", "name": "Http", "downloadUrl": "http://update.greasyfork.org/y.user.js"},
+            {"id": "other-host", "name": "Other host", "downloadUrl": "https://greasyfork.org.example.com/y.user.js"},
+            {
+              "id": "other-page",
+              "name": "Other page",
+              "downloadUrl": "https://update.greasyfork.org/y.user.js",
+              "pageUrl": "https://example.com/y",
+            },
           ],
         ),
       );
@@ -195,6 +203,11 @@ void main() {
           reason: '${script.name} download URL must resolve to its declared id',
         );
       }
+    });
+
+    test('no script in the file is dropped as invalid', () {
+      final raw = json.decode(File('userscripts/catalog/torntools.json').readAsStringSync()) as Map<String, dynamic>;
+      expect(catalog.scripts.length, (raw["scripts"] as List).length);
     });
 
     test('script ids and Greasy Fork ids are unique', () {

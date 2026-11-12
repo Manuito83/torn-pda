@@ -36,6 +36,7 @@ dependencies:
   connectivity_plus: 6.1.5
   cookie_jar: 4.0.9
   crypto: 3.0.7
+  cryptography: 2.9.0
   csv: 6.0.0
   cupertino_icons: 1.0.9
   dart_ping: 9.0.1
@@ -51,6 +52,7 @@ dependencies:
   file_picker: 10.3.1
   file_saver: 0.3.1
   firebase_analytics: 12.6.1
+  firebase_app_check: 0.4.9
   firebase_auth: 6.6.0
   firebase_core: 4.15.2
   firebase_crashlytics: 5.3.0

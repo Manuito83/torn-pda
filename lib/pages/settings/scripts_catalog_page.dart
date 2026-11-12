@@ -51,8 +51,6 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
 
   final Set<String> _installing = {};
 
-  static const String _pdaKeyWord = "###PDA-APIKEY###";
-
   // Key applied to every catalog script that supports one, empty means the Torn PDA key
   String _catalogApiKey = "";
 
@@ -719,7 +717,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                     "$stateText\n\nYou can manage it from the user scripts list, or use the shortcuts below.",
                     style: const TextStyle(fontSize: 13, height: 1.35),
                   ),
-                  if (model.source.contains(_pdaKeyWord)) ...[
+                  if (model.source.contains(apiKeyPlaceholder)) ...[
                     const SizedBox(height: 12),
                     InkWell(
                       borderRadius: BorderRadius.circular(8),
@@ -1102,7 +1100,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     if (catalog == null) return const [];
     final ids = catalog.scripts.map((s) => s.greasyforkId).toSet();
     return _userScriptsProvider.userScriptList
-        .where((s) => ids.contains(CatalogScript.greasyforkIdFromUrl(s.url)) && s.source.contains(_pdaKeyWord))
+        .where((s) => ids.contains(CatalogScript.greasyforkIdFromUrl(s.url)) && s.source.contains(apiKeyPlaceholder))
         .toList();
   }
 
@@ -1164,7 +1162,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
       }
 
       final model = result.model!;
-      model.customApiKeyCandidate = model.source.contains(_pdaKeyWord);
+      model.customApiKeyCandidate = model.source.contains(apiKeyPlaceholder);
 
       // The provider skips scripts whose name is taken, which would fail silently otherwise
       final String newName = model.name.toLowerCase();

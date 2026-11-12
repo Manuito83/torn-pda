@@ -132,7 +132,18 @@ class CatalogScript {
   final List<String> matches;
   final bool usesApiKey;
 
-  bool get isValid => id.isNotEmpty && name.isNotEmpty && downloadUrl.isNotEmpty;
+  bool get isValid =>
+      id.isNotEmpty &&
+      name.isNotEmpty &&
+      _isGreasyforkUrl(downloadUrl) &&
+      (pageUrl.isEmpty || _isGreasyforkUrl(pageUrl));
+
+  static bool _isGreasyforkUrl(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null &&
+        uri.scheme == "https" &&
+        (uri.host == "greasyfork.org" || uri.host == "update.greasyfork.org");
+  }
 
   static const String everywhere = "Everywhere";
 

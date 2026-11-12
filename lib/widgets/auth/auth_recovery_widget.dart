@@ -125,7 +125,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       _logStep('EARLY_EXIT_UID', details: {'uid': uid ?? 'none'});
-      if (uid != null) FirestoreHelper().setUID(uid);
+      if (uid != null) FirestoreHelper().markSignedIn();
     } catch (e) {
       _logStep('EARLY_EXIT_UID_ERROR', details: {'error': _errorCode(e)});
     }
@@ -271,7 +271,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       _userUid = user.uid;
       _hasAuthenticationError = false;
       if (mounted) setState(() {});
-      await FirestoreHelper().setUID(_userUid);
+      FirestoreHelper().markSignedIn();
       _drawerUserChecked = true;
       _totalRecoveryStopwatch.stop();
       widget.onAuthCompleted?.call();
@@ -292,7 +292,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
           _userUid = user.uid;
           _hasAuthenticationError = false;
           if (mounted) setState(() {});
-          await FirestoreHelper().setUID(_userUid);
+          FirestoreHelper().markSignedIn();
           _drawerUserChecked = true;
           _totalRecoveryStopwatch.stop();
           widget.onAuthCompleted?.call();
@@ -710,7 +710,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     _userUid = uid;
     if (mounted) setState(() {});
 
-    await FirestoreHelper().setUID(_userUid);
+    FirestoreHelper().markSignedIn();
     await _syncProfileToFirebase();
 
     _totalRecoveryStopwatch.stop();
@@ -745,7 +745,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     _userUid = uid;
     if (mounted) setState(() {});
 
-    await FirestoreHelper().setUID(_userUid);
+    FirestoreHelper().markSignedIn();
 
     // Try to recover alerts (local snapshot first, then Firestore)
     final outcome = await _tryRecoverAlerts(currentUid: _userUid);
@@ -783,12 +783,9 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   }
 
   Future<bool> _restoreFromLocalSnapshot() async {
-    final snapshot = await FirestoreHelper().loadLocalSnapshot();
-    if (snapshot == null || _debugFailLocalRecovery) {
-      return false;
-    }
-
-    final restored = await FirestoreHelper().applyAlertsFromPayload(snapshot.toMap(), resetRestockTimestamps: true);
+    if (_debugFailLocalRecovery) return false;
+    final restored =
+        await FirestoreHelper().restoreAlertsFromLocalSnapshot(UserHelper.playerId, newSession: true) != null;
     log("AUTH_DEBUG: Local snapshot restore: $restored", name: "AUTH_DEBUG");
     return restored;
   }
