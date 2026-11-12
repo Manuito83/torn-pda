@@ -2,8 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
-
-const aDayInMilliseconds = 24 * 60 * 60 * 1000;
+import { aDayInMilliseconds } from "./time";
 
 // Ceiling per run, so a big backlog drains over several nights instead of in one burst
 const staleMaxPerRun = 10000;
@@ -78,6 +77,34 @@ async function remindInactive(now: number) {
   );
 }
 
+// Clock ahead: expire normally from today
+async function resetFutureLastActive(now: number) {
+  let totalReset = 0;
+  try {
+    while (totalReset < staleMaxPerRun) {
+      const snapshot = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("lastActive", ">", now + aDayInMilliseconds)
+        .orderBy("lastActive")
+        .limit(500)
+        .get();
+      if (snapshot.empty) {
+        break;
+      }
+
+      const batch = admin.firestore().batch();
+      snapshot.docs.forEach((doc) => batch.update(doc.ref, { lastActive: now }));
+      await batch.commit();
+      totalReset += snapshot.size;
+    }
+  } catch (error) {
+    logger.error("Future lastActive reset aborted", error);
+  }
+  logger.info(`Future lastActive reset: ${totalReset}`);
+}
+
 export const deactivateStale = onSchedule(
   {
     schedule: "0 0 * * *",
@@ -88,15 +115,16 @@ export const deactivateStale = onSchedule(
   async () => {
     const currentDateInMillis = Date.now();
     const batchSize = 500;
-    let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
     let totalProcessed = 0;
     let notifySent = 0;
     let notifySkipped = 0;
     let notifyFailed = 0;
 
     await remindInactive(currentDateInMillis);
+    await resetFutureLastActive(currentDateInMillis);
 
     // This pull the users who haven't open the app for 10 days
+    let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
     while (totalProcessed < staleMaxPerRun) {
       let query = admin
         .firestore()
@@ -119,7 +147,7 @@ export const deactivateStale = onSchedule(
       snapshot.docs.forEach((doc) => {
         const user = doc.data();
         batch.update(doc.ref, { active: false });
-        logger.warn(`Staled: ${user.playerId} with UID ${user.uid}`);
+        logger.warn(`Staled: ${user.playerId} with UID ${doc.id}`);
       });
       await batch.commit();
 

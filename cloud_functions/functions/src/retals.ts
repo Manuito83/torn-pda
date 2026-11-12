@@ -4,6 +4,13 @@ import * as admin from "firebase-admin";
 import { FactionModel, Attack, State } from "./interfaces/faction_interface";
 import { sendNotificationToUser } from "./notification";
 import { isDiscreetNow } from "./discreet";
+import { RECIPIENT_FACTION_FIELD } from "./verified_players";
+import { getFactionSelections, INVALID_KEY_ERRORS, isApiKey } from "./torn_api";
+import { createHash } from "crypto";
+
+const maxKeysPerCycle = 5;
+const tornTimeoutMs = 60 * 1000;
+const rejectedRetryMs = 60 * 60 * 1000;
 
 export const evaluateRetals = onSchedule(
     {
@@ -40,12 +47,15 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
     let ownFactionId = 0;
     let lastSubscriber = "";
     try {
-        ownFactionId = +id;  // Parse to integer
+        // Placeholder in the db, skip
+        if (id === "0") return;
+        if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(+id)) {
+            await refFactions.child(id).remove();
+            return;
+        }
+        ownFactionId = +id;
 
         const originalNoHostWarning = factionsList[id].noHostWarning;
-
-        // Placeholder in the db, skip
-        if (ownFactionId === 0) return;
 
         // DEBUG!
         //if (ownFactionId !== 33241) return;
@@ -64,9 +74,26 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         let subscribers: any[] = [];
 
         // Is any API key available?
-        let apiKey = factionsList[id].api ?? "";
+        let savedApi = isApiKey(factionsList[id].api) ? factionsList[id].api : "";
+        let apiKey = savedApi;
+        const now = Date.now();
+        const savedRejected = factionsList[id].rejected;
+        const rejected = recentRejections(savedRejected, now);
+        let tries = 0;
+        let apiAttacks: any = null;
 
-        if (apiKey === "") {
+        if (apiKey !== "") {
+            tries++;
+            apiAttacks = await getFactionAttacks(ownFactionId, apiKey);
+            if (await isUnusableKey(apiAttacks, apiKey)) {
+                rejected[keyHash(apiKey)] = now;
+                apiAttacks = null;
+                savedApi = "";
+                promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
+            }
+        }
+
+        if (apiAttacks === null) {
             // There might not be anything on first execution
 
             // Get all members subscribed from this faction and get the API key of the last active
@@ -75,11 +102,11 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                 .firestore()
                 .collection("players")
                 .where("active", "==", true)
-                .where("faction", "==", ownFactionId)  // Parsed id
+                .where(RECIPIENT_FACTION_FIELD, "==", ownFactionId)  // Parsed id
                 .where("retalsNotification", "==", true)
                 .get();
 
-            subscribers = factionsSubscribers.docs.map((d) => d.data());
+            subscribers = factionsSubscribers.docs.map((d) => ({ ...d.data(), uid: d.id }));
 
             // If there are no subscribers, get rid of this faction in the database
             if (subscribers.length === 0) {
@@ -87,140 +114,60 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                 return;
             }
 
-            // If there are no hosts, send a notification
-            let numberOfHosts = 0;
-            for (const key of Array.from(subscribers.keys())) {
-                if (subscribers[key].retalsNotificationHost) {
-                    numberOfHosts++
+            // Newest hosts first, skip recently rejected keys
+            const hosts = subscribers
+                .filter((s) => s.retalsNotificationHost && isApiKey(s.apiKey))
+                .sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0));
+
+            apiKey = "";
+            for (const host of hosts) {
+                if (rejected[keyHash(host.apiKey)] !== undefined) continue;
+                if (tries >= maxKeysPerCycle) break;
+                tries++;
+                apiAttacks = await getFactionAttacks(ownFactionId, host.apiKey);
+                if (await isUnusableKey(apiAttacks, host.apiKey)) {
+                    rejected[keyHash(host.apiKey)] = now;
+                    apiAttacks = null;
+                    continue;
                 }
+                apiKey = host.apiKey;
+                break;
             }
 
-            if (numberOfHosts === 0) {
-                if (!factionsList[id].noHostWarning) {
-                    for (const key of Array.from(subscribers.keys())) {
-                        let title = "Retaliation notifications inactive";
-                        let body = "No users in this faction detected with faction API access permits " +
-                            "and retaliation notifications active in Torn PDA.\n\n" +
-                            "Retaliation notifications might not work!";
-                        if (isDiscreetNow(subscribers[key])) {
-                            title = `Retals`;
-                            body = `Inactive`;
-                        }
+            // Update the faction apiKey and rejected hosts
+            const hostHashes = new Set(hosts.map((host) => keyHash(host.apiKey)));
+            const rejectedHosts = Object.fromEntries(Object.entries(rejected).filter(([hash]) => hostHashes.has(hash)));
+            if (apiKey !== savedApi) {
+                promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(apiKey));
+            }
+            if (!sameRejected(rejectedHosts, savedRejected)) {
+                promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/rejected`).set(rejectedHosts));
+            }
 
-                        try {
-                            promisesFaction.push(
-                                sendNotificationToUser({
-                                    token: subscribers[key].token,
-                                    title: title,
-                                    body: body,
-                                    icon: "notification_retals",
-                                    color: "#FF0000",
-                                    channelId: "Alerts retals",
-                                    assistId: "-1",
-                                    bulkDetails: "-1",
-                                    vibration: subscribers[key].vibration,
-                                    sound: "sword_clash.aiff"
-                                })
-                            );
-                        } catch {
-                            // Entity not found?
-                        }
-                    }
+            if (apiAttacks === null) {
+                // No usable key left, warn once
+                if (!originalNoHostWarning && hosts.every((host) => rejected[keyHash(host.apiKey)] !== undefined)) {
+                    promisesFaction.push(...warnNoHost(subscribers));
+                    promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(true));
                 }
-                promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(true));
+                await Promise.all(promisesFaction);
                 return;
-            } else if (numberOfHosts > 0) {
-                // Rearm the no-hosts warning
-                promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(false));
             }
+        }
 
-            // Update with the most recent updated subscriber
-            // (to ensure that the apiKey is valid)
-            let lastActiveUserTime = 0;
-            let lastActiveUserApiKey = "";
+        // Torn did not answer, keep the timestamp
+        if (apiAttacks.error) {
+            await Promise.all(promisesFaction);
+            return;
+        }
 
-            for (const key of Array.from(subscribers.keys())) {
-                // Only take into account hosts (users with faction API permits)
-                if (!subscribers[key].retalsNotificationHost) continue;
-
-                if (subscribers[key].lastActive > lastActiveUserTime) {
-                    lastActiveUserTime = subscribers[key].lastActive;
-                    lastActiveUserApiKey = subscribers[key].apiKey;
-                }
-            }
-
-            apiKey = lastActiveUserApiKey;
-            // Update the faction apiKey
-            promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(lastActiveUserApiKey));
+        // Rearm the no-hosts warning
+        if (originalNoHostWarning) {
+            promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(false));
         }
 
         // Update the faction timestamp
         promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/timestamp`).set(currentDateInMillis));
-
-        // Use api to get attacks information and see if we have new retals
-        const response = await fetch(`https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}&comment=PDA-App`);
-        const apiAttacks = await response.json();
-
-        // If permissions are not right, remove this user as a host
-        // Code 7 == Incorrect ID-entity relation
-        if (apiAttacks.error && apiAttacks.error.code === 7) {
-            promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
-
-            const noPermsUser = await admin
-                .firestore()
-                .collection("players")
-                .where("apiKey", "==", apiKey)
-                .get();
-
-            subscribers = noPermsUser.docs.map((d) => d.data());
-
-            for (const key of Array.from(subscribers.keys())) {
-                promisesFaction.push(
-                    admin
-                        .firestore()
-                        .collection("players")
-                        .doc(subscribers[key].uid)
-                        .update({
-                            retalsNotificationHost: false,
-                        })
-                );
-            }
-
-            // If we had already sent a no-host warning to the faction, and for some
-            // reason we encounter a username that lost his privileges after activating
-            // (still with host == true), leave the warning as it was to avoid sending another notification
-            if (originalNoHostWarning) {
-                promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/noHostWarning`).set(true));
-            }
-            return;
-        }
-
-        // If the key is incorrect, deactivate the user and clean the key in the db
-        // Code 2 == Incorrect Key
-        if (apiAttacks.error && apiAttacks.error.code === 2) {
-            promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/api`).set(""));
-
-            const incorrectKeyUser = await admin
-                .firestore()
-                .collection("players")
-                .where("apiKey", "==", apiKey)
-                .get();
-
-            subscribers = incorrectKeyUser.docs.map((d) => d.data());
-
-            for (const key of Array.from(subscribers.keys())) {
-                promisesFaction.push(
-                    admin
-                        .firestore()
-                        .collection("players")
-                        .doc(subscribers[key].uid)
-                        .update({
-                            active: false,
-                        })
-                );
-            }
-            return;
-        }
 
         const factionModel: FactionModel = apiAttacks;
 
@@ -318,11 +265,11 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                 .firestore()
                 .collection("players")
                 .where("active", "==", true)
-                .where("faction", "==", ownFactionId)  // Parsed id
+                .where(RECIPIENT_FACTION_FIELD, "==", ownFactionId)  // Parsed id
                 .where("retalsNotification", "==", true)
                 .get();
 
-            subscribers = refillSubscribers.docs.map((d) => d.data());
+            subscribers = refillSubscribers.docs.map((d) => ({ ...d.data(), uid: d.id }));
 
             // If there are no subscribers, get rid of this faction in the database
             if (subscribers.length === 0) {
@@ -336,6 +283,9 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
             let lastActiveUserApiKey = "";
 
             for (const key of Array.from(subscribers.keys())) {
+                if (!subscribers[key].retalsNotificationHost) continue;
+                if (!isApiKey(subscribers[key].apiKey) || rejected[keyHash(subscribers[key].apiKey)] !== undefined) continue;
+
                 if (subscribers[key].lastActive > lastActiveUserTime) {
                     lastActiveUserTime = subscribers[key].lastActive;
                     lastActiveUserApiKey = subscribers[key].apiKey;
@@ -445,4 +395,64 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
         return;
     }
+}
+
+async function getFactionAttacks(factionId: number, apiKey: string) {
+    return getFactionSelections(factionId, "basic,attacks", apiKey, "PDA-App", tornTimeoutMs);
+}
+
+// Stored instead of the key
+function keyHash(apiKey: string) {
+    return createHash("sha256").update(apiKey).digest("hex").slice(0, 16);
+}
+
+function recentRejections(saved: any, now: number): Record<string, number> {
+    if (typeof saved !== "object" || saved === null) return {};
+    return Object.fromEntries(Object.entries(saved)
+        .filter(([, at]) => typeof at === "number" && now - at < rejectedRetryMs)) as Record<string, number>;
+}
+
+function sameRejected(current: Record<string, number>, saved: any) {
+    const sorted = (rejected: any) => JSON.stringify(Object.entries(rejected ?? {}).sort());
+    return sorted(current) === sorted(typeof saved === "object" ? saved : {});
+}
+
+function warnNoHost(subscribers: any[]) {
+    return subscribers.map((subscriber) => {
+        let title = "Retaliation notifications inactive";
+        let body = "No users in this faction detected with faction API access permits " +
+            "and retaliation notifications active in Torn PDA.\n\n" +
+            "Retaliation notifications might not work!";
+        if (isDiscreetNow(subscriber)) {
+            title = `Retals`;
+            body = `Inactive`;
+        }
+        return sendNotificationToUser({
+            token: subscriber.token,
+            title: title,
+            body: body,
+            icon: "notification_retals",
+            color: "#FF0000",
+            channelId: "Alerts retals",
+            assistId: "-1",
+            bulkDetails: "-1",
+            vibration: subscriber.vibration,
+            sound: "sword_clash.aiff"
+        }).catch((e) => logger.warn(`ERROR RETALS NO HOST\n${e}`));
+    });
+}
+
+// Skip unusable keys, demote only 7
+async function isUnusableKey(apiAttacks: any, apiKey: string) {
+    const code = apiAttacks?.error?.code;
+    if (INVALID_KEY_ERRORS.includes(code)) return true;
+    if (code !== 7) return false;
+
+    const sameKeyUsers = await admin
+        .firestore()
+        .collection("players")
+        .where("apiKey", "==", apiKey)
+        .get();
+    await Promise.all(sameKeyUsers.docs.map((d) => d.ref.update({ retalsNotificationHost: false })));
+    return true;
 }

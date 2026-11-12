@@ -22,7 +22,7 @@ export const sendForumsSubscription = onSchedule({
       //.where("name", "==", "Manuito")
       .get();
 
-    const subscribers = response.docs.map((d) => d.data());
+    const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }) as any);
 
     let ipBlocks = 0;
     let sent = 0;

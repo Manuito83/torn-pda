@@ -150,7 +150,7 @@ export const lootAlerts = onSchedule(
                             .where("lootAlerts", "array-contains", `${npcId}:${warnLevel}`)
                             .get();
 
-                        const subscribers = response.docs.map((d) => d.data());
+                        const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }) as any);
                         let usersNotified = 0;
 
                         const bucketMapRef = db.ref(`loot/alertsTimestamp/${npcId}/${warnLevel}`);
