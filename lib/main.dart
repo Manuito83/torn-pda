@@ -213,7 +213,15 @@ Future<void> main() async {
   await drainFcmInbox();
 
   // Sync background-safe preferences
-  await Prefs().syncBackgroundPrefs();
+  Object? syncPrefsError;
+  StackTrace? syncPrefsStack;
+  try {
+    await Prefs().syncBackgroundPrefs();
+  } catch (e, stackTrace) {
+    log("Error syncing background prefs: $e");
+    syncPrefsError = e;
+    syncPrefsStack = stackTrace;
+  }
 
   if (Platform.isAndroid && await Prefs().getBrowserRemoteDebugging()) {
     try {
@@ -222,11 +230,33 @@ Future<void> main() async {
   }
 
   // Core initialization
-  await _initializeAppCompilation();
+  Object? compilationError;
+  StackTrace? compilationStack;
+  try {
+    await _initializeAppCompilation();
+  } catch (e, stackTrace) {
+    log("Error initializing app compilation: $e");
+    compilationError = e;
+    compilationStack = stackTrace;
+  }
   await _initializePlatformSpecifics();
   await _initializeBackupAndTheme(widgetsBinding);
   _startDebugWakelock();
   await _initializeFirebase();
+  if (syncPrefsError != null) {
+    logErrorToCrashlytics(
+      "Error syncing background prefs",
+      "Background prefs sync failed: $syncPrefsError",
+      syncPrefsStack,
+    );
+  }
+  if (compilationError != null) {
+    logErrorToCrashlytics(
+      "Error initializing app compilation",
+      "App compilation init failed: $compilationError",
+      compilationStack,
+    );
+  }
   if (_isFirebaseInitialized) {
     unawaited(ExitInfo.reportPreviousExits());
     unawaited(StatsController.chat.flush());

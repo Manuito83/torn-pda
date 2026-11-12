@@ -157,21 +157,6 @@
 	<true/>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>We need permission to schedule alarms for your game events.</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>torn.com</key>
-			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSTemporaryExceptionMinimumTLSVersion</key>
-				<string>TLSv1.1</string>
-			</dict>
-		</dict>
-	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Torn PDA uses the camera when a web page asks you to take a photo or video to upload.</string>
 	<key>NSMicrophoneUsageDescription</key>

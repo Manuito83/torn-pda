@@ -1644,7 +1644,7 @@ class WebViewFullState extends State<WebViewFull>
             if (incomingUrl.contains("http://")) {
               _loadUrl(incomingUrl.replaceAll("http:", "https:"));
               // Only the https copy should load
-              if (Platform.isAndroid && incomingUrl.startsWith("http://")) return NavigationActionPolicy.CANCEL;
+              if (incomingUrl.startsWith("http://")) return NavigationActionPolicy.CANCEL;
               return NavigationActionPolicy.ALLOW;
             }
 
