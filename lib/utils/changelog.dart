@@ -110,7 +110,7 @@ class _MVersion {
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
     version: 'v4.0.0',
-    date: '10 November 2026',
+    date: '14 November 2026',
     hotfixes: [],
     sections: [
       _MSection(
