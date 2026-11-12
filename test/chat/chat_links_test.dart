@@ -189,6 +189,9 @@ void main() {
         'https://www.torn.com@example.org/x',
         'https://example.org/torn/login',
         '[torn.com/bazaar](https://example.org/x)',
+        'https://torn.report.example.org/x',
+        'https://torn.report@example.org/x',
+        'https://torn.report/torn/login',
       ]) {
         expect(warning(url), ChatLink.lookalikeWarning, reason: url);
       }
@@ -200,6 +203,7 @@ void main() {
         'https://www.torn.com/profiles.php?XID=1',
         'https://tornstats.com/spy',
         'https://www.tornexchange.com/prices',
+        'https://torn.report/halloween/full',
         'https://example.org/login',
         '[my bazaar](https://example.org/x)',
       ]) {

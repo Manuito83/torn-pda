@@ -256,15 +256,18 @@ class ChatLink {
     r'|(login|signin|secure|auth|verify|support|account|gift|reward|bonus|free|official|staff|admin|help|api|key)torn$',
   );
   static final RegExp _credentialPath = RegExp(r'log-?in|sign-?in|password|api[-_]?key');
+  static const Set<String> _communityHosts = {'torn.report'};
 
   static String? _warning(Uri uri, String host) {
     final userInfo = uri.userInfo.toLowerCase();
     if (userInfo.isNotEmpty) return userInfo.contains('torn') ? lookalikeWarning : 'Hidden address';
+    final community = _communityHosts.contains(host.startsWith('www.') ? host.substring(4) : host);
     final labels = host.split('.');
-    final lookalike = labels
-        .take(labels.length - 1)
-        .map((l) => l.replaceAll('0', 'o').replaceAll(RegExp('[-_]'), ''))
-        .any(_lookalikeLabel.hasMatch);
+    final lookalike = !community &&
+        labels
+            .take(labels.length - 1)
+            .map((l) => l.replaceAll('0', 'o').replaceAll(RegExp('[-_]'), ''))
+            .any(_lookalikeLabel.hasMatch);
     if (lookalike) return lookalikeWarning;
     final rest = '${uri.path}?${uri.query}'.toLowerCase();
     if (rest.contains('torn') && _credentialPath.hasMatch(rest)) return lookalikeWarning;
