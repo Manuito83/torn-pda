@@ -63,17 +63,20 @@ function getLowestPrice(itemId) {
 }
 
 /**
- * Short age of the market data, for the toast.
+ * Note on the market data age, null when fresh.
  * @param {number | null} cachedAt - epoch seconds
- * @returns {string}
+ * @returns {string | null}
  */
-function dataAge(cachedAt) {
-  if (cachedAt === null) return "";
+function dataAgeNote(cachedAt) {
+  if (cachedAt === null) return null;
   const minutes = Math.floor((Date.now() / 1000 - cachedAt) / 60);
-  if (minutes < 1) return " (market data under 1m old)";
-  if (minutes < 120) return ` (market data ${minutes}m old)`;
-  return ` (market data ${Math.floor(minutes / 60)}h old)`;
+  if (minutes < 1) return null;
+  if (minutes < 120) return `Note: data is ${minutes} minutes old`;
+  return `Note: data is ${Math.floor(minutes / 60)} hours old`;
 }
+
+/** @type {string | null} */
+let lastNote = null;
 
 /**
  * Toast through PDA or on the page.
@@ -145,7 +148,9 @@ async function addPrice(input) {
   const priceToSet = Math.max(1, currentLowestPrice - diff);
   updateInput(input, priceToSet);
   input.classList.add("kw--price-set");
-  showToast(`Price set to $${priceToSet.toLocaleString("en-US")}${dataAge(cachedAt)}`);
+  const note = dataAgeNote(cachedAt);
+  if (note && note !== lastNote) showToast(note);
+  lastNote = note;
 }
 
 /**
