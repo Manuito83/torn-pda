@@ -83,7 +83,7 @@ export const sendLootRangersNotification = onSchedule({
       .where("lootRangersNotification", "==", true)
       .get();
 
-    const subscribers = response.docs.map((d) => d.data());
+    const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }) as any);
 
     console.log("Sending Loot Rangers to: " + subscribers.length + " users");
 

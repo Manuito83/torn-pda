@@ -12,9 +12,9 @@ import {
   checkIOS,
   checkAndroidLow,
   checkAndroidHigh,
-  runForUser,
-  sendTestNotification,
-  sendMassNotification
+  // runForUser,
+  // sendTestNotification,
+  // sendMassNotification
 } from "./alerts";
 import { updateNpcs, lootAlerts } from "./loot";
 import { deactivateStale, deleteStale } from "./stale_users";
@@ -34,10 +34,11 @@ import {
 } from "./prefs_backup";
 import { sendTroubleshootingAutoNotification } from "./troubleshooting_notification";
 import { sendForumsSubscription } from "./forums";
-import { registerActivityToken, registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
+import { registerActivityToken, registerPushToStartToken /*, sendTestTravelPushToManuito */ } from "./la_functions";
 import { recalculateStats } from "./stats_recalc";
-import { updateCityShops, cityShopsTest } from "./city_shops";
+import { updateCityShops /*, cityShopsTest */ } from "./city_shops";
 import { countActives } from "./metrics";
+// import { verifyPlayersBackfill } from "./verified_players";
 
 export const alerts = {
   checkIOS: checkIOS,
@@ -45,12 +46,12 @@ export const alerts = {
   checkAndroidHigh: checkAndroidHigh
 };
 
-export const alertsTest = {
-  runForUser: runForUser,
-  sendTestNotification: sendTestNotification,
-  sendMassNotification: sendMassNotification,
-  cityShops: cityShopsTest
-};
+// export const alertsTest = {
+//   runForUser: runForUser,
+//   sendTestNotification: sendTestNotification,
+//   sendMassNotification: sendMassNotification,
+//   cityShops: cityShopsTest
+// };
 
 export const loot = {
   updateNpcs: updateNpcs,
@@ -120,11 +121,15 @@ export const forums = {
 export const liveActivities = {
   registerPushToStartToken: registerPushToStartToken,
   registerActivityToken: registerActivityToken,
-  sendTestTravelPushToManuito: sendTestTravelPushToManuito,
+  // sendTestTravelPushToManuito: sendTestTravelPushToManuito,
 };
 
 export const stats = {
   recalculateStats: recalculateStats
 };
+
+// export const verified = {
+//   verifyPlayersBackfill: verifyPlayersBackfill
+// };
 
 export { lookupPlayerByApiKey } from "./players";

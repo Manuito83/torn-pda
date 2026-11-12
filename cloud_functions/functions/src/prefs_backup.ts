@@ -1,7 +1,12 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 import { checkUserIdKey } from "./torn_api";
+import { takeRateLimitSlot, returnRateLimitSlot } from "./rate_limit";
 import admin from "firebase-admin";
+
+const FAILED_SHARE_ATTEMPTS_PER_CALLER = 5;
+const FAILED_SHARE_ATTEMPTS_PER_ID = 20;
+const SHARE_ATTEMPTS_WINDOW_MS = 60 * 60 * 1000;
 
 /*
  * USERSCRIPTS BACKUP MIGRATION
@@ -475,12 +480,38 @@ export const getImportShare = onCall({
             return JSON.stringify(new UserPrefsOutput(false, 'Invalid input', null, null));
         }
 
+        // Successful attempts give their slots back
+        const tooMany = JSON.stringify(new UserPrefsOutput(false, 'Too many attempts, please try again later', null, null));
+        const callerAttemptsId = `import_${request.auth.uid}`;
+        const shareAttemptsId = `share_${String(inputJson.shareId)}`;
+        const callerWindow = await takeRateLimitSlot(callerAttemptsId, FAILED_SHARE_ATTEMPTS_PER_CALLER, SHARE_ATTEMPTS_WINDOW_MS);
+        if (callerWindow === undefined) {
+            return tooMany;
+        }
+        let shareWindow: number | undefined;
+        const giveSlotsBack = () => Promise.all([
+            returnRateLimitSlot(callerAttemptsId, callerWindow, SHARE_ATTEMPTS_WINDOW_MS),
+            shareWindow === undefined ? undefined : returnRateLimitSlot(shareAttemptsId, shareWindow, SHARE_ATTEMPTS_WINDOW_MS),
+        ]);
+
         // Initialize Firestore
         const db = admin.firestore();
 
         // Reference to the player backup document
-        const mainImportBackupRef = db.collection('player_backup').doc(String(inputJson.shareId));
-        const mainImportBackupDoc = await mainImportBackupRef.get();
+        let mainImportBackupDoc: admin.firestore.DocumentSnapshot | undefined;
+        try {
+            shareWindow = await takeRateLimitSlot(shareAttemptsId, FAILED_SHARE_ATTEMPTS_PER_ID, SHARE_ATTEMPTS_WINDOW_MS);
+            if (shareWindow !== undefined) {
+                mainImportBackupDoc = await db.collection('player_backup').doc(String(inputJson.shareId)).get();
+            }
+        } catch (e) {
+            await giveSlotsBack();
+            throw e;
+        }
+        if (mainImportBackupDoc === undefined) {
+            await giveSlotsBack();
+            return tooMany;
+        }
 
         // If the document doesn't exist, return a failure response
         let importConfiguration: any = {};
@@ -494,6 +525,7 @@ export const getImportShare = onCall({
                 return JSON.stringify(new UserPrefsOutput(false, 'No backup found with the provided details!', null, null));
             }
         }
+        await giveSlotsBack();
 
         // Reference to the prefs subcollection
         const userPrefsRef = mainImportBackupDoc.ref.collection('prefs');

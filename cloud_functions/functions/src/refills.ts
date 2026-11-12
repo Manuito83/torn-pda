@@ -28,7 +28,7 @@ export const sendRefillNotifications = onSchedule(
       .where("refillsNotification", "==", true)
       .get();
 
-    const subscribers = response.docs.map((d) => d.data());
+    const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }) as any);
     let ipBlocks = 0;
     let subscribersThisTime = 0;
     let sent = 0;

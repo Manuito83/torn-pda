@@ -1,8 +1,32 @@
 import { ForumsApiResponse } from './interfaces/forums_interface';
 const { tornParam } = require('../key/torn_key.js');
 
+export const INVALID_KEY_ERRORS = [2, 10, 13, 16, 18];
+
+export function isApiKey(apiKey: unknown): apiKey is string {
+  return typeof apiKey === "string" && apiKey !== "";
+}
+
 export async function getUsersStat(apiKey: string) {
-  const response = await fetch(`https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents,workstats&key=${apiKey}&comment=PDA-Alerts&${tornParam}`);
+  return getUserSelections(apiKey, "profile,bars,travel,icons,cooldowns,newmessages,newevents,workstats", "PDA-Alerts");
+}
+
+export async function getUserSelections(apiKey: string, selections: string, comment: string, timeoutMs?: number) {
+  return getTornJson(
+    `https://api.torn.com/user/?selections=${selections}&key=${encodeURIComponent(apiKey)}&comment=${comment}&${tornParam}`,
+    timeoutMs
+  );
+}
+
+export async function getFactionSelections(factionId: number, selections: string, apiKey: string, comment: string, timeoutMs?: number) {
+  return getTornJson(
+    `https://api.torn.com/faction/${factionId}?selections=${selections}&key=${encodeURIComponent(apiKey)}&comment=${comment}`,
+    timeoutMs
+  );
+}
+
+async function getTornJson(url: string, timeoutMs?: number) {
+  const response = await fetch(url, timeoutMs === undefined ? undefined : { signal: AbortSignal.timeout(timeoutMs) });
   if (!response.ok) {
     return { error: { error: `HTTP ${response.status}` } };
   }
