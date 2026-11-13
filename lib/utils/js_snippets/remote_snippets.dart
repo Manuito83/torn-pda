@@ -1,5 +1,6 @@
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
 
 // JS snippet that ships compiled, but a newer version from RC can replace it at runtime
 class RemoteSnippet {
@@ -34,6 +35,10 @@ class RemoteSnippets {
   static const String travelBuyMax = 'travel_buy_max';
   static const String barsDoubleClick = 'bars_double_click';
   static const String pdaApi = 'pda_api';
+  static const String quickItemsRun = 'quick_items_run';
+  static const String quickItemsPicker = 'quick_items_picker';
+  static const String quickItemsMassCheck = 'quick_items_mass_check';
+  static const String quickItemsLoadout = 'quick_items_loadout';
 
   static final Map<String, RemoteSnippet> _registry = {
     pdaApi: const RemoteSnippet(id: pdaApi, version: '1.0.2', buildBase: _pdaApiBaseJS),
@@ -55,6 +60,14 @@ class RemoteSnippets {
     ),
     travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.2', buildBase: _travelBuyMaxBaseJS),
     barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.2', buildBase: _barsDoubleClickBaseJS),
+    quickItemsRun: const RemoteSnippet(id: quickItemsRun, version: '1.0.0', buildBase: quickItemsRunBaseJS),
+    quickItemsPicker: const RemoteSnippet(id: quickItemsPicker, version: '1.0.0', buildBase: quickItemsPickerBaseJS),
+    quickItemsMassCheck: const RemoteSnippet(
+      id: quickItemsMassCheck,
+      version: '1.0.0',
+      buildBase: quickItemsMassCheckBaseJS,
+    ),
+    quickItemsLoadout: const RemoteSnippet(id: quickItemsLoadout, version: '1.0.0', buildBase: quickItemsLoadoutBaseJS),
   };
 
   static final Map<String, _Override> _overrides = {};

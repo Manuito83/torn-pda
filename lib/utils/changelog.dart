@@ -319,6 +319,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Scripts: @match now follows Tampermonkey rules (http*, any port, pages with #) [xentac]'),
           _MItem('Scripts: a script no longer runs on the previous page after going back [xentac]'),
           _MItem('Quick items: item icons no longer go missing after closing the picker [xentac]'),
+          _MItem('Fixed quick items page detection'),
           _MItem('Profile: the race start notification icon now shows when it is set'),
           _MItem('Profile: manual hospital and jail notifications now follow changes in your release time'),
           _MItem('Travel: flight times now include travel time reduction perks'),

@@ -44,6 +44,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/oc/yata_members_model.dart';
+import 'package:torn_pda/models/quick_items_page.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_profile_icon.dart';
 import 'package:torn_pda/models/userscript_model.dart';
@@ -2097,6 +2098,14 @@ class WebViewFullState extends State<WebViewFull>
             if (_isParked && uri != null) _isParked = false;
             if (uri != null) _latestUrl = uri;
 
+            if (_quickItemsActive && uri != null && !isPersonalQuickItemsPage(uri.toString())) {
+              setState(() {
+                _quickItemsController.expanded = false;
+                _quickItemsActive = false;
+                _quickItemsTriggered = false;
+              });
+            }
+
             final sameUrl = uri?.toString() == _currentUrl;
             if (!sameUrl) {
               _heightExtendInjected = false;
@@ -2256,9 +2265,9 @@ class WebViewFullState extends State<WebViewFull>
                 final uri = await webViewController!.getUrl();
                 _currentUrl = uri.toString();
 
-                if (_currentUrl.contains('tab=armoury') && !_quickItemsFactionTriggered) {
+                if (isFactionQuickItemsPage(_currentUrl) && !_quickItemsFactionTriggered) {
                   _assessFactionQuickItems();
-                } else if (!_currentUrl.contains('tab=armoury') && _quickItemsFactionTriggered) {
+                } else if (!isFactionQuickItemsPage(_currentUrl) && _quickItemsFactionTriggered) {
                   _assessFactionQuickItems(deactivate: true);
                 }
               }
@@ -3852,8 +3861,8 @@ class WebViewFullState extends State<WebViewFull>
     bool getJail = false;
     bool getBounties = false;
 
-    if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
-        (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
+    if ((isPersonalQuickItemsPage(_currentUrl) && !_quickItemsTriggered) ||
+        (!isPersonalQuickItemsPage(_currentUrl) && _quickItemsTriggered)) {
       anySectionTriggered = true;
       getItems = true;
     }
@@ -4826,7 +4835,8 @@ class WebViewFullState extends State<WebViewFull>
   // QUICK ITEMS
   Future _assessQuickItems(String pageTitle) async {
     if (mounted) {
-      if (!pageTitle.contains('items')) {
+      // Html may be from the previous page
+      if (!pageTitle.contains('items') || !isPersonalQuickItemsPage(_currentUrl)) {
         setState(() {
           _quickItemsController.expanded = false;
           _quickItemsActive = false;
@@ -4856,7 +4866,7 @@ class WebViewFullState extends State<WebViewFull>
   // QUICK ITEMS
   Future _assessFactionQuickItems({bool deactivate = false}) async {
     if (mounted) {
-      if (deactivate) {
+      if (deactivate || !isFactionQuickItemsPage(_currentUrl)) {
         setState(() {
           _quickItemsFactionController.expanded = false;
           _quickItemsFactionActive = false;
