@@ -10,11 +10,14 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/chat/chat_share_out.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class MemberDetailsPage extends StatefulWidget {
   final String memberId;
@@ -200,6 +203,24 @@ class MemberDetailsPageState extends State<MemberDetailsPage> {
           _goBack();
         },
       ),
+      actions: [
+        if (NativeChat.canShare && _member != null)
+          IconButton(
+            tooltip: 'Share to chat',
+            icon: const Icon(Icons.forum_outlined),
+            onPressed: () => ChatShareIn.shareText(
+              ChatShareOut.player(
+                name: _member!.name ?? '',
+                id: _member!.playerId ?? 0,
+                level: _member!.level,
+                state: _member!.status?.state,
+                description: _member!.status?.description,
+                until: _member!.status?.until,
+                now: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+              ),
+            ),
+          ),
+      ],
     );
   }
 

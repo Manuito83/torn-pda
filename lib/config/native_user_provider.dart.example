@@ -5,7 +5,13 @@ class NativeUserProvider extends ChangeNotifier {
   NativeLoginType get playerLastLoginMethod => NativeLoginType.none;
   String get playerSToken => "";
   bool get keychainAccessDenied => false;
+  int? get playerId => null;
 
   Future<void> loadPreferences() async {}
   void eraseUserPreferences() {}
+  Future<void> registerPushToken({String? fcmToken}) async {}
+  Future<void> refreshPushToken() async {}
+  Future<void> refreshPushAfterTwoFA() async {}
 }
+
+Future<String?> readNativeApiToken() async => null;

@@ -22,11 +22,14 @@ import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/models/chat/chat_share_out.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
@@ -266,7 +269,30 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                         hasIcon: false,
                       ),
                       header: _header(),
-                      expanded: _footer(),
+                      expanded: Column(
+                        children: [
+                          _footer(),
+                          if (NativeChat.canShare)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.forum_outlined, size: 18),
+                                label: const Text('Share to chat'),
+                                onPressed: () => ChatShareIn.shareText(
+                                  ChatShareOut.foreignStock(
+                                    item: widget.foreignStock.name ?? '',
+                                    country: widget.foreignStock.countryFullName ?? '',
+                                    quantity: widget.foreignStock.quantity ?? 0,
+                                    cost: widget.foreignStock.cost ?? 0,
+                                    age: DateTime.now().difference(
+                                      DateTime.fromMillisecondsSinceEpoch((widget.foreignStock.timestamp ?? 0) * 1000),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -761,7 +787,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           ),
         ),
         const SizedBox(width: 10),
-        _returnLastUpdated(),
+        Flexible(
+          child: FittedBox(fit: BoxFit.scaleDown, child: _returnLastUpdated()),
+        ),
         const SizedBox(width: 10),
       ],
     );
@@ -777,6 +805,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             (TravelTimes.travelTimeMinutesOneWay(
                   ticket: widget.ticket,
                   countryCode: widget.foreignStock.country,
+                  reductionPercent: _settingsProvider.travelTimeReduction,
                 ) *
                 2 /
                 60))
@@ -1735,6 +1764,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.foreignStock.country,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60;
         final totalNeeded = timeToWidgetCountry + timeToTorn;
@@ -1760,6 +1790,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final timeToTornAndBack = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.foreignStock.country,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60 *
             2;
@@ -1789,11 +1820,13 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final timeBackToTorn = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.travelingCountry,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60;
         final timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
               countryCode: widget.foreignStock.country,
+              reductionPercent: _settingsProvider.travelTimeReduction,
             ) *
             60;
         final totalNeeded = timeToFirstCountryFromTorn + timeBackToTorn + timeToWidgetCountry;
@@ -1815,6 +1848,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       _travelSeconds = TravelTimes.travelTimeMinutesOneWay(
             ticket: widget.ticket,
             countryCode: widget.foreignStock.country,
+            reductionPercent: _settingsProvider.travelTimeReduction,
           ) *
           60;
       _earliestArrival = DateTime.now().add(Duration(seconds: _travelSeconds));

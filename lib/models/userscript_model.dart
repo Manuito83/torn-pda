@@ -4,6 +4,9 @@
 
 // Dart imports:
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import "package:http/http.dart" as http;
 import 'package:uuid/uuid.dart';
 import 'userscripts/script_header_model.dart';
@@ -20,6 +23,96 @@ enum ScriptStorageSupport { none, legacyOnly, pdaNative }
 enum UserScriptUpdateStatus { upToDate, updateAvailable, localModified, noRemote, error, updating }
 
 enum UserScriptSort { name, dateNewest }
+
+const String warModeId = "war";
+
+enum ScriptsBulkMode { none, globalDisable, scriptMode }
+
+class UserScriptMode {
+  const UserScriptMode({required this.id, required this.name});
+
+  factory UserScriptMode.fromJson(Map<String, dynamic> json) => UserScriptMode(id: json["id"], name: json["name"]);
+
+  static const war = UserScriptMode(id: warModeId, name: "War mode");
+
+  final String id;
+  final String name;
+
+  bool get isWar => id == warModeId;
+  IconData get icon => isWar ? MdiIcons.swordCross : Icons.tune;
+  Color get color => isWar ? Colors.orange[800]! : Colors.indigo[600]!;
+
+  Map<String, dynamic> toJson() => {"id": id, "name": name};
+}
+
+List<UserScriptMode> userScriptModesFromJson(String encoded) {
+  try {
+    return [for (final m in json.decode(encoded) as List) UserScriptMode.fromJson(m)];
+  } catch (_) {
+    return [];
+  }
+}
+
+String userScriptModesToJson(List<UserScriptMode> modes) => json.encode(modes);
+
+String bulkModeToPrefs(ScriptsBulkMode mode, String activeModeId) => switch (mode) {
+      ScriptsBulkMode.none => "none",
+      ScriptsBulkMode.globalDisable => "globalDisable",
+      ScriptsBulkMode.scriptMode => activeModeId == warModeId ? "warMode" : "mode:$activeModeId",
+    };
+
+({ScriptsBulkMode mode, String? modeId}) bulkModeFromPrefs(String saved) {
+  if (saved == "globalDisable") return (mode: ScriptsBulkMode.globalDisable, modeId: null);
+  if (saved == "warMode") return (mode: ScriptsBulkMode.scriptMode, modeId: warModeId);
+  if (saved.startsWith("mode:")) return (mode: ScriptsBulkMode.scriptMode, modeId: saved.substring(5));
+  return (mode: ScriptsBulkMode.none, modeId: null);
+}
+
+// Registered groups not meant for url
+List<String> staleScriptGroups(Iterable<String> registered, Iterable<UserScriptModel> active, String url) {
+  final keep = {for (final s in active) if (s.matchesTarget(url)) s.storageId};
+  return registered.where((g) => !keep.contains(g)).toList();
+}
+
+// Unchanged groups stay registered
+bool needsRegistering(String? group, String source, Map<String, String> registered) =>
+    group == null || registered[group] != source;
+
+// Runs once per document, where guard holds
+String oncePerDocument(String? key, String source, {String? guard}) {
+  final String k = jsonEncode(key ?? 'anon');
+  final String g = guard == null ? '' : '($guard)&&';
+  return "if($g!(window.__pdaOnce=window.__pdaOnce||{})[$k]){window.__pdaOnce[$k]=1;\n$source\n}";
+}
+
+final _anyQuotes = RegExp(r'[“”‘’]');
+final _doubleQuotes = RegExp(r'[“”]');
+final _singleQuotes = RegExp(r'[‘’]');
+
+String _normalizeQuotes(String s) => s.replaceAll(_doubleQuotes, '"').replaceAll(_singleQuotes, "'");
+
+const String apiKeyPlaceholder = '###PDA-APIKEY###';
+
+void disableRestoredScript(UserScriptModel script) {
+  script.enabled = false;
+  // Avoid that scripts run as soon as war mode is on when restoring
+  script.modes.clear();
+  script.alwaysActive = false;
+}
+
+// Same string back when nothing changes
+String adaptBody(String source, String apiKey) {
+  if (!source.contains(apiKeyPlaceholder) && !source.contains(_anyQuotes)) return source;
+  return _normalizeQuotes(source.replaceAll(apiKeyPlaceholder, apiKey));
+}
+
+String wrapSource(String body, String storageId) {
+  // Bind PDA_storage to this script's namespace inside its own closure (sid not reachable elsewhere)
+  // jsonEncode the id: it can come from imported/restored data, so never interpolate it raw into JS
+  final String bind =
+      'const PDA_storage = window.__pdaStorageFactory && window.__pdaStorageFactory(${jsonEncode(storageId)});';
+  return "(function() {${_normalizeQuotes(bind)}$body}());";
+}
 
 class UserScriptModel {
   UserScriptModel({
@@ -39,9 +132,11 @@ class UserScriptModel {
     this.grants = const [],
     this.requires = const [],
     this.installedAt = 0,
-    this.warEnabled = false,
+    this.alwaysActive = false,
+    Set<String>? modes,
     String? storageId,
-  }) : storageId = (storageId != null && storageId.isNotEmpty) ? storageId : const Uuid().v4();
+  }) : modes = modes ?? <String>{},
+       storageId = (storageId != null && storageId.isNotEmpty) ? storageId : const Uuid().v4();
 
   bool enabled;
   List<String> matches;
@@ -66,7 +161,10 @@ class UserScriptModel {
   // 0 for those installed before this existed
   int installedAt;
 
-  bool warEnabled;
+  final Set<String> modes;
+
+  // Runs in every mode
+  bool alwaysActive;
 
   // Immutable namespace for PDA_storage; survives rename/update, wiped on delete. Quota lives in ScriptStorage.
   final String storageId;
@@ -113,7 +211,8 @@ class UserScriptModel {
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
         installedAt: json["installedAt"] is int ? json["installedAt"] : 0,
-        warEnabled: json["warEnabled"] is bool ? json["warEnabled"] : false,
+        alwaysActive: json["alwaysActive"] is bool ? json["alwaysActive"] : false,
+        modes: _modesFromJson(json),
         storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     } else {
@@ -134,11 +233,18 @@ class UserScriptModel {
         grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : [],
         requires: json["requires"] is List<dynamic> ? json["requires"].cast<String>() : [],
         installedAt: json["installedAt"] is int ? json["installedAt"] : 0,
-        warEnabled: json["warEnabled"] is bool ? json["warEnabled"] : false,
+        alwaysActive: json["alwaysActive"] is bool ? json["alwaysActive"] : false,
+        modes: _modesFromJson(json),
         storageId: json["storageId"] is String ? json["storageId"] : null,
       );
     }
   }
+
+  // Old backups only carry the war flag
+  static Set<String> _modesFromJson(Map<String, dynamic> json) => {
+    if (json["modes"] is List) ...(json["modes"] as List).whereType<String>(),
+    if (json["warEnabled"] == true) warModeId,
+  };
 
   factory UserScriptModel.fromMetaMap(
     Map<String, dynamic> metaMap, {
@@ -241,7 +347,9 @@ class UserScriptModel {
     "grants": grants,
     "requires": requires,
     "installedAt": installedAt,
-    "warEnabled": warEnabled,
+    "modes": modes.toList(),
+    "warEnabled": modes.contains(warModeId),
+    "alwaysActive": alwaysActive,
     "storageId": storageId,
   };
 
@@ -296,9 +404,113 @@ class UserScriptModel {
     return inSource && source.toLowerCase().contains(q);
   }
 
+  // Rebuilt when source or key changes
+  String? _bodyFor;
+  String? _bodyKey;
+  String _body = "";
+
+  String adaptedBody(String apiKey) {
+    if (!identical(_bodyFor, source) || _bodyKey != apiKey) {
+      _body = adaptBody(source, apiKey);
+      _bodyFor = source;
+      _bodyKey = apiKey;
+    }
+    return _body;
+  }
+
+  // Rebuilt when body or @match changes
+  String? _startFor;
+  String? _startGuard;
+  String _start = "";
+
+  String startSource(String apiKey) {
+    final body = adaptedBody(apiKey);
+    final guard = matchGuardJs;
+    if (!identical(_startFor, body) || !identical(_startGuard, guard)) {
+      _start = oncePerDocument(storageId, wrapSource(body, storageId), guard: guard);
+      _startFor = body;
+      _startGuard = guard;
+    }
+    return _start;
+  }
+
+  // Compiled @match patterns, rebuilt when matches changes
+  List<String>? _compiledFor;
+  List<RegExp?> _compiled = const [];
+
   /// Whether the script targets this url and injection time
-  bool matchesTarget(String url, [UserScriptTime? time]) =>
-      (this.time == time || time == null) && matches.any((match) => _matchPattern(match, url));
+  bool matchesTarget(String url, [UserScriptTime? time]) => matchingPattern(url, time) != null;
+
+  /// The @match pattern that hits, if any
+  String? matchingPattern(String url, [UserScriptTime? time]) {
+    if (time != null && this.time != time) return null;
+    _compile();
+    String? withHash;
+    String? noHash;
+    for (var i = 0; i < _compiledFor!.length; i++) {
+      final pattern = _compiledFor![i];
+      if (pattern == '*') return pattern;
+      // Keep hash only if pattern has one
+      final target = pattern.contains('#') ? (withHash ??= _withPath(url)) : (noHash ??= _withPath(_withoutHash(url)));
+      final regex = _compiled[i];
+      // Non-standard pattern: old "contains" heuristic
+      final hit = regex != null ? regex.hasMatch(target) : target.contains(pattern.replaceAll('*', ''));
+      if (hit) return pattern;
+    }
+    return null;
+  }
+
+  void _compile() {
+    if (listEquals(_compiledFor, matches)) return;
+    _compiledFor = List.of(matches);
+    _compiled = [for (final m in _compiledFor!) m == '*' ? null : _tryPatternToRegex(m)];
+    _matchGuard = null;
+  }
+
+  String? _matchGuard;
+
+  // matchesTarget in JS, null if any URL
+  String? get matchGuardJs {
+    _compile();
+    if (_compiledFor!.contains('*')) return null;
+    return _matchGuard ??= _buildMatchGuard();
+  }
+
+  String _buildMatchGuard() {
+    final tests = <String>[];
+    for (var i = 0; i < _compiledFor!.length; i++) {
+      final pattern = _compiledFor![i];
+      // Same hash rule as matchingPattern
+      final target = pattern.contains('#') ? 'h' : 'u';
+      final regex = _compiled[i];
+      tests.add(
+        regex != null
+            ? "new RegExp(${jsonEncode(regex.pattern)}).test($target)"
+            : "$target.indexOf(${jsonEncode(pattern.replaceAll('*', ''))})>=0",
+      );
+    }
+    final hit = tests.isEmpty ? 'false' : tests.join('||');
+    return "(function(h){var u=h.split('#')[0];return $hit;})(location.href)";
+  }
+
+  static RegExp? _tryPatternToRegex(String pattern) {
+    try {
+      return _patternToRegex(pattern);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String _withoutHash(String url) {
+    final hash = url.indexOf('#');
+    return hash < 0 ? url : url.substring(0, hash);
+  }
+
+  // Regex needs "/" after host
+  static String _withPath(String url) {
+    final uri = Uri.tryParse(url);
+    return uri != null && uri.path.isEmpty ? '$url/' : url;
+  }
 
   /// Converts a Tampermonkey-style @match pattern to a [RegExp].
   ///
@@ -310,26 +522,26 @@ class UserScriptModel {
   /// For backwards compatibility, patterns without a protocol get `*://`
   /// prepended, and patterns without a path get `/*` appended.
   static RegExp _patternToRegex(String pattern) {
-    final fullMatch = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+    final fullMatch = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
     RegExpMatch? match = fullMatch;
 
     if (match == null) {
       // Try without a path (e.g. "https://example.com")
-      final noPath = RegExp(r'^(https?|file|\*):\/\/([^/]*)$').firstMatch(pattern);
+      final noPath = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)$').firstMatch(pattern);
       if (noPath != null) {
         pattern = '$pattern/*';
-        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+        match = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
       }
     }
 
     if (match == null) {
       // Legacy pattern without protocol – prepend *://
       pattern = '*://$pattern';
-      match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+      match = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
       if (match == null) {
         // Still no path component
         pattern = '$pattern/*';
-        match = RegExp(r'^(https?|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
+        match = RegExp(r'^(https?|http\*|file|\*):\/\/([^/]*)\/(.*)$').firstMatch(pattern);
       }
     }
 
@@ -341,7 +553,7 @@ class UserScriptModel {
     final host = match.group(2)!;
     final path = match.group(3)!;
 
-    final schemeRe = scheme == '*' ? 'https?' : RegExp.escape(scheme);
+    final schemeRe = scheme == '*' || scheme == 'http*' ? 'https?' : RegExp.escape(scheme);
 
     String hostRe = RegExp.escape(host);
     // Handle *.example.com  →  optional subdomain prefix
@@ -350,31 +562,12 @@ class UserScriptModel {
     } else {
       hostRe = hostRe.replaceAll(r'\*', '[^/]*');
     }
+    // Any port, unless the pattern has one
+    if (!host.contains(':')) hostRe = '$hostRe(?::\\d+)?';
 
     final pathRe = RegExp.escape(path).replaceAll(r'\*', '.*');
 
     return RegExp('^$schemeRe://$hostRe/$pathRe\$');
-  }
-
-  /// Returns `true` when [url] satisfies the given @match [pattern].
-  ///
-  /// A bare `*` is kept as the universal wildcard for backwards compatibility.
-  /// Invalid patterns silently return `false` to avoid breaking the app.
-  static bool _matchPattern(String pattern, String url) {
-    if (pattern == '*') return true;
-    try {
-      // Normalise URLs without a path (e.g. "https://example.com") so
-      // the regex always has a "/" to match against.
-      final uri = Uri.tryParse(url);
-      if (uri != null && uri.path.isEmpty) {
-        url = '$url/';
-      }
-      return _patternToRegex(pattern).hasMatch(url);
-    } catch (_) {
-      // Fall back to the old "contains" heuristic so we don't break scripts
-      // that use a non-standard pattern we haven't accounted for.
-      return url.contains(pattern.replaceAll('*', ''));
-    }
   }
 
   void update({

@@ -16,6 +16,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -24,22 +25,27 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
+import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/pages/settings/drawer_sections_page.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/player_notes_list_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
+import 'package:torn_pda/pages/settings/split_links_examples_page.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
@@ -73,11 +79,9 @@ import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:vibration/vibration.dart';
 
 class SettingsPage extends StatefulWidget {
-  final Function changeUID;
   final StatsController statsController;
 
   const SettingsPage({
-    required this.changeUID,
     required this.statsController,
     super.key,
   });
@@ -144,10 +148,12 @@ class SettingsPageState extends State<SettingsPage> {
   List<Widget> buildFilteredSections() {
     List<Widget> sections = [
       _browserSection(),
+      _chatSection(),
       _shortcutsSection(),
       _timeSection(),
       _notificationsSection(),
-      if (Platform.isAndroid) _appWidgetSection(),
+      if (Platform.isAndroid || Platform.isIOS) _appWidgetSection(),
+      if (Platform.isAndroid && Get.find<PipController>().supported) _floatingWindowSection(),
       _spiesSection(),
       _playerNotesSection(),
       _ffScouterSection(),
@@ -202,7 +208,6 @@ class SettingsPageState extends State<SettingsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _loadRefreshRateInfo();
-    analytics?.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
     routeName = "settings";
@@ -224,7 +229,7 @@ class SettingsPageState extends State<SettingsPage> {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      leadingWidth: _isSearching ? 56 : (_webViewProvider.webViewSplitActive ? 50 : 88),
+      leadingWidth: _isSearching ? 56 : (_webViewProvider.appCanOpenBrowser ? 88 : 50),
       leading: !_isSearching
           ? Row(
               children: [
@@ -241,7 +246,7 @@ class SettingsPageState extends State<SettingsPage> {
                     }
                   },
                 ),
-                if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+                if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
               ],
             )
           : IconButton(
@@ -353,7 +358,6 @@ class SettingsPageState extends State<SettingsPage> {
                           apiKeyInputController: _apiKeyInputController,
                           expandableController: _expandableController,
                           getApiDetails: _getApiDetails,
-                          changeUID: (value) => widget.changeUID(value),
                           setStateOnParent: () => setState(() {}),
                           changeApiError: (val) => setState(() => _apiError = val),
                           changeUserProfile: (val) => setState(() => _userProfile = val),
@@ -428,6 +432,7 @@ class SettingsPageState extends State<SettingsPage> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
+                      settings: const RouteSettings(name: 'settings_browser'),
                       builder: (BuildContext context) => const SettingsBrowserPage(),
                     ),
                   );
@@ -440,6 +445,34 @@ class SettingsPageState extends State<SettingsPage> {
     ];
     return buildSectionWithRows(
       title: "BROWSER",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _chatSection() {
+    if (!NativeChat.compiled) return const SizedBox.shrink();
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Chat settings",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Chat settings"),
+              IconButton(
+                icon: const Icon(Icons.forum_rounded),
+                onPressed: () => showChatSettingsFrom(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+    return buildSectionWithRows(
+      title: "CHAT",
       rows: rows,
       searchText: _searchText,
     );
@@ -461,7 +494,32 @@ class SettingsPageState extends State<SettingsPage> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
+                      settings: const RouteSettings(name: 'shortcuts'),
                       builder: (BuildContext context) => ShortcutsPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "App icon menu",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("App icon menu"),
+              IconButton(
+                icon: const Icon(Icons.apps_rounded),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      settings: const RouteSettings(name: 'app_icon_menu'),
+                      builder: (BuildContext context) => const AppIconMenuPage(),
                     ),
                   );
                 },
@@ -694,6 +752,35 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  bool get _h12 => _settingsProvider.currentTimeFormat == TimeFormatSetting.h12;
+
+  Widget _discreetHourLabel(int minutes) {
+    final at = DateTime(2000, 1, 1, minutes ~/ 60, minutes % 60);
+    return Text(DateFormat(_h12 ? 'h:mm a' : 'HH:mm').format(at));
+  }
+
+  Future<void> _pickDiscreetHour({required bool from}) async {
+    final current = _settingsProvider.discreetSchedule;
+    final minutes = from ? current.from : current.to;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: !_h12),
+        child: child!,
+      ),
+    );
+    if (picked == null || !mounted) return;
+    final value = picked.hour * 60 + picked.minute;
+    setState(() {
+      _settingsProvider.discreetSchedule = DiscreetSchedule(
+        enabled: current.enabled,
+        from: from ? value : current.from,
+        to: from ? current.to : value,
+      );
+    });
+  }
+
   Widget _notificationsSection() {
     List<SearchableRow> rows = [
       SearchableRow(
@@ -707,7 +794,7 @@ class SettingsPageState extends State<SettingsPage> {
               Flexible(
                 child: Row(
                   children: [
-                    const Text("Discreet local notifications"),
+                    const Flexible(child: Text("Discreet local notifications")),
                     IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () {
@@ -724,7 +811,7 @@ class SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               Switch(
-                value: _settingsProvider.discreetNotifications,
+                value: _settingsProvider.discreetNotificationsOption,
                 onChanged: (value) {
                   setState(() {
                     _settingsProvider.discreetNotifications = value;
@@ -733,6 +820,64 @@ class SettingsPageState extends State<SettingsPage> {
                 activeTrackColor: Colors.lightGreenAccent,
                 activeThumbColor: Colors.green,
               ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Discreet schedule",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Schedule")),
+                  Switch(
+                    value: _settingsProvider.discreetSchedule.enabled,
+                    onChanged: (value) {
+                      final current = _settingsProvider.discreetSchedule;
+                      setState(() {
+                        _settingsProvider.discreetSchedule = DiscreetSchedule(
+                          enabled: value,
+                          from: current.from,
+                          to: current.to,
+                        );
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              if (_settingsProvider.discreetSchedule.enabled) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("From"),
+                    TextButton(
+                      onPressed: () => _pickDiscreetHour(from: true),
+                      child: _discreetHourLabel(_settingsProvider.discreetSchedule.from),
+                    ),
+                    const Text("To"),
+                    TextButton(
+                      onPressed: () => _pickDiscreetHour(from: false),
+                      child: _discreetHourLabel(_settingsProvider.discreetSchedule.to),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    "Covers notifications created by Torn PDA on this phone and Torn PDA server alerts. "
+                    "Not covered: Torn private messages on iOS while the app is in the background or closed, "
+                    "other apps and the Torn website",
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -1025,6 +1170,15 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _appWidgetSection() {
+    final destinationRow = SearchableRow(
+      label: "Cooldown tap destination",
+      searchText: _searchText,
+      child: _appWidgetCooldownTapDestinationSelector(),
+    );
+    if (Platform.isIOS) {
+      return buildSectionWithRows(title: "HOME SCREEN WIDGET", rows: [destinationRow], searchText: _searchText);
+    }
+
     List<SearchableRow> rows = [
       SearchableRow(
         label: "Dark mode",
@@ -1147,12 +1301,7 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
-      if (_settingsProvider.appwidgetCooldownTapOpenBrowser)
-        SearchableRow(
-          label: "Cooldown tap destination",
-          searchText: _searchText,
-          child: _appWidgetCooldownTapDestinationSelector(),
-        ),
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowser) destinationRow,
       SearchableRow(
         label: "Racing tap opens browser",
         searchText: _searchText,
@@ -1188,6 +1337,85 @@ class SettingsPageState extends State<SettingsPage> {
     ];
     return buildSectionWithRows(
       title: "HOME SCREEN WIDGET",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _floatingWindowSection() {
+    SearchableRow row(String label, String hint, bool value, void Function(bool)? onChanged, {double indent = 20}) {
+      return SearchableRow(
+        label: label,
+        searchText: _searchText,
+        child: Padding(
+          padding: EdgeInsets.only(left: indent, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: Text(label)),
+                  Switch(
+                    value: value,
+                    onChanged: onChanged == null
+                        ? null
+                        : (on) {
+                            setState(() => onChanged(on));
+                            Get.find<PipController>().syncAutoEnter();
+                          },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              if (hint.isNotEmpty)
+                Text(hint, style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final enabled = _settingsProvider.pipEnabled;
+    List<SearchableRow> rows = [
+      row(
+        "Floating window",
+        "Off hides every floating window button",
+        enabled,
+        (value) => _settingsProvider.pipEnabled = value,
+      ),
+      row(
+        "Chain widget button",
+        "",
+        _settingsProvider.pipChainButton,
+        enabled ? (value) => _settingsProvider.pipChainButton = value : null,
+        indent: 40,
+      ),
+      row(
+        "Player lists button",
+        "Targets, war, retals, attacks, FFScouter",
+        _settingsProvider.pipPlayerButtons,
+        enabled ? (value) => _settingsProvider.pipPlayerButtons = value : null,
+        indent: 40,
+      ),
+      row(
+        "Stakeouts button",
+        "",
+        _settingsProvider.pipStakeoutsButton,
+        enabled ? (value) => _settingsProvider.pipStakeoutsButton = value : null,
+        indent: 40,
+      ),
+      row(
+        "Open when leaving the app with the chain watcher on",
+        "No button needed",
+        _settingsProvider.pipAutoEnter,
+        enabled ? (value) => _settingsProvider.pipAutoEnter = value : null,
+        indent: 40,
+      ),
+    ];
+    return buildSectionWithRows(
+      title: "FLOATING WINDOW",
       rows: rows,
       searchText: _searchText,
     );
@@ -2144,6 +2372,16 @@ class SettingsPageState extends State<SettingsPage> {
                   fontStyle: FontStyle.italic,
                 ),
               ),
+              if (!_settingsProvider.allowScreenRotation &&
+                  _webViewProvider.splitScreenPosition != WebViewSplitPosition.off)
+                Text(
+                  'Allow auto rotation to use split screen on phones and foldables',
+                  style: TextStyle(
+                    color: Colors.orange[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
             ],
           ),
         ),
@@ -2175,6 +2413,70 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+      if (_settingsProvider.useTabsFullBrowser &&
+          _webViewProvider.splitBrowsersAllowedRC &&
+          _webViewProvider.splitScreenPosition != WebViewSplitPosition.off)
+        SearchableRow(
+          label: "Links from the app in split screen",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Links from the app in split screen")),
+                    DropdownButton<SplitAppLinkTarget>(
+                      value: _settingsProvider.splitAppLinkTarget,
+                      items: [
+                        for (final (target, label) in [
+                          (SplitAppLinkTarget.browserTab, "Current tab"),
+                          (SplitAppLinkTarget.browserNewTab, "New tab"),
+                          (SplitAppLinkTarget.appSideTab, "Tab behind app"),
+                          (SplitAppLinkTarget.appSideNewTab, "New tab, app side"),
+                        ])
+                          DropdownMenuItem(
+                            value: target,
+                            child: SizedBox(
+                              width: 110,
+                              child: Text(label, textAlign: TextAlign.right, style: const TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _settingsProvider.splitAppLinkTarget = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "When the app and a browser are side by side, links tapped in the app open in the current tab or a new tab of the browser next to it, or on the app's side, which then shows the tab it was covering or a new one",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.play_circle_outline, size: 18),
+                    label: const Text("See examples"),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (BuildContext context) => const SplitLinksExamplesPage()),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       SearchableRow(
         label: "High refresh rate",
         searchText: _searchText,
@@ -2497,7 +2799,7 @@ class SettingsPageState extends State<SettingsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Flexible(child: Text("Override icon")),
+                    const Text("Override icon"),
                     Flexible(child: _manualAppIconDropdown()),
                   ],
                 ),
@@ -3501,7 +3803,7 @@ class SettingsPageState extends State<SettingsPage> {
           if (value == WebViewSplitPosition.off) {
             _webViewProvider.browserShowInForeground = false;
           } else {
-            if (MediaQuery.sizeOf(context).width > 800) {
+            if (MediaQuery.sizeOf(context).width >= kSplitScreenMinWidth) {
               _webViewProvider.webViewSplitActive = true;
 
               // Force stackview convertion from Container if it still hasn't happened
@@ -4296,10 +4598,14 @@ class SettingsPageState extends State<SettingsPage> {
             _expandableController.expanded = false;
           });
 
+          if (!Platform.isWindows) analytics?.logEvent(name: "api_key_loaded");
+
           if (!Platform.isWindows) {
             try {
               // See note in [firebase_auth.dart]
+              final reusedSession = await FirestoreHelper().waitForKeyRemoval();
               final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
+              bool newSession = reusedSession;
               // Only sign in if there is currently no user registered (to avoid duplicates)
               if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
                 final User? newFirebaseUser = await (firebaseAuth.signInAnon());
@@ -4307,13 +4613,26 @@ class SettingsPageState extends State<SettingsPage> {
                 if (newFirebaseUser == null) {
                   log("Settings: Firebase anonymous sign-in failed, continuing without Firebase");
                 } else {
-                  await FirestoreHelper().setUID(newFirebaseUser.uid);
-                  // Returns UID to Drawer so that it can be passed to settings
-                  widget.changeUID(newFirebaseUser.uid);
+                  newSession = true;
+                  FirestoreHelper().markSignedIn();
                   log("Settings: signed in with UID ${newFirebaseUser.uid}");
                 }
               } else {
                 log("Settings: existing user UID ${firebaseUser.uid}");
+              }
+
+              final restored = await FirestoreHelper().restoreAlertsFromLocalSnapshot(
+                myProfile.playerId,
+                newSession: newSession,
+              );
+              if (restored != null && restored.activeAlerts.isNotEmpty) {
+                BotToast.showText(
+                  text: "Your alerts have been restored",
+                  textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                  contentColor: Colors.green,
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
               }
 
               await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
@@ -4321,10 +4640,6 @@ class SettingsPageState extends State<SettingsPage> {
               if (Platform.isAndroid) {
                 FirestoreHelper().setVibrationPattern(_vibrationValue);
               }
-
-              // Sendbird notifications
-              final sbController = Get.find<SendbirdController>();
-              sbController.register();
             } catch (firebaseError) {
               log("Settings: Firebase/Firestore operations failed, continuing: $firebaseError");
             }
@@ -4340,6 +4655,8 @@ class SettingsPageState extends State<SettingsPage> {
             if ((await pdaWidget_numberInstalled()).isNotEmpty) {
               fetchAndPersistWidgetData();
             }
+          } else if (Platform.isIOS) {
+            refreshIosWidget();
           }
         }
       } else if (myProfile is ApiError) {
@@ -4361,13 +4678,11 @@ class SettingsPageState extends State<SettingsPage> {
       }
     } catch (e, stack) {
       if (!Platform.isWindows) {
-        String currentKey = _apiKeyInputController.text.trim();
-        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $currentKey. "
-            "Error: $e. Stack: $stack");
+        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. Error: $e. Stack: $stack");
         FirebaseCrashlytics.instance.recordError(
           e,
           stack,
-          information: ['API Key: $currentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser?.uid}'],
+          information: ['ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser?.uid}'],
         );
       }
     }

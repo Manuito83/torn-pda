@@ -19,6 +19,8 @@ import workmanager_apple
   var memoryChannel: FlutterMethodChannel!
   var liveActivityChannel: FlutterMethodChannel!
 
+  private let chatReplyRelay = ChatReplyRelay()
+
   // LA tokens must not cross the channel before the engine runs (see markEngineRunning)
   private var flutterEngineRunning = false
 
@@ -109,6 +111,9 @@ import workmanager_apple
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
     let messenger = engineBridge.applicationRegistrar.messenger()
+
+    chatReplyRelay.mainChannel = FlutterMethodChannel(
+      name: ChatReplyRelay.channelName, binaryMessenger: messenger)
 
     // Set up the Flutter channel to handle AlarmKit
     let alarmChannel = FlutterMethodChannel(
@@ -529,6 +534,19 @@ import workmanager_apple
     }
   }
 
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    guard let args = ChatReplyRelay.arguments(for: response) else {
+      super.userNotificationCenter(
+        center, didReceive: response, withCompletionHandler: completionHandler)
+      return
+    }
+    chatReplyRelay.deliver(args, completion: completionHandler)
+  }
+
   // MARK: - App Icon Changer
   private func setApplicationIconName(_ iconName: String?, result: @escaping FlutterResult) {
     guard UIApplication.shared.supportsAlternateIcons else {
@@ -557,6 +575,87 @@ import workmanager_apple
 
   // MARK: - AlarmKit Handlers
   // Handlers moved to AlarmKitHandler.swift
+}
+
+// MARK: - Chat notification reply
+final class ChatReplyRelay {
+  static let channelName = "tornpda/chat_reply"
+  private static let category = "TORN_CHAT_DM"
+  private static let action = "tchat_reply_action"
+
+  var mainChannel: FlutterMethodChannel?
+  private var engine: FlutterEngine?
+  private var headlessChannel: FlutterMethodChannel?
+  private var headlessReady = false
+  private var pending: [(args: [String: Any], finish: () -> Void)] = []
+
+  // Remote: userId, local: payload
+  static func arguments(for response: UNNotificationResponse) -> [String: Any]? {
+    let content = response.notification.request.content
+    guard let input = response as? UNTextInputNotificationResponse,
+      response.actionIdentifier == action, content.categoryIdentifier == category
+    else { return nil }
+    var args: [String: Any] = ["text": input.userText]
+    for key in ["event", "kind", "userId", "sender", "payload"] {
+      if let value = content.userInfo[key] { args[key] = "\(value)" }
+    }
+    return args
+  }
+
+  func deliver(_ args: [String: Any], completion: @escaping () -> Void) {
+    var finished = false
+    let finish = {
+      if finished { return }
+      finished = true
+      completion()
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 25, execute: finish)
+    guard let channel = mainChannel else {
+      runHeadless(args, finish)
+      return
+    }
+    channel.invokeMethod("reply", arguments: args) { [weak self] result in
+      if (result as AnyObject?) === FlutterMethodNotImplemented {
+        self?.runHeadless(args, finish)
+      } else {
+        finish()
+      }
+    }
+  }
+
+  // iOS woke the app without a scene
+  private func runHeadless(_ args: [String: Any], _ finish: @escaping () -> Void) {
+    pending.append((args, finish))
+    if engine != nil {
+      if headlessReady { flushHeadless() }
+      return
+    }
+    let engine = FlutterEngine(
+      name: "tornpda_chat_reply", project: nil, allowHeadlessExecution: true)
+    // Handlers can only be set once running
+    engine.run(
+      withEntrypoint: "tornChatReplyMain", libraryURI: "package:torn_pda/utils/notification.dart")
+    let channel = FlutterMethodChannel(
+      name: Self.channelName, binaryMessenger: engine.binaryMessenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      if call.method == "ready", let self {
+        self.headlessReady = true
+        self.flushHeadless()
+      }
+      result(nil)
+    }
+    GeneratedPluginRegistrant.register(with: engine)
+    self.engine = engine
+    headlessChannel = channel
+  }
+
+  private func flushHeadless() {
+    let batch = pending
+    pending.removeAll()
+    for item in batch {
+      headlessChannel?.invokeMethod("reply", arguments: item.args) { _ in item.finish() }
+    }
+  }
 }
 
 // MARK: - FlutterViewController Press Event Handling (Existing Functionality)

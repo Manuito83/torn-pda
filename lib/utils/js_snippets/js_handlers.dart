@@ -3,7 +3,25 @@
 // Project imports:
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 
-String handler_flutterPlatformReady() {
+String handler_flutterPlatformReady({required bool early}) {
+  final String wait = early
+      ? '''
+            let ready = false;
+            const done = () => { ready = true; resolve(); };
+            window.addEventListener("flutterInAppWebViewPlatformReady", done);
+            // Ask the app before the ready event
+            let tries = 0;
+            (function ping() {
+                if (ready) return;
+                const b = window.flutter_inappwebview;
+                if (b && typeof b.callHandler === "function") {
+                    b.callHandler("PDA_handlersReady").then(r => { if (r === true) done(); }, () => {});
+                } else if (++tries < 100) {
+                    setTimeout(ping, 10);
+                }
+            })();'''
+      : '''
+            window.addEventListener("flutterInAppWebViewPlatformReady", resolve);''';
   return '''
     // Initialize event listener for other handlers
     // Attached to window so it survives injection-time scope wrapping: some webviews wrap
@@ -11,7 +29,7 @@ String handler_flutterPlatformReady() {
     if (typeof window.__PDA_platformReadyPromise === 'undefined') {
         window.__PDA_platformReadyPromise = new Promise(resolve => {
             if (window.flutter_inappwebview?._platformReady) return resolve();
-            window.addEventListener("flutterInAppWebViewPlatformReady", resolve);
+$wait
         });
     }
   ''';
@@ -32,7 +50,7 @@ String handler_tabContext(String tabUid) {
 			}
 
 			if (!root.tab.state) {
-				root.tab.state = { uid: '$tabUid', isActiveTab: false, isWebViewVisible: false };
+				root.tab.state = { uid: '$tabUid', isActiveTab: false, isWebViewVisible: false, isOnScreen: false };
 			}
 		})();
 	''';
@@ -71,7 +89,7 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
           var bytes = k.length + (ls.getItem(k) || "").length;
           total += bytes;
           allKeys.push({ n: k, b: bytes });
-          if (k.indexOf("chat_query_cache") === 0) {
+          if (k.indexOf("chat_query_cache") === 0 || k.indexOf("tchat_query_cache") === 0) {
             chatKeys.push(k);
             chatBytes += bytes;
           }
@@ -81,9 +99,22 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
           return { n: e.n.slice(0, 40), b: e.b };
         });
 
+        // Dart only keeps KB
+        var kb = function(b) { return Math.floor(b / 1024); };
+        var measuredKb = kb(total) + "|" + kb(chatBytes) + "|" + topKeys.map(function(e) {
+          return e.n + ":" + kb(e.b);
+        }).join(",");
+        var alreadyReported = false;
+        try {
+          alreadyReported = sessionStorage.getItem("pda_ls_measured") === measuredKb;
+        } catch (_) {}
+
         var reportMeasured = function() {
           try {
             window.flutter_inappwebview.callHandler("PDA_localStorageMeasured", total, chatBytes, topKeys);
+          } catch (_) {}
+          try {
+            sessionStorage.setItem("pda_ls_measured", measuredKb);
           } catch (_) {}
         };
 
@@ -101,6 +132,7 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
         }
 
         if (!shouldTrim) {
+          if (alreadyReported) return;
           if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
             reportMeasured();
           } else {
@@ -118,16 +150,16 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
             var qs = d && d.clientState && d.clientState.queries;
             if (Array.isArray(qs)) {
               d.clientState.queries = qs.filter(function(q) {
-                return !(q && Array.isArray(q.queryKey) && q.queryKey[0] === "channel");
+                if (q && Array.isArray(q.queryKey) && q.queryKey[0] === "channel") return false;
+                return JSON.stringify(q).length < 20 * 1024;
               });
               var after = JSON.stringify(d);
-              ls.setItem(k, after);
-              freed += before.length - after.length;
-              return;
+              if (after.length < before.length) {
+                ls.setItem(k, after);
+                freed += before.length - after.length;
+              }
             }
           } catch (_) {}
-          ls.removeItem(k);
-          freed += k.length + before.length;
         });
         var report = function() {
           try {
@@ -145,9 +177,9 @@ String handler_tornChatCacheTrim(int chatLimitMb, int safetyLimitMb) {
   ''';
 }
 
-String handler_pdaAPI() {
+String handler_pdaAPI({required bool early}) {
   // PDA HTTP helpers (PDA_httpGet/Post/Put/Delete/Patch)
-  return RemoteSnippets.resolve(RemoteSnippets.pdaApi);
+  return RemoteSnippets.resolvePdaApi(early: early);
 }
 
 String handler_evaluateJS() {

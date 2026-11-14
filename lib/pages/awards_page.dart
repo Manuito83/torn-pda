@@ -99,8 +99,6 @@ class AwardsPageState extends State<AwardsPage> {
     _pinProvider = Provider.of<AwardsProvider>(context, listen: false);
     _getAwardsPayload = _fetchYataAndPopulate();
 
-    analytics?.logScreenView(screenName: 'awards');
-
     routeWithDrawer = true;
     routeName = "awards";
   }
@@ -383,7 +381,7 @@ class AwardsPageState extends State<AwardsPage> {
           ),
         ],
       ),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -399,7 +397,7 @@ class AwardsPageState extends State<AwardsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: [
@@ -421,7 +419,10 @@ class AwardsPageState extends State<AwardsPage> {
 
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AwardsGraphs(graphInfo: graphsToPass)),
+                MaterialPageRoute(
+                  settings: const RouteSettings(name: 'awards_graphs'),
+                  builder: (context) => AwardsGraphs(graphInfo: graphsToPass),
+                ),
               );
             },
           )

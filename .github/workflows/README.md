@@ -25,7 +25,7 @@ The project keeps private config files out of version control (API keys, etc.).
 The CI copies the `.dart.example` stubs before running anything so that all
 imports resolve. This means CI builds with **placeholder values** — features
 that need real credentials (YATA proxy, native auth, TAC) won't work, but
-analysis and tests still pass.
+analysis and tests still pass. `lib/utils/env/env.g.dart.example` is copied too.
 
 The iOS build also creates temporary CI-only stubs for `ios/Flutter/Secrets.xcconfig`
 and `ios/Runner/GoogleService-Info.plist`. Those files are intentionally not

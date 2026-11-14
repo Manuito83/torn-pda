@@ -1,0 +1,3 @@
+class AppSettingsDaily {
+  static String countBucket(int count) => '';
+}

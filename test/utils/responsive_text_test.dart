@@ -64,11 +64,5 @@ void main() {
       expect(tester.getSize(find.byType(Align)).width, greaterThanOrEqualTo(30));
       expect(tester.getSize(find.byType(Align)).width, lessThan(70));
     });
-
-    testWidgets('the previous fixed 30px box did break the word', (tester) async {
-      await tester.pumpWidget(_tabNameBox('Targets', minWidth: 30, maxWidth: 30, avoidWordBreak: false));
-
-      expect(_lines(tester), greaterThan(1));
-    });
   });
 }

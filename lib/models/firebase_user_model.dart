@@ -5,6 +5,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   String? token;
   String? uid;
   bool discreet = false;
+  String? vibration;
   bool? travelNotification = false;
   bool travelStocksInNotification = false;
   bool? foreignRestockNotification = false;
@@ -53,6 +54,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool? factionAssistMessage = true;
   bool? retalsNotification = false;
   bool? retalsNotificationDonor = false;
+  bool retalsNotificationHost = false;
   bool? forumsSubscription = false;
   String? laTravelPushToken;
   String? laRacingPushToken;
@@ -62,6 +64,30 @@ class FirebaseUserModel extends OwnProfileExtended {
   int workStatsEnduranceTarget = 0;
 
   FirebaseUserModel();
+
+  List<String> get activeAlerts => [
+    if (energyNotification == true) 'energy',
+    if (nerveNotification == true) 'nerve',
+    if (lifeNotification == true) 'life',
+    if (travelNotification == true) 'travel',
+    if (hospitalNotification == true) 'hospital',
+    if (drugsNotification == true) 'drugs',
+    if (medicalNotification == true) 'medical',
+    if (boosterNotification == true) 'booster',
+    if (racingNotification == true) 'racing',
+    if (messagesNotification == true) 'messages',
+    if (eventsNotification == true) 'events',
+    if (refillsNotification == true) 'refills',
+    if (stockMarketNotification == true) 'stock_market',
+    if (retalsNotification == true) 'retals',
+    if (lootAlerts.isNotEmpty) 'loot_npc',
+    if (lootRangersAlerts == true) 'loot_rangers',
+    if (foreignRestockNotification == true) 'foreign_restock',
+    if (cityShopRestockNotification == true) 'city_shop',
+    if (abroadStayNotification == true) 'abroad_stay',
+    if (forumsSubscription == true) 'forums',
+    if (workStatsNotification == true) 'work_stats',
+  ];
 
   FirebaseUserModel.fromProfileModel(OwnProfileExtended model) {
     playerId = model.playerId;
@@ -80,6 +106,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "token": token,
       "status": status,
       "discrete": discreet, // We need to accept this typo (discreet)
+      "vibration": vibration,
       "travelNotification": travelNotification,
       "travelStocksInNotification": travelStocksInNotification,
       "foreignRestockNotification": foreignRestockNotification,
@@ -128,6 +155,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "factionAssistMessage": factionAssistMessage,
       "retalsNotification": retalsNotification,
       "retalsNotificationDonor": retalsNotificationDonor,
+      "retalsNotificationHost": retalsNotificationHost,
       "forumsSubscriptionsNotification": forumsSubscription,
       "la_travel_push_token": laTravelPushToken,
       "la_racing_push_token": laRacingPushToken,
@@ -141,6 +169,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   static FirebaseUserModel fromMap(Map data) {
     return FirebaseUserModel()
       ..discreet = data["discrete"] ?? false // We need to accept this typo (discreet)
+      ..vibration = data["vibration"] is String ? data["vibration"] : null
       ..travelNotification = data["travelNotification"] ?? false
       ..travelStocksInNotification = data["travelStocksInNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
@@ -193,6 +222,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..factionAssistMessage = data["factionAssistMessage"] ?? true
       ..retalsNotification = data["retalsNotification"] ?? false
       ..retalsNotificationDonor = data["retalsNotificationDonor"] ?? false
+      ..retalsNotificationHost = data["retalsNotificationHost"] == true
       ..forumsSubscription = data["forumsSubscriptionsNotification"] ?? false
       ..laTravelPushToken = data["la_travel_push_token"]
       ..laRacingPushToken = data["la_racing_push_token"]

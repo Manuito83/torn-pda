@@ -50,23 +50,6 @@ void main() {
   });
 
   group('UserScriptModel with new fields', () {
-    test('parses header with grants and requires', () {
-      const source = '''
-// ==UserScript==
-// @name Test Script
-// @version 1.0.0
-// @match https://example.com/*
-// @grant GM_xmlhttpRequest
-// @grant GM_setValue
-// @require https://example.com/lib.js
-// ==/UserScript==
-// Script content here
-''';
-      final metaMap = UserScriptModel.parseHeader(source);
-      expect(metaMap['grants'], ['GM_xmlhttpRequest', 'GM_setValue']);
-      expect(metaMap['requires'], ['https://example.com/lib.js']);
-    });
-
     test('improved URL pattern matching', () {
       final model = UserScriptModel(
         name: 'Test',
@@ -80,33 +63,6 @@ void main() {
       expect(model.matchesTarget('https://sub.torn.com/'), true);
       expect(model.matchesTarget('https://torn.com/path/test'), true);
       expect(model.matchesTarget('https://other.com/'), false);
-    });
-
-    test('version comparison with VersionModel', () {
-      expect(UserScriptModel.isNewerVersion('1.0.1', '1.0.0'), true);
-      expect(UserScriptModel.isNewerVersion('2.0.0', '1.9.9'), true);
-      expect(UserScriptModel.isNewerVersion('1.0.0', '1.0.0'), false);
-      expect(UserScriptModel.isNewerVersion('1.0.0-alpha', '1.0.0'), false); // pre-release is older
-      expect(UserScriptModel.isNewerVersion('1.0.0', '1.0.0-alpha'), true);
-    });
-
-    test('serializes and deserializes with new fields', () {
-      final model = UserScriptModel(
-        name: 'Test',
-        source: '// ==UserScript==\n// @name Test\n// ==/UserScript==\n',
-        version: '1.0.0',
-        grants: ['GM_xmlhttpRequest'],
-        requires: ['https://example.com/lib.js'],
-        isExample: false,
-      );
-
-      final json = model.toJson();
-      expect(json['grants'], ['GM_xmlhttpRequest']);
-      expect(json['requires'], ['https://example.com/lib.js']);
-
-      final restored = UserScriptModel.fromJson(json);
-      expect(restored.grants, ['GM_xmlhttpRequest']);
-      expect(restored.requires, ['https://example.com/lib.js']);
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 // Package imports:
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
@@ -156,4 +158,18 @@ enum DrawerSection {
     }
     return legacyToNew[index];
   }
+}
+
+const drawerChatId = 'chat';
+
+/// New sections join, chat above Profile
+List<String> drawerFullOrder(List<String> saved) {
+  final order = [...saved.where((id) => id == drawerChatId || DrawerSection.fromId(id) != null)];
+  if (!order.contains(drawerChatId)) {
+    order.insert(math.max(0, order.indexOf(DrawerSection.profile.name)), drawerChatId);
+  }
+  for (final section in DrawerSection.values) {
+    if (!order.contains(section.name)) order.add(section.name);
+  }
+  return order;
 }

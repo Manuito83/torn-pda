@@ -9,7 +9,6 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
@@ -20,10 +19,10 @@ import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/profile/energy_trigger_dialog.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class ProfileNotificationsIOS extends StatefulWidget {
   final Function callback;
@@ -94,71 +93,49 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : isStatusBarShown
-                  ? _themeProvider.statusBar
-                  : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Builder(
-            builder: (BuildContext context) {
-              return Container(
-                color: _themeProvider.canvas,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                  child: FutureBuilder(
-                    future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return SingleChildScrollView(
-                          child: Column(
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.all(20.0),
-                                child: Text('Here you can specify your preferred alerting '
-                                    'values for each type of event.'),
-                              ),
-                              _rowsWithTypes(),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 50,
-                                  vertical: 20,
-                                ),
-                                child: Divider(),
-                              ),
-                              const SizedBox(height: 50),
-                            ],
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Builder(
+        builder: (BuildContext context) {
+          return Container(
+            color: _themeProvider.canvas,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: FutureBuilder(
+                future: _preferencesLoaded,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Text('Here you can specify your preferred alerting '
+                                'values for each type of event.'),
                           ),
-                        );
-                      } else {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+                          _rowsWithTypes(),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 50,
+                              vertical: 20,
+                            ),
+                            child: Divider(),
+                          ),
+                          const SizedBox(height: 50),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -293,49 +270,54 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Flexible(child: Text('Trigger')),
+                const Text('Trigger'),
                 const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
-                Row(
-                  children: <Widget>[
-                    Text('E${_energyTrigger.floor()}'),
-                    Slider(
-                      value: _energyTrigger,
-                      min: _energyMin,
-                      max: widget.energyMax!.toDouble(),
-                      divisions: _energyDivisions,
-                      onChanged: (double newValue) {
-                        setState(() {
-                          _energyTrigger = newValue;
-                        });
-                      },
-                      onChangeEnd: (double finalValue) {
-                        Prefs().setEnergyNotificationValue(finalValue.floor());
-                      },
-                    ),
-                    GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
-                      onTap: () {
-                        showDialog<void>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return EnergyNerveTriggerDialog(
-                              parameterCallback: (newEnergy) {
-                                setState(() {
-                                  _energyTrigger = newEnergy.toDouble();
-                                });
-                                Prefs().setEnergyNotificationValue(newEnergy.floor());
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      children: <Widget>[
+                        Text('E${_energyTrigger.floor()}'),
+                        Slider(
+                          value: _energyTrigger,
+                          min: _energyMin,
+                          max: widget.energyMax!.toDouble(),
+                          divisions: _energyDivisions,
+                          onChanged: (double newValue) {
+                            setState(() {
+                              _energyTrigger = newValue;
+                            });
+                          },
+                          onChangeEnd: (double finalValue) {
+                            Prefs().setEnergyNotificationValue(finalValue.floor());
+                          },
+                        ),
+                        GestureDetector(
+                          child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
+                          onTap: () {
+                            showDialog<void>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return EnergyNerveTriggerDialog(
+                                  parameterCallback: (newEnergy) {
+                                    setState(() {
+                                      _energyTrigger = newEnergy.toDouble();
+                                    });
+                                    Prefs().setEnergyNotificationValue(newEnergy.floor());
+                                  },
+                                  currentValue: _energyTrigger.toInt(),
+                                  minimum: _energyMin.toInt(),
+                                  maximun: widget.energyMax!,
+                                );
                               },
-                              currentValue: _energyTrigger.toInt(),
-                              minimum: _energyMin.toInt(),
-                              maximun: widget.energyMax!,
                             );
                           },
-                        );
-                      },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -350,48 +332,53 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Flexible(child: Text('Trigger')),
+                const Text('Trigger'),
                 const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
-                Row(
-                  children: <Widget>[
-                    Text('N${_nerveTrigger.floor()}'),
-                    Slider(
-                      value: _nerveTrigger,
-                      min: _nerveMin,
-                      max: widget.nerveMax!.toDouble(),
-                      onChanged: (double newValue) {
-                        setState(() {
-                          _nerveTrigger = newValue;
-                        });
-                      },
-                      onChangeEnd: (double finalValue) {
-                        Prefs().setNerveNotificationValue(finalValue.floor());
-                      },
-                    ),
-                    GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
-                      onTap: () {
-                        showDialog<void>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return EnergyNerveTriggerDialog(
-                              parameterCallback: (newNerve) {
-                                setState(() {
-                                  _nerveTrigger = newNerve.toDouble();
-                                });
-                                Prefs().setNerveNotificationValue(newNerve.floor());
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      children: <Widget>[
+                        Text('N${_nerveTrigger.floor()}'),
+                        Slider(
+                          value: _nerveTrigger,
+                          min: _nerveMin,
+                          max: widget.nerveMax!.toDouble(),
+                          onChanged: (double newValue) {
+                            setState(() {
+                              _nerveTrigger = newValue;
+                            });
+                          },
+                          onChangeEnd: (double finalValue) {
+                            Prefs().setNerveNotificationValue(finalValue.floor());
+                          },
+                        ),
+                        GestureDetector(
+                          child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
+                          onTap: () {
+                            showDialog<void>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return EnergyNerveTriggerDialog(
+                                  parameterCallback: (newNerve) {
+                                    setState(() {
+                                      _nerveTrigger = newNerve.toDouble();
+                                    });
+                                    Prefs().setNerveNotificationValue(newNerve.floor());
+                                  },
+                                  currentValue: _nerveTrigger.toInt(),
+                                  minimum: _nerveMin.toInt(),
+                                  maximun: widget.nerveMax!,
+                                );
                               },
-                              currentValue: _nerveTrigger.toInt(),
-                              minimum: _nerveMin.toInt(),
-                              maximun: widget.nerveMax!,
                             );
                           },
-                        );
-                      },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),

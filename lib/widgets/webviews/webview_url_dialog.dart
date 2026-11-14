@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
@@ -14,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
+import 'package:torn_pda/models/faction/faction_assist_result.dart';
 import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -34,6 +36,7 @@ import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_open_button.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:torn_pda/widgets/webviews/faction_assist_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -47,6 +50,8 @@ class WebviewUrlDialog extends StatefulWidget {
   final WebViewController? stockWebView;
   final Key? webviewKey;
   final Function? openDevTools;
+  final Future<void> Function()? onSoftCacheReset;
+  final VoidCallback? onZoom;
 
   const WebviewUrlDialog({
     this.callFindInPage,
@@ -56,6 +61,8 @@ class WebviewUrlDialog extends StatefulWidget {
     this.stockWebView,
     this.webviewKey,
     this.openDevTools,
+    this.onSoftCacheReset,
+    this.onZoom,
   });
 
   @override
@@ -133,6 +140,18 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             ],
                           ),
                           onPressed: () async {
+                            final String? attackId = attackIdFromUrl(widget.url);
+                            if (attackId == null) {
+                              BotToast.showText(
+                                text: factionAssistResultMessage(null),
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: Colors.orange[700]!,
+                                duration: const Duration(seconds: 5),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                              return;
+                            }
+
                             // Show a loading toast while fetching data
                             BotToast.showText(
                               text: "Fetching target info…",
@@ -140,8 +159,6 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               contentColor: Colors.grey[700]!,
                               contentPadding: const EdgeInsets.all(10),
                             );
-
-                            final String attackId = widget.url.split("user2ID=")[1];
 
                             final dynamic t = await ApiCallsV2.getOtherUserProfile_v2(payload: {"id": attackId});
 
@@ -238,47 +255,40 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
                             if (result == null) return; // User cancelled
 
-                            BotToast.showText(
+                            final hideRequesting = BotToast.showText(
                               text: "Requesting assistance from faction members!",
                               textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                               contentColor: Colors.green,
+                              duration: firebaseFunctions.assistTimeout,
                               contentPadding: const EdgeInsets.all(10),
                             );
 
-                            final int membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                              attackId: result.attackId,
-                              attackName: result.attackName,
-                              attackLevel: result.attackLevel,
-                              attackLife: result.attackLife,
-                              attackAge: result.attackAge,
-                              estimatedStats: result.estimatedStats,
-                              xanax: result.xanax,
-                              refills: result.refills,
-                              drinks: result.drinks,
-                              exactStats: result.exactStats,
-                              ffsStats: result.ffsStats,
-                              fairFight: result.fairFight,
-                            );
-
-                            String membersMessage =
-                                "$membersNotified faction member${membersNotified == 1 ? " has" : "s have"} been notified!";
-                            Color? membersColor = Colors.green;
-
-                            if (membersNotified == 0) {
-                              membersMessage =
-                                  "No faction member could be notified (not using Torn PDA or "
-                                  "assists messages deactivated)!";
-                              membersColor = Colors.orange[700];
-                            } else if (membersNotified == -1) {
-                              membersMessage = "There was a problem locating your faction's details, please try again!";
-                              membersColor = Colors.orange[700];
+                            int? membersNotified;
+                            try {
+                              membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                                attackId: result.attackId,
+                                attackName: result.attackName,
+                                attackLevel: result.attackLevel,
+                                attackLife: result.attackLife,
+                                attackAge: result.attackAge,
+                                estimatedStats: result.estimatedStats,
+                                xanax: result.xanax,
+                                refills: result.refills,
+                                drinks: result.drinks,
+                                exactStats: result.exactStats,
+                                ffsStats: result.ffsStats,
+                                fairFight: result.fairFight,
+                              );
+                            } catch (e) {
+                              log("Faction assist request failed: $e");
                             }
+                            hideRequesting();
 
                             BotToast.showText(
-                              text: membersMessage,
+                              text: factionAssistResultMessage(membersNotified),
                               textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                              contentColor: membersColor!,
-                              duration: const Duration(seconds: 5),
+                              contentColor: (membersNotified ?? 0) > 0 ? Colors.green : Colors.orange[700]!,
+                              duration: Duration(seconds: factionAssistToastSeconds(membersNotified)),
                               contentPadding: const EdgeInsets.all(10),
                             );
                           },
@@ -344,6 +354,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         onPressed: () {
                           Navigator.of(context).pop();
                           if (widget.inAppWebview != null) {
+                            _discardSavedUrl();
                             widget.inAppWebview!.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
                           }
                           if (widget.stockWebView != null) {
@@ -493,78 +504,82 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         },
                       ),
                     ),
-                    if (widget.inAppWebview != null && Platform.isAndroid)
+                    if (_webviewProvider.splitScreenWide)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
+                        child: ElevatedButton(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(MdiIcons.viewSplitVertical, size: 20),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  _webviewProvider.splitScreenPosition == WebViewSplitPosition.off
+                                      ? 'Split with app'
+                                      : 'Close split',
+                                  style: const TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                          onPressed: () {
+                            _customURLController.text = "";
+                            Navigator.of(context).pop();
+                            _webviewProvider.toggleSplitScreen();
+                          },
+                        ),
+                      ),
+                    if (widget.onZoom != null && Platform.isAndroid)
                       Padding(
                         padding: const EdgeInsets.only(top: 5),
                         child: Column(
                           children: [
                             const Divider(),
-                            const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [Text('ZOOM', style: TextStyle(fontSize: 8))],
-                            ),
-                            Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5),
-                                  child: ElevatedButton(
-                                    child: const Icon(MdiIcons.minus),
-                                    onPressed: () async {
-                                      if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newOptions = (await widget.inAppWebview!
-                                            .getSettings())!;
-                                        if (newOptions.initialScale == 0) {
-                                          newOptions.initialScale = 350;
-                                        } else if (newOptions.initialScale != null) {
-                                          if (newOptions.initialScale! > 100) {
-                                            newOptions.initialScale = newOptions.initialScale! - 5;
-                                          }
-                                        }
-                                        widget.inAppWebview!.setSettings(settings: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = newOptions.initialScale ?? 0;
-                                      }
-                                    },
+                            ElevatedButton(
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.zoom_in, size: 20),
+                                  SizedBox(width: 5),
+                                  Flexible(
+                                    child: Text('Zoom', style: TextStyle(fontSize: 12), textAlign: TextAlign.center),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5),
-                                  child: ElevatedButton(
-                                    child: const Icon(MdiIcons.refresh),
-                                    onPressed: () async {
-                                      if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newOptions = (await widget.inAppWebview!
-                                            .getSettings())!;
-                                        newOptions.initialScale = 0;
-                                        widget.inAppWebview!.setSettings(settings: newOptions);
-                                        _settingsProvider.setAndroidBrowserScale = 0;
-                                      }
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 5),
-                                  child: ElevatedButton(
-                                    child: const Icon(MdiIcons.plus),
-                                    onPressed: () async {
-                                      if (Platform.isAndroid) {
-                                        final InAppWebViewSettings newSettings = (await widget.inAppWebview!
-                                            .getSettings())!;
-                                        if (newSettings.initialScale == 0) {
-                                          newSettings.initialScale = 100;
-                                        } else if (newSettings.initialScale! < 350) {
-                                          newSettings.initialScale = newSettings.initialScale! + 5;
-                                        }
-                                        widget.inAppWebview!.setSettings(settings: newSettings);
-                                        _settingsProvider.setAndroidBrowserScale = newSettings.initialScale!;
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                widget.onZoom!();
+                              },
                             ),
                           ],
+                        ),
+                      ),
+                    if (widget.onSoftCacheReset != null && !Platform.isWindows)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: ElevatedButton(
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.cleaning_services_outlined, size: 20),
+                              SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  'Soft cache reset',
+                                  style: TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                          onPressed: () {
+                            final reset = widget.onSoftCacheReset!;
+                            _customURLController.text = "";
+                            Navigator.of(context).pop();
+                            reset();
+                          },
                         ),
                       ),
                     if (widget.inAppWebview != null)
@@ -635,6 +650,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                       Navigator.of(context).pop();
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
+                                          settings: const RouteSettings(name: 'userscripts'),
                                           builder: (BuildContext context) => const UserScriptsPage(fromWebview: true),
                                         ),
                                       );
@@ -710,6 +726,11 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
     );
   }
 
+  void _discardSavedUrl() {
+    final Key? key = widget.webviewKey;
+    if (key is GlobalKey<WebViewFullState>) key.currentState?.discardUrlBeforeInitialLoad();
+  }
+
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState!.validate()) {
       String url = _customURLController.text.replaceAll(" ", "");
@@ -720,6 +741,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
       }
 
       if (widget.inAppWebview != null) {
+        _discardSavedUrl();
         widget.inAppWebview!.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
       } else {
         widget.stockWebView!.loadRequest(Uri.parse(url));

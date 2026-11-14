@@ -16,27 +16,25 @@ import 'package:torn_pda/pages/chaining/target_details_page.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chaining/chain_attack.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_activity_badge.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_flight_info.dart';
 import 'package:torn_pda/widgets/ffscouter/ffscouter_notes_badge.dart';
 import 'package:torn_pda/widgets/player_notes_dialog.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class TargetCard extends StatefulWidget {
   final TargetModel targetModel;
 
+  /// Replaces the chaining browser launch
+  final Future<void> Function(bool shortTap)? onAttack;
+
   // Key is needed to update at least the hospital counter individually
-  const TargetCard({required this.targetModel, required Key key}) : super(key: key);
+  const TargetCard({required this.targetModel, required Key key, this.onAttack}) : super(key: key);
 
   @override
   TargetCardState createState() => TargetCardState();
@@ -46,9 +44,7 @@ class TargetCardState extends State<TargetCard> {
   TargetModel? _target;
   late TargetsProvider _targetsProvider;
   late ThemeProvider _themeProvider;
-  late SettingsProvider _settingsProvider;
   final _chainProvider = Get.find<ChainStatusController>();
-  late WebViewProvider _webViewProvider;
 
   Timer? _updatedTicker;
   Timer? _lifeTicker;
@@ -60,9 +56,7 @@ class TargetCardState extends State<TargetCard> {
   @override
   void initState() {
     super.initState();
-    _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
   }
@@ -840,59 +834,11 @@ class TargetCardState extends State<TargetCard> {
     }
   }
 
-  Future<void> _startAttack({required bool shortTap}) async {
-    final browserType = _settingsProvider.currentBrowser;
-    switch (browserType) {
-      case BrowserSetting.app:
-        // For app browser, we are going to pass a list of attacks
-        // so that we can move to the next one
-        final myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
-        // First, find out where we are in the list
-        for (var i = 0; i < myTargetList.length; i++) {
-          if (_target!.playerId == myTargetList[i].playerId) {
-            myTargetList.removeRange(0, i);
-            break;
-          }
-        }
-        List<String> attacksIds = <String>[];
-        List<String?> attacksNames = <String?>[];
-        List<String?> attackNotes = <String?>[];
-        List<String?> attacksNotesColor = <String?>[];
-        for (final tar in myTargetList) {
-          attacksIds.add(tar.playerId.toString());
-          attacksNames.add(tar.name);
-          final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(tar.playerId.toString());
-          attackNotes.add(playerNote?.note);
-          attacksNotesColor.add(playerNote?.color);
-        }
-
-        final bool showNotes = await Prefs().getShowTargetsNotes();
-        final bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
-        final bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
-
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: 'https://www.torn.com/page.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
-          isChainingBrowser: true,
-          chainingPayload: ChainingPayload()
-            ..attackIdList = attacksIds
-            ..attackNameList = attacksNames
-            ..attackNotesList = attackNotes
-            ..attackNotesColorList = attacksNotesColor
-            ..showNotes = showNotes
-            ..showBlankNotes = showBlankNotes
-            ..showOnlineFactionWarning = showOnlineFactionWarning,
-        );
-
-      case BrowserSetting.external:
-        final url =
-            'https://www.torn.com/page.php?sid='
-            'attack&user2ID=${_target!.playerId}';
-        if (await canLaunchUrl(Uri.parse(url))) {
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-        }
-    }
+  Future<void> _startAttack({required bool shortTap}) {
+    final attack = widget.onAttack;
+    return attack == null
+        ? attackFromTargets(context, _target!.playerId, name: _target!.name, shortTap: shortTap)
+        : attack(shortTap);
   }
 
   void _warnFedetalOrFallen() {

@@ -368,6 +368,7 @@ class VaultWidgetState extends State<VaultWidget> {
         Navigator.push(
           context,
           MaterialPageRoute(
+            settings: const RouteSettings(name: 'vault_config'),
             builder: (context) {
               return VaultConfigurationPage(
                 callback: _configurationCallback,

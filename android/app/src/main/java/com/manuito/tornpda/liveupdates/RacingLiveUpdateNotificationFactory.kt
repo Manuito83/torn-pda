@@ -381,6 +381,8 @@ class RacingLiveUpdateNotificationFactory(
     private fun LiveUpdatePayload.toExtrasBundle(): android.os.Bundle {
         return android.os.Bundle().also { bundle ->
             extras.forEach { (key, value) ->
+                // keep the API key out
+                if (key == LiveUpdateNotificationReceiver.EXTRA_API_KEY) return@forEach
                 when (value) {
                     is String -> bundle.putString(key, value)
                     is Boolean -> bundle.putBoolean(key, value)

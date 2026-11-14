@@ -15,7 +15,7 @@ import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class AwardsGraphs extends StatefulWidget {
   const AwardsGraphs({required this.graphInfo});
@@ -58,61 +58,40 @@ class AwardsGraphsState extends State<AwardsGraphs> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : Colors.grey[900]
-          : _themeProvider.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Colors.black,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider.canvas,
-            child: Padding(
-              padding: const EdgeInsets.all(30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  /*
-                  Text(
-                    'Awards',
-                    style: TextStyle(
-                        color: const Color(0xff0f4a3c),
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(
-                    height: 38,
-                  ),
-                  */
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: BarChart(
-                        mainBarData(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                ],
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      margin: PdaScaffoldMargin.grey,
+      body: Container(
+        color: _themeProvider.canvas,
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              /*
+              Text(
+                'Awards',
+                style: TextStyle(
+                    color: const Color(0xff0f4a3c),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold),
               ),
-            ),
+              const SizedBox(
+                height: 38,
+              ),
+              */
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: BarChart(
+                    mainBarData(),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 12,
+              ),
+            ],
           ),
         ),
       ),

@@ -477,6 +477,14 @@ class TargetsProvider extends ChangeNotifier {
     await _saveTargetsSharedPrefs();
   }
 
+  Future<void> restoreTarget(TargetModel target) async {
+    if (_targets.any((t) => t.playerId == target.playerId)) return;
+    _targets.add(target);
+    sortTargets(currentSort);
+    notifyListeners();
+    await _saveTargetsSharedPrefs();
+  }
+
   void restoredDeleted() {
     _targets = List<TargetModel>.from(_oldTargetsList);
     _oldTargetsList.clear();

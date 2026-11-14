@@ -3,6 +3,7 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
 class WebViewFullAwh extends StatefulWidget {
@@ -55,6 +57,7 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
     _pageTitle = widget.customTitle;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _initialWebViewSettings = InAppWebViewSettings(
+      isInspectable: kDebugMode || _settingsProvider.browserRemoteDebugging,
       useOnRenderProcessGone: _settingsProvider.browserRenderProcessGoneRemoteConfigAllowed,
       hardwareAcceleration: context.read<WebViewProvider>().webViewHardwareLayerActive,
     );
@@ -78,33 +81,13 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
   }
 
   Widget buildScaffold(BuildContext context) {
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : Colors.grey[900]
-          : _themeProvider.currentTheme == AppTheme.dark
-          ? Colors.grey[900]
-          : Colors.black,
-      child: SafeArea(
-        right:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildCustomAppBar())
-              : null,
-          body: Container(
-            // Background color for all browser widgets
-            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
-            child: mainWebViewColumn(),
-          ),
-        ),
+    return PdaScaffold(
+      appBar: buildCustomAppBar(),
+      margin: PdaScaffoldMargin.grey,
+      body: Container(
+        // Background color for all browser widgets
+        color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+        child: mainWebViewColumn(),
       ),
     );
   }

@@ -289,7 +289,7 @@ class RetalsController extends GetxController {
     update();
 
     try {
-      final String error = await _getApiEvaluateRetals(context);
+      final String error = await _getApiEvaluateRetals();
       int seconds = 6;
       if (error.isNotEmpty) {
         String message = "There was an issue fetching targets, there might be a connection error with the API."
@@ -323,7 +323,14 @@ class RetalsController extends GetxController {
     update();
   }
 
-  Future<String> _getApiEvaluateRetals(BuildContext context) async {
+  /// For the chat, without toasts
+  Future<String> retrieveQuietly() async {
+    final error = await _getApiEvaluateRetals();
+    update();
+    return error;
+  }
+
+  Future<String> _getApiEvaluateRetals() async {
     List<Retal> newList = <Retal>[];
 
     final attacksResult = await ApiCallsV1.getFactionAttacks();

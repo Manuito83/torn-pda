@@ -77,7 +77,6 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
     if (Platform.isIOS) _refreshAlarmPendingIos();
     _ticker = Timer.periodic(const Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics?.logScreenView(screenName: 'travel');
 
     routeWithDrawer = true;
     routeName = "travel";
@@ -153,6 +152,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               return OpenContainer(
                 transitionDuration: const Duration(milliseconds: 300),
                 transitionType: ContainerTransitionType.fade,
+                routeSettings: const RouteSettings(name: 'foreign_stocks'),
                 openBuilder: (BuildContext context, VoidCallback _) {
                   return ForeignStockPage(apiKey: _myCurrentKey);
                 },
@@ -201,7 +201,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return AppBar(
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -217,7 +217,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       title: const Text('Travel', style: TextStyle(color: Colors.white)),
@@ -300,6 +300,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         Navigator.of(context)
             .push(
               MaterialPageRoute(
+                settings: const RouteSettings(name: 'foreign_stocks'),
                 builder: (BuildContext context) => ForeignStockPage(
                   apiKey: _myCurrentKey,
                 ),
@@ -624,6 +625,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             destination: _travelModel.destination,
             settingsProvider: _settingsProvider,
             dateTimeArrival: _travelModel.timeArrival,
+            departed: _travelModel.departed,
+            timestamp: _travelModel.timeStamp,
           ),
           Padding(
             padding: const EdgeInsets.only(top: 20),
@@ -672,6 +675,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               destination: _travelModel.destination,
               settingsProvider: _settingsProvider,
               dateTimeArrival: _travelModel.timeArrival,
+              departed: _travelModel.departed,
+              timestamp: _travelModel.timeStamp,
             ),
           ),
           ElevatedButton(
@@ -801,6 +806,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               destination: _travelModel.destination,
               settingsProvider: _settingsProvider,
               dateTimeArrival: _travelModel.timeArrival,
+              departed: _travelModel.departed,
+              timestamp: _travelModel.timeStamp,
             ),
           ),
         ];
@@ -979,7 +986,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var notificationTitle = await Prefs().getTravelNotificationTitle();
     var notificationSubtitle = await Prefs().getTravelNotificationBody();
 
-    if (_settingsProvider!.discreetNotifications) {
+    if (_settingsProvider!.discreetAt(scheduledNotificationDateTime)) {
       notificationTitle = "T";
       notificationSubtitle = " ";
     }
@@ -1059,7 +1066,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
       final descriptor = AlarmKitServiceIos.profileDescriptor('travel');
 
-      final label = _settingsProvider!.discreetNotifications ? 'T' : 'Travel';
+      final label = _settingsProvider!.discreetAt(alarmTime) ? 'T' : 'Travel';
       await AlarmKitServiceIos.setAlarm(
         targetTime: alarmTime,
         label: label,
@@ -1097,7 +1104,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': _alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
-        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications ? "T" : 'TORN PDA Travel',
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetAt(alarmTime) ? "T" : 'TORN PDA Travel',
       },
     );
     intent.launch();
@@ -1123,18 +1130,19 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setTimer() async {
+    final timerEnd = DateTime.now().add(Duration(seconds: _travelModel.timeLeft! - _travelTimerAhead));
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft! - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications ? "T" : 'TORN PDA Travel',
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetAt(timerEnd) ? "T" : 'TORN PDA Travel',
       },
     );
     intent.launch();
 
-    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft! - _travelTimerAhead));
+    return timerEnd;
   }
 
   Future _restorePreferences() async {

@@ -27,6 +27,12 @@ MAIN INDEX
   
   From JS code, you can communicate with the native (Flutter) side of Torn PDA, which offers some additional capabilities (such as notifications) and also helps to overcome restrictions imposed by Torn (such as cross-origin http requests).
 <br></br>
+- ## Remote debugging of the browser
+
+  Connect Chrome DevTools (Android) or Safari Web Inspector (iOS) to the Torn PDA browser to debug userscripts: console, handler calls and breakpoints.
+
+  [Remote debugging guide](./webview/remote-debugging.md)
+<br></br>
 - ## GM support for PDA
 
   As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not include any external libraries that are served in frameworks such as GM or TM. 
@@ -70,6 +76,13 @@ MAIN INDEX
   cp native_login_widget.dart.example ../torn-pda-native/auth/native_login_widget.dart
   mkdir -p ../torn-pda-native/stats
   cp stats_controller.dart.example ../torn-pda-native/stats/stats_controller.dart
+  cp usage_counters.dart.example ../torn-pda-native/stats/usage_counters.dart
+  cp app_settings_daily.dart.example ../torn-pda-native/stats/app_settings_daily.dart
+  mkdir -p ../torn-pda-native/chat
+  cp chat_engine.dart.example ../torn-pda-native/chat/chat_engine.dart
+  cp torn_chat_source.dart.example ../torn-pda-native/chat/torn_chat_source.dart
+  cp chat_push.dart.example ../torn-pda-native/chat/chat_push.dart
+  cp ../utils/env/env.g.dart.example ../utils/env/env.g.dart
   ```
 
   ### 3. Set up Android signing (for release builds)

@@ -1,6 +1,7 @@
 import { onDocumentCreated, onDocumentDeleted, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+import { RECIPIENT_FACTION_FIELD, verifyAfterWrite } from "./verified_players";
 
 export const onPlayerAdded = onDocumentCreated(
   {
@@ -37,6 +38,11 @@ export const onPlayerAdded = onDocumentCreated(
     }
 
     promises.push(deactivateOtherDocsWithToken(event.params.uid, beforeStat.token, beforeStat.playerId));
+
+    promises.push(
+      verifyAfterWrite(event.params.uid, {}, beforeStat)
+        .catch((e) => console.warn(`Failed to verify ${event.params.uid}: ${e}`))
+    );
 
     await Promise.all(promises);
   }
@@ -184,6 +190,11 @@ export const onPlayerUpdated = onDocumentUpdated({
 
   if (afterStat.active !== false && (beforeStat.token !== afterStat.token || beforeStat.active !== afterStat.active))
     promises.push(deactivateOtherDocsWithToken(event.params.uid, afterStat.token, afterStat.playerId));
+
+  promises.push(
+    verifyAfterWrite(event.params.uid, beforeStat, afterStat)
+      .catch((e) => console.warn(`Failed to verify ${event.params.uid}: ${e}`))
+  );
 
   if (beforeStat.alertsEnabled !== afterStat.alertsEnabled)
     promises.push(
@@ -388,12 +399,13 @@ export const onPlayerUpdated = onDocumentUpdated({
     );
   }
 
-  if (afterStat.retalsNotification) {
+  const retalsFaction = afterStat[RECIPIENT_FACTION_FIELD];
+  if (afterStat.retalsNotification && Number.isSafeInteger(retalsFaction) && retalsFaction > 0) {
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
-    db.ref(`retals/factions/${afterStat.faction}`).once("value", (snapshot: admin.database.DataSnapshot) => {
+    db.ref(`retals/factions/${retalsFaction}`).once("value", (snapshot: admin.database.DataSnapshot) => {
       if (!snapshot.exists()) {
-        db.ref(`retals/factions/${afterStat.faction}`).set("");
+        db.ref(`retals/factions/${retalsFaction}`).set("");
       }
     });
   }
@@ -424,6 +436,59 @@ async function manageStats(statName: string, changeInValue: number) {
 
   await totalUserRef.transaction((current: number | null) => (current || 0) + changeInValue);
 }
+
+// Fields the app copies on session recovery
+const RECOVERY_FIELDS: readonly string[] = [
+  "platform",
+  "restockActiveAlerts",
+  "cityShopActiveAlerts",
+  "discrete",
+  "vibration",
+  "travelNotification",
+  "travelStocksInNotification",
+  "foreignRestockNotification",
+  "foreignRestockNotificationOnlyCurrentCountry",
+  "foreignRestockNotificationOnlyLanded",
+  "foreignRestockNotificationSellout",
+  "cityShopRestockNotification",
+  "cityShopOnlyConfirmed",
+  "cityShopOnlyInTorn",
+  "cityShopHoursEnabled",
+  "cityShopHoursFrom",
+  "cityShopHoursTo",
+  "abroadStayNotification",
+  "abroadStayIntervals",
+  "abroadStayIncludeHospital",
+  "energyNotification",
+  "nerveNotification",
+  "lifeNotification",
+  "hospitalNotification",
+  "drugsNotification",
+  "medicalNotification",
+  "boosterNotification",
+  "racingNotification",
+  "messagesNotification",
+  "eventsNotification",
+  "eventsFilter",
+  "refillsNotification",
+  "refillsTime",
+  "refillsRequested",
+  "stockMarketNotification",
+  "stockMarketShares",
+  "factionAssistMessage",
+  "retalsNotification",
+  "retalsNotificationHost",
+  "retalsNotificationDonor",
+  "forumsSubscriptionsNotification",
+  "lootAlerts",
+  "lootRangersNotification",
+  "lootAlertAheadSeconds",
+  "lootRangersAheadSeconds",
+  "workStatsNotification",
+  "workStatsManualLaborTarget",
+  "workStatsIntelligenceTarget",
+  "workStatsEnduranceTarget",
+];
 
 export const lookupPlayerByApiKey = onCall({
   region: "us-east4",
@@ -475,7 +540,7 @@ export const lookupPlayerByApiKey = onCall({
   // Prefer same-platform matches only when the caller specifies the platform explicitly
   const requestedPlatformValue = (requestedPlatform || "").toString();
 
-  const samePlatform = requestedPlatformValue.isEmpty
+  const samePlatform = requestedPlatformValue.length === 0
     ? undefined
     : query.docs.find(
       (d) => d.id !== currentUid && (d.get("platform") || "").toString() === requestedPlatformValue,
@@ -487,5 +552,11 @@ export const lookupPlayerByApiKey = onCall({
     return { uid: null, data: null };
   }
 
-  return { uid: anyOther.id, data: anyOther.data() };
+  const source = anyOther.data();
+  const data: Record<string, unknown> = {};
+  for (const field of RECOVERY_FIELDS) {
+    if (field in source) data[field] = source[field];
+  }
+
+  return { uid: anyOther.id, data };
 });

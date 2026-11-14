@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import 'package:torn_pda/models/backup/prefs_backup_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
@@ -52,6 +53,10 @@ class BackupReminderDialogState extends State<BackupReminderDialog> {
     final key = _passwordController.text.trim();
     if (key.isEmpty) {
       _showToast('Please enter an encryption key', ToastificationType.error);
+      return;
+    }
+    if (isBackupPasswordTooShort(key)) {
+      _showToast(backupPasswordTooShortMessage, ToastificationType.error);
       return;
     }
 

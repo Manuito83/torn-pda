@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/drawer_section.dart';
+import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class DrawerSectionsPage extends StatefulWidget {
   @override
@@ -14,35 +16,22 @@ class DrawerSectionsPage extends StatefulWidget {
 class DrawerSectionsPageState extends State<DrawerSectionsPage> {
   late SettingsProvider _settingsProvider;
 
-  List<DrawerSection> _orderedSections = [];
+  List<String> _order = [];
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = context.read<SettingsProvider>();
-
-    final order = _settingsProvider.drawerSectionOrder;
-
-    if (order.isNotEmpty) {
-      _orderedSections = order.map((id) => DrawerSection.fromId(id)).whereType<DrawerSection>().toList();
-      // Append any new sections not yet in the order
-      for (final section in DrawerSection.values) {
-        if (!_orderedSections.contains(section)) {
-          _orderedSections.add(section);
-        }
-      }
-    } else {
-      _orderedSections = List.from(DrawerSection.values);
-    }
+    _order = drawerFullOrder(_settingsProvider.drawerSectionOrder);
   }
 
   void _save() {
-    _settingsProvider.drawerSectionOrder = _orderedSections.map((s) => s.name).toList();
+    _settingsProvider.drawerSectionOrder = List.of(_order);
   }
 
   void _resetToDefaults() {
     setState(() {
-      _orderedSections = List.from(DrawerSection.values);
+      _order = drawerFullOrder(const []);
     });
     _settingsProvider.changeDisableTravelSection = false;
     _settingsProvider.changeRankedWarsInMenu = false;
@@ -141,17 +130,32 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
         ),
         body: ReorderableListView.builder(
           padding: const EdgeInsets.only(bottom: 20),
-          itemCount: _orderedSections.length,
+          itemCount: _order.length,
           onReorderItem: (oldIndex, newIndex) {
             // newIndex is already corrected by the framework as of Flutter 3.44
             setState(() {
-              final item = _orderedSections.removeAt(oldIndex);
-              _orderedSections.insert(newIndex, item);
+              final item = _order.removeAt(oldIndex);
+              _order.insert(newIndex, item);
             });
             _save();
           },
           itemBuilder: (context, index) {
-            final section = _orderedSections[index];
+            if (_order[index] == drawerChatId) {
+              if (!NativeChat.compiled) return const SizedBox.shrink(key: ValueKey(drawerChatId));
+              final shown = NativeChat.prefs.launcher == ChatLauncher.menuBar;
+              return Card(
+                key: const ValueKey(drawerChatId),
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                child: ListTile(
+                  leading: const Icon(Icons.forum_rounded),
+                  title: const Text('Chat'),
+                  subtitle: shown ? null : const Text('Shown with Menu bar in Chat settings'),
+                  trailing: const Icon(Icons.drag_handle),
+                  tileColor: shown ? null : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+                ),
+              );
+            }
+            final section = DrawerSection.fromId(_order[index])!;
             final isVisible = _isVisible(section);
             final canHide = section.canHide;
 

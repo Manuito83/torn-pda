@@ -13,6 +13,7 @@ import type {
   CityShopsTickResult,
 } from "./interfaces/city_shops_interface";
 import { sendNotificationToUser, type NotificationCheckResult } from "./notification";
+import { isDiscreetNow } from "./discreet";
 const { tornKey } = require("../key/torn_key.js");
 
 // Interval between scheduled API samples
@@ -400,7 +401,7 @@ export function sendCityShopRestockNotification(
       }
     }
 
-    if (subscriber.discrete) {
+    if (isDiscreetNow(subscriber)) {
       title = "Shops";
       body = " ";
     }

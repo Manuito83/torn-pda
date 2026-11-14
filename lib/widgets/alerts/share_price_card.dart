@@ -74,27 +74,29 @@ class SharePriceCardState extends State<SharePriceCard> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // First Row
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text("(${widget.stock.acronym}) ", style: const TextStyle(fontSize: 12)),
-                Text(widget.stock.name!, style: const TextStyle(fontSize: 12)),
-              ],
-            ),
-            const SizedBox(height: 2),
-            // Second Row
-            Row(
-              children: [
-                Text(
-                  "Price: \$${widget.stock.currentPrice}",
-                  style: const TextStyle(fontSize: 12),
-                ),
-                gain,
-              ],
-            ),
-          ],
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text("(${widget.stock.acronym}) ", style: const TextStyle(fontSize: 12)),
+                  Flexible(child: Text(widget.stock.name!, style: const TextStyle(fontSize: 12))),
+                ],
+              ),
+              const SizedBox(height: 2),
+              // Second Row
+              Wrap(
+                children: [
+                  Text(
+                    "Price: \$${widget.stock.currentPrice}",
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  gain,
+                ],
+              ),
+            ],
+          ),
         ),
         Column(
           children: [

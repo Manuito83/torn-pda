@@ -10,6 +10,7 @@ final firebaseFunctions = _FirebaseFunctions();
 
 class _FirebaseFunctions {
   final String region = 'us-east4';
+  final Duration assistTimeout = const Duration(seconds: 30);
 
   Future<String> _getProjectId() async {
     FirebaseApp app = Firebase.app();
@@ -111,16 +112,21 @@ class _FirebaseFunctions {
       'exactStats': exactStats,
       'ffsStats': ffsStats,
       'fairFight': fairFight,
+      'errorDetail': true,
     };
 
     if (Platform.isWindows) {
-      final result = await _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+      final result = await _callHttpFunctionForDesktop(
+        functionName,
+        data,
+        wrapDataAsJsonString: false,
+      ).timeout(assistTimeout);
       return result as int;
     } else {
       // Android / iOS
       final HttpsCallable callable = FirebaseFunctions.instanceFor(
         region: 'us-east4',
-      ).httpsCallable(functionName);
+      ).httpsCallable(functionName, options: HttpsCallableOptions(timeout: assistTimeout));
 
       final HttpsCallableResult results = await callable.call(data);
       return results.data;

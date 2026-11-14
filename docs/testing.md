@@ -37,16 +37,7 @@ The project keeps private config files (API keys etc.) out of version
 control. You need the stubs so that imports resolve:
 
 ```bash
-cd lib/config
-for f in *.dart.example; do cp "$f" "${f%.example}"; done
-
-cd ../torn-pda-native
-mkdir -p auth stats
-cp ../config/native_auth_models.dart.example    auth/native_auth_models.dart
-cp ../config/native_auth_provider.dart.example   auth/native_auth_provider.dart
-cp ../config/native_user_provider.dart.example   auth/native_user_provider.dart
-cp ../config/native_login_widget.dart.example    auth/native_login_widget.dart
-cp ../config/stats_controller.dart.example       stats/stats_controller.dart
+bash .github/ci_stubs.sh
 ```
 
 ### 2. Install dependencies
@@ -104,7 +95,6 @@ flutter test --name "shouldInject"
 | | `isTraveling` — active flight detection |
 | `travel_times_test.dart` | `TravelTimes.getCountry` — name → enum mapping |
 | | `travelTimeMinutesOneWay` — travel duration by destination × ticket |
-| `html_parser_test.dart` | `HtmlParser.fix` — strip HTML tags to plain text |
 | `events_timeline_fixes_test.dart` | `fixHrefAttributes` — deduplicate malformed torn.com hrefs |
 | | `processEventMessage` — normalise event message text |
 | | `stripUnsupportedHtmlTags` — allow only `<a>` and `<b>` tags |
@@ -171,12 +161,12 @@ These have been identified as testable but don't have tests yet:
 
 ### Config stubs
 
-The CI and local test setup both need config stubs. A one-liner to set
-everything up:
+The CI and local test setup both need config stubs. The same script
+the CI jobs run:
 
 ```bash
 # From the project root
-cd lib/config && for f in *.dart.example; do cp "$f" "${f%.example}"; done && cd ../torn-pda-native && mkdir -p auth stats && cp ../config/native_auth_models.dart.example auth/native_auth_models.dart && cp ../config/native_auth_provider.dart.example auth/native_auth_provider.dart && cp ../config/native_user_provider.dart.example auth/native_user_provider.dart && cp ../config/native_login_widget.dart.example auth/native_login_widget.dart && cp ../config/stats_controller.dart.example stats/stats_controller.dart && cd ../..
+bash .github/ci_stubs.sh
 ```
 
 ### No emulator needed

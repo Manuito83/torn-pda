@@ -17,6 +17,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
@@ -101,6 +102,8 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     log(entry, name: 'AUTH_RECOVERY_TRACE');
   }
 
+  String _errorCode(Object e) => e is FirebaseException ? e.code : e.runtimeType.toString();
+
   /// [iOS only] Check if protected data (Keychain) is available
   /// This is for diagnostics only, to confirm if keychain access issues cause auth loss
   Future<void> _logProtectedDataAvailability() async {
@@ -112,7 +115,19 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     } catch (e) {
       // Channel not implemented yet - just log the error
       _iosProtectedDataAvailable = null;
-      _logStep('IOS_PROTECTED_DATA_ERROR', details: {'error': e.toString()});
+      _logStep('IOS_PROTECTED_DATA_ERROR', details: {'error': _errorCode(e)});
+    }
+  }
+
+  // Also for paths that skip recovery
+  void _setUidIfSessionRestored() {
+    if (Platform.isWindows) return;
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      _logStep('EARLY_EXIT_UID', details: {'uid': uid ?? 'none'});
+      if (uid != null) FirestoreHelper().markSignedIn();
+    } catch (e) {
+      _logStep('EARLY_EXIT_UID_ERROR', details: {'error': _errorCode(e)});
     }
   }
 
@@ -162,6 +177,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
             'app_updated': widget.appHasBeenUpdated.toString(),
           },
         );
+        _setUidIfSessionRestored();
         widget.onAuthCompleted?.call();
         return;
       }
@@ -170,12 +186,14 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     // Kill switch via Remote Config (checked AFTER preferences load)
     if (!widget.enabled) {
       _logStep('DISABLED_RC');
+      _setUidIfSessionRestored();
       widget.onAuthCompleted?.call();
       return;
     }
 
     if (Platform.isWindows || _drawerUserChecked) {
       _logStep('EARLY_RETURN', details: {'reason': Platform.isWindows ? 'windows' : 'already_checked'});
+      _setUidIfSessionRestored();
       widget.onAuthCompleted?.call();
       return;
     }
@@ -194,7 +212,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       _logStep('FIREBASE_INIT_OK');
     } catch (e) {
-      _logStep('FIREBASE_INIT_ERROR', details: {'error': e.toString()});
+      _logStep('FIREBASE_INIT_ERROR', details: {'error': _errorCode(e)});
     }
 
     // [Debug] Force sign-out to simulate lost session
@@ -239,7 +257,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       _initialCurrentUserState = user == null ? 'null' : 'present';
     } catch (e) {
       _initialCurrentUserState = 'error';
-      _logStep('CURRENT_USER_ERROR', details: {'error': e.toString()});
+      _logStep('CURRENT_USER_ERROR', details: {'error': _errorCode(e)});
     }
     _logStep('INITIAL_USER_CHECK', details: {'state': _initialCurrentUserState, 'uid': user?.uid ?? 'none'});
 
@@ -247,22 +265,13 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     if (user != null && !_debugForceSignOut) {
       _isOriginalUserRecovered = true;
       _logStep('USER_FOUND_IMMEDIATE', details: {'uid': user.uid});
-      FirebaseAnalytics.instance.logEvent(
-        name: 'auth_restoration_success',
-        parameters: {
-          'method': 'immediate',
-          'time_ms': _totalRecoveryStopwatch.elapsedMilliseconds,
-          'success': 'true',
-          'platform': Platform.isIOS ? 'iOS' : 'Android',
-          'app_updated': widget.appHasBeenUpdated.toString(),
-        },
-      );
+      unawaited(UsageCounters.feature('auth_ok_immediate'));
 
-      setState(() {
-        _userUid = user!.uid;
-        _hasAuthenticationError = false;
-      });
-      await FirestoreHelper().setUID(_userUid);
+      // May run after unmount
+      _userUid = user.uid;
+      _hasAuthenticationError = false;
+      if (mounted) setState(() {});
+      FirestoreHelper().markSignedIn();
       _drawerUserChecked = true;
       _totalRecoveryStopwatch.stop();
       widget.onAuthCompleted?.call();
@@ -278,22 +287,12 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         if (user != null && !_debugForceSignOut) {
           _isOriginalUserRecovered = true;
           _logStep('USER_FOUND_REINIT', details: {'uid': user.uid});
-          FirebaseAnalytics.instance.logEvent(
-            name: 'auth_restoration_success',
-            parameters: {
-              'method': 'firebase_reinit',
-              'time_ms': _totalRecoveryStopwatch.elapsedMilliseconds,
-              'success': 'true',
-              'platform': Platform.isIOS ? 'iOS' : 'Android',
-              'app_updated': 'true',
-            },
-          );
+          unawaited(UsageCounters.feature('auth_ok_firebase_reinit'));
 
-          setState(() {
-            _userUid = user!.uid;
-            _hasAuthenticationError = false;
-          });
-          await FirestoreHelper().setUID(_userUid);
+          _userUid = user.uid;
+          _hasAuthenticationError = false;
+          if (mounted) setState(() {});
+          FirestoreHelper().markSignedIn();
           _drawerUserChecked = true;
           _totalRecoveryStopwatch.stop();
           widget.onAuthCompleted?.call();
@@ -301,7 +300,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         }
         _logStep('APP_UPDATE_REINIT_NO_USER');
       } catch (e) {
-        _logStep('APP_UPDATE_REINIT_ERROR', details: {'error': e.toString()});
+        _logStep('APP_UPDATE_REINIT_ERROR', details: {'error': _errorCode(e)});
       }
     }
 
@@ -344,7 +343,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       try {
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       } catch (e) {
-        _logStep('RETRY_FIREBASE_INIT_ERROR', details: {'attempt': attempt, 'error': e.toString()});
+        _logStep('RETRY_FIREBASE_INIT_ERROR', details: {'attempt': attempt, 'error': _errorCode(e)});
       }
 
       // Check currentUser
@@ -352,7 +351,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       try {
         user = FirebaseAuth.instance.currentUser;
       } catch (e) {
-        _logStep('RETRY_CURRENT_USER_ERROR', details: {'attempt': attempt, 'error': e.toString()});
+        _logStep('RETRY_CURRENT_USER_ERROR', details: {'attempt': attempt, 'error': _errorCode(e)});
       }
 
       // Also listen to authStateChanges briefly to catch delayed auth events
@@ -365,7 +364,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
           );
           _authStateChangesCount++;
         } catch (e) {
-          _logStep('RETRY_AUTH_STREAM_ERROR', details: {'error': e.toString()});
+          _logStep('RETRY_AUTH_STREAM_ERROR', details: {'error': _errorCode(e)});
         }
       }
 
@@ -379,17 +378,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         _isOriginalUserRecovered = true;
         _logStep('RETRY_USER_RECOVERED', details: {'attempt': attempt, 'uid': user.uid});
 
-        FirebaseAnalytics.instance.logEvent(
-          name: 'auth_restoration_success',
-          parameters: {
-            'method': 'retry_exponential_backoff',
-            'time_ms': _totalRecoveryStopwatch.elapsedMilliseconds,
-            'attempt': attempt,
-            'success': 'true',
-            'platform': Platform.isIOS ? 'iOS' : 'Android',
-            'app_updated': widget.appHasBeenUpdated.toString(),
-          },
-        );
+        unawaited(UsageCounters.feature('auth_ok_retry_exponential_backoff'));
 
         await _finalizeOriginalUser(user.uid);
         return;
@@ -480,7 +469,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       try {
         user = FirebaseAuth.instance.currentUser;
       } catch (e) {
-        _logStep('ANON_CURRENT_USER_ERROR', details: {'error': e.toString()});
+        _logStep('ANON_CURRENT_USER_ERROR', details: {'error': _errorCode(e)});
       }
 
       _logStep(
@@ -535,7 +524,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         await _finalizeNewUserAndRecoverAlerts(user.uid, retriesUsed: retriesUsed);
       }
     } catch (e, s) {
-      _logStep('ANON_EXCEPTION', details: {'error': e.toString()});
+      _logStep('ANON_EXCEPTION', details: {'error': _errorCode(e)});
       failure = Exception('final_recovery_exception');
       _logResults(
         restoredUser: _userUid.isNotEmpty,
@@ -609,7 +598,7 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
           platformMatch = recovery['platformMatch'] ?? true;
         }
       } catch (e) {
-        _logStep('ALERTS_CLONE_ERROR', details: {'error': e.toString()});
+        _logStep('ALERTS_CLONE_ERROR', details: {'error': _errorCode(e)});
       }
     } else {
       _logStep('ALERTS_CLONE_SKIPPED', details: {'reason': apiKey.isEmpty ? 'no_api_key' : 'no_uid'});
@@ -718,11 +707,10 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     _logStep('FINALIZE_ORIGINAL_USER', details: {'uid': uid});
     _isOriginalUserRecovered = true;
 
-    if (mounted) {
-      setState(() => _userUid = uid);
-    }
+    _userUid = uid;
+    if (mounted) setState(() {});
 
-    await FirestoreHelper().setUID(_userUid);
+    FirestoreHelper().markSignedIn();
     await _syncProfileToFirebase();
 
     _totalRecoveryStopwatch.stop();
@@ -754,11 +742,10 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     }
     _finalizationStarted = true;
 
-    if (mounted) {
-      setState(() => _userUid = uid);
-    }
+    _userUid = uid;
+    if (mounted) setState(() {});
 
-    await FirestoreHelper().setUID(_userUid);
+    FirestoreHelper().markSignedIn();
 
     // Try to recover alerts (local snapshot first, then Firestore)
     final outcome = await _tryRecoverAlerts(currentUid: _userUid);
@@ -796,12 +783,9 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   }
 
   Future<bool> _restoreFromLocalSnapshot() async {
-    final snapshot = await FirestoreHelper().loadLocalSnapshot();
-    if (snapshot == null || _debugFailLocalRecovery) {
-      return false;
-    }
-
-    final restored = await FirestoreHelper().applyAlertsFromPayload(snapshot.toMap(), resetRestockTimestamps: true);
+    if (_debugFailLocalRecovery) return false;
+    final restored =
+        await FirestoreHelper().restoreAlertsFromLocalSnapshot(UserHelper.playerId, newSession: true) != null;
     log("AUTH_DEBUG: Local snapshot restore: $restored", name: "AUTH_DEBUG");
     return restored;
   }
@@ -876,18 +860,20 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         " isOriginalUser=$_isOriginalUserRecovered totalMs=${_totalRecoveryStopwatch.elapsedMilliseconds}";
     log(summary, name: "AUTH RECOVERY");
 
+    const failures = {'auth_recovery_final_timeout', 'final_recovery_exception', 'alerts_not_recovered'};
+    final code = '$failure'.replaceFirst('Exception: ', '');
     FirebaseAnalytics.instance.logEvent(
       name: success ? 'auth_recovery_success' : 'auth_recovery_failed',
       parameters: {
+        'method': success ? 'anon_new_user' : (failures.contains(code) ? code : 'other'),
         'recoverySource': recoverySource,
         'restoredUser': restoredUser.toString(),
         'clonedAlerts': clonedAlerts.toString(),
         'snapshotRestored': snapshotRestored.toString(),
-        'retries': retries,
+        'retries': '$retries',
         'timedOut': timedOut.toString(),
-        'sourceUid': sourceUid ?? 'none',
         'isOriginalUser': _isOriginalUserRecovered.toString(),
-        'totalTimeMs': _totalRecoveryStopwatch.elapsedMilliseconds,
+        'time_ms': _totalRecoveryStopwatch.elapsedMilliseconds,
         'platform': Platform.isIOS ? 'iOS' : 'Android',
         'appUpdated': widget.appHasBeenUpdated.toString(),
         'initialUserState': _initialCurrentUserState ?? 'unknown',

@@ -12,9 +12,37 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+
+const _travelHomeSelector = ".travel-home, .travel-home-header-button";
+const _stockRowsSelector = 'div[class*="stockTableWrapper"] div[class*="row___"]';
+
+// Answers once, also on page exit
+const _waitForSelectorJS = '''
+  return await new Promise((resolve) => {
+    let done = false;
+    let observer = null;
+    let timer = null;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (observer) observer.disconnect();
+      clearTimeout(timer);
+      window.removeEventListener("pagehide", finish);
+      resolve(document.querySelector(selector) !== null);
+    };
+    if (document.querySelector(selector)) return finish();
+    observer = new MutationObserver(() => {
+      if (document.querySelector(selector)) finish();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    timer = setTimeout(finish, timeout);
+    window.addEventListener("pagehide", finish);
+  });
+''';
 
 class ForeignStocksWebviewHandler {
   final InAppWebViewController? webViewController;
@@ -22,6 +50,8 @@ class ForeignStocksWebviewHandler {
   final SettingsProvider settingsProvider;
 
   DateTime? _foreignStocksSentTime;
+  // Newest travel check wins
+  int _travelCheck = 0;
 
   ForeignStocksWebviewHandler({
     required this.webViewController,
@@ -48,23 +78,36 @@ class ForeignStocksWebviewHandler {
     return (value * multiplier).toInt();
   }
 
-  Future<void> assessTravel(dom.Document document) async {
-    var abroad = document.querySelectorAll(".travel-home, .travel-home-header-button");
-    if (abroad.isEmpty) {
-      int attempts = 0;
-      while (attempts < 10) {
-        await Future.delayed(const Duration(milliseconds: 200));
-        final html = await webViewController?.getHtml();
-        if (html != null) {
-          document = parse(html);
-          abroad = document.querySelectorAll(".travel-home, .travel-home-header-button");
-          if (abroad.isNotEmpty) break;
-        }
-        attempts++;
-      }
+  Future<bool> _pageShows(String selector, Duration timeout) async {
+    try {
+      final result = await webViewController
+          ?.callAsyncJavaScript(
+            functionBody: _waitForSelectorJS,
+            arguments: {"selector": selector, "timeout": timeout.inMilliseconds},
+          )
+          .timeout(timeout + const Duration(seconds: 2));
+      return result?.value == true;
+    } catch (_) {
+      return false;
     }
+  }
 
-    if (abroad.isNotEmpty) {
+  Future<dom.Document> _freshDocument(dom.Document fallback) async {
+    final html = await webViewController?.getHtml();
+    return html != null ? parse(html) : fallback;
+  }
+
+  Future<void> assessTravel(dom.Document document) async {
+    final check = ++_travelCheck;
+    bool abroad = document.querySelectorAll(_travelHomeSelector).isNotEmpty;
+    if (!abroad && await _pageShows(_travelHomeSelector, const Duration(seconds: 6))) {
+      abroad = true;
+      document = await _freshDocument(document);
+    }
+    // A newer page took over
+    if (check != _travelCheck) return;
+
+    if (abroad) {
       _handleTravelUI();
       _sendStockInformation(document);
       onTravelStatusChanged(true);
@@ -85,34 +128,25 @@ class ForeignStocksWebviewHandler {
     }
   }
 
-  Future<void> _sendStockInformation(dom.Document document) async {
+  List<dom.Element> _stockRows(dom.Document document) {
     // Find item elements
-    var elements = <dom.Element>[];
+    final elements = <dom.Element>[];
 
     // Find wrappers
-    var wrappers = document.querySelectorAll('div[class*="stockTableWrapper"]');
-    for (var wrapper in wrappers) {
+    for (final wrapper in document.querySelectorAll('div[class*="stockTableWrapper"]')) {
       // Find rows (divs with class row___)
       elements.addAll(wrapper.querySelectorAll('div[class*="row___"]'));
     }
+    return elements;
+  }
+
+  Future<void> _sendStockInformation(dom.Document document) async {
+    var elements = _stockRows(document);
 
     // Retry if empty as it might take additional time to load after [assessTravel] is called
-    if (elements.isEmpty) {
-      int attempts = 0;
-      while (attempts < 10) {
-        await Future.delayed(const Duration(milliseconds: 250));
-        final html = await webViewController?.getHtml();
-        if (html != null) {
-          document = parse(html);
-          elements.clear();
-          wrappers = document.querySelectorAll('div[class*="stockTableWrapper"]');
-          for (var wrapper in wrappers) {
-            elements.addAll(wrapper.querySelectorAll('div[class*="row___"]'));
-          }
-          if (elements.isNotEmpty) break;
-        }
-        attempts++;
-      }
+    if (elements.isEmpty && await _pageShows(_stockRowsSelector, const Duration(seconds: 7))) {
+      document = await _freshDocument(document);
+      elements = _stockRows(document);
     }
 
     if (elements.isNotEmpty) {
@@ -219,6 +253,8 @@ class ForeignStocksWebviewHandler {
   Future<void> _uploadStocks({required String provider, required Uri url, required String body}) async {
     const retryDelays = [Duration(seconds: 2), Duration(seconds: 5)];
     String error = "";
+    Object? failure;
+    int? status;
 
     for (int attempt = 0; attempt <= retryDelays.length; attempt++) {
       try {
@@ -229,16 +265,22 @@ class ForeignStocksWebviewHandler {
         log("$provider replied with status code ${response.statusCode}. Response: ${response.body}");
         if (response.statusCode == 200) return;
         error = "Status code ${response.statusCode}";
+        status = response.statusCode;
+        failure = null;
         // Client errors... does not make sense to retry
         if (response.statusCode < 500) break;
-      } on TimeoutException {
+      } on TimeoutException catch (e) {
         error = "Timed out";
+        failure = e;
       } on SocketException catch (e) {
         error = "Connection error: $e";
+        failure = e;
       } on http.ClientException catch (e) {
         error = "Connection error: $e";
+        failure = e;
       } catch (e) {
         error = "Catched exception: $e";
+        failure = e;
         break;
       }
 
@@ -248,11 +290,7 @@ class ForeignStocksWebviewHandler {
     }
 
     log('Error sending Foreign Stocks to $provider: $error');
-    final String details = "$appVersion $provider: $error";
-    analytics?.logEvent(
-      name: 'foreign_stock_upload_failed',
-      parameters: {'error': details.length > 99 ? details.substring(0, 99) : details},
-    );
+    unawaited(UsageCounters.apiError(provider.toLowerCase(), failure, status: failure == null ? status : null));
     logToUser("Error sending Foreign Stocks to $provider");
   }
 

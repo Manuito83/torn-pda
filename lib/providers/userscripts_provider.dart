@@ -18,13 +18,13 @@ import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/torn-pda-native/stats/app_settings_daily.dart';
 import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
+import 'package:uuid/uuid.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
-
-enum ScriptsBulkMode { none, globalDisable, warMode }
 
 /// Reviewable entry for the bulk update dialog
 class BulkUpdateReviewItem {
@@ -50,6 +50,8 @@ class UserScriptsProvider extends ChangeNotifier {
   final List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
 
+  final Set<String> _hashMatchReported = {};
+
   // Safety lock to prevent overwriting data with empty lists if load fails
   bool _isSafeToSave = false;
   bool get isInSafeMode => !_isSafeToSave;
@@ -71,6 +73,9 @@ class UserScriptsProvider extends ChangeNotifier {
     _saveUserScriptsToStorage();
     notifyListeners();
   }
+
+  // Remote Config: scripts_early_http_allowed
+  bool earlyHttpAllowedRC = true;
 
   var _userScriptsNotifyUpdates = true;
   bool get userScriptsNotifyUpdates => _userScriptsNotifyUpdates;
@@ -151,14 +156,22 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   ScriptsBulkMode _bulkMode = ScriptsBulkMode.none;
+  String _activeModeId = warModeId;
+  List<UserScriptMode> _customModes = [];
 
   bool get isGlobalDisableActive => _bulkMode == ScriptsBulkMode.globalDisable;
-  bool get isWarModeActive => _bulkMode == ScriptsBulkMode.warMode;
+  List<UserScriptMode> get customModes => _customModes;
+  List<UserScriptMode> get allModes => [UserScriptMode.war, ..._customModes];
+
+  UserScriptMode? get activeMode {
+    if (_bulkMode != ScriptsBulkMode.scriptMode) return null;
+    return allModes.where((m) => m.id == _activeModeId).firstOrNull;
+  }
 
   // Old disable settings by script name, used after the scripts are loaded
   Map<String, bool>? _legacyGlobalDisableByName;
 
-  int get warEnabledCount => _userScriptList.where((s) => s.warEnabled).length;
+  int modeScriptCount(UserScriptMode mode) => _userScriptList.where((s) => s.alwaysActive || s.modes.contains(mode.id)).length;
 
   /// Whether a script runs right now, which depends on the active mode and not only on its own switch
   bool isActive(UserScriptModel script) {
@@ -167,39 +180,98 @@ class UserScriptsProvider extends ChangeNotifier {
         return script.enabled;
       case ScriptsBulkMode.globalDisable:
         return false;
-      case ScriptsBulkMode.warMode:
-        return script.warEnabled;
+      case ScriptsBulkMode.scriptMode:
+        return script.alwaysActive || script.modes.contains(_activeModeId);
     }
   }
 
-  void toggleGlobalDisable() => _setBulkMode(ScriptsBulkMode.globalDisable);
+  void toggleGlobalDisable() {
+    _bulkMode = isGlobalDisableActive ? ScriptsBulkMode.none : ScriptsBulkMode.globalDisable;
+    _saveBulkMode();
+  }
 
-  void toggleWarMode() {
-    _setBulkMode(ScriptsBulkMode.warMode);
-    final int count = warEnabledCount;
-    final String text = !isWarModeActive
-        ? "Scripts war mode off"
+  // Null leaves any mode
+  void setMode(String? id) {
+    final UserScriptMode? previous = activeMode;
+    final UserScriptMode? mode = allModes.where((m) => m.id == id).firstOrNull;
+    _bulkMode = mode == null ? ScriptsBulkMode.none : ScriptsBulkMode.scriptMode;
+    if (mode != null) _activeModeId = mode.id;
+    _saveBulkMode();
+
+    final int count = _userScriptList.where(isActive).length;
+    final String name = (mode ?? previous)?.name ?? "Scripts mode";
+    final String text = mode == null
+        ? "$name off"
         : count == 0
-        ? "Scripts war mode on, but no script is selected for it yet. Switch on the ones you want in the scripts "
-              "section: they will stay selected every time you enter war mode"
-        : "Scripts war mode on: $count script${count == 1 ? "" : "s"} running";
+        ? "$name on, but no script is selected for it yet. Switch on the ones you want in the scripts section: they "
+              "will stay selected every time you enter this mode"
+        : "$name on: $count script${count == 1 ? "" : "s"} running";
     BotToast.showText(
       text: text,
       textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-      contentColor: Colors.orange[800]!,
-      duration: Duration(seconds: count == 0 && isWarModeActive ? 6 : 3),
+      contentColor: (mode ?? previous)?.color ?? Colors.orange[800]!,
+      duration: Duration(seconds: count == 0 && mode != null ? 6 : 3),
       contentPadding: const EdgeInsets.all(10),
     );
   }
 
-  void _setBulkMode(ScriptsBulkMode mode) {
-    _bulkMode = _bulkMode == mode ? ScriptsBulkMode.none : mode;
-    Prefs().setUserScriptsBulkMode(_bulkMode.name);
+  void _saveBulkMode() {
+    Prefs().setUserScriptsBulkMode(bulkModeToPrefs(_bulkMode, _activeModeId));
+    _reportScriptsOn();
     notifyListeners();
   }
 
-  void changeUserScriptWarEnabled(UserScriptModel changedModel, bool enabled) {
-    changedModel.warEnabled = enabled;
+  String? _lastScriptsOn;
+  void _reportScriptsOn() {
+    if (Platform.isWindows) return;
+    final String value = AppSettingsDaily.countBucket(_userScriptsEnabled ? _userScriptList.where(isActive).length : 0);
+    if (value == _lastScriptsOn) return;
+    _lastScriptsOn = value;
+    try {
+      analytics?.setUserProperty(name: "scripts_on", value: value);
+    } catch (_) {}
+  }
+
+  UserScriptMode addMode(String name) {
+    final mode = UserScriptMode(id: const Uuid().v4(), name: name.trim());
+    _customModes = [..._customModes, mode];
+    _saveModes();
+    return mode;
+  }
+
+  void renameMode(UserScriptMode mode, String name) {
+    _customModes = [for (final m in _customModes) m.id == mode.id ? UserScriptMode(id: m.id, name: name.trim()) : m];
+    _saveModes();
+  }
+
+  void deleteMode(UserScriptMode mode) {
+    if (_activeModeId == mode.id && _bulkMode == ScriptsBulkMode.scriptMode) {
+      _bulkMode = ScriptsBulkMode.none;
+      _saveBulkMode();
+    }
+    _customModes = _customModes.where((m) => m.id != mode.id).toList();
+    for (final script in _userScriptList) {
+      script.modes.remove(mode.id);
+    }
+    _saveModes();
+    _saveUserScriptsToStorage();
+  }
+
+  void _saveModes() {
+    Prefs().setUserScriptsModes(getUserScriptModesAsJsonString());
+    notifyListeners();
+  }
+
+  String getUserScriptModesAsJsonString() => userScriptModesToJson(_customModes);
+
+  void changeUserScriptInActiveMode(UserScriptModel changedModel, bool included) {
+    included ? changedModel.modes.add(_activeModeId) : changedModel.modes.remove(_activeModeId);
+    notifyListeners();
+    _saveUserScriptsToStorage();
+  }
+
+  void changeUserScriptAlwaysActive(UserScriptModel changedModel, bool alwaysActive) {
+    changedModel.alwaysActive = alwaysActive;
     notifyListeners();
     _saveUserScriptsToStorage();
   }
@@ -263,7 +335,7 @@ class UserScriptsProvider extends ChangeNotifier {
         UserScript(
           groupName: "__TornPDA_ReadyEvent__",
           injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: handler_flutterPlatformReady(),
+          source: handler_flutterPlatformReady(early: earlyHttpAllowedRC),
         ),
       );
 
@@ -272,7 +344,7 @@ class UserScriptsProvider extends ChangeNotifier {
         UserScript(
           groupName: "__TornPDA_API__",
           injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: handler_pdaAPI(),
+          source: handler_pdaAPI(early: earlyHttpAllowedRC),
         ),
       );
 
@@ -305,18 +377,17 @@ class UserScriptsProvider extends ChangeNotifier {
     if (_userScriptsEnabled) {
       try {
         return UnmodifiableListView(
-          _userScriptList.where((s) => isActive(s) && s.matchesTarget(url, time)).map((s) {
+          _userScriptList.where((s) => isActive(s) && _injectsInto(s, url, time)).map((s) {
+            // If the script is a custom API key script, we need to replace the API key
+            final String apiKey = s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey;
             return UserScript(
               groupName: s.storageId,
               injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-              // If the script is a custom API key script, we need to replace the API key
-              source: adaptSource(
-                source: s.source,
-                scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
-                storageId: s.storageId,
-              ),
+              source: time == UserScriptTime.start
+                  ? s.startSource(apiKey)
+                  : wrapSource(s.adaptedBody(apiKey), s.storageId),
             );
-          }),
+          }).toList(),
         );
       } catch (e, trace) {
         if (!Platform.isWindows) {
@@ -334,23 +405,30 @@ class UserScriptsProvider extends ChangeNotifier {
     return _userScriptList.where((s) => isActive(s) && s.matchesTarget(url)).toList();
   }
 
-  List<String> getScriptsToRemove({required String url}) {
-    if (!_userScriptsEnabled) {
-      return const <String>[];
-    } else {
-      return _userScriptList.where((s) => !(isActive(s) && s.matchesTarget(url))).map((s) => s.storageId).toList();
-    }
+  List<String> getScriptsToRemove({required String url, required Iterable<String> registered}) {
+    if (!_userScriptsEnabled) return const <String>[];
+    return staleScriptGroups(registered, _userScriptList.where(isActive), url);
   }
 
-  String adaptSource({required String source, required String scriptFinalApiKey, required String storageId}) {
-    final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
-    // Bind PDA_storage to this script's namespace inside its own closure (sid not reachable elsewhere)
-    // jsonEncode the id: it can come from imported/restored data, so never interpolate it raw into JS
-    final String bind =
-        'const PDA_storage = window.__pdaStorageFactory && window.__pdaStorageFactory(${jsonEncode(storageId)});';
-    String anonFunction = "(function() {$bind$withApiKey}());";
-    anonFunction = anonFunction.replaceAll(RegExp(r'[“”]'), '"').replaceAll(RegExp(r'[‘’]'), "'");
-    return anonFunction;
+  bool _injectsInto(UserScriptModel s, String url, UserScriptTime time) {
+    final pattern = s.matchingPattern(url, time);
+    if (pattern == null) return false;
+    if (pattern.contains('#') && _hashMatchReported.add(s.storageId)) {
+      analytics?.logEvent(
+        name: "userscript_match_hash",
+        parameters: {
+          "pattern": _anonymous(pattern),
+          "origin": s.isExample ? "example" : "installed",
+        },
+      ).catchError((_) {});
+    }
+    return true;
+  }
+
+  // No player or item ids in Analytics
+  String _anonymous(String pattern) {
+    final clean = pattern.replaceAll(RegExp(r'\d{3,}'), 'N');
+    return clean.length > 100 ? clean.substring(0, 100) : clean;
   }
 
   void addUserScriptByModel(UserScriptModel model) {
@@ -480,6 +558,7 @@ class UserScriptsProvider extends ChangeNotifier {
     required bool overwrite,
     required String scriptsList,
     bool defaultToDisabled = false,
+    String? modesList,
   }) async {
     // If we are restoring from a backup, we assume the data is valid and we can exit Safe Mode
     _isSafeToSave = true;
@@ -487,6 +566,16 @@ class UserScriptsProvider extends ChangeNotifier {
     if (overwrite) {
       _userScriptList.clear();
       final List<dynamic> decoded = json.decode(scriptsList);
+
+      // Old backups keep the local modes
+      if (modesList != null) {
+        _customModes = userScriptModesFromJson(modesList);
+        await Prefs().setUserScriptsModes(getUserScriptModesAsJsonString());
+        if (_bulkMode == ScriptsBulkMode.scriptMode && activeMode == null) {
+          _bulkMode = ScriptsBulkMode.none;
+          _saveBulkMode();
+        }
+      }
 
       for (final dec in decoded) {
         try {
@@ -504,11 +593,7 @@ class UserScriptsProvider extends ChangeNotifier {
       }
 
       if (defaultToDisabled) {
-        for (final script in _userScriptList) {
-          script.enabled = false;
-          // Avoid that scripts run as soon as war mode is on when restoring
-          script.warEnabled = false;
-        }
+        _userScriptList.forEach(disableRestoredScript);
       }
     } else {
       // We add the scripts that don't already exist
@@ -636,6 +721,7 @@ class UserScriptsProvider extends ChangeNotifier {
       // Encode to Base64 with prefix to prevent character encoding issues
       final encodedString = "PDA_B64:${base64Encode(utf8.encode(saveString))}";
       await Prefs().setUserScriptsList(encodedString);
+      _reportScriptsOn();
     } catch (e, trace) {
       if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA error saving userscripts. Error: $e");
@@ -801,9 +887,15 @@ class UserScriptsProvider extends ChangeNotifier {
     }
     _isSafeToSave = false; // Reset safety lock
 
+    _customModes = userScriptModesFromJson(await Prefs().getUserScriptsModes());
+
     // Active bulk mode (global disable or war mode)
-    final savedMode = await Prefs().getUserScriptsBulkMode();
-    _bulkMode = ScriptsBulkMode.values.firstWhere((m) => m.name == savedMode, orElse: () => ScriptsBulkMode.none);
+    final saved = bulkModeFromPrefs(await Prefs().getUserScriptsBulkMode());
+    _bulkMode = saved.mode;
+    if (saved.modeId != null) {
+      _activeModeId = saved.modeId!;
+      if (!allModes.any((m) => m.id == _activeModeId)) _bulkMode = ScriptsBulkMode.none;
+    }
 
     // Installs coming from the version where global disable really turned every script off:
     // the switches have to be put back, which needs the list loaded
@@ -973,6 +1065,7 @@ class UserScriptsProvider extends ChangeNotifier {
         if (!_initializationCompleter.isCompleted) {
           _initializationCompleter.complete();
         }
+        _reportScriptsOn();
       });
     }
   }
@@ -981,7 +1074,7 @@ class UserScriptsProvider extends ChangeNotifier {
   void _checkForCustomApiKeyCandidates() {
     try {
       for (final script in _userScriptList) {
-        if (script.source.contains("###PDA-APIKEY###")) {
+        if (script.source.contains(apiKeyPlaceholder)) {
           script.customApiKeyCandidate = true;
         } else {
           script.customApiKeyCandidate = false;
@@ -1158,7 +1251,7 @@ class UserScriptsProvider extends ChangeNotifier {
           manuallyEdited: false,
           matches: UserScriptModel.tryGetMatches(remote.source),
           customApiKey: script.customApiKey,
-          customApiKeyCandidate: remote.source.contains("###PDA-APIKEY###"),
+          customApiKeyCandidate: remote.source.contains(apiKeyPlaceholder),
           updateStatus: UserScriptUpdateStatus.upToDate,
         );
         script.grants = remote.grants;
@@ -1256,7 +1349,8 @@ class UserScriptsProvider extends ChangeNotifier {
       final idTaken = _userScriptList.any((s) => s.storageId == script.storageId);
       return UserScriptModel(
         enabled: replacing?.enabled ?? script.enabled,
-        warEnabled: replacing?.warEnabled ?? script.warEnabled,
+        modes: {...(replacing?.modes ?? script.modes)},
+        alwaysActive: replacing?.alwaysActive ?? script.alwaysActive,
         installedAt: replacing?.installedAt ?? script.installedAt,
         storageId: replacing?.storageId ?? (idTaken ? null : script.storageId),
         customApiKey: script.customApiKey.isNotEmpty ? script.customApiKey : (replacing?.customApiKey ?? ""),

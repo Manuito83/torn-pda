@@ -14,6 +14,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
+import 'package:get/get.dart' show Get, Inst;
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -24,6 +26,8 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
+import 'package:torn_pda/utils/js_snippets/js_chain_web.dart';
+import 'package:torn_pda/utils/js_snippets/js_chat_profile_icon.dart';
 import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
 import 'package:torn_pda/utils/city_shops_daily_limit.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -41,6 +45,7 @@ class WebviewHandlers {
           'uid': tabUid,
           'isActiveTab': webViewProvider.isTabUidActive(tabUid),
           'isWebViewVisible': webViewProvider.browserShowInForeground,
+          'isOnScreen': webViewProvider.isTabUidOnScreen(tabUid),
         };
       },
     );
@@ -513,6 +518,12 @@ class WebviewHandlers {
         logToUser("GM storage full (browser localStorage), '$key' was not saved", duration: 5);
       },
     );
+
+    // Last one: true means the above exist
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_handlersReady',
+      callback: (JavaScriptHandlerFunctionData data) => true,
+    );
   }
 
   static void addTornChatCacheTrimHandler({
@@ -536,9 +547,41 @@ class WebviewHandlers {
             'total_kb': totalBytes ~/ 1024,
             'freed_kb': freedBytes ~/ 1024,
             'limit_mb': limitMb,
-            'reason': reason,
+            'reason': const {'chat', 'safety'}.contains(reason) ? reason : 'other',
           },
         );
+      },
+    );
+  }
+
+  static void addChatProfileIconHandler({
+    required InAppWebViewController webview,
+    required bool Function(Object? userId) onClick,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: chatProfileIconHandler,
+      callback: (JavaScriptHandlerFunctionData data) {
+        try {
+          return onClick(data.args.isEmpty ? null : data.args.first);
+        } catch (_) {
+          return false;
+        }
+      },
+    );
+  }
+
+  static void addChainWebHandler({
+    required InAppWebViewController webview,
+    required bool Function() onScreen,
+    void Function(Object? raw)? onReading,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: chainWebHandler,
+      callback: (JavaScriptHandlerFunctionData data) {
+        final raw = data.args.isEmpty ? null : data.args.first;
+        onReading?.call(raw);
+        if (raw == null || !Get.isRegistered<ChainStatusController>()) return;
+        Get.find<ChainStatusController>().applyWebChain(raw, onScreen: onScreen);
       },
     );
   }
@@ -817,6 +860,7 @@ class WebviewHandlers {
           defense: payload['defense'] is num ? (payload['defense'] as num).toDouble() : null,
           armoryId: payload['armoryId']?.toString(),
           rowKey: payload['rowKey']?.toString(),
+          loaned: payload['loaned'] == true,
         );
 
         final result = quickItemsProvider.addPickedItem(itemNumber: itemNumber, data: equipData);
@@ -895,7 +939,12 @@ class WebviewHandlers {
 
         if (originalName != null && foundName != null) {
           if (originalName.trim().toLowerCase() == foundName.trim().toLowerCase()) {
-            quickItemsProvider.updateItemFromMassCheck(originalName: originalName, qty: qty, isGrouped: isGrouped);
+            quickItemsProvider.updateItemFromMassCheck(
+              originalName: originalName,
+              qty: qty,
+              isGrouped: isGrouped,
+              loaned: payload['loaned'] == true,
+            );
           }
         }
       },

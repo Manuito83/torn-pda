@@ -24,14 +24,12 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
-import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/share_stats_dialog.dart';
@@ -48,6 +46,8 @@ import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/revive/combat_ready_revive_button.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class WarOptions {
   String? description;
@@ -87,6 +87,8 @@ class WarOptions {
       case "Asclepius revive":
         // Own icon in widget
         break;
+      case "Watch players":
+        iconData = Icons.picture_in_picture_alt_outlined;
     }
   }
 }
@@ -135,7 +137,10 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "The Wolverines revive"),
     WarOptions(description: "Combat Ready revive"),
     WarOptions(description: "Asclepius revive"),
+    WarOptions(description: "Watch players"),
   ];
+
+  final _pipSelection = PipSelection();
 
   @override
   void initState() {
@@ -157,6 +162,7 @@ class WarPageState extends State<WarPage> {
     _updatedTicker?.cancel();
     _w.stopUpdate();
     Get.delete<WarController>();
+    _pipSelection.dispose();
     super.dispose();
   }
 
@@ -177,18 +183,26 @@ class WarPageState extends State<WarPage> {
         return Scaffold(
           backgroundColor: _themeProvider!.canvas,
           drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-          appBar: _settingsProvider!.appBarTop ? buildAppBar(ctx) : null,
+          appBar: _settingsProvider!.appBarTop
+              ? PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(ctx))
+              : null,
           bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar(ctx))
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(ctx)),
+                )
               : null,
           body: Container(
             color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: MediaQuery.orientationOf(context) == Orientation.portrait
-                  ? _mainColumn()
-                  : SingleChildScrollView(child: _mainColumn()),
+              child: PipSelectionScope(
+                selection: _pipSelection,
+                child: MediaQuery.orientationOf(context) == Orientation.portrait
+                    ? _mainColumn()
+                    : SingleChildScrollView(child: _mainColumn()),
+              ),
             ),
           ),
         );
@@ -567,7 +581,7 @@ class WarPageState extends State<WarPage> {
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War", style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -583,7 +597,7 @@ class WarPageState extends State<WarPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -800,6 +814,8 @@ class WarPageState extends State<WarPage> {
                 openCombatReadyReviveDialog(context, _themeProvider!, null);
               case "Asclepius revive":
                 openAsclepiusReviveDialog(context, _themeProvider!, null);
+              case "Watch players":
+                _pipSelection.start(empty: _w.orderedCardsDetails.isEmpty);
             }
           },
           itemBuilder: (BuildContext context) {
@@ -857,6 +873,9 @@ class WarPageState extends State<WarPage> {
                     return false;
                   }
                   if (choice.description!.contains("Asclepius") && !_w.asclepiusReviveActive) {
+                    return false;
+                  }
+                  if (choice.description == "Watch players" && !PipSelection.allowed(context)) {
                     return false;
                   }
                   return true;
@@ -1057,7 +1076,12 @@ class WarPageState extends State<WarPage> {
         IconButton(
           icon: const Icon(MdiIcons.earth),
           onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => const RankedWarsPage()));
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                settings: const RouteSettings(name: 'rankedWars'),
+                builder: (BuildContext context) => const RankedWarsPage(),
+              ),
+            );
           },
         ),
       ],
@@ -1581,206 +1605,18 @@ class WarTargetsListState extends State<WarTargetsList> {
     );
   }
 
-  List<WarCard> getChildrenTarget() {
-    List<Member?> members = <Member?>[];
-    List<WarCard> filteredCards = <WarCard>[];
-
-    List<WarCard> pinnedMembers = [];
-    List<WarCard> nonPinnedMembers = [];
-
-    for (final faction in widget.warController.factions) {
-      if (!faction.hidden!) {
-        faction.members!.forEach((key, value) {
-          value!.memberId = int.parse(key);
-          value.factionName = faction.name;
-          value.factionLeader = faction.leader;
-          value.factionColeader = faction.coLeader;
-          members.add(value);
-        });
-      }
-    }
-
-    for (final Member? thisMember in members) {
-      if (thisMember!.hidden!) continue;
-      if (thisMember.status!.state!.contains("Federal") && thisMember.status!.state!.contains("Fallen")) continue;
-
-      if ((thisMember.lastAction!.status!.contains("Online") || thisMember.lastAction!.status!.contains("Idle")) &&
-          widget.offlineSelector == 2) {
-        continue;
-      }
-
-      if (thisMember.lastAction!.status!.contains("Offline") && widget.offlineSelector == 1) {
-        continue;
-      }
-
-      if (widget.okayRedFilterActive == 1 && thisMember.status!.color == "red") {
-        continue;
-      }
-
-      if (widget.okayRedFilterActive == 2 && thisMember.status!.color != "red") {
-        continue;
-      }
-
-      if (widget.countryFilterActive &&
-          countryCheck(state: thisMember.status!.state, description: thisMember.status!.description) !=
-              widget.warController.playerLocation) {
-        continue;
-      }
-
-      // Filter out not traveling
-      if (widget.abroadFilterActive == 1) {
-        if (countryCheck(state: thisMember.status!.state, description: thisMember.status!.description) == "Torn" &&
-            !isTraveling(state: thisMember.status!.state)) {
-          continue;
-        }
-      }
-
-      // Filter out traveling
-      if (widget.abroadFilterActive == 2) {
-        if (countryCheck(state: thisMember.status!.state, description: thisMember.status!.description) != "Torn" ||
-            isTraveling(state: thisMember.status!.state)) {
-          continue;
-        }
-      }
-
-      // Range Filters
-      final settings = widget.warController.warSettings;
-      if (settings.filtersEnabled) {
-        if (settings.levelRange != null) {
-          if (thisMember.level == null ||
-              thisMember.level! < settings.levelRange!.start ||
-              thisMember.level! > settings.levelRange!.end) {
-            continue;
-          }
-        }
-
-        if (settings.lifeRange != null) {
-          if (thisMember.lifeCurrent == null ||
-              thisMember.lifeCurrent! < settings.lifeRange!.start ||
-              thisMember.lifeCurrent! > settings.lifeRange!.end) {
-            continue;
-          }
-        }
-
-        if (settings.respectRange != null) {
-          if (thisMember.respectGain == null ||
-              thisMember.respectGain! < settings.respectRange!.start ||
-              thisMember.respectGain! > settings.respectRange!.end) {
-            continue;
-          }
-        }
-
-        if (settings.fairFightRange != null) {
-          double effFF = widget.warController.getEffectiveFairFight(thisMember);
-          if (effFF == -1 || effFF < settings.fairFightRange!.start || effFF > settings.fairFightRange!.end) {
-            continue;
-          }
-        }
-
-        if (settings.hospitalTimeRange != null) {
-          int seconds = 0;
-          if (thisMember.status?.state == 'Hospital') {
-            int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-            seconds = (thisMember.status?.until ?? 0) - now;
-            if (seconds < 0) seconds = 0;
-          }
-          double minutes = seconds / 60.0;
-          if (minutes < settings.hospitalTimeRange!.start || minutes > settings.hospitalTimeRange!.end) {
-            continue;
-          }
-        }
-
-        // Stats Filters
-        if (settings.statsRange != null) {
-          double totalStats = widget.warController.getMemberTotalStatsWithFFS(thisMember);
-          if (totalStats < settings.statsRange!.start || totalStats > settings.statsRange!.end) {
-            continue;
-          }
-        }
-
-        if (settings.estimatedStatsRange != null) {
-          int estIndex = widget.warController.getMemberEstimatedStatsIndex(thisMember);
-          // If member has no estimate (index -1), and we are filtering, exclude them
-          // Range is 0-6.
-          if (estIndex == -1) {
-            continue;
-          }
-
-          if (estIndex < settings.estimatedStatsRange!.start.round() ||
-              estIndex > settings.estimatedStatsRange!.end.round()) {
-            continue;
-          }
-        }
-
-        if (settings.strengthRange != null) {
-          if (thisMember.statsStr == null ||
-              thisMember.statsStr == -1 ||
-              thisMember.statsStr! < settings.strengthRange!.start ||
-              thisMember.statsStr! > settings.strengthRange!.end) {
-            continue;
-          }
-        }
-        if (settings.defenseRange != null) {
-          if (thisMember.statsDef == null ||
-              thisMember.statsDef == -1 ||
-              thisMember.statsDef! < settings.defenseRange!.start ||
-              thisMember.statsDef! > settings.defenseRange!.end) {
-            continue;
-          }
-        }
-        if (settings.speedRange != null) {
-          if (thisMember.statsSpd == null ||
-              thisMember.statsSpd == -1 ||
-              thisMember.statsSpd! < settings.speedRange!.start ||
-              thisMember.statsSpd! > settings.speedRange!.end) {
-            continue;
-          }
-        }
-        if (settings.dexterityRange != null) {
-          if (thisMember.statsDex == null ||
-              thisMember.statsDex == -1 ||
-              thisMember.statsDex! < settings.dexterityRange!.start ||
-              thisMember.statsDex! > settings.dexterityRange!.end) {
-            continue;
-          }
-        }
-      }
-
-      //filteredCards.add(WarCard(memberModel: thisMember));
-      if (thisMember.pinned) {
-        pinnedMembers.add(WarCard(memberModel: thisMember));
-      } else {
-        nonPinnedMembers.add(WarCard(memberModel: thisMember));
-      }
-    }
-
-    // Apply sorting to both lists
-    widget.warController.sortWarCards(pinnedMembers);
-    widget.warController.sortWarCards(nonPinnedMembers);
-
-    // Combine the sorted lists
-    filteredCards = [...pinnedMembers, ...nonPinnedMembers];
-
-    widget.warController.orderedCardsDetails.clear();
-    for (int i = 0; i < filteredCards.length; i++) {
-      final playerNotesController = Get.find<PlayerNotesController>();
-      final playerNote = playerNotesController.getNoteForPlayer(filteredCards[i].memberModel.memberId.toString());
-
-      final WarCardDetails details = WarCardDetails()
-        ..cardPosition = i + 1
-        ..memberId = filteredCards[i].memberModel.memberId
-        ..name = filteredCards[i].memberModel.name
-        ..personalNote = playerNote?.note ?? ''
-        ..personalNoteColor = playerNote?.color ?? PlayerNoteColor.none;
-
-      widget.warController.orderedCardsDetails.add(details);
-    }
-
-    return filteredCards;
-  }
+  List<WarCard> getChildrenTarget() => [
+    for (final member in widget.warController.membersShown(
+      offlineSelector: widget.offlineSelector,
+      okayRedFilterActive: widget.okayRedFilterActive,
+      countryFilterActive: widget.countryFilterActive,
+      abroadFilterActive: widget.abroadFilterActive,
+    ))
+      WarCard(memberModel: member),
+  ];
 
   Widget slidableCard(WarCard filteredCard) {
-    return Slidable(
+    final slidable = Slidable(
       key: ValueKey(filteredCard.memberModel.memberId),
       closeOnScroll: false,
       startActionPane: ActionPane(
@@ -1811,6 +1647,7 @@ class WarTargetsListState extends State<WarTargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
+          profileSlidableAction(filteredCard.memberModel.memberId),
           if (_chainStatusProvider.panicTargets.where((t) => t.name == filteredCard.memberModel.name).isEmpty)
             SlidableAction(
               label: 'Add to panic!',
@@ -1879,5 +1716,8 @@ class WarTargetsListState extends State<WarTargetsList> {
       ),
       child: filteredCard,
     );
+    final id = filteredCard.memberModel.memberId;
+    if (id == null) return slidable;
+    return PipSelectable(key: ValueKey(id), id: id, name: filteredCard.memberModel.name ?? '', child: slidable);
   }
 }

@@ -178,3 +178,11 @@ window.flutter_inappwebview.callHandler('PDA_httpDelete', url, headers)
     console.error("DELETE Error:", error);
   });
 ```
+
+## When the helpers can be called
+
+`PDA_httpGet`, `PDA_httpPost`, `PDA_httpPut`, `PDA_httpDelete`, `PDA_httpPatch` and `PDA_evaluateJavascript` wait for Torn PDA on their own, so you can call them at any time, also from a `@run-at document-start` script. Since v4.0.0 they start as soon as Torn PDA is ready, usually before the page has finished loading, so a request made in the first lines of a script can return early.
+
+This is how Tampermonkey works too. If your script runs at `document-start` and uses the response to change the page, wait for the elements you need (for example with `DOMContentLoaded` or a `MutationObserver`), since the response may arrive before they exist. Scripts that run at `document-end` (the default) are not affected.
+
+Calling `window.flutter_inappwebview.callHandler` directly is not affected: it still needs the `flutterInAppWebViewPlatformReady` event (see [Platform readiness](webview-handlers.md#platform-readiness-before-calling-a-handler)).

@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
@@ -13,14 +17,91 @@ import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart'
 import 'package:torn_pda/widgets/webviews/tabs_lock_dialog.dart';
 import 'package:torn_pda/widgets/webviews/tabs_name_dialog.dart';
 
+// Indexes count the other group's tabs
+(int, int)? splitGroupReorderIndexes(List<int> groupTabs, int start, int dropBefore, {bool firstIsFixed = false}) {
+  final int oldGroupIndex = groupTabs.indexOf(start);
+  if (oldGroupIndex < 0) return null;
+  final int dropGroupIndex = groupTabs.where((t) => t < dropBefore).length;
+  final int newGroupIndex = dropGroupIndex > oldGroupIndex ? dropGroupIndex - 1 : dropGroupIndex;
+  if (newGroupIndex == oldGroupIndex || (firstIsFixed && (oldGroupIndex == 0 || newGroupIndex == 0))) return null;
+  return (oldGroupIndex, newGroupIndex);
+}
+
+// Shared by bars and drop zones
+class TabDragState {
+  final Set<TabDropZoneState> zones = {};
+  final ValueNotifier<TabDropZoneState?> hovered = ValueNotifier(null);
+  final ValueNotifier<bool> labelAtBottom = ValueNotifier(false);
+  final ValueNotifier<Offset?> mainTabGhost = ValueNotifier(null);
+}
+
+class TabDropZone extends StatefulWidget {
+  final String label;
+
+  const TabDropZone({super.key, required this.label});
+
+  @override
+  State<TabDropZone> createState() => TabDropZoneState();
+}
+
+class TabDropZoneState extends State<TabDropZone> {
+  late final TabDragState _drag;
+
+  @override
+  void initState() {
+    super.initState();
+    _drag = context.read<WebViewProvider>().tabDrag;
+    _drag.zones.add(this);
+  }
+
+  @override
+  void dispose() {
+    _drag.zones.remove(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: ListenableBuilder(
+        listenable: Listenable.merge([_drag.hovered, _drag.labelAtBottom]),
+        builder: (context, _) {
+          if (_drag.hovered.value != this) return const SizedBox.expand();
+          return Container(
+            alignment: Alignment(0, _drag.labelAtBottom.value ? 0.5 : -0.5),
+            decoration: BoxDecoration(
+              color: Colors.blue[400]!.withValues(alpha: 0.25),
+              border: Border.all(color: Colors.blue[400]!, width: 2),
+            ),
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                child: Text(
+                  _drag.mainTabGhost.value != null ? "Copy here" : widget.label,
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class TabsList extends StatefulWidget {
-  const TabsList({super.key});
+  final SplitGroup group;
+  final Widget? leading;
+
+  const TabsList({super.key, this.group = SplitGroup.main, this.leading});
 
   @override
   State<TabsList> createState() => TabsListState();
 }
 
-class TabsListState extends State<TabsList> with TickerProviderStateMixin {
+class TabsListState extends State<TabsList> with TickerProviderStateMixin, WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   WebViewProvider? _webViewProvider;
 
@@ -31,18 +112,83 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
   ToastificationItem? _lockToast;
 
+  static const double _dragOutMargin = 72;
+
+  final Set<int> _pointersDown = {};
+  String? _dragUid;
+  int? _dragPointer;
+  Offset _dragStart = Offset.zero;
+  final ValueNotifier<double?> _ghostShift = ValueNotifier(null);
+  bool _dragOut = false;
+  Size? _reorderScreen;
+
+  late final TabDragState _drag;
+  final OverlayPortalController _mainTabGhostPortal = OverlayPortalController()..show();
+  Offset _mainTabOrigin = Offset.zero;
+  Size _mainTabSize = Size.zero;
+  late final AnimationController _mainTabDrop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+  );
+  Offset _mainTabDropFrom = Offset.zero;
+
   @override
   void initState() {
     super.initState();
 
+    _drag = context.read<WebViewProvider>().tabDrag;
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
 
     _tabsOpacity = CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
+
+    _ghostShift.addListener(() {
+      if ((_ghostShift.value != null) != _dragOut) setState(() => _dragOut = !_dragOut);
+    });
+
+    _mainTabDrop
+      ..addListener(() {
+        _drag.mainTabGhost.value = Offset.lerp(
+          _mainTabOrigin,
+          _mainTabDropFrom,
+          Curves.easeOut.transform(_mainTabDrop.value),
+        );
+      })
+      ..addStatusListener((status) {
+        if (status.isDismissed) _drag.mainTabGhost.value = null;
+      });
+
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  // Rotating mid-reorder breaks the SDK reorder
+  @override
+  void didChangeMetrics() {
+    if (_reorderScreen == null) return;
+    if (View.of(context).physicalSize == _reorderScreen) return;
+    _resetDrag();
+    _cancelReorder();
+  }
+
+  void _resetDrag({bool keepMainTabGhost = false}) {
+    _dragUid = null;
+    _dragPointer = null;
+    _drag.hovered.value = null;
+    _ghostShift.value = null;
+    if (!keepMainTabGhost) _drag.mainTabGhost.value = null;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
+    _ghostShift.dispose();
+    if (_dragPointer != null || _mainTabDrop.isAnimating) {
+      scheduleMicrotask(() {
+        _drag.hovered.value = null;
+        _drag.mainTabGhost.value = null;
+      });
+    }
+    _mainTabDrop.dispose();
     super.dispose();
   }
 
@@ -52,6 +198,11 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     final tabs = <Widget>[];
+    final List<int> groupTabs = _webViewProvider!.tabIndexesForGroup(widget.group);
+    final bool bothBrowsersShown =
+        _webViewProvider!.splitBrowsersActive &&
+        _webViewProvider!.splitLeftSlot != SplitSlotContent.app &&
+        _webViewProvider!.splitRightSlot != SplitSlotContent.app;
 
     // Assign GlobalKeys as long as the tab number does not change so that state is kept when using setState
     if (_circularMenuKeys.isEmpty || _circularMenuKeys.length != _webViewProvider!.tabList.length) {
@@ -78,10 +229,227 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
       bool tabCustomNameShown =
           _webViewProvider!.tabList[i].customName.isNotEmpty && _webViewProvider!.tabList[i].customNameInTab;
 
+      final List<Widget> menuOptions = [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: CircularMenuItem(
+            icon: _webViewProvider!.tabList[i].isLocked ? Icons.lock : Icons.lock_open,
+            onTap: () async {
+              final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
+              if (!tabLockAlerted) {
+                Prefs().setFirstTabLockAlerted(true);
+                showWebviewDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const TabsLockDialog();
+                  },
+                );
+              }
+
+              if (!_webViewProvider!.tabList[i].isLocked && context.read<SettingsProvider>().showTabLockWarnings) {
+                if (_lockToast != null) toastification.dismiss(_lockToast!);
+                _lockToast = toastification.show(
+                  closeOnClick: true,
+                  alignment: Alignment.bottomCenter,
+                  margin: const EdgeInsets.only(bottom: 50),
+                  title: Column(
+                    children: [
+                      const Icon(Icons.lock, color: Colors.orange),
+                      const SizedBox(height: 10),
+                      Text("Positional Lock", style: TextStyle(color: _themeProvider.mainText)),
+                    ],
+                  ),
+                  autoCloseDuration: const Duration(milliseconds: 1500),
+                  backgroundColor: _themeProvider.canvas,
+                  closeButton: ToastCloseButton(
+                    buttonBuilder: (context, onClose) {
+                      return Icon(Icons.close, color: _themeProvider.mainText);
+                    },
+                  ),
+                  animationDuration: const Duration(milliseconds: 0),
+                  type: ToastificationType.info,
+                  style: ToastificationStyle.simple,
+                  borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+                );
+              }
+
+              // Make the change after alerting, so that we take the correct index (before changing it)
+              _webViewProvider!.toggleTabLock(tab: _webViewProvider!.tabList[i]);
+              _webViewProvider!.verticalMenuClose();
+            },
+            onLongPress: () async {
+              final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
+              if (!tabLockAlerted) {
+                Prefs().setFirstTabLockAlerted(true);
+                showWebviewDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const TabsLockDialog();
+                  },
+                );
+              }
+
+              if (context.read<SettingsProvider>().showTabLockWarnings) {
+                if (_lockToast != null) toastification.dismiss(_lockToast!);
+                _lockToast = toastification.show(
+                  closeOnClick: true,
+                  alignment: Alignment.bottomCenter,
+                  margin: const EdgeInsets.only(bottom: 50),
+                  title: Column(
+                    children: [
+                      Icon(Icons.lock, color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red),
+                      const SizedBox(height: 10),
+                      Text(
+                        _webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock",
+                        style: TextStyle(color: _themeProvider.mainText),
+                      ),
+                    ],
+                  ),
+                  autoCloseDuration: const Duration(milliseconds: 1500),
+                  animationDuration: const Duration(milliseconds: 0),
+                  backgroundColor: _themeProvider.canvas,
+                  closeButton: ToastCloseButton(
+                    buttonBuilder: (context, onClose) {
+                      return Icon(Icons.close, color: _themeProvider.mainText);
+                    },
+                  ),
+                  type: ToastificationType.info,
+                  style: ToastificationStyle.simple,
+                  borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+                );
+              }
+
+              // Make the change after alerting, so that we take the correct index (before changing it)
+              _webViewProvider!.toggleTabLock(
+                tab: _webViewProvider!.tabList[i],
+                forceLock: true, // Long press always locks full
+                isLockFull: !_webViewProvider!.tabList[i].isLockFull,
+              );
+              _webViewProvider!.verticalMenuClose();
+            },
+            color: _webViewProvider!.tabList[i].isLockFull ? Colors.red[700] : null,
+            iconColor: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
+                ? Colors.orange
+                : null,
+            boxShadow: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
+                ? [const BoxShadow(color: Colors.orange, blurRadius: 4)]
+                : null,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: CircularMenuItem(
+            icon: MdiIcons.text,
+            onTap: () async {
+              _webViewProvider!.verticalMenuClose();
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return EditTabDialog(
+                    tabDetails: _webViewProvider!.tabList[i],
+                    onSave: (customName, customNameInTitle, customNameInTab) {
+                      _webViewProvider!.setTabCustomName(
+                        tab: _webViewProvider!.tabList[i],
+                        customName: customName,
+                        customNameInTitle: customNameInTitle,
+                        customNameInTab: customNameInTab,
+                      );
+                    },
+                  );
+                },
+              );
+            },
+            iconColor: _webViewProvider!.tabList[i].customName.isNotEmpty ? Colors.lime : null,
+            boxShadow: _webViewProvider!.tabList[i].customName.isNotEmpty
+                ? [const BoxShadow(color: Colors.lime, blurRadius: 4)]
+                : null,
+          ),
+        ),
+        if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              icon: Icons.home_outlined,
+              onTap: () {
+                _webViewProvider!.verticalMenuClose();
+                _webViewProvider!.loadCurrentTabUrl("https://www.torn.com");
+              },
+            ),
+          ),
+        if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              icon: Icons.arrow_back,
+              onTap: () {
+                _webViewProvider!.tryGoBack();
+                _webViewProvider!.verticalMenuClose();
+              },
+            ),
+          ),
+        if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              icon: Icons.arrow_forward,
+              onTap: () {
+                _webViewProvider!.tryGoForward();
+                _webViewProvider!.verticalMenuClose();
+              },
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: CircularMenuItem(
+            icon: Icons.copy_all_outlined,
+            onTap: () {
+              _webViewProvider!.duplicateTab(i);
+            },
+          ),
+        ),
+        if (_webViewProvider!.splitScreenWide && _webViewProvider!.splitBrowsersAllowed)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Tooltip(
+              message: bothBrowsersShown ? "Move to other panel" : "Open in split panel",
+              child: CircularMenuItem(
+                icon: bothBrowsersShown ? MdiIcons.swapHorizontal : MdiIcons.viewSplitVertical,
+                onTap: () {
+                  _webViewProvider!.verticalMenuClose();
+                  if (_webViewProvider!.tabList[i].isLocked && context.read<SettingsProvider>().showTabLockWarnings) {
+                    _showLockedExchangeWarning(i, i, message: "A locked tab cannot be moved to the other panel!");
+                    return;
+                  }
+                  _webViewProvider!.moveTabToOtherGroup(i);
+                },
+              ),
+            ),
+          ),
+        if (!_webViewProvider!.tabList[i].isLocked)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: CircularMenuItem(
+              onTap: () {
+                _webViewProvider!.verticalMenuClose();
+                _webViewProvider!.removeTab(position: i);
+              },
+              icon: Icons.delete_forever_outlined,
+              color: Colors.red[700],
+              iconColor: Colors.white,
+            ),
+          ),
+      ];
+      if (i != 0 && _webViewProvider!.verticalMenuIsOpen && _webViewProvider!.verticalMenuCurrentIndex == i) {
+        _webViewProvider!.reportVerticalMenuItems(menuOptions.length);
+      }
+
       tabs.add(
         Visibility(
           key: ValueKey(_webViewProvider!.tabList[i].id),
-          visible: i == 0 ? false : true, // Do not repeat tab #0 in the tabs list
+          visible:
+              i != 0 && groupTabs.contains(i), // Do not repeat tab #0 in the tabs list
           child: FadeTransition(
             opacity: _tabsOpacity,
             child: CircularMenuTabs(
@@ -98,7 +466,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
-                    color: _webViewProvider!.currentTab == i
+                    color: _webViewProvider!.isTabVisible(i)
                         ? _themeProvider.navSelected
                         : _themeProvider.currentTheme == AppTheme.extraDark
                         ? Colors.black
@@ -202,6 +570,22 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                   size: 9,
                                 ),
                               ),
+                            if (_webViewProvider!.tabNumbersFrom > 0 &&
+                                _webViewProvider!.tabList.length >= _webViewProvider!.tabNumbersFrom)
+                              Positioned(
+                                bottom: 0,
+                                left: _webViewProvider!.tabList[i].customName.isNotEmpty ? 11 : 2,
+                                child: IgnorePointer(
+                                  child: Text(
+                                    "${i + 1}",
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      height: 1,
+                                      color: _themeProvider.mainText.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                         SizedBox(height: 40, child: VerticalDivider(width: 1, thickness: 1, color: Colors.grey[400])),
@@ -213,207 +597,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
               items: [
                 SingleChildScrollView(
                   reverse: true,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: CircularMenuItem(
-                          icon: _webViewProvider!.tabList[i].isLocked ? Icons.lock : Icons.lock_open,
-                          onTap: () async {
-                            final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
-                            if (!tabLockAlerted) {
-                              Prefs().setFirstTabLockAlerted(true);
-                              showWebviewDialog<void>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return const TabsLockDialog();
-                                },
-                              );
-                            }
-
-                            if (!_webViewProvider!.tabList[i].isLocked &&
-                                context.read<SettingsProvider>().showTabLockWarnings) {
-                              if (_lockToast != null) toastification.dismiss(_lockToast!);
-                              _lockToast = toastification.show(
-                                closeOnClick: true,
-                                alignment: Alignment.bottomCenter,
-                                margin: const EdgeInsets.only(bottom: 50),
-                                title: Column(
-                                  children: [
-                                    const Icon(Icons.lock, color: Colors.orange),
-                                    const SizedBox(height: 10),
-                                    Text("Positional Lock", style: TextStyle(color: _themeProvider.mainText)),
-                                  ],
-                                ),
-                                autoCloseDuration: const Duration(milliseconds: 1500),
-                                backgroundColor: _themeProvider.canvas,
-                                closeButton: ToastCloseButton(
-                                  buttonBuilder: (context, onClose) {
-                                    return Icon(Icons.close, color: _themeProvider.mainText);
-                                  },
-                                ),
-                                animationDuration: const Duration(milliseconds: 0),
-                                type: ToastificationType.info,
-                                style: ToastificationStyle.simple,
-                                borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-                              );
-                            }
-
-                            // Make the change after alerting, so that we take the correct index (before changing it)
-                            _webViewProvider!.toggleTabLock(tab: _webViewProvider!.tabList[i]);
-                            _webViewProvider!.verticalMenuClose();
-                          },
-                          onLongPress: () async {
-                            final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
-                            if (!tabLockAlerted) {
-                              Prefs().setFirstTabLockAlerted(true);
-                              showWebviewDialog<void>(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (BuildContext context) {
-                                  return const TabsLockDialog();
-                                },
-                              );
-                            }
-
-                            if (context.read<SettingsProvider>().showTabLockWarnings) {
-                              if (_lockToast != null) toastification.dismiss(_lockToast!);
-                              _lockToast = toastification.show(
-                                closeOnClick: true,
-                                alignment: Alignment.bottomCenter,
-                                margin: const EdgeInsets.only(bottom: 50),
-                                title: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.lock,
-                                      color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      _webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock",
-                                      style: TextStyle(color: _themeProvider.mainText),
-                                    ),
-                                  ],
-                                ),
-                                autoCloseDuration: const Duration(milliseconds: 1500),
-                                animationDuration: const Duration(milliseconds: 0),
-                                backgroundColor: _themeProvider.canvas,
-                                closeButton: ToastCloseButton(
-                                  buttonBuilder: (context, onClose) {
-                                    return Icon(Icons.close, color: _themeProvider.mainText);
-                                  },
-                                ),
-                                type: ToastificationType.info,
-                                style: ToastificationStyle.simple,
-                                borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-                              );
-                            }
-
-                            // Make the change after alerting, so that we take the correct index (before changing it)
-                            _webViewProvider!.toggleTabLock(
-                              tab: _webViewProvider!.tabList[i],
-                              forceLock: true, // Long press always locks full
-                              isLockFull: !_webViewProvider!.tabList[i].isLockFull,
-                            );
-                            _webViewProvider!.verticalMenuClose();
-                          },
-                          color: _webViewProvider!.tabList[i].isLockFull ? Colors.red[700] : null,
-                          iconColor: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
-                              ? Colors.orange
-                              : null,
-                          boxShadow: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
-                              ? [const BoxShadow(color: Colors.orange, blurRadius: 4)]
-                              : null,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: CircularMenuItem(
-                          icon: MdiIcons.text,
-                          onTap: () async {
-                            _webViewProvider!.verticalMenuClose();
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return EditTabDialog(
-                                  tabDetails: _webViewProvider!.tabList[i],
-                                  onSave: (customName, customNameInTitle, customNameInTab) {
-                                    _webViewProvider!.setTabCustomName(
-                                      tab: _webViewProvider!.tabList[i],
-                                      customName: customName,
-                                      customNameInTitle: customNameInTitle,
-                                      customNameInTab: customNameInTab,
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                          iconColor: _webViewProvider!.tabList[i].customName.isNotEmpty ? Colors.lime : null,
-                          boxShadow: _webViewProvider!.tabList[i].customName.isNotEmpty
-                              ? [const BoxShadow(color: Colors.lime, blurRadius: 4)]
-                              : null,
-                        ),
-                      ),
-                      if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            icon: Icons.home_outlined,
-                            onTap: () {
-                              _webViewProvider!.verticalMenuClose();
-                              _webViewProvider!.loadCurrentTabUrl("https://www.torn.com");
-                            },
-                          ),
-                        ),
-                      if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            icon: Icons.arrow_back,
-                            onTap: () {
-                              _webViewProvider!.tryGoBack();
-                              _webViewProvider!.verticalMenuClose();
-                            },
-                          ),
-                        ),
-                      if (_webViewProvider!.currentTab == i && !_webViewProvider!.tabList[i].isLockFull)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            icon: Icons.arrow_forward,
-                            onTap: () {
-                              _webViewProvider!.tryGoForward();
-                              _webViewProvider!.verticalMenuClose();
-                            },
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: CircularMenuItem(
-                          icon: Icons.copy_all_outlined,
-                          onTap: () {
-                            _webViewProvider!.duplicateTab(i);
-                          },
-                        ),
-                      ),
-                      if (!_webViewProvider!.tabList[i].isLocked)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: CircularMenuItem(
-                            onTap: () {
-                              _webViewProvider!.verticalMenuClose();
-                              _webViewProvider!.removeTab(position: i);
-                            },
-                            icon: Icons.delete_forever_outlined,
-                            color: Colors.red[700],
-                            iconColor: Colors.white,
-                          ),
-                        ),
-                    ],
-                  ),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.end, children: menuOptions),
                 ),
               ],
             ),
@@ -422,17 +606,46 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
       );
     }
 
-    return ReorderableListView(
+    final reorderableList = ReorderableListView(
       proxyDecorator: _proxyDecorator,
       buildDefaultDragHandles: false,
       scrollDirection: Axis.horizontal,
+      // No auto scroll while dragging out
+      physics: _dragOut ? const NeverScrollableScrollPhysics() : null,
       children: tabs,
+      onReorderStart: (index) {
+        _reorderScreen = View.of(context).physicalSize;
+        _dragPointer = _pointersDown.length == 1 ? _pointersDown.first : null;
+        _dragUid = _dragPointer == null ? null : _webViewProvider!.tabList[index].id;
+      },
+      onReorderEnd: (_) {
+        _reorderScreen = null;
+        _dragUid = null;
+      },
       onReorderItem: (start, end) {
         // Flutter 3.44: onReorderItem already corrects `end` for the shortening
         // caused by removing oldIndex. Reverse it so the rest of this function
         // keeps its original semantics (the `end == 0` guard inspects the raw
         // drop target, then `end` is re-decremented before use).
         if (start < end) end += 1;
+
+        if (_webViewProvider!.splitBrowsersActive) {
+          final move = splitGroupReorderIndexes(groupTabs, start, end, firstIsFixed: widget.group == SplitGroup.main);
+          if (move == null) return;
+          final (oldGroupIndex, newGroupIndex) = move;
+          if (_webViewProvider!.tabList[start].isLocked !=
+                  _webViewProvider!.tabList[groupTabs[newGroupIndex]].isLocked &&
+              context.read<SettingsProvider>().showTabLockWarnings) {
+            _showLockedExchangeWarning(start, groupTabs[newGroupIndex]);
+            return;
+          }
+          final String movedUid = _webViewProvider!.tabList[start].id;
+          _webViewProvider!.reorderTabsInGroup(widget.group, oldGroupIndex, newGroupIndex);
+          if (_webViewProvider!.verticalMenuIsOpen && _webViewProvider!.verticalMenuCurrentIndex == start) {
+            _webViewProvider!.verticalMenuCurrentIndex = _webViewProvider!.tabList.indexWhere((t) => t.id == movedUid);
+          }
+          return;
+        }
 
         if (start == 0 || end == 0) return;
 
@@ -445,42 +658,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
         // (but allow two locked tabs to exchange positions)
         if (_webViewProvider!.tabList[start].isLocked != _webViewProvider!.tabList[end].isLocked &&
             context.read<SettingsProvider>().showTabLockWarnings) {
-          toastification.show(
-            closeOnClick: true,
-            alignment: Alignment.bottomCenter,
-            margin: const EdgeInsets.only(bottom: 50),
-            title: SizedBox(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.lock,
-                    color: _webViewProvider!.tabList[start].isLockFull || _webViewProvider!.tabList[end].isLockFull
-                        ? Colors.red
-                        : Colors.orange,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "A locked tab cannot be exchanged with an unlocked one!",
-                    maxLines: 5,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: _themeProvider.mainText),
-                  ),
-                ],
-              ),
-            ),
-            autoCloseDuration: const Duration(seconds: 3),
-            animationDuration: const Duration(milliseconds: 0),
-            backgroundColor: _themeProvider.canvas,
-            closeButton: ToastCloseButton(
-              buttonBuilder: (context, onClose) {
-                return Icon(Icons.close, color: _themeProvider.mainText);
-              },
-            ),
-            type: ToastificationType.info,
-            style: ToastificationStyle.simple,
-            borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-          );
-
+          _showLockedExchangeWarning(start, end);
           return;
         }
 
@@ -502,13 +680,222 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
         }
       },
     );
+
+    return Listener(
+      onPointerDown: (event) {
+        _pointersDown.add(event.pointer);
+        _dragStart = event.position;
+        if (_dragPointer == null) return;
+        if (_drag.mainTabGhost.value != null) _reorderScreen = null;
+        _resetDrag();
+      },
+      onPointerMove: (event) {
+        if (!mounted || _dragUid == null || event.pointer != _dragPointer) return;
+        if (_drag.mainTabGhost.value != null) {
+          _drag.mainTabGhost.value = _mainTabOrigin.translate(event.position.dx - _dragStart.dx, 0);
+        }
+        if (!_webViewProvider!.splitScreenWide || !_webViewProvider!.splitBrowsersAllowed) {
+          _drag.hovered.value = null;
+          _ghostShift.value = null;
+          return;
+        }
+        final RenderBox bar = context.findRenderObject() as RenderBox;
+        final Rect barRect = bar.localToGlobal(Offset.zero) & bar.size;
+        TabDropZoneState? zone;
+        for (final candidate in _drag.zones) {
+          final RenderBox? box = candidate.context.findRenderObject() as RenderBox?;
+          if (box == null || !box.attached || !box.hasSize) continue;
+          final Rect rect = box.localToGlobal(Offset.zero) & box.size;
+          if (rect.contains(event.position) && !rect.contains(barRect.center)) {
+            zone = candidate;
+            _drag.labelAtBottom.value = event.position.dy < rect.center.dy;
+            break;
+          }
+        }
+        final bool out =
+            zone != null || (event.position.dy - barRect.center.dy).abs() > barRect.height / 2 + _dragOutMargin;
+        final bool wasOut = _ghostShift.value != null;
+        if ((out && !wasOut) || (zone != null && zone != _drag.hovered.value)) {
+          if (Platform.isAndroid || Platform.isIOS) HapticFeedback.selectionClick();
+        }
+        _drag.hovered.value = zone;
+        _ghostShift.value = out ? event.position.dy - _dragStart.dy : null;
+      },
+      onPointerUp: (event) {
+        _pointersDown.remove(event.pointer);
+        if (!mounted || event.pointer != _dragPointer) return;
+        final String? uid = _dragUid;
+        final TabDropZoneState? zone = _drag.hovered.value;
+        final bool out = _ghostShift.value != null;
+        final Offset? mainTabGhost = _drag.mainTabGhost.value;
+        if (mainTabGhost != null) _reorderScreen = null;
+        _resetDrag(keepMainTabGhost: true);
+        if (mainTabGhost != null && !out) {
+          _mainTabDropFrom = mainTabGhost;
+          _mainTabDrop.reverse(from: 1);
+        } else {
+          _drag.mainTabGhost.value = null;
+        }
+        if (uid == null || !out) return;
+        // Before the list changes
+        _cancelReorder();
+        if (zone == null || !zone.mounted) return;
+        if (!_webViewProvider!.splitScreenWide || !_webViewProvider!.splitBrowsersAllowed) return;
+        _webViewProvider!.verticalMenuClose();
+        final int index = _webViewProvider!.tabList.indexWhere((t) => t.id == uid);
+        if (index == 0) {
+          final int tabsBefore = _webViewProvider!.tabList.length;
+          _webViewProvider!.duplicateTab(0);
+          if (_webViewProvider!.tabList.length > tabsBefore) {
+            _webViewProvider!.moveTabToOtherGroup(_webViewProvider!.tabList.length - 1);
+          }
+          return;
+        }
+        if (_webViewProvider!.tabList[index].isLocked && context.read<SettingsProvider>().showTabLockWarnings) {
+          _showLockedExchangeWarning(index, index, message: "A locked tab cannot be moved to the other panel!");
+          return;
+        }
+        _webViewProvider!.moveTabToOtherGroup(index);
+      },
+      onPointerCancel: (event) {
+        _pointersDown.remove(event.pointer);
+        if (!mounted || event.pointer != _dragPointer) return;
+        _reorderScreen = null;
+        _resetDrag();
+      },
+      child: widget.leading == null
+          ? reorderableList
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Builder(
+                  builder: (leadingContext) => GestureDetector(
+                    onLongPressStart: _webViewProvider!.splitScreenWide && _webViewProvider!.splitBrowsersAllowed
+                        ? (details) {
+                            if (_pointersDown.length != 1) return;
+                            // Same press area as the other tabs
+                            Rect? dragArea;
+                            void findDragArea(Element element) {
+                              if (dragArea != null) return;
+                              if (element.widget is ReorderableDelayedDragStartListener) {
+                                final RenderBox area = element.renderObject! as RenderBox;
+                                dragArea = area.localToGlobal(Offset.zero) & area.size;
+                              } else {
+                                element.visitChildren(findDragArea);
+                              }
+                            }
+
+                            leadingContext.visitChildElements(findDragArea);
+                            if (dragArea == null || !dragArea!.contains(_dragStart)) return;
+                            final RenderBox box = leadingContext.findRenderObject() as RenderBox;
+                            _mainTabDrop.stop();
+                            _reorderScreen = View.of(context).physicalSize;
+                            _dragPointer = _pointersDown.first;
+                            _dragUid = _webViewProvider!.tabList[0].id;
+                            _mainTabOrigin = box.localToGlobal(Offset.zero);
+                            _mainTabSize = box.size;
+                            _drag.mainTabGhost.value = _mainTabOrigin.translate(
+                              details.globalPosition.dx - _dragStart.dx,
+                              0,
+                            );
+                          }
+                        : null,
+                    child: OverlayPortal(
+                      controller: _mainTabGhostPortal,
+                      overlayChildBuilder: (overlayContext) => ValueListenableBuilder<Offset?>(
+                        valueListenable: _drag.mainTabGhost,
+                        builder: (_, ghost, _) {
+                          if (ghost == null || (_dragUid == null && !_mainTabDrop.isAnimating)) {
+                            return const SizedBox.shrink();
+                          }
+                          final RenderBox overlay = Overlay.of(overlayContext).context.findRenderObject() as RenderBox;
+                          final Offset topLeft = overlay.globalToLocal(ghost);
+                          return Positioned(
+                            left: topLeft.dx,
+                            top: topLeft.dy,
+                            child: IgnorePointer(
+                              child: SizedBox.fromSize(
+                                size: _mainTabSize,
+                                child: _proxyDecorator(widget.leading!, 0, kAlwaysCompleteAnimation),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      child: widget.leading,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 40, child: VerticalDivider(width: 2, thickness: 2, color: _themeProvider.mainText)),
+                Flexible(child: reorderableList),
+              ],
+            ),
+    );
+  }
+
+  void _cancelReorder() {
+    _reorderScreen = null;
+    void cancel(Element element) {
+      if (element is StatefulElement && element.state is SliverReorderableListState) {
+        (element.state as SliverReorderableListState).cancelReorder();
+      } else {
+        element.visitChildren(cancel);
+      }
+    }
+
+    context.visitChildElements(cancel);
+  }
+
+  void _showLockedExchangeWarning(
+    int first,
+    int second, {
+    String message = "A locked tab cannot be exchanged with an unlocked one!",
+  }) {
+    toastification.show(
+      closeOnClick: true,
+      alignment: Alignment.bottomCenter,
+      margin: const EdgeInsets.only(bottom: 50),
+      title: SizedBox(
+        child: Column(
+          children: [
+            Icon(
+              Icons.lock,
+              color: _webViewProvider!.tabList[first].isLockFull || _webViewProvider!.tabList[second].isLockFull
+                  ? Colors.red
+                  : Colors.orange,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              maxLines: 5,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _themeProvider.mainText),
+            ),
+          ],
+        ),
+      ),
+      autoCloseDuration: const Duration(seconds: 3),
+      animationDuration: const Duration(milliseconds: 0),
+      backgroundColor: _themeProvider.canvas,
+      closeButton: ToastCloseButton(
+        buttonBuilder: (context, onClose) {
+          return Icon(Icons.close, color: _themeProvider.mainText);
+        },
+      ),
+      type: ToastificationType.info,
+      style: ToastificationStyle.simple,
+      borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+    );
   }
 
   Widget _proxyDecorator(Widget child, int index, Animation<double> animation) {
     return AnimatedBuilder(
-      animation: animation,
+      animation: Listenable.merge([animation, _ghostShift]),
       builder: (BuildContext context, Widget? child) {
-        return Material(color: Colors.transparent, child: child);
+        return Transform.translate(
+          offset: Offset(0, _ghostShift.value ?? 0),
+          child: Material(color: Colors.transparent, child: child),
+        );
       },
       child: child,
     );

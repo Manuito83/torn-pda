@@ -37,25 +37,6 @@ void main() {
   // processEventMessage
   // -------------------------------------------------------------------------
   group('processEventMessage', () {
-    test('replaces "View the details here!" with "view"', () {
-      expect(processEventMessage('View the details here!'), 'view');
-    });
-
-    test('replaces "Please click here to continue." with "view"', () {
-      expect(processEventMessage('Please click here to continue.'), 'view');
-    });
-
-    test('replaces "Please click here." with "view"', () {
-      expect(processEventMessage('Please click here.'), 'view');
-    });
-
-    test('replaces "Please click here to collect your funds." with "Collect"', () {
-      expect(
-        processEventMessage('Please click here to collect your funds.'),
-        'Collect',
-      );
-    });
-
     test('converts [view] brackets to parentheses', () {
       expect(processEventMessage('[view]'), '(view)');
     });

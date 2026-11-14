@@ -2,6 +2,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
+import { isDiscreetNow } from "./discreet";
 
 // Max number of items named in the landing notification before summarizing the rest
 const MAX_DESTINATION_STOCKS = 8;
@@ -116,13 +117,13 @@ export const sendTravelNotifications = onSchedule(
             landingBody = `You are descending towards ${thisUser.travelDestination}, landing in about ${minutesRemaining} minutes!`
           }
 
-          if (thisUser.travelStocksInNotification === true && !thisUser.discrete) {
+          if (thisUser.travelStocksInNotification === true && !isDiscreetNow(thisUser)) {
             landingBody += await destinationStocksText(thisUser.travelDestination, thisUser.restockActiveAlerts);
           }
 
           let title = `Approaching ${thisUser.travelDestination}!`;
           let body = landingBody;
-          if (thisUser.discrete) {
+          if (isDiscreetNow(thisUser)) {
             title = `T`;
             body = ` `;
           }

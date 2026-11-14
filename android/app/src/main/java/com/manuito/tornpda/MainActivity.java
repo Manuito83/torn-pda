@@ -11,6 +11,7 @@ import android.service.notification.StatusBarNotification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import java.util.List;
 import io.flutter.plugin.common.MethodChannel;
@@ -32,10 +33,50 @@ import android.app.ActivityManager.MemoryInfo;
 import android.app.ApplicationExitInfo;
 import android.content.SharedPreferences;
 import java.util.ArrayList;
+import android.app.PendingIntent;
+import android.app.PictureInPictureParams;
+import android.app.RemoteAction;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.drawable.Icon;
+import android.util.Rational;
+import androidx.core.content.ContextCompat;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.view.PixelCopy;
+import android.view.View;
+import java.util.Arrays;
+import io.flutter.plugin.common.MethodCall;
+import android.content.ContentResolver;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends FlutterActivity {
 
     private static final String CHANNEL = "tornpda.channel";
+    private static final String PIP_CHANNEL = "tornpda.pip";
+    private static final String PIP_ACTION = "com.manuito.tornpda.PIP_ACTION";
+    private static final String SHARE_CHANNEL = "tornpda.share";
+    private static final long SHARE_IMAGE_MAX = 32L * 1024 * 1024;
+
+    private MethodChannel pipChannel;
+    private BroadcastReceiver pipReceiver;
+    private boolean pipAutoEnter;
+    private boolean pipAutoPending;
+    private boolean pipOwnLaunch;
+    private List<Map<String, String>> pipAutoActions;
+    private HandlerThread pixelProbeThread;
+    private MethodChannel shareChannel;
+    private Map<String, String> pendingShare;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +109,93 @@ public class MainActivity extends FlutterActivity {
                             });
         }
 
+        // Skip restores and launches from recents
+        if (savedInstanceState == null
+                && (getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) == 0) {
+            pendingShare = readShare(getIntent());
+        }
+
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    protected void onNewIntent(@NonNull Intent intent) {
+        super.onNewIntent(intent);
+        Map<String, String> share = readShare(intent);
+        if (share == null) return;
+        if (shareChannel == null) {
+            pendingShare = share;
+            return;
+        }
+        // Dart may not be listening yet
+        shareChannel.invokeMethod("shared", share, new MethodChannel.Result() {
+            @Override
+            public void success(Object result) {}
+
+            @Override
+            public void error(@NonNull String code, String message, Object details) {
+                pendingShare = share;
+            }
+
+            @Override
+            public void notImplemented() {
+                pendingShare = share;
+            }
+        });
+    }
+
+    // Only images from other apps
+    private void copySharedImage(String raw) throws IOException {
+        Uri uri = raw == null ? null : Uri.parse(raw);
+        String authority = uri == null ? null : uri.getAuthority();
+        if (uri == null || !"content".equals(uri.getScheme()) || authority == null
+                || authority.startsWith(getPackageName())) {
+            throw new IOException("rejected");
+        }
+        ContentResolver resolver = getContentResolver();
+        String type = resolver.getType(uri);
+        if (type == null || !type.startsWith("image/")) throw new IOException("rejected");
+        File dir = new File(getCacheDir(), "chat_share");
+        if (!dir.isDirectory() && !dir.mkdirs()) throw new IOException("unreadable");
+        File out = new File(dir, "shared");
+        long total = 0;
+        boolean tooBig = false;
+        try (InputStream in = resolver.openInputStream(uri); OutputStream os = new FileOutputStream(out)) {
+            if (in == null) throw new IOException();
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                total += read;
+                if (total > SHARE_IMAGE_MAX) {
+                    tooBig = true;
+                    break;
+                }
+                os.write(buffer, 0, read);
+            }
+        } catch (IOException | RuntimeException e) {
+            out.delete();
+            throw new IOException("unreadable");
+        }
+        if (tooBig) {
+            out.delete();
+            throw new IOException("too_big");
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Map<String, String> readShare(Intent intent) {
+        if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction()) || intent.getType() == null) {
+            return null;
+        }
+        Map<String, String> share = new HashMap<>();
+        share.put("type", intent.getType());
+        CharSequence text = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+        if (text != null) share.put("text", text.toString());
+        if (intent.getType().startsWith("image/")) {
+            Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (stream != null) share.put("image", stream.toString());
+        }
+        return share.size() > 1 ? share : null;
     }
 
     private MethodChannel.Result myResult;
@@ -147,6 +274,10 @@ public class MainActivity extends FlutterActivity {
                             }
                             break;
 
+                        case "probeWebViewPixels":
+                            probeWebViewPixels(call, result);
+                            break;
+
                         case "getProcessExitReasons":
                             try {
                                 result.success(getProcessExitReasons());
@@ -160,7 +291,186 @@ public class MainActivity extends FlutterActivity {
                     }
                 });
 
+        pipChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), PIP_CHANNEL);
+        pipChannel.setMethodCallHandler((call, result) -> {
+            switch (call.method) {
+                case "isSupported":
+                    result.success(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                            && getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE));
+                    break;
+
+                case "enter":
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        result.success(false);
+                        break;
+                    }
+                    try {
+                        PictureInPictureParams params = buildPipParams(call.argument("actions"), false);
+                        boolean entered;
+                        if (isInPictureInPictureMode()) {
+                            setPictureInPictureParams(params);
+                            entered = true;
+                        } else {
+                            entered = enterPictureInPictureMode(params);
+                        }
+                        result.success(entered);
+                    } catch (Exception e) {
+                        result.error("PIP", e.getMessage(), null);
+                    }
+                    break;
+
+                case "autoEnter":
+                    pipAutoEnter = Boolean.TRUE.equals(call.argument("enabled"));
+                    pipAutoActions = call.argument("actions");
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !isInPictureInPictureMode()) {
+                        setPictureInPictureParams(buildPipParams(pipAutoActions, pipAutoEnter));
+                    }
+                    result.success(null);
+                    break;
+
+                case "expand":
+                    startActivity(new Intent(this, MainActivity.class));
+                    result.success(null);
+                    break;
+
+                default:
+                    result.notImplemented();
+            }
+        });
+
+        shareChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), SHARE_CHANNEL);
+        shareChannel.setMethodCallHandler((call, result) -> {
+            if ("take".equals(call.method)) {
+                result.success(pendingShare);
+                pendingShare = null;
+            } else if ("readImage".equals(call.method)) {
+                String raw = call.argument("uri");
+                new Thread(() -> {
+                    try {
+                        copySharedImage(raw);
+                        runOnUiThread(() -> result.success(null));
+                    } catch (Exception e) {
+                        String code = e instanceof IOException && e.getMessage() != null
+                                ? e.getMessage()
+                                : "unreadable";
+                        runOnUiThread(() -> result.error(code, null, null));
+                    }
+                }).start();
+            } else {
+                result.notImplemented();
+            }
+        });
+
         LiveUpdatePlugin.register(flutterEngine, this);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private PictureInPictureParams buildPipParams(List<Map<String, String>> actions, boolean autoEnter) {
+        List<RemoteAction> remoteActions = new ArrayList<>();
+        if (actions != null) {
+            for (Map<String, String> action : actions) {
+                String id = action.get("id");
+                int requestCode;
+                int icon;
+                if ("profile".equals(id)) {
+                    requestCode = 2;
+                    icon = R.drawable.ic_pip_profile;
+                } else if ("panic".equals(id)) {
+                    requestCode = 3;
+                    icon = R.drawable.ic_pip_panic;
+                } else {
+                    requestCode = 1;
+                    icon = R.drawable.ic_pip_open;
+                }
+                Intent intent = new Intent(PIP_ACTION).setPackage(getPackageName()).putExtra("id", id);
+                PendingIntent pending = PendingIntent.getBroadcast(this, requestCode, intent,
+                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                String title = action.get("title");
+                remoteActions.add(new RemoteAction(Icon.createWithResource(this, icon), title, title, pending));
+            }
+        }
+        PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
+                .setAspectRatio(new Rational(4, 3))
+                .setActions(remoteActions);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setSeamlessResizeEnabled(false);
+            builder.setAutoEnterEnabled(autoEnter);
+        }
+        return builder.build();
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode, Bundle options) {
+        pipOwnLaunch = true;
+        super.startActivityForResult(intent, requestCode, options);
+    }
+
+    // Android 12+ enters by itself
+    @Override
+    public void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        if (!pipAutoEnter || pipOwnLaunch || Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+                || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S || isInPictureInPictureMode() || pipChannel == null) {
+            return;
+        }
+        pipAutoPending = true;
+        pipChannel.invokeMethod("autoEntering", null);
+        try {
+            enterPictureInPictureMode(buildPipParams(pipAutoActions, false));
+        } catch (Exception e) {
+            pipAutoPending = false;
+            pipChannel.invokeMethod("changed", false);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        pipOwnLaunch = false;
+        if (pipAutoPending && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !isInPictureInPictureMode()
+                && pipChannel != null) {
+            pipChannel.invokeMethod("changed", false);
+        }
+        pipAutoPending = false;
+    }
+
+    private void unregisterPipReceiver() {
+        if (pipReceiver == null) return;
+        unregisterReceiver(pipReceiver);
+        pipReceiver = null;
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+        pipAutoPending = false;
+        if (!isInPictureInPictureMode) {
+            unregisterPipReceiver();
+        } else if (pipReceiver == null) {
+            pipReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent received) {
+                    if (pipChannel != null) {
+                        pipChannel.invokeMethod("action", received.getStringExtra("id"));
+                    }
+                }
+            };
+            ContextCompat.registerReceiver(this, pipReceiver, new IntentFilter(PIP_ACTION),
+                    ContextCompat.RECEIVER_NOT_EXPORTED);
+        }
+        if (pipChannel != null) {
+            pipChannel.invokeMethod("changed", isInPictureInPictureMode);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterPipReceiver();
+        if (pixelProbeThread != null) {
+            pixelProbeThread.quitSafely();
+            pixelProbeThread = null;
+        }
+        super.onDestroy();
     }
 
     // This cancels Firebase notifications upon request from the Flutter app, as the
@@ -248,6 +558,73 @@ public class MainActivity extends FlutterActivity {
             prefs.edit().putLong("lastReportedExitTimestamp", newest).apply();
         }
         return exits;
+    }
+
+    // On-screen pixels at 1/8 scale
+    private void probeWebViewPixels(MethodCall call, MethodChannel.Result result) {
+        Integer left = call.argument("left");
+        Integer top = call.argument("top");
+        Integer width = call.argument("width");
+        Integer height = call.argument("height");
+        List<Double> points = call.argument("points");
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || left == null || top == null || width == null
+                || height == null || points == null) {
+            result.success(null);
+            return;
+        }
+
+        int[] origin = new int[2];
+        View flutterView = findViewById(FLUTTER_VIEW_ID);
+        if (flutterView != null) flutterView.getLocationInWindow(origin);
+        View decor = getWindow().getDecorView();
+        Rect source = new Rect(left + origin[0], top + origin[1], left + origin[0] + width, top + origin[1] + height);
+        if (!source.intersect(0, 0, decor.getWidth(), decor.getHeight())) {
+            result.success(null);
+            return;
+        }
+
+        int bitmapWidth = Math.max(1, source.width() / 8);
+        int bitmapHeight = Math.max(1, source.height() / 8);
+        Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
+        if (pixelProbeThread == null) {
+            pixelProbeThread = new HandlerThread("tornpda-pixel-probe");
+            pixelProbeThread.start();
+        }
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+
+        try {
+            PixelCopy.request(getWindow(), source, bitmap, copyResult -> {
+                Map<String, Object> out = new HashMap<>();
+                out.put("copyResult", copyResult);
+                if (copyResult == PixelCopy.SUCCESS) {
+                    List<List<Integer>> pixels = new ArrayList<>();
+                    for (int i = 0; i + 1 < points.size(); i += 2) {
+                        int x = Math.min(bitmapWidth - 1, Math.max(0, (int) (points.get(i) * bitmapWidth)));
+                        int y = Math.min(bitmapHeight - 1, Math.max(0, (int) (points.get(i + 1) * bitmapHeight)));
+                        int color = bitmap.getPixel(x, y);
+                        pixels.add(Arrays.asList(Color.red(color), Color.green(color), Color.blue(color)));
+                    }
+                    out.put("pixels", pixels);
+                }
+                bitmap.recycle();
+
+                long graphicsMb = -1;
+                try {
+                    Debug.MemoryInfo memoryInfo = new Debug.MemoryInfo();
+                    Debug.getMemoryInfo(memoryInfo);
+                    String graphics = memoryInfo.getMemoryStat("summary.graphics");
+                    // Reported in KB
+                    if (graphics != null) graphicsMb = Long.parseLong(graphics) / 1024;
+                } catch (Exception ignored) {
+                }
+                out.put("graphicsMb", graphicsMb);
+
+                mainHandler.post(() -> result.success(out));
+            }, new Handler(pixelProbeThread.getLooper()));
+        } catch (IllegalArgumentException e) {
+            bitmap.recycle();
+            result.success(null);
+        }
     }
 
     // Opens the battery optimization settings screen

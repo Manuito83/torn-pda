@@ -3,6 +3,7 @@ import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { getUsersRefills } from "./torn_api";
 import { sendNotificationToUser } from "./notification";
+import { isDiscreetNow } from "./discreet";
 
 export const sendRefillNotifications = onSchedule(
   {
@@ -27,7 +28,7 @@ export const sendRefillNotifications = onSchedule(
       .where("refillsNotification", "==", true)
       .get();
 
-    const subscribers = response.docs.map((d) => d.data());
+    const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }) as any);
     let ipBlocks = 0;
     let subscribersThisTime = 0;
     let sent = 0;
@@ -65,7 +66,7 @@ export const sendRefillNotifications = onSchedule(
 
             let title = emptyTitle;
             let body = emptyBody;
-            if (thisUser.discrete) {
+            if (isDiscreetNow(thisUser)) {
               title = `Refill`;
               body = ` `;
             }

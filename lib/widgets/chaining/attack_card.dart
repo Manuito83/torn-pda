@@ -99,13 +99,19 @@ class AttackCardState extends State<AttackCard> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        SizedBox(
-                          width: _attack.targetName!.isNotEmpty ? 85 : 0,
-                          child: Text(
-                            _attack.targetName!.isNotEmpty ? ' [${_attack.targetId}]' : "",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                        Flexible(
+                          child: SizedBox(
+                            width: _attack.targetName!.isNotEmpty ? 85 : 0,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(
+                                _attack.targetName!.isNotEmpty ? ' [${_attack.targetId}]' : "",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -149,11 +155,13 @@ class AttackCardState extends State<AttackCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Row(
-                    children: [
-                      const Text('Last results: '),
-                      _returnLastResults(),
-                    ],
+                  Flexible(
+                    child: Row(
+                      children: [
+                        const Text('Last results: '),
+                        Flexible(child: _returnLastResults()),
+                      ],
+                    ),
                   ),
                   _returnFairFight(),
                 ],
@@ -435,7 +443,7 @@ class AttackCardState extends State<AttackCard> {
       }
     }
 
-    return Row(children: results);
+    return Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: results);
   }
 
   Widget _factionIcon() {

@@ -12,7 +12,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/settings/scripts_catalog_page.dart';
@@ -25,8 +24,10 @@ import 'package:torn_pda/widgets/settings/gold_storage_icon.dart';
 import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_bulk_update_dialog.dart';
+import 'package:torn_pda/widgets/settings/userscripts_modes_dialogs.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class UserScriptsPage extends StatefulWidget {
   final bool? fromWebview;
@@ -121,192 +122,175 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider.statusBar
-                : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          floatingActionButton: _showWarFab
-              ? FloatingActionButton.extended(
-                  icon: const Icon(MdiIcons.swordCross, color: Colors.white),
-                  label: Text(
-                    _userScriptsProvider.isWarModeActive ? "Exit war mode" : "War mode",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  elevation: 4,
-                  backgroundColor: _userScriptsProvider.isWarModeActive ? Colors.orange[800] : Colors.blueGrey,
-                  onPressed: _userScriptsProvider.toggleWarMode,
-                )
-              : null,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-              : null,
-          body: Container(
-            color: _themeProvider.canvas,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-              child: Column(
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      floatingActionButton: _showWarFab
+          ? FloatingActionButton.extended(
+              icon: Icon(_userScriptsProvider.activeMode?.icon ?? MdiIcons.swordCross, color: Colors.white),
+              label: Text(
+                _userScriptsProvider.activeMode?.name ?? "Modes",
+                style: const TextStyle(color: Colors.white),
+              ),
+              elevation: 4,
+              backgroundColor: _userScriptsProvider.activeMode?.color ?? Colors.blueGrey,
+              onPressed: () => showScriptModePicker(context),
+            )
+          : null,
+      body: Container(
+        color: _themeProvider.canvas,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          child: Column(
+            children: <Widget>[
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
-                            shape: WidgetStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: const BorderSide(width: 2, color: Colors.blueGrey),
-                              ),
-                            ),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
+                        shape: WidgetStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: const BorderSide(width: 2, color: Colors.blueGrey),
                           ),
-                          child: Icon(Icons.add, size: 20, color: _themeProvider.mainText),
-                          onPressed: () {
-                            _showAddDialog(context);
-                          },
                         ),
                       ),
-                      const SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                              if (states.contains(WidgetState.disabled)) {
-                                return Colors.grey;
-                              }
-                              return _themeProvider.secondBackground;
-                            }),
-                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
-                              return RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
-                                ),
-                              );
-                            }),
-                          ),
-                          onPressed: _userScriptsProvider.userScriptList.isEmpty
-                              ? null
-                              : () => _userScriptsProvider.checkForUpdates().then((i) {
-                                  _userScriptsProvider.resetBulkUpdateBannerDismiss();
-                                  BotToast.showText(
-                                    text: i > 0
-                                        ? "$i script${i == 1 ? " is" : "s are"} ready to update"
-                                        : "No updates found",
-                                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                                    contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                }),
-                          child: Icon(Icons.refresh, size: 20, color: _themeProvider.mainText),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                              if (states.contains(WidgetState.disabled)) {
-                                return Colors.grey;
-                              }
-                              return _userScriptsProvider.isGlobalDisableActive
-                                  ? Colors.orange[700]
-                                  : _themeProvider.secondBackground;
-                            }),
-                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
-                              return RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: states.contains(WidgetState.disabled)
-                                      ? Colors.grey
-                                      : _userScriptsProvider.isGlobalDisableActive
-                                      ? Colors.orange[900]!
-                                      : Colors.blueGrey,
-                                ),
-                              );
-                            }),
-                          ),
-                          onPressed: _userScriptsProvider.userScriptList.isEmpty
-                              ? null
-                              : () {
-                                  if (_userScriptsProvider.isGlobalDisableActive) {
-                                    _userScriptsProvider.toggleGlobalDisable();
-                                  } else {
-                                    _showGlobalDisableDialog(context);
-                                  }
-                                },
-                          child: Icon(Icons.remove_circle_outline, size: 20, color: _themeProvider.mainText),
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
-                              if (states.contains(WidgetState.disabled)) {
-                                return Colors.grey;
-                              }
-                              return _themeProvider.secondBackground;
-                            }),
-                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
-                              return RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
-                                ),
-                              );
-                            }),
-                          ),
-                          onPressed: _userScriptsProvider.userScriptList.isEmpty
-                              ? null
-                              : () {
-                                  _openWipeDialog();
-                                },
-                          child: Icon(Icons.delete_outline, size: 20, color: _themeProvider.mainText),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_userScriptsProvider.isWarModeActive || _userScriptsProvider.isGlobalDisableActive)
-                    _bulkModeBanner(),
-                  if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
-                  if (_userScriptsProvider.scriptCatalogEnabled) _catalogBanner(),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Preexisting scripts might require modifications to work with Torn PDA. '
-                      'Please ensure that you use scripts responsibly and '
-                      'understand the hazards. Tap the exclamation mark for more information.',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                      child: Icon(Icons.add, size: 20, color: _themeProvider.mainText),
+                      onPressed: () {
+                        _showAddDialog(context);
+                      },
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Flexible(
-                    child: Consumer<UserScriptsProvider>(builder: (context, settingsProvider, child) => scriptsCards()),
+                  const SizedBox(width: 15),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return Colors.grey;
+                          }
+                          return _themeProvider.secondBackground;
+                        }),
+                        shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
+                          return RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              width: 2,
+                              color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
+                            ),
+                          );
+                        }),
+                      ),
+                      onPressed: _userScriptsProvider.userScriptList.isEmpty
+                          ? null
+                          : () => _userScriptsProvider.checkForUpdates().then((i) {
+                              _userScriptsProvider.resetBulkUpdateBannerDismiss();
+                              BotToast.showText(
+                                text: i > 0
+                                    ? "$i script${i == 1 ? " is" : "s are"} ready to update"
+                                    : "No updates found",
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            }),
+                      child: Icon(Icons.refresh, size: 20, color: _themeProvider.mainText),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return Colors.grey;
+                          }
+                          return _userScriptsProvider.isGlobalDisableActive
+                              ? Colors.orange[700]
+                              : _themeProvider.secondBackground;
+                        }),
+                        shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
+                          return RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              width: 2,
+                              color: states.contains(WidgetState.disabled)
+                                  ? Colors.grey
+                                  : _userScriptsProvider.isGlobalDisableActive
+                                  ? Colors.orange[900]!
+                                  : Colors.blueGrey,
+                            ),
+                          );
+                        }),
+                      ),
+                      onPressed: _userScriptsProvider.userScriptList.isEmpty
+                          ? null
+                          : () {
+                              if (_userScriptsProvider.isGlobalDisableActive) {
+                                _userScriptsProvider.toggleGlobalDisable();
+                              } else {
+                                _showGlobalDisableDialog(context);
+                              }
+                            },
+                      child: Icon(Icons.remove_circle_outline, size: 20, color: _themeProvider.mainText),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  ButtonTheme(
+                    minWidth: 1.0,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return Colors.grey;
+                          }
+                          return _themeProvider.secondBackground;
+                        }),
+                        shape: WidgetStateProperty.resolveWith<OutlinedBorder>((Set<WidgetState> states) {
+                          return RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            side: BorderSide(
+                              width: 2,
+                              color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
+                            ),
+                          );
+                        }),
+                      ),
+                      onPressed: _userScriptsProvider.userScriptList.isEmpty
+                          ? null
+                          : () {
+                              _openWipeDialog();
+                            },
+                      child: Icon(Icons.delete_outline, size: 20, color: _themeProvider.mainText),
+                    ),
                   ),
                 ],
               ),
-            ),
+              if (_userScriptsProvider.activeMode != null || _userScriptsProvider.isGlobalDisableActive)
+                _bulkModeBanner(),
+              if (_userScriptsProvider.showBulkUpdateBanner) _bulkUpdateBanner(),
+              if (_userScriptsProvider.scriptCatalogEnabled) _catalogBanner(),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Preexisting scripts might require modifications to work with Torn PDA. '
+                  'Please ensure that you use scripts responsibly and '
+                  'understand the hazards. Tap the exclamation mark for more information.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Flexible(
+                child: Consumer<UserScriptsProvider>(builder: (context, settingsProvider, child) => scriptsCards()),
+              ),
+            ],
           ),
         ),
       ),
@@ -329,7 +313,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (BuildContext context) => const ScriptsCatalogPage()),
+              MaterialPageRoute(
+                settings: const RouteSettings(name: 'scripts_catalog'),
+                builder: (BuildContext context) => const ScriptsCatalogPage(),
+              ),
             ).then((_) {
               routeWithDrawer = false;
               routeName = "userscripts";
@@ -365,7 +352,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   Widget _bulkModeBanner() {
     final bool light = _themeProvider.currentTheme == AppTheme.light;
-    final bool warMode = _userScriptsProvider.isWarModeActive;
+    final mode = _userScriptsProvider.activeMode;
     return Padding(
       padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
       child: Card(
@@ -380,15 +367,15 @@ class UserScriptsPageState extends State<UserScriptsPage> {
           child: Row(
             children: [
               Icon(
-                warMode ? MdiIcons.swordCross : Icons.remove_circle_outline,
+                mode?.icon ?? Icons.remove_circle_outline,
                 size: 18,
                 color: Colors.orange[light ? 800 : 300],
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  warMode
-                      ? "War mode is on: the switches below select which scripts run during a war"
+                  mode != null
+                      ? "${mode.name} is on: the switches below select which scripts run in it"
                       : "All scripts are temporarily disabled",
                   style: const TextStyle(fontSize: 12),
                 ),
@@ -396,8 +383,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               TextButton(
                 child: const Text("EXIT", style: TextStyle(fontSize: 12)),
                 onPressed: () {
-                  if (warMode) {
-                    _userScriptsProvider.toggleWarMode();
+                  if (mode != null) {
+                    _userScriptsProvider.setMode(null);
                   } else {
                     _userScriptsProvider.toggleGlobalDisable();
                   }
@@ -461,7 +448,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   ListView scriptsCards() {
     final scriptList = <Widget>[];
     final visible = _visibleScripts();
-    final bool warMode = _userScriptsProvider.isWarModeActive;
+    final mode = _userScriptsProvider.activeMode;
 
     if (visible.isEmpty && _userScriptsProvider.userScriptList.isNotEmpty) {
       final bool inSource = _userScriptsProvider.searchInSource;
@@ -510,14 +497,14 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         height: 20,
                         width: 60,
                         child: Switch(
-                          value: warMode ? script.warEnabled : script.enabled,
-                          activeTrackColor: warMode ? Colors.orange[100] : Colors.green[100],
-                          activeThumbColor: warMode ? Colors.orange[800] : Colors.green,
+                          value: mode != null ? script.modes.contains(mode.id) : script.enabled,
+                          activeTrackColor: mode != null ? mode.color.withValues(alpha: 0.3) : Colors.green[100],
+                          activeThumbColor: mode?.color ?? Colors.green,
                           inactiveThumbColor: Colors.grey,
                           inactiveTrackColor: Colors.grey[300],
                           onChanged: (value) {
-                            if (warMode) {
-                              _userScriptsProvider.changeUserScriptWarEnabled(script, value);
+                            if (mode != null) {
+                              _userScriptsProvider.changeUserScriptInActiveMode(script, value);
                             } else {
                               _userScriptsProvider.changeUserScriptEnabled(script, value);
                             }
@@ -683,6 +670,25 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                     const SizedBox(width: 12),
                     GestureDetector(
+                      child: Icon(
+                        script.alwaysActive ? Icons.push_pin : Icons.push_pin_outlined,
+                        color: script.alwaysActive ? Colors.blue : Colors.grey,
+                        size: 20,
+                      ),
+                      onTap: () {
+                        _userScriptsProvider.changeUserScriptAlwaysActive(script, !script.alwaysActive);
+                        BotToast.showText(
+                          text: script.alwaysActive
+                              ? "Always active: this script runs in every mode"
+                              : "No longer always active: this script only runs in the modes you select",
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                          contentColor: Colors.grey[800]!,
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
                       child: const Icon(Icons.edit, size: 20),
                       onTap: () {
                         showDialog<void>(
@@ -731,7 +737,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               style: const TextStyle(color: Colors.white, fontSize: 16),
             )
           : const Text('User scripts', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -740,7 +746,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          if (!_webViewProvider.webViewSplitActive && widget.fromWebview != true)
+          if (_webViewProvider.appCanOpenBrowser && widget.fromWebview != true)
             const PdaBrowserIcon()
           else
             Container(),
@@ -785,30 +791,49 @@ class UserScriptsPageState extends State<UserScriptsPage> {
             } else if (value == 'search_source') {
               _userScriptsProvider.setSearchInSource = !_userScriptsProvider.searchInSource;
               _onSearchInputChange();
-            } else if (value == 'war_mode') {
-              _userScriptsProvider.toggleWarMode();
+            } else if (value == 'mode') {
+              showScriptModePicker(context);
+            } else if (value == 'modes') {
+              showScriptModesManager(context);
             } else if (value == 'toggle_war_shortcuts') {
               _userScriptsProvider.setWarShortcutsEnabled = !_userScriptsProvider.warShortcutsEnabled;
             }
           },
           itemBuilder: (BuildContext context) {
             final bool byName = _userScriptsProvider.sortOrder == UserScriptSort.name;
-            final bool warMode = _userScriptsProvider.isWarModeActive;
             const selected = TextStyle(fontWeight: FontWeight.bold);
             return [
               if (!_showWarFab) ...[
                 PopupMenuItem<String>(
-                  value: 'war_mode',
+                  value: 'mode',
                   child: Row(
                     children: [
-                      Icon(MdiIcons.swordCross, color: warMode ? Colors.orange[800] : Colors.grey),
+                      Icon(
+                        _userScriptsProvider.activeMode?.icon ?? MdiIcons.swordCross,
+                        color: _userScriptsProvider.activeMode?.color ?? Colors.grey,
+                      ),
                       const SizedBox(width: 10),
-                      Text(warMode ? 'Exit war mode' : 'Enter war mode'),
+                      Text(
+                        _userScriptsProvider.activeMode != null
+                            ? 'Mode: ${_userScriptsProvider.activeMode!.name}'
+                            : 'Select a mode',
+                      ),
                     ],
                   ),
                 ),
                 const PopupMenuDivider(),
               ],
+              const PopupMenuItem<String>(
+                value: 'modes',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_note, color: Colors.grey),
+                    SizedBox(width: 10),
+                    Text('Manage modes'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
               PopupMenuItem<String>(
                 value: 'sort_name',
                 child: Row(
@@ -911,7 +936,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       color: Colors.grey,
                     ),
                     const SizedBox(width: 10),
-                    Text(_userScriptsProvider.warShortcutsEnabled ? 'Hide war mode shortcuts' : 'Show war mode shortcuts'),
+                    Text(_userScriptsProvider.warShortcutsEnabled ? 'Hide mode shortcuts' : 'Show mode shortcuts'),
                   ],
                 ),
               ),

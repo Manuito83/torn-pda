@@ -1,9 +1,6 @@
-import 'dart:developer';
-
 import 'package:get/get.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/utils/crashlytics_identity.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -125,19 +122,9 @@ class UserController extends GetxController {
     // Removed update() to prevent build cycle conflicts with Provider
   }
 
-  int _factionId = 0;
-  int get factionId => _factionId;
-  set factionId(int value) {
-    _factionId = value;
-    _checkIfNewFactionAndReport();
-  }
+  int factionId = 0;
 
-  int _companyId = 0;
-  int get companyId => _companyId;
-  set companyId(int value) {
-    _companyId = value;
-    _checkIfNewCompanyAndReport();
-  }
+  int companyId = 0;
 
   // Alternative keys YATA
   bool alternativeYataKeyEnabled = false;
@@ -166,31 +153,5 @@ class UserController extends GetxController {
       alternativeFFScouterKeyEnabled ? _alternativeFFScouterKey.trim() : (apiKey ?? "");
   set alternativeFFScouterKey(String key) {
     _alternativeFFScouterKey = key.trim();
-  }
-
-  Future<void> _checkIfNewFactionAndReport() async {
-    final lastKnown = await Prefs().getLastKnownFaction();
-    if (lastKnown != _factionId) {
-      log("Faction changed from $lastKnown to $_factionId!!");
-      Prefs().setLastKnownFaction(_factionId);
-
-      if (_factionId != 0) {
-        final sb = Get.find<SendbirdController>();
-        sb.updatePushPreferencesAfterFactionChange();
-      }
-    }
-  }
-
-  Future<void> _checkIfNewCompanyAndReport() async {
-    final lastKnown = await Prefs().getLastKnownCompany();
-    if (lastKnown != _companyId) {
-      log("Company changed from $lastKnown to $_companyId!!");
-      Prefs().setLastKnownCompany(_companyId);
-
-      if (_companyId != 0) {
-        final sb = Get.find<SendbirdController>();
-        sb.updatePushPreferencesAfterCompanyChange();
-      }
-    }
   }
 }

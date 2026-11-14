@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
@@ -14,6 +13,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
@@ -41,6 +41,7 @@ import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
+import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
@@ -48,7 +49,6 @@ import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -69,8 +69,13 @@ import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/background_inbox.dart';
+import 'package:torn_pda/utils/background_prefs.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/crashlytics_identity.dart';
 import 'package:torn_pda/utils/exit_info.dart';
@@ -81,18 +86,27 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
+import 'package:torn_pda/widgets/chaining/chain_mini_window.dart';
+import 'package:torn_pda/widgets/chat/chat_overlay.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
+import 'package:torn_pda/widgets/pip/pip_view.dart';
 import 'package:torn_pda/widgets/webviews/browser_engine_prewarm.dart';
+import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
+import 'package:torn_pda/widgets/webviews/split_divider.dart';
+import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.17.0';
-const String androidCompilation = '689';
-const String iosCompilation = '689';
+const String appVersion = '4.0.0';
+const String androidCompilation = '712';
+const String iosCompilation = '712';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
 /// (add new alert fields here when implementing new alerts)
+// In sync with RECOVERY_FIELDS in players.ts
 const List<String> kAlertFirestoreFields = [
   "discrete",
   "vibration",
@@ -199,19 +213,58 @@ Future<void> main() async {
   await drainFcmInbox();
 
   // Sync background-safe preferences
-  await Prefs().syncBackgroundPrefs();
+  Object? syncPrefsError;
+  StackTrace? syncPrefsStack;
+  try {
+    await Prefs().syncBackgroundPrefs();
+  } catch (e, stackTrace) {
+    log("Error syncing background prefs: $e");
+    syncPrefsError = e;
+    syncPrefsStack = stackTrace;
+  }
+
+  if (Platform.isAndroid && await Prefs().getBrowserRemoteDebugging()) {
+    try {
+      await InAppWebViewController.setWebContentsDebuggingEnabled(true);
+    } catch (_) {}
+  }
 
   // Core initialization
-  await _initializeAppCompilation();
+  Object? compilationError;
+  StackTrace? compilationStack;
+  try {
+    await _initializeAppCompilation();
+  } catch (e, stackTrace) {
+    log("Error initializing app compilation: $e");
+    compilationError = e;
+    compilationStack = stackTrace;
+  }
   await _initializePlatformSpecifics();
   await _initializeBackupAndTheme(widgetsBinding);
   _startDebugWakelock();
   await _initializeFirebase();
-  if (_isFirebaseInitialized) unawaited(ExitInfo.reportPreviousExits());
+  if (syncPrefsError != null) {
+    logErrorToCrashlytics(
+      "Error syncing background prefs",
+      "Background prefs sync failed: $syncPrefsError",
+      syncPrefsStack,
+    );
+  }
+  if (compilationError != null) {
+    logErrorToCrashlytics(
+      "Error initializing app compilation",
+      "App compilation init failed: $compilationError",
+      compilationStack,
+    );
+  }
+  if (_isFirebaseInitialized) {
+    unawaited(ExitInfo.reportPreviousExits());
+    unawaited(StatsController.chat.flush());
+    unawaited(UsageCounters.flush());
+  }
   await _initializeWorkManager();
   await _initializeHomeWidget();
   await _initializeGetXControllers();
-  await _initializeSendbird();
   await _initializeNotifications();
   await _initializePlatformPlugins();
   await _initializeAudioAndConnectivity();
@@ -254,13 +307,30 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late Future _mainBrowserPreferencesLoaded;
 
   late Widget _mainBrowser;
+  final GlobalKey _mainBrowserKey = GlobalKey();
+  final GlobalKey _homeDrawerKey = GlobalKey();
+  final List<NavigatorObserver> _homeObservers = [
+    NativeChat.homeWatch,
+    if (_isFirebaseInitialized && analytics != null) Get.find<StatsController>().homeObserver,
+  ];
+  final GlobalKey _devToolsKey = GlobalKey();
+  final FocusNode _devToolsFocusNode = FocusNode(canRequestFocus: false, skipTraversal: true);
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    NativeChat.start(login: context.read<NativeUserProvider>());
 
     _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
+
+    ever(Get.find<PipController>().inPip, (bool active) {
+      // Skipped in background, after the X
+      final state = WidgetsBinding.instance.lifecycleState;
+      if (!active && mounted && state != AppLifecycleState.paused && state != AppLifecycleState.hidden) {
+        _setSplitScreenPosition();
+      }
+    });
 
     // Callback to force the browser back to full screen if there is a system request to revert
     // Might happen when app is on the background or when only the top is being extended
@@ -270,7 +340,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       }
     });
 
+    // Keeps the webviews across layout changes
     _mainBrowser = Consumer<WebViewProvider>(
+      key: _mainBrowserKey,
       builder: (context, w, child) {
         return Visibility(
           maintainState: true,
@@ -284,9 +356,17 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() async {
     // Assess the split screen condition after the device or window metrics change
-    _setSplitScreenPosition();
+    if (!Get.find<PipController>().inPip.value) _setSplitScreenPosition();
 
     isStatusBarShown = MediaQuery.of(context).padding.top > 0;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isFirebaseInitialized) {
+      StatsController.chat.flush();
+      UsageCounters.flush();
+    }
   }
 
   @override
@@ -306,13 +386,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _devToolsFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
 
     // https://github.com/flutter/flutter/issues/126585
     MediaQuery.viewInsetsOf(context).bottom;
@@ -344,9 +424,10 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Inside of Navigator so that even if DrawerPage is replaced (we push another route), the
     // reference to this widget is not lost. Key prevents unnecessary rebuilds.
     final homeDrawer = Navigator(
-      key: const ValueKey('main_drawer_navigator'),
-      onGenerateRoute: (_) {
-        return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
+      key: _homeDrawerKey,
+      observers: _homeObservers,
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(settings: settings, builder: (BuildContext _) => DrawerPage());
       },
     );
 
@@ -357,8 +438,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         theme: theme,
         debugShowCheckedModeBanner: false,
         builder: (context, child) {
-          final botToastWrappedChild = BotToastInit()(context, child);
-
           final Widget content = (enableAccessibilityTools && kDebugMode)
               ? AccessibilityTools(
                   // Set to null to disable tap area checking
@@ -375,15 +454,35 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   buttonsAlignment: ButtonsAlignment.bottomRight,
                   // Enable or disable draging the buttons around
                   enableButtonsDrag: true,
-                  child: botToastWrappedChild,
+                  child: child!,
                 )
-              : botToastWrappedChild;
+              : child!;
 
           // Warm the Android WebView engine offstage (1x1, behind content, non-blocking) to avoid the
           // #2843 cold-start onWebViewCreated drop. Can be changed via RC
-          return Stack(alignment: Alignment.topLeft, children: [const BrowserEnginePrewarm(), content]);
+          // Notices above the chat windows
+          return BotToastInit()(
+            context,
+            Stack(
+              alignment: Alignment.topLeft,
+              children: [
+                const BrowserEnginePrewarm(),
+                PipHost(child: content),
+                if (NativeChat.engineEnabled)
+                  ValueListenableBuilder(
+                    valueListenable: NativeChat.remoteEnabled,
+                    builder: (_, on, _) => on ? ChatOverlay(navigatorKey: navigatorKey) : const SizedBox.shrink(),
+                  ),
+                const ChainMiniHost(),
+              ],
+            ),
+          );
         },
-        navigatorObservers: [BotToastNavigatorObserver()],
+        navigatorObservers: [
+          BotToastNavigatorObserver(),
+          NativeChat.rootWatch,
+          if (_isFirebaseInitialized && analytics != null) Get.find<StatsController>().rootObserver,
+        ],
         scrollBehavior: !Platform.isWindows
             ? null
             : const MaterialScrollBehavior().copyWith(
@@ -407,7 +506,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 Widget home;
 
                 // Use IndexedStack for normal mode (non-split screen)
-                if (!wProvider.webViewSplitActive) {
+                if (!wProvider.webViewSplitActive && wProvider.splitDevToolsSlot == null) {
                   // IndexedStack: drawer at index 0, browser placeholder at index 1
                   home = IndexedStack(
                     index: wProvider.browserShowInForeground ? 1 : 0,
@@ -420,26 +519,69 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   );
                 } else {
                   // Split screen mode: normal rendering (both widgets visible)
-                  if (wProvider.splitScreenPosition == WebViewSplitPosition.right && screenIsWide) {
-                    home = Stack(
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(child: homeDrawerWidget),
-                            Flexible(child: _mainBrowser),
-                          ],
+                  final bool appLeft =
+                      wProvider.splitRightSlot != null && wProvider.splitLeftSlot == SplitSlotContent.app;
+                  final bool appRight = wProvider.splitRightSlot == SplitSlotContent.app;
+                  final bool devToolsLeft = wProvider.splitLeftSlot == SplitSlotContent.devTools;
+                  final bool devToolsRight = wProvider.splitRightSlot == SplitSlotContent.devTools;
+                  final Widget appInSlot = Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Offstage(
+                        offstage: devToolsLeft || devToolsRight,
+                        child: MediaQuery.removePadding(
+                          context: context,
+                          removeLeft: appRight,
+                          removeRight: appLeft,
+                          child: homeDrawerWidget,
                         ),
-                        const AppBorder(),
-                      ],
-                    );
-                  } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left && screenIsWide) {
+                      ),
+                      if (devToolsLeft || devToolsRight)
+                        Focus(
+                          focusNode: _devToolsFocusNode,
+                          child: DevToolsMainPage(key: _devToolsKey, initialIndex: wProvider.splitDevToolsTabIndex),
+                        ),
+                      const Positioned.fill(child: TabDropZone(label: "Open here")),
+                    ],
+                  );
+                  // Keyboard only shrinks the DevTools
+                  final Widget browserInSlot = ListenableBuilder(
+                    listenable: _devToolsFocusNode,
+                    builder: (context, child) => MediaQuery.removeViewInsets(
+                      context: context,
+                      removeBottom: (devToolsLeft || devToolsRight) && _devToolsFocusNode.hasFocus,
+                      child: child!,
+                    ),
+                    child: _mainBrowser,
+                  );
+                  if (appLeft || appRight || devToolsLeft || devToolsRight) {
+                    final EdgeInsets screenPadding = MediaQuery.paddingOf(context);
                     home = Stack(
                       children: [
-                        Row(
-                          children: [
-                            Flexible(child: _mainBrowser),
-                            Flexible(child: homeDrawerWidget),
-                          ],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Row(
+                              children: [
+                                SizedBox(
+                                  width: splitLeftSlotWidth(
+                                    constraints.maxWidth,
+                                    wProvider.splitScreenRatio,
+                                    leftInset: screenPadding.left,
+                                    rightInset: screenPadding.right,
+                                  ),
+                                  child: appLeft || devToolsLeft ? appInSlot : browserInSlot,
+                                ),
+                                SplitDivider(
+                                  width: constraints.maxWidth,
+                                  ratio: wProvider.splitScreenRatio,
+                                  onRatioChanged: (ratio) => wProvider.splitScreenRatio = ratio,
+                                  leftInset: screenPadding.left,
+                                  rightInset: screenPadding.right,
+                                ),
+                                Expanded(child: appLeft || devToolsLeft ? browserInSlot : appInSlot),
+                              ],
+                            );
+                          },
                         ),
                         const AppBorder(),
                       ],
@@ -460,11 +602,11 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     if (w.browserShowInForeground) {
                       // Browser is in front, delegate the call
                       w.tryGoBack();
-                    } else {
+                    } else if (!Get.isRegistered<PipController>() || !Get.find<PipController>().cancelPick()) {
                       _openDrawerIfPossible();
                     }
                   },
-                  child: home,
+                  child: PipSelectionBackGuard(child: home),
                 );
               },
               child: homeDrawer,
@@ -486,47 +628,26 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void _setSplitScreenPosition() {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      final bool splitNowActive = _webViewProvider.webViewSplitActive;
-      final bool splitUserEnabled = _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
-      final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
+    // Not post-frame, avoids a stale split
+    _webViewProvider.updateSplitScreenWidth(MediaQueryData.fromView(View.of(context)).size.width);
 
-      if (!splitNowActive && splitUserEnabled && screenIsWide) {
-        _webViewProvider.webViewSplitActive = true;
-        _webViewProvider.browserForegroundWithSplitTransition();
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: _themeProvider.statusBar,
+        systemNavigationBarColor: _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.light,
 
-        // Chat notifications should be omitted when switching into splitview
-        //   (note: the case where we are no longer in splitiew is handled below,
-        //    by notifying the webviewProvider with true/false which in turns
-        //    will update the Sendbird Controller with the right value)
-        SendbirdController sb = Get.find<SendbirdController>();
-        sb.webviewInForeground = true;
-      } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
-        _webViewProvider.webViewSplitActive = false;
-        if (_webViewProvider.splitScreenRevertsToApp) {
-          _webViewProvider.browserShowInForeground = false;
-        } else {
-          _webViewProvider.browserShowInForeground = true;
-        }
-      }
-
-      SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(
-          statusBarColor: _themeProvider.statusBar,
-          systemNavigationBarColor: _themeProvider.statusBar,
-          systemNavigationBarIconBrightness: Brightness.light,
-          statusBarIconBrightness: Brightness.light,
-
-          // iOS
-          statusBarBrightness: Brightness.dark,
-        ),
-      );
-    });
+        // iOS
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
   }
 
   /// This is mostly needed in case we start the app with split screen or directly with the browser as main view
   Future _loadMainBrowserPreferences() async {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    Get.find<StatsController>().webViews = _webViewProvider;
     await _webViewProvider.restorePreferences();
 
     /// DOC
@@ -586,33 +707,17 @@ Future<void> _initializeAppCompilation() async {
   }
 }
 
-Future<void> _handleNotificationResponse(NotificationResponse notificationResponse) async {
+Future<void> handleNotificationResponse(NotificationResponse notificationResponse) async {
   try {
-    String? payload = notificationResponse.payload;
+    final payload = notificationResponse.payload;
 
-    // Handle reply action on Sendbird notifications (while on background and foreground)
-    if (notificationResponse.id.toString().startsWith('666')) {
-      if (notificationResponse.actionId == "sb_reply_action") {
-        // Reply message
-        final message = notificationResponse.input ?? "";
-
-        // Get channel URL from notification payload
-        final payload = notificationResponse.payload;
-        Map<String, dynamic> decodedPayload = jsonDecode(payload ?? "{}");
-        final String channelUrl = decodedPayload["channelUrl"] ?? "";
-
-        // Send reply message
-        if (message.isNotEmpty && channelUrl.isNotEmpty) {
-          SendbirdController sb = Get.find<SendbirdController>();
-          sb.sendMessage(channelUrl: channelUrl, message: message);
-        }
-      }
-
-      // Reassign payload so that the browser opens in Drawwer
-      payload = "sendbird";
+    final chatTap = await handleTornChatResponse(notificationResponse);
+    if (chatTap != null) {
+      selectNotificationStream.add(NativeChat.dmTapPayload(chatTap.$1, chatTap.$2));
+      return;
     }
 
-    if (notificationResponse.payload != null) {
+    if (payload != null) {
       log('Notification payload: $payload');
       selectNotificationStream.add(payload);
     }
@@ -725,6 +830,8 @@ Future<void> _initializeHomeWidget() async {
 
 Future<void> _initializeGetXControllers() async {
   try {
+    Get.put(StatsController(), permanent: true);
+    Get.put(AppIconMenuController(), permanent: true);
     Get.put(UserController(), permanent: true);
     Get.put(AudioController(), permanent: true);
     Get.put(SpiesController(), permanent: true);
@@ -741,6 +848,7 @@ Future<void> _initializeGetXControllers() async {
     Get.put(PeriodicExecutionController(), permanent: true);
     Get.put(ChainStatusController(), permanent: true);
     Get.put(ProfileApiCallsController(), permanent: true);
+    Get.put(PipController(), permanent: true);
 
     final bool enableLiveUpdateBridge = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
     if (enableLiveUpdateBridge) {
@@ -762,16 +870,6 @@ Future<void> _initializeGetXControllers() async {
   }
 }
 
-Future<void> _initializeSendbird() async {
-  try {
-    final sb = Get.put(SendbirdController(), permanent: true);
-    await sb.init();
-  } catch (e, stackTrace) {
-    log("Error initializing Sendbird: $e");
-    logErrorToCrashlytics("Error initializing Sendbird", "Sendbird initialization failed: $e", stackTrace);
-  }
-}
-
 Future<void> _initializeNotifications() async {
   try {
     tz.initializeTimeZones();
@@ -784,14 +882,16 @@ Future<void> _initializeNotifications() async {
     }
 
     const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-    const initializationSettingsIOS = DarwinInitializationSettings();
+    final initializationSettingsIOS = DarwinInitializationSettings(
+      notificationCategories: darwinNotificationCategories(reply: await BackgroundPrefs().getNativeChatReplyEnabled()),
+    );
     const initizationSettingsWindows = WindowsInitializationSettings(
       appName: 'Torn PDA',
       appUserModelId: 'com.manuito.tornpda',
       guid: 'fdf9adab-cc5d-4660-aec3-f9b7e4b3e355',
     );
 
-    const initializationSettings = InitializationSettings(
+    final initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
       windows: initizationSettingsWindows,
@@ -799,8 +899,10 @@ Future<void> _initializeNotifications() async {
 
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveNotificationResponse: _handleNotificationResponse,
+      onDidReceiveNotificationResponse: handleNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse: tornChatBackgroundResponse,
     );
+    if (Platform.isIOS) listenTornChatReplies();
 
     final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
     if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
@@ -821,6 +923,7 @@ Future<void> _initializeFirebase() async {
     _isFirebaseInitialized = true;
 
     if (!Platform.isWindows) {
+      unawaited(_activateAppCheck());
       FirebaseMessaging.onBackgroundMessage(messagingBackgroundHandler);
 
       // Before the rest of the startup, which is where the fatals we cannot attribute happen
@@ -843,6 +946,19 @@ Future<void> _initializeFirebase() async {
   } catch (e) {
     log("Error initializing Firebase: $e");
     _isFirebaseInitialized = false;
+  }
+}
+
+// Silent on failure, not enforced yet
+Future<void> _activateAppCheck() async {
+  try {
+    await FirebaseAppCheck.instance.activate(
+      providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
+      providerApple: kDebugMode ? const AppleDebugProvider() : const AppleDeviceCheckProvider(),
+    );
+    await FirebaseAppCheck.instance.setTokenAutoRefreshEnabled(true);
+  } catch (e) {
+    log("Error activating App Check: $e");
   }
 }
 

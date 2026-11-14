@@ -432,6 +432,7 @@ class _DevToolsScriptsTabState extends State<DevToolsScriptsTab> {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
+        settings: const RouteSettings(name: 'userscripts'),
         builder: (BuildContext context) => const UserScriptsPage(
           fromWebview: true,
         ),

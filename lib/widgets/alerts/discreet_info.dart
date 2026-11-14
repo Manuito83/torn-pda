@@ -28,7 +28,14 @@ class DiscreetInfoState extends State<DiscreetInfo> {
         "notification text (i.e.: referencing loot, drugs, etc.) would not be appropriate."
         "\n\nInstead, you will receive a much shorter text, as explained below."
         "\n\nBe aware that you might lose some key information in the notification "
-        "(e.g.: event or message details). Applies both for manual notifications and automatic alerts.";
+        "(e.g.: event or message details). Applies both for manual notifications and automatic alerts."
+        "\n\nThey can also be discreet only during some hours: turn on Schedule under Discreet local "
+        "notifications in Settings. The schedule applies to automatic alerts too.";
+
+    if (Platform.isIOS) {
+      discreetText += "\n\nNOTE: Torn private messages that arrive while the app is in the background or closed "
+          "come directly from Apple and can't be made discreet.";
+    }
 
     if (Platform.isAndroid) {
       discreetText += "\n\nNOTE: This setting also applies to titles for alarms and timers.";

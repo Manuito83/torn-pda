@@ -25,9 +25,11 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/script_storage.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/webviews/browser_text_live_panel.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/fullscreen_header_doubletap_warning.dart';
@@ -98,8 +100,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       _profile(),
       if (Platform.isIOS) _linkPreview(),
       _gestures(),
-      _maintenance(),
       _memory(),
+      _maintenance(),
     ];
 
     // Filter out empty sections
@@ -148,45 +150,28 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Widget build(BuildContext context) {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider.statusBar
-                : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-              : null,
-          body: Container(
-            color: _themeProvider.canvas,
-            child: FutureBuilder(
-              future: _preferencesRestored,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      child: Column(
-                        children: [const SizedBox(height: 15), ...buildFilteredSections(), const SizedBox(height: 40)],
-                      ),
-                    ),
-                  );
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
-          ),
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: FutureBuilder(
+          future: _preferencesRestored,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(
+                    children: [const SizedBox(height: 15), ...buildFilteredSections(), const SizedBox(height: 40)],
+                  ),
+                ),
+              );
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
+          },
         ),
       ),
     );
@@ -482,9 +467,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       _userScriptsProvider.showSafeModeWarning();
                       return;
                     }
-                    Navigator.of(
-                      context,
-                    ).push(MaterialPageRoute(builder: (BuildContext context) => const UserScriptsPage()));
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        settings: const RouteSettings(name: 'userscripts'),
+                        builder: (BuildContext context) => const UserScriptsPage(),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -671,69 +659,51 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       if (_settingsProvider.useTabsFullBrowser)
         SearchableRow(
-          label: "Only load tabs when used",
+          label: "Show tab numbers",
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Flexible(child: Text("Only load tabs when used")),
-                    Switch(
-                      value: _webViewProvider.onlyLoadTabsWhenUsed,
+                    const Flexible(child: Text("Show tab numbers")),
+                    DropdownButton<int>(
+                      value: WebViewProvider.tabNumbersFromOptions.contains(_webViewProvider.tabNumbersFrom)
+                          ? _webViewProvider.tabNumbersFrom
+                          : 10,
+                      items: [
+                        for (final from in WebViewProvider.tabNumbersFromOptions)
+                          DropdownMenuItem(
+                            value: from,
+                            child: SizedBox(
+                              width: 130,
+                              child: Text(
+                                from == 0 ? "Off" : "From $from tabs",
+                                textAlign: TextAlign.right,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ),
+                      ],
                       onChanged: (value) {
-                        _webViewProvider.onlyLoadTabsWhenUsed = value;
+                        if (value == null) return;
+                        setState(() {
+                          _webViewProvider.tabNumbersFrom = value;
+                        });
                       },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
-                Text(
-                  'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, they will retrieve the web content when first used (tapped). This could add a small delay when the tab is pressed the first time, but should improve overall browser performance. Also, tabs that have not been used for a while will be deactivated to reduce memory consumption, and will be reactivated when you switch back to them (you can change how long in the Memory section, at the bottom of this page).',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-                ),
-              ],
-            ),
-          ),
-        ),
-      if (_settingsProvider.useTabsFullBrowser && _webViewProvider.onlyLoadTabsWhenUsed)
-        SearchableRow(
-          label: "Keep locked tabs loaded",
-          searchText: _searchText,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Flexible(
-                      child: Row(
-                        children: [
-                          Icon(Icons.keyboard_arrow_right_outlined),
-                          Flexible(child: Text("Keep locked tabs loaded")),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _webViewProvider.keepLockedTabsActive,
-                      onChanged: (value) {
-                        _webViewProvider.keepLockedTabsActive = value;
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeThumbColor: Colors.green,
-                    ),
-                  ],
-                ),
-                Text(
-                  'Locked tabs are loaded as soon as the browser starts and are never put to sleep or rested '
-                  'while you are away, so they are always ready when you switch to them. Only the tabs you lock '
-                  'are exempt; the rest keep behaving as above. Under memory pressure they can still be '
-                  'deactivated to keep the app alive.',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "Once you have this many tabs open, each tab shows its position number in a corner",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
                 ),
               ],
             ),
@@ -746,6 +716,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -902,6 +873,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -993,6 +965,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1147,6 +1120,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1849,14 +1823,14 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Widget _chat() {
     List<SearchableRow> rows = [
       SearchableRow(
-        label: "Show chat remove icon",
+        label: "Show chat icon in the browser",
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Flexible(child: Text("Show chat remove icon")),
+              const Flexible(child: Text("Show chat icon in the browser")),
               Switch(
                 value: _settingsProvider.chatRemoveEnabled,
                 onChanged: (value) {
@@ -1896,19 +1870,23 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       ),
       if (_highlightChat)
         SearchableRow(
-          label: "Select words to highlight",
+          label: "Highlight words",
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Flexible(
+                Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Select words to highlight"),
-                      Text("(ONLY CHAT v2.0)", style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic)),
+                      const Text("Highlight words"),
+                      if (NativeChat.compiled)
+                        const Text(
+                          "(TORN CHAT AND PDA CHAT)",
+                          style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                        ),
                     ],
                   ),
                 ),
@@ -1929,12 +1907,16 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Flexible(
+                Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Select highlight color"),
-                      Text("(ONLY CHAT v2.0)", style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic)),
+                      const Text("Select highlight color"),
+                      if (NativeChat.compiled)
+                        const Text(
+                          "(TORN CHAT AND PDA CHAT)",
+                          style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                        ),
                     ],
                   ),
                 ),
@@ -2314,42 +2296,47 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Range", style: TextStyle(fontSize: 12)),
-                Row(
-                  children: [
-                    Text(
-                      _settingsProvider.travelEnergyRangeWarningThreshold.end >= 110
-                          ? "> ${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}%"
-                          : "${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}% to ${_settingsProvider.travelEnergyRangeWarningThreshold.end.round()}%",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    RangeSlider(
-                      min: 0,
-                      max: 110,
-                      divisions: 11,
-                      values: _settingsProvider.travelEnergyRangeWarningThreshold,
-                      labels: RangeLabels(
-                        _buildRangeLabel(
-                          _settingsProvider.travelEnergyRangeWarningThreshold.start,
-                          currentEnergyMax,
-                          "E",
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      children: [
+                        Text(
+                          _settingsProvider.travelEnergyRangeWarningThreshold.end >= 110
+                              ? "> ${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}%"
+                              : "${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}% to ${_settingsProvider.travelEnergyRangeWarningThreshold.end.round()}%",
+                          style: const TextStyle(fontSize: 12),
                         ),
-                        _buildRangeLabel(
-                          _settingsProvider.travelEnergyRangeWarningThreshold.end,
-                          currentEnergyMax,
-                          "E",
+                        RangeSlider(
+                          min: 0,
+                          max: 110,
+                          divisions: 11,
+                          values: _settingsProvider.travelEnergyRangeWarningThreshold,
+                          labels: RangeLabels(
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.start,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.end,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                          ),
+                          onChanged: (RangeValues values) {
+                            setState(() {
+                              double startValue = values.start.roundToDouble();
+                              double endValue = values.end.roundToDouble();
+                              if (endValue - startValue >= 10) {
+                                _settingsProvider.travelEnergyRangeWarningThreshold = RangeValues(startValue, endValue);
+                              }
+                            });
+                          },
                         ),
-                      ),
-                      onChanged: (RangeValues values) {
-                        setState(() {
-                          double startValue = values.start.roundToDouble();
-                          double endValue = values.end.roundToDouble();
-                          if (endValue - startValue >= 10) {
-                            _settingsProvider.travelEnergyRangeWarningThreshold = RangeValues(startValue, endValue);
-                          }
-                        });
-                      },
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -2361,6 +2348,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2432,6 +2420,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2560,11 +2549,45 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       SearchableRow(
+        label: "Organized crime warning",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Organized crime warning"),
+                  Switch(
+                    value: _settingsProvider.travelOrganizedCrimeWarning,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.travelOrganizedCrimeWarning = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "If enabled, you'll get a warning when you access the Travel Agency if your OC will be ready "
+                "before some round trips are back, with the destinations that make it in time",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
         label: "Drug cooldown warning",
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2631,6 +2654,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3018,6 +3042,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3167,6 +3192,59 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Close all tabs",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Close all tabs"),
+                  ElevatedButton(
+                    child: const Text("Close"),
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text("Close all tabs?"),
+                          content: const Text(
+                            "Every tab except the main one will be closed, locked tabs included. "
+                            "The browser cache and your Torn session are kept.",
+                          ),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text("Cancel")),
+                            TextButton(onPressed: () => Navigator.of(c).pop(true), child: const Text("Close")),
+                          ],
+                        ),
+                      );
+                      if (confirm != true) return;
+                      _webViewProvider.closeAllTabsButMain();
+                      BotToast.showText(
+                        text: "All tabs closed except the main one",
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                        contentColor: Colors.grey[600]!,
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  "Closes every tab except the main one, without clearing the browser cache or logging you out",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -3329,6 +3407,39 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Allow remote debugging",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Allow remote debugging")),
+                  Switch(
+                    value: _settingsProvider.browserRemoteDebugging,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.setBrowserRemoteDebugging = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Lets you inspect the browser from a computer (chrome://inspect on Android, Safari Web Inspector "
+                "on iOS). While enabled, Google sign-in inside the browser may not work. Restart the app to apply.",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
     return buildSectionWithRows(title: 'MAINTENANCE', rows: rows, searchText: _searchText);
   }
@@ -3338,6 +3449,85 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     final bool recoveryNoticeAllowed = _settingsProvider.browserRecoveryOverlayRemoteConfigAllowed;
 
     List<SearchableRow> rows = [
+      if (_settingsProvider.useTabsFullBrowser)
+        SearchableRow(
+          label: "Only load tabs when used",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Only load tabs when used")),
+                    Switch(
+                      value: _webViewProvider.onlyLoadTabsWhenUsed,
+                      onChanged: (value) {
+                        _webViewProvider.onlyLoadTabsWhenUsed = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                if (!_webViewProvider.onlyLoadTabsWhenUsed)
+                  const Text(
+                    "Every tab stays loaded in memory. With many tabs open, pages can turn blank or reload on "
+                    "their own; turning this on is recommended",
+                    style: TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
+                  )
+                else
+                  Text(
+                    'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, they will retrieve the web content when first used (tapped). This could add a small delay when the tab is pressed the first time, but should improve overall browser performance. Also, tabs that have not been used for a while will be deactivated to reduce memory consumption, and will be reactivated when you switch back to them (you can change how long below).',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      if (_settingsProvider.useTabsFullBrowser && _webViewProvider.onlyLoadTabsWhenUsed)
+        SearchableRow(
+          label: "Keep locked tabs loaded",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Row(
+                        children: [
+                          Icon(Icons.keyboard_arrow_right_outlined),
+                          Flexible(child: Text("Keep locked tabs loaded")),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _webViewProvider.keepLockedTabsActive,
+                      onChanged: (value) {
+                        _webViewProvider.keepLockedTabsActive = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'Locked tabs are loaded as soon as the browser starts and are never put to sleep or rested '
+                  'while you are away, so they are always ready when you switch to them. Only the tabs you lock '
+                  'are exempt; the rest keep behaving as above. Under memory pressure they can still be '
+                  'deactivated to keep the app alive.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+        ),
       if (Platform.isAndroid)
         SearchableRow(
           label: "Rest tabs while you are away",
@@ -3396,6 +3586,84 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     "again next time you tap them. Needs \"Only load tabs when used\" to be enabled",
                     style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (_settingsProvider.useTabsFullBrowser)
+        SearchableRow(
+          label: "Maximum loaded tabs",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Maximum loaded tabs")),
+                    _maxLiveTabsDropdown(),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: _webViewProvider.maxLiveTabsActive <= 0
+                      ? const Text(
+                          "Every open tab can stay loaded. With many tabs open, pages can turn blank or reload on "
+                          "their own",
+                          style: TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
+                        )
+                      : Text(
+                          "Tabs above this number are put to sleep, starting with the one you have not used for "
+                          "the longest, and load again when you tap them. This helps if pages turn blank when many "
+                          "tabs are open",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Recover blank pages automatically",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Recover blank pages automatically")),
+                    Switch(
+                      value: _webViewProvider.blankRecoveryEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _webViewProvider.blankRecoveryEnabled = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: _webViewProvider.blankRecoveryEnabled
+                      ? Text(
+                          "If the page you are looking at stops drawing (blank areas) because too many tabs are "
+                          "using the browser memory, Torn PDA puts the other tabs to sleep and redraws it",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                        )
+                      : const Text(
+                          "With many tabs open, pages that stop drawing will stay blank until you reload them or "
+                          "close some tabs",
+                          style: TextStyle(color: Colors.orange, fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
                 ),
               ],
             ),
@@ -3678,6 +3946,52 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         if (value == null) return;
         setState(() {
           _webViewProvider.tabSleepMinutesOverride = value;
+        });
+      },
+    );
+  }
+
+  Widget _maxLiveTabsDropdown() {
+    const List<int> options = WebViewProvider.maxLiveTabsOptions;
+    final int current = options.contains(_webViewProvider.maxLiveTabsOverride)
+        ? _webViewProvider.maxLiveTabsOverride
+        : 0;
+
+    String label(int tabs) => tabs <= 0 ? "No limit" : "$tabs";
+
+    return DropdownButton<int>(
+      value: current,
+      items: [
+        DropdownMenuItem(
+          value: 0,
+          child: SizedBox(
+            width: 130,
+            child: Text(
+              "Default (${label(_webViewProvider.maxLiveTabsDefaultRC)})",
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
+        for (final tabs in options.skip(1))
+          DropdownMenuItem(
+            value: tabs,
+            child: SizedBox(
+              width: 130,
+              child: Text(
+                label(tabs),
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _webViewProvider.maxLiveTabsOverride = value;
         });
       },
     );
@@ -4011,7 +4325,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
-      leadingWidth: _isSearching ? 56 : (_webViewProvider.webViewSplitActive ? 50 : 88),
+      leadingWidth: _isSearching ? 56 : (_webViewProvider.appCanOpenBrowser ? 88 : 50),
       leading: !_isSearching
           ? Row(
               children: [
@@ -4021,7 +4335,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     _goBack();
                   },
                 ),
-                if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+                if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
               ],
             )
           : IconButton(

@@ -587,7 +587,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
     if (widget.calledFromMenu) {
       final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
       if (scaffoldState != null) {
-        if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+        if (_webViewProvider.splitAppSide == SplitSide.right) {
           scaffoldState.openEndDrawer();
         } else {
           scaffoldState.openDrawer();

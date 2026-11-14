@@ -6,20 +6,28 @@ import 'dart:io';
 
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
+import 'package:torn_pda/models/backup/prefs_backup_model.dart';
 import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/torn-pda-native/stats/app_settings_daily.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+
+part 'firebase_firestore_profile_deletion.dart';
+part 'firebase_firestore_snapshot.dart';
 
 class FirestoreHelper {
   static final FirestoreHelper _instance = FirestoreHelper._internal();
@@ -34,20 +42,39 @@ class FirestoreHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;
+  DateTime? _lastTokenReconcile;
+  bool _reconcilingToken = false;
+  Future<void> _keyRemoval = Future.value();
+  Future<void>? _profileDeletion;
   FirebaseUserModel? _firebaseUserModel;
+  FirebaseUserModel? get cachedUserModel => _firebaseUserModel;
 
-  String? _uid;
-  Future setUID(String userUID) async {
-    _uid = userUID;
+  void markSignedIn() {
     if (!uidCompleter.isCompleted) {
       uidCompleter.complete();
     }
   }
 
+  // Null while signed out or deleting
+  DocumentReference<Map<String, dynamic>>? _playerDoc() {
+    if (_profileDeletion != null) return null;
+    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUid == null) return null;
+    markSignedIn();
+    return _firestore.collection("players").doc(currentUid);
+  }
+
+  String get _platform => Platform.isAndroid
+      ? "android"
+      : Platform.isIOS
+      ? "ios"
+      : "windows";
+
   Future<bool> _updateAlertField(String fieldName, Map<String, Object?> update) async {
-    if (_uid == null) return false;
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return false;
     try {
-      await _firestore.collection("players").doc(_uid).update(update);
+      await playerDoc.update(update);
       return true;
     } catch (e, s) {
       logErrorToCrashlytics("Alert field update failed: $fieldName", e, s);
@@ -58,13 +85,9 @@ class FirestoreHelper {
   // Settings, when user initialized after API key validated
   Future<FirebaseUserModel?> uploadUsersProfileDetail(OwnProfileBasic profile, {bool userTriggered = false}) async {
     if (_alreadyUploaded && !userTriggered) return null;
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return null;
     _alreadyUploaded = true;
-
-    final platform = Platform.isAndroid
-        ? "android"
-        : Platform.isIOS
-        ? "ios"
-        : "windows";
 
     // Generate or replace token if it already exists
     String token = "";
@@ -80,10 +103,12 @@ class FirestoreHelper {
     final bool validToken = token.isNotEmpty && token != "error";
 
     // Fetch existing Firebase profile or return a default empty model
-    _firebaseUserModel = await getUserProfile(force: true);
+    final existingModel = await getUserProfile(force: true);
+    if (existingModel == null) return null;
+    _firebaseUserModel = existingModel;
 
     final payload = {
-      "uid": _uid,
+      "uid": playerDoc.id,
       "name": profile.name,
       "level": profile.level,
       "apiKey": profile.userApiKey,
@@ -95,7 +120,7 @@ class FirestoreHelper {
       "medicalInfluence": _firebaseUserModel!.medicalInfluence, // Defaults
       "boosterInfluence": _firebaseUserModel!.boosterInfluence, // Defaults
       "racingSent": _firebaseUserModel!.racingSent, // Defaults
-      "platform": platform,
+      "platform": _platform,
       "version": appVersion,
       "faction": profile.faction!.factionId,
       // Ensure all users have a refill time set
@@ -111,7 +136,13 @@ class FirestoreHelper {
       payload["tokenErrors"] = 0;
     }
 
-    await _firestore.collection("players").doc(_uid).set(payload, SetOptions(merge: true));
+    final schedule = await Prefs().getDiscreetSchedule();
+    final offset = DateTime.now().timeZoneOffset.inMinutes;
+    if (schedule.enabled) payload["discreetSchedule"] = schedule.toFirestore(offset);
+
+    if (_playerDoc()?.id != playerDoc.id || profile.userApiKey != UserHelper.apiKey) return null;
+    await playerDoc.set(payload, SetOptions(merge: true));
+    if (schedule.enabled) await Prefs().setDiscreetScheduleSynced(offset);
 
     // Mark synced only after a successful write (windows uses a placeholder token)
     if (validToken && !Platform.isWindows) {
@@ -151,6 +182,28 @@ class FirestoreHelper {
     return _updateAlertField("discrete", {
       "discrete": discreet, // Legacy field name (typo kept for compatibility)
     });
+  }
+
+  Future<bool> uploadDiscreetSchedule(DiscreetSchedule schedule) async {
+    final offset = DateTime.now().timeZoneOffset.inMinutes;
+    final success = await _updateAlertField("discreetSchedule", {"discreetSchedule": schedule.toFirestore(offset)});
+    if (success) {
+      await Prefs().setDiscreetScheduleSynced(offset);
+    } else {
+      await Prefs().setDiscreetSchedulePending();
+    }
+    return success;
+  }
+
+  Future<void> syncDiscreetScheduleOffset() async {
+    final schedule = await Prefs().getDiscreetSchedule();
+    final needsSync = discreetScheduleNeedsSync(
+      schedule,
+      offset: DateTime.now().timeZoneOffset.inMinutes,
+      uploadedOffset: await Prefs().getDiscreetScheduleOffsetSynced(),
+      pending: await Prefs().getDiscreetSchedulePending(),
+    );
+    if (needsSync) await uploadDiscreetSchedule(schedule);
   }
 
   Future<bool> subscribeToTravelNotification(bool? subscribe) {
@@ -246,9 +299,9 @@ class FirestoreHelper {
   }
 
   Future<bool> updateActiveRestockAlerts(Map restockMap) async {
-    return _firestore
-        .collection("players")
-        .doc(_uid)
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return false;
+    return playerDoc
         .update({"restockActiveAlerts": restockMap})
         .then((value) {
           return true;
@@ -304,9 +357,11 @@ class FirestoreHelper {
   // Sets every followed key to now, so restocks already seen are not notified
   // Returns false without writing anything if the current alerts can't be read
   Future<bool> _updateWithCityShopMarksNow(String fieldName, Map<String, Object?> update) async {
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return false;
     Map<String, dynamic> alerts;
     try {
-      final doc = await _firestore.collection("players").doc(_uid).get();
+      final doc = await playerDoc.get();
       final remote = doc.data()?["cityShopActiveAlerts"];
       alerts = remote is Map ? Map<String, dynamic>.from(remote) : <String, dynamic>{};
     } catch (e, s) {
@@ -327,9 +382,9 @@ class FirestoreHelper {
 
   // Single key, the server writes the others
   Future<bool> setCityShopActiveAlert(String key, bool active) async {
-    return _firestore
-        .collection("players")
-        .doc(_uid)
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return false;
+    return playerDoc
         .update({
           "cityShopActiveAlerts.$key": active ? FieldValue.serverTimestamp() : FieldValue.delete(),
           if (!active) "cityShopHeadsUp.$key": FieldValue.delete(),
@@ -350,8 +405,9 @@ class FirestoreHelper {
 
   // Read from the player document, marks as milliseconds; null without a user
   Future<Map<String, dynamic>?> getCityShopActiveAlerts() async {
-    if (_uid == null) return null;
-    final doc = await _firestore.collection("players").doc(_uid).get();
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return null;
+    final doc = await playerDoc.get();
     final remote = doc.data()?["cityShopActiveAlerts"];
     if (remote is! Map) return <String, dynamic>{};
     return remote.map(
@@ -438,16 +494,20 @@ class FirestoreHelper {
   }
 
   Future<void> addToEventsFilter(String filter) async {
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
     final List currentFilter = _firebaseUserModel!.eventsFilter;
     currentFilter.add(filter);
-    await _firestore.collection("players").doc(_uid).update({"eventsFilter": currentFilter});
+    await playerDoc.update({"eventsFilter": currentFilter});
   }
 
   Future<void> removeFromEventsFilter(String filter) async {
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
     final List currentFilter = _firebaseUserModel!.eventsFilter;
     // Avoid duplicities by removing more than one item if they exist
     currentFilter.removeWhere((element) => element == filter);
-    await _firestore.collection("players").doc(_uid).update({"eventsFilter": currentFilter});
+    await playerDoc.update({"eventsFilter": currentFilter});
   }
 
   Future<bool> subscribeToRefillsNotification(bool? subscribe) {
@@ -463,18 +523,22 @@ class FirestoreHelper {
   }
 
   Future<void> addToRefillsRequested(String request) async {
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
     final List currentRequests = _firebaseUserModel!.refillsRequested;
     if (!currentRequests.contains(request)) {
       currentRequests.add(request);
     }
-    await _firestore.collection("players").doc(_uid).update({"refillsRequested": currentRequests});
+    await playerDoc.update({"refillsRequested": currentRequests});
   }
 
   Future<void> removeFromRefillsRequested(String request) async {
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
     final List currentRequests = _firebaseUserModel!.refillsRequested;
     // Avoid duplicities by removing more than one item if they exist
     currentRequests.removeWhere((element) => element == request);
-    await _firestore.collection("players").doc(_uid).update({"refillsRequested": currentRequests});
+    await playerDoc.update({"refillsRequested": currentRequests});
   }
 
   Future<bool> subscribeToHospitalNotification(bool? subscribe) {
@@ -482,14 +546,27 @@ class FirestoreHelper {
   }
 
   Future<bool> uploadLastActiveTimeAndTokensToFirebase(int timeStamp) async {
-    if (_uid == null) return false;
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return false;
 
     try {
-      final Map<String, dynamic> updatePayload = {"lastActive": timeStamp, "active": true};
+      final Map<String, dynamic> updatePayload = {
+        "uid": playerDoc.id,
+        "lastActive": timeStamp,
+        "active": true,
+        "platform": _platform,
+        "version": appVersion,
+      };
 
       final apiKey = UserHelper.apiKey;
       if (apiKey.isNotEmpty) {
         updatePayload["apiKey"] = apiKey;
+      }
+
+      // In case the profile call fails
+      final playerId = UserHelper.playerId;
+      if (playerId > 0) {
+        updatePayload["playerId"] = playerId;
       }
 
       if (Platform.isIOS && kSdkIos >= 17.2) {
@@ -522,8 +599,14 @@ class FirestoreHelper {
         }
       }
 
+      if (Platform.isIOS) {
+        final widgetToken = await HomeWidget.getWidgetData<String>('widget_push_token') ?? "";
+        updatePayload['widget_push_token'] = widgetToken.isEmpty ? FieldValue.delete() : widgetToken;
+      }
+
+      if (_playerDoc()?.id != playerDoc.id) return false;
       log("Uploading data to Firestore: $updatePayload");
-      await _firestore.collection("players").doc(_uid).update(updatePayload);
+      await playerDoc.update(updatePayload);
       return true;
     } catch (error) {
       log("Error in uploadLastActiveTime: $error");
@@ -534,7 +617,8 @@ class FirestoreHelper {
   // Init State in alerts
   Future<FirebaseUserModel?> getUserProfile({bool force = false, bool fromServer = false}) async {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
-    final docRef = _firestore.collection("players").doc(_uid);
+    final docRef = _playerDoc();
+    if (docRef == null) return null;
     DocumentSnapshot<Map<String, dynamic>> userReceived;
     if (fromServer) {
       try {
@@ -552,48 +636,16 @@ class FirestoreHelper {
     _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data()!);
     // Persist a local snapshot for auth-recovery fallback
     persistLocalSnapshot();
+
+    if (!Platform.isWindows) {
+      analytics?.setUserProperty(name: "alerts_on", value: AppSettingsDaily.countBucket(_firebaseUserModel!.activeAlerts.length));
+    }
     return _firebaseUserModel;
   }
 
-  Future<String?> findMostRecentUidByApiKey(String apiKey) async {
-    try {
-      final query = await _firestore
-          .collection("players")
-          .where("apiKey", isEqualTo: apiKey)
-          .orderBy("lastActive", descending: true)
-          .limit(1)
-          .get();
-
-      if (query.docs.isEmpty) return null;
-      return query.docs.first.id;
-    } catch (e, s) {
-      log("Error finding UID by apiKey: $e", stackTrace: s);
-      return null;
-    }
-  }
-
-  Future<Map<String, dynamic>?> cloneUserProfileFromPayload(Map<String, dynamic> payload) async {
-    if (_uid == null) return null;
-
-    try {
-      final cloned = Map<String, dynamic>.from(payload);
-      cloned.remove("uid");
-      cloned.remove("token");
-      cloned.remove("tokenErrors");
-
-      await _firestore.collection("players").doc(_uid).set(cloned);
-
-      cloned["uid"] = _uid;
-      _firebaseUserModel = FirebaseUserModel.fromMap(cloned);
-      return cloned;
-    } catch (e, s) {
-      log("Error cloning profile from payload into $_uid: $e", stackTrace: s);
-      return null;
-    }
-  }
-
   Future<bool> applyAlertsFromPayload(Map<String, dynamic> payload, {bool resetRestockTimestamps = false}) async {
-    if (_uid == null) return false;
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return false;
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -633,53 +685,26 @@ class FirestoreHelper {
 
     if (updates.isEmpty) return false;
 
-    await _firestore.collection("players").doc(_uid).set(updates, SetOptions(merge: true));
+    await playerDoc.set(updates, SetOptions(merge: true));
     return true;
   }
 
-  Future deleteUserProfile() async {
-    _alreadyUploaded = false;
-    await _firestore.collection("players").doc(_uid).delete();
-  }
-
   Future<void> setVibrationPattern(String? pattern) async {
-    await _firestore.collection("players").doc(_uid).update({"vibration": pattern});
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
+    _firebaseUserModel?.vibration = pattern;
+    await playerDoc.update({"vibration": pattern});
   }
-
-  // --- Local Snapshot Logic ---
-  static const String _kLocalUserSnapshot = "_local_user_model_snapshot";
-
-  Future<void> persistLocalSnapshot() async {
-    if (_firebaseUserModel == null) return;
-    try {
-      final jsonStr = jsonEncode(
-        _firebaseUserModel!.toMap(),
-        toEncodable: (value) => value is Timestamp ? value.millisecondsSinceEpoch : value,
-      );
-      await PrefsDatabase.setString(_kLocalUserSnapshot, jsonStr);
-    } catch (e) {
-      log("Snapshot save failed: $e");
-    }
-  }
-
-  Future<FirebaseUserModel?> loadLocalSnapshot() async {
-    try {
-      final jsonStr = await PrefsDatabase.getString(_kLocalUserSnapshot, "");
-      if (jsonStr.isEmpty) return null;
-      final map = jsonDecode(jsonStr);
-      return FirebaseUserModel.fromMap(map);
-    } catch (e) {
-      log("Snapshot load failed: $e");
-      return null;
-    }
-  }
-  // ----------------------------
 
   Future<void> subscribeToStockMarketNotification(bool? subscribe) async {
-    await _firestore.collection("players").doc(_uid).update({"stockMarketNotification": subscribe});
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
+    await playerDoc.update({"stockMarketNotification": subscribe});
   }
 
   Future<bool> addStockMarketShare(String? ticker, String action) async {
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return false;
     final List currentStocks = _firebaseUserModel!.stockMarketShares;
     // Format: ticker-gain-price-loss-price ('n' for empty)
     // Example: YAZ-G-840-L-n
@@ -689,9 +714,7 @@ class FirestoreHelper {
       currentStocks.add(action);
     }
 
-    return _firestore
-        .collection("players")
-        .doc(_uid)
+    return playerDoc
         .update({"stockMarketShares": currentStocks})
         .then((value) {
           return true;
@@ -709,6 +732,7 @@ class FirestoreHelper {
   Future<bool> toggleRetaliationNotification(bool active, {bool host = true}) {
     bool isHost = host;
     if (!active) isHost = false;
+    _firebaseUserModel?.retalsNotificationHost = isHost;
 
     return _updateAlertField("retalsNotification", {
       "retalsNotification": active,
@@ -722,14 +746,16 @@ class FirestoreHelper {
   }
 
   Future<void> toggleNpcAlert({required String id, required int level, required bool active}) async {
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
     if (active) {
       if (!_firebaseUserModel!.lootAlerts.contains("$id:$level")) {
         _firebaseUserModel!.lootAlerts.add("$id:$level");
-        await _firestore.collection("players").doc(_uid).update({"lootAlerts": _firebaseUserModel!.lootAlerts});
+        await playerDoc.update({"lootAlerts": _firebaseUserModel!.lootAlerts});
       }
     } else {
       _firebaseUserModel!.lootAlerts.remove("$id:$level");
-      await _firestore.collection("players").doc(_uid).update({"lootAlerts": _firebaseUserModel!.lootAlerts});
+      await playerDoc.update({"lootAlerts": _firebaseUserModel!.lootAlerts});
     }
   }
 
@@ -758,7 +784,9 @@ class FirestoreHelper {
       await FirebaseMessaging.instance.getAPNSToken();
     }
 
-    final String? currentToken = await _messaging.getToken().onError((error, stackTrace) {
+    // getToken can block on network
+    final String? currentToken =
+        await _messaging.getToken().timeout(const Duration(seconds: 20)).onError((error, stackTrace) {
       log("TOKEN ERROR!");
       return "error";
     });
@@ -773,19 +801,30 @@ class FirestoreHelper {
   // FCM only fires onTokenRefresh when the token rotates, so tokens that rotated
   // before we had a listener stay stale in Firestore (server sees NotRegistered)
   Future<void> reconcileMessagingToken() async {
-    if (Platform.isWindows) return;
+    if (Platform.isWindows || _reconcilingToken) return;
+    final last = _lastTokenReconcile;
+    if (last != null && DateTime.now().difference(last).inMinutes < 10) return;
+    _reconcilingToken = true;
     try {
       await uidCompleter.future;
-      if (_uid == null) return;
-
+      if (_playerDoc() == null) return;
       final token = await _getMessagingToken();
       if (token == "error") return;
-      if (token == await Prefs().getFCMTokenSynced()) return;
+      final playerDoc = _playerDoc();
+      if (playerDoc == null) return;
+      _lastTokenReconcile = DateTime.now();
+      final synced = await Prefs().getFCMTokenSynced();
+      if (token == synced) return;
 
-      await _writeMessagingToken(token);
+      final written = await _writeMessagingToken(playerDoc, token);
+      if (written && synced.isNotEmpty) {
+        analytics?.logEvent(name: "fcm_token_healed");
+      }
     } catch (e, s) {
       log("Failed to reconcile FCM token: $e");
       logErrorToCrashlytics("Failed to reconcile FCM token", e, s);
+    } finally {
+      _reconcilingToken = false;
     }
   }
 
@@ -794,10 +833,11 @@ class FirestoreHelper {
     if (Platform.isWindows || newToken.isEmpty) return;
     try {
       await uidCompleter.future;
-      if (_uid == null) return;
+      final playerDoc = _playerDoc();
+      if (playerDoc == null) return;
 
       Prefs().setFCMToken(newToken);
-      await _writeMessagingToken(newToken);
+      await _writeMessagingToken(playerDoc, newToken);
     } catch (e, s) {
       log("Failed to handle FCM token refresh: $e");
       logErrorToCrashlytics("Failed to handle FCM token refresh", e, s);
@@ -805,31 +845,35 @@ class FirestoreHelper {
   }
 
   // Writes the token and marks it synced only on success
-  Future<void> _writeMessagingToken(String token) async {
+  Future<bool> _writeMessagingToken(DocumentReference<Map<String, dynamic>> playerDoc, String token) async {
     try {
-      await _firestore.collection("players").doc(_uid).set({"token": token, "tokenErrors": 0}, SetOptions(merge: true));
+      await playerDoc.set({"token": token, "tokenErrors": 0}, SetOptions(merge: true));
       Prefs().setFCMTokenSynced(token);
+      return true;
     } catch (e, s) {
       log("Failed to sync FCM token: $e");
       logErrorToCrashlytics("Failed to sync FCM token", e, s);
+      return false;
     }
   }
 
   Future<void> disableLiveActivityTravel() async {
-    if (_uid == null) return;
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
 
     log("Disabling Live Activities for travel. Deleting token from Firestore");
-    await _firestore.collection("players").doc(_uid).update({
+    await playerDoc.update({
       "la_travel_push_token": FieldValue.delete(),
       "la_travel_activity_push_token": FieldValue.delete(),
     });
   }
 
   Future<void> disableLiveActivityRacing() async {
-    if (_uid == null) return;
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
 
     log("Disabling Live Activities for racing. Deleting token from Firestore");
-    await _firestore.collection("players").doc(_uid).update({
+    await playerDoc.update({
       "la_racing_push_token": FieldValue.delete(),
       "la_racing_activity_push_token": FieldValue.delete(),
     });
@@ -844,7 +888,9 @@ class FirestoreHelper {
     required int intelligence,
     required int endurance,
   }) async {
-    await _firestore.collection("players").doc(_uid).update({
+    final playerDoc = _playerDoc();
+    if (playerDoc == null) return;
+    await playerDoc.update({
       "workStatsManualLaborTarget": manualLabor,
       "workStatsIntelligenceTarget": intelligence,
       "workStatsEnduranceTarget": endurance,

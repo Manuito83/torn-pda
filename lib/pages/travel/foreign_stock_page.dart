@@ -24,12 +24,14 @@ import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/inventory_feedback.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
@@ -236,127 +238,106 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider!.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider!.statusBar
-                : _themeProvider!.canvas
-          : _themeProvider!.canvas,
-      child: SafeArea(
-        right:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left:
-            context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider!.canvas,
-          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider!.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: buildAppBar())
-              : null,
-          body: Container(
-            color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-            child: FutureBuilder(
-              future: _apiCalled,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (_apiSuccess) {
-                    return Stack(
-                      children: [
-                        // Main list
-                        RefreshIndicator(
-                          onRefresh: _onRefresh,
-                          child: Builder(
-                            builder: (context) {
-                              final visibleStocks = _visibleStocks;
-                              final itemCount = visibleStocks.length + 2;
-
-                              return ListView.builder(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                itemCount: itemCount,
-                                itemBuilder: (context, index) => _buildStockListItem(index, visibleStocks),
-                              );
-                            },
-                          ),
-                        ),
-                        if (!_temporaryDestinationFilterActive)
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut,
-                            left: 0,
-                            right: 0,
-                            bottom: _isFilterSheetOpen ? 0 : -200,
-                            child: _filterSheetContent(),
-                          ),
-                        if (!_temporaryDestinationFilterActive)
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut,
-                            right: 35.0,
-                            bottom: _isFilterSheetOpen ? 215.0 : 25.0,
-                            child: FloatingActionButton.extended(
-                              icon: Icon(_isFilterSheetOpen ? Icons.close : Icons.filter_list),
-                              label: Text(_isFilterSheetOpen ? "Close" : "Filter"),
-                              elevation: 4,
-                              onPressed: _toggleFilterSheet,
-                              backgroundColor: Colors.orange,
-                            ),
-                          ),
-                      ],
-                    );
-                  } else {
-                    // Error case handling
-                    final errorTiles = <Widget>[];
-                    errorTiles.add(
-                      Center(
-                        child: Column(
-                          children: [
-                            Image.asset('images/icons/airplane.png', height: 100),
-                            const SizedBox(height: 15),
-                            const Text(
-                              'OOPS!',
-                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                              child: Text(
-                                'There was an error getting the information, please '
-                                'try again later or pull to refresh!',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-
-                    return RefreshIndicator(
+    return PdaScaffold(
+      appBar: buildAppBar(),
+      body: Container(
+        color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+        child: FutureBuilder(
+          future: _apiCalled,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (_apiSuccess) {
+                return Stack(
+                  children: [
+                    // Main list
+                    RefreshIndicator(
                       onRefresh: _onRefresh,
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(
-                            height: MediaQuery.sizeOf(context).height / 2,
-                            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: errorTiles),
-                          ),
-                        ],
+                      child: Builder(
+                        builder: (context) {
+                          final visibleStocks = _visibleStocks;
+                          final itemCount = visibleStocks.length + 2;
+
+                          return ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: itemCount,
+                            itemBuilder: (context, index) => _buildStockListItem(index, visibleStocks),
+                          );
+                        },
                       ),
-                    );
-                  }
-                } else {
-                  // Loading case
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[Text('Fetching data...'), SizedBox(height: 30), CircularProgressIndicator()],
                     ),
-                  );
-                }
-              },
-            ),
-          ),
+                    if (!_temporaryDestinationFilterActive)
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                        left: 0,
+                        right: 0,
+                        bottom: _isFilterSheetOpen ? 0 : -200,
+                        child: _filterSheetContent(),
+                      ),
+                    if (!_temporaryDestinationFilterActive)
+                      AnimatedPositioned(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                        right: 35.0,
+                        bottom: _isFilterSheetOpen ? 215.0 : 25.0,
+                        child: FloatingActionButton.extended(
+                          icon: Icon(_isFilterSheetOpen ? Icons.close : Icons.filter_list),
+                          label: Text(_isFilterSheetOpen ? "Close" : "Filter"),
+                          elevation: 4,
+                          onPressed: _toggleFilterSheet,
+                          backgroundColor: Colors.orange,
+                        ),
+                      ),
+                  ],
+                );
+              } else {
+                // Error case handling
+                final errorTiles = <Widget>[];
+                errorTiles.add(
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset('images/icons/airplane.png', height: 100),
+                        const SizedBox(height: 15),
+                        const Text(
+                          'OOPS!',
+                          style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                          child: Text(
+                            'There was an error getting the information, please '
+                            'try again later or pull to refresh!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+
+                return RefreshIndicator(
+                  onRefresh: _onRefresh,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.sizeOf(context).height / 2,
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: errorTiles),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            } else {
+              // Loading case
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[Text('Fetching data...'), SizedBox(height: 30), CircularProgressIndicator()],
+                ),
+              );
+            }
+          },
         ),
       ),
     );
@@ -370,12 +351,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   AppBar buildAppBar() {
-    final bool webViewSplitActive = context.read<WebViewProvider>().webViewSplitActive;
+    final bool appCanOpenBrowser = context.select<WebViewProvider, bool>((w) => w.appCanOpenBrowser);
 
     return AppBar(
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
-      leadingWidth: webViewSplitActive ? 56 : 88,
+      leadingWidth: appCanOpenBrowser ? 88 : 56,
       title: const Text("Foreign Stock", style: TextStyle(color: Colors.white)),
       leading: Row(
         children: [
@@ -385,7 +366,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               _goBack(false, false);
             },
           ),
-          if (!webViewSplitActive) const PdaBrowserIcon(),
+          if (appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -482,7 +463,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(width: 40),
-                SizedBox(height: 90, width: 220, child: _toggleFlagsFilterWidget()),
+                Flexible(child: SizedBox(height: 90, width: 220, child: _toggleFlagsFilterWidget())),
                 SizedBox(
                   width: 40,
                   child: Padding(
@@ -1115,6 +1096,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       (TravelTimes.travelTimeMinutesOneWay(
                             ticket: _settingsProvider!.travelTicket,
                             countryCode: stock.country,
+                            reductionPercent: _settingsProvider!.travelTimeReduction,
                           ) *
                           2 /
                           60))
@@ -1130,6 +1112,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               minutes: TravelTimes.travelTimeMinutesOneWay(
                 countryCode: stock.country,
                 ticket: _settingsProvider!.travelTicket,
+                reductionPercent: _settingsProvider!.travelTimeReduction,
               ),
             ),
           );
@@ -1161,6 +1144,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     if (provider == "prometheus") url = "https://api.prombot.co.uk/api/travel";
 
     String lastError = "";
+    Object? failure;
+    int? status;
     for (int attempt = 0; attempt < 2; attempt++) {
       try {
         final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 6));
@@ -1172,16 +1157,21 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           return (apiSuccess: true, apiMessage: "");
         }
         lastError = "Status code ${responseDB.statusCode}";
-      } on TimeoutException {
+        status = responseDB.statusCode;
+        failure = null;
+      } on TimeoutException catch (e) {
         // Already waited long enough: move on to the next provider
         lastError = "Timed out";
+        failure = e;
         break;
       } catch (e) {
         lastError = e.toString();
+        failure = e;
       }
       if (attempt == 0) await Future.delayed(const Duration(seconds: 2));
     }
 
+    unawaited(UsageCounters.apiError(provider, failure, status: failure == null ? status : null));
     logToUser("Provider: $provider, Error: $lastError");
     return (apiSuccess: false, apiMessage: lastError);
   }
@@ -1347,13 +1337,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     // All three sources failed
-    final String failures =
-        "$primary[${primaryResult.apiMessage}] $backup[${backupResult.apiMessage}] db[${tornPDAResult.apiMessage}]";
-    analytics?.logEvent(
-      name: 'foreign_stocks_sources_failed',
-      parameters: {'error': failures.length > 99 ? failures.substring(0, 99) : failures},
-    );
-
     _showAllSourcesFailedDialog();
     return (
       providersSuccess: false,
@@ -1845,6 +1828,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       (TravelTimes.travelTimeMinutesOneWay(
                             ticket: _settingsProvider!.travelTicket,
                             countryCode: stock.country,
+                            reductionPercent: _settingsProvider!.travelTimeReduction,
                           ) *
                           2 /
                           60))

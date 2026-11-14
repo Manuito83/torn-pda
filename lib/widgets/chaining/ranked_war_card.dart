@@ -8,6 +8,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
+import 'package:torn_pda/models/chat/chat_share_out.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -16,6 +17,8 @@ import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 enum RankedWarStatus {
@@ -235,6 +238,23 @@ class RankedWarCardState extends State<RankedWarCard> {
               )
             else
               const SizedBox(height: 5),
+            if (NativeChat.canShare)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.forum_outlined, size: 18),
+                  label: const Text('Share to chat'),
+                  onPressed: () => ChatShareIn.shareText(
+                    ChatShareOut.rankedWar(
+                      warId: widget.warId,
+                      left: (HtmlParser.fix(_factions[0].name), _factions[0].score ?? 0, _factions[0].chain ?? 0),
+                      right: (HtmlParser.fix(_factions[1].name), _factions[1].score ?? 0, _factions[1].chain ?? 0),
+                      target: widget.status == RankedWarStatus.active ? widget.rankedWar.war!.target ?? 0 : 0,
+                      time: [_titleString, _finishedString],
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

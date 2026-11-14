@@ -14,6 +14,7 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_cache_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
+import 'package:torn_pda/models/chaining/war_filters.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
@@ -32,7 +33,6 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
-import 'package:torn_pda/widgets/chaining/war_card.dart';
 
 class WarCardDetails {
   int? cardPosition;
@@ -2092,8 +2092,41 @@ class WarController extends GetxController {
     members.sort((a, b) => compareMembers(a, b, currentSort ?? WarSortType.levelDes));
   }
 
-  void sortWarCards(List<WarCard> warCards) {
-    warCards.sort((a, b) => compareMembers(a.memberModel, b.memberModel, currentSort ?? WarSortType.levelDes));
+  /// The War page list, attack queue refreshed
+  List<Member> membersShown({
+    required int offlineSelector,
+    required int okayRedFilterActive,
+    required bool countryFilterActive,
+    required int abroadFilterActive,
+  }) {
+    final members = warMembersShown(
+      factions,
+      offlineSelector: offlineSelector,
+      okayRedFilterActive: okayRedFilterActive,
+      countryFilterActive: countryFilterActive,
+      abroadFilterActive: abroadFilterActive,
+      playerLocation: playerLocation,
+      settings: warSettings,
+      fairFightOf: getEffectiveFairFight,
+      totalStatsOf: getMemberTotalStatsWithFFS,
+      estimatedStatsIndexOf: getMemberEstimatedStatsIndex,
+      compare: (a, b) => compareMembers(a, b, currentSort ?? WarSortType.levelDes),
+    );
+
+    final notes = Get.find<PlayerNotesController>();
+    orderedCardsDetails.clear();
+    for (final (i, member) in members.indexed) {
+      final note = notes.getNoteForPlayer(member.memberId.toString());
+      orderedCardsDetails.add(
+        WarCardDetails()
+          ..cardPosition = i + 1
+          ..memberId = member.memberId
+          ..name = member.name
+          ..personalNote = note?.note ?? ''
+          ..personalNoteColor = note?.color ?? PlayerNoteColor.none,
+      );
+    }
+    return members;
   }
 
   Future<bool> _prepareFFScouterStatsShare(List<Member> members) async {

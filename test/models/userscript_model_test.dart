@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/userscript_model.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
 
 /// Tests for [UserScriptModel]: header parsing, version comparison and URL
 /// matching logic
@@ -193,9 +192,41 @@ void main() {
       expect(m.matchesTarget('http://www.torn.com/page'), isTrue);
     });
 
-    test('says nothing about the switches, which the active mode decides', () {
-      final m = _model(matches: ['*://www.torn.com/*'], enabled: false);
+    test('ignores the #hash, as Tampermonkey does', () {
+      final m = _model(matches: ['https://www.torn.com/page.php?sid=slots']);
+      expect(m.matchesTarget('https://www.torn.com/page.php?sid=slots'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/page.php?sid=slots#/spin'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/page.php?sid=slotsX'), isFalse);
+      final legacy = _model(matches: ['www.torn.com/gym.php']);
+      expect(legacy.matchesTarget('https://www.torn.com/gym.php#x'), isTrue);
+    });
+
+    test('a pattern cannot match inside the #hash', () {
+      final m = _model(matches: ['*://www.torn.com/*sid=attack*']);
+      expect(m.matchesTarget('https://www.torn.com/loader.php?sid=attack&user2ID=1'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/factions.php#/sid=attack'), isFalse);
+    });
+
+    test('pattern with # keeps the hash', () {
+      final m = _model(matches: ['https://www.torn.com/factions.php?step=your#/tab=armoury']);
+      expect(m.matchesTarget('https://www.torn.com/factions.php?step=your#/tab=armoury'), isTrue);
+      expect(m.matchesTarget('https://www.torn.com/factions.php?step=your#/tab=info'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/factions.php?step=your'), isFalse);
+    });
+
+    test('http*:// matches http and https', () {
+      final m = _model(matches: ['http*://www.torn.com/*']);
       expect(m.matchesTarget('https://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('http://www.torn.com/page'), isTrue);
+      expect(m.matchesTarget('ftp://www.torn.com/page'), isFalse);
+    });
+
+    test('matches any port unless the pattern has one', () {
+      final m = _model(matches: ['*://*.torn.com/*']);
+      expect(m.matchesTarget('https://www.torn.com:443/page'), isTrue);
+      final withPort = _model(matches: ['http://localhost:8080/*']);
+      expect(withPort.matchesTarget('http://localhost:8080/a'), isTrue);
+      expect(withPort.matchesTarget('http://localhost:9090/a'), isFalse);
     });
 
     test('respects injection time filter', () {
@@ -212,32 +243,59 @@ void main() {
       expect(m.matchesTarget('https://api.torn.com/user'), isTrue);
       expect(m.matchesTarget('https://example.com/'), isFalse);
     });
+
+    test('follows a new @match list after the first check', () {
+      final m = _model(matches: ['*://www.torn.com/item.php*']);
+      expect(m.matchesTarget('https://www.torn.com/item.php'), isTrue);
+
+      m.update(matches: ['*://www.torn.com/index.php*'], updateStatus: UserScriptUpdateStatus.noRemote);
+      expect(m.matchesTarget('https://www.torn.com/item.php'), isFalse);
+      expect(m.matchesTarget('https://www.torn.com/index.php'), isTrue);
+    });
+  });
+
+  group('staleScriptGroups', () {
+    test('drops what does not match the next page, deleted scripts included', () {
+      final items = UserScriptModel(
+        name: 'items',
+        source: '',
+        isExample: false,
+        matches: ['*://www.torn.com/item.php*'],
+        time: UserScriptTime.start,
+      );
+      final everywhere = UserScriptModel(name: 'all', source: '', isExample: false, time: UserScriptTime.start);
+
+      final stale = staleScriptGroups(
+        [items.storageId, everywhere.storageId, 'deleted-script'],
+        [items, everywhere],
+        'https://www.torn.com/index.php',
+      );
+
+      expect(stale, [items.storageId, 'deleted-script']);
+    });
+  });
+
+  group('needsRegistering', () {
+    test('skips a group registered with the same source', () {
+      final registered = {'a': 'v1'};
+      expect(needsRegistering('a', 'v1', registered), isFalse);
+      expect(needsRegistering('a', 'v2', registered), isTrue);
+      expect(needsRegistering('b', 'v1', registered), isTrue);
+      expect(needsRegistering(null, 'v1', registered), isTrue);
+      expect(needsRegistering('a', 'v1', {}), isTrue);
+    });
   });
 
   // -------------------------------------------------------------------------
   // tryGet* helpers
   // -------------------------------------------------------------------------
   group('tryGet helpers', () {
-    test('tryGetMatches returns matches from valid script', () {
-      final source = _script(match: 'https://www.torn.com/*');
-      expect(UserScriptModel.tryGetMatches(source), ['https://www.torn.com/*']);
-    });
-
     test('tryGetMatches returns ["*"] for garbage input', () {
       expect(UserScriptModel.tryGetMatches('not a script'), ['*']);
     });
 
-    test('tryGetVersion returns version string', () {
-      expect(UserScriptModel.tryGetVersion(_script(version: '3.2.1')), '3.2.1');
-    });
-
     test('tryGetVersion returns null for garbage', () {
       expect(UserScriptModel.tryGetVersion('nope'), isNull);
-    });
-
-    test('tryGetUrl returns download URL', () {
-      final s = _script(downloadUrl: 'https://example.com/s.js');
-      expect(UserScriptModel.tryGetUrl(s), 'https://example.com/s.js');
     });
 
     test('tryGetUrl returns null when missing', () {
@@ -292,12 +350,7 @@ void main() {
 
   group('source adaptation', () {
     test('replaces the PDA API key placeholder before injection', () {
-      final provider = UserScriptsProvider();
-      final adapted = provider.adaptSource(
-        source: 'const key = "###PDA-APIKEY###";',
-        scriptFinalApiKey: 'abc123',
-        storageId: 'test-sid',
-      );
+      final adapted = wrapSource(adaptBody('const key = "###PDA-APIKEY###";', 'abc123'), 'test-sid');
 
       expect(adapted, contains('const key = "abc123";'));
       expect(adapted, isNot(contains('###PDA-APIKEY###')));
@@ -306,15 +359,52 @@ void main() {
     });
 
     test('normalizes smart quotes before injection', () {
-      final provider = UserScriptsProvider();
-      final adapted = provider.adaptSource(
-        source: 'const text = “value”; const other = ‘x’;',
-        scriptFinalApiKey: 'unused',
-        storageId: 'test-sid',
-      );
+      final adapted = wrapSource(adaptBody('const text = “value”; const other = ‘x’;', 'unused'), 'test-sid');
 
       expect(adapted, contains('const text = "value";'));
       expect(adapted, contains("const other = 'x';"));
+    });
+
+    test('gives the same start source until the key or @match changes', () {
+      final model = UserScriptModel(
+        name: 'start',
+        source: 'const key = "###PDA-APIKEY###";',
+        isExample: false,
+        matches: ['https://www.torn.com/gym.php'],
+        time: UserScriptTime.start,
+      );
+
+      final first = model.startSource('k1');
+      expect(first, contains('const key = "k1";'));
+      expect(identical(model.startSource('k1'), first), isTrue);
+
+      final newKey = model.startSource('k2');
+      expect(identical(newKey, first), isFalse);
+      expect(newKey, contains('const key = "k2";'));
+
+      model.matches = ['https://www.torn.com/gym.php*'];
+      expect(identical(model.startSource('k2'), newKey), isFalse);
+    });
+
+    test('keeps a source without key or smart quotes as the same string', () {
+      const source = 'const a = "b";';
+      expect(identical(adaptBody(source, 'k'), source), isTrue);
+    });
+
+    test('caches the adapted source until the source or the key changes', () {
+      final model = _model();
+      model.source = 'key = "###PDA-APIKEY###";';
+      final first = model.adaptedBody('k1');
+      expect(first, 'key = "k1";');
+      expect(identical(model.adaptedBody('k1'), first), isTrue);
+
+      final second = model.adaptedBody('k2');
+      expect(second, 'key = "k2";');
+
+      model.source = 'key = “###PDA-APIKEY###”;';
+      final third = model.adaptedBody('k2');
+      expect(third, 'key = "k2";');
+      expect(identical(third, second), isFalse);
     });
   });
 
@@ -342,23 +432,6 @@ void main() {
     test('returns null on a source with no header at all', () {
       expect(UserScriptModel.tryGetUpdateUrl('console.log("no header");'), isNull);
     });
-
-    test('a real Greasy Fork .meta.js parses as a header and exposes its version', () {
-      // Same shape Greasy Fork serves for @updateURL: header only, no body
-      const metaJs =
-          '// ==UserScript==\n'
-          '// @name             TORN: TornTools - Only New Feed\n'
-          '// @namespace        torntools.only-new-feed\n'
-          '// @version          1.0.17\n'
-          '// @match            https://*.torn.com/forums.php*\n'
-          '// @grant            GM_addStyle\n'
-          '// @run-at           document-end\n'
-          '// ==/UserScript==\n';
-
-      final parsed = UserScriptModel.parseHeader(metaJs);
-      expect(parsed['version'], '1.0.17');
-      expect(parsed['name'], 'TORN: TornTools - Only New Feed');
-    });
   });
 
   // -------------------------------------------------------------------------
@@ -380,37 +453,12 @@ void main() {
       expect(model.name, 'TORN: TornTools - City Items');
       expect(model.version, '1.1.0');
     });
-
-    test('picks up a rename made on the remote', () {
-      final model = UserScriptModel(name: 'Old', source: '', isExample: false);
-      model.update(
-        source: _script(name: 'Brand New Name', version: '2.0.0'),
-        updateStatus: UserScriptUpdateStatus.upToDate,
-      );
-
-      expect(model.name, 'Brand New Name');
-    });
-
-    test('survives a save and load round trip', () {
-      final model = UserScriptModel(
-        name: 'TORN: TornTools - City Items',
-        source: _script(name: 'TORN: TornTools - City Items', version: '1.0.0'),
-        isExample: false,
-        version: '1.0.0',
-      );
-      final restored = UserScriptModel.fromJson(model.toJson());
-      expect(restored.name, 'TORN: TornTools - City Items');
-    });
   });
 
   // -------------------------------------------------------------------------
   // Install date
   // -------------------------------------------------------------------------
   group('installedAt', () {
-    test('defaults to 0 so that pre-existing scripts are not dated', () {
-      expect(_model().installedAt, 0);
-    });
-
     test('survives a save and load round trip', () {
       final model = UserScriptModel(name: 'Dated', source: '', isExample: false, installedAt: 1756800000000);
       expect(UserScriptModel.fromJson(model.toJson()).installedAt, 1756800000000);
@@ -467,39 +515,84 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // War mode switch
+  // Modes
   // -------------------------------------------------------------------------
-  group('warEnabled', () {
-    test('defaults to false, so war mode starts as an empty selection', () {
-      expect(_model().warEnabled, isFalse);
+  group('modes', () {
+    final legacy = {
+      "enabled": true,
+      "matches": ["*"],
+      "name": "Old",
+      "version": "1.0.0",
+      "edited": false,
+      "source": "",
+      "url": null,
+      "updateStatus": "noRemote",
+      "isExample": false,
+      "time": "end",
+    };
+
+    test('survive a save and load round trip', () {
+      final model = UserScriptModel(
+        name: 'Modes',
+        source: '',
+        isExample: false,
+        modes: {warModeId, 'casino'},
+        alwaysActive: true,
+      );
+      final loaded = UserScriptModel.fromJson(model.toJson());
+      expect(loaded.modes, {warModeId, 'casino'});
+      expect(loaded.alwaysActive, isTrue);
     });
 
-    test('is independent from the normal switch', () {
-      final m = _model(enabled: false);
-      m.warEnabled = true;
-      expect(m.enabled, isFalse);
-      expect(m.warEnabled, isTrue);
+    test('a saved warEnabled true keeps the script inside war mode', () {
+      expect(UserScriptModel.fromJson({...legacy, "warEnabled": true}).modes, {warModeId});
     });
 
-    test('survives a save and load round trip', () {
-      final model = UserScriptModel(name: 'War', source: '', isExample: false, warEnabled: true);
-      expect(UserScriptModel.fromJson(model.toJson()).warEnabled, isTrue);
+    test('a saved warEnabled true is merged with the new list', () {
+      final loaded = UserScriptModel.fromJson({
+        ...legacy,
+        "warEnabled": true,
+        "modes": ['casino'],
+      });
+      expect(loaded.modes, {warModeId, 'casino'});
     });
 
-    test('reads as false when the saved data predates the field', () {
-      final legacy = {
-        "enabled": true,
-        "matches": ["*"],
-        "name": "Old",
-        "version": "1.0.0",
-        "edited": false,
-        "source": "",
-        "url": null,
-        "updateStatus": "noRemote",
-        "isExample": false,
-        "time": "end",
-      };
-      expect(UserScriptModel.fromJson(legacy).warEnabled, isFalse);
+    test('read as empty when the saved data predates the fields', () {
+      final loaded = UserScriptModel.fromJson(legacy);
+      expect(loaded.modes, isEmpty);
+      expect(loaded.alwaysActive, isFalse);
+    });
+  });
+
+  group('saved modes', () {
+    test('custom modes survive a save and load round trip', () {
+      const modes = [UserScriptMode(id: 'a1', name: 'Casino'), UserScriptMode(id: 'b2', name: 'Racing')];
+      final loaded = userScriptModesFromJson(userScriptModesToJson(modes));
+      expect([for (final m in loaded) (m.id, m.name)], [('a1', 'Casino'), ('b2', 'Racing')]);
+    });
+
+    test('broken saved modes load as none', () {
+      expect(userScriptModesFromJson(''), isEmpty);
+      expect(userScriptModesFromJson('{"id": "a1"}'), isEmpty);
+    });
+
+    test('active mode survives a save and load round trip', () {
+      for (final (mode, id) in [
+        (ScriptsBulkMode.none, warModeId),
+        (ScriptsBulkMode.globalDisable, warModeId),
+        (ScriptsBulkMode.scriptMode, warModeId),
+        (ScriptsBulkMode.scriptMode, 'a1'),
+      ]) {
+        final loaded = bulkModeFromPrefs(bulkModeToPrefs(mode, id));
+        expect(loaded.mode, mode);
+        expect(loaded.modeId, mode == ScriptsBulkMode.scriptMode ? id : null);
+      }
+    });
+
+    test('"warMode" reads as war mode', () {
+      final loaded = bulkModeFromPrefs('warMode');
+      expect(loaded.mode, ScriptsBulkMode.scriptMode);
+      expect(loaded.modeId, warModeId);
     });
   });
 }

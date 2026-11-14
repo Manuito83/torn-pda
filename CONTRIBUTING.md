@@ -11,7 +11,7 @@ Join us on [Discord](https://discord.gg/vyP23kJ), it's the fastest way to get an
 Follow the **Building from Source** guide in [docs/README.md](docs/README.md). The short version:
 
 1. Clone the repo and switch to the `develop` branch
-2. Copy config stubs: `cd lib/config && for f in *.dart.example; do cp "$f" "${f%.example}"; done`
+2. Copy config stubs: `cd lib/config && for f in *.dart.example; do cp "$f" "${f%.example}"; done`, plus `cp lib/utils/env/env.g.dart.example lib/utils/env/env.g.dart`
 3. Set up native stubs (see [docs/README.md](docs/README.md) for details)
 4. `flutter pub get`
 

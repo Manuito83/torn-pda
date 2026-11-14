@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/friends/friends_sort.dart';
 import 'package:torn_pda/pages/friends/friends_backup_page.dart';
@@ -54,7 +53,6 @@ class FriendsPageState extends State<FriendsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
-    analytics?.logScreenView(screenName: 'friends');
 
     routeWithDrawer = true;
     routeName = "friends";
@@ -170,7 +168,7 @@ class FriendsPageState extends State<FriendsPage> {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: _appBarText,
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -186,7 +184,7 @@ class FriendsPageState extends State<FriendsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

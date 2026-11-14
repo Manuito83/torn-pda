@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:get/get.dart';
@@ -10,6 +11,7 @@ import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.da
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
 
 String apiV2LegacyRequests = "";
 
@@ -52,7 +54,7 @@ class ApiCallsV2 {
       apiCall: (client, apiKey) {
         return client.userGet(
           selections:
-              "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket"
+              "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket,perks"
               "${includeOrganizedCrime ? ",organizedcrime" : ""}"
               "${includeVirus ? ",virus" : ""}",
         );
@@ -112,7 +114,23 @@ class ApiCallsV2 {
         }
       }
 
-      return ProfileMiscResult(ownProfileMisc, market, oc, virusResolved, virus);
+      double? travelTimeReduction;
+      final perksNode = _deepCastJson(apiResponse["perks"]);
+      if (perksNode is Map && perksNode.values.any((list) => list is List)) {
+        travelTimeReduction = TravelTimes.parseReduction([
+          for (final list in perksNode.values)
+            if (list is List) ...list,
+        ]);
+      }
+
+      return ProfileMiscResult(
+        ownProfileMisc,
+        market,
+        oc,
+        virusResolved,
+        virus,
+        travelTimeReduction: travelTimeReduction,
+      );
     } catch (e, trace) {
       log("Error converting V2 OwnProfileMisc: $e, $trace");
       return null;
@@ -215,7 +233,7 @@ class ApiCallsV2 {
       apiCall: (client, apiKey) {
         return client.userGet(
           id: payload["id"],
-          selections: "profile,personalstats,bazaar,faction,job,icons",
+          selections: "profile,personalstats,faction,job,icons",
           cat: "all",
         );
       },
@@ -229,6 +247,28 @@ class ApiCallsV2 {
       log("Error converting V2 OtherProfilePDA: $e, $trace");
       return null;
     }
+  }
+
+  static Future<FactionBasic?> getOwnFactionBasic_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.factionBasic,
+      apiCall: (client, apiKey) {
+        return client.factionBasicGet();
+      },
+    );
+    return apiResponse is FactionBasicResponse ? apiResponse.basic : null;
+  }
+
+  /// Response or ApiError
+  static Future<Object?> getOwnFactionNews_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    return apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.factionNews,
+      apiCall: (client, apiKey) {
+        return client.factionNewsGet(cat: enums.FactionNewsCategory.main, limit: 50);
+      },
+    );
   }
 
   static Future<dynamic> getTornCalendar_v2() async {
@@ -293,6 +333,17 @@ class ApiCallsV2 {
 
     return apiResponse;
   }
+
+  static Future<UserListResponse?> getUserFriendsList_v2({int offset = 0}) async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.userFriendsList,
+      apiCall: (client, apiKey) {
+        return client.userListGet(cat: enums.UserListEnum.friends, limit: 50, offset: offset);
+      },
+    );
+    return apiResponse is UserListResponse ? apiResponse : null;
+  }
 }
 
 /// Torn can answer a single selection with {code, error} instead of the data, and only
@@ -312,5 +363,13 @@ class ProfileMiscResult {
   final UserOrganizedCrimeResponse? organizedCrime;
   final bool virusResolved; // if false, the virus below means nothing
   final UserVirus? virus; // null means nothing being programmed
-  ProfileMiscResult(this.misc, this.itemmarket, this.organizedCrime, this.virusResolved, this.virus);
+  final double? travelTimeReduction; // null when perks did not come
+  ProfileMiscResult(
+    this.misc,
+    this.itemmarket,
+    this.organizedCrime,
+    this.virusResolved,
+    this.virus, {
+    this.travelTimeReduction,
+  });
 }

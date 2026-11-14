@@ -9,6 +9,7 @@ import 'dart:io';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart' show InAppWebViewController;
 import 'package:flutter_refresh_rate_control/flutter_refresh_rate_control.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/config/webview_config.dart';
@@ -16,6 +17,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 
 // Project imports:
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
@@ -31,6 +33,8 @@ enum TimeFormatSetting { h24, h12 }
 enum TimeZoneSetting { localTime, tornTime }
 
 enum BrowserRefreshSetting { icon, pull, both }
+
+enum SplitAppLinkTarget { browserTab, browserNewTab, appSideTab, appSideNewTab }
 
 class PdaUpdateDetails {
   final int latestVersionCode;
@@ -157,6 +161,14 @@ class SettingsProvider extends ChangeNotifier {
   set setIosBrowserPinch(bool pinch) {
     _iosBrowserPinch = pinch;
     Prefs().setIosBrowserPinch(_iosBrowserPinch);
+  }
+
+  var _browserRemoteDebugging = false;
+  bool get browserRemoteDebugging => _browserRemoteDebugging;
+  set setBrowserRemoteDebugging(bool value) {
+    _browserRemoteDebugging = value;
+    Prefs().setBrowserRemoteDebugging(value);
+    if (Platform.isAndroid) InAppWebViewController.setWebContentsDebuggingEnabled(value);
   }
 
   var _iosDisallowOverscroll = false;
@@ -324,10 +336,27 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _discreetNotifications = false;
-  bool get discreetNotifications => _discreetNotifications;
+
+  bool get discreetNotificationsOption => _discreetNotifications;
+
+  // Includes the schedule
+  bool get discreetNotifications => discreetAt(DateTime.now());
+
+  // Scheduled alerts pass their fire time
+  bool discreetAt(DateTime time) =>
+      isDiscreetAt(always: _discreetNotifications, schedule: _discreetSchedule, time: time);
   set discreetNotifications(bool value) {
     _discreetNotifications = value;
     Prefs().setDiscreetNotifications(value);
+    notifyListeners();
+  }
+
+  var _discreetSchedule = const DiscreetSchedule();
+  DiscreetSchedule get discreetSchedule => _discreetSchedule;
+  set discreetSchedule(DiscreetSchedule value) {
+    _discreetSchedule = value;
+    Prefs().setDiscreetSchedule(value);
+    FirestoreHelper().uploadDiscreetSchedule(value);
     notifyListeners();
   }
 
@@ -615,6 +644,14 @@ class SettingsProvider extends ChangeNotifier {
   set newTabByDeepLinkTap(bool value) {
     _newTabByDeepLinkTap = value;
     Prefs().setNewTabByDeepLinkTap(_newTabByDeepLinkTap);
+    notifyListeners();
+  }
+
+  var _splitAppLinkTarget = SplitAppLinkTarget.browserTab;
+  SplitAppLinkTarget get splitAppLinkTarget => _splitAppLinkTarget;
+  set splitAppLinkTarget(SplitAppLinkTarget value) {
+    _splitAppLinkTarget = value;
+    Prefs().setSplitAppLinkTarget(value.name);
     notifyListeners();
   }
 
@@ -1143,6 +1180,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _travelOrganizedCrimeWarning = true;
+  bool get travelOrganizedCrimeWarning => _travelOrganizedCrimeWarning;
+  set travelOrganizedCrimeWarning(bool choice) {
+    _travelOrganizedCrimeWarning = choice;
+    Prefs().setTravelOrganizedCrimeWarning(_travelOrganizedCrimeWarning);
+    notifyListeners();
+  }
+
   var _travelWalletMoneyWarningThreshold = 50000;
   int get travelWalletMoneyWarningThreshold => _travelWalletMoneyWarningThreshold;
   set travelWalletMoneyWarningThreshold(int choice) {
@@ -1251,6 +1296,15 @@ class SettingsProvider extends ChangeNotifier {
         ticketString = "business";
     }
     Prefs().setTravelTicket(ticketString);
+    notifyListeners();
+  }
+
+  double _travelTimeReduction = 0;
+  double get travelTimeReduction => _travelTimeReduction;
+  set travelTimeReduction(double value) {
+    if (value == _travelTimeReduction) return;
+    _travelTimeReduction = value;
+    Prefs().setTravelTimeReduction(value);
     notifyListeners();
   }
 
@@ -1526,6 +1580,46 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _pipEnabled = true;
+  bool get pipEnabled => _pipEnabled;
+  set pipEnabled(bool value) {
+    _pipEnabled = value;
+    Prefs().setPipEnabled(value);
+    notifyListeners();
+  }
+
+  var _pipChainButton = true;
+  bool get pipChainButton => _pipChainButton;
+  set pipChainButton(bool value) {
+    _pipChainButton = value;
+    Prefs().setPipChainButton(value);
+    notifyListeners();
+  }
+
+  var _pipPlayerButtons = true;
+  bool get pipPlayerButtons => _pipPlayerButtons;
+  set pipPlayerButtons(bool value) {
+    _pipPlayerButtons = value;
+    Prefs().setPipPlayerButtons(value);
+    notifyListeners();
+  }
+
+  var _pipStakeoutsButton = true;
+  bool get pipStakeoutsButton => _pipStakeoutsButton;
+  set pipStakeoutsButton(bool value) {
+    _pipStakeoutsButton = value;
+    Prefs().setPipStakeoutsButton(value);
+    notifyListeners();
+  }
+
+  var _pipAutoEnter = false;
+  bool get pipAutoEnter => _pipAutoEnter;
+  set pipAutoEnter(bool value) {
+    _pipAutoEnter = value;
+    Prefs().setPipAutoEnter(value);
+    notifyListeners();
+  }
+
   int _exactPermissionDialogShownAndroid = 0;
   int get exactPermissionDialogShownAndroid => _exactPermissionDialogShownAndroid;
   set exactPermissionDialogShownAndroid(int value) {
@@ -1775,6 +1869,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByLongChainingTap = await Prefs().getFullScreenByLongChainingTap();
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
     _newTabByDeepLinkTap = await Prefs().getNewTabByDeepLinkTap();
+    _splitAppLinkTarget =
+        SplitAppLinkTarget.values.asNameMap()[await Prefs().getSplitAppLinkTarget()] ?? SplitAppLinkTarget.browserTab;
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
@@ -1869,6 +1965,7 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _discreetNotifications = await Prefs().getDiscreetNotifications();
+    _discreetSchedule = await Prefs().getDiscreetSchedule();
 
     _showDateInClock = await Prefs().getShowDateInClock();
     _showSecondsInClock = await Prefs().getShowSecondsInClock();
@@ -1911,6 +2008,7 @@ class SettingsProvider extends ChangeNotifier {
     _travelBoosterCooldownWarningThreshold = await Prefs().getTravelBoosterCooldownWarningThreshold();
     _travelWalletMoneyWarning = await Prefs().getTravelWalletMoneyWarning();
     _travelWalletMoneyWarningThreshold = await Prefs().getTravelWalletMoneyWarningThreshold();
+    _travelOrganizedCrimeWarning = await Prefs().getTravelOrganizedCrimeWarning();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
 
@@ -1936,6 +2034,7 @@ class SettingsProvider extends ChangeNotifier {
       case "business":
         _travelTicket = TravelTicket.business;
     }
+    _travelTimeReduction = await Prefs().getTravelTimeReduction();
 
     _foreignStocksDataProvider = await Prefs().getForeignStocksDataProvider();
 
@@ -1978,6 +2077,12 @@ class SettingsProvider extends ChangeNotifier {
     _appwidgetCooldownTapOpenBrowserDestination = await Prefs().getAppwidgetCooldownTapOpensBrowserDestination();
     _appwidgetRacingTapOpenBrowser = await Prefs().getAppwidgetRacingTapOpensBrowser();
 
+    _pipEnabled = await Prefs().getPipEnabled();
+    _pipChainButton = await Prefs().getPipChainButton();
+    _pipPlayerButtons = await Prefs().getPipPlayerButtons();
+    _pipStakeoutsButton = await Prefs().getPipStakeoutsButton();
+    _pipAutoEnter = await Prefs().getPipAutoEnter();
+
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 
     _downloadActionShare = await Prefs().getDownloadActionShare();
@@ -2006,6 +2111,8 @@ class SettingsProvider extends ChangeNotifier {
     _iosLiveActivitiesRacingEnabled = await Prefs().getIosLiveActivityRacingEnabled();
 
     _joblessWarningEnabled = await Prefs().getJoblessWarningEnabled();
+
+    _browserRemoteDebugging = await Prefs().getBrowserRemoteDebugging();
 
     notifyListeners();
   }

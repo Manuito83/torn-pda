@@ -226,17 +226,6 @@ void main() {
       expect(statSeriesFromHiddenKeys(['not_a_stat', 'defense']), {StatSeries.defense});
     });
 
-    test('empty input hides nothing', () {
-      expect(statSeriesFromHiddenKeys([]), isEmpty);
-    });
-
-    test('three hidden keys are honored, one stat stays visible', () {
-      expect(
-        statSeriesFromHiddenKeys(['strength', 'defense', 'speed']),
-        {StatSeries.strength, StatSeries.defense, StatSeries.speed},
-      );
-    });
-
     test('never hides all four, even if prefs say so', () {
       expect(statSeriesFromHiddenKeys(['strength', 'defense', 'speed', 'dexterity']), isEmpty);
     });

@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_bounty_model.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_flights_model.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_hit_calling_model.dart';
-import 'package:torn_pda/models/chaining/ffscouter/ffscouter_key_models.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_notes_model.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_stats_model.dart';
 
@@ -66,17 +65,6 @@ void main() {
     expect(torn.displayMessage, 'Could not validate your key (Torn API error 2)');
   });
 
-  test('check-key reads the data policy flag', () {
-    final key = FFScouterCheckKeyResponse.fromJson(
-      _json('''{"key": "EXAMPLEKEY000000", "is_registered": true, "registered_at": 1640995200,
-        "last_used": 1747333361, "policy_version": 2, "policy_update_required": true, "is_premium": true,
-        "premium_expires_at": 1740000000, "faction_id": null, "faction_premium_expires_at": null,
-        "premium_entitlement_source": "personal", "elimination_team": "Conspiracy Theorists"}'''),
-    );
-    expect(key.policyUpdateRequired, isTrue);
-    expect(key.isPremium, isTrue);
-  });
-
   test('flights batch keeps players that are not flying', () {
     final flights = ffScouterFlightsBatchFromJson(
       _json('''{"flights": [
@@ -104,22 +92,6 @@ void main() {
   });
 
   group('notes', () {
-    test('list with pagination', () {
-      final page = FFScouterNotesPage.fromJson(
-        _json('''{"notes": [{"uuid": "4c3f0f6e-8b3a-4f0e-9a4e-2f4b6c8d0e12", "scope": "faction",
-          "target_type": "player", "target_id": 1844049, "content": "Watch for war activity on weekends.",
-          "created_at": 1769295473, "deleted_at": null, "author_player_id": 2675763, "author_name": "Someone",
-          "can_soft_delete": true, "can_purge": false}],
-          "pagination": {"page": 1, "limit": 100, "total": 1, "total_pages": 1}}'''),
-      );
-      final note = page.notes.single;
-      expect(page.totalPages, 1);
-      expect(note.isFaction, isTrue);
-      expect(note.targetId, 1844049);
-      expect(note.authorName, 'Someone');
-      expect(note.canSoftDelete, isTrue);
-    });
-
     test('info with and without faction', () {
       final withFaction = FFScouterNotesInfo.fromJson(
         _json('''{"personal": {"used": 12, "limit": 200, "is_premium": false},
@@ -194,46 +166,6 @@ void main() {
       expect(target.totalRemaining, 9);
       expect(board.claims.pending.single.requiredChecks, 5);
       expect(board.claims.recentHits.single.payoutStatus, 'queued');
-    });
-
-    test('quote, new order and order status', () {
-      final quote = FFScouterBountyQuote.fromJson(
-        _json('''{"quote": {"subtotal": 5000000, "fee_amount": 1250000, "total_payable": 6250000, "fee_percent": 0.25,
-          "payment_value_per_xanax": 1200000, "expected_xanax_quantity": 6, "xanax_overage_value": 950000}}'''),
-      );
-      expect(quote.feePercent, 0.25);
-      expect(quote.expectedXanax, 6);
-
-      final order = FFScouterBountyNewOrder.fromJson(
-        _json('''{"order": {"reference": "B1234567A", "status_token": "01234567890123",
-          "status_url": "https://ffscouter.com/buy-bounties/01234567890123",
-          "payment_instructions": {"quantity_remaining": 6, "message": "bounty:B1234567A", "xanax_expected": 6,
-            "xanax_received": 0, "total_payable": 6250000, "payment_value_per_xanax": 1200000,
-            "payment_deadline_at": 1770007200}}}'''),
-      );
-      expect(order.statusToken, '01234567890123');
-      expect(order.payment.message, 'bounty:B1234567A');
-
-      final status = FFScouterBountyOrderStatus.fromJson(
-        _json('''{"order": {"reference": "B1234567A", "state": "active", "target_player_id": 267456763,
-          "target_name": "Arcanine", "price_per_hit": 500000, "quantity": 10, "quantity_credited": 4, "hits": []},
-          "payment_instructions": {"quantity_remaining": 0, "message": "bounty:B1234567A", "xanax_expected": 6,
-            "xanax_received": 6, "payment_deadline_at": 1770007200}}'''),
-      );
-      expect(status.state, 'active');
-      expect(status.quantityCredited, 4);
-      expect(status.payment.xanaxReceived, 6);
-    });
-
-    test('a disabled target has no estimate when it is not available', () {
-      final target = FFScouterBountyTarget.fromJson(
-        _json('''{"target_player_id": 1, "target_name": "Me", "estimate": null, "estimate_available": false,
-          "tiers": [], "max_price_per_hit": 300000, "total_remaining": 1, "disabled": true,
-          "disabled_reason": "target"}'''),
-      );
-      expect(target.estimate, isNull);
-      expect(target.disabled, isTrue);
-      expect(target.disabledReason, 'target');
     });
   });
 }

@@ -5,9 +5,11 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:torn_pda/main.dart' show analytics;
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -21,6 +23,7 @@ import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/profile/shortcut_icon_picker.dart';
 import 'package:workmanager/workmanager.dart';
 
 const String iOSRankedWarWidgetRefreshTaskID = "com.manuito.tornpda.ranked_widget_refresh";
@@ -207,8 +210,12 @@ Future<void> fetchAndPersistWidgetData() async {
         "${formatter.format(timeZoneIsLocal ? DateTime.now() : DateTime.now().toUtc())} "
             "${timeZoneIsLocal ? 'LT' : 'TCT'}");
 
+    if (isPdaWidgetInstalled && Platform.isIOS) {
+      await shareSetupWithIosWidget();
+    }
+
     if (apiKey.isEmpty) {
-      if (isPdaWidgetInstalled) {
+      if (isPdaWidgetInstalled && Platform.isAndroid) {
         HomeWidget.saveWidgetData<bool>('main_layout_visibility', false);
         HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
         HomeWidget.saveWidgetData<String>('error_message', "No API key found!");
@@ -217,7 +224,7 @@ Future<void> fetchAndPersistWidgetData() async {
         HomeWidget.saveWidgetData<bool>('rw_widget_visibility', false);
       }
     } else {
-      if (isPdaWidgetInstalled) {
+      if (isPdaWidgetInstalled && Platform.isAndroid) {
         await _refreshMainPdaWidgetData(apiKey);
       }
       if (isRankedWarWidgetInstalled) {
@@ -303,10 +310,15 @@ Future<void> syncBackgroundRefreshWithWidgetInstallation() async {
     await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
     await HomeWidget.updateWidget(name: 'HomeWidgetRankedWar', iOSName: 'HomeWidgetRankedWar');
   } else {
+    if (Platform.isIOS) await shareSetupWithIosWidget();
     await HomeWidget.saveWidgetData<bool>('reloading', false);
     await HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
     await HomeWidget.updateWidget(name: 'HomeWidgetRankedWar', iOSName: 'HomeWidgetRankedWar');
   }
+
+  try {
+    analytics?.setUserProperty(name: "widget", value: installedWidgets.anyWidgetInstalled ? "on" : "off");
+  } catch (_) {}
 }
 
 /// Cancels all platform-specific background tasks related to widgets.
@@ -601,7 +613,9 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<String>('racing_string', racingString);
 
     // Messages and events
-    int unreadMessages = user.messages?.length ?? 0;
+    // Only unseen count
+    final messages = user.messages;
+    final int unreadMessages = messages is Map ? messages.values.where((m) => m is Map && m['seen'] == 0).length : 0;
     HomeWidget.saveWidgetData<int>('messages', unreadMessages);
 
     int unreadEvents = user.events?.length ?? 0;
@@ -815,25 +829,11 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     }
     // --- END DEBUG ---
 
-    // SHORTCUTS
-    var savedShortcuts = await BackgroundPrefs().getActiveShortcutsList();
-    List<Shortcut> shortcuts = <Shortcut>[];
-    for (var savedShortRaw in savedShortcuts) {
-      shortcuts.add(shortcutFromJson(savedShortRaw));
-    }
-    HomeWidget.saveWidgetData<int>('shortcuts_number', shortcuts.length);
-    for (int i = 0; i < 9; i++) {
-      HomeWidget.saveWidgetData<String>('shortcut${i + 1}_name', "");
-      HomeWidget.saveWidgetData<String>('shortcut${i + 1}_url', "");
-    }
-    for (int i = 0; i < shortcuts.length; i++) {
-      HomeWidget.saveWidgetData<String>('shortcut${i + 1}_name', shortcuts[i].nickname);
-      String url = shortcuts[i].url!;
-      if (shortcuts[i].addPlayerId == true) url = url.replaceAll("##P##", user.playerId.toString());
-      if (shortcuts[i].addFactionId == true) url = url.replaceAll("##F##", user.faction!.factionId.toString());
-      if (shortcuts[i].addCompanyId == true) url = url.replaceAll("##C##", user.job!.companyId.toString());
-      HomeWidget.saveWidgetData<String>('shortcut${i + 1}_url', url);
-    }
+    await _persistWidgetShortcuts(
+      playerId: user.playerId,
+      factionId: user.faction?.factionId,
+      companyId: user.job?.companyId,
+    );
   } else {
     // In case of API error
     var error = user as ApiError;
@@ -841,6 +841,70 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
     HomeWidget.saveWidgetData<String>('error_message', "API error: ${error.errorReason}");
   }
+}
+
+Future<void> _persistWidgetShortcuts({int? playerId, int? factionId, int? companyId}) async {
+  var savedShortcuts = await BackgroundPrefs().getActiveShortcutsList();
+  List<Shortcut> shortcuts = <Shortcut>[];
+  for (var savedShortRaw in savedShortcuts) {
+    shortcuts.add(shortcutFromJson(savedShortRaw));
+  }
+  HomeWidget.saveWidgetData<int>('shortcuts_number', shortcuts.length);
+  for (int i = 0; i < 9; i++) {
+    HomeWidget.saveWidgetData<String>('shortcut${i + 1}_name', "");
+    HomeWidget.saveWidgetData<String>('shortcut${i + 1}_url', "");
+    HomeWidget.saveWidgetData<String>('shortcut${i + 1}_icon', "");
+    HomeWidget.saveWidgetData<String>('shortcut${i + 1}_icon_tint', "");
+  }
+  for (int i = 0; i < shortcuts.length; i++) {
+    HomeWidget.saveWidgetData<String>('shortcut${i + 1}_name', shortcuts[i].nickname);
+    String url = shortcuts[i].url!;
+    if (shortcuts[i].addPlayerId == true && playerId != null) url = url.replaceAll("##P##", playerId.toString());
+    if (shortcuts[i].addFactionId == true && factionId != null) url = url.replaceAll("##F##", factionId.toString());
+    if (shortcuts[i].addCompanyId == true && companyId != null) url = url.replaceAll("##C##", companyId.toString());
+    HomeWidget.saveWidgetData<String>('shortcut${i + 1}_url', url);
+    if (Platform.isIOS && (shortcuts[i].iconUrl ?? "").isNotEmpty) {
+      try {
+        final icon = await rootBundle.load(shortcuts[i].iconUrl!);
+        HomeWidget.saveWidgetData<String>('shortcut${i + 1}_icon', base64Encode(icon.buffer.asUint8List()));
+        final tint = isFullColorShortcutIcon(shortcuts[i].iconUrl)
+            ? "full"
+            : shortcuts[i].iconColor?.toARGB32().toRadixString(16) ?? "";
+        HomeWidget.saveWidgetData<String>('shortcut${i + 1}_icon_tint', tint);
+      } catch (_) {}
+    }
+  }
+}
+
+Future<void> shareSetupWithIosWidget() async {
+  OwnProfileBasic user;
+  try {
+    user = ownProfileBasicFromJson(await BackgroundPrefs().getOwnDetails());
+  } catch (e) {
+    user = OwnProfileBasic();
+  }
+
+  await HomeWidget.saveWidgetData<String>('widget_api_key', user.userApiKey ?? "");
+  await HomeWidget.saveWidgetData<String>('widget_time_format', await BackgroundPrefs().getDefaultTimeFormat());
+  await HomeWidget.saveWidgetData<String>('widget_time_zone', await BackgroundPrefs().getDefaultTimeZone());
+  await _persistWidgetShortcuts(
+    playerId: user.playerId,
+    factionId: user.faction?.factionId,
+    companyId: user.job?.companyId,
+  );
+}
+
+Future<void> refreshIosWidget() async {
+  await shareSetupWithIosWidget();
+  if (!(await getInstalledWidgetsInfo()).isPdaWidgetInstalled) return;
+  await HomeWidget.saveWidgetData<bool>('widget_force_fetch', true);
+  await HomeWidget.updateWidget(iOSName: 'HomeWidgetTornPda');
+}
+
+Future<void> forgetIosWidgetAccount() async {
+  await HomeWidget.saveWidgetData<String>('widget_api_key', "");
+  await HomeWidget.saveWidgetData<int>('shortcuts_number', 0);
+  await HomeWidget.updateWidget(iOSName: 'HomeWidgetTornPda');
 }
 
 Future<bool> _handleLiveActivityBackup(Map<String, dynamic>? inputData) async {

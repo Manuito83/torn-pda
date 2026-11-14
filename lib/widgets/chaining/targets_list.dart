@@ -14,7 +14,17 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
+import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
 import 'package:torn_pda/widgets/chaining/target_card.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
+
+/// Passes the page's word, color and sort filters
+bool targetShown(TargetsProvider targets, TargetModel target) {
+  final note = Get.find<PlayerNotesController>().getNoteForPlayer(target.playerId.toString());
+  return target.name!.toUpperCase().contains(targets.currentWordFilter.toUpperCase()) &&
+      !targets.currentColorFilterOut.contains(note?.color ?? PlayerNoteColor.none) &&
+      targets.targetPassesFilters(target);
+}
 
 class TargetsList extends StatefulWidget {
   final List<TargetModel> targets;
@@ -58,17 +68,10 @@ class TargetsListState extends State<TargetsList> {
   }
 
   Widget slidableCard(int index, BuildContext context) {
-    final playerNotesController = Get.find<PlayerNotesController>();
-    final playerNote = playerNotesController.getNoteForPlayer(widget.targets[index].playerId.toString());
-    final noteColor = playerNote?.color ?? PlayerNoteColor.none;
+    if (!targetShown(_targetsProvider, widget.targets[index])) return const SizedBox.shrink();
+    final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(widget.targets[index].playerId.toString());
 
-    if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
-        _targetsProvider.currentColorFilterOut.contains(noteColor) ||
-        !_targetsProvider.targetPassesFilters(widget.targets[index])) {
-      return const SizedBox.shrink();
-    }
-
-    return Slidable(
+    final slidable = Slidable(
       key: ValueKey(widget.targets[index].playerId),
       closeOnScroll: false,
       startActionPane: ActionPane(
@@ -133,6 +136,7 @@ class TargetsListState extends State<TargetsList> {
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
         children: [
+          profileSlidableAction(widget.targets[index].playerId),
           if (_chainStatusProvider.panicTargets.where((t) => t.name == widget.targets[index].name).isEmpty)
             SlidableAction(
               label: 'Add to panic!',
@@ -206,6 +210,14 @@ class TargetsListState extends State<TargetsList> {
         key: ValueKey(widget.targets[index].playerId),
         targetModel: widget.targets[index],
       ),
+    );
+    final id = widget.targets[index].playerId;
+    if (id == null) return slidable;
+    return PipSelectable(
+      key: ValueKey(id),
+      id: id,
+      name: widget.targets[index].name ?? '',
+      child: slidable,
     );
   }
 }

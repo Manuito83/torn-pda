@@ -9,6 +9,7 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/widgets/chaining/attack_card.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class AttacksList extends StatelessWidget {
   final List<Attack> attacks;
@@ -62,7 +63,9 @@ class AttacksList extends StatelessWidget {
       }
       // Finally, add to list if it qualifies
       if (addThisAttack) {
-        filteredCards.add(AttackCard(attackModel: thisAttack));
+        final id = int.tryParse(thisAttack.targetId ?? '');
+        final card = AttackCard(attackModel: thisAttack);
+        filteredCards.add(id == null ? card : PipSelectable(id: id, name: thisAttack.targetName ?? '', child: card));
       }
     }
     // Avoid collisions with SnackBar

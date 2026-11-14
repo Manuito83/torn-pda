@@ -58,6 +58,7 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/profile/events_timeline_fixes.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
@@ -363,8 +364,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _profileApi.resetApiTimer(initCall: true, trigger: "browser-closed");
     });
 
-    analytics?.logScreenView(screenName: 'profile');
-
     routeWithDrawer = true;
     routeName = "profile`";
   }
@@ -388,6 +387,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _profileApi.deactivate();
     _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    NativeChat.dialOpen.value = false;
     super.dispose();
   }
 
@@ -749,18 +749,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               );
                             },
                             child: ExcludeSemantics(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "[${_user!.playerId}] - Level ${_user!.level}",
-                                    style: const TextStyle(fontSize: 10, color: Colors.white),
-                                  ),
-                                  const Padding(
-                                    padding: EdgeInsets.only(left: 4),
-                                    child: Icon(Icons.open_in_new, size: 10, color: Colors.white70),
-                                  ),
-                                ],
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      "[${_user!.playerId}] - Level ${_user!.level}",
+                                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                                    ),
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 4),
+                                      child: Icon(Icons.open_in_new, size: 10, color: Colors.white70),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -775,7 +778,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
         ],
       ),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -791,7 +794,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive)
+          if (_webViewProvider.appCanOpenBrowser)
             Showcase(
               key: _showcasePdaBrowserButton,
               title: 'Direct Torn access!',
@@ -857,6 +860,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             await Navigator.push(
               context,
               MaterialPageRoute(
+                settings: const RouteSettings(name: 'profile_options'),
                 builder: (context) => ProfileOptionsPage(
                   callBackTimings: _callBackFromNotificationOptions,
                   user: _user,
@@ -952,7 +956,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _shortcutsCarrousel() {
     void openShortcutsEditor() {
-      Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => ShortcutsPage()));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          settings: const RouteSettings(name: 'shortcuts'),
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
     }
 
     // Returns Main individual tile
@@ -1693,6 +1702,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   destination: _user!.travel!.destination,
                   settingsProvider: _settingsProvider,
                   dateTimeArrival: dateTimeArrival,
+                  departed: _user!.travel!.departed,
+                  timestamp: _user!.travel!.timestamp,
                 ),
               ],
             ),
@@ -1771,6 +1782,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             destination: _user!.travel!.destination,
             settingsProvider: _settingsProvider,
             dateTimeArrival: DateTime.now(),
+            departed: _user!.travel!.departed,
+            timestamp: _user!.travel!.timestamp,
           ),
         ],
       );
@@ -2045,64 +2058,72 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          const SizedBox(width: 60, child: Text('Energy')),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            key: _showOne,
-                            onLongPress: () {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
-                            },
-                            onTap: () async {
-                              _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
-                            },
-                            child: Showcase(
-                              key: _showcaseProfileBars,
-                              title: 'Did you know?',
-                              description:
-                                  '\nTap any of the bars to launch a browser '
-                                  'straight to the gym, crimes or items sections!',
-                              targetPadding: const EdgeInsets.all(10),
-                              disableMovingAnimation: true,
-                              textColor: _themeProvider!.mainText,
-                              tooltipBackgroundColor: _themeProvider!.secondBackground,
-                              descTextStyle: const TextStyle(fontSize: 13),
-                              tooltipPadding: const EdgeInsets.all(20),
-                              child: LinearPercentIndicator(
-                                padding: const EdgeInsets.all(0),
-                                barRadius: const Radius.circular(10),
-                                width: 150,
-                                lineHeight: 20,
-                                progressColor: Colors.green,
-                                backgroundColor: Colors.grey,
-                                center: FittedBox(
-                                  fit: BoxFit.fitWidth,
-                                  child: Text(
-                                    '${_user!.energy!.current}/${_user!.energy!.maximum}',
-                                    style: const TextStyle(color: Colors.black),
+                      Flexible(
+                        child: Row(
+                          children: <Widget>[
+                            const SizedBox(width: 60, child: Text('Energy')),
+                            const SizedBox(width: 10),
+                            Flexible(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 150),
+                                child: GestureDetector(
+                                  key: _showOne,
+                                  onLongPress: () {
+                                    _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: false);
+                                  },
+                                  onTap: () async {
+                                    _launchBrowser(url: 'https://www.torn.com/gym.php', shortTap: true);
+                                  },
+                                  child: Showcase(
+                                    key: _showcaseProfileBars,
+                                    title: 'Did you know?',
+                                    description:
+                                        '\nTap any of the bars to launch a browser '
+                                        'straight to the gym, crimes or items sections!',
+                                    targetPadding: const EdgeInsets.all(10),
+                                    disableMovingAnimation: true,
+                                    textColor: _themeProvider!.mainText,
+                                    tooltipBackgroundColor: _themeProvider!.secondBackground,
+                                    descTextStyle: const TextStyle(fontSize: 13),
+                                    tooltipPadding: const EdgeInsets.all(20),
+                                    child: LinearPercentIndicator(
+                                      padding: const EdgeInsets.all(0),
+                                      barRadius: const Radius.circular(10),
+                                      lineHeight: 20,
+                                      progressColor: Colors.green,
+                                      backgroundColor: Colors.grey,
+                                      center: FittedBox(
+                                        fit: BoxFit.fitWidth,
+                                        child: Text(
+                                          '${_user!.energy!.current}/${_user!.energy!.maximum}',
+                                          style: const TextStyle(color: Colors.black),
+                                        ),
+                                      ),
+                                      percent: _user!.energy!.current! / _user!.energy!.maximum! > 1.0
+                                          ? 1.0
+                                          : _user!.energy!.current! / _user!.energy!.maximum!,
+                                    ),
                                   ),
                                 ),
-                                percent: _user!.energy!.current! / _user!.energy!.maximum! > 1.0
-                                    ? 1.0
-                                    : _user!.energy!.current! / _user!.energy!.maximum!,
                               ),
                             ),
-                          ),
-                          if (_warnAboutChains && _chainModel.chain!.current! > 10 && _chainModel.chain!.cooldown == 0)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 5),
-                              child: GestureDetector(
-                                onTap: () {
-                                  // Open chaining section
-                                  widget.callBackSection(DrawerSection.chaining);
-                                },
-                                child: const Icon(MdiIcons.linkVariant, color: Colors.blue, size: 22),
-                              ),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                        ],
+                            if (_warnAboutChains &&
+                                _chainModel.chain!.current! > 10 &&
+                                _chainModel.chain!.cooldown == 0)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // Open chaining section
+                                    widget.callBackSection(DrawerSection.chaining);
+                                  },
+                                  child: const Icon(MdiIcons.linkVariant, color: Colors.blue, size: 22),
+                                ),
+                              )
+                            else
+                              const SizedBox.shrink(),
+                          ],
+                        ),
                       ),
                       _notificationIcon(ProfileNotification.energy),
                     ],
@@ -5325,6 +5346,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
+      onOpen: () => NativeChat.dialOpen.value = true,
+      onClose: () => NativeChat.dialOpen.value = false,
       animationDuration: const Duration(),
       direction: MediaQuery.orientationOf(context) == Orientation.portrait
           ? SpeedDialDirection.up
@@ -5506,6 +5529,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     String notificationIconAndroid = "notification_icon";
     Color notificationIconColor = Colors.grey;
 
+    // Discreet is judged at fire time
+    bool discreet() =>
+        _settingsProvider!.discreetAt(DateTime.now().add(Duration(seconds: secondsToNotification!)));
+
     // We will add the timestamp to the payload
     String notificationPayload = '';
 
@@ -5516,8 +5543,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "T" : await Prefs().getTravelNotificationTitle();
-        notificationSubtitle = _settingsProvider!.discreetNotifications
+        notificationTitle = discreet() ? "T" : await Prefs().getTravelNotificationTitle();
+        notificationSubtitle = discreet()
             ? " "
             : await Prefs().getTravelNotificationBody();
         notificationPayload += 'travel';
@@ -5529,8 +5556,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual energy';
         channelSubtitle = 'Manual energy';
         channelDescription = 'Manual notifications for energy';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "E" : 'Energy bar';
-        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Full" : 'Here is your energy reminder!';
+        notificationTitle = discreet() ? "E" : 'Energy bar';
+        notificationSubtitle = discreet() ? "Full" : 'Here is your energy reminder!';
         final myTimeStamp = (_energyNotificationTime!.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_energy";
@@ -5541,8 +5568,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual nerve';
         channelSubtitle = 'Manual nerve';
         channelDescription = 'Manual notifications for nerve';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "N" : 'Nerve bar';
-        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Full" : 'Here is your nerve reminder!';
+        notificationTitle = discreet() ? "N" : 'Nerve bar';
+        notificationSubtitle = discreet() ? "Full" : 'Here is your nerve reminder!';
         final myTimeStamp = (_nerveNotificationTime!.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_nerve";
@@ -5553,8 +5580,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual life';
         channelSubtitle = 'Manual life';
         channelDescription = 'Manual notifications for life';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "Lf" : 'Life bar';
-        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Full" : 'Here is your life reminder!';
+        notificationTitle = discreet() ? "Lf" : 'Life bar';
+        notificationSubtitle = discreet() ? "Full" : 'Here is your life reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.life!.fulltime!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_life";
@@ -5565,8 +5592,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual drugs';
         channelSubtitle = 'Manual drugs';
         channelDescription = 'Manual notifications for drugs';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "D" : 'Drug Cooldown';
-        notificationSubtitle = _settingsProvider!.discreetNotifications
+        notificationTitle = discreet() ? "D" : 'Drug Cooldown';
+        notificationSubtitle = discreet()
             ? "Exp"
             : 'Here is your drugs cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.drug!;
@@ -5579,8 +5606,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual medical';
         channelSubtitle = 'Manual medical';
         channelDescription = 'Manual notifications for medical';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "Med" : 'Medical Cooldown';
-        notificationSubtitle = _settingsProvider!.discreetNotifications
+        notificationTitle = discreet() ? "Med" : 'Medical Cooldown';
+        notificationSubtitle = discreet()
             ? "Exp"
             : 'Here is your medical cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.medical!;
@@ -5593,8 +5620,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual booster';
         channelSubtitle = 'Manual booster';
         channelDescription = 'Manual notifications for booster';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "B" : 'Booster Cooldown';
-        notificationSubtitle = _settingsProvider!.discreetNotifications
+        notificationTitle = discreet() ? "B" : 'Booster Cooldown';
+        notificationSubtitle = discreet()
             ? "Exp"
             : 'Here is your booster cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.booster!;
@@ -5607,11 +5634,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual hospital';
         channelSubtitle = 'Manual hospital';
         channelDescription = 'Manual notifications for hospital';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "H" : 'Hospital release';
-        notificationSubtitle = _settingsProvider!.discreetNotifications
+        notificationTitle = discreet() ? "H" : 'Hospital release';
+        notificationSubtitle = discreet()
             ? "App"
             : 'You are about to be released from hospital!';
-        notificationPayload += 'hospital';
+        final myTimeStamp = (_hospitalReleaseTime.millisecondsSinceEpoch / 1000).floor() - _hospitalNotificationAhead;
+        notificationPayload += 'hospital-$myTimeStamp';
         notificationIconAndroid = "notification_hospital";
         notificationIconColor = Colors.yellow;
       case ProfileNotification.jail:
@@ -5620,11 +5648,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual jail';
         channelSubtitle = 'Manual jail';
         channelDescription = 'Manual notifications for jail';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "J" : 'Jail release';
-        notificationSubtitle = _settingsProvider!.discreetNotifications
+        notificationTitle = discreet() ? "J" : 'Jail release';
+        notificationSubtitle = discreet()
             ? "App"
             : 'You are about to be released from jail!';
-        notificationPayload += 'jail';
+        final myTimeStamp = (_jailReleaseTime.millisecondsSinceEpoch / 1000).floor() - _jailNotificationAhead;
+        notificationPayload += 'jail-$myTimeStamp';
         notificationIconAndroid = "notification_events";
         notificationIconColor = Colors.purple;
       case ProfileNotification.rankedWar:
@@ -5633,8 +5662,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual war';
         channelSubtitle = 'Manual war';
         channelDescription = 'Manual notifications for war';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "W" : 'Ranked War';
-        notificationSubtitle = _settingsProvider!.discreetNotifications ? "App" : 'Ranked war is about to start!';
+        notificationTitle = discreet() ? "W" : 'Ranked War';
+        notificationSubtitle = discreet() ? "App" : 'Ranked war is about to start!';
         notificationPayload += 'war';
         notificationIconAndroid = "notification_assists";
         notificationIconColor = Colors.red;
@@ -5644,8 +5673,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual race start';
         channelSubtitle = 'Manual race start';
         channelDescription = 'Manual notifications for race start';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "R" : 'Race Start';
-        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Start" : 'Lights out and here we go!';
+        notificationTitle = discreet() ? "R" : 'Race Start';
+        notificationSubtitle = discreet() ? "Start" : 'Lights out and here we go!';
         notificationPayload += 'raceStart';
         notificationIconAndroid = "notification_racing";
         notificationIconColor = Colors.blue;
@@ -5661,8 +5690,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual education';
         channelSubtitle = 'Manual education';
         channelDescription = 'Manual notifications for education';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "Edu" : 'Education Complete';
-        notificationSubtitle = _settingsProvider!.discreetNotifications
+        notificationTitle = discreet() ? "Edu" : 'Education Complete';
+        notificationSubtitle = discreet()
             ? "Done"
             : 'Your education course has finished!';
         notificationIconAndroid = "notification_items";
@@ -5679,8 +5708,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual virus';
         channelSubtitle = 'Manual virus';
         channelDescription = 'Manual notifications for virus coding';
-        notificationTitle = _settingsProvider!.discreetNotifications ? "Vir" : 'Virus Coded';
-        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Done" : 'Your virus has finished coding!';
+        notificationTitle = discreet() ? "Vir" : 'Virus Coded';
+        notificationSubtitle = discreet() ? "Done" : 'Your virus has finished coding!';
         notificationIconAndroid = "notification_items";
         notificationIconColor = Colors.deepPurple;
     }
@@ -5805,7 +5834,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (notification.id == 109) {
           war = true;
         }
-        if (notification.id == 201) {
+        if (notification.id == 110) {
           raceStart = true;
         }
         if (notification.id == 113) {
@@ -6070,6 +6099,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           updatedTypes.add('booster');
           final boosterCurrentSchedule = DateTime.now().add(Duration(seconds: _user!.cooldowns!.booster!));
           updatedTimes.add(formatter.format(boosterCurrentSchedule));
+        }
+        // HOSPITAL AND JAIL
+      } else if (notification.id == 107 || notification.id == 108) {
+        final isHospital = notification.id == 107;
+        final type = isHospital ? ProfileNotification.hospital : ProfileNotification.jail;
+        final until = _user!.status!.until ?? 0;
+        final newTimeStamp = until - (isHospital ? _hospitalNotificationAhead : _jailNotificationAhead);
+        final now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+        if (_user!.status!.state != (isHospital ? 'Hospital' : 'Jail') || newTimeStamp <= now + 1) {
+          _cancelNotifications(type);
+          BotToast.showText(
+            text: '${isHospital ? 'Hospital' : 'Jail'} notification expired, removing!',
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+            contentColor: Colors.grey[700]!,
+            duration: const Duration(seconds: 5),
+            contentPadding: const EdgeInsets.all(10),
+          );
+          continue;
+        }
+        if ((newTimeStamp - oldTimeStamp).abs() > 120) {
+          final releaseTime = DateTime.fromMillisecondsSinceEpoch(until * 1000);
+          if (isHospital) {
+            _hospitalReleaseTime = releaseTime;
+          } else {
+            _jailReleaseTime = releaseTime;
+          }
+          _cancelNotifications(type);
+          _scheduleNotification(type);
+          triggered = true;
+          updatedTypes.add(isHospital ? 'hospital' : 'jail');
+          updatedTimes.add(formatter.format(DateTime.fromMillisecondsSinceEpoch(newTimeStamp * 1000)));
         }
       }
     }
@@ -6905,7 +6965,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelName: 'Profile alarms',
         channelDescription: 'Manual alarms for profile timers longer than 24 hours',
         title: message,
-        body: _settingsProvider!.discreetNotifications ? " " : 'Your wait is over!',
+        body: _settingsProvider!.discreetAt(alarmDateTime) ? " " : 'Your wait is over!',
         targetTime: alarmDateTime,
         payload: descriptor.payload,
         sound: 'slow_spring_board',
@@ -7016,7 +7076,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
-        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetAt(alarmDateTime!)
             ? _getDiscreetAlarmMessage(profileNotification)
             : message,
       },
@@ -7093,12 +7153,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return;
     }
 
+    final timerEnd = DateTime.now().add(Duration(seconds: totalSeconds));
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.LENGTH': totalSeconds,
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetAt(timerEnd)
             ? _getDiscreetTimerMessage(profileNotification)
             : message,
       },

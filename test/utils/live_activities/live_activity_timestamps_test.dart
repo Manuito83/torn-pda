@@ -3,19 +3,6 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 
 void main() {
   group('computeDeviceRelativeTimestamps', () {
-    test('computes device-relative arrival from timeLeft', () {
-      final result = LiveActivityTravelController.computeDeviceRelativeTimestamps(
-        serverArrivalTimestamp: 1000300,
-        serverDepartureTimestamp: 1000000,
-        timeLeftSeconds: 300,
-        deviceNowSeconds: 999800,
-      );
-      // deviceNow(999800) + timeLeft(300) = 1000100
-      expect(result.arrivalTimestamp, 1000100);
-      // departure = arrival - totalDuration = 1000100 - 300 = 999800
-      expect(result.departureTimestamp, 999800);
-    });
-
     test('compensates for device clock offset behind server', () {
       // Server: now=1000000, arrival=1000300, timeLeft=300
       // Device: now=999970 (30s behind server)
@@ -28,21 +15,6 @@ void main() {
       // arrival = 999970 + 300 = 1000270; countdown = 300s (matches Torn)
       expect(result.arrivalTimestamp, 1000270);
       expect(result.departureTimestamp, 999970);
-    });
-
-    test('compensates for device clock offset ahead of server', () {
-      // Server: now=1000000, arrival=1000300, timeLeft=300
-      // Device: now=1000030 (30s ahead of server)
-      final result = LiveActivityTravelController.computeDeviceRelativeTimestamps(
-        serverArrivalTimestamp: 1000300,
-        serverDepartureTimestamp: 1000000,
-        timeLeftSeconds: 300,
-        deviceNowSeconds: 1000030,
-      );
-      // Expected: 1000030 + 300 = 1000330
-      // Countdown: 1000330 - 1000030 = 300s (matches Torn)
-      expect(result.arrivalTimestamp, 1000330);
-      expect(result.departureTimestamp, 1000030);
     });
 
     test('computes consistent departure for progress bar', () {

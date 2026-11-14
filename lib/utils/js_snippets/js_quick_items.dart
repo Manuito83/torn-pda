@@ -1,5 +1,13 @@
 import 'dart:convert';
 
+// Project imports:
+import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
+
+String _snippetWithArgs(String id, String argsVar, Map<String, dynamic> args) {
+  return 'window.$argsVar = ${jsonEncode(args)};\n${RemoteSnippets.resolve(id)}';
+}
+
+// Use or equip a quick item (RC-overridable)
 String runQuickItemJS({
   required String item,
   required String itemName,
@@ -9,12 +17,50 @@ String runQuickItemJS({
   String? instanceId,
   bool isEquip = false,
   bool isTemporary = false,
+  bool loaned = false,
   bool kDebugMode = false,
 }) {
-  const String timeRegex =
-      r'/<span class="counter-wrap[\s=\-"a-zA-Z0-9]*data-time="[0-9]+"[\s=\-"a-zA-Z0-9]*>[0-9:]*<\/span>/g';
+  return _snippetWithArgs(RemoteSnippets.quickItemsRun, '__pdaQuickItemsRunArgs', {
+    'item': item,
+    'itemName': itemName,
+    'faction': faction,
+    'eRefill': eRefill,
+    'nRefill': nRefill,
+    'instanceId': '$instanceId',
+    'isEquip': isEquip,
+    'isTemporary': isTemporary,
+    'loaned': loaned,
+    'debug': kDebugMode,
+  });
+}
 
+// Item picker buttons in item.php (RC-overridable)
+String quickItemPickerJS({required bool enable}) {
+  return _snippetWithArgs(RemoteSnippets.quickItemsPicker, '__pdaQuickItemsPickerArgs', {'enable': enable});
+}
+
+// Mass item check (RC-overridable)
+String quickItemsMassCheckJS(List<String> itemNames) {
+  return _snippetWithArgs(RemoteSnippets.quickItemsMassCheck, '__pdaQuickItemsMassCheckArgs', {'names': itemNames});
+}
+
+// Change loadout (RC-overridable)
+String changeLoadOutJS({required String item, required bool attackWebview}) {
+  return _snippetWithArgs(RemoteSnippets.quickItemsLoadout, '__pdaQuickItemsLoadoutArgs', {
+    'item': item,
+    'attackWebview': attackWebview,
+  });
+}
+
+// quick_items_run base
+// RC keys: snippet_quick_items_run_js + snippet_quick_items_run_version
+String quickItemsRunBaseJS() {
   return '''
+    var pdaQi = window.__pdaQuickItemsRunArgs || {};
+
+    // Personal in item.php, faction in factions.php
+    if (location.href.indexOf(pdaQi.faction ? 'factions.php' : 'item.php') !== -1) {
+
     // Credits:
     // Partially based on Torn Tools & reTorn
     
@@ -27,9 +73,9 @@ String runQuickItemJS({
     // - executeAction(): API calls (Equip/Use) and handles "Wrong itemID" retries
     //
     // Strategies for Temporary Items:
-    // - Level 1: Flutter persistente (checks injected `resolvedId`)
-    // - Level 2: TORN search API. `fetchItemViaSearch()`, if Level 1 fails
-    // - Level 3: Scroll fallback. `doScrollForTemporary()`. Physical scroll if Level 2 fails
+    // - Level 1: Flutter persistente (checks injected 'resolvedId')
+    // - Level 2: TORN search API. 'fetchItemViaSearch()', if Level 1 fails
+    // - Level 3: Scroll fallback. 'doScrollForTemporary()'. Physical scroll if Level 2 fails
     //
     // Caching & Interception:
     // - installTempInterceptor(): XHR/Fetch to sniff IDs
@@ -51,7 +97,9 @@ String runQuickItemJS({
     
     // Fixed time string for faction armoury replies
     function fixTime(str) {
-      let regexp = $timeRegex
+      // Backslash built at runtime for RC
+      let ws = String.fromCharCode(92) + 's';
+      let regexp = new RegExp('<span class="counter-wrap[' + ws + '="a-zA-Z0-9-]*data-time="[0-9]+"[' + ws + '="a-zA-Z0-9-]*>[0-9:]*</span>', 'g');
       let matches = str.match(regexp);
 
       if (matches == null || Object.keys(matches).length === 0) {
@@ -134,53 +182,53 @@ String runQuickItemJS({
         
     var darkModeFound = document.querySelectorAll('#body.dark-mode');
     if (darkModeFound.length > 0) {
-      addStyle(`
-        .resultBox {
-          border: 2px dotted black;
-          margin-top: 20px;
-          margin-bottom: 20px;
-          padding:5px;
-          background-color: #242424;
-        }
-        .resultBox a {
-          color: #82c8e0;
-          cursor: pointer;
-          text-decoration: underline;
-        }
-        .resultBox .pda-result-links {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px 14px;
-          margin-top: 8px;
-        }
-        .resultBox .pda-result-link {
-          display: inline-block;
-        }
-      `);
+      addStyle(
+        '.resultBox {' +
+        '  border: 2px dotted black;' +
+        '  margin-top: 20px;' +
+        '  margin-bottom: 20px;' +
+        '  padding:5px;' +
+        '  background-color: #242424;' +
+        '}' +
+        '.resultBox a {' +
+        '  color: #82c8e0;' +
+        '  cursor: pointer;' +
+        '  text-decoration: underline;' +
+        '}' +
+        '.resultBox .pda-result-links {' +
+        '  display: flex;' +
+        '  flex-wrap: wrap;' +
+        '  gap: 10px 14px;' +
+        '  margin-top: 8px;' +
+        '}' +
+        '.resultBox .pda-result-link {' +
+        '  display: inline-block;' +
+        '}'
+      );
     } else {
-      addStyle(`
-        .resultBox {
-          border: 2px dotted black;
-          margin-top: 20px;
-          margin-bottom: 20px;
-          padding:5px;
-          background-color: #fff;
-        }
-        .resultBox a {
-          color: #006994;
-          cursor: pointer;
-          text-decoration: underline;
-        }
-        .resultBox .pda-result-links {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px 14px;
-          margin-top: 8px;
-        }
-        .resultBox .pda-result-link {
-          display: inline-block;
-        }
-      `);
+      addStyle(
+        '.resultBox {' +
+        '  border: 2px dotted black;' +
+        '  margin-top: 20px;' +
+        '  margin-bottom: 20px;' +
+        '  padding:5px;' +
+        '  background-color: #fff;' +
+        '}' +
+        '.resultBox a {' +
+        '  color: #006994;' +
+        '  cursor: pointer;' +
+        '  text-decoration: underline;' +
+        '}' +
+        '.resultBox .pda-result-links {' +
+        '  display: flex;' +
+        '  flex-wrap: wrap;' +
+        '  gap: 10px 14px;' +
+        '  margin-top: 8px;' +
+        '}' +
+        '.resultBox .pda-result-link {' +
+        '  display: inline-block;' +
+        '}'
+      );
     }
     
     // If there any boxes remaining (from previous calls), remove them
@@ -384,7 +432,7 @@ String runQuickItemJS({
       } catch(e) {}
     }
 
-    var _tempDebugLogging = $kDebugMode; // Use Flutter's kDebugMode
+    var _tempDebugLogging = pdaQi.debug; // Use Flutter's kDebugMode
 
     // Helper for debug logging with timestamp
     // Usage: Called throughout the lifecycle to trace ID resolution (Strategies 0-3)
@@ -681,6 +729,9 @@ String runQuickItemJS({
           if (extraData && extraData.fac) {
             ajaxData.fac = extraData.fac;
           }
+          if (pdaQi.loaned && !(extraData && extraData.fac)) {
+            ajaxData.loaned = 1;
+          }
         }
         
         \$.ajax({
@@ -745,7 +796,7 @@ String runQuickItemJS({
     }
     
     var url = "";
-    if (!$eRefill && !$nRefill) {
+    if (!pdaQi.eRefill && !pdaQi.nRefill) {
       url = "https://www.torn.com/" + addRFC("item.php");
     } else {
       url = "https://www.torn.com/" + addRFC("factions.php");
@@ -754,11 +805,11 @@ String runQuickItemJS({
     // ========================================================================
     // LEVEL 1: PERSISTENCE & INITIALIZATION
     // ========================================================================
-    var resolvedId = "$instanceId";
+    var resolvedId = pdaQi.instanceId;
     var abortEquip = false;
-    var itemId = "$item";
-    var itemName = "$itemName";
-    var isTemporaryItem = $isTemporary;
+    var itemId = pdaQi.item;
+    var itemName = pdaQi.itemName;
+    var isTemporaryItem = pdaQi.isTemporary;
     var tempRetryAttempted = false;
 
     if (isTemporaryItem) {
@@ -783,7 +834,7 @@ String runQuickItemJS({
       }
     }
 
-    if ($isEquip && (!$faction) && !$eRefill && !$nRefill) {
+    if (pdaQi.isEquip && (!pdaQi.faction) && !pdaQi.eRefill && !pdaQi.nRefill) {
       if (!isTemporaryItem) {
         // Non-temporary items: use stored instanceId
         if (resolvedId === "" || resolvedId === "null") {
@@ -878,7 +929,7 @@ String runQuickItemJS({
       if (abortEquip) return;
       
       // For temporary items without ID...
-      if (isTemporaryItem && $isEquip && (resolvedId === "" || resolvedId === "null")) {
+      if (isTemporaryItem && pdaQi.isEquip && (resolvedId === "" || resolvedId === "null")) {
         
         // ========================================================================
         // TEMPORARY ITEMS STRATEGY CHAIN
@@ -944,11 +995,11 @@ String runQuickItemJS({
     // [Action Execution - All Levels]
     function executeAction() {
       // 1. Setup Flags
-      var isFaction = $faction;
-      var isRefill = $eRefill || $nRefill;
+      var isFaction = pdaQi.faction;
+      var isRefill = pdaQi.eRefill || pdaQi.nRefill;
       var isStandard = !isFaction && !isRefill;
       var validId = resolvedId !== "" && resolvedId !== "null";
-      var isEquip = $isEquip;
+      var isEquip = pdaQi.isEquip;
       
       var canEquip = isStandard && isEquip && validId;
 
@@ -1130,11 +1181,11 @@ String runQuickItemJS({
             onerror: function(e) {}
           });
         } else {
-            if (!$eRefill && !$nRefill) {
+            if (!pdaQi.eRefill && !pdaQi.nRefill) {
               ajaxWrapper({
                 url: url,
                 type: 'POST',
-                data: 'step=useItem&itemID=$item&fac=1',
+                data: 'step=useItem&itemID=' + pdaQi.item + '&fac=1',
                 oncomplete: function(resp) {
                   var response = JSON.parse(resp.responseText);
                   var topBox = document.querySelector('.content-title');
@@ -1154,7 +1205,7 @@ String runQuickItemJS({
                 onerror: function(e) {}
               });
             } else {
-              let step = $eRefill ? "step=armouryRefillEnergy" : "step=armouryRefillNerve";
+              let step = pdaQi.eRefill ? "step=armouryRefillEnergy" : "step=armouryRefillNerve";
 
               ajaxWrapper({
                 url: url,
@@ -1214,18 +1265,23 @@ String runQuickItemJS({
 
     removeRemaining();
 
+    }
+
     // Return to avoid iOS WKErrorDomain
     123;
   ''';
 }
 
-String quickItemPickerJS({required bool enable}) {
-  final enabled = enable ? 'true' : 'false';
+// quick_items_picker base
+// RC keys: snippet_quick_items_picker_js + snippet_quick_items_picker_version
+String quickItemsPickerBaseJS() {
   return '''
   (function() {
     try {
+      var pickerArgs = window.__pdaQuickItemsPickerArgs || {};
+
       // Check if in grid/thumbnails mode (not supported)
-      if ($enabled) {
+      if (pickerArgs.enable) {
         const thumbnailsIcon = document.querySelector('.link-icon-svg.thumbnails-icon.active, .link-icon-svg.thumbnails.active');
         if (thumbnailsIcon) {
           return 'grid-mode';
@@ -1236,6 +1292,7 @@ String quickItemPickerJS({required bool enable}) {
       const BTN_CLASS = 'pda-item-picker-btn';
       const WRAP_CLASS = 'pda-item-picker-wrap';
       const OBSERVER_KEY = '_pdaPickerObserver';
+      const RESIZE_KEY = '_pdaPickerResize';
       const ACTIVE_KEY = '_pdaPickerActive';
       const CLEANUP_FLAG = '_pdaPickerCleanupAdded';
       const QUICK_ITEM_CATEGORIES = ['Medical', 'Drug', 'Energy Drink', 'Alcohol', 'Candy', 'Booster', 'Supply Pack', 'Special'];
@@ -1243,9 +1300,11 @@ String quickItemPickerJS({required bool enable}) {
       const EXCEPTION_ITEMS = ['403', '283'];
       const HIGHLIGHT_CLASS = 'pda-picker-eligible';
       const NARROW_WIDTH_PX = 785; // fallback only
+      const root = document.body;
+      let narrow = false;
 
       function getFirstActionsWrap() {
-        return document.querySelector('li[data-item] ul.actions-wrap, li[data-item] ul.actions, li[data-item] .actions-wrap ul, li[data-item] .actions ul, li[data-item] .action-wrap ul, li[data-item] .item-actions ul, li[data-item] .actions-wrap, li[data-item] .actions, li[data-item] .action-wrap, li[data-item] .item-actions');
+        return root.querySelector('li[data-item] ul.actions-wrap:not(.pda-picker-actions), li[data-item] ul.actions:not(.pda-picker-actions), li[data-item] .actions-wrap:not(.pda-picker-actions) ul, li[data-item] .actions:not(.pda-picker-actions) ul, li[data-item] .action-wrap:not(.pda-picker-actions) ul, li[data-item] .item-actions:not(.pda-picker-actions) ul, li[data-item] .actions-wrap:not(.pda-picker-actions), li[data-item] .actions:not(.pda-picker-actions), li[data-item] .action-wrap:not(.pda-picker-actions), li[data-item] .item-actions:not(.pda-picker-actions)');
       }
 
       function isNarrow() {
@@ -1303,8 +1362,10 @@ String quickItemPickerJS({required bool enable}) {
           window[OBSERVER_KEY].disconnect();
           window[OBSERVER_KEY] = null;
         }
-        window.removeEventListener('scroll', addButtons);
-        window.removeEventListener('resize', addButtons);
+        if (window[RESIZE_KEY]) {
+          window.removeEventListener('resize', window[RESIZE_KEY]);
+          window[RESIZE_KEY] = null;
+        }
         window[ACTIVE_KEY] = false;
         window[CLEANUP_FLAG] = false;
 
@@ -1316,13 +1377,40 @@ String quickItemPickerJS({required bool enable}) {
       }
 
       function addButtons() {
-        // Update highlights, insert buttons when eligible
+        // Full pass over the list
         if (!window[ACTIVE_KEY]) {
           return; // If picker was deactivated, ignore stray observer/resize callbacks
         }
-        const narrow = isNarrow();
-        let addedCount = 0;
-        document.querySelectorAll('li[data-item]').forEach(function(li) {
+        narrow = isNarrow();
+        root.querySelectorAll('li[data-item]').forEach(updateItem);
+      }
+
+      function refreshNarrow() {
+        // Highlights follow narrow changes
+        if (!window[ACTIVE_KEY]) return;
+        const next = isNarrow();
+        if (next === narrow) return;
+        narrow = next;
+        root.querySelectorAll('li[data-item]').forEach(updateItem);
+      }
+
+      function onMutations(mutations) {
+        // Only items in the changed nodes
+        if (!window[ACTIVE_KEY]) return;
+        const items = new Set();
+        mutations.forEach(function(m) {
+          m.addedNodes.forEach(function(node) {
+            if (node.nodeType !== 1 || node.classList.contains(WRAP_CLASS)) return;
+            if (node.matches('li[data-item]')) items.add(node);
+            node.querySelectorAll('li[data-item]').forEach(function(li) { items.add(li); });
+            const owner = m.target.closest && m.target.closest('li[data-item]');
+            if (owner) items.add(owner);
+          });
+        });
+        items.forEach(updateItem);
+      }
+
+      function updateItem(li) {
           const itemNum = li.dataset.item;
           if (!itemNum) return;
           // Use getAttribute as fallback for dataset issues
@@ -1413,7 +1501,6 @@ String quickItemPickerJS({required bool enable}) {
           const btn = document.createElement('button');
           btn.className = BTN_CLASS + ' pda-picker-main-btn';
           btn.setAttribute('aria-label', 'Add ' + name + ' to quick items');
-          btn.title = 'Add to quick items';
           btn.innerHTML = '<span class="pda-picker-label">ADD QUICK</span>';
           btn.addEventListener('click', function(ev) {
             ev.stopPropagation();
@@ -1432,6 +1519,7 @@ String quickItemPickerJS({required bool enable}) {
               window.flutter_inappwebview.callHandler('quickItemPicker', {
                 item: itemNum,
                 rowKey: rKey,
+                loaned: (/f([0-9]+)/.test(rKey) && parseInt(/f([0-9]+)/.exec(rKey)[1], 10) > 0) || !!li.querySelector('button.option-return-to-faction'),
                 instanceId: isTemporary ? '' : id,
                 name: name,
                 category: category,
@@ -1447,8 +1535,8 @@ String quickItemPickerJS({required bool enable}) {
 
           wrap.appendChild(btn);
 
-          // Replace action list with our button; cache original for restoration
-          if (!actionsWrap.hasAttribute('data-pda-actions-html')) {
+          // Torn's latest actions, restored on close
+          if (actionsWrap.firstElementChild || !actionsWrap.hasAttribute('data-pda-actions-html')) {
             actionsWrap.setAttribute('data-pda-actions-html', actionsWrap.innerHTML);
           }
           while (actionsWrap.firstChild) {
@@ -1464,14 +1552,9 @@ String quickItemPickerJS({required bool enable}) {
           actionsWrap.style.alignItems = 'center';
           actionsWrap.style.padding = '6px 0';
           actionsWrap.appendChild(wrap);
-          addedCount++;
-        });
-        if (typeof console !== 'undefined') {
-          //console.debug('[PDA picker] added buttons:', addedCount);
-        }
       }
 
-      if ($enabled === false) {
+      if (pickerArgs.enable === false) {
         removeAll();
         return 'picker-disabled';
       }
@@ -1485,78 +1568,87 @@ String quickItemPickerJS({required bool enable}) {
       if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
         style.id = styleId;
-        style.textContent = `
-          .\${WRAP_CLASS}, .re_add_qitem {
-            display: block;
-            clear: both;
-            width: 100%;
-            margin-top: 6px;
-            list-style: none;
-          }
-          ul.actions-wrap .\${WRAP_CLASS}, ul.actions .\${WRAP_CLASS},
-          ul.actions-wrap .re_add_qitem, ul.actions .re_add_qitem {
-            float: none;
-            width: 100%;
-            display: block;
-            clear: both;
-            padding: 6px 0;
-          }
-          .pda-picker-actions {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-            justify-content: center !important;
-            min-height: 28px !important;
-            padding: 0 !important;
-          }
-          .pda-picker-main-btn {
-            border: 1px solid #ff8000 !important;
-            background: transparent !important;
-            color: #ff8000 !important;
-            border-radius: 10px !important;
-            position: relative !important;
-            top: auto !important;
-            left: auto !important;
-            transform: none !important;
-            height: 18px !important;
-            min-width: 64px !important;
-            padding: 0 6px !important;
-            text-align: center !important;
-            line-height: 16px !important;
-            font-size: 10px !important;
-            white-space: nowrap !important;
-            cursor: pointer !important;
-            z-index: 999 !important;
-            font-weight: bold !important;
-            box-sizing: border-box !important;
-            text-decoration: none !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-          }
-          .\${HIGHLIGHT_CLASS} {
-            outline: 1px solid #ff8000 !important;
-            outline-offset: -1px !important; /* keep stroke inside to avoid clipping */
-            border-radius: 10px !important;
-            box-shadow:
-              0 0 0 1px rgba(255, 128, 0, 0.16) inset,
-              0 0 0 1px rgba(255, 128, 0, 0.10) !important;
-            overflow: visible !important;
-          }
-          .pda-picker-main-btn:hover { filter: brightness(1.05); }
-          .pda-picker-main-btn:active { transform: translateY(1px); }
-        `;
+        style.textContent =
+          ' .' + WRAP_CLASS + ', .re_add_qitem {' +
+          '   display: block;' +
+          '   clear: both;' +
+          '   width: 100%;' +
+          '   margin-top: 6px;' +
+          '   list-style: none;' +
+          ' }' +
+          ' ul.actions-wrap .' + WRAP_CLASS + ', ul.actions .' + WRAP_CLASS + ',' +
+          ' ul.actions-wrap .re_add_qitem, ul.actions .re_add_qitem {' +
+          '   float: none;' +
+          '   width: 100%;' +
+          '   display: block;' +
+          '   clear: both;' +
+          '   padding: 6px 0;' +
+          ' }' +
+          ' .pda-picker-actions {' +
+          '   display: flex !important;' +
+          '   flex-direction: column !important;' +
+          '   align-items: center !important;' +
+          '   justify-content: center !important;' +
+          '   min-height: 28px !important;' +
+          '   padding: 0 !important;' +
+          ' }' +
+          ' .pda-picker-main-btn {' +
+          '   border: 1px solid #ff8000 !important;' +
+          '   background: transparent !important;' +
+          '   color: #ff8000 !important;' +
+          '   border-radius: 10px !important;' +
+          '   position: relative !important;' +
+          '   top: auto !important;' +
+          '   left: auto !important;' +
+          '   transform: none !important;' +
+          '   height: 18px !important;' +
+          '   min-width: 64px !important;' +
+          '   padding: 0 6px !important;' +
+          '   text-align: center !important;' +
+          '   line-height: 16px !important;' +
+          '   font-size: 10px !important;' +
+          '   white-space: nowrap !important;' +
+          '   cursor: pointer !important;' +
+          '   z-index: 999 !important;' +
+          '   font-weight: bold !important;' +
+          '   box-sizing: border-box !important;' +
+          '   text-decoration: none !important;' +
+          '   display: inline-flex !important;' +
+          '   align-items: center !important;' +
+          '   justify-content: center !important;' +
+          ' }' +
+          ' .' + HIGHLIGHT_CLASS + ' {' +
+          '   outline: 1px solid #ff8000 !important;' +
+          '   outline-offset: -1px !important; /* keep stroke inside to avoid clipping */' +
+          '   border-radius: 10px !important;' +
+          '   box-shadow:' +
+          '     0 0 0 1px rgba(255, 128, 0, 0.16) inset,' +
+          '     0 0 0 1px rgba(255, 128, 0, 0.10) !important;' +
+          '   overflow: visible !important;' +
+          ' }' +
+          ' .pda-picker-main-btn:hover { filter: brightness(1.05); }' +
+          ' .pda-picker-main-btn:active { transform: translateY(1px); }';
         document.head.appendChild(style);
       }
 
       addButtons();
+      refreshNarrow();
 
-      const observer = new MutationObserver(addButtons);
-      observer.observe(document.body, { childList: true, subtree: true });
+      const observer = new MutationObserver(onMutations);
+      observer.observe(root, { childList: true, subtree: true });
       window[OBSERVER_KEY] = observer;
 
-      window.addEventListener('scroll', addButtons, { passive: true });
-      window.addEventListener('resize', addButtons, { passive: true });
+      // One check per frame
+      let resizeFrame = 0;
+      const onResize = function() {
+        if (resizeFrame) return;
+        resizeFrame = requestAnimationFrame(function() {
+          resizeFrame = 0;
+          refreshNarrow();
+        });
+      };
+      window.addEventListener('resize', onResize, { passive: true });
+      window[RESIZE_KEY] = onResize;
 
       if (!window[CLEANUP_FLAG]) {
         const cleanup = () => removeAll();
@@ -1576,11 +1668,12 @@ String quickItemPickerJS({required bool enable}) {
 ''';
 }
 
-String quickItemsMassCheckJS(List<String> itemNames) {
-  final namesJson = jsonEncode(itemNames);
+// quick_items_mass_check base
+// RC keys: snippet_quick_items_mass_check_js + snippet_quick_items_mass_check_version
+String quickItemsMassCheckBaseJS() {
   return '''
       (function() {
-        var items = $namesJson;
+        var items = (window.__pdaQuickItemsMassCheckArgs || {}).names || [];
         // console.log("PDA Mass Check: Starting for " + items.length + " items");
 
         function getRFC() {
@@ -1690,30 +1783,35 @@ String quickItemsMassCheckJS(List<String> itemNames) {
 
                  // console.log("PDA Mass Check DEBUG: Found " + dName + ", Qty: " + dQty + ", RowKey: " + dRowKey);
 
-                 if (!results[dName]) {
-                    results[dName] = { qty: 0, rowKey: dRowKey };
+                 var isLoaned = (/f([0-9]+)/.test(dRowKey || '') && parseInt(/f([0-9]+)/.exec(dRowKey)[1], 10) > 0) || !!li.querySelector('button.option-return-to-faction');
+                 var rKey = (isLoaned ? 'L:' : 'O:') + dName;
+
+                 if (!results[rKey]) {
+                    results[rKey] = { name: dName, loaned: isLoaned, qty: 0, rowKey: dRowKey };
                  }
-                 results[dName].qty += dQty;
+                 results[rKey].qty += dQty;
                  if (dRowKey && dRowKey.startsWith('g')) {
-                     results[dName].rowKey = dRowKey;
+                     results[rKey].rowKey = dRowKey;
                  }
               }
               
               // Now send the aggregated results
                 var wanted = (itemName || '').toString().trim().toLowerCase();
                 var foundExact = false;
+                var foundExactLoaned = false;
               for (var key in results) {
                  var res = results[key];
-                  if (wanted && key.toString().trim().toLowerCase() === wanted) {
-                   foundExact = true;
+                  if (wanted && res.name.toString().trim().toLowerCase() === wanted) {
+                   if (res.loaned) foundExactLoaned = true; else foundExact = true;
                   }
                  // console.log("PDA Mass Check DEBUG: Sending " + key + " -> Qty: " + res.qty + ", RowKey: " + res.rowKey);
                  if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
                     window.flutter_inappwebview.callHandler('quickItemMassUpdate', {
                        originalName: itemName,
-                       foundName: key,
+                       foundName: res.name,
                        qty: res.qty,
-                       rowKey: res.rowKey
+                       rowKey: res.rowKey,
+                       loaned: res.loaned
                     });
                  }
               }
@@ -1725,7 +1823,19 @@ String quickItemsMassCheckJS(List<String> itemNames) {
                     originalName: itemName,
                     foundName: itemName,
                     qty: 0,
-                    rowKey: null
+                    rowKey: null,
+                    loaned: false
+                  });
+                 }
+                }
+                if (!foundExactLoaned) {
+                 if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                  window.flutter_inappwebview.callHandler('quickItemMassUpdate', {
+                    originalName: itemName,
+                    foundName: itemName,
+                    qty: 0,
+                    rowKey: null,
+                    loaned: true
                   });
                  }
                 }
@@ -1739,15 +1849,18 @@ String quickItemsMassCheckJS(List<String> itemNames) {
       ''';
 }
 
-String changeLoadOutJS({required String item, required bool attackWebview}) {
+// quick_items_loadout base
+// RC keys: snippet_quick_items_loadout_js + snippet_quick_items_loadout_version
+String quickItemsLoadoutBaseJS() {
   return '''
-    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=$item';
-    
+    var pdaLoadoutArgs = window.__pdaQuickItemsLoadoutArgs || {};
+    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=' + pdaLoadoutArgs.item;
+
     ajaxWrapper({
       url: action,
       type: 'GET',
       oncomplete: function(resp) {
-        if ($attackWebview) {
+        if (pdaLoadoutArgs.attackWebview) {
           window.loadoutChangeHandler.postMessage(resp.responseText);
         } else {
           window.flutter_inappwebview.callHandler('loadoutChangeHandler', resp.responseText);

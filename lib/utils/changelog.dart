@@ -14,6 +14,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ChangeLogItem {
@@ -34,15 +36,38 @@ class ComplexFeature {
 
 // Modern changelog model (v3.14.0+)
 
+class _MImage {
+  final String light;
+  final String? dark;
+
+  const _MImage(this.light, {this.dark});
+}
+
 class _MItem {
   final String text;
   final String? detail;
   final bool androidOnly;
+  final bool iosOnly;
+  final bool chatOnly;
   final String? docUrl;
+  final List<FeatureDiagramScene> diagrams;
+  final List<_MImage> images;
+  final bool pinned;
 
-  const _MItem(this.text, {this.detail, this.androidOnly = false, this.docUrl});
+  const _MItem(
+    this.text, {
+    this.detail,
+    this.androidOnly = false,
+    this.iosOnly = false,
+    this.chatOnly = false,
+    this.docUrl,
+    this.diagrams = const [],
+    this.images = const [],
+    this.pinned = false,
+  });
 
-  bool get visibleOnThisPlatform => !androidOnly || Platform.isAndroid;
+  bool get visibleOnThisPlatform =>
+      (!androidOnly || Platform.isAndroid) && (!iosOnly || Platform.isIOS) && (!chatOnly || NativeChat.compiled);
 
   // Credits are tagged inline as "[Name]", same as the legacy changelog
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
@@ -83,6 +108,230 @@ class _MVersion {
 }
 
 List<_MVersion> _modernChangelog() => [
+  const _MVersion(
+    version: 'v4.0.0',
+    date: '14 November 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem(
+            "Chat: Torn's chat is now built into Torn PDA",
+            chatOnly: true,
+            pinned: true,
+            detail:
+                'Chat without leaving the game. The chat floats over the browser in a window you can move, resize or '
+                'shrink to a bubble, and any conversation can pop out on its own.\n\n'
+                'Names open a player card with their status and quick actions, links open in a preview, and sell and '
+                'buy offers in Trade and Global show the market value. Each chat has its own alerts, and rooms can '
+                'alert you only when you are mentioned. With the app closed, only private messages notify you: '
+                'faction, company and other rooms alert while Torn PDA is open or just left.\n\n'
+                'Everything else is in Tips > Chat.',
+            diagrams: [
+              FeatureDiagramScene.chatBubble,
+              FeatureDiagramScene.chatDrawer,
+              FeatureDiagramScene.chatMenuBar,
+              FeatureDiagramScene.chatWindow,
+              FeatureDiagramScene.chatLinkPreview,
+              FeatureDiagramScene.chatPlayerCard,
+            ],
+          ),
+          _MItem(
+            'Browser: added support for two groups of tabs side by side',
+            detail:
+                'On wide screens with split screen enabled in Settings, press and hold a tab and drag it onto the app '
+                'or the other panel to move it there, or double-tap it and use the "open in split panel" icon. '
+                'Dragging the main tab opens a copy of it. Locked tabs stay in their group while tab lock warnings '
+                'are enabled.\n\nPress and hold the divider, then drag it, to resize the panels. You can also choose '
+                'where links tapped in the app open, in Settings next to Split screen. Dev Tools open in the other panel, '
+                'next to the page.\n\nMore details in the Tips section.',
+            diagrams: [
+              FeatureDiagramScene.dragToApp,
+              FeatureDiagramScene.dragToOtherPanel,
+              FeatureDiagramScene.copyMainTab,
+              FeatureDiagramScene.linkCurrentTab,
+            ],
+            pinned: true,
+          ),
+          _MItem(
+            'Home screen widget for iOS',
+            iosOnly: true,
+            pinned: true,
+            detail:
+                'Add Torn PDA to your home screen in small, medium or large size, or to the lock screen. It shows your '
+                'status, bars, cooldowns, chain, messages, events, money and shortcuts, and tapping any of them opens '
+                'the right page.\n\n'
+                'Note: bars and timers keep moving on their own between updates. iOS decides how often widgets refresh, '
+                'usually every 15 to 30 minutes, but leaving Torn PDA or tapping the refresh icon updates it right '
+                'away. Press and hold the widget and choose Edit Widget to show or hide shortcuts and money.\n\n'
+                'Your shortcuts can also be added to Control Center (iOS 18 or later). Requires iOS 17 or later.',
+            images: [
+              _MImage(
+                'images/changelog/widget_ios/large_light.png',
+                dark: 'images/changelog/widget_ios/large_dark.png',
+              ),
+              _MImage(
+                'images/changelog/widget_ios/medium_light.png',
+                dark: 'images/changelog/widget_ios/medium_dark.png',
+              ),
+              _MImage(
+                'images/changelog/widget_ios/small_light.png',
+                dark: 'images/changelog/widget_ios/small_dark.png',
+              ),
+              _MImage('images/changelog/widget_ios/lockscreen.png'),
+            ],
+          ),
+          _MItem(
+            'Floating window: keep watching the chain or up to 4 players over other apps',
+            androidOnly: true,
+            pinned: true,
+            detail:
+                'The app shrinks into a small window that stays on top of other apps. Tap the window icon in the chain '
+                'widget to watch the chain (counter, chain watcher colors, blinking border and, in panic mode, a '
+                'Panic attack button), '
+                'choose "Watch players" in the options of Targets, War or Retaliation (or the window icon in Attacks '
+                'and FFScouter) and tap up to 4 player cards (hospital or jail countdown, green when their status '
+                'changes), or in Stakeouts to watch all of them at once.\n\n'
+                'While a floating window is open, '
+                'stakeout alerts appear as a banner and as a phone notification. Settings let you turn it on or off '
+                'for each place, and optionally open the chain window when you leave the app. Closing it with the '
+                'system X is like leaving the app: the chain watcher stops alerting.\n\nMore details in the Tips '
+                'section.',
+            diagrams: [FeatureDiagramScene.pipChain, FeatureDiagramScene.pipPlayer],
+          ),
+          _MItem(
+            'Quick items: support for items loaned by your faction',
+            detail:
+                'Loaned medical items, drugs, energy drinks, alcohol, candy and boosters can be added to quick items '
+                'as their own entry, marked with the faction shield. Using one spends the loaned item instead of your own.',
+          ),
+          _MItem(
+            'Browser: option to allow remote debugging',
+            detail:
+                'Found in Advanced browser settings, under Maintenance. Lets you inspect the browser '
+                'from a computer: chrome://inspect on Android, Safari Web Inspector on iOS. '
+                'While enabled, Google sign-in inside the browser may not work. Restart the app to apply.',
+          ),
+          _MItem(
+            'Scripts: create your own modes besides war mode',
+            detail:
+                'Create modes such as "Casino" or "Trader" from the options menu of the scripts section. While a mode '
+                'is on, the switches in the list choose which scripts run in it, and scripts marked as always active '
+                'run in every mode. The war mode shortcuts now let you pick the mode.',
+          ),
+          _MItem(
+            'Browser: tab counter on the new tab button',
+            detail:
+                'From 10 open tabs, the + button shows how many there are. Tabs can also show their own number '
+                '(Advanced browser settings, Tabs).',
+          ),
+          _MItem(
+            'Browser: close all tabs at once',
+            detail:
+                'New button in Advanced browser settings, Maintenance. It keeps the main tab, the cache and your '
+                'Torn session.',
+          ),
+          _MItem(
+            'Browser: limit how many tabs stay loaded',
+            detail:
+                'Maximum loaded tabs, in Advanced browser settings, Memory. Tabs above the limit go to sleep and '
+                'load again when you tap them, which avoids blank pages with many tabs open.',
+          ),
+          _MItem(
+            'Notifications: discreet notifications on a schedule',
+            detail:
+                'In Settings, under Discreet local notifications, turn on Schedule and pick the hours. '
+                'Notifications created by Torn PDA and its server alerts are discreet between those hours. '
+                'Torn private messages on iOS are not covered.',
+          ),
+          _MItem(
+            'Chaining: live chain from the Torn page you are viewing',
+            detail:
+                'While a Torn page is on screen in the browser, the chain widget and the chain in the faction chat '
+                'update with every hit. The chain icon turns live while it lasts, and the API takes over when you '
+                'leave the page.',
+          ),
+          _MItem(
+            'App icon menu: pick its shortcuts, chats included',
+            detail:
+                'In Settings, Shortcuts, App icon menu. Each of the four slots can be a Torn page or one of your '
+                'chats, shown when you long press the Torn PDA icon.',
+          ),
+          _MItem("Chaining / Chat: browse your faction's past chain reports"),
+          _MItem('Travel: warning when your OC is ready before a round trip is back, with the destinations that fit'),
+        ],
+      ),
+      _MSection(
+        icon: Icons.trending_up,
+        title: 'Improved',
+        color: Color(0xFFE65100),
+        items: [
+          _MItem(
+            'Browser: blank pages are now redrawn automatically',
+            androidOnly: true,
+            detail:
+                'With many tabs open, the page you were looking at could stop drawing. Torn PDA now detects it, puts '
+                'the other tabs to sleep and redraws it.',
+          ),
+          _MItem(
+            'Browser: zoom is now adjusted live with a slider, from the Zoom button in the URL options',
+            androidOnly: true,
+          ),
+          _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
+          _MItem('Chat: hit calls can count down until the target is out', chatOnly: true),
+          _MItem('Chat: bazaars of other players only show open or closed, following Torn API changes', chatOnly: true),
+          _MItem('Items / Chat: market prices show how old they are, Torn now updates them hourly'),
+          _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
+          _MItem('Local backups: private backups now need a key of at least 8 characters'),
+          _MItem('Local backups: stronger encryption, backups made with 4.0.0 cannot be opened by older versions'),
+          _MItem('Local backups: shareable backups and backups from another player import userscripts disabled'),
+          _MItem('Stock market alerts: option to hide stocks where you already own a benefit block [Juoku]'),
+          _MItem('Browser: improved page load speed [xentac]'),
+          _MItem(
+            'Scripts: faster and more reliable injection and PDA_http requests [xentac]',
+            detail:
+                'Scripts start sooner after a page loads, and PDA_http requests can go out before the page has '
+                'finished loading, as in Tampermonkey.\n\n'
+                'For script developers: a script that runs at document-start and changes the page with the '
+                'response should wait for the elements it needs. The developer guide is linked below.',
+            docUrl: 'https://github.com/Manuito83/torn-pda/blob/master/docs/webview/http-handlers.md',
+          ),
+        ],
+      ),
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Fixed alerts not loading or saving after the app recovers its session'),
+          _MItem('Fixed automatic alerts stopping after a few days until a Soft Reset'),
+          _MItem('Browser: rotating or resizing the screen no longer reloads your tabs'),
+          _MItem('Browser: fixed a tab being duplicated when split screen turns off'),
+          _MItem('Browser: find in page arrows are visible in chaining mode'),
+          _MItem('Calendar: fixed event dates'),
+          _MItem('Faction assistance: a request that cannot reach the server now shows an error'),
+          _MItem('API key: re-entering it restores your alerts'),
+          _MItem('Network fixes [bombel]'),
+          _MItem('Faction assistance: explains why a request failed, including when your key hits the Torn rate limit'),
+          _MItem('Scripts: @match now follows Tampermonkey rules (http*, any port, pages with #) [xentac]'),
+          _MItem('Scripts: a script no longer runs on the previous page after going back [xentac]'),
+          _MItem('Quick items: item icons no longer go missing after closing the picker [xentac]'),
+          _MItem('Fixed quick items page detection'),
+          _MItem('Profile: the race start notification icon now shows when it is set'),
+          _MItem('Profile: manual hospital and jail notifications now follow changes in your release time'),
+          _MItem('Travel: flight times now include travel time reduction perks'),
+          _MItem('Fixed unread messages count in the home screen widget', androidOnly: true),
+          _MItem('Fixed crashes when a web page shows an alert while another dialog is open', iosOnly: true),
+          _MItem('Fixed crashes when a page asks for the camera or microphone', iosOnly: true),
+          _MItem('Fixed occasional crashes when Live Activities update', iosOnly: true),
+        ],
+      ),
+    ],
+  ),
+
   // TODO: confirm the release date
   const _MVersion(
     version: 'v3.17.0',
@@ -606,6 +855,8 @@ const _contributorXids = <String, String>{
   'Kwack': '2190604',
   'DarXide': '4059250',
   'bombel': '2362436',
+  'xentac': '3354782',
+  'Juoku': '2545301',
 };
 
 const _contributorColors = <Color>[
@@ -3581,9 +3832,14 @@ class ChangeLogState extends State<ChangeLog> {
 
   @override
   Widget build(BuildContext context) {
+    // Hidden under the browser
+    final underBrowser = context.select<WebViewProvider?, bool>(
+      (w) => (w?.browserShowInForeground ?? false) && !w!.webViewSplitActive,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 5),
@@ -3597,11 +3853,14 @@ class ChangeLogState extends State<ChangeLog> {
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(15, 25, 15, 15),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: _items(),
+                      padding: const EdgeInsets.fromLTRB(8, 25, 10, 15),
+                      child: TickerMode(
+                        enabled: !underBrowser,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: _items(),
+                        ),
                       ),
                     ),
                   ),
@@ -3642,31 +3901,34 @@ class ChangeLogState extends State<ChangeLog> {
     itemList.add(
       Padding(
         padding: const EdgeInsets.only(bottom: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset('images/icons/torn_pda.png', width: 42, height: 42),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'TORN PDA',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.5,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset('images/icons/torn_pda.png', width: 42, height: 42),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TORN PDA',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2.5,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
-                ),
-                const _AnimatedChangelogWordmark(),
-              ],
-            ),
-          ],
+                  const _AnimatedChangelogWordmark(),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -3911,7 +4173,7 @@ class _ModernSectionTile extends StatelessWidget {
           section.title,
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: accent),
         ),
-        childrenPadding: const EdgeInsets.only(left: 16, right: 4, bottom: 8),
+        childrenPadding: const EdgeInsets.only(left: 6, right: 4, bottom: 8),
         children: [
           for (final item in visibleItems)
             Padding(
@@ -3962,6 +4224,12 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
+    if (widget.item.pinned) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [_front(pinned: true), const SizedBox(height: 8), _back(pinned: true)],
+      );
+    }
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       alignment: Alignment.topCenter,
@@ -3985,28 +4253,29 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
     );
   }
 
-  Widget _front() {
+  Widget _front({bool pinned = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _AuthorDot(author: widget.item.author, contributors: widget.contributors),
         Expanded(child: Text(widget.item.description, style: const TextStyle(fontSize: 15, height: 1.4))),
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: _flip,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Icon(Icons.info_outline, size: 22, color: widget.accent),
+        if (!pinned)
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _flip,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Icon(Icons.info_outline, size: 22, color: widget.accent),
+            ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _back() {
+  Widget _back({bool pinned = false}) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _flip,
+      onTap: pinned ? null : _flip,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(12),
@@ -4050,14 +4319,95 @@ class _FlipItemState extends State<_FlipItem> with SingleTickerProviderStateMixi
                       ),
                     ),
                   ],
+                  if (widget.item.diagrams.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    FeatureDiagram(scenes: widget.item.diagrams),
+                  ],
+                  if (widget.item.images.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _ChangelogImages(images: widget.item.images),
+                  ],
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.close, size: 18, color: widget.accent),
+            if (!pinned) ...[const SizedBox(width: 8), Icon(Icons.close, size: 18, color: widget.accent)],
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ChangelogImages extends StatefulWidget {
+  final List<_MImage> images;
+
+  const _ChangelogImages({required this.images});
+
+  @override
+  State<_ChangelogImages> createState() => _ChangelogImagesState();
+}
+
+class _ChangelogImagesState extends State<_ChangelogImages> {
+  final _controller = PageController();
+  Timer? _timer;
+  int _page = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.images.length < 2) return;
+    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!_controller.hasClients) return;
+      final next = (_page + 1) % widget.images.length;
+      _controller.animateToPage(next, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ink = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 130,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.images.length,
+            onPageChanged: (page) => setState(() => _page = page),
+            itemBuilder: (_, index) {
+              final image = widget.images[index];
+              return Image.asset(isDark ? image.dark ?? image.light : image.light, fit: BoxFit.contain);
+            },
+          ),
+        ),
+        if (widget.images.length > 1) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              widget.images.length,
+              (index) => Container(
+                width: 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: ink.withValues(alpha: index == _page ? 0.8 : 0.25),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

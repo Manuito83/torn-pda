@@ -32,6 +32,7 @@ class QuickItem {
     this.accuracy,
     this.defense,
     this.isGrouped,
+    this.loaned = false,
   });
 
   bool? active;
@@ -52,6 +53,7 @@ class QuickItem {
   double? accuracy;
   double? defense;
   bool? isGrouped;
+  bool? loaned;
 
   factory QuickItem.fromJson(Map<String, dynamic> json) => QuickItem(
         active: json["active"],
@@ -72,6 +74,7 @@ class QuickItem {
         accuracy: (json["accuracy"] is num) ? (json["accuracy"] as num).toDouble() : null,
         defense: (json["defense"] is num) ? (json["defense"] as num).toDouble() : null,
         isGrouped: json["isGrouped"],
+        loaned: json["loaned"] ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -93,5 +96,6 @@ class QuickItem {
         "accuracy": accuracy,
         "defense": defense,
         "isGrouped": isGrouped,
+        "loaned": loaned ?? false,
       };
 }

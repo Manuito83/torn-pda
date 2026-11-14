@@ -23,6 +23,8 @@ import {
   NotificationCheckResult,
 } from "./notification";
 import { getUsersStat } from "./torn_api";
+import { KeyTracking, readKeyTracking, settleKeyFailures, trackKeyResult } from "./key_failures";
+import { verifiedUpdate } from "./verified_players";
 import { sendCityShopRestockNotification } from "./city_shops";
 import { CityShopItem } from "./interfaces/city_shops_interface";
 
@@ -30,6 +32,7 @@ const privateKey = require("../key/torn_key");
 
 import { handleTravelLiveActivity } from "./la_travel_handler";
 import { handleRacingLiveActivity } from "./la_racing_handler";
+import { handleWidgetPush } from "./widget_push";
 
 export async function getStockMarket(apiKey: string) {
   const response = await fetch(
@@ -105,22 +108,38 @@ export const checkIOS = onSchedule(
         .where("la_racing_push_token", ">", "")
         .get();
 
-      const [alertsUsersSnapshot, laTravelOnlyUsersSnapshot, laRacingOnlyUsersSnapshot] = await Promise.all([
-        alertsUsersQuery,
-        laTravelOnlyUsersQuery,
-        laRacingOnlyUsersQuery,
-      ]);
+      const widgetOnlyUsersQuery = admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("platform", "==", "ios")
+        .where("alertsEnabled", "==", false)
+        .where("widget_push_token", ">", "")
+        .get()
+        .catch((e) => {
+          logger.warn(`Widget-only users query failed: ${e}`);
+          return { docs: [] as admin.firestore.QueryDocumentSnapshot[] };
+        });
 
-      const alertsUsers = alertsUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
-      const laTravelOnlyUsers = laTravelOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
-      const laRacingOnlyUsers = laRacingOnlyUsersSnapshot.docs.map((d) => ({ uid: d.id, ...d.data() }));
+      const [alertsUsersSnapshot, laTravelOnlyUsersSnapshot, laRacingOnlyUsersSnapshot, widgetOnlyUsersSnapshot] =
+        await Promise.all([alertsUsersQuery, laTravelOnlyUsersQuery, laRacingOnlyUsersQuery, widgetOnlyUsersQuery]);
+
+      const alertsUsers = alertsUsersSnapshot.docs.map((d) => ({ ...d.data(), uid: d.id }));
+      const laTravelOnlyUsers = laTravelOnlyUsersSnapshot.docs.map((d) => ({ ...d.data(), uid: d.id }));
+      const laRacingOnlyUsers = laRacingOnlyUsersSnapshot.docs.map((d) => ({ ...d.data(), uid: d.id }));
+      const widgetOnlyUsers = widgetOnlyUsersSnapshot.docs
+        .map((d) => ({ ...d.data(), uid: d.id }) as any)
+        .filter((subscriber) => subscriber.widget_push_token !== subscriber.widget_push_bad_token);
 
       const subscribers = Array.from(
         new Map(
-          [...alertsUsers, ...laTravelOnlyUsers, ...laRacingOnlyUsers].map((subscriber) => [subscriber.uid, subscriber])
+          [...alertsUsers, ...laTravelOnlyUsers, ...laRacingOnlyUsers, ...widgetOnlyUsers].map((subscriber) => [
+            subscriber.uid,
+            subscriber,
+          ])
         ).values()
       );
-      const cityItems = await readCityShopItems(subscribers);
+      const [cityItems, keyTracking] = await Promise.all([readCityShopItems(subscribers), readKeyTracking()]);
       let iOSBlocks = 0;
 
       const batchSize = 500;
@@ -132,7 +151,8 @@ export const checkIOS = onSchedule(
             foreignStocks,
             stockMarket,
             false,
-            cityItems
+            cityItems,
+            keyTracking
           ).then(function (value) {
             if (value === "ip-block") {
               iOSBlocks++;
@@ -146,12 +166,13 @@ export const checkIOS = onSchedule(
           await new Promise(resolve => setTimeout(resolve, 1000)); // Pausa de 1000ms = 1 segundo
         }
       }
+      if (keyTracking) await settleKeyFailures(keyTracking, "iOS");
 
       const millisAfterFinish = Date.now();
       const difference = (millisAfterFinish - millisAtStart) / 1000;
 
       logger.info(
-        `Processing ${subscribers.length} iOS users (${alertsUsers.length} with alerts, ${subscribers.length - alertsUsers.length} with LA only). Blocks: ${iOSBlocks}. Time: ${difference}s`
+        `Processing ${subscribers.length} iOS users (${alertsUsers.length} with alerts, ${subscribers.length - alertsUsers.length} with LA or widget only). Blocks: ${iOSBlocks}. Time: ${difference}s`
       );
     }
 
@@ -197,8 +218,8 @@ export const checkAndroidLow = onSchedule(
         .where("level", "<", 42)
         .get();
 
-      const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
-      const cityItems = await readCityShopItems(subscribers);
+      const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }));
+      const [cityItems, keyTracking] = await Promise.all([readCityShopItems(subscribers), readKeyTracking()]);
       let androidLow = 0;
 
       const batchSize = 500;
@@ -210,7 +231,8 @@ export const checkAndroidLow = onSchedule(
             foreignStocks,
             stockMarket,
             false,
-            cityItems
+            cityItems,
+            keyTracking
           ).then(function (value) {
             if (value === "ip-block") {
               androidLow++;
@@ -224,6 +246,7 @@ export const checkAndroidLow = onSchedule(
           await new Promise(resolve => setTimeout(resolve, 1000)); // Pausa de 1000ms = 1 segundo
         }
       }
+      if (keyTracking) await settleKeyFailures(keyTracking, "Android Low");
 
       const millisAfterFinish = Date.now();
       const difference = (millisAfterFinish - millisAtStart) / 1000;
@@ -274,8 +297,8 @@ export const checkAndroidHigh = onSchedule(
         .where("level", ">=", 42)
         .get();
 
-      const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
-      const cityItems = await readCityShopItems(subscribers);
+      const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }));
+      const [cityItems, keyTracking] = await Promise.all([readCityShopItems(subscribers), readKeyTracking()]);
       let androidHigh = 0;
 
       const batchSize = 500;
@@ -287,7 +310,8 @@ export const checkAndroidHigh = onSchedule(
             foreignStocks,
             stockMarket,
             false,
-            cityItems
+            cityItems,
+            keyTracking
           ).then(function (value) {
             if (value === "ip-block") {
               androidHigh++;
@@ -301,6 +325,7 @@ export const checkAndroidHigh = onSchedule(
           await new Promise(resolve => setTimeout(resolve, 1000)); // Pausa de 1000ms = 1 segundo
         }
       }
+      if (keyTracking) await settleKeyFailures(keyTracking, "Android High");
 
       const millisAfterFinish = Date.now();
       const difference = (millisAfterFinish - millisAtStart) / 1000;
@@ -330,20 +355,18 @@ async function sendNotificationForProfile(
   foreignStocks: any,
   stockMarket: any,
   _forceTest: boolean = false,
-  cityItems: Record<string, CityShopItem> = {}
+  cityItems: Record<string, CityShopItem> = {},
+  keyTracking?: KeyTracking
 ): Promise<any> {
-  // Guard: skip subscribers without a valid uid (e.g. LA-only users missing this field)
-  if (!subscriber.uid) {
-    logger.warn(`Skipping subscriber without uid (playerId: ${subscriber.playerId || "unknown"})`);
-    return;
-  }
-
   const notificationsToSend: NotificationParams[] = [];
   const firestoreUpdates: { [key: string]: any } = {};
   const allPromises: Promise<any>[] = [];
 
   try {
     const userStats: any = await getUsersStat(subscriber.apiKey);
+    if (keyTracking) {
+      allPromises.push(trackKeyResult(subscriber, userStats, keyTracking));
+    }
 
     if (!userStats.error) {
       // 1. Live Activities: Call handleTravelLiveActivity (it handles its own RTDB writes)
@@ -353,6 +376,9 @@ async function sendNotificationForProfile(
       }
       if (subscriber.la_racing_push_token) {
         allPromises.push(handleRacingLiveActivity(userStats, subscriber));
+      }
+      if (subscriber.widget_push_token && subscriber.widget_push_token !== subscriber.widget_push_bad_token) {
+        allPromises.push(handleWidgetPush(userStats, subscriber));
       }
 
       // 2. Prepare an array to collect results conditionally
@@ -418,6 +444,7 @@ async function sendNotificationForProfile(
           Object.assign(firestoreUpdates, result.firestoreUpdate);
         }
       }
+      Object.assign(firestoreUpdates, verifiedUpdate(subscriber.uid, subscriber, userStats, Date.now()));
 
       // 4. Perform a single Firestore update for this user
       if (Object.keys(firestoreUpdates).length > 0) {
@@ -440,6 +467,7 @@ async function sendNotificationForProfile(
       // 6. Wait for all concurrent operations to complete
       await Promise.all(allPromises);
     } else {
+      await Promise.all(allPromises);
       // Return API errors for certain statistics
       if (userStats.error.error.includes("IP block")) {
         return "ip-block";
@@ -536,7 +564,7 @@ export const runForUser = onCall(
       .where("name", "==", userName)
       .get();
 
-    const subscribers = response.docs.map((d) => ({ uid: d.id, ...d.data() }));
+    const subscribers = response.docs.map((d) => ({ ...d.data(), uid: d.id }));
 
     if (subscribers.length === 0) {
       const message = `No player found with name: ${userName}`;

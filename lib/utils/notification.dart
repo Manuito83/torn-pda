@@ -1,6 +1,4 @@
 // Dart imports:
-import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -10,16 +8,16 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:get/get.dart';
 
 // Project imports:
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/main.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
+import 'package:torn_pda/models/chat/chat_tone.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/utils/background_prefs.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 
 // IDS
@@ -30,7 +28,9 @@ import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 // 400 loot
 // 499 loot rangers
 // 555 chain watcher
-// 666 + timestamp Torn chat (Sendbird)
+// 556 chain watch ending
+// 677000 -> 677999 native chat alerts
+// 678000 -> 678999 native chat reminders
 // 777 script updates
 const webviewNotificationIdPrefix = 88; // 88001, 88002, etc
 
@@ -56,8 +56,8 @@ Future showNotificationBoth(Map payload, int notId) async {
     tradeId = payload["tornTradeId"] ?? '';
     assistId = payload["assistId"] ?? '';
     bulkDetails = payload["bulkDetails"] ?? '';
-    if (payload["sendbird"] != null) {
-      channel = 'sendbird';
+    if (payload["tornChat"] != null) {
+      channel = 'tornChat';
       bulkDetails = payload["message"] ?? 'Chat message received';
     }
   }
@@ -227,11 +227,11 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts information';
     channelName = 'Alerts information';
     channelDescription = 'Information messages';
-  } else if (channel.contains("sendbird")) {
+  } else if (channel.contains("tornChat")) {
     channelId = "Torn chat";
     channelName = "Torn chat";
     channelDescription = 'Torn chat notifications';
-    onTapPayload += 'sendbird';
+    onTapPayload += payload["nativeChatTap"] ?? 'tornChat';
     notificationIcon = "notification_chat";
     notificationColor = Colors.green;
   } else if (channel.contains("Alerts forums")) {
@@ -251,21 +251,24 @@ Future showNotificationBoth(Map payload, int notId) async {
 
   String title = payload["title"] ?? "";
   String body = payload["body"] ?? "";
-  if (channel.contains("sendbird")) {
+  if (channel.contains("tornChat")) {
     List<String> parts = (payload["message"] ?? "").split(":");
 
     title = parts.isNotEmpty ? parts[0].trim() : "";
     body = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
+    if (await BackgroundPrefs().getDiscreetAt()) {
+      title = discreetChatTitle;
+      body = discreetChatBody;
+    }
   }
+
+  final tone = ChatTone.decode('${payload["chatTone"]}') ?? const ChatTone(ChatSound.silent);
 
   if (Platform.isAndroid) {
     final modifier = await getNotificationChannelsModifiers();
 
     // Add s for custom sounds
-    if (channelId.contains("travel") ||
-        channelId.contains("assists") ||
-        channelId.contains("loot") ||
-        channelId.contains("Torn chat")) {
+    if (channelId.contains("travel") || channelId.contains("assists") || channelId.contains("loot")) {
       channelId = "$channelId ${modifier.channelIdModifier} s";
       channelName = "$channelName ${modifier.channelIdModifier} s";
     } else {
@@ -274,7 +277,9 @@ Future showNotificationBoth(Map payload, int notId) async {
     }
 
     final platformChannelSpecifics = NotificationDetails(
-      android: AndroidNotificationDetails(
+      android: channel.contains("tornChat")
+          ? await tornChatAndroidDetails(body, tone: tone)
+          : AndroidNotificationDetails(
         channelId,
         channelName,
         channelDescription: channelDescription,
@@ -321,10 +326,8 @@ Future showNotificationBoth(Map payload, int notId) async {
       platformChannelSpecifics = const NotificationDetails(
         iOS: DarwinNotificationDetails(presentSound: true, sound: 'car_start.aiff'),
       );
-    } else if (channelName.contains("sendbird")) {
-      platformChannelSpecifics = const NotificationDetails(
-        iOS: DarwinNotificationDetails(presentSound: true, sound: 'keyboard.aiff'),
-      );
+    } else if (channel.contains("tornChat")) {
+      platformChannelSpecifics = NotificationDetails(iOS: tornChatIosDetails(tone));
     }
 
     await flutterLocalNotificationsPlugin.show(
@@ -389,6 +392,35 @@ Future<VibrationModifier> getNotificationChannelsModifiers({String? mod = ""}) a
   }
 
   return modifier;
+}
+
+Future<void> showChainStyleNotification(
+  int id,
+  String title,
+  String body, {
+  required String channel,
+  required String description,
+  String? tag,
+  String payload = '',
+}) async {
+  final modifier = await getNotificationChannelsModifiers();
+  final details = NotificationDetails(
+    android: AndroidNotificationDetails(
+      "$channel ${modifier.channelIdModifier}",
+      "$channel ${modifier.channelIdModifier}",
+      channelDescription: description,
+      priority: Priority.high,
+      visibility: NotificationVisibility.public,
+      icon: 'notification_chain',
+      tag: tag,
+      color: Colors.red,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+      ledOnMs: 1000,
+      ledOffMs: 500,
+    ),
+    iOS: const DarwinNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff'),
+  );
+  await flutterLocalNotificationsPlugin.show(id, title, body, details, payload: payload);
 }
 
 Future configureNotificationChannels({String? mod = ""}) async {
@@ -866,6 +898,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
+      'Stakeouts ${modifier.channelIdModifier}',
+      'Stakeouts ${modifier.channelIdModifier}',
+      description: 'Stakeout alerts',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
       'Manual scripts ${modifier.channelIdModifier}',
       'Manual scripts ${modifier.channelIdModifier}',
       description: 'Manual notifications for scripts',
@@ -890,22 +935,27 @@ Future configureNotificationChannels({String? mod = ""}) async {
     ),
   );
 
-  // Handled in SendbirdController
-  /*
-  channels.add(
-    AndroidNotificationChannel(
-      'Torn chat ${modifier.channelIdModifier} s',
-      'Torn chat ${modifier.channelIdModifier} s',
-      groupId: "sendbird",
-      description: 'Torn chat notifications',
-      importance: Importance.max,
-      sound: const RawResourceAndroidNotificationSound('keyboard'),
-      vibrationPattern: modifier.vibrationPattern,
-      enableLights: true,
-      ledColor: const Color.fromARGB(255, 255, 0, 0),
-    ),
-  );
-  */
+  if (NativeChat.compiled) {
+    // Sendbird era ids keep user customizations
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannelGroup(
+          const AndroidNotificationChannelGroup('sendbird', 'Torn chat', description: 'Torn chat notifications'),
+        );
+    channels.add(
+      AndroidNotificationChannel(
+        'Torn chat ${modifier.channelIdModifier} s',
+        'Torn chat ${modifier.channelIdModifier} s',
+        groupId: 'sendbird',
+        description: 'Torn chat notifications',
+        importance: Importance.max,
+        sound: const RawResourceAndroidNotificationSound('keyboard'),
+        vibrationPattern: modifier.vibrationPattern,
+        enableLights: true,
+        ledColor: const Color.fromARGB(255, 255, 0, 0),
+      ),
+    );
+  }
 
   channels.add(
     AndroidNotificationChannel(
@@ -1059,208 +1109,9 @@ Future<void> scheduleAlarmGradeNotificationAndroid({
   );
 }
 
-@pragma("vm:entry-point")
-Future<void> showSendbirdNotification(
-  String sender,
-  String message,
-  String channelUrl, {
-  bool fromBackground = false,
-}) async {
-  // Note: with the app on the background we can't access providers, so take Prefs()
+// Reached by name from the platforms
+@pragma('vm:entry-point')
+Future<void> tornChatBackgroundResponse(NotificationResponse response) => chatBackgroundResponse(response);
 
-  // We might have Sendbird notifications disabled, but we are nontheless registered
-  // so that we can send messages (e.g.: from the Chaining attack share dialog)
-  final sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
-  if (!sendBirdNotificationsEnabled) return;
-
-  String ownName = "";
-  bool excludeFaction = false;
-  bool excludeCompany = false;
-  bool excludeElimination = false;
-  if (fromBackground) {
-    // Don't show own messages
-    final savedUser = await Prefs().getOwnDetails();
-    if (savedUser != '') {
-      try {
-        ownName = ownProfileBasicFromJson(savedUser).name ?? "";
-      } catch (e) {
-        ownName = "";
-      }
-    }
-
-    // Filter faction
-    excludeFaction = await Prefs().getSendbirdExcludeFactionMessages();
-    // Filter company
-    excludeCompany = await Prefs().getSendbirdExcludeCompanyMessages();
-    // Filter elimination
-    excludeElimination = await Prefs().getSendbirdExcludeEliminationMessages();
-  } else {
-    ownName = Get.find<UserController>().playerName;
-    excludeFaction = Get.find<SendbirdController>().excludeFactionMessages;
-    excludeCompany = Get.find<SendbirdController>().excludeCompanyMessages;
-    excludeElimination = Get.find<SendbirdController>().excludeEliminationMessages;
-  }
-
-  if (sender.toLowerCase() == ownName.toLowerCase()) return;
-
-  final modifier = await getNotificationChannelsModifiers();
-  String channelTitle = "Torn chat ${modifier.channelIdModifier} s";
-  String channelSubtitle = "Torn chat ${modifier.channelIdModifier} s";
-  const String channelDescription = 'Torn chat notifications';
-
-  // Map channels
-  final Map<String, String> patterns = {
-    "private-": "",
-    "faction-": "(faction)",
-    "company-": "(company)",
-    "elimination-": "(elimination)",
-    "public_global": "(global)",
-    "public_trade": "(trade)",
-    "public_competition": "(competition)",
-    "public_jail": "(jail)",
-    "public_hospital": "(hospital)",
-    "public_travelling": "(travel)",
-  };
-
-  String suffix = "";
-  for (final entry in patterns.entries) {
-    if (channelUrl.contains(entry.key)) {
-      suffix = entry.value;
-
-      // Exclude faction messages
-      if (suffix == "(faction)" && excludeFaction) {
-        log("Filtered OUT faction message: $message");
-        return;
-      }
-
-      // Exclude company messages
-      if (suffix == "(company)" && excludeCompany) {
-        log("Filtered OUT company message: $message");
-        return;
-      }
-
-      // Exclude elimination messages
-      if (suffix == "(elimination)" && excludeElimination) {
-        log("Filtered OUT elimination message: $message");
-        return;
-      }
-
-      break;
-    }
-  }
-
-  if (suffix.isNotEmpty) {
-    sender = "$sender $suffix";
-  }
-
-  final androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    channelTitle,
-    channelSubtitle,
-    channelDescription: channelDescription,
-    importance: Importance.max,
-    sound: const RawResourceAndroidNotificationSound('keyboard'),
-    icon: 'notification_chat',
-    color: Colors.green,
-    styleInformation: BigTextStyleInformation(message),
-    actions: <AndroidNotificationAction>[
-      const AndroidNotificationAction(
-        'sb_reply_action',
-        'Reply',
-        showsUserInterface: true,
-        inputs: <AndroidNotificationActionInput>[
-          AndroidNotificationActionInput(label: 'Type your reply', allowFreeFormInput: true),
-        ],
-      ),
-      /*
-      AndroidNotificationAction(
-        'sb_silence_action',
-        'Silence (1 min)',
-      ),
-      */
-    ],
-  );
-
-  const iOSPlatformChannelSpecifics = DarwinNotificationDetails(presentSound: true, sound: 'keyboard.aiff');
-
-  final platformChannelSpecifics = NotificationDetails(
-    android: androidPlatformChannelSpecifics,
-    iOS: iOSPlatformChannelSpecifics,
-  );
-
-  // Ensure notifications can stack
-  final tsSuffix = DateTime.now().millisecondsSinceEpoch % 100000;
-  final notificationId = int.parse('666$tsSuffix');
-
-  flutterLocalNotificationsPlugin.show(
-    notificationId, // 666 + timestamp
-    sender,
-    message,
-    platformChannelSpecifics,
-    payload: jsonEncode({'channelUrl': channelUrl}),
-  );
-}
-
-/// Fired from main() when notification is tapped (or interacted with) in a killed state
-void handleNotificationTap(NotificationResponse? notificationResponse) {
-  // Handle Sendbird reply messages when app is killed
-  if (notificationResponse != null && notificationResponse.id.toString().startsWith('666')) {
-    final payload = notificationResponse.payload;
-
-    if (payload != null && payload.contains("channelUrl") && notificationResponse.input != null) {
-      Map<String, dynamic> decodedJson = jsonDecode(payload);
-      String channelUrl = decodedJson['channelUrl'];
-      SendbirdController sb = Get.find<SendbirdController>();
-      sb.sendMessage(channelUrl: channelUrl, message: notificationResponse.input!);
-    }
-  }
-}
-
-void createSendBirdNotificationsChannel() async {
-  if (!Platform.isAndroid) return;
-
-  final androidImpl = flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-
-  const sendbirdGroup = AndroidNotificationChannelGroup(
-    'sendbird',
-    'Torn chat',
-    description: 'Torn chat notifications',
-  );
-
-  await androidImpl?.createNotificationChannelGroup(sendbirdGroup);
-
-  final modifier = await getNotificationChannelsModifiers();
-  final channel = AndroidNotificationChannel(
-    'Torn chat ${modifier.channelIdModifier} s',
-    'Torn chat ${modifier.channelIdModifier} s',
-    description: 'Torn chat notifications',
-    groupId: 'sendbird',
-    importance: Importance.max,
-    sound: const RawResourceAndroidNotificationSound('keyboard'),
-    vibrationPattern: modifier.vibrationPattern,
-    enableLights: true,
-    ledColor: const Color.fromARGB(255, 255, 0, 0),
-  );
-
-  await androidImpl?.createNotificationChannel(channel);
-}
-
-void removeSendBirdNotificationsChannel() async {
-  if (!Platform.isAndroid) return;
-
-  final modifier = await getNotificationChannelsModifiers();
-  final channels = await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-      ?.getNotificationChannels();
-
-  if (channels != null && channels.isNotEmpty) {
-    for (var channel in channels) {
-      if (channel.id == "Torn chat ${modifier.channelIdModifier} s") {
-        await flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-            ?.deleteNotificationChannel(channel.id);
-        log("Sendbird push notifications channel deleted");
-      }
-    }
-  }
-}
+@pragma('vm:entry-point')
+Future<void> tornChatReplyMain() => chatReplyMain();

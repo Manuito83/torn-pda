@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/attacks_list.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
 
 class AttacksPage extends StatefulWidget {
   const AttacksPage({super.key});
@@ -43,6 +44,8 @@ class AttacksPageState extends State<AttacksPage> {
     AttackSort(type: AttackSortType.dateAsc),
   ];
 
+  final _pipSelection = PipSelection();
+
   @override
   void initState() {
     super.initState();
@@ -62,11 +65,11 @@ class AttacksPageState extends State<AttacksPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      appBar: _settingsProvider.appBarTop ? PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar) : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
-              child: buildAppBar(),
+              child: PipSelectionAppBar(selection: _pipSelection, appBar: buildAppBar),
             )
           : null,
       body: FutureBuilder(
@@ -117,9 +120,12 @@ class AttacksPageState extends State<AttacksPage> {
                       child: _filterText,
                     ),
                     Flexible(
-                      child: Consumer<AttacksProvider>(
-                        builder: (context, attacksProvider, child) => AttacksList(
-                          attacks: attacksProvider.allAttacks,
+                      child: PipSelectionScope(
+                        selection: _pipSelection,
+                        child: Consumer<AttacksProvider>(
+                          builder: (context, attacksProvider, child) => AttacksList(
+                            attacks: attacksProvider.allAttacks,
+                          ),
                         ),
                       ),
                     ),
@@ -142,7 +148,7 @@ class AttacksPageState extends State<AttacksPage> {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Attacks', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -158,10 +164,11 @@ class AttacksPageState extends State<AttacksPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
+        PipPlayersButton(onPressed: () => _pipSelection.start(empty: _attacksProvider.allAttacks.isEmpty)),
         IconButton(
           icon: Icon(
             Icons.refresh,
@@ -246,6 +253,7 @@ class AttacksPageState extends State<AttacksPage> {
   @override
   Future dispose() async {
     _searchController.dispose();
+    _pipSelection.dispose();
     super.dispose();
   }
 

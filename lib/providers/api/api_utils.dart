@@ -46,6 +46,13 @@ enum ApiSelection_v2 {
   userCalendar,
   oc2UserCrime,
   userTargetsList,
+  factionBasic,
+  factionMembers,
+  factionChain,
+  factionNews,
+  userFriendsList,
+  forumThread,
+  forumCategories,
 }
 
 class ApiError {

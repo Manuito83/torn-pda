@@ -166,37 +166,45 @@ class FriendCardState extends State<FriendCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          'Lvl ${_friend!.level}',
-                        ),
-                        if (_friend!.hasFaction!)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 15),
-                            child: Row(
-                              children: [
-                                _factionIcon(),
-                                const SizedBox(width: 6),
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 100),
-                                  child: Text(
-                                    _friend!.faction!.factionName ?? '',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            'Lvl ${_friend!.level}',
                           ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: _companyIcon(),
-                        ),
-                      ],
+                          if (_friend!.hasFaction!)
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 15),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _factionIcon(),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: ConstrainedBox(
+                                        constraints: const BoxConstraints(maxWidth: 100),
+                                        child: Text(
+                                          _friend!.faction!.factionName ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: _companyIcon(),
+                          ),
+                        ],
+                      ),
                     ),
                     Row(
                       children: <Widget>[
@@ -241,7 +249,9 @@ class FriendCardState extends State<FriendCard> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
-                          Text('$_lastUpdated'),
+                          Flexible(
+                            child: FittedBox(fit: BoxFit.scaleDown, child: Text('$_lastUpdated')),
+                          ),
                           const SizedBox(width: 8),
                           SizedBox(
                             height: 20,

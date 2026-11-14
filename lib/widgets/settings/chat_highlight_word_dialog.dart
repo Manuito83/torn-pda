@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class ChatHighlightAddWordsDialog extends StatefulWidget {
   @override
@@ -25,7 +26,7 @@ class ChatHighlightAddWordsDialogState extends State<ChatHighlightAddWordsDialog
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: true);
     return AlertDialog(
-      title: const Text('Select words to highlight'),
+      title: const Text('Highlight words'),
       content: Container(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         child: SingleChildScrollView(
@@ -36,7 +37,8 @@ class ChatHighlightAddWordsDialogState extends State<ChatHighlightAddWordsDialog
                 Text(
                     "Your username will be highlighted by default, so you do not need to add it here. "
                     "Keep in mind that the highlights are a simple substring check - if you add 'cat', "
-                    "it would match 'catastrophe'.",
+                    "it would match 'catastrophe'."
+                    "${NativeChat.compiled ? " The Torn PDA chat uses the same list, but matches whole words only." : ""}",
                     style: TextStyle(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,

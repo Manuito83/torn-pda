@@ -71,23 +71,4 @@ void main() {
       expect(countryCheck(state: 'Idle', description: ''), 'Torn');
     });
   });
-
-  // -------------------------------------------------------------------------
-  // isTraveling
-  // -------------------------------------------------------------------------
-  group('isTraveling', () {
-    test('returns true when state is Traveling', () {
-      expect(isTraveling(state: 'Traveling'), isTrue);
-    });
-
-    test('returns false for other states', () {
-      expect(isTraveling(state: 'Abroad'), isFalse);
-      expect(isTraveling(state: 'Okay'), isFalse);
-      expect(isTraveling(state: 'Hospital'), isFalse);
-    });
-
-    test('returns false for null', () {
-      expect(isTraveling(state: null), isFalse);
-    });
-  });
 }

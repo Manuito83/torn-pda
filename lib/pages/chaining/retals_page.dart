@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -20,6 +21,8 @@ import 'package:torn_pda/widgets/chaining/retal_card.dart';
 import 'package:torn_pda/widgets/countdown.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
+import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
 
 class RetalsOptions {
   String? description;
@@ -29,6 +32,8 @@ class RetalsOptions {
     switch (description) {
       case "Manage Spies":
         iconData = MdiIcons.incognito;
+      case "Watch players":
+        iconData = Icons.picture_in_picture_alt_outlined;
     }
   }
 }
@@ -55,7 +60,10 @@ class RetalsPageState extends State<RetalsPage> {
 
   final _popupOptionsChoices = <RetalsOptions>[
     RetalsOptions(description: "Manage Spies"),
+    RetalsOptions(description: "Watch players"),
   ];
+
+  final _pipSelection = PipSelection();
 
   final _scrollController = ScrollController();
 
@@ -72,6 +80,7 @@ class RetalsPageState extends State<RetalsPage> {
   Future dispose() async {
     Get.delete<RetalsController>();
     _scrollController.dispose();
+    _pipSelection.dispose();
     super.dispose();
   }
 
@@ -85,11 +94,13 @@ class RetalsPageState extends State<RetalsPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      appBar: _settingsProvider.appBarTop ? buildAppBar(context) : null,
+      appBar: _settingsProvider.appBarTop
+          ? PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(context))
+          : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
-              child: buildAppBar(context),
+              child: PipSelectionAppBar(selection: _pipSelection, appBar: () => buildAppBar(context)),
             )
           : null,
       body: GetBuilder<RetalsController>(
@@ -172,15 +183,18 @@ class RetalsPageState extends State<RetalsPage> {
             ),
           )
         else
-          context.orientation == Orientation.portrait
-              ? Flexible(
-                  child: RetalsTargetsList(
+          PipSelectionScope(
+            selection: _pipSelection,
+            child: context.orientation == Orientation.portrait
+                ? Flexible(
+                    child: RetalsTargetsList(
+                      retalsController: r,
+                    ),
+                  )
+                : RetalsTargetsList(
                     retalsController: r,
                   ),
-                )
-              : RetalsTargetsList(
-                  retalsController: r,
-                ),
+          ),
         if (_settingsProvider.appBarTop) const SizedBox(height: 50),
       ],
     );
@@ -192,7 +206,7 @@ class RetalsPageState extends State<RetalsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Retaliation", style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -208,7 +222,7 @@ class RetalsPageState extends State<RetalsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -264,6 +278,8 @@ class RetalsPageState extends State<RetalsPage> {
                   },
                 );
                 break;
+              case "Watch players":
+                _pipSelection.start(empty: Get.find<RetalsController>().retaliationList.isEmpty);
             }
           },
           itemBuilder: (BuildContext context) {
@@ -284,7 +300,7 @@ class RetalsPageState extends State<RetalsPage> {
             final spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : _themeProvider.mainText;
 
             return _popupOptionsChoices.where((RetalsOptions choice) {
-              return true;
+              return choice.description != "Watch players" || PipSelection.allowed(context);
             }).map((RetalsOptions choice) {
               // Spies
               if (choice.description!.contains("Manage Spies")) {
@@ -488,6 +504,25 @@ class RetalsTargetsList extends StatelessWidget {
       retalsController.orderedCardsDetails.add(details);
     }
 
-    return filteredCards;
+    return [
+      for (final card in filteredCards)
+        if (card.retalModel.retalId == null)
+          card
+        else
+          PipSelectable(
+            key: ValueKey(card.retalModel.retalId),
+            id: card.retalModel.retalId!,
+            name: card.retalModel.name ?? '',
+            child: Slidable(
+              key: ValueKey(card.retalModel.retalId),
+              closeOnScroll: false,
+              endActionPane: ActionPane(
+                motion: const ScrollMotion(),
+                children: [profileSlidableAction(card.retalModel.retalId)],
+              ),
+              child: card,
+            ),
+          ),
+    ];
   }
 }

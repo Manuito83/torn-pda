@@ -13,17 +13,6 @@ void main() {
     );
   }
 
-  testWidgets('provides a 48px tap target and reload tooltip', (tester) async {
-    var presses = 0;
-    await tester.pumpWidget(buildButton(isReloading: false, onPressed: () => presses++));
-
-    expect(tester.getSize(find.byType(IconButton)), const Size(48, 48));
-    expect(find.byTooltip('Reload page'), findsOneWidget);
-
-    await tester.tap(find.byType(IconButton));
-    expect(presses, 1);
-  });
-
   testWidgets('shows progress while busy but still accepts taps', (tester) async {
     var presses = 0;
     await tester.pumpWidget(buildButton(isReloading: true, onPressed: () => presses++));

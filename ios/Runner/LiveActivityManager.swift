@@ -3,6 +3,7 @@ import ActivityKit
 import Foundation
 
 @available(iOS 16.2, *)
+@MainActor
 class LiveActivityManager {
 
   // MARK: - Properties
@@ -430,6 +431,7 @@ class LiveActivityManager {
 }
 
 @available(iOS 16.2, *)
+@MainActor
 class RacingLiveActivityManager {
 
   private var currentActivity: Activity<RacingActivityAttributes>?

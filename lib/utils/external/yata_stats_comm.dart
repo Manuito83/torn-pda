@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:torn_pda/utils/telemetry_sanitize.dart';
+import 'package:torn_pda/utils/safe_text.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/yata/yata_stats_response_model.dart';
 

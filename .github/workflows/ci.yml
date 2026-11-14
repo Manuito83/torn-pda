@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.44.0"
+  FLUTTER_VERSION: "3.47.8"
 
 jobs:
   # ──────────────────────────────────────────────
@@ -46,20 +46,7 @@ jobs:
       # Copy config stubs so the analyzer can resolve all imports
       # Guarded ([ ! -f ]) so running this locally never overwrites real private files
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
+        run: bash .github/ci_stubs.sh
 
       - name: Install dependencies
         run: flutter pub get
@@ -82,20 +69,7 @@ jobs:
           cache: true
 
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
+        run: bash .github/ci_stubs.sh
 
       - name: Install dependencies
         run: flutter pub get
@@ -154,20 +128,7 @@ jobs:
           cache: true
 
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
+        run: bash .github/ci_stubs.sh
 
       - name: Create iOS CI stubs
         run: |
@@ -229,22 +190,7 @@ jobs:
           java-version: "21"
 
       - name: Copy config stubs
-        run: |
-          cd lib/config
-          for f in *.dart.example; do
-            target="${f%.example}"
-            if [ ! -f "$target" ]; then cp "$f" "$target"; fi
-          done
-          if [ ! -f ../firebase_options.dart ]; then cp firebase_options.dart.example ../firebase_options.dart; fi
-          cd ..
-          mkdir -p torn-pda-native/auth torn-pda-native/stats
-          if [ ! -f torn-pda-native/auth/native_auth_models.dart ];  then cp config/native_auth_models.dart.example  torn-pda-native/auth/native_auth_models.dart;  fi
-          if [ ! -f torn-pda-native/auth/native_auth_provider.dart ]; then cp config/native_auth_provider.dart.example torn-pda-native/auth/native_auth_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_user_provider.dart ]; then cp config/native_user_provider.dart.example torn-pda-native/auth/native_user_provider.dart; fi
-          if [ ! -f torn-pda-native/auth/native_login_widget.dart ];  then cp config/native_login_widget.dart.example  torn-pda-native/auth/native_login_widget.dart;  fi
-          if [ ! -f torn-pda-native/stats/stats_controller.dart ];    then cp config/stats_controller.dart.example      torn-pda-native/stats/stats_controller.dart;    fi
-          # Android Firebase config stub for APK build
-          if [ ! -f ../android/app/google-services.json ]; then cp ../android/app/google-services.json.example ../android/app/google-services.json; fi
+        run: bash .github/ci_stubs.sh --android
 
       - name: Install dependencies
         run: flutter pub get

@@ -386,6 +386,7 @@ class ProfileApiCallsController extends GetxController {
         return;
       }
       final OwnProfileMisc miscApiResponse = result.misc;
+      if (result.travelTimeReduction != null) _settings!.travelTimeReduction = result.travelTimeReduction!;
 
       await _getEducationCatalog(miscApiResponse);
 
@@ -604,19 +605,16 @@ class ProfileApiCallsController extends GetxController {
             final int ts = DateTime.now().millisecondsSinceEpoch;
             final bool warInFuture = warMap.value.war!.start! * 1000 > ts;
             final bool warActive = warMap.value.war!.start! < ts && warMap.value.war!.end == 0;
-            if (warInFuture || warActive) {
-              factionRankedWar = warMap.value;
-              _notify();
-            }
+            factionRankedWar = warInFuture || warActive ? warMap.value : null;
+            _notify();
             return;
           }
         }
+        factionRankedWar = null;
       }
     } catch (e) {
-      // Returns null
+      // Keeps the last value
     }
-    factionRankedWar = null;
-    return;
   }
 
   Future<void> refreshCompanyAddiction({required String trigger}) {

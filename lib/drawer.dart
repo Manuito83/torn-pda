@@ -49,6 +49,7 @@ import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/utils/app_icon_menu.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
@@ -65,7 +66,6 @@ import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
 import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
-import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -73,18 +73,24 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
+import 'package:torn_pda/torn-pda-native/chat/chat_push.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
+import 'package:torn_pda/utils/appwidget/installed_widgets_info.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_racing_controller.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
+import 'package:torn_pda/utils/chat_notifications.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/widgets/chat/chat_logo_bubble.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/backup_reminder_dialog.dart';
@@ -99,7 +105,7 @@ import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/pda_update_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
-import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/chaining/chain_attack.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:uri_to_file/uri_to_file.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -121,7 +127,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Drawer section order
   final _drawerItemsList = DrawerSection.values;
 
-  final StatsController _statsController = StatsController();
+  final StatsController _statsController = Get.find<StatsController>();
 
   ThemeProvider? _themeProvider;
 
@@ -153,10 +159,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   bool _retalsRedirection = false;
 
+  // Rebuilds Chaining on the saved tab
+  int _chainingOpens = 0;
+
   // Tracks the enqueued PDA update version to avoid duplicate dialogs in a session
   int? _pdaUpdateDialogEnqueuedVersion;
 
-  String _userUID = "";
   bool _drawerUserChecked = false;
   bool _authRecoveryEnabledRC = true;
 
@@ -189,6 +197,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   // Script updates check rate limiting (1 hour between checks)
   DateTime _lastScriptUpdateCheck = DateTime.now().subtract(const Duration(hours: 2));
+  DateTime _lastPushTokenRegister = DateTime.now();
 
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
@@ -220,7 +229,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _initializeIntentListeners();
     _initializeRemoteConfigInit();
     _initializeChainStatus();
-    _initializeSendbird();
     _initializeBrowserPreferences();
     _initializeConnectivity();
   }
@@ -267,15 +275,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             url: "https://www.torn.com/travelagency.php",
             browserTapType: BrowserTapType.quickItem,
           );
+        } else if (shortcutType.startsWith(NativeChat.shortcutPrefix)) {
+          await _preferencesCompleter.future;
+          selectNotificationStream.add(NativeChat.tapPayload(shortcutType.substring(NativeChat.shortcutPrefix.length)));
         }
       });
 
-      quickActions.setShortcutItems(<ShortcutItem>[
-        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
-        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
-        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
-        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
-      ]);
+      // The chat start publishes the menu
+      if (!NativeChat.compiled) Get.find<AppIconMenuController>().publish();
     } catch (e, stackTrace) {
       log("Error initializing quick actions: $e");
       logErrorToCrashlytics("Error initializing quick actions", e, stackTrace);
@@ -374,6 +381,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
 
         FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+          if (await showTornChatNotification(message.data, foreground: true)) return;
+
           if (message.data.isEmpty) {
             message.data["title"] = message.notification!.title;
             message.data["body"] = message.notification!.body;
@@ -403,9 +412,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
 
         // Heal tokens that rotated before we listened
-        if (appHasBeenUpdated) {
-          FirestoreHelper().reconcileMessagingToken();
-        }
+        FirestoreHelper().reconcileMessagingToken();
         _messaging.onTokenRefresh.listen((newToken) {
           FirestoreHelper().onMessagingTokenRefreshed(newToken);
         });
@@ -457,18 +464,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } catch (e, stackTrace) {
       log("Error initializing chain status: $e");
       logErrorToCrashlytics("Error initializing chain status", e, stackTrace);
-    }
-  }
-
-  void _initializeSendbird() {
-    try {
-      _preferencesCompleter.future.whenComplete(() async {
-        final sbController = Get.find<SendbirdController>();
-        await sbController.register();
-      });
-    } catch (e, stackTrace) {
-      log("Error initializing Sendbird: $e");
-      logErrorToCrashlytics("Error initializing Sendbird", e, stackTrace);
     }
   }
 
@@ -617,10 +612,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Enqueue all other dialogs to be shown sequentially
       // NOTE: the update-available-dialog is in remote config with priority 90!
 
-      // 1. Appwidget dialog (Android only) - Priority 300
-      if (Platform.isAndroid) {
+      // 1. Appwidget dialog - Priority 300
+      if (Platform.isAndroid || Platform.isIOS) {
         if (_debugShowAllDialogs || !await Prefs().getAppwidgetExplanationShown()) {
-          if ((await pdaWidget_numberInstalled()).isNotEmpty && mounted) {
+          final widgets = await getInstalledWidgetsInfo();
+          final bool explain = Platform.isIOS ? widgets.isPdaWidgetInstalled : widgets.anyWidgetInstalled;
+          if (explain && mounted) {
             DialogQueue.enqueue(
               dialogFunction: () async {
                 await _showAppwidgetExplanationDialog(context);
@@ -709,7 +706,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       remoteConfig.setConfigSettings(
         RemoteConfigSettings(
           fetchTimeout: const Duration(minutes: 30),
-          minimumFetchInterval: const Duration(minutes: kDebugMode ? 0 : 1440),
+          minimumFetchInterval: const Duration(minutes: kDebugMode ? 0 : 60),
         ),
       );
 
@@ -733,17 +730,30 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_restore_webview_focus_allowed": true,
         "browser_engine_prewarm_allowed": true,
         "browser_engine_prewarm_unmount_after_load": false,
+        "browser_hidden_tab_load_allowed": true,
+        "browser_hidden_tab_rebuild_allowed": true,
+        "browser_torn_page_refresh_allowed": true,
         "browser_webview_recovery_allowed": true,
         "browser_render_process_gone_allowed": true,
         "browser_recovery_overlay_allowed": true,
         "browser_park_background_tabs_allowed": true,
+        "browser_split_browsers_allowed": true,
+        "chain_web_live_enabled": true,
+        "chain_mini_window_enabled": true,
         // Default for the browser memory settings (can be overriden)
         "browser_park_background_tabs_default": false,
         "browser_webview_hardware_layer_mode": "default_on",
         "browser_torn_chat_cache_limit_mb": 0,
         "browser_localstorage_safety_mb": 3,
         "browser_tab_sleep_minutes_default": 720,
+        "browser_max_live_tabs_default": 0,
+        "browser_blank_detector_mode": 2,
         "auth_recovery_enabled": true,
+        "native_chat_enabled": true,
+        "native_chat_reply_enabled": false,
+        "native_chat_rooms": "",
+        "native_chat_tab_grace_seconds": 30,
+        "chat_test_players": "",
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
         //"revive_hela": "1.8 million or 2 Xanax",
@@ -759,6 +769,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "pda_update_details": "",
         // Connectivity check
         "pda_connectivity_check": false,
+        "network_strict_mode": true,
+        "scripts_early_http_allowed": true,
       });
 
       // Wait for preferences to be loaded before fetching Remote Config
@@ -846,6 +858,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _webViewProvider.parkBackgroundTabsRemoteConfigAllowed = remoteConfig.getBool(
         "browser_park_background_tabs_allowed",
       );
+      _webViewProvider.splitBrowsersAllowedRC = remoteConfig.getBool("browser_split_browsers_allowed");
+      _webViewProvider.hiddenTabLoadAllowedRC = remoteConfig.getBool("browser_hidden_tab_load_allowed");
+      _webViewProvider.hiddenTabRebuildAllowedRC = remoteConfig.getBool("browser_hidden_tab_rebuild_allowed");
+      _webViewProvider.tornPageRefreshRC = remoteConfig.getBool("browser_torn_page_refresh_allowed");
+      final bool chainWebLiveRC = remoteConfig.getBool("chain_web_live_enabled");
+      Get.find<ChainStatusController>()
+        ..webLiveAllowed = chainWebLiveRC
+        ..setMiniRemote(mini: remoteConfig.getBool("chain_mini_window_enabled"), web: chainWebLiveRC);
 
       // Browser memory defaults (also persisted, so they are known before the fetch on next launch)
       _webViewProvider.parkBackgroundTabsDefaultRC = remoteConfig.getBool("browser_park_background_tabs_default");
@@ -856,6 +876,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (tabSleepMinutesRC > 0) {
         _webViewProvider.tabSleepMinutesDefaultRC = tabSleepMinutesRC;
       }
+      final int maxLiveTabsRC = remoteConfig.getInt("browser_max_live_tabs_default");
+      _webViewProvider.maxLiveTabsDefaultRC = maxLiveTabsRC > 0 ? math.max(maxLiveTabsRC, 4) : 0;
+      final int blankDetectorModeRC = remoteConfig.getInt("browser_blank_detector_mode");
+      _webViewProvider.blankDetectorModeRC =
+          blankDetectorModeRC >= 0 && blankDetectorModeRC <= 2 ? blankDetectorModeRC : 2;
+
+      // Chat sessions also need native_jwt_weblogin
+      NativeChat.setRemoteEnabled(remoteConfig.getBool("native_chat_enabled"));
+      NativeChat.prefs.setRemoteRooms(remoteConfig.getString("native_chat_rooms"));
+      NativeChat.setReplyEnabled(remoteConfig.getBool("native_chat_reply_enabled"));
+      NativeChat.setTabGrace(remoteConfig.getInt("native_chat_tab_grace_seconds"));
+      NativeChat.prefs.setTesters(remoteConfig.getString("chat_test_players"));
 
       // Auth recovery (also persist to SharedPrefs for next app launch)
       _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
@@ -871,11 +903,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.reviveCombatReadyPrice = remoteConfig.getString("revive_combat_ready");
       _settingsProvider.reviveAsclepiusPrice = remoteConfig.getString("revive_asclepius");
 
-      // Sendbird
-      final sb = Get.find<SendbirdController>();
-      sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
-      sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
-
       // Torn API
       apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
 
@@ -884,6 +911,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Connectivity check
       Prefs().setPdaConnectivityCheck(remoteConfig.getBool("pda_connectivity_check"));
+
+      final httpOverrides = HttpOverrides.current;
+      if (httpOverrides is MyHttpOverrides) {
+        httpOverrides.strictMode = remoteConfig.getBool("network_strict_mode");
+      }
+
+      _userScriptsProvider.earlyHttpAllowedRC = remoteConfig.getBool("scripts_early_http_allowed");
 
       // JS Snippets RC overrides: snippet_<id>_js (raw JS) + snippet_<id>_version
       for (final id in RemoteSnippets.ids) {
@@ -961,12 +995,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _statsController.logCheckOut();
 
       // Refresh widget to have up to date info when we exit
+      if (Platform.isIOS) refreshIosWidget();
       if ((await getInstalledHomeWidgets()).isNotEmpty) {
         startBackgroundRefresh();
       }
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
+      FirestoreHelper().syncDiscreetScheduleOffset();
+      FirestoreHelper().reconcileMessagingToken();
 
       // Execute periodic tasks
       Get.find<PeriodicExecutionController>().checkAndExecuteTasks();
@@ -996,6 +1033,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (nativeUserProvider.keychainAccessDenied) {
         nativeUserProvider.loadPreferences();
       }
+      if (DateTime.now().difference(_lastPushTokenRegister).inMinutes >= 10) {
+        _lastPushTokenRegister = DateTime.now();
+        nativeUserProvider.registerPushToken();
+      }
 
       _syncThemeWithDeviceSettings();
     }
@@ -1005,15 +1046,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future<void> _initIntentReceiverOnLaunch() async {
     final intent = await ReceiveIntent.getInitialIntent();
     if (!mounted || intent!.data == null) return;
-    log("Intent received: ${intent.data}");
-    await _assessIntent(intent);
+    await _assessWidgetLink(intent.data!);
   }
 
   Future<void> _initIntentListenerSubscription() async {
     _intentListenerSub = ReceiveIntent.receivedIntentStream.listen(
       (Intent? intent) async {
         if (!mounted || intent!.data == null) return;
-        await _assessIntent(intent);
+        await _assessWidgetLink(intent.data!);
       },
       onError: (err) {
         log(err);
@@ -1021,74 +1061,85 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     );
   }
 
-  Future<void> _assessIntent(Intent intent) async {
-    log("Intent received: ${intent.data}");
+  Future<void> _assessWidgetLink(String link) async {
+    log("Widget link received: $link");
 
     bool launchBrowser = false;
     var browserUrl = "https://www.torn.com";
-    if (intent.data!.contains("pdaWidget://energy:box:clicked")) {
+    if (link.contains("pdaWidget://energy:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
-    } else if (intent.data!.contains("pdaWidget://nerve:box:clicked")) {
+    } else if (link.contains("pdaWidget://nerve:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
-    } else if (intent.data!.contains("pdaWidget://happy:box:clicked")) {
+    } else if (link.contains("pdaWidget://happy:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#candy-items";
-    } else if (intent.data!.contains("pdaWidget://life:box:clicked")) {
+    } else if (link.contains("pdaWidget://life:box:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#medical-items";
-    } else if (intent.data!.contains("pdaWidget://blue:status:clicked") ||
-        intent.data!.contains("pdaWidget://blue:status:icon:clicked")) {
+    } else if (link.contains("pdaWidget://blue:status:clicked") ||
+        link.contains("pdaWidget://blue:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com";
-    } else if (intent.data!.contains("pdaWidget://hospital:status:icon:clicked")) {
+    } else if (link.contains("pdaWidget://hospital:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/hospitalview.php";
-    } else if (intent.data!.contains("pdaWidget://jail:status:icon:clicked")) {
+    } else if (link.contains("pdaWidget://jail:status:icon:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/jailview.php";
-    } else if (intent.data!.contains("pdaWidget://messages:clicked")) {
+    } else if (link.contains("pdaWidget://messages:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/messages.php";
-    } else if (intent.data!.contains("pdaWidget://events:clicked")) {
+    } else if (link.contains("pdaWidget://events:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/events.php";
-    } else if (intent.data!.contains("pdaWidget://shortcut:")) {
-      final String shortcutUrl = intent.data!.split("pdaWidget://shortcut:")[1];
+    } else if (link.contains("pdaWidget://shortcut:")) {
+      final String shortcutUrl = link.split("pdaWidget://shortcut:")[1];
       launchBrowser = true;
       browserUrl = shortcutUrl;
-    } else if (intent.data!.contains("pdaWidget://drug:clicked")) {
+    } else if (link.contains("pdaWidget://drug:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#drugs-items";
       if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
         browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs";
       }
-    } else if (intent.data!.contains("pdaWidget://medical:clicked")) {
+    } else if (link.contains("pdaWidget://medical:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#medical-items";
       if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
         browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical";
       }
-    } else if (intent.data!.contains("pdaWidget://booster:clicked")) {
+    } else if (link.contains("pdaWidget://booster:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#boosters-items";
       if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
         browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters";
       }
-    } else if (intent.data!.contains("pdaWidget://racing:clicked")) {
+    } else if (link.contains("pdaWidget://education:clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/education.php";
+    } else if (link.contains("pdaWidget://bank:clicked")) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/bank.php";
+    } else if (link.contains("pdaWidget://racing:clicked")) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/page.php?sid=racing";
-    } else if (intent.data!.contains("pdaWidget://chain:box:clicked")) {
+    } else if (link.contains("pdaWidget://chain:box:clicked")) {
       _callSectionFromOutside(DrawerSection.chaining); // Chaining
       return;
-    } else if (intent.data!.contains("pdaWidget://empty:shortcuts:clicked")) {
+    } else if (link.contains("pdaWidget://empty:shortcuts:clicked")) {
       if (!_webViewProvider.webViewSplitActive) {
         setState(() {
           _webViewProvider.browserShowInForeground = false;
         });
       }
-      Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => ShortcutsPage()));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          settings: const RouteSettings(name: 'shortcuts'),
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
       return;
     }
 
@@ -1156,6 +1207,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     }
 
+    if (link != null && link.toLowerCase().startsWith("pdawidget://widget")) {
+      if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
+        return;
+      }
+      _deepLinkSubTriggeredTime = DateTime.now();
+      final action = Uri.parse(link).queryParameters["action"];
+      if (action != null) await _assessWidgetLink(action);
+      return;
+    }
+
     if (link != null && link.startsWith("tornpda://travel/")) {
       if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
         return;
@@ -1202,6 +1263,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final highlight = uri.queryParameters['highlight'];
 
         _preferencesCompleter.future.whenComplete(() {
+          _webViewProvider.closeSplitDevTools();
           // Close browser if it's in foreground
           if (!_webViewProvider.webViewSplitActive) {
             _webViewProvider.browserShowInForeground = false;
@@ -1214,7 +1276,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             // Push Advanced Browser Settings with highlight
             WidgetsBinding.instance.addPostFrameCallback((_) {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (BuildContext context) => SettingsBrowserPage(highlightItem: highlight)),
+                MaterialPageRoute(
+                  settings: const RouteSettings(name: 'settings_browser'),
+                  builder: (BuildContext context) => SettingsBrowserPage(highlightItem: highlight),
+                ),
               );
             });
           }
@@ -1327,6 +1392,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Important: await preferences in case we need to use settings providers
     await _preferencesCompleter.future;
 
+    final chatDm = ChatPush.fromData(message);
+    if (chatDm != null) {
+      selectNotificationStream.add(NativeChat.dmTapPayload(chatDm.senderId, chatDm.senderName));
+      return;
+    }
+
     // Opens new tab in broser
     bool launchBrowserWithUrl = false;
     var browserUrl = "https://www.torn.com";
@@ -1354,7 +1425,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool assists = false;
     bool loot = false;
     bool retals = false;
-    bool sendbird = false;
+    bool tornChat = false;
     bool forums = false;
     bool workStats = false;
 
@@ -1422,7 +1493,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (channel.contains("Alerts retals")) {
       retals = true;
     } else if (channel.contains("Torn chat")) {
-      sendbird = true;
+      tornChat = true;
     } else if (channel.contains("Alerts forums")) {
       forums = true;
     } else if (channel.contains("Alerts work stats")) {
@@ -1650,37 +1721,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // This is a Loot Rangers alert for one or more NPCs
         final ids = <String>[];
         final names = <String>[];
-        final notes = <String>[];
-        final colors = <String>[];
         for (var i = 0; i < incomingIds.length; i++) {
           final parts = incomingIds[i].split("[");
           names.add(parts[0]);
           ids.add(parts[1].replaceAll("]", ""));
-          colors.add("green");
-          if (i == 0) {
-            notes.add("Attacks due to commence at $bulkDetails TCT!");
-          } else {
-            notes.add("");
-          }
         }
 
         // Open chaining browser for Loot Rangers
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
-          browserTapType: BrowserTapType.chainShort,
-          isChainingBrowser: true,
-          chainingPayload: ChainingPayload()
-            ..attackIdList = ids
-            ..attackNameList = names
-            ..attackNotesList = notes
-            ..attackNotesColorList = colors
-            ..showNotes = true
-            ..showBlankNotes = false
-            ..showOnlineFactionWarning = false,
+        attackFromLootRangers(
+          context,
+          ids,
+          names,
+          "Attacks due to commence at $bulkDetails TCT!",
+          fromNotification: true,
         );
       }
-    } else if (sendbird) {
+    } else if (tornChat) {
       showBrowserForeground = true;
     } else if (forums) {
       if (bulkDetails != null && bulkDetails.isNotEmpty) {
@@ -1712,6 +1768,23 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future<void> _onForegroundNotification() async {
     selectNotificationStream.stream.listen((String? payload) async {
       if (payload == null) return;
+      final tappedRoom = NativeChat.roomFromTap(payload);
+      if (tappedRoom != null && !await NativeChat.tapsOpenChat()) payload = NativeChat.webChatPayload(tappedRoom);
+      if (payload == NativeChat.settingsPayload) {
+        _callSectionFromOutside(DrawerSection.settings);
+        return;
+      }
+      if (payload == NativeChat.alertsPayload) {
+        _callSectionFromOutside(DrawerSection.alerts);
+        return;
+      }
+      final chainingTab = NativeChat.chainingTabOf(payload);
+      if (chainingTab != null) {
+        await Prefs().setChainingCurrentPage(chainingTab);
+        _chainingOpens++;
+        _callSectionFromOutside(DrawerSection.chaining);
+        return;
+      }
 
       // Opens new tab in broser
       bool launchBrowserWithUrl = false;
@@ -1719,6 +1792,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Shows browser but does not change URL
       bool showBrowserForeground = false;
+      String? webChatPeer;
 
       // ##-88-## comes in the payload for browser notifications (triggered from user scripts)
       // We put them first to ensure they are not overridden by other conditions
@@ -1807,7 +1881,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (_userScriptsProvider.isInSafeMode) {
           _userScriptsProvider.showSafeModeWarning();
         } else {
-          Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => const UserScriptsPage()));
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              settings: const RouteSettings(name: 'userscripts'),
+              builder: (BuildContext context) => const UserScriptsPage(),
+            ),
+          );
         }
       } else if (payload.contains('400-')) {
         launchBrowserWithUrl = true;
@@ -1823,33 +1902,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final lootRangersNpcsIds = payload.split('-')[1].split(",");
         final lootRangersNpcsNames = payload.split('-')[2].split(",");
         final lootRangersTime = payload.split('-')[3];
-        final timeNote = "Attacks due to commence at $lootRangersTime!";
-
-        final notes = <String>[];
-        final colors = <String>[];
-        for (var i = 0; i < lootRangersNpcsIds.length; i++) {
-          colors.add("green");
-          if (i == 0) {
-            notes.add(timeNote);
-          } else {
-            notes.add("");
-          }
-        }
 
         // Open chaining browser for Loot Rangers
-        _webViewProvider.openBrowserPreference(
-          context: context,
-          url: "https://www.torn.com/page.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
-          browserTapType: BrowserTapType.chainShort,
-          isChainingBrowser: true,
-          chainingPayload: ChainingPayload()
-            ..attackIdList = lootRangersNpcsIds
-            ..attackNameList = lootRangersNpcsNames
-            ..attackNotesList = notes
-            ..attackNotesColorList = colors
-            ..showNotes = true
-            ..showBlankNotes = false
-            ..showOnlineFactionWarning = false,
+        attackFromLootRangers(
+          context,
+          lootRangersNpcsIds,
+          lootRangersNpcsNames,
+          "Attacks due to commence at $lootRangersTime!",
+          fromNotification: true,
         );
 
         browserUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=$lootRangersNpcsIds';
@@ -1872,7 +1932,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (tradeId[1] != "0") {
           browserUrl = "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
         }
-      } else if (payload.contains('211')) {
+      } else if (payload == '211') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
       } else if (payload.contains('refills') && (!payload.contains("Xanax"))) {
@@ -2011,38 +2071,24 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // This is a Loot Rangers alert for one or more NPCs
           final ids = <String>[];
           final names = <String>[];
-          final notes = <String>[];
-          final colors = <String>[];
           for (var i = 0; i < incomingIds.length; i++) {
             final parts = incomingIds[i].split("[");
             names.add(parts[0]);
             ids.add(parts[1].replaceAll("]", ""));
-            colors.add("green");
-            if (i == 0) {
-              notes.add("Attacks due to commence at ${bulkDetails[1]} TCT!");
-            } else {
-              notes.add("");
-            }
           }
 
           // Open chaining browser for Loot Rangers
-          _webViewProvider.openBrowserPreference(
-            context: context,
-            url: "https://www.torn.com/page.php?sid=attack&user2ID=${ids[0]}",
-            browserTapType: BrowserTapType.chainShort,
-            isChainingBrowser: true,
-            chainingPayload: ChainingPayload()
-              ..attackIdList = ids
-              ..attackNameList = names
-              ..attackNotesList = notes
-              ..attackNotesColorList = colors
-              ..showNotes = true
-              ..showBlankNotes = false
-              ..showOnlineFactionWarning = false,
+          attackFromLootRangers(
+            context,
+            ids,
+            names,
+            "Attacks due to commence at ${bulkDetails[1]} TCT!",
+            fromNotification: true,
           );
         }
-      } else if (payload.contains('sendbird')) {
+      } else if (payload.contains('tornChat')) {
         showBrowserForeground = true;
+        webChatPeer = NativeChat.webChatPeer(payload);
       } else if (payload == 'forums###') {
         launchBrowserWithUrl = true;
         browserUrl = payload.split('###')[1];
@@ -2057,8 +2103,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           );
         });
       } else if (showBrowserForeground) {
+        final peer = webChatPeer;
         _preferencesCompleter.future.whenComplete(() async {
           _webViewProvider.browserShowInForeground = true;
+          if (peer != null) _webViewProvider.openTornChatDm(peer);
         });
       }
     });
@@ -2137,18 +2185,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                       : _themeProvider!.canvas
                 : _themeProvider!.statusBar,
             child: SafeArea(
-              right:
-                  _webViewProvider.webViewSplitActive &&
-                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-              left:
-                  _webViewProvider.webViewSplitActive &&
-                  _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
+              right: _webViewProvider.splitAppSide == SplitSide.right,
+              left: _webViewProvider.splitAppSide == SplitSide.left,
               child: Scaffold(
                 key: _scaffoldKey,
                 body: _getPages(),
-                endDrawer:
-                    _webViewProvider.webViewSplitActive &&
-                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                onDrawerChanged: (open) => NativeChat.drawerOpen.value = open,
+                onEndDrawerChanged: (open) => NativeChat.drawerOpen.value = open,
+                endDrawer: _webViewProvider.splitAppSide == SplitSide.right
                     ? Drawer(
                         backgroundColor: _themeProvider!.canvas,
                         surfaceTintColor: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : null,
@@ -2166,9 +2210,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         ),
                       )
                     : null,
-                drawer:
-                    _webViewProvider.webViewSplitActive &&
-                        _webViewProvider.splitScreenPosition == WebViewSplitPosition.left
+                drawer: _webViewProvider.splitAppSide == SplitSide.right
                     ? null
                     : Drawer(
                         backgroundColor: _themeProvider!.canvas,
@@ -2266,9 +2308,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             showMemory
                 ? const Padding(padding: EdgeInsets.all(8.0), child: MemoryBarWidgetDrawer())
                 : const SizedBox.shrink(),
-            const Flexible(
-              child: Image(image: AssetImage('images/icons/torn_pda.png'), fit: BoxFit.fill),
-            ),
+            const Flexible(child: ChatLogoBubble()),
             const Padding(
               padding: EdgeInsets.only(top: 8.0),
               child: Text('TORN PDA', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -2446,8 +2486,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Widget _getDrawerItems(SettingsProvider settingsProvider) {
     final drawerOptions = <Widget>[];
     final visibleSections = _getVisibleSections(settingsProvider);
+    final order = drawerFullOrder(settingsProvider.drawerSectionOrder);
+    var chatAdded = false;
 
     for (final section in visibleSections) {
+      if (!chatAdded && order.indexOf(section.name) > order.indexOf(drawerChatId)) {
+        drawerOptions.add(const ChatMenuBar());
+        chatAdded = true;
+      }
       if (section.isDivider) {
         drawerOptions.add(const Divider());
         continue;
@@ -2478,6 +2524,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       );
     }
 
+    if (!chatAdded) drawerOptions.add(const ChatMenuBar());
     return Column(children: drawerOptions);
   }
 
@@ -2491,7 +2538,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case DrawerSection.travel:
         return const TravelPage();
       case DrawerSection.chaining:
-        return ChainingPage(retalsRedirection: _retalsRedirection);
+        return KeyedSubtree(
+          key: ValueKey(_chainingOpens),
+          child: ChainingPage(retalsRedirection: _retalsRedirection),
+        );
       case DrawerSection.loot:
         return LootPage();
       case DrawerSection.friends:
@@ -2512,9 +2562,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (Platform.isWindows) return AlertsSettingsWindows();
         return AlertsSettings(_onChangeStockMarketInMenu);
       case DrawerSection.settings:
-        return SettingsPage(changeUID: changeUID, statsController: _statsController);
+        return SettingsPage(statsController: _statsController);
       case DrawerSection.about:
-        return AboutPage(uid: _userUID);
+        return AboutPage(uid: Platform.isWindows ? "" : FirebaseAuth.instance.currentUser?.uid ?? "");
       case DrawerSection.tips:
         return TipsPage();
       case DrawerSection.divider1:
@@ -2525,6 +2575,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _onSelectItem(DrawerSection section) async {
     Navigator.of(context).pop();
+    _statsController.section(section);
     setState(() {
       _selected = section;
       _activeDrawerIndex = section;
@@ -2543,9 +2594,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
     _willPopShouldOpenDrawer = _settingsProvider.willPopShouldOpenDrawerStream.stream;
-    _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
-      _openDrawer();
-    });
+    if (mounted) {
+      _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
+        _openDrawer();
+      });
+    }
 
     // Set up UserController. If key is empty, redirect to the Settings page.
     // Else, open the default
@@ -2561,6 +2614,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!userController.isApiKeyValid) {
       _selected = DrawerSection.settings;
       _activeDrawerIndex = DrawerSection.settings;
+      _statsController.section(DrawerSection.settings);
     } else {
       String defaultSection = await Prefs().getDefaultSection();
 
@@ -2580,6 +2634,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       _selected = resolvedSection;
       _activeDrawerIndex = resolvedSection;
+      _statsController.section(resolvedSection);
     }
 
     // Change device preferences
@@ -2608,7 +2663,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // UserController handles its own initialization
     }
 
-    if (!userController.isApiKeyValid) return;
+    if (!userController.isApiKeyValid) {
+      if (!Platform.isWindows) FirestoreHelper().resumePendingProfileDeletion();
+      return;
+    }
 
     await _initializeAndHandleFirebaseAuth();
 
@@ -2618,6 +2676,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!Platform.isWindows) {
       FirestoreHelper().uidCompleter.future.whenComplete(() {
         _updateLastActiveTime();
+        FirestoreHelper().syncDiscreetScheduleOffset();
       });
     }
 
@@ -2649,26 +2708,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           ));
 
           if (newAnonUser != null) {
-            _userUID = newAnonUser.uid;
-            FirestoreHelper().setUID(_userUID);
-            await _updateFirebaseDetails();
+            FirestoreHelper().markSignedIn();
 
             // Try to restore alerts from local snapshot (included in the backup)
-            bool alertsRestored = false;
-            try {
-              final snapshot = await FirestoreHelper().loadLocalSnapshot();
-              if (snapshot != null) {
-                alertsRestored = await FirestoreHelper().applyAlertsFromPayload(
-                  snapshot.toMap(),
-                  resetRestockTimestamps: true,
-                );
-                if (alertsRestored) {
-                  log("🔒 Drawer: Alerts restored from local snapshot after import.", name: "AUTH CHECKS");
-                }
-              }
-            } catch (e) {
-              log("🔒 Drawer: Failed to restore alerts from snapshot: $e", name: "AUTH CHECKS");
+            final alertsRestored =
+                await FirestoreHelper().restoreAlertsFromLocalSnapshot(UserHelper.playerId, newSession: true) != null;
+            if (alertsRestored) {
+              log("🔒 Drawer: Alerts restored from local snapshot after import.", name: "AUTH CHECKS");
             }
+            await _updateFirebaseDetails();
 
             // Show dialog only if alerts could NOT be restored (no snapshot or failed)
             // This dialog can be shown here with no postframe callback as it is inside
@@ -2740,8 +2788,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           "🔒 Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
           name: "AUTH CHECKS",
         );
-        _userUID = FirebaseAuth.instance.currentUser!.uid;
-        FirestoreHelper().setUID(_userUID);
+        FirestoreHelper().markSignedIn();
       }
 
       justImportedFromLocalBackup = false;
@@ -2756,8 +2803,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (user != null && !_debugForceFirebaseAuthMissing) {
       log("🔒 Drawer: Session found immediately. UID: ${user.uid}", name: "AUTH CHECKS");
-      _userUID = user.uid;
-      FirestoreHelper().setUID(_userUID);
+      FirestoreHelper().markSignedIn();
       _drawerUserChecked = true;
       return;
     }
@@ -2795,14 +2841,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _updateFirebaseDetails() async {
-    // Realign FirestoreHelper UID with the currently authenticated user
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
+    if (FirebaseAuth.instance.currentUser == null) {
       log("Drawer: skip _updateFirebaseDetails, no Firebase user", name: "AUTH CHECKS");
       return;
     }
-    _userUID = currentUser.uid;
-    FirestoreHelper().setUID(_userUID);
 
     // We save the key because the API call will reset it
     // Then get user's profile and update
@@ -3082,6 +3124,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   void _callSectionFromOutside(DrawerSection section) {
+    _webViewProvider.closeSplitDevTools();
     setState(() {
       if (!_webViewProvider.webViewSplitActive) {
         _webViewProvider.browserShowInForeground = false;
@@ -3090,6 +3133,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _selected = section;
       _activeDrawerIndex = section;
     });
+    _statsController.section(section);
     _getPages();
   }
 
@@ -3126,6 +3170,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     _openingForeignStocksExternally = true;
 
+    _webViewProvider.closeSplitDevTools();
     if (!_webViewProvider.webViewSplitActive) {
       _webViewProvider.browserShowInForeground = false;
     }
@@ -3139,6 +3184,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       Navigator.of(context)
           .push(
             MaterialPageRoute(
+              settings: const RouteSettings(name: 'foreign_stocks'),
               builder: (BuildContext context) =>
                   ForeignStockPage(apiKey: UserHelper.apiKey, temporaryDestinationCountry: temporaryDestinationCountry),
             ),
@@ -3150,6 +3196,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   void _openDrawer() {
+    if (!mounted) return;
     if (routeWithDrawer) {
       // Dialogs sit on top of this route and the back button never reaches them
       final ModalRoute<dynamic>? route = ModalRoute.of(context);
@@ -3158,7 +3205,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return;
       }
 
-      if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+      if (_webViewProvider.splitAppSide == SplitSide.right) {
         _scaffoldKey.currentState!.openEndDrawer();
       } else {
         _scaffoldKey.currentState!.openDrawer();
@@ -3390,7 +3437,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       bridgeController.initializeHandler();
       if (isAndroid || _settingsProvider.iosLiveActivityTravelEnabled) {
-        await travelController.activate();
+        await travelController.activate(_settingsProvider);
       }
       if ((isIos && _settingsProvider.iosLiveActivityRacingEnabled) ||
           (isAndroid && _settingsProvider.androidLiveActivityRacingEnabled)) {
@@ -3405,9 +3452,5 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } catch (e) {
       log('Error configuring refresh rate: $e');
     }
-  }
-
-  void changeUID(String uid) {
-    _userUID = uid;
   }
 }

@@ -331,7 +331,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     String notificationSubtitle = "Remember to bring your ${widget.stockName} import papers!";
     final int notificationId = _notificationId;
 
-    if (_settingsProvider.discreetNotifications) {
+    if (_settingsProvider.discreetAt(_targetTime)) {
       notificationTitle = "Scheduled";
       notificationSubtitle = "Departure";
     }
@@ -382,7 +382,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     String notificationTitle = "Your flight to ${widget.country} is ready for boarding!";
     String notificationSubtitle = "Remember to bring your ${widget.stockName} import papers!";
 
-    if (_settingsProvider.discreetNotifications) {
+    if (_settingsProvider.discreetAt(_targetTime)) {
       notificationTitle = "Scheduled";
       notificationSubtitle = "Departure";
     }
@@ -433,7 +433,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
 
     await AlarmKitServiceIos.setAlarmWithMetadata(
       targetTime: targetTime,
-      label: _settingsProvider.discreetNotifications ? 'Fl' : widget.stockName,
+      label: _settingsProvider.discreetAt(targetTime) ? 'Fl' : widget.stockName,
       id: _alarmKitId,
       context: 'Boarding alarm',
       details: '${widget.country}: ${widget.stockName}',
@@ -498,7 +498,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     final alarmTime = _targetTime;
     final hour = alarmTime.hour;
     final minute = alarmTime.minute;
-    final message = _settingsProvider.discreetNotifications ? "Fl" : 'Flight Boarding - ${widget.stockName}';
+    final message = _settingsProvider.discreetAt(alarmTime) ? "Fl" : 'Flight Boarding - ${widget.stockName}';
 
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
@@ -516,7 +516,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
 
   void _setTimer() {
     final totalSeconds = _targetTime.difference(DateTime.now()).inSeconds;
-    final message = _settingsProvider.discreetNotifications ? "Fl" : 'Flight Boarding - ${widget.stockName}';
+    final message = _settingsProvider.discreetAt(_targetTime) ? "Fl" : 'Flight Boarding - ${widget.stockName}';
 
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',

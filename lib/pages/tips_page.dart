@@ -3,6 +3,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:app_settings/app_settings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,10 +13,12 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 
 // Project imports:
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/widgets/chat/chat_help.dart';
+import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
 import 'package:torn_pda/widgets/webviews/fullscreen_explanation.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -25,6 +28,7 @@ enum TipClass {
   browserGeneral,
   browserTabs,
   browserFAB,
+  chat,
   appwidget,
   travel,
   profile,
@@ -60,17 +64,23 @@ abstract class TipTextBuilder {
 }
 
 class ExpandableTip extends TipTextBuilder {
-  ExpandableTip({this.expandedValue, super.headerValue, super.isExpanded});
+  ExpandableTip({this.expandedValue, this.scenes = const [], super.headerValue, super.isExpanded});
 
   String? expandedValue;
+  final List<FeatureDiagramScene> scenes;
 
   @override
   Widget buildExpandedText() {
-    return Text(
+    final text = Text(
       expandedValue!,
       style: const TextStyle(
         fontSize: 13,
       ),
+    );
+    if (scenes.isEmpty) return text;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [text, const SizedBox(height: 12), FeatureDiagram(scenes: scenes)],
     );
   }
 }
@@ -117,6 +127,8 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
   var _chainingWarTipsList = <TipTextBuilder>[];
   var _spiesTipsList = <TipTextBuilder>[];
   var _ffScouterTipsList = <TipTextBuilder>[];
+  var _chatTipGroups = <ChatHelpGroup, List<TipTextBuilder>>{};
+  Set<ChatNeed>? _chatNeeds;
   var _tradingTipsList = <TipTextBuilder>[];
   var _deepLinksTipsList = <TipTextBuilder>[];
   var _userScriptsTipsList = <TipTextBuilder>[];
@@ -129,8 +141,6 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _batteryStatusFuture = _checkBatteryOptimization();
 
     _buildLists();
-
-    analytics?.logScreenView(screenName: 'tips');
 
     routeWithDrawer = true;
     routeName = "tips";
@@ -152,6 +162,63 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
     _userScriptsTipsList = buildUserScriptsTipsList();
+  }
+
+  void _buildChatTips(Set<ChatNeed> needs) {
+    _chatNeeds = needs;
+    _chatTipGroups = {
+      for (final g in ChatHelpGroup.values)
+        g: [
+          for (final e in chatHelpOf(g, needs))
+            ExpandableTip(
+              headerValue: e.title,
+              expandedValue: e.text,
+              scenes: e.scenes,
+              isExpanded: e.needs.any(needs.contains),
+            ),
+        ],
+    };
+  }
+
+  Widget _chatTips() {
+    final needs = _chatNeeds!;
+    final theme = Theme.of(context);
+    final groups = chatHelpGroupsOf(needs);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final g in groups) ...[
+          if (g == ChatHelpGroup.accessibility && needs.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Semantics(
+                header: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text(chatNeedsText(needs), style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Semantics(
+                header: true,
+                child: Text(g.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          _tipPanelList(_chatTipGroups[g]!),
+        ],
+      ],
+    );
   }
 
   @override
@@ -182,6 +249,8 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
+    final needs = chatNeedsOf(context);
+    if (_chatNeeds == null || !setEquals(needs, _chatNeeds)) _buildChatTips(needs);
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
@@ -225,6 +294,12 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.browserFAB),
                 const SizedBox(height: 25),
+                if (NativeChat.compiled) ...[
+                  const Text("CHAT"),
+                  const SizedBox(height: 10),
+                  tipsPanels(TipClass.chat),
+                  const SizedBox(height: 25),
+                ],
                 if (Platform.isAndroid)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,7 +365,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
+      leadingWidth: _webViewProvider.appCanOpenBrowser ? 88 : 50,
       leading: Row(
         children: [
           IconButton(
@@ -306,7 +381,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+          if (_webViewProvider.appCanOpenBrowser) const PdaBrowserIcon(),
         ],
       ),
       title: const Text('Torn PDA - Tips', style: TextStyle(color: Colors.white)),
@@ -324,6 +399,8 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         listToShow = _browserTabsTipList;
       case TipClass.browserFAB:
         listToShow = _browserFABTipList;
+      case TipClass.chat:
+        return _chatTips();
       case TipClass.appwidget:
         listToShow = _appwidgetTipsList;
       case TipClass.travel:
@@ -348,6 +425,10 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         listToShow = _userScriptsTipsList;
     }
 
+    return _tipPanelList(listToShow);
+  }
+
+  Widget _tipPanelList(List<TipTextBuilder> listToShow) {
     return ExpansionPanelList(
       expandedHeaderPadding: const EdgeInsets.all(0),
       expansionCallback: (int index, bool isExpanded) {
@@ -772,10 +853,14 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     tips.add(
       ExpandableTip(
         headerValue: "Use the chat in different tabs",
-        expandedValue: "You can activate or deactivate the chat in separate tabs by short-tapping the chat icon "
-            "(enabled in Settings by default)."
-            "\n\nIf you wish to change the standard behavior of the chat when a new tab is opened, long-press the "
-            "chat icon in any tab and you'll get a confirmation message of the change.",
+        expandedValue: NativeChat.compiled
+            ? "Tap the chat icon to open the chat window, or a small menu when the in-app chat is off. Double tap it "
+                  "to hide or show Torn's own chat in that tab. Long press it for the full chat, Chat settings and "
+                  "hiding Torn's chat in every tab."
+            : "You can activate or deactivate the chat in separate tabs by short-tapping the chat icon "
+                  "(enabled in Settings by default)."
+                  "\n\nIf you wish to change the standard behavior of the chat when a new tab is opened, long-press the "
+                  "chat icon in any tab and you'll get a confirmation message of the change.",
       ),
     );
     tips.add(
@@ -833,6 +918,31 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
             "to the page title (which is shown in the default browser style).\n\n"
             "Please note that this name will be lost if you close the tab. This could be particularly useful, however, "
             "in combination with the tab locking feature (explained above), so that you can organize your tabs better.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Two groups of tabs side by side",
+        scenes: [
+          FeatureDiagramScene.dragToApp,
+          FeatureDiagramScene.dragToOtherPanel,
+          FeatureDiagramScene.copyMainTab,
+          FeatureDiagramScene.linkCurrentTab,
+          FeatureDiagramScene.linkNewTab,
+          FeatureDiagramScene.linkTabBehindApp,
+          FeatureDiagramScene.linkNewTabAppSide,
+        ],
+        expandedValue: "On wide screens (tablets, unfolded foldables or large Android windows) you can show "
+            "two groups of browser tabs at once.\n\n"
+            "First choose 'Browser left' or 'Browser right' in Settings / Split screen. On phones and foldables, "
+            "also enable 'Allow auto rotation'.\n\n"
+            "Then double-tap a tab and use the split icon to open it in a second panel, where the app was. "
+            "Each panel has its own tabs and its own + button, and the same icon moves a tab to the other panel.\n\n"
+            "You can also press and hold a tab and drag it onto the app or the other panel. "
+            "Dragging the main tab opens a copy of it.\n\n"
+            "Where links tapped in the app open is chosen in Settings, next to Split screen.\n\n"
+            "To close an empty panel, tap its X and the app comes back.\n\n"
+            "To resize the panels, press and hold the divider, then drag it.",
       ),
     );
     return tips;
@@ -1128,6 +1238,33 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
             "main app bar when in the Targets section.",
       ),
     );
+    if (Platform.isAndroid) {
+      tips.add(
+        ExpandableTip(
+          headerValue: "Floating window",
+          scenes: [FeatureDiagramScene.pipChain, FeatureDiagramScene.pipPlayer],
+          expandedValue: "On Android, the floating window shrinks the app into a small window that stays on top of "
+              "other apps, so you can keep an eye on the chain or on a player while you do something else.\n\n"
+              "Tap the window icon in the chain widget to watch the chain: you get the counter, the chain watcher "
+              "colors, a border that blinks when time is running out and, with panic mode on and panic targets "
+              "set, a Panic attack button.\n\n"
+              "In Targets, War and Retaliation, choose 'Watch players' in the options menu (the gear icon); in "
+              "Attacks and FFScouter, tap the window icon in the top bar. The cards get a checkbox: tap up to 4 "
+              "of them and then 'Watch' in the bar (the X or the back button leaves without watching). With one "
+              "player the window shows their name and counts down their hospital or jail time; with several, one "
+              "row each, whoever gets out first on top. A player turns green for 30 seconds when their status "
+              "changes, and Profile opens that player.\n\n"
+              "Tap the Floating window button in the Stakeouts page to watch all your stakeouts at once and "
+              "highlight the latest alert.\n\n"
+              "While any floating window is open, stakeout alerts show as a banner for a few seconds and as a phone "
+              "notification (type 'Stakeouts', which you can mute separately).\n\n"
+              "In Settings you can turn the floating window on or off, globally and for each place, and choose to "
+              "open the chain window automatically when you leave the app with the chain watcher on (off by "
+              "default). Closing it with the system X is like leaving the app: the chain watcher stops alerting.\n\n"
+              "Press and hold the window icon for a short explanation.",
+        ),
+      );
+    }
     /*
     tips.add(
       ExpandableTip(

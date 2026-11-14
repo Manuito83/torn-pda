@@ -405,7 +405,8 @@ class _FFScouterInfoPageState extends State<FFScouterInfoPage> {
                             '&title=FFScouterv3.2'
                             '&user=hof,faction,basic,profile,cooldowns,refills,attacks,battlestats,personalstats'
                             '&faction=members,rankedwarreport,warfare,wars,rankedwars'
-                            '&torn=rankedwarreport,rankedwars';
+                            '&torn=rankedwarreport,rankedwars'
+                            '&sensitiveData=1';
                         await openSimpleWebViewDialog(context: context, url: url, title: 'Create API Key');
                       },
                       icon: const Icon(Icons.open_in_new, size: 16),

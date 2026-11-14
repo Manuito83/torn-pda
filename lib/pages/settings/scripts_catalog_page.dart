@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/models/userscripts/script_catalog_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -22,6 +21,7 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/script_catalog_service.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/pda_scaffold.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class ScriptsCatalogPage extends StatefulWidget {
@@ -50,8 +50,6 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
   String? _categoryFilter;
 
   final Set<String> _installing = {};
-
-  static const String _pdaKeyWord = "###PDA-APIKEY###";
 
   // Key applied to every catalog script that supports one, empty means the Torn PDA key
   String _catalogApiKey = "";
@@ -99,26 +97,9 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context);
 
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-                ? Colors.blueGrey
-                : isStatusBarShown
-                ? _themeProvider.statusBar
-                : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SafeArea(
-        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
-        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: _settingsProvider.appBarTop ? _buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height, child: _buildAppBar())
-              : null,
-          body: Container(color: _themeProvider.canvas, child: _buildBody()),
-        ),
-      ),
+    return PdaScaffold(
+      appBar: _buildAppBar(),
+      body: Container(color: _themeProvider.canvas, child: _buildBody()),
     );
   }
 
@@ -689,8 +670,9 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
   /// Reason why a script with its own switch on is still not running, when a bulk mode is active
   String? _modeBlockReason(UserScriptModel model) {
     if (!model.enabled || _userScriptsProvider.isActive(model)) return null;
-    return _userScriptsProvider.isWarModeActive
-        ? "war mode is on and this script is not in your war selection"
+    final mode = _userScriptsProvider.activeMode;
+    return mode != null
+        ? "${mode.isWar ? "war mode" : mode.name} is on and this script is not selected for it"
         : "all scripts are temporarily disabled";
   }
 
@@ -735,7 +717,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
                     "$stateText\n\nYou can manage it from the user scripts list, or use the shortcuts below.",
                     style: const TextStyle(fontSize: 13, height: 1.35),
                   ),
-                  if (model.source.contains(_pdaKeyWord)) ...[
+                  if (model.source.contains(apiKeyPlaceholder)) ...[
                     const SizedBox(height: 12),
                     InkWell(
                       borderRadius: BorderRadius.circular(8),
@@ -1118,7 +1100,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
     if (catalog == null) return const [];
     final ids = catalog.scripts.map((s) => s.greasyforkId).toSet();
     return _userScriptsProvider.userScriptList
-        .where((s) => ids.contains(CatalogScript.greasyforkIdFromUrl(s.url)) && s.source.contains(_pdaKeyWord))
+        .where((s) => ids.contains(CatalogScript.greasyforkIdFromUrl(s.url)) && s.source.contains(apiKeyPlaceholder))
         .toList();
   }
 
@@ -1180,7 +1162,7 @@ class ScriptsCatalogPageState extends State<ScriptsCatalogPage> {
       }
 
       final model = result.model!;
-      model.customApiKeyCandidate = model.source.contains(_pdaKeyWord);
+      model.customApiKeyCandidate = model.source.contains(apiKeyPlaceholder);
 
       // The provider skips scripts whose name is taken, which would fail silently otherwise
       final String newName = model.name.toLowerCase();

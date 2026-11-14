@@ -9,12 +9,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
+import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/models/trades/trade_price_provider.dart';
+import 'package:torn_pda/utils/background_prefs.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
+import 'package:torn_pda/utils/shared_prefs_chat.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
-class Prefs {
+class Prefs with ChatPrefsStorage {
   static final Prefs _instance = Prefs._internal();
   factory Prefs() => _instance;
   Prefs._internal();
@@ -30,9 +33,6 @@ class Prefs {
   final String _kLastRendererGoneMs = "pda_lastRendererGoneMs";
   final String _kPdaConnectivityCheckRC = "pda_connectivityCheckRC";
   final String _kAuthRecoveryEnabledRC = "pda_authRecoveryEnabledRC";
-
-  final String _kLastKnownFaction = "pfa_lastKnownFaction";
-  final String _kLastKnownCompany = "pfa_lastKnownCompany";
 
   // Native login
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
@@ -126,6 +126,11 @@ class Prefs {
   final String _kDynamicAppIconsManual = "pda_dynamicAppIconsManual";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
+  final String _kDiscreetSchedule = "pda_discreetSchedule";
+  final String _kDiscreetScheduleFrom = "pda_discreetScheduleFrom";
+  final String _kDiscreetScheduleTo = "pda_discreetScheduleTo";
+  final String _kDiscreetScheduleOffsetSynced = "pda_discreetScheduleOffsetSynced";
+  final String _kDiscreetSchedulePending = "pda_discreetSchedulePending";
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDrawerSectionOrder = "pda_drawerSectionOrder";
@@ -137,6 +142,7 @@ class Prefs {
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
+  final String _kManyTabsAlerted = "pda_manyTabsAlerted";
   final String _kFirstTabLockAlerted = "pda_firstTabLockAlerted";
   final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
@@ -172,6 +178,7 @@ class Prefs {
 
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
+  final String _kBrowserRemoteDebugging = "pda_browserRemoteDebugging";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
   final String _kBrowserCenterEditingTextField = "pda_browserCenterEditingTextField";
@@ -219,6 +226,7 @@ class Prefs {
   final String _kShowArrivalTime = "pda_showArrivalTime";
   final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
+  final String _kTravelTimeReduction = "pda_travelTimeReduction";
   final String _kForeignStocksDataProvider = "pda_foreignStocksDataProvider";
   final String _kActiveRestocks = "pda_activeRestocks";
   final String _kHiddenForeignStocks = "pda_hiddenForeignStocks";
@@ -286,6 +294,7 @@ class Prefs {
   final String _kTravelBoosterCooldownWarningThreshold = "pda_travelBoosterCooldownWarningThreshold";
   final String _kTravelWalletMoneyWarning = "pda_travelWalletMoneyWarning";
   final String _kTravelWalletMoneyWarningThreshold = "pda_travelWalletMoneyWarningThreshold";
+  final String _kTravelOrganizedCrimeWarning = "pda_travelOrganizedCrimeWarning";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
   final String _kMessagesShowNumber = "pda_messagesShowNumber";
@@ -372,6 +381,7 @@ class Prefs {
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
   final String _kUserScriptsBulkMode = "pda_userScriptsBulkMode";
+  final String _kUserScriptsModes = "pda_userScriptsModes";
   final String _kUserScriptsSortOrder = "pda_userScriptsSortOrder";
   final String _kUserScriptsUpdatesFirst = "pda_userScriptsUpdatesFirst";
   final String _kUserScriptsSearchInSource = "pda_userScriptsSearchInSource";
@@ -399,6 +409,7 @@ class Prefs {
   final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kShortcutTile = "pda_shortcutTile"; // Firebase User Pref
   final String _kShortcutMenu = "pda_shortcutMenu"; // Firebase User Pref
+  final String _kAppIconMenu = "pda_appIconMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList"; // Firebase User Pref
 
   // Reviving
@@ -431,10 +442,13 @@ class Prefs {
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
+  final String _kStockExchangeHideBenefitBlocks = "pda_stockExchangeHideBenefitBlocks";
 
   // WebView Tabs
-  final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
+  final String _kChatRemovalEnabled = "pda_chatIconEnabled";
+  final String _kChatRemovalEnabledLegacy = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
+  final String _kChatRemovalMigrated = "pda_chatRemovalMigrated";
   final String _kWebViewLastActiveTab = "pda_webViewLastActiveTab";
   final String _kWebViewSessionCookie = "pda_webViewSessionCookie";
   final String _kWebViewMainTab = "pda_webViewMainTab";
@@ -452,6 +466,11 @@ class Prefs {
   // and 0 = follow default for the sleep period). RC values are persisted to be known at cold start
   final String _kTabSleepMinutesOverride = "pda_tabSleepMinutesOverride";
   final String _kTabSleepMinutesDefaultRC = "pda_tabSleepMinutesDefaultRC";
+  final String _kMaxLiveTabsOverride = "pda_maxLiveTabsOverride";
+  final String _kMaxLiveTabsDefaultRC = "pda_maxLiveTabsDefaultRC";
+  final String _kBlankDetectorModeRC = "pda_blankDetectorModeRC";
+  final String _kBlankRecoveryEnabled = "pda_blankRecoveryEnabled";
+  final String _kTabNumbersFrom = "pda_tabNumbersFrom";
   final String _kParkBackgroundTabsOverride = "pda_parkBackgroundTabsOverride";
   final String _kParkBackgroundTabsDefaultRC = "pda_parkBackgroundTabsDefaultRC";
   final String _kParkBackgroundTabsAllowedRC = "pda_parkBackgroundTabsAllowedRC";
@@ -487,6 +506,7 @@ class Prefs {
   final String _kFullScreenByLongChainingTap = "pda_fullScreenByLongChainingTap";
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
   final String _kNewTabByDeepLinkTap = "pda_newTabByDeepLinkTap";
+  final String _kSplitAppLinkTarget = "pda_splitAppLinkTarget";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
 
@@ -569,6 +589,13 @@ class Prefs {
   final String _kAppwidgetCooldownTapOpensBrowserDestination = "pda__appwidgetCooldownTapOpensBrowserDestination";
   final String _kAppwidgetRacingTapOpensBrowser = "pda__appwidgetRacingTapOpensBrowser";
 
+  // Floating window
+  final String _kPipEnabled = "pda_pipEnabled";
+  final String _kPipChainButton = "pda_pipChainButton";
+  final String _kPipPlayerButtons = "pda_pipPlayerButtons";
+  final String _kPipStakeoutsButton = "pda_pipStakeoutsButton";
+  final String _kPipAutoEnter = "pda_pipAutoEnter";
+
   // Permissions
   final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
 
@@ -590,19 +617,14 @@ class Prefs {
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
   final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
+  final String _kSplitBrowsersLayout = "pda_splitBrowsersLayout";
+  final String _kSplitScreenRatio = "pda_splitScreenRatio";
+  final String _kSplitBrowsersAllowedRC = "pda_splitBrowsersAllowedRC";
 
   // FCM token
   final String _kFCMToken = "pda_fcmToken";
   // Last FCM token we confirmed written to Firestore
   final String _kFCMTokenSynced = "pda_fcmTokenSynced";
-
-  // Sendbird notifications
-  final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
-  final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
-  final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
-  final String _kSendbirdExcludeFactionMessages = "pda_sendbirdExcludeFactionMessages";
-  final String _kSendbirdExcludeCompanyMessages = "pda_sendbirdExcludeCompanyMessages";
-  final String _kSendbirdExcludeEliminationMessages = "pda_sendbirdExcludeEliminationMessages";
 
   final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
 
@@ -708,6 +730,12 @@ class Prefs {
     final defaultTimeZone = await PrefsDatabase.getString(_kDefaultTimeZone, 'local');
     await prefs.setString(_kDefaultTimeZone, defaultTimeZone);
 
+    await BackgroundPrefs().setTornChatDmPush(await getTornChatDmPush());
+    await prefs.setString(_kVibrationPattern, await PrefsDatabase.getString(_kVibrationPattern, 'medium'));
+
+    await BackgroundPrefs().setDiscreetNotifications(await getDiscreetNotifications());
+    await BackgroundPrefs().setDiscreetSchedule(await getDiscreetSchedule());
+
     final activeShortcuts = await PrefsDatabase.getStringList(_kActiveShortcutsList, <String>[]);
     final existingShortcuts = await prefs.getStringList(_kActiveShortcutsList);
     if (activeShortcuts.isNotEmpty || existingShortcuts == null) {
@@ -754,25 +782,6 @@ class Prefs {
 
   Future setAuthRecoveryEnabledRC(bool value) async {
     return await PrefsDatabase.setBool(_kAuthRecoveryEnabledRC, value);
-  }
-
-  /// ----------------------------
-  /// Methods for faction and company tracking
-  /// ----------------------------
-  Future<int> getLastKnownFaction() async {
-    return await PrefsDatabase.getInt(_kLastKnownFaction, 0);
-  }
-
-  Future setLastKnownFaction(int value) async {
-    return await PrefsDatabase.setInt(_kLastKnownFaction, value);
-  }
-
-  Future<int> getLastKnownCompany() async {
-    return await PrefsDatabase.getInt(_kLastKnownCompany, 0);
-  }
-
-  Future setLastKnownCompany(int value) async {
-    return await PrefsDatabase.setInt(_kLastKnownCompany, value);
   }
 
   /// ----------------------------
@@ -1257,6 +1266,7 @@ class Prefs {
   }
 
   Future setVibrationPattern(String value) async {
+    await SharedPreferencesAsync().setString(_kVibrationPattern, value);
     return await PrefsDatabase.setString(_kVibrationPattern, value);
   }
 
@@ -1268,7 +1278,41 @@ class Prefs {
   }
 
   Future setDiscreetNotifications(bool value) async {
+    await BackgroundPrefs().setDiscreetNotifications(value);
     return await PrefsDatabase.setBool(_kDiscreetNotifications, value);
+  }
+
+  Future<DiscreetSchedule> getDiscreetSchedule() async {
+    const fallback = DiscreetSchedule();
+    return DiscreetSchedule(
+      enabled: await PrefsDatabase.getBool(_kDiscreetSchedule, false),
+      from: await PrefsDatabase.getInt(_kDiscreetScheduleFrom, fallback.from),
+      to: await PrefsDatabase.getInt(_kDiscreetScheduleTo, fallback.to),
+    );
+  }
+
+  Future setDiscreetSchedule(DiscreetSchedule value) async {
+    await BackgroundPrefs().setDiscreetSchedule(value);
+    await PrefsDatabase.setBool(_kDiscreetSchedule, value.enabled);
+    await PrefsDatabase.setInt(_kDiscreetScheduleFrom, value.from);
+    await PrefsDatabase.setInt(_kDiscreetScheduleTo, value.to);
+  }
+
+  Future<int?> getDiscreetScheduleOffsetSynced() async {
+    return int.tryParse(await PrefsDatabase.getString(_kDiscreetScheduleOffsetSynced, ""));
+  }
+
+  Future<bool> getDiscreetSchedulePending() async {
+    return await PrefsDatabase.getBool(_kDiscreetSchedulePending, false);
+  }
+
+  Future setDiscreetScheduleSynced(int offset) async {
+    await PrefsDatabase.setString(_kDiscreetScheduleOffsetSynced, offset.toString());
+    return await PrefsDatabase.setBool(_kDiscreetSchedulePending, false);
+  }
+
+  Future setDiscreetSchedulePending() async {
+    return await PrefsDatabase.setBool(_kDiscreetSchedulePending, true);
   }
 
   /// ----------------------------
@@ -1616,6 +1660,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kIosBrowserPinch, value);
   }
 
+  Future<bool> getBrowserRemoteDebugging() async {
+    return await PrefsDatabase.getBool(_kBrowserRemoteDebugging, false);
+  }
+
+  Future setBrowserRemoteDebugging(bool value) async {
+    return await PrefsDatabase.setBool(_kBrowserRemoteDebugging, value);
+  }
+
   Future<bool> getIosDisallowOverscroll() async {
     return await PrefsDatabase.getBool(_kIosDisallowOverscroll, false);
   }
@@ -1816,6 +1868,14 @@ class Prefs {
 
   Future setExcessTabsAlerted(bool value) async {
     return await PrefsDatabase.setBool(_kExcessTabsAlerted, value);
+  }
+
+  Future<bool> getManyTabsAlerted() async {
+    return await PrefsDatabase.getBool(_kManyTabsAlerted, false);
+  }
+
+  Future setManyTabsAlerted(bool value) async {
+    return await PrefsDatabase.setBool(_kManyTabsAlerted, value);
   }
 
   /// ----------------------------
@@ -2162,6 +2222,14 @@ class Prefs {
 
   Future setTravelTicket(String value) async {
     return await PrefsDatabase.setString(_kTravelTicket, value);
+  }
+
+  Future<double> getTravelTimeReduction() async {
+    return await PrefsDatabase.getDouble(_kTravelTimeReduction, 0);
+  }
+
+  Future setTravelTimeReduction(double value) async {
+    return await PrefsDatabase.setDouble(_kTravelTimeReduction, value);
   }
 
   Future<String> getForeignStocksDataProvider() async {
@@ -2673,6 +2741,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kTravelWalletMoneyWarning, value);
   }
 
+  Future<bool> getTravelOrganizedCrimeWarning() async {
+    return await PrefsDatabase.getBool(_kTravelOrganizedCrimeWarning, true);
+  }
+
+  Future setTravelOrganizedCrimeWarning(bool value) async {
+    return await PrefsDatabase.setBool(_kTravelOrganizedCrimeWarning, value);
+  }
+
   Future<int> getTravelWalletMoneyWarningThreshold() async {
     return await PrefsDatabase.getInt(_kTravelWalletMoneyWarningThreshold, 50000);
   }
@@ -3028,6 +3104,14 @@ class Prefs {
     return await PrefsDatabase.setString(_kShortcutTile, value);
   }
 
+  Future<List<String>> getAppIconMenu() async {
+    return await PrefsDatabase.getStringList(_kAppIconMenu, <String>[]);
+  }
+
+  Future setAppIconMenu(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kAppIconMenu, value);
+  }
+
   Future<String> getShortcutMenu() async {
     return await PrefsDatabase.getString(_kShortcutMenu, 'carousel');
   }
@@ -3375,12 +3459,25 @@ class Prefs {
     return await PrefsDatabase.setBool(_kChatRemovalEnabled, value);
   }
 
+  // Read only by the chat removal migration
+  Future<bool> getChatRemovalEnabledLegacy() async {
+    return await PrefsDatabase.getBool(_kChatRemovalEnabledLegacy, true);
+  }
+
   Future<bool> getChatRemovalActive() async {
     return await PrefsDatabase.getBool(_kChatRemovalActive, false);
   }
 
   Future setChatRemovalActive(bool value) async {
     return await PrefsDatabase.setBool(_kChatRemovalActive, value);
+  }
+
+  Future<bool> getChatRemovalMigrated() async {
+    return await PrefsDatabase.getBool(_kChatRemovalMigrated, false);
+  }
+
+  Future setChatRemovalMigrated(bool value) async {
+    return await PrefsDatabase.setBool(_kChatRemovalMigrated, value);
   }
 
   /// ----------------------------
@@ -3833,6 +3930,16 @@ class Prefs {
 
   // --
 
+  Future<String> getUserScriptsModes() async {
+    return await PrefsDatabase.getString(_kUserScriptsModes, "");
+  }
+
+  Future setUserScriptsModes(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsModes, value);
+  }
+
+  // --
+
   Future<String> getUserScriptsSortOrder() async {
     return await PrefsDatabase.getString(_kUserScriptsSortOrder, "name");
   }
@@ -4044,6 +4151,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kStockExchangeInMenu, value);
   }
 
+  Future<bool> getStockExchangeHideBenefitBlocks() async {
+    return await PrefsDatabase.getBool(_kStockExchangeHideBenefitBlocks, false);
+  }
+
+  Future setStockExchangeHideBenefitBlocks(bool value) async {
+    return await PrefsDatabase.setBool(_kStockExchangeHideBenefitBlocks, value);
+  }
+
   Future<int> getForeignStockSellingFee() async {
     return await PrefsDatabase.getInt(_kForeignStockSellingFee, 0);
   }
@@ -4163,6 +4278,49 @@ class Prefs {
 
   Future setTabSleepMinutesDefaultRC(int value) async {
     return await PrefsDatabase.setInt(_kTabSleepMinutesDefaultRC, value);
+  }
+
+  /// 0 follows Remote Config, -1 is no limit
+  Future<int> getMaxLiveTabsOverride() async {
+    return await PrefsDatabase.getInt(_kMaxLiveTabsOverride, 0);
+  }
+
+  Future setMaxLiveTabsOverride(int value) async {
+    return await PrefsDatabase.setInt(_kMaxLiveTabsOverride, value);
+  }
+
+  Future<int> getMaxLiveTabsDefaultRC() async {
+    return await PrefsDatabase.getInt(_kMaxLiveTabsDefaultRC, 0);
+  }
+
+  Future setMaxLiveTabsDefaultRC(int value) async {
+    return await PrefsDatabase.setInt(_kMaxLiveTabsDefaultRC, value);
+  }
+
+  /// 0 off, 1 measure, 2 recover
+  Future<int> getBlankDetectorModeRC() async {
+    return await PrefsDatabase.getInt(_kBlankDetectorModeRC, 2);
+  }
+
+  Future setBlankDetectorModeRC(int value) async {
+    return await PrefsDatabase.setInt(_kBlankDetectorModeRC, value);
+  }
+
+  Future<bool> getBlankRecoveryEnabled() async {
+    return await PrefsDatabase.getBool(_kBlankRecoveryEnabled, true);
+  }
+
+  Future setBlankRecoveryEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kBlankRecoveryEnabled, value);
+  }
+
+  /// 0 is off
+  Future<int> getTabNumbersFrom() async {
+    return await PrefsDatabase.getInt(_kTabNumbersFrom, 10);
+  }
+
+  Future setTabNumbersFrom(int value) async {
+    return await PrefsDatabase.setInt(_kTabNumbersFrom, value);
   }
 
   /// "default" (follow Remote Config), "on" or "off"
@@ -4474,6 +4632,16 @@ class Prefs {
 
   //--
 
+  Future<String> getSplitAppLinkTarget() async {
+    return await PrefsDatabase.getString(_kSplitAppLinkTarget, "browserTab");
+  }
+
+  Future setSplitAppLinkTarget(String value) async {
+    return await PrefsDatabase.setString(_kSplitAppLinkTarget, value);
+  }
+
+  //--
+
   Future<bool> getFullScreenByQuickItemTap() async {
     return await PrefsDatabase.getBool(_kFullScreenByQuickItemTap, false);
   }
@@ -4699,6 +4867,56 @@ class Prefs {
 
   // ---
 
+  Future<bool> getPipEnabled() async {
+    return await PrefsDatabase.getBool(_kPipEnabled, true);
+  }
+
+  Future setPipEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kPipEnabled, value);
+  }
+
+  // ---
+
+  Future<bool> getPipChainButton() async {
+    return await PrefsDatabase.getBool(_kPipChainButton, true);
+  }
+
+  Future setPipChainButton(bool value) async {
+    return await PrefsDatabase.setBool(_kPipChainButton, value);
+  }
+
+  // ---
+
+  Future<bool> getPipPlayerButtons() async {
+    return await PrefsDatabase.getBool(_kPipPlayerButtons, true);
+  }
+
+  Future setPipPlayerButtons(bool value) async {
+    return await PrefsDatabase.setBool(_kPipPlayerButtons, value);
+  }
+
+  // ---
+
+  Future<bool> getPipStakeoutsButton() async {
+    return await PrefsDatabase.getBool(_kPipStakeoutsButton, true);
+  }
+
+  Future setPipStakeoutsButton(bool value) async {
+    return await PrefsDatabase.setBool(_kPipStakeoutsButton, value);
+  }
+
+  // ---
+
+  Future<bool> getPipAutoEnter() async {
+    return await PrefsDatabase.getBool(_kPipAutoEnter, false);
+  }
+
+  Future setPipAutoEnter(bool value) async {
+    return await PrefsDatabase.setBool(_kPipAutoEnter, value);
+  }
+
+  // ---
+
   Future<bool> getAppwidgetExplanationShown() async {
     return await PrefsDatabase.getBool(_kAppwidgetExplanationShown, false);
   }
@@ -4811,6 +5029,30 @@ class Prefs {
     return await PrefsDatabase.setBool(_kSplitScreenRevertsToApp, value);
   }
 
+  Future<String> getSplitBrowsersLayout() async {
+    return await PrefsDatabase.getString(_kSplitBrowsersLayout, '');
+  }
+
+  Future setSplitBrowsersLayout(String value) async {
+    return await PrefsDatabase.setString(_kSplitBrowsersLayout, value);
+  }
+
+  Future<double> getSplitScreenRatio() async {
+    return await PrefsDatabase.getDouble(_kSplitScreenRatio, 0.5);
+  }
+
+  Future setSplitScreenRatio(double value) async {
+    return await PrefsDatabase.setDouble(_kSplitScreenRatio, value);
+  }
+
+  Future<bool> getSplitBrowsersAllowedRC() async {
+    return await PrefsDatabase.getBool(_kSplitBrowsersAllowedRC, true);
+  }
+
+  Future setSplitBrowsersAllowedRC(bool value) async {
+    return await PrefsDatabase.setBool(_kSplitBrowsersAllowedRC, value);
+  }
+
   /// ----------------------------
   /// FCM Token
   /// ----------------------------
@@ -4828,57 +5070,6 @@ class Prefs {
 
   Future setFCMTokenSynced(String value) async {
     return await PrefsDatabase.setString(_kFCMTokenSynced, value);
-  }
-
-  /// ----------------------------
-  /// Methods for Sendbird notifications
-  /// ----------------------------
-  Future<bool> getSendbirdNotificationsEnabled() async {
-    return await PrefsDatabase.getBool(_kSendbirdnotificationsEnabled, false);
-  }
-
-  Future setSendbirdNotificationsEnabled(bool value) async {
-    return await PrefsDatabase.setBool(_kSendbirdnotificationsEnabled, value);
-  }
-
-  Future<String> getSendbirdSessionToken() async {
-    return await PrefsDatabase.getString(_kSendbirdSessionToken, "");
-  }
-
-  Future setSendbirdSessionToken(String value) async {
-    return await PrefsDatabase.setString(_kSendbirdSessionToken, value);
-  }
-
-  Future<int> getSendbirdTokenTimestamp() async {
-    return await PrefsDatabase.getInt(_kSendbirdTokenTimestamp, 0);
-  }
-
-  Future setSendbirdTokenTimestamp(int timestamp) async {
-    return await PrefsDatabase.setInt(_kSendbirdTokenTimestamp, timestamp);
-  }
-
-  Future<bool> getSendbirdExcludeFactionMessages() async {
-    return await PrefsDatabase.getBool(_kSendbirdExcludeFactionMessages, false);
-  }
-
-  Future setSendbirdExcludeFactionMessages(bool value) async {
-    return await PrefsDatabase.setBool(_kSendbirdExcludeFactionMessages, value);
-  }
-
-  Future<bool> getSendbirdExcludeCompanyMessages() async {
-    return await PrefsDatabase.getBool(_kSendbirdExcludeCompanyMessages, false);
-  }
-
-  Future setSendbirdExcludeCompanyMessages(bool value) async {
-    return await PrefsDatabase.setBool(_kSendbirdExcludeCompanyMessages, value);
-  }
-
-  Future<bool> getSendbirdExcludeEliminationMessages() async {
-    return await PrefsDatabase.getBool(_kSendbirdExcludeEliminationMessages, false);
-  }
-
-  Future setSendbirdExcludeEliminationMessages(bool value) async {
-    return await PrefsDatabase.setBool(_kSendbirdExcludeEliminationMessages, value);
   }
 
   ///////

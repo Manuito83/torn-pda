@@ -9,10 +9,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
+import 'package:torn_pda/models/backup/prefs_backup_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
+import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 
 /// Local backup / restore section for app settings
 class PrefsBackupWidget extends StatefulWidget {
@@ -26,9 +28,10 @@ class PrefsBackupWidget extends StatefulWidget {
     String? key,
     String? customName,
     BackupExportMode mode = BackupExportMode.private,
+    String? data,
   }) async {
-    final data = await PrefsBackupService.exportPrefs(key: key, mode: mode);
-    final bytes = Uint8List.fromList(utf8.encode(data));
+    final contents = data ?? await PrefsBackupService.exportPrefs(key: key, mode: mode);
+    final bytes = Uint8List.fromList(utf8.encode(contents));
 
     String timestamp() {
       final d = DateTime.now();
@@ -269,24 +272,50 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
       _showToast('No key entered', ToastificationType.error);
       return;
     }
+    if (mode == BackupExportMode.private && isBackupPasswordTooShort(key)) {
+      _showToast(backupPasswordTooShortMessage, ToastificationType.error);
+      return;
+    }
+
+    final String data;
+    try {
+      data = await _withProgress(ctx, () => PrefsBackupService.exportPrefs(key: key, mode: mode));
+    } catch (e) {
+      _showToast('Could not create the backup', ToastificationType.error);
+      return;
+    }
+    if (!ctx.mounted) return;
 
     if (choice == 'local') {
-      await _savePrefsToDisk(ctx, key: key, mode: mode);
+      await _savePrefsToDisk(ctx, data: data, mode: mode);
     } else if (choice == 'other') {
-      await _saveWithShareIntent(ctx, key: key, mode: mode);
+      await _saveWithShareIntent(ctx, data: data, mode: mode);
     }
   }
 
-  Future<void> _savePrefsToDisk(BuildContext ctx, {required String? key, required BackupExportMode mode}) async {
-    final result = await PrefsBackupWidget.createBackup(key: key, mode: mode);
+  Future<T> _withProgress<T>(BuildContext ctx, Future<T> Function() work) async {
+    final navigator = Navigator.of(ctx, rootNavigator: true);
+    final route = DialogRoute<void>(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (_) => const PopScope(canPop: false, child: Center(child: CircularProgressIndicator())),
+    );
+    navigator.push(route);
+    try {
+      return await work();
+    } finally {
+      if (route.isActive) navigator.removeRoute(route);
+    }
+  }
+
+  Future<void> _savePrefsToDisk(BuildContext ctx, {required String data, required BackupExportMode mode}) async {
+    final result = await PrefsBackupWidget.createBackup(data: data, mode: mode);
     if (result != null) {
       _showToast('Backup saved', ToastificationType.success);
     }
   }
 
-  Future<void> _saveWithShareIntent(BuildContext ctx, {required String? key, required BackupExportMode mode}) async {
-    final data = await PrefsBackupService.exportPrefs(key: key, mode: mode);
-
+  Future<void> _saveWithShareIntent(BuildContext ctx, {required String data, required BackupExportMode mode}) async {
     // Create timestamp similar to the static method
     final d = DateTime.now();
     String two(int n) => n.toString().padLeft(2, '0');
@@ -321,17 +350,20 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
     }
 
     final encoded = utf8.decode(file.bytes!);
-    final inspection = PrefsBackupService.inspectBackup(encoded);
 
     String key = '';
-    if (inspection.requiresKey) {
+    if (isEncryptedBackup(encoded)) {
       final enteredKey = await _askKey(ctx, false);
       if (enteredKey == null || enteredKey.isEmpty) return;
       key = enteredKey;
     }
 
     try {
-      final decoded = PrefsBackupService.decodeBackup(encoded, key);
+      final opened = await _withProgress(
+        ctx,
+        () => PrefsBackupService.openBackup(encoded, key).timeout(const Duration(seconds: 30)),
+      );
+      final decoded = opened.prefs;
 
       // Get current keys from Sembast
       final currentKeys = await PrefsDatabase.getKeys();
@@ -354,11 +386,11 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
                 'Identified $backupKeys saved preferences in this file.'
                 '\n\nRestore on next launch?',
               ),
-              if (inspection.mode == BackupExportMode.shareable)
+              if (opened.shareable) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    'This is a shareable backup. API keys, auth-related data and browser session state were excluded.',
+                    'This is a shareable backup. API keys, auth-related data and browser session state are not imported.',
                     style: TextStyle(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
@@ -366,6 +398,8 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
                     ),
                   ),
                 ),
+              ],
+              if (opened.needsReview) ImportedScriptsWarning(backup: opened),
               Text(
                 '\nNote: restart app to apply changes',
                 style: TextStyle(
@@ -384,7 +418,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
       );
       if (confirm != true) return;
 
-      await PrefsBackupService.scheduleImport(encoded, key);
+      await PrefsBackupService.scheduleImport(opened);
       _showToast('Settings restore scheduled, please restart Torn PDA', ToastificationType.success);
     } catch (_) {
       _showToast('Invalid key or corrupt file', ToastificationType.error);

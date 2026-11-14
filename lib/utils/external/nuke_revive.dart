@@ -2,7 +2,7 @@
 import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:torn_pda/utils/telemetry_sanitize.dart';
+import 'package:torn_pda/utils/safe_text.dart';
 import 'package:http/http.dart' as http;
 
 // Project imports:

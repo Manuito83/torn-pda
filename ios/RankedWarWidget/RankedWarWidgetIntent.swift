@@ -3,7 +3,7 @@ import Foundation
 import WidgetKit
 import home_widget
 
-private let appGroup = "group.com.manuito.tornpda"
+let pdaAppGroup = "group.com.manuito.tornpda"
 
 @available(iOS 17, *)
 public struct PdaWidgetMainIntent: WidgetConfigurationIntent {
@@ -31,7 +31,7 @@ public struct ReloadWidgetActionIntent: AppIntent {
   public init() {}
 
   public func perform() async throws -> some IntentResult {
-    if let prefs = UserDefaults(suiteName: appGroup) {
+    if let prefs = UserDefaults(suiteName: pdaAppGroup) {
       prefs.setValue("Updating...", forKey: "last_updated")
       prefs.setValue(true, forKey: "reloading")
       prefs.synchronize()
@@ -41,7 +41,7 @@ public struct ReloadWidgetActionIntent: AppIntent {
 
     Task {
       await HomeWidgetBackgroundWorker.run(
-        url: URL(string: "pdaWidget://reload_clicked"), appGroup: appGroup)
+        url: URL(string: "pdaWidget://reload_clicked"), appGroup: pdaAppGroup)
     }
 
     return .result()

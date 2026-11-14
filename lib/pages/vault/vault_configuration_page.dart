@@ -10,10 +10,10 @@ import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/widgets/split_app_safe_area.dart';
 import 'package:torn_pda/widgets/vault/vault_configuration_dialog.dart';
 
 class VaultConfigurationPage extends StatefulWidget {
@@ -45,11 +45,7 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
       onPopInvokedWithResult: (didPop, result) {
         widget.callback();
       },
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+      child: SplitAppSafeArea(
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

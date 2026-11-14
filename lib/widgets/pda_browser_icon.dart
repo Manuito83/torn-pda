@@ -20,7 +20,7 @@ class PdaBrowserIcon extends StatelessWidget {
 
     final bool automaticLogins = context.read<NativeAuthProvider>().tryAutomaticLogins;
 
-    if (webviewProvider.webViewSplitActive) {
+    if (!webviewProvider.appCanOpenBrowser) {
       return Container();
     }
 
