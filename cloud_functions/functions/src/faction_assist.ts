@@ -56,8 +56,8 @@ interface Requester {
 }
 
 // Saved verification, only if recent
-function verifiedRequester(player: any, now: number): Requester | undefined {
-    const name = assistField({ attackName: player.name }, "attackName");
+export function verifiedRequester(player: any, now: number): Requester | undefined {
+    const name = assistField({ attackName: player.verifiedName }, "attackName");
     if (typeof player.verifiedAt !== "number" || now - player.verifiedAt >= MAX_RECHECK_MS) return undefined;
     if (name === "" || !Number.isSafeInteger(player.verifiedFaction)) return undefined;
     return {
@@ -156,7 +156,7 @@ export const sendAssistMessage = onCall({
         .where("name", "!=", name) // Not the requestor's own name
         .get();
 
-    const factionMembers = response.docs.map((d) => d.data());
+    const factionMembers = response.docs.filter((d) => d.id !== request.auth!.uid).map((d) => d.data());
     if (factionMembers.length === 0) {
         logger.info(`Call from ${name} [${playerId}]: 0 receptors`);
         // No one to notify

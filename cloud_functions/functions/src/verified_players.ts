@@ -35,11 +35,11 @@ const BACKFILL_LIMITS: BackfillLimits = {
 const RECHECK_AFTER_MS = 30 * aDayInMilliseconds;
 const RECHECK_SPREAD_MINUTES = 7 * 24 * 60;
 export const MAX_RECHECK_MS = RECHECK_AFTER_MS + RECHECK_SPREAD_MINUTES * 60 * 1000;
-const CHECKS_PER_HOUR = 10;
+export const CHECKS_PER_HOUR = 10;
 const UNAVAILABLE_STREAK = 3;
 const RETRY_PAUSE_MS = 2000;
 const TORN_TIMEOUT_MS = 10 * 1000;
-const VERIFIED_FIELDS = ["verifiedPlayerId", "verifiedFaction", "verifiedAt"];
+const VERIFIED_FIELDS = ["verifiedPlayerId", "verifiedFaction", "verifiedAt", "verifiedName"];
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -56,17 +56,25 @@ function profileIds(profile: any) {
   if (!Number.isSafeInteger(playerId) || playerId <= 0 || !Number.isSafeInteger(faction) || faction < 0) {
     return undefined;
   }
-  return { playerId: playerId as number, faction: faction as number };
+  const name = typeof profile?.name === "string" && profile.name !== "" ? profile.name as string : undefined;
+  return { playerId: playerId as number, faction: faction as number, name };
+}
+
+function needsVerifiedName(player: any) {
+  return typeof player.verifiedAt === "number" && !(typeof player.verifiedName === "string" && player.verifiedName !== "");
 }
 
 // Undefined when nothing to write
-export function verifiedUpdate(uid: string, player: any, profile: any, now: number): Record<string, number> | undefined {
+export function verifiedUpdate(uid: string, player: any, profile: any, now: number): Record<string, number | string> | undefined {
   const ids = profileIds(profile);
   if (!ids) return undefined;
-  const { playerId, faction } = ids;
+  const { playerId, faction, name } = ids;
   if (player.verifiedPlayerId === playerId && player.verifiedFaction === faction &&
+    (name === undefined || player.verifiedName === name) &&
     checkedRecently(uid, player.verifiedAt, now)) return undefined;
-  return { verifiedPlayerId: playerId, verifiedFaction: faction, verifiedAt: now };
+  const update: Record<string, number | string> = { verifiedPlayerId: playerId, verifiedFaction: faction, verifiedAt: now };
+  if (name !== undefined) update.verifiedName = name;
+  return update;
 }
 
 function wantsVerification(player: any) {
@@ -236,7 +244,7 @@ export async function runVerifyBackfill(requested: BackfillLimits = BACKFILL_LIM
     let query = db.collection("players")
       .where("active", "==", true)
       .orderBy(admin.firestore.FieldPath.documentId())
-      .select("apiKey", "factionAssistMessage", "retalsNotification", "verifiedAt")
+      .select("apiKey", "verifiedAt", "verifiedName")
       .limit(limits.pageSize);
     if (cursor !== "") query = query.startAfter(cursor);
     const page = await query.get();
@@ -247,8 +255,7 @@ export async function runVerifyBackfill(requested: BackfillLimits = BACKFILL_LIM
       const previous = cursor;
       cursor = doc.id;
       const player = doc.data();
-      if (!wantsVerification(player) || !isApiKey(player.apiKey) ||
-        checkedRecently(doc.id, player.verifiedAt, Date.now())) continue;
+      if (!needsVerifiedName(player) || !isApiKey(player.apiKey)) continue;
       if (block.length === 0) blockStart = previous;
       block.push({ id: doc.id, apiKey: player.apiKey });
       if (block.length >= limits.concurrency) await askBlock();
