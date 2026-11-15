@@ -120,6 +120,10 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem('Chat: bank requests and paid confirmations accept "all" or "max"', chatOnly: true),
           _MItem('Chat: tap the messages to close the keyboard, or drag them on iOS', chatOnly: true),
+          _MItem('Chat: fixed an error that could stop chat windows from opening on split screens', chatOnly: true),
+          _MItem('Chaining: the live chain window only shows while a Torn tab is open, like the chat'),
+          _MItem('City shops: purchases made close together now all count toward the daily limit'),
+          _MItem("Fixed iOS version detection on iOS 15 and 16, which turned on features they don't support", iosOnly: true),
         ],
       ),
     ],
