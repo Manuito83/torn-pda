@@ -736,7 +736,7 @@ Future<void> _initializePlatformSpecifics() async {
     if (Platform.isIOS) {
       final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-      kSdkIos = double.tryParse(iosInfo.systemVersion) ?? 99;
+      kSdkIos = double.tryParse(iosInfo.systemVersion.split('.').take(2).join('.')) ?? 99;
       log("iOS SDK Version: $kSdkIos");
 
       // Workaround for Flutter bug on iPadOS 26.x: FlutterViewController sends fake touch
