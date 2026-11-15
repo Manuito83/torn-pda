@@ -109,6 +109,23 @@ class _MVersion {
 
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
+    version: 'v4.0.1',
+    date: '20 November 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Chat: bank requests and paid confirmations accept "all" or "max"', chatOnly: true),
+          _MItem('Chat: tap the messages to close the keyboard, or drag them on iOS', chatOnly: true),
+        ],
+      ),
+    ],
+  ),
+
+  const _MVersion(
     version: 'v4.0.0',
     date: '14 November 2026',
     hotfixes: [],
