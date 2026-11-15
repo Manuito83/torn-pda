@@ -133,6 +133,8 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   _MiniState _state = _MiniState.loading;
   InAppWebViewController? _controller;
   Timer? _noBar;
+  Timer? _tornTabCheck;
+  bool _tornTab = false;
   bool _warm = !Platform.isAndroid;
   bool _loadStopped = false;
   String _loadError = '';
@@ -145,8 +147,26 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
     super.initState();
     _web = context.read<WebViewProvider?>();
     WidgetsBinding.instance.addObserver(this);
-    _armNoBar();
+    _tornTab = _tornTabOpen();
+    if (_tornTab) _armNoBar();
+    // Same rule as the chat
+    _tornTabCheck = Timer.periodic(const Duration(seconds: 1), (_) {
+      final open = _tornTabOpen();
+      if (open == _tornTab) return;
+      if (open) return _reload();
+      _noBar?.cancel();
+      setState(() {
+        _tornTab = false;
+        _controller = null;
+        _state = _MiniState.loading;
+      });
+    });
     if (!_warm) _warmEngine();
+  }
+
+  bool _tornTabOpen() {
+    final web = _web;
+    return web != null && NativeChat.tornTabOpen(web);
   }
 
   // Same cold start guard as the browser
@@ -169,6 +189,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _noBar?.cancel();
+    _tornTabCheck?.cancel();
     // Closed over a hidden browser: pause again
     final WebViewProvider? web = _web;
     if (Platform.isAndroid && !_chain.miniWindowOpen.value && web != null && !web.browserShowInForeground) {
@@ -191,7 +212,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   void _publishShown() => _controller?.evaluateJavascript(source: chainWebShown(_visible));
 
   void _onReading(Object? raw) {
-    if (!mounted) return;
+    if (!mounted || !_tornTab) return;
     // The sidebar renders after load
     if (raw is Map && raw['none'] == true) {
       if (_state == _MiniState.live) _toReload('bar_lost');
@@ -228,6 +249,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
 
   void _reload() {
     setState(() {
+      _tornTab = true;
       _controller = null;
       _state = _MiniState.loading;
       _generation++;
@@ -279,13 +301,13 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       height: _labelHeight,
                       child: Padding(
-                        padding: EdgeInsets.only(left: 6, top: 2),
+                        padding: const EdgeInsets.only(left: 6, top: 2),
                         child: Text(
-                          'Live browser view',
-                          style: TextStyle(color: Colors.white38, fontSize: 8, height: 1),
+                          _tornTab ? 'Live browser view' : 'Live chain paused',
+                          style: const TextStyle(color: Colors.white38, fontSize: 8, height: 1),
                         ),
                       ),
                     ),
@@ -293,13 +315,18 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          if (_warm && _state != _MiniState.reload) IgnorePointer(child: _webView()),
-                          if (_state != _MiniState.live)
+                          if (_tornTab && _warm && _state != _MiniState.reload) IgnorePointer(child: _webView()),
+                          if (!_tornTab || _state != _MiniState.live)
                             ColoredBox(
                               color: const Color(0xFF1E1E1E),
                               child: Center(
                                 child: Text(
-                                  _state == _MiniState.loading ? 'Loading...' : 'Tap to reload',
+                                  !_tornTab
+                                      ? 'Back on a Torn tab to resume'
+                                      : _state == _MiniState.loading
+                                      ? 'Loading...'
+                                      : 'Tap to reload',
+                                  textAlign: TextAlign.center,
                                   style: const TextStyle(color: Colors.white70, fontSize: 11),
                                 ),
                               ),
