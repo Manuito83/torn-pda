@@ -213,6 +213,23 @@ void main() {
       expect(chatBankParseTyped('5m please'), isNull);
       expect(chatBankParseTyped('0'), isNull);
     });
+
+    test('full balance words', () {
+      for (final word in ['all', 'max', 'maximum', 'full', 'full balance', 'balance']) {
+        expect(chatBankTypedIsFull(word), isTrue);
+      }
+    });
+
+    test('full balance ignores case and spaces', () {
+      expect(chatBankTypedIsFull('  ALL '), isTrue);
+      expect(chatBankTypedIsFull('Full   Balance'), isTrue);
+    });
+
+    test('full balance needs the word alone', () {
+      expect(chatBankTypedIsFull('all 5m'), isFalse);
+      expect(chatBankTypedIsFull('5m'), isFalse);
+      expect(chatBankTypedIsFull(''), isFalse);
+    });
   });
 
   group('link', () {

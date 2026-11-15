@@ -135,7 +135,7 @@ class _BankPaidDialogState extends State<_BankPaidDialog> {
     super.dispose();
   }
 
-  bool get _blank => _text.text.trim().isEmpty;
+  bool get _blank => _text.text.trim().isEmpty || chatBankTypedIsFull(_text.text);
 
   int? get _amount => chatBankParseTyped(_text.text);
 
@@ -156,7 +156,7 @@ class _BankPaidDialogState extends State<_BankPaidDialog> {
             decoration: InputDecoration(
               labelText: 'Amount paid (optional)',
               prefixText: '\$ ',
-              errorText: valid ? null : 'Enter an amount like 5m or 250000',
+              errorText: valid ? null : 'Enter an amount like 5m or 250000, or all',
             ),
           ),
           const SizedBox(height: 12),
@@ -195,6 +195,7 @@ class _BankRequestDialogState extends State<_BankRequestDialog> {
   }
 
   void _submit() {
+    if (chatBankTypedIsFull(_text.text)) return Navigator.of(context).pop(chatBankFullText);
     final amount = chatBankParseTyped(_text.text);
     if (amount == null) return setState(() => _invalid = true);
     Navigator.of(context).pop(chatBankRequestText(amount));
@@ -224,9 +225,9 @@ class _BankRequestDialogState extends State<_BankRequestDialog> {
             onSubmitted: (_) => _submit(),
             decoration: InputDecoration(
               labelText: 'Amount',
-              hintText: 'For example 5m, 250k or 1,500,000',
+              hintText: 'For example 5m, 250k, 1,500,000 or all',
               prefixText: '\$ ',
-              errorText: _invalid ? 'Enter an amount like 5m or 250000' : null,
+              errorText: _invalid ? 'Enter an amount like 5m or 250000, or all' : null,
             ),
           ),
           const SizedBox(height: 12),
