@@ -112,6 +112,14 @@ void main() {
       expect(ChatWindowFrame.decode('dm:5').frame, isNull);
     });
 
+    test('a window as big as an odd sized panel fits', () {
+      const panel = Rect.fromLTRB(94.0952380952381, 30.476190476190474, 392, 300);
+      final fitted = ChatWindowFrame.fit(const Rect.fromLTWH(100, 40, 420, 640), panel);
+      expect(fitted.left, closeTo(panel.left, 1e-9));
+      expect(fitted.top, closeTo(panel.top, 1e-9));
+      expect(fitted.size, panel.size);
+    });
+
     test('three windows at most, the rest minimized', () {
       List<String> minimized() => NativeChat.minimized.value.map((m) => m.roomId).toList();
       for (final room in ['dm:1', 'dm:2', 'faction']) {

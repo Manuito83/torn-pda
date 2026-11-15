@@ -48,9 +48,10 @@ class ChatWindowFrame {
   static Rect fit(Rect frame, Rect area, {Size min = minSize}) {
     final width = frame.width.clamp(math.min(min.width, area.width), area.width).toDouble();
     final height = frame.height.clamp(math.min(min.height, area.height), area.height).toDouble();
+    // Rounding can invert the limits
     return Rect.fromLTWH(
-      frame.left.clamp(area.left, area.right - width).toDouble(),
-      frame.top.clamp(area.top, area.bottom - height).toDouble(),
+      frame.left.clamp(area.left, math.max(area.left, area.right - width)).toDouble(),
+      frame.top.clamp(area.top, math.max(area.top, area.bottom - height)).toDouble(),
       width,
       height,
     );
