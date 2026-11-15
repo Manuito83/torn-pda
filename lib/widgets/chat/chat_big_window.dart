@@ -96,6 +96,8 @@ class BigWindowKeyboardProbe with WidgetsBindingObserver {
     _states.clear();
   }
 
+  void dismissed() => _since = null;
+
   void lost({required bool fieldGone, required bool fullscreen, bool disposed = false}) {
     final since = _since;
     _since = null;

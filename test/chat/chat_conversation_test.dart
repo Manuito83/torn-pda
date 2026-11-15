@@ -671,6 +671,34 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('tapping or dragging the messages closes the keyboard on iOS', (tester) async {
+    start();
+    await _show(tester, chat, const ChatConversationPage(roomId: 'dm:7'));
+    await tester.pump();
+    _connect(source);
+    _history(source, 'dm:7', [
+      for (var i = 30; i > 0; i--) _ago('$i', 'dm:7', i.isEven ? 7 : 99, i.isEven ? 'Bravo' : 'Me', i),
+    ]);
+    await tester.pump();
+    final list = find.byKey(const PageStorageKey('dm:7'));
+    bool typing() => tester.testTextInput.isVisible;
+
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(typing(), isTrue);
+    await tester.tapAt(tester.getBottomLeft(list) + const Offset(4, -3));
+    await tester.pump();
+    expect(typing(), isFalse);
+
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    expect(typing(), isTrue);
+    await tester.drag(list, const Offset(0, 120));
+    await tester.pumpAndSettle();
+    expect(typing(), isFalse);
+    await close(tester);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
   testWidgets('an emoji from the strip replies to that message', (tester) async {
     NativeChat.prefs.emojiFavorites = ['👍', '🔥'];
     start();

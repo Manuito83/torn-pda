@@ -26,10 +26,25 @@ void main() {
 
   tearDown(() => BigWindowKeyboardProbe.instance = saved);
 
-  Future<ChatController> pumpWindow(WidgetTester tester) async {
+  Future<ChatController> pumpWindow(WidgetTester tester, [List<ChatMessage> history = const []]) async {
     final source = FakeChatSource();
     final chat = ChatController(source, ChatPrefs());
     source.emit(const ChatReadyEvent(99));
+    if (history.isNotEmpty) {
+      source
+        ..emit(const ChatConnectionEvent(ChatConnection.connected))
+        ..emit(
+          const ChatDmsEvent([
+            ChatRoom(
+              id: 'dm:7',
+              name: 'Bravo',
+              type: ChatRoomType.dm,
+              peer: ChatUser(id: 7, name: 'Bravo'),
+            ),
+          ]),
+        )
+        ..emit(ChatHistoryEvent('dm:7', history, hasOlder: false, isOlderPage: false));
+    }
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -87,6 +102,21 @@ void main() {
     now = now.add(const Duration(milliseconds: 200));
     BigWindowKeyboardProbe.instance.lost(fieldGone: false, fullscreen: false);
     expect(reports, hasLength(1));
+
+    await close(tester, chat);
+  });
+
+  testWidgets('closing the keyboard from the messages is not reported', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final chat = await pumpWindow(tester, [chatMessage('a', 'dm:7', sender: 7, name: 'Bravo', at: now)]);
+
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    now = now.add(const Duration(milliseconds: 300));
+    await tester.tapAt(tester.getBottomLeft(find.byKey(const PageStorageKey('dm:7'))) + const Offset(4, -3));
+    await tester.pump();
+    expect(tester.testTextInput.isVisible, isFalse);
+    expect(reports, isEmpty);
 
     await close(tester, chat);
   });

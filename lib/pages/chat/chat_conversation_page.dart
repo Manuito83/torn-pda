@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_share.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
+import 'package:torn_pda/widgets/chat/chat_big_window.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_arrival_fade.dart';
@@ -975,28 +976,39 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     return Stack(
       key: _listKey,
       children: [
-        ListView.builder(
-          key: PageStorageKey(roomId),
-          controller: _scroll,
-          reverse: true,
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
-          itemCount: entries.length + (hasTopRow ? 1 : 0),
-          findChildIndexCallback: (key) => key is ValueKey<String> ? at[key.value] : null,
-          itemBuilder: (context, index) {
-            if (index >= entries.length) return _TopRow(loading: chat.loadingOlder);
-            final (row, i) = entries[index];
-            final m = shown[i];
-            return switch (row) {
-              _Row.unread => ChatUnreadSeparator(key: _unreadKey),
-              _Row.away => ChatAwayCard(key: _awayKey, away: away!, onJump: _jumpTo),
-              _Row.day => ChatDaySeparator(key: ValueKey('day-${ChatArrivalTracker.keyOf(m)}'), day: m.createdAt),
-              _Row.events => ChatFactionEventsFold(
-                key: ValueKey(ChatArrivalTracker.keyOf(m)),
-                events: shown.sublist(i, folded[i]! + 1),
-              ),
-              _Row.message => _messageRow(chat, room, clock, shown, i, term, firstUnread, saved),
-            };
+        GestureDetector(
+          onTap: () {
+            final scope = FocusScope.of(context);
+            if (!scope.hasFocus || scope.hasPrimaryFocus) return;
+            BigWindowKeyboardProbe.instance.dismissed();
+            FocusManager.instance.primaryFocus?.unfocus();
           },
+          child: ListView.builder(
+            key: PageStorageKey(roomId),
+            controller: _scroll,
+            reverse: true,
+            keyboardDismissBehavior: Theme.of(context).platform == TargetPlatform.iOS
+                ? ScrollViewKeyboardDismissBehavior.onDrag
+                : ScrollViewKeyboardDismissBehavior.manual,
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            itemCount: entries.length + (hasTopRow ? 1 : 0),
+            findChildIndexCallback: (key) => key is ValueKey<String> ? at[key.value] : null,
+            itemBuilder: (context, index) {
+              if (index >= entries.length) return _TopRow(loading: chat.loadingOlder);
+              final (row, i) = entries[index];
+              final m = shown[i];
+              return switch (row) {
+                _Row.unread => ChatUnreadSeparator(key: _unreadKey),
+                _Row.away => ChatAwayCard(key: _awayKey, away: away!, onJump: _jumpTo),
+                _Row.day => ChatDaySeparator(key: ValueKey('day-${ChatArrivalTracker.keyOf(m)}'), day: m.createdAt),
+                _Row.events => ChatFactionEventsFold(
+                  key: ValueKey(ChatArrivalTracker.keyOf(m)),
+                  events: shown.sublist(i, folded[i]! + 1),
+                ),
+                _Row.message => _messageRow(chat, room, clock, shown, i, term, firstUnread, saved),
+              };
+            },
+          ),
         ),
         Positioned(
           top: 10,
