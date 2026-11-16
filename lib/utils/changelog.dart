@@ -14,7 +14,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/diagrams/feature_diagrams.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
@@ -48,7 +47,6 @@ class _MItem {
   final String? detail;
   final bool androidOnly;
   final bool iosOnly;
-  final bool chatOnly;
   final String? docUrl;
   final List<FeatureDiagramScene> diagrams;
   final List<_MImage> images;
@@ -59,15 +57,13 @@ class _MItem {
     this.detail,
     this.androidOnly = false,
     this.iosOnly = false,
-    this.chatOnly = false,
     this.docUrl,
     this.diagrams = const [],
     this.images = const [],
     this.pinned = false,
   });
 
-  bool get visibleOnThisPlatform =>
-      (!androidOnly || Platform.isAndroid) && (!iosOnly || Platform.isIOS) && (!chatOnly || NativeChat.compiled);
+  bool get visibleOnThisPlatform => (!androidOnly || Platform.isAndroid) && (!iosOnly || Platform.isIOS);
 
   // Credits are tagged inline as "[Name]", same as the legacy changelog
   String get author => _creditTag.firstMatch(text)?.group(1)?.trim() ?? _defaultAuthor;
@@ -117,17 +113,29 @@ List<_MVersion> _modernChangelog() => [
         icon: Icons.auto_awesome,
         title: 'New',
         color: Color(0xFF1565C0),
-        items: [_MItem('Browser: option to fold faction descriptions with large or animated images')],
+        items: [
+          _MItem("Chat: added Torn's notepad, with folders, pins, search, sorting, tasks and images"),
+          _MItem('Chat: add a chat message to a note'),
+          _MItem('Chat: read forum threads without leaving the chat'),
+          _MItem('Chat: added slash (/) commands to open quick actions and the notepad'),
+          _MItem('Chat: Giphy and Tenor links now show as GIFs'),
+          _MItem('Chat: play YouTube videos inside the chat'),
+          _MItem('Chat: faction links open a faction card'),
+          _MItem('Chat: place a bounty from the player card'),
+          _MItem('Chat: tap the bubble again to close the chat window'),
+          _MItem('Chat: change a refused image upload key right from the error'),
+          _MItem('Browser: option to fold faction descriptions with large or animated images'),
+        ],
       ),
       _MSection(
         icon: Icons.handyman,
         title: 'Fixed',
         color: Color(0xFF2E7D32),
         items: [
-          _MItem('Chat: bank requests and paid confirmations accept "all" or "max"', chatOnly: true),
-          _MItem('Chat: you can now tap the messages to close the keyboard', chatOnly: true),
-          _MItem('Chat: fixed an error with split screens and keyboard', chatOnly: true),
-          _MItem('Chat: fixed missing icons in the browser when using chat', chatOnly: true),
+          _MItem('Chat: bank requests and paid confirmations accept "all" or "max"'),
+          _MItem('Chat: you can now tap the messages to close the keyboard'),
+          _MItem('Chat: fixed an error with split screens and keyboard'),
+          _MItem('Chat: fixed missing icons in the browser when using chat'),
           _MItem('City shops: fixed count for purchases made close together'),
           _MItem('Profile: fixed missing Misc section'),
           _MItem('Items: fixed display case'),
@@ -150,7 +158,6 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem(
             "Chat: Torn's chat is now built into Torn PDA",
-            chatOnly: true,
             pinned: true,
             detail:
                 'Chat without leaving the game. The chat floats over the browser in a window you can move, resize or '
@@ -311,8 +318,8 @@ List<_MVersion> _modernChangelog() => [
             androidOnly: true,
           ),
           _MItem('Browser: soft cache reset in the URL options, avoids logging you out or clearing scripts storage'),
-          _MItem('Chat: hit calls can count down until the target is out', chatOnly: true),
-          _MItem('Chat: bazaars of other players only show open or closed, following Torn API changes', chatOnly: true),
+          _MItem('Chat: hit calls can count down until the target is out'),
+          _MItem('Chat: bazaars of other players only show open or closed, following Torn API changes'),
           _MItem('Items / Chat: market prices show how old they are, Torn now updates them hourly'),
           _MItem('Chaining: swipe a target, war or retaliation card to open the profile'),
           _MItem('Local backups: private backups now need a key of at least 8 characters'),
