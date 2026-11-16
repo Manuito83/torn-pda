@@ -26,6 +26,7 @@ class Prefs with ChatPrefsStorage {
   final String _kAppVersion = "pda_appVersion";
   final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
   final String _kBugsAnnouncementDialogVersion = "pda_bugsAnnouncementDialogVersion";
+  final String _kRemoteAnnouncementSeen = "pda_remoteAnnouncementSeen";
   final String _kPdaUpdateDialogVersion = "pda_updateDialogVersion";
   final String _kPdaUpdateDialogDisabled = "pda_updateDialogDisabled";
   final String _kOwnDetails = "pda_ownDetails";
@@ -681,6 +682,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setBugsAnnouncementDialogVersion(int value) async {
     await PrefsDatabase.setInt(_kBugsAnnouncementDialogVersion, value);
+  }
+
+  Future<String> getRemoteAnnouncementSeen() async {
+    return await PrefsDatabase.getString(_kRemoteAnnouncementSeen, "");
+  }
+
+  Future setRemoteAnnouncementSeen(String value) async {
+    await PrefsDatabase.setString(_kRemoteAnnouncementSeen, value);
   }
 
   Future<int> getPdaUpdateDialogVersion() async {

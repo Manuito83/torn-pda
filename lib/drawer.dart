@@ -36,6 +36,7 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/models/remote_announcement.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
@@ -103,6 +104,7 @@ import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/memory_widget_drawer.dart';
 import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/pda_update_dialog.dart';
+import 'package:torn_pda/widgets/drawer/remote_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/chaining/chain_attack.dart';
@@ -164,6 +166,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   // Tracks the enqueued PDA update version to avoid duplicate dialogs in a session
   int? _pdaUpdateDialogEnqueuedVersion;
+
+  String? _announcementEnqueuedId;
 
   bool _drawerUserChecked = false;
   bool _authRecoveryEnabledRC = true;
@@ -767,6 +771,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "apiV2LegacyRequests": "",
         // PDA Update Details
         "pda_update_details": "",
+        "pda_announcement": "",
         // Connectivity check
         "pda_connectivity_check": false,
         "network_strict_mode": true,
@@ -782,6 +787,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Check for PDA updates after initial Remote Config fetch
       _showPdaUpdateDialog();
+      _showRemoteAnnouncement();
 
       // Dynamic App Icon depends on Remote Config
       if (Platform.isIOS) {
@@ -800,6 +806,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
               // Check for PDA updates after Remote Config is updated
               _showPdaUpdateDialog();
+              _showRemoteAnnouncement();
             });
           }
         } catch (e) {
@@ -3120,6 +3127,42 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         context: context,
         priority: 90,
       );
+    }
+  }
+
+  Future<void> _showRemoteAnnouncement() async {
+    try {
+      await _finishedWithPreferencesAndDialogs;
+      final seenId = await Prefs().getRemoteAnnouncementSeen();
+      final announcement = RemoteAnnouncement.parse(remoteConfig.getString("pda_announcement"));
+      if (announcement == null || !mounted || announcement.id == _announcementEnqueuedId) return;
+      final applies = announcement.appliesTo(
+        playerId: UserHelper.playerId,
+        platform: Platform.isAndroid ? "android" : "ios",
+        build: int.tryParse(Platform.isAndroid ? androidCompilation : iosCompilation) ?? 0,
+        now: DateTime.now(),
+        seenId: seenId,
+      );
+      if (!applies) return;
+
+      _announcementEnqueuedId = announcement.id;
+      DialogQueue.enqueue(
+        dialogFunction: () async {
+          await showDialog(
+            useRootNavigator: false,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => RemoteAnnouncementDialog(announcement: announcement),
+          );
+          await Prefs().setRemoteAnnouncementSeen(announcement.id);
+          return true;
+        },
+        dialogName: "Remote Announcement",
+        context: context,
+        priority: 0,
+      );
+    } catch (e) {
+      log("Error showing remote announcement: $e");
     }
   }
 
