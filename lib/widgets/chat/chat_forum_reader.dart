@@ -64,6 +64,7 @@ class _ChatForumReaderState extends State<ChatForumReader> {
   bool _scrolledUp = false;
   Future<void>? _busy;
   int? _seeking;
+  final Map<int, ChatForumPage> _found = {};
   int? _flashed;
   Timer? _flash;
 
@@ -227,33 +228,87 @@ class _ChatForumReaderState extends State<ChatForumReader> {
     _loadNext();
   }
 
-  // Up to 3 pages back, else Torn
   Future<void> _reply(int id) async {
+    final loaded = [..._before, ..._after].where((post) => post.id == id).firstOrNull;
+    if (loaded != null) return _showQuoted(loaded, _numbers[id]!);
     if (_seeking != null) return;
     final run = _run;
     setState(() => _seeking = id);
     bool stale() => !mounted || run != _run || _seeking != id;
-    var loaded = 0;
-    for (var tries = 0; tries < 10 && loaded < 3 && !_numbers.containsKey(id) && _prev > 0; tries++) {
-      await _busy;
-      if (stale()) return;
-      if (_numbers.containsKey(id)) break;
-      final before = _prev;
-      if (!await _loadPrev()) continue;
-      if (stale()) return;
-      if (_prev == before) break;
-      loaded++;
-    }
+    if (_total == null) await _loadThread();
+    if (stale()) return;
+    final total = _total;
+    final found = total == null
+        ? (post: null, number: null, failed: true)
+        : await ChatForum.findPost(
+            id,
+            total,
+            (page) => ChatLinkPreviews.forumPage(_thread, ChatForum.offsetOf(page)),
+            cache: _found,
+          );
     if (stale()) return;
     setState(() => _seeking = null);
-    if (_numbers.containsKey(id)) {
-      await WidgetsBinding.instance.endOfFrame;
-      if (mounted && run == _run) await _reveal(id);
-    } else if (_prev == 0) {
-      chatToast('Quoted post is gone');
-    } else {
+    final post = found.post;
+    if (post != null) {
+      _showQuoted(post, found.number!);
+    } else if (found.failed) {
       _openInTorn(to: id);
+    } else {
+      chatToast('Quoted post is gone');
     }
+  }
+
+  Future<void> _showQuoted(ChatForumPost post, int number) async {
+    final go = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (context) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _ForumPostView(
+                  post: post,
+                  number: number,
+                  replyTo: post.quotedPostId == null ? null : _numbers[post.quotedPostId],
+                  onReply: post.quotedPostId == null
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                          _reply(post.quotedPostId!);
+                        },
+                ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: FilledButton.tonalIcon(
+                  onPressed: () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.forum_outlined, size: 18),
+                  label: Text('Go to page ${ChatForum.pageOf(number - 1)}'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (go != true || !mounted) return;
+    if (_numbers.containsKey(post.id)) return _reveal(post.id);
+    _goTo(ChatForum.pageOf(number - 1));
+    final run = _run;
+    await _busy;
+    if (!mounted || run != _run) return;
+    await WidgetsBinding.instance.endOfFrame;
+    if (mounted && run == _run) await _reveal(post.id);
   }
 
   // Earlier posts may not be built yet

@@ -70,6 +70,51 @@ void main() {
     expect(ChatForum.webLink(9, to: 28163100), 'https://www.torn.com/forums.php#/p=threads&t=9&b=0&a=0&to=28163100');
   });
 
+  group('finding a quoted post', () {
+    // Ids grow with gaps, like Torn's
+    final ids = [for (var i = 0; i < 3548; i++) 28000000 + i * 3];
+    ChatForumPage page(int number) {
+      final from = ChatForum.offsetOf(number);
+      final slice = ids.skip(from).take(ChatForum.pageSize);
+      return ChatForumPage([
+        for (final id in slice) ChatForumPost(id: id, authorId: 1, author: 'A', createdAt: DateTime(2026), content: ''),
+      ], hasNext: from + ChatForum.pageSize < ids.length);
+    }
+
+    test('in a handful of calls, with its number', () async {
+      for (final at in [0, 1999, 3547]) {
+        var calls = 0;
+        final found = await ChatForum.findPost(ids[at], ids.length, (n) async {
+          calls++;
+          return page(n);
+        });
+        expect((found.post?.id, found.number, found.failed), (ids[at], at + 1, false), reason: '$at');
+        expect(calls, lessThanOrEqualTo(8));
+      }
+    });
+
+    test('pages already asked are not asked again', () async {
+      final cache = <int, ChatForumPage>{};
+      var calls = 0;
+      Future<ChatForumPage?> load(int n) async {
+        calls++;
+        return page(n);
+      }
+
+      await ChatForum.findPost(ids[100], ids.length, load, cache: cache);
+      final first = calls;
+      await ChatForum.findPost(ids[100], ids.length, load, cache: cache);
+      expect(calls, first);
+    });
+
+    test('a deleted post is gone, a failed call is not', () async {
+      final gone = await ChatForum.findPost(ids[500] + 1, ids.length, (n) async => page(n));
+      expect((gone.post, gone.failed), (null, false));
+      final failed = await ChatForum.findPost(ids[500], ids.length, (n) async => null);
+      expect((failed.post, failed.failed), (null, true));
+    });
+  });
+
   test('only the text color is read', () {
     expect(ChatForum.colorOf('color:#888888;'), 0xFF888888);
     expect(ChatForum.colorOf('font-weight:bold; color: #ABC'), 0xFFAABBCC);

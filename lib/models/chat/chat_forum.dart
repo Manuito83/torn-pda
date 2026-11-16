@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart' as html;
 import 'package:torn_pda/models/chat/chat_links.dart';
@@ -85,8 +87,49 @@ class ChatForumPage {
   }
 }
 
+typedef ChatForumFind = ({ChatForumPost? post, int? number, bool failed});
+
 class ChatForum {
   ChatForum._();
+
+  /// Binary search, post ids grow with the page
+  static Future<ChatForumFind> findPost(
+    int id,
+    int total,
+    Future<ChatForumPage?> Function(int page) load, {
+    Map<int, ChatForumPage>? cache,
+  }) async {
+    final pages = cache ?? <int, ChatForumPage>{};
+    var low = 1;
+    var high = ChatForum.pages(total);
+    while (low <= high) {
+      final middle = (low + high) ~/ 2;
+      final page = pages[middle] ?? await load(middle);
+      if (page == null) return (post: null, number: null, failed: true);
+      pages[middle] = page;
+      final posts = page.posts;
+      if (posts.isEmpty) {
+        high = middle - 1;
+        continue;
+      }
+      final at = posts.indexWhere((post) => post.id == id);
+      if (at >= 0) return (post: posts[at], number: offsetOf(middle) + at + 1, failed: false);
+      // Pinned posts may repeat on top
+      final ordered = [
+        for (final post in posts)
+          if (!post.pinned) post.id,
+      ];
+      final ids = ordered.isEmpty ? [for (final post in posts) post.id] : ordered;
+      if (id < ids.reduce(math.min)) {
+        high = middle - 1;
+      } else if (id > ids.reduce(math.max)) {
+        low = middle + 1;
+      } else {
+        break;
+      }
+    }
+    return (post: null, number: null, failed: false);
+  }
 
   // Fixed by the API
   static const int pageSize = 20;
