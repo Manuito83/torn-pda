@@ -2,7 +2,7 @@ import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import { getUserSelections, INVALID_KEY_ERRORS, isApiKey } from "./torn_api";
-import { takeRateLimitSlot } from "./rate_limit";
+import { returnRateLimitSlot, takeRateLimitSlot } from "./rate_limit";
 import { aDayInMilliseconds } from "./time";
 
 // Assist and retals members by verifiedFaction
@@ -36,6 +36,8 @@ const RECHECK_AFTER_MS = 30 * aDayInMilliseconds;
 const RECHECK_SPREAD_MINUTES = 7 * 24 * 60;
 export const MAX_RECHECK_MS = RECHECK_AFTER_MS + RECHECK_SPREAD_MINUTES * 60 * 1000;
 export const CHECKS_PER_HOUR = 10;
+const TOTAL_CHECKS_PER_HOUR = 600;
+const HOUR_MS = 60 * 60 * 1000;
 const UNAVAILABLE_STREAK = 3;
 const RETRY_PAUSE_MS = 2000;
 const TORN_TIMEOUT_MS = 10 * 1000;
@@ -172,8 +174,17 @@ export async function verifyAfterWrite(uid: string, before: any, after: any) {
   const reason = verifyReason(uid, before, after);
   if (reason === undefined) return undefined;
   const hasKey = isApiKey(after.apiKey);
-  const limited = hasKey && !await takeRateLimitSlot(`verify_${uid}`, CHECKS_PER_HOUR, 60 * 60 * 1000);
+  const uidSlot = hasKey ? await takeRateLimitSlot(`verify_${uid}`, CHECKS_PER_HOUR, HOUR_MS) : undefined;
+  let limited = hasKey && uidSlot === undefined;
   if (limited) logger.info(`Verify ${uid}: hourly limit reached`);
+  if (uidSlot !== undefined &&
+    !await takeRateLimitSlot("verify_total", TOTAL_CHECKS_PER_HOUR, HOUR_MS).catch((): undefined => undefined)) {
+    limited = true;
+    await returnRateLimitSlot(`verify_${uid}`, uidSlot, HOUR_MS).catch((): undefined => undefined);
+    if (await takeRateLimitSlot("verify_total_warned", 1, HOUR_MS).catch((): undefined => undefined)) {
+      logger.warn("Verify: global hourly limit reached");
+    }
+  }
   if (limited && reason !== "key") return "limited";
   // Over the limit only clears
   return verifyPlayer(uid, after.apiKey, limited ? 0 : 2, reason === "key");
