@@ -950,6 +950,54 @@
       "matches": [
         "https://*.torn.com/*"
       ]
+    },
+    {
+      "id": "torntools.faction-war-online-counts",
+      "greasyforkId": 605866,
+      "name": "Faction War Online Counts",
+      "description": "Show the member counts per status on each side of a ranked war.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/605866/TORN%3A%20TornTools%20-%20Faction%20War%20Online%20Counts.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/605866-torn-torntools-faction-war-online-counts",
+      "matches": [
+        "https://*.torn.com/factions.php*"
+      ]
+    },
+    {
+      "id": "torntools.cooldown-end-times",
+      "greasyforkId": 605867,
+      "name": "Cooldown End Times",
+      "description": "Show the end time of cooldowns in tooltips.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/605867/TORN%3A%20TornTools%20-%20Cooldown%20End%20Times.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/605867-torn-torntools-cooldown-end-times",
+      "matches": [
+        "https://*.torn.com/*"
+      ]
+    },
+    {
+      "id": "torntools.flying-time",
+      "greasyforkId": 605868,
+      "name": "Flying Time",
+      "description": "Display your arrival and return time on the travel page.",
+      "category": "travel",
+      "downloadUrl": "https://update.greasyfork.org/scripts/605868/TORN%3A%20TornTools%20-%20Flying%20Time.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/605868-torn-torntools-flying-time",
+      "matches": [
+        "https://*.torn.com/page.php?sid=travel*"
+      ]
+    },
+    {
+      "id": "torntools.forum-menu",
+      "greasyforkId": 605869,
+      "name": "Forum Menu",
+      "description": "Adds a menu to hide, highlight and ignore threads and posts on the forums.",
+      "category": "forums",
+      "downloadUrl": "https://update.greasyfork.org/scripts/605869/TORN%3A%20TornTools%20-%20Forum%20Menu.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/605869-torn-torntools-forum-menu",
+      "matches": [
+        "https://*.torn.com/forums.php*"
+      ]
     }
   ]
 }
