@@ -450,6 +450,22 @@ void main() {
       expect(opacity(), 1);
     });
 
+    testWidgets('a second tap on the bubble closes the chat window', (tester) async {
+      NativeChat.prefs.launcherTap = ChatLauncherTap.window;
+      addTearDown(() {
+        NativeChat.prefs.launcherTap = ChatLauncherTap.full;
+        NativeChat.bigWindow.value = null;
+      });
+      await _pumpApp(tester);
+      await tester.tap(find.byIcon(Icons.forum_rounded));
+      await _settle(tester);
+      expect(NativeChat.bigWindow.value, isNotNull);
+
+      await tester.tap(find.byIcon(Icons.forum_rounded));
+      await _settle(tester);
+      expect(NativeChat.bigWindow.value, isNull);
+    });
+
     testWidgets('double tap marks every chat read, with undo', (tester) async {
       NativeChat.prefs.setMarkedUnread('global', true);
       await _pumpApp(tester);

@@ -59,39 +59,42 @@ class ChatToastBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        padding: EdgeInsets.only(left: 16, top: 4, bottom: 4, right: action == null ? 16 : 4),
-        decoration: BoxDecoration(color: const Color(0xE6303030), borderRadius: BorderRadius.circular(8)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(text, style: const TextStyle(fontSize: 14, color: Colors.white)),
-              ),
-            ),
-            if (action case final action?)
-              TextButton(
-                style: TextButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: Colors.lightBlueAccent),
-                onPressed: () {
-                  close();
-                  onAction?.call();
-                },
-                child: Text(action),
-              ),
-            if (held)
-              Semantics(
-                container: true,
-                child: IconButton(
-                  tooltip: 'Dismiss',
-                  color: Colors.white,
-                  icon: const Icon(Icons.close_rounded, size: 20),
-                  onPressed: close,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.only(left: 16, top: 4, bottom: 4, right: action == null ? 16 : 4),
+          decoration: BoxDecoration(color: const Color(0xE6303030), borderRadius: BorderRadius.circular(8)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(text, style: const TextStyle(fontSize: 14, color: Colors.white)),
                 ),
               ),
-          ],
+              if (action case final action?)
+                TextButton(
+                  style: TextButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: Colors.lightBlueAccent),
+                  onPressed: () {
+                    close();
+                    onAction?.call();
+                  },
+                  child: Text(action),
+                ),
+              if (held)
+                Semantics(
+                  container: true,
+                  child: IconButton(
+                    tooltip: 'Dismiss',
+                    color: Colors.white,
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    onPressed: close,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_notepad.dart';
 import 'package:torn_pda/models/chat/chat_source.dart';
 import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 
@@ -72,6 +73,21 @@ class TornChatSource implements ChatSource {
 
   @override
   Future<void> send(String roomId, String content, String reqId) async {}
+
+  @override
+  Future<List<ChatNote>?> notes() async => null;
+
+  @override
+  Future<ChatNote?> createNote(String title, String text) async => null;
+
+  @override
+  Future<ChatNoteSave> saveNote(ChatNote note, Duration age) async => (note: null, stale: false);
+
+  @override
+  Future<bool> deleteNote(String id) async => false;
+
+  @override
+  Future<bool> selectNote(String id) async => false;
 
   @override
   Future<void> reconnect() => _engine.reconnect();

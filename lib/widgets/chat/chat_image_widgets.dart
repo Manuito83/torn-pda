@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_share.dart';
 import 'package:torn_pda/pages/chat/chat_settings_page.dart';
 import 'package:torn_pda/pages/chat/settings/chat_upload_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_image_store.dart';
@@ -128,17 +129,17 @@ class ChatImages {
 
   // Hosts here can see the viewer's IP
   static final RegExp autoLoadHosts = RegExp(
-    r'^(i\.imgur\.com|i\.ibb\.co|files\.catbox\.moe|litter\.catbox\.moe|media\.tenor\.com'
-    r'|media\d*\.giphy\.com|cdn\.discordapp\.com|media\.discordapp\.net)$',
+    r'^(i\.imgur\.com|i\.ibb\.co|files\.catbox\.moe|litter\.catbox\.moe|(www\.|media\d*\.|c\.)?tenor\.com'
+    r'|(www\.|media\d*\.|i\.)?giphy\.com|cdn\.discordapp\.com|media\.discordapp\.net|(www\.)?tornpda\.com)$',
   );
 
   /// Anything unsure counts as public
   static bool closedRoom(ChatRoom? room) =>
       room != null && (room.isDm || room.type == ChatRoomType.custom || room.id == 'faction' || room.id == 'company');
 
-  static bool autoLoads(ChatLink link, ChatRoom? room) {
+  static bool autoLoads(ChatLink link, ChatRoom? room, {bool trusted = false}) {
     final prefs = NativeChat.prefs;
-    if (!(closedRoom(room) ? prefs.imagesPrivate : prefs.imagesPublic)) return false;
+    if (!(trusted || closedRoom(room) ? prefs.imagesPrivate : prefs.imagesPublic)) return false;
     return link.isTorn || autoLoadHosts.hasMatch(link.uri.host.toLowerCase());
   }
 
@@ -148,7 +149,7 @@ class ChatImages {
     return bytes;
   }
 
-  static Future<Uint8List> load(String url, {ChatImageFetch download = chatImageDownload}) {
+  static Future<Uint8List> load(String url, {ChatImageFetch download = chatLinkImage}) {
     final generation = _generation;
     return _loading[url] ??= _fetch(url, download, generation).whenComplete(() {
       if (generation == _generation) _loading.remove(url);
@@ -176,11 +177,22 @@ class ChatImages {
 }
 
 class ChatImageCard extends StatefulWidget {
-  const ChatImageCard({super.key, required this.link, required this.color, this.roomId});
+  const ChatImageCard({
+    super.key,
+    required this.link,
+    required this.color,
+    this.roomId,
+    this.trusted = false,
+    this.maxWidth = 240,
+    this.maxHeight = 220,
+  });
 
   final ChatLink link;
   final Color color;
   final String? roomId;
+  final bool trusted;
+  final double maxWidth;
+  final double maxHeight;
 
   @override
   State<ChatImageCard> createState() => _ChatImageCardState();
@@ -198,6 +210,7 @@ class _ChatImageCardState extends State<ChatImageCard> {
   bool get _auto => ChatImages.autoLoads(
     widget.link,
     widget.roomId == null ? null : NativeChat.controller.roomById(widget.roomId!),
+    trusted: widget.trusted,
   );
 
   @override
@@ -338,16 +351,23 @@ class _ChatImageCardState extends State<ChatImageCard> {
             ),
           );
         }
-        final side = (240 * MediaQuery.devicePixelRatioOf(context)).round();
+        final ratio = MediaQuery.devicePixelRatioOf(context);
+        final side = (widget.maxWidth * ratio).round();
+        final tall = (widget.maxHeight * ratio).round();
         return GestureDetector(
           onTap: () => _openChatImageViewer(context, widget.link, data),
           onLongPress: _copy,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 240, maxHeight: 220, minWidth: 48, minHeight: 48),
+              constraints: BoxConstraints(
+                maxWidth: widget.maxWidth,
+                maxHeight: widget.maxHeight,
+                minWidth: 48,
+                minHeight: 48,
+              ),
               child: Image(
-                image: ResizeImage(MemoryImage(data), width: side, height: side, policy: ResizeImagePolicy.fit),
+                image: ResizeImage(MemoryImage(data), width: side, height: tall, policy: ResizeImagePolicy.fit),
                 fit: BoxFit.contain,
                 gaplessPlayback: true,
                 semanticLabel: 'Image from ${widget.link.uri.host}',
@@ -417,7 +437,8 @@ class _ChatImageViewerState extends State<ChatImageViewer> {
     setState(() => _saving = true);
     try {
       final segments = widget.link.uri.pathSegments.where((s) => s.isNotEmpty);
-      final name = (segments.isEmpty ? 'image.png' : segments.last).replaceAll(RegExp(r'[^\w.-]'), '_');
+      var name = (segments.isEmpty ? 'image.png' : segments.last).replaceAll(RegExp(r'[^\w.-]'), '_');
+      if (!name.contains('.')) name = '$name.${ChatShared.imageExtension(widget.bytes) ?? 'gif'}';
       if (share) {
         final folder = '${(await getTemporaryDirectory()).path}/downloads';
         final file = await File('$folder/$name').create(recursive: true);

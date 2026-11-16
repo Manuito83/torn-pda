@@ -15,6 +15,7 @@ import 'package:torn_pda/widgets/chat/chat_intro_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_list_reply.dart';
 import 'package:torn_pda/widgets/chat/chat_motion.dart';
+import 'package:torn_pda/widgets/chat/chat_notepad_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_slide_to_place.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -455,6 +456,12 @@ class ChatInboxViewState extends State<ChatInboxView> {
             avatar: const Icon(Icons.bookmark_border_rounded, size: 18),
             label: Text('Saved ${NativeChat.prefs.savedMessages.length}'),
             onPressed: widget.onSaved,
+          ),
+        if (widget.chat.ready && NativeChat.prefs.notepad)
+          ActionChip(
+            avatar: const Icon(Icons.sticky_note_2_outlined, size: 18),
+            label: const Text('Notepad'),
+            onPressed: () => showChatNotepad(context),
           ),
       ],
     );

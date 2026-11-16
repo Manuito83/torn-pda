@@ -4,6 +4,7 @@ import 'package:torn_pda/models/api_v2/torn_v2.enums.swagger.dart' as enums;
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/chat/chat_faction_events.dart';
 import 'package:torn_pda/models/chat/chat_faction_roster.dart';
+import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
@@ -165,15 +166,18 @@ class ChatFactionRoster extends ChangeNotifier {
     wanted,
   );
 
-  static Future<List<FactionMember>?> _membersCall() async {
+  /// Any faction, or ours with [ChatLink.ownFaction]
+  static Future<List<FactionMember>?> membersOf(int id, {bool fresh = false}) async {
+    // Timestamp skips Torn's 30 s cache
+    final timestamp = fresh ? '${DateTime.now().millisecondsSinceEpoch ~/ 1000}' : null;
     final response = await Get.find<ApiCallerController>().enqueueApiCall<dynamic>(
       apiSelection_v2: ApiSelection_v2.factionMembers,
-      // Timestamp skips Torn's 30 s cache
-      apiCall: (client, apiKey) => client.factionMembersGet(
-        striptags: enums.ApiStripTagsTrue.$false,
-        timestamp: '${DateTime.now().millisecondsSinceEpoch ~/ 1000}',
-      ),
+      apiCall: (client, apiKey) => id == ChatLink.ownFaction
+          ? client.factionMembersGet(striptags: enums.ApiStripTagsTrue.$false, timestamp: timestamp)
+          : client.factionIdMembersGet(id: id, striptags: enums.ApiStripTagsTrue.$false, timestamp: timestamp),
     );
     return response is FactionMembersResponse ? response.members : null;
   }
+
+  static Future<List<FactionMember>?> _membersCall() => membersOf(ChatLink.ownFaction, fresh: true);
 }

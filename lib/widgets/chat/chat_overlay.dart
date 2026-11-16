@@ -165,10 +165,10 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     if (NativeChat.tornTabMissing.value) _sheets.currentState?.popUntil((route) => route.isFirst);
   }
 
-  void _openChat() {
+  void _openChat({bool toggle = false}) {
     final navigator = widget.navigatorKey.currentState;
     StatsController.chat.count('open_bubble');
-    if (navigator != null) NativeChat.launch(navigator);
+    if (navigator != null) NativeChat.launch(navigator, toggle: toggle);
   }
 
   void _openSettings(VoidCallback leaveWindow) {
@@ -947,7 +947,13 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     final holdsBigWindow = NativeChat.bigWindow.value?.minimized ?? false;
     final VoidCallback open = holdsBigWindow
         ? NativeChat.restoreBigWindow
-        : (pages.isEmpty ? _openChat : () => NativeChat.restore(pages.last));
+        : (pages.isEmpty ? () => _openChat(toggle: !failed) : () => NativeChat.restore(pages.last));
+    final closes =
+        !failed &&
+        !holdsBigWindow &&
+        pages.isEmpty &&
+        prefs.launcherTap == ChatLauncherTap.window &&
+        NativeChat.windows.bigWindowOnTop;
     final VoidCallback tap = dock != 0
         ? () => _setSpot(_spot.$1, 0)
         : (failed
@@ -992,7 +998,9 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
                   ? 'try again'
                   : (holdsBigWindow
                         ? 'open the chat window'
-                        : (pages.isEmpty ? 'open chat' : 'reopen the minimized chat'))),
+                        : (closes
+                              ? 'close the chat window'
+                              : (pages.isEmpty ? 'open chat' : 'reopen the minimized chat')))),
         customSemanticsActions: {
           if (dock == 0) const CustomSemanticsAction(label: 'Mark all as read'): () => _markAllRead(context),
           if (dock == 0 && pages.isNotEmpty) const CustomSemanticsAction(label: 'Open chat'): _openChat,

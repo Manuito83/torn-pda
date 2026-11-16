@@ -6,6 +6,17 @@ import 'package:torn_pda/utils/torn_web.dart';
 
 const String chatAttackUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
 
+/// Query and #fragment params, lower case keys
+Map<String, String> tornLinkParams(Uri uri) {
+  final params = <String, String>{};
+  for (final source in [uri.query, uri.fragment.replaceFirst(RegExp(r'^[/!]+'), '')]) {
+    try {
+      Uri.splitQueryString(source).forEach((k, v) => params[k.toLowerCase()] = v);
+    } catch (_) {}
+  }
+  return params;
+}
+
 enum ChatLinkKind {
   player,
   bazaar,
@@ -55,6 +66,9 @@ class ChatLink {
 
   bool get isTorn => kind != ChatLinkKind.external;
 
+  /// Id of links to the viewer's own faction
+  static const int ownFaction = 0;
+
   static final RegExp _logCode = RegExp(r'^[0-9a-f]{32}$', caseSensitive: false);
 
   String? get logCode => kind == ChatLinkKind.attackLog ? _codeOf(uri) : null;
@@ -72,7 +86,25 @@ class ChatLink {
 
   static final RegExp _imagePath = RegExp(r'\.(png|jpe?g|gif|webp)$', caseSensitive: false);
 
-  bool get isImage => _imagePath.hasMatch(uri.path);
+  bool get isImage => _imagePath.hasMatch(uri.path) || giphyMedia(uri) != null || isTenorPage(uri);
+
+  static final RegExp _giphyId = RegExp(r'^(?=.*[A-Z0-9])[A-Za-z0-9]{10,}$');
+
+  static Uri? giphyMedia(Uri uri) {
+    if (!const ['giphy.com', 'www.giphy.com'].contains(uri.host.toLowerCase())) return null;
+    final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+    if (segments.length != 2 || !const ['gifs', 'embed', 'stickers'].contains(segments.first)) return null;
+    final id = segments.last.split('-').last;
+    return _giphyId.hasMatch(id) ? Uri.https('media.giphy.com', '/media/$id/giphy.gif') : null;
+  }
+
+  // Also tenor.com/es/view/...
+  static bool isTenorPage(Uri uri) {
+    if (!const ['tenor.com', 'www.tenor.com'].contains(uri.host.toLowerCase())) return false;
+    final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+    final view = segments.indexOf('view');
+    return (view == 0 || view == 1) && segments.length > view + 1;
+  }
 
   static final RegExp _videoId = RegExp(r'^[A-Za-z0-9_-]{11}$');
 
@@ -173,12 +205,7 @@ class ChatLink {
     }
 
     final page = uri.pathSegments.isEmpty ? '' : uri.pathSegments.last.toLowerCase();
-    final p = <String, String>{};
-    for (final source in [uri.query, uri.fragment.replaceFirst(RegExp(r'^[/!]+'), '')]) {
-      try {
-        Uri.splitQueryString(source).forEach((k, v) => p[k.toLowerCase()] = v);
-      } catch (_) {}
-    }
+    final p = tornLinkParams(uri);
     int? id(String key) => int.tryParse(p[key] ?? '');
     ChatLink card(ChatLinkKind kind, String title, [String? detail, int? id, int? forumId]) =>
         ChatLink(uri: uri, raw: raw, kind: kind, title: title, detail: detail, id: id, forumId: forumId);
@@ -220,7 +247,12 @@ class ChatLink {
           return card(ChatLinkKind.chainReport, 'Chain report #$chain', null, chain);
         }
         final faction = id('id');
-        if (faction != null) return card(ChatLinkKind.faction, 'Faction [$faction]', null, faction);
+        if (faction != null && faction > 0) return card(ChatLinkKind.faction, 'Faction [$faction]', null, faction);
+        if (p['step']?.toLowerCase() == 'your') {
+          final tab = p['tab'] ?? (uri.fragment.contains('war') ? 'war' : null);
+          final section = tab == null || tab.isEmpty ? null : '${tab[0].toUpperCase()}${tab.substring(1)}';
+          return card(ChatLinkKind.faction, 'Your faction', section, ownFaction);
+        }
       case 'joblist.php':
       case 'companies.php':
         final company = id('id');

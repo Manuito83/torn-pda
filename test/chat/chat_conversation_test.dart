@@ -731,7 +731,7 @@ void main() {
         'copy',
         ...ChatPrefs.messageActionIds.where((id) => id != 'share' && id != 'copy'),
       ]
-      ..messageActionHidden = {'forward', 'smiley', 'pin', 'save', 'translate', 'remind'};
+      ..messageActionHidden = {'forward', 'smiley', 'pin', 'save', 'note', 'translate', 'remind'};
     start();
     await _show(tester, chat, const ChatConversationPage(roomId: 'faction'));
     await tester.pump();
@@ -1110,6 +1110,50 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('a slash command opens its quick action with what follows', (tester) async {
+    final replies = NativeChat.prefs.quickReplies;
+    addTearDown(() {
+      NativeChat.prefs
+        ..quickReplies = replies
+        ..quickFrom = ChatQuickFrom.both;
+    });
+    NativeChat.prefs
+      ..quickReplies = ['On my way']
+      ..quickFrom = ChatQuickFrom.commands;
+    start();
+    await _show(tester, chat, const ChatConversationPage(roomId: 'faction'));
+    _connect(source, const []);
+    await tester.pump();
+
+    await tester.enterText(find.byType(TextField).last, '/wi xanax');
+    await tester.pump();
+    await tester.tap(find.text('/wiki'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(find.widgetWithText(TextField, 'Search the wiki')).controller!.text, 'xanax');
+    expect(_box(tester), isEmpty);
+
+    await tester.enterText(find.byType(TextField).last, '/time');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(ListTile, '/time'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TimePickerDialog), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).last, '/on my');
+    await tester.pump();
+    await tester.tap(find.text('On my way'));
+    await tester.pumpAndSettle();
+    expect(_box(tester), startsWith('On my way'));
+
+    NativeChat.prefs.setQuickFrom(ChatQuickFrom.button);
+    await tester.enterText(find.byType(TextField).last, '/wi');
+    await tester.pump();
+    expect(find.widgetWithText(ListTile, '/wiki'), findsNothing);
+    expect(source.sent, isEmpty);
+    await close(tester);
+  });
+
   testWidgets('an imgur upload lands in the box', (tester) async {
     NativeChat.prefs
       ..imageHost = ChatImageHost.imgur
@@ -1228,7 +1272,11 @@ void main() {
         'status_code': 400,
         'error': {'message': 'Invalid API v1 key.', 'code': 100},
       }),
-      'ImgBB refused the API key, check it in the chat settings',
+      'ImgBB refused the API key',
+    );
+    await expectLater(
+      up(ChatImageHost.imgbb, _Host(401, {}), 'k'),
+      throwsA(isA<ChatUploadError>().having((e) => e.refusedKey, 'refusedKey', isTrue)),
     );
     await fails(
       ChatImageHost.imgbb,
@@ -1272,7 +1320,7 @@ void main() {
     await fails(
       ChatImageHost.catbox,
       _Host(400, 'Invalid UserHash'),
-      'Catbox refused the Userhash, check it in the chat settings',
+      'Catbox refused the Userhash',
     );
     await fails(ChatImageHost.catbox, _Host(200, 'Something went wrong'), 'Catbox could not take the image');
     await fails(ChatImageHost.catbox, _Host(413, 'too big'), 'The image is too big for Catbox');

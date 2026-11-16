@@ -175,6 +175,23 @@ void main() {
     });
   });
 
+  test('own faction link', () {
+    final own = only('https://www.torn.com/factions.php?step=your&type=1');
+    expect((own.kind, own.id, own.title, own.detail), (ChatLinkKind.faction, ChatLink.ownFaction, 'Your faction', null));
+    expect(only('https://www.torn.com/factions.php?step=your#/tab=armoury').detail, 'Armoury');
+  });
+
+  test('Giphy and Tenor pages show as GIFs', () {
+    final giphy = only('https://giphy.com/gifs/hello-hi-wave-xT9IgG50Fb7Mi0prBC');
+    expect(giphy.isImage, isTrue);
+    expect(ChatLink.giphyMedia(giphy.uri).toString(), 'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif');
+    expect(only('https://tenor.com/view/hey-cat-waving-wave-paw-gif-11249423921160715390').isImage, isTrue);
+    expect(only('https://tenor.com/es/view/hola-gif-123').isImage, isTrue);
+    expect(only('https://giphy.com/clips/some-video-abc123XYZ').isImage, isFalse);
+    expect(only('https://tenor.com/search/hello-gifs').isImage, isFalse);
+    expect(only('https://giphy.com/gifs/happy-birthday').isImage, isFalse);
+  });
+
   group('warnings', () {
     String? warning(String text) => only(text).warning;
 

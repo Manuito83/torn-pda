@@ -4,6 +4,7 @@ import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_colors.dart';
 import 'package:torn_pda/models/chat/chat_filter.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
+import 'package:torn_pda/models/chat/chat_notepad.dart';
 import 'package:torn_pda/models/chat/chat_person.dart';
 import 'package:torn_pda/models/chat/chat_quick_rows.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
@@ -52,6 +53,10 @@ class ChatBackup {
     this.glowMode,
     this.launcher,
     this.launcherTap,
+    this.quickFrom,
+    this.noteSort,
+    this.noteOrder,
+    this.folderOrder,
     this.chatTimes,
     this.animations,
     this.profileIcon,
@@ -114,6 +119,10 @@ class ChatBackup {
   final ChatGlowMode? glowMode;
   final ChatLauncher? launcher;
   final ChatLauncherTap? launcherTap;
+  final ChatQuickFrom? quickFrom;
+  final ChatNoteSort? noteSort;
+  final List<String>? noteOrder;
+  final List<String>? folderOrder;
   final ChatTimes? chatTimes;
   final ChatAnimations? animations;
   final ChatProfileIcon? profileIcon;
@@ -193,6 +202,10 @@ class ChatBackup {
       'glowMode': prefs.glowMode.name,
       'launcher': prefs.launcher.name,
       'launcherTap': prefs.launcherTap.name,
+      'quickFrom': prefs.quickFrom.name,
+      'noteSort': prefs.noteSort.name,
+      'noteOrder': prefs.noteOrder,
+      'folderOrder': prefs.folderOrder,
       'chatTimes': prefs.chatTimes.name,
       'animations': prefs.animations.name,
       'profileIcon': prefs.profileIcon.name,
@@ -321,6 +334,10 @@ class ChatBackup {
       glowMode: named('glowMode', ChatGlowMode.values),
       launcher: named('launcher', ChatLauncher.values),
       launcherTap: named('launcherTap', ChatLauncherTap.values),
+      quickFrom: named('quickFrom', ChatQuickFrom.values),
+      noteSort: named('noteSort', ChatNoteSort.values),
+      noteOrder: strings('noteOrder'),
+      folderOrder: strings('folderOrder'),
       chatTimes: named('chatTimes', ChatTimes.values),
       animations: named('animations', ChatAnimations.values),
       profileIcon: named('profileIcon', ChatProfileIcon.values),

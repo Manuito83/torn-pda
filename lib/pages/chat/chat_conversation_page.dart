@@ -28,6 +28,7 @@ import 'package:torn_pda/widgets/chat/chat_compose_tools.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_message_actions.dart';
 import 'package:torn_pda/widgets/chat/chat_motion.dart';
+import 'package:torn_pda/widgets/chat/chat_notepad_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_next_unread.dart';
 import 'package:torn_pda/widgets/chat/chat_note_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_player_card_widgets.dart';
@@ -1124,6 +1125,11 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
               icon: saved.contains(m.id) ? Icons.bookmark_remove_rounded : null,
               label: saved.contains(m.id) ? 'Remove from saved' : null,
             ),
+            if (prefs.notepad && chat.available)
+              'note': action('note', () {
+                setState(_selected.clear);
+                showChatAddToNote(context, m);
+              }),
             if (!m.isSystem)
               'translate': action(
                 'translate',

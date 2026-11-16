@@ -8,6 +8,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:torn_pda/models/chat/chat_link_info.dart';
+import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 
 typedef ChatImageFetch = Future<Uint8List?> Function(String url, int maxBytes);
@@ -268,6 +270,20 @@ final Dio _dio = Dio(
     responseType: ResponseType.bytes,
   ),
 );
+
+/// GIF pages give their GIF
+Future<Uint8List?> chatLinkImage(String url, int maxBytes) async {
+  final media = await chatGifMedia(Uri.parse(url));
+  return media == null ? null : chatImageDownload('$media', maxBytes);
+}
+
+Future<Uri?> chatGifMedia(Uri uri) async {
+  if (ChatLink.giphyMedia(uri) case final giphy?) return giphy;
+  if (!ChatLink.isTenorPage(uri)) return uri;
+  final source = await ChatLinkPreviews.fetchPage(uri);
+  final image = source == null ? null : ChatLinkInfo.page(source, uri)?.imageUrl;
+  return image == null ? null : Uri.tryParse(image);
+}
 
 /// Null unless an image; network errors throw
 Future<Uint8List?> chatImageDownload(String url, int maxBytes) async {

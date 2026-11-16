@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chat/chat_banking.dart';
+import 'package:torn_pda/models/chat/chat_commands.dart';
 import 'package:torn_pda/models/chat/chat_emoji.dart';
 import 'package:torn_pda/models/chat/chat_format.dart';
 import 'package:torn_pda/models/chat/chat_item_price.dart';
@@ -33,14 +34,42 @@ import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 enum _Tool { replies, price, player, tabs, scripts, wiki, help }
 
+bool chatQuickAvailable(String id, {ChatController? chat, String? roomId}) => switch (id) {
+  'price' => NativeChat.prefs.itemPrice,
+  'player' => chat != null,
+  'bank' => chatBankAppliesTo(roomId ?? ''),
+  _ => true,
+};
+
+/// Null when the slot sheet is cancelled
+Future<String?> chatFillReply(BuildContext context, String reply, {String? name, String? me}) async {
+  StatsController.chat.count('quick_reply');
+  final values = await chatSlotValues(name: name, me: me, fetch: ChatTemplate.needsBars(reply));
+  if (!context.mounted) return null;
+  final asks = ChatTemplate.toAsk(reply, values);
+  if (asks.isEmpty) return ChatTemplate.fill(reply, values).text;
+  return showChatSlotSheet(context, reply, values, asks);
+}
+
 class ChatComposeTools extends StatefulWidget {
-  const ChatComposeTools({super.key, required this.onInsert, this.onEmoji, this.chat, this.name, this.roomId});
+  const ChatComposeTools({
+    super.key,
+    required this.onInsert,
+    this.onEmoji,
+    this.chat,
+    this.name,
+    this.roomId,
+    this.run,
+  });
 
   final ValueChanged<String> onInsert;
   final ValueChanged<String>? onEmoji;
   final ChatController? chat;
   final String? name;
   final String? roomId;
+
+  /// From a slash command
+  final ChatCommandRun? run;
 
   @override
   State<ChatComposeTools> createState() => _ChatComposeToolsState();
@@ -64,6 +93,56 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
   final TextEditingController _wikiText = TextEditingController();
   final FocusNode _wikiFocus = FocusNode();
   List<(String, String)>? _savedTabs;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.run case final run?) WidgetsBinding.instance.addPostFrameCallback((_) => _start(run));
+  }
+
+  @override
+  void didUpdateWidget(ChatComposeTools old) {
+    super.didUpdateWidget(old);
+    final run = widget.run;
+    if (run != null && run.serial != old.run?.serial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _start(run));
+    }
+  }
+
+  void _start(ChatCommandRun run) {
+    if (!mounted) return;
+    _runAction(run.id);
+    switch (run.id) {
+      case 'price':
+        _query.text = run.args;
+      case 'player':
+        _name.text = run.args;
+        _onName(run.args);
+      case 'wiki':
+        _wikiText.text = run.args;
+    }
+  }
+
+  void _runAction(String id) {
+    switch (id) {
+      case 'price':
+        _openPricing();
+      case 'player':
+        _show(_Tool.player, _nameFocus);
+      case 'tab':
+        _openTabs();
+      case 'script':
+        _show(_Tool.scripts);
+      case 'status':
+        showChatStatusSheet(context, widget.onInsert);
+      case 'wiki':
+        _show(_Tool.wiki, _wikiFocus);
+      case 'time':
+        _insertTime();
+      case 'bank':
+        _requestMoney();
+    }
+  }
 
   @override
   void dispose() {
@@ -130,17 +209,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
   }
 
   Future<void> _insertReply(String reply) async {
-    StatsController.chat.count('quick_reply');
-    final values = await chatSlotValues(
-      name: widget.name,
-      me: widget.chat?.myName,
-      fetch: ChatTemplate.needsBars(reply),
-    );
-    if (!mounted) return;
-    final asks = ChatTemplate.toAsk(reply, values);
-    final text = asks.isEmpty
-        ? ChatTemplate.fill(reply, values).text
-        : await showChatSlotSheet(context, reply, values, asks);
+    final text = await chatFillReply(context, reply, name: widget.name, me: widget.chat?.myName);
     if (text != null && mounted) widget.onInsert(text);
   }
 
@@ -332,79 +401,21 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
   }
 
   List<Widget> _actionChips(String id) {
-    VoidCallback tap(VoidCallback action) => () {
-      StatsController.chat.count('quick_action');
-      action();
-    };
-    return switch (id) {
-      'price' when NativeChat.prefs.itemPrice => [
-        ActionChip(
-          avatar: const Icon(Icons.sell_outlined, size: 18),
-          label: const Text('Item price'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(_openPricing),
-        ),
-      ],
-      'player' when widget.chat != null => [
-        ActionChip(
-          avatar: const Icon(Icons.person_search_outlined, size: 18),
-          label: const Text('Player'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(() => _show(_Tool.player, _nameFocus)),
-        ),
-      ],
-      'tab' => [
-        ActionChip(
-          avatar: const Icon(Icons.tab_rounded, size: 18),
-          label: const Text('Share tab'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(_openTabs),
-        ),
-      ],
-      'script' => [
-        ActionChip(
-          avatar: const Icon(Icons.code_rounded, size: 18),
-          label: const Text('Share script'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(() => _show(_Tool.scripts)),
-        ),
-      ],
-      'status' => [
-        ActionChip(
-          avatar: const Icon(Icons.monitor_heart_outlined, size: 18),
-          label: const Text('Status'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(() => showChatStatusSheet(context, widget.onInsert)),
-        ),
-      ],
-      'wiki' => [
-        ActionChip(
-          avatar: const Icon(Icons.menu_book_outlined, size: 18),
-          label: const Text('Wiki'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(() => _show(_Tool.wiki, _wikiFocus)),
-        ),
-      ],
-      'time' => [
-        ActionChip(
-          avatar: const Icon(Icons.schedule_rounded, size: 18),
-          label: const Text('Time'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(_insertTime),
-        ),
-      ],
-      'bank' when chatBankAppliesTo(widget.roomId ?? '') => [
-        ActionChip(
-          avatar: const Icon(Icons.account_balance_outlined, size: 18),
-          label: const Text('Request money'),
-          visualDensity: VisualDensity.compact,
-          onPressed: tap(_requestMoney),
-        ),
-      ],
-      'emoji' => _emojiChips(),
-      'replies' => _replyChips(),
-      _ => const <Widget>[],
-    };
+    if (id == 'emoji') return _emojiChips();
+    if (id == 'replies') return _replyChips();
+    final label = ChatQuickActionsEditor.labels[id];
+    if (label == null || !chatQuickAvailable(id, chat: widget.chat, roomId: widget.roomId)) return const [];
+    return [
+      ActionChip(
+        avatar: Icon(label.$1, size: 18),
+        label: Text(label.$2),
+        visualDensity: VisualDensity.compact,
+        onPressed: () {
+          StatsController.chat.count('quick_action');
+          _runAction(id);
+        },
+      ),
+    ];
   }
 
   Widget _share(BuildContext context, {required bool tabs}) {
@@ -790,7 +801,7 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
 class ChatQuickActionsEditor extends StatelessWidget {
   const ChatQuickActionsEditor({super.key});
 
-  static const Map<String, (IconData, String)> _labels = {
+  static const Map<String, (IconData, String)> labels = {
     'price': (Icons.sell_outlined, 'Item price'),
     'player': (Icons.person_search_outlined, 'Player'),
     'tab': (Icons.tab_rounded, 'Share tab'),
@@ -871,12 +882,12 @@ class ChatQuickActionsEditor extends StatelessWidget {
                       else
                         SwitchListTile(
                           key: ValueKey(id),
-                          secondary: handle(i, _labels[id]!.$2),
+                          secondary: handle(i, labels[id]!.$2),
                           title: Row(
                             children: [
-                              Icon(_labels[id]!.$1, size: 18),
+                              Icon(labels[id]!.$1, size: 18),
                               const SizedBox(width: 8),
-                              Text(_labels[id]!.$2),
+                              Text(labels[id]!.$2),
                             ],
                           ),
                           value: !prefs.quickOff(id),
