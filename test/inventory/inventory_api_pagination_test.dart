@@ -119,35 +119,25 @@ void main() {
     expect(caller.requested.length, 2);
   });
 
-  test('asks for the display case on the first page only and reads it', () async {
+  test('asks for the display case once, without category, and reads it', () async {
     final caller = _FakeApiCaller([
-      _page(
-        [1, 2],
-        next: "https://api.torn.com/v2/user?selections=inventory&offset=250",
-        display: [
-          {
-            "ID": 261,
-            "name": "Wolverine Plushie",
-            "type": "Plushie",
-            "quantity": 4,
-            "circulation": 100,
-            "market_price": 6,
-          },
-          {"ID": 739, "name": "Blood Bag : O-", "type": "Medical", "quantity": 2, "circulation": 1, "market_price": 1},
-        ],
-      ),
-      _page(
-        [3],
-        display: [
-          {"ID": 999, "name": "Not read", "type": "Other", "quantity": 9, "circulation": 1, "market_price": 1},
-        ],
-      ),
+      _page([1, 2], next: "https://api.torn.com/v2/user?selections=inventory&offset=250"),
+      _page([3]),
+      jsonEncode({
+        "display": {
+          "items": [
+            {"id": 261, "uids": [], "name": "Wolverine Plushie", "type": "Plushie", "quantity": 4},
+            {"id": 739, "uids": [], "name": "Blood Bag : O-", "type": "Medical", "quantity": 2},
+          ],
+        },
+      }),
     ]);
     Get.put<ApiCallerController>(caller);
 
     final result = await ApiCallsV2.getUserInventory_v2(cat: "Plushie", withDisplay: true) as InventoryV2Category;
 
-    expect(caller.requested.map((e) => e.queryParameters["selections"]), ["inventory,display", "inventory"]);
+    expect(caller.requested.map((e) => e.queryParameters["selections"]), ["inventory", "inventory", "display"]);
+    expect(caller.requested.last.queryParameters.containsKey("cat"), isFalse);
     expect(result.items.map((e) => e.id), [1, 2, 3]);
     expect(result.display!.map((e) => e.id), [261, 739]);
     expect(result.display!.map((e) => e.quantity), [4, 2]);
@@ -155,7 +145,10 @@ void main() {
 
   test('an empty display case is read as empty, not as missing', () async {
     final caller = _FakeApiCaller([
-      _page([1], display: []),
+      _page([1]),
+      jsonEncode({
+        "display": {"items": []},
+      }),
     ]);
     Get.put<ApiCallerController>(caller);
 
@@ -183,17 +176,17 @@ void main() {
   });
 
   test('an unreadable display case does not invalidate the category', () async {
-    for (final display in <Object>[
-      {"code": 16, "error": "Access level of this key is not high enough"},
-      [
-        {"ID": 261, "quantity": "many"},
-      ],
+    for (final display in <String>[
+      jsonEncode({"code": 16, "error": "Access level of this key is not high enough"}),
+      jsonEncode({
+        "display": {
+          "items": [
+            {"id": 261, "quantity": "many"},
+          ],
+        },
+      }),
     ]) {
-      Get.put<ApiCallerController>(
-        _FakeApiCaller([
-          _page([1, 2], display: display),
-        ]),
-      );
+      Get.put<ApiCallerController>(_FakeApiCaller([_page([1, 2]), display]));
 
       final result = await ApiCallsV2.getUserInventory_v2(cat: "Plushie", withDisplay: true) as InventoryV2Category;
 

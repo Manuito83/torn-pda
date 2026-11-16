@@ -17,9 +17,10 @@ class ChatBazaar {
 
   /// Null without a bazaar in the profile
   static ChatBazaar? parse(Map<String, dynamic> json) {
-    final open = json['bazaar_is_open'];
+    final node = json['bazaar'];
+    final open = json['bazaar_is_open'] ?? (node is Map ? node['is_open'] : null);
     if (open == false || open == 0) return const ChatBazaar(false, []);
-    final rows = json['bazaar'];
+    final rows = node is Map ? node['items'] : node;
     if (rows is! List) return open == true || open == 1 ? const ChatBazaar(true, [], listed: false) : null;
     final items = <BazaarItem>[];
     for (final row in rows) {

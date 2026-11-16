@@ -75,6 +75,21 @@ void main() {
       expect(ChatBazaar.parse(profile([]))!.summary, 'Empty');
     });
 
+    test('v2 object with lowercase ids', () {
+      final bazaar = ChatBazaar.parse({
+        'bazaar': {
+          'exists': true,
+          'is_open': true,
+          'items': [
+            {'id': 180, 'name': 'Beer', 'type': 'Alcohol', 'quantity': 1, 'price': 500, 'market_price': 400},
+          ],
+        },
+      })!;
+      expect(bazaar.open, isTrue);
+      expect(bazaar.items.single.id, 180);
+      expect(ChatBazaar.parse({'bazaar': {'is_open': false, 'items': []}})!.open, isFalse);
+    });
+
     test('no bazaar in the profile is null', () {
       expect(ChatBazaar.parse({'profile': {}}), isNull);
     });
@@ -150,17 +165,11 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    final tapRow = find.byKey(ChatTradeInsert.checkKey);
-
-    testWidgets('asks nothing until the row is pressed', (tester) async {
+    testWidgets('an uncached profile asks nothing and shows no row', (tester) async {
       await pump(tester);
       expect(calls, 0);
       expect(find.byType(ChatBazaarSummary), findsNothing);
-
-      await tester.tap(tapRow);
-      await tester.pumpAndSettle();
-      expect(calls, 1);
-      expect(find.byType(ChatBazaarSummary), findsOneWidget);
+      expect(find.byIcon(Icons.storefront_rounded), findsNothing);
     });
 
     testWidgets('a cached profile shows the line without asking', (tester) async {
@@ -178,28 +187,17 @@ void main() {
         ('WTS Xanax https://www.torn.com/bazaar.php?userId=7', 7),
       ]) {
         await pump(tester, text: text, userId: userId);
-        expect(tapRow, findsNothing, reason: text);
         expect(find.byType(ChatBazaarSummary), findsNothing, reason: text);
       }
       expect(calls, 0);
     });
 
-    testWidgets('a failed load keeps the row and a quick retry asks nothing', (tester) async {
-      ChatPlayerCards.fetch = (id) async {
-        calls++;
-        return null;
-      };
+    testWidgets('a cached profile without bazaar shows nothing', (tester) async {
+      ChatPlayerCards.fetch = (id) async => {'profile': {}};
+      await ChatPlayerCards.json(7);
       await pump(tester);
-      await tester.tap(tapRow);
-      await tester.pumpAndSettle();
       expect(find.byType(ChatBazaarSummary), findsNothing);
-      expect(tapRow, findsOneWidget);
-      expect(calls, 1);
-
-      await tester.tap(tapRow);
-      await tester.pumpAndSettle();
-      expect(calls, 1);
-      expect(tapRow, findsOneWidget);
+      expect(find.byIcon(Icons.storefront_rounded), findsNothing);
     });
 
     testWidgets('a points offer with a cached profile shows no bazaar line', (tester) async {

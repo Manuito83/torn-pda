@@ -10,7 +10,7 @@ class ChatPlayerCards {
   static const Duration _ttl = Duration(minutes: 3);
   static const Duration _failTtl = Duration(seconds: 30);
 
-  static const String _base = 'profile,bazaar,bounties';
+  static const String _base = 'profile,bounties';
   static bool _discordRejected = false;
 
   static Future<Map<String, dynamic>?> Function(int id) fetch = _fetch;
@@ -34,11 +34,9 @@ class ChatPlayerCards {
     return _cache[id]?.$3;
   }
 
-  static Future<Map<String, dynamic>?> json(int id, {Duration maxAge = _ttl, bool retry = false}) {
+  static Future<Map<String, dynamic>?> json(int id, {Duration maxAge = _ttl}) {
     final hit = _cache[id];
-    if (hit != null &&
-        !(retry && hit.$2 == null && DateTime.now().difference(hit.$1) > const Duration(seconds: 5)) &&
-        DateTime.now().difference(hit.$1) < (hit.$2 == null ? _failTtl : maxAge)) {
+    if (hit != null && DateTime.now().difference(hit.$1) < (hit.$2 == null ? _failTtl : maxAge)) {
       return Future.value(hit.$2);
     }
     final generation = _generation;
@@ -63,15 +61,15 @@ class ChatPlayerCards {
       apiCall: (client, apiKey) => client.userGet(id: '$id', selections: selections),
     );
     final generation = _generation;
-    var response = await ask(_discordRejected ? _base : '$_base,discord');
+    // Another player's bazaar gives error 7
+    final mine = Get.isRegistered<UserController>() && Get.find<UserController>().playerId == id;
+    final base = mine ? '$_base,bazaar' : _base;
+    var response = await ask(_discordRejected ? base : '$base,discord');
     if (response is ApiError && response.errorId == 4 && !_discordRejected) {
-      response = await ask(_base);
+      response = await ask(base);
       if (generation == _generation) _discordRejected = response is Map<String, dynamic>;
     }
-    if (response is! Map<String, dynamic>) return null;
-    final mine = Get.isRegistered<UserController>() && Get.find<UserController>().playerId == id;
-    // Torn hides other players' bazaar items
-    return mine ? response : ({...response}..remove('bazaar'));
+    return response is Map<String, dynamic> ? response : null;
   }
 
   /// Nothing cached from the old account

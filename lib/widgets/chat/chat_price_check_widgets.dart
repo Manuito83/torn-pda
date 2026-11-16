@@ -36,8 +36,6 @@ class ChatTradeInsert extends StatefulWidget {
   /// Hangs from the right edge
   final bool mine;
 
-  static const Key checkKey = ValueKey('bazaar-check');
-
   @override
   State<ChatTradeInsert> createState() => _ChatTradeInsertState();
 }
@@ -49,8 +47,6 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
   final Map<int, int> _have = {};
   Set<int> _named = const {};
   ChatBazaar? _bazaar;
-  bool _loading = false;
-  bool _failed = false;
 
   @override
   void initState() {
@@ -70,8 +66,6 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
     _checks = const [];
     _named = const {};
     _bazaar = null;
-    _failed = false;
-    _loading = false;
     _open.clear();
     _lines.clear();
     _have.clear();
@@ -154,26 +148,12 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
     setState(() => _lines[id] = ChatPriceCheck.lowestLine(listings, ChatLinkPreviews.marketAge(id)));
   }
 
-  Future<void> _check() async {
-    final id = widget.userId!;
-    final text = widget.text;
-    setState(() => _loading = true);
-    final json = await ChatPlayerCards.json(id, retry: _failed);
-    if (!mounted || text != widget.text) return;
-    final bazaar = json == null ? null : ChatBazaar.parse(json);
-    setState(() {
-      _loading = false;
-      _bazaar = bazaar;
-      _failed = bazaar == null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final id = widget.userId;
     final bazaar = _bazaar;
     final bazaarShown =
-        NativeChat.prefs.bazaarAnalysis && id != null && _named.isNotEmpty && (bazaar != null || widget.roomId == 'trade');
+        NativeChat.prefs.bazaarAnalysis && id != null && _named.isNotEmpty && bazaar != null;
     if (!NativeChat.prefs.priceCheck || (_checks.isEmpty && !bazaarShown)) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
@@ -277,42 +257,14 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
                                   ),
                           ),
                       if (_checks.isNotEmpty && bazaarShown) const SizedBox(height: 6),
-                      if (bazaarShown && bazaar != null)
-                        ChatBazaarSummary(bazaar: bazaar, userId: id, named: _named, color: color, framed: true)
-                      else if (bazaarShown)
-                        _checkRow(theme),
+                      if (bazaarShown)
+                        ChatBazaarSummary(bazaar: bazaar, userId: id, named: _named, color: color, framed: true),
                     ],
                   ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _checkRow(ThemeData theme) {
-    final color = widget.color;
-    return InkWell(
-      key: ChatTradeInsert.checkKey,
-      onTap: _loading ? null : _check,
-      child: SizedBox(
-        height: 48,
-        child: Row(
-          children: [
-            _loading
-                ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: color))
-                : Icon(Icons.storefront_rounded, size: 18, color: color),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _failed ? "Couldn't load - try again" : 'Check their bazaar',
-                style: theme.textTheme.bodyMedium?.copyWith(color: color),
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, size: 18, color: color),
-          ],
         ),
       ),
     );

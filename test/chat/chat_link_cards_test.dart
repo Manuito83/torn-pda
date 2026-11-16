@@ -304,7 +304,7 @@ void main() {
       expect(asked, 1);
     });
 
-    test('profile, bazaar and bounties in one call', () async {
+    test('profile and bounties in one call', () async {
       final api = FakeApiCaller(
         (url) => {
           ...player(),
@@ -318,25 +318,23 @@ void main() {
       expect(card!.extra, [r'Bounty $4,000,000']);
       expect((await ChatLinkPreviews.bountyOf(42))!.total, 4000000);
       expect((await ChatPlayerCards.load(42))!.levelText, 'Lvl 15');
-      expect(api.urls.map((u) => u.queryParameters['selections']), ['profile,bazaar,bounties,discord']);
+      expect(api.urls.map((u) => u.queryParameters['selections']), ['profile,bounties,discord']);
     });
   });
 
   group('bazaar of other players', () {
-    test('the list is dropped and open or closed is kept', () async {
-      final api = FakeApiCaller(
-        (url) => {
-          ...player(bazaar: [{}, {}]),
-          'bazaar_is_open': true,
-        },
-      );
+    test('only the own card asks for the bazaar', () async {
+      final api = FakeApiCaller((url) => player());
       Get.put<ApiCallerController>(api);
       addTearDown(Get.reset);
       ChatPlayerCards.resetForTests();
-      final json = (await ChatPlayerCards.json(42))!;
-      expect(json.containsKey('bazaar'), isFalse);
-      expect(json['bazaar_is_open'], isTrue);
-      expect(ChatLinkInfo.player(ChatLinkKind.bazaar, json)!.detail, 'Open');
+      await ChatPlayerCards.json(42);
+      Get.put<UserController>(UserController()..playerId = 43);
+      await ChatPlayerCards.json(43);
+      expect(api.urls.map((u) => u.queryParameters['selections']), [
+        'profile,bounties,discord',
+        'profile,bounties,bazaar,discord',
+      ]);
     });
 
     test('the own list is kept', () async {
@@ -360,7 +358,7 @@ void main() {
       expect(first!.levelText, 'Lvl 15');
       expect(first.discordId, isNull);
       expect(second!.levelText, 'Lvl 15');
-      expect(api.asked, ['profile,bazaar,bounties,discord', 'profile,bazaar,bounties', 'profile,bazaar,bounties']);
+      expect(api.asked, ['profile,bounties,discord', 'profile,bounties', 'profile,bounties']);
     });
   });
 
