@@ -1,5 +1,6 @@
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/utils/js_snippets/js_faction_fold.dart';
 import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
 
 // JS snippet that ships compiled, but a newer version from RC can replace it at runtime
@@ -34,6 +35,7 @@ class RemoteSnippets {
   static const String travelRemovePlane = 'travel_remove_plane';
   static const String travelBuyMax = 'travel_buy_max';
   static const String barsDoubleClick = 'bars_double_click';
+  static const String factionDescriptionFold = 'faction_description_fold';
   static const String pdaApi = 'pda_api';
   static const String quickItemsRun = 'quick_items_run';
   static const String quickItemsPicker = 'quick_items_picker';
@@ -60,6 +62,11 @@ class RemoteSnippets {
     ),
     travelBuyMax: const RemoteSnippet(id: travelBuyMax, version: '1.0.2', buildBase: _travelBuyMaxBaseJS),
     barsDoubleClick: const RemoteSnippet(id: barsDoubleClick, version: '1.0.2', buildBase: _barsDoubleClickBaseJS),
+    factionDescriptionFold: const RemoteSnippet(
+      id: factionDescriptionFold,
+      version: '1.0.0',
+      buildBase: factionDescriptionFoldBaseJS,
+    ),
     quickItemsRun: const RemoteSnippet(id: quickItemsRun, version: '1.0.0', buildBase: quickItemsRunBaseJS),
     quickItemsPicker: const RemoteSnippet(id: quickItemsPicker, version: '1.0.0', buildBase: quickItemsPickerBaseJS),
     quickItemsMassCheck: const RemoteSnippet(

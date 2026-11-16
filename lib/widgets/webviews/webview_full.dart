@@ -33,6 +33,7 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/js_snippets/js_bank_vault.dart';
+import 'package:torn_pda/utils/js_snippets/js_faction_fold.dart';
 import 'package:torn_pda/utils/js_snippets/js_handlers.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
@@ -2004,6 +2005,7 @@ class WebViewFullState extends State<WebViewFull>
 
               hideChatOnLoad();
               _highlightChat();
+              _foldFactionDescriptionIfEnabled();
 
               // If we are using pull-to-refresh in a short page (that does not scroll), add a bit of body
               // height so that the pull-to-refresh triggers properly
@@ -2523,6 +2525,13 @@ class WebViewFullState extends State<WebViewFull>
   void _openNewTabFromWindowRequest(String url, int? windowId) {
     _webViewProvider.addTab(url: url, windowId: windowId, openerTabUid: _tabUid);
     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+  }
+
+  void _foldFactionDescriptionIfEnabled() {
+    final mode = _settingsProvider.factionDescriptionFold;
+    if (mode == "off") return;
+    if (!_currentUrl.contains('torn.com/factions.php')) return;
+    webViewController!.evaluateJavascript(source: factionDescriptionFoldJS(always: mode == "always"));
   }
 
   void _removeTravelAirplaneIfEnabled() {

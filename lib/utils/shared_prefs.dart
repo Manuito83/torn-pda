@@ -370,6 +370,7 @@ class Prefs with ChatPrefsStorage {
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
   final String _kHighlightChat = "pda_highlightChat";
+  final String _kFactionDescriptionFold = "pda_factionDescriptionFold";
   final String _kHighlightChatWordsList = "pda_highlightChatWordsList";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
@@ -3478,6 +3479,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setChatRemovalMigrated(bool value) async {
     return await PrefsDatabase.setBool(_kChatRemovalMigrated, value);
+  }
+
+  Future<String> getFactionDescriptionFold() async {
+    return await PrefsDatabase.getString(_kFactionDescriptionFold, "off");
+  }
+
+  Future setFactionDescriptionFold(String value) async {
+    return await PrefsDatabase.setString(_kFactionDescriptionFold, value);
   }
 
   /// ----------------------------
