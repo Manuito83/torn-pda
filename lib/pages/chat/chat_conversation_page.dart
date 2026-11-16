@@ -976,20 +976,11 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     return Stack(
       key: _listKey,
       children: [
-        GestureDetector(
-          onTap: () {
-            final scope = FocusScope.of(context);
-            if (!scope.hasFocus || scope.hasPrimaryFocus) return;
-            BigWindowKeyboardProbe.instance.dismissed();
-            FocusManager.instance.primaryFocus?.unfocus();
-          },
+        ChatListKeyboardDismiss(
           child: ListView.builder(
             key: PageStorageKey(roomId),
             controller: _scroll,
             reverse: true,
-            keyboardDismissBehavior: Theme.of(context).platform == TargetPlatform.iOS
-                ? ScrollViewKeyboardDismissBehavior.onDrag
-                : ScrollViewKeyboardDismissBehavior.manual,
             padding: const EdgeInsets.only(top: 8, bottom: 8),
             itemCount: entries.length + (hasTopRow ? 1 : 0),
             findChildIndexCallback: (key) => key is ValueKey<String> ? at[key.value] : null,

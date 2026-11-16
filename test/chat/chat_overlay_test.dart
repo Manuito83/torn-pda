@@ -188,6 +188,43 @@ void main() {
       chat.dispose();
     });
 
+    testWidgets('tapping the messages closes the keyboard', (tester) async {
+      final source = FakeChatSource();
+      final chat = ChatController(source, ChatPrefs());
+      source.emit(const ChatReadyEvent(99));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 340,
+              height: 440,
+              child: ChatQuickWindow(chat: chat, roomId: 'dm:7', onClose: () {}),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      source.emit(
+        ChatHistoryEvent(
+          'dm:7',
+          [chatMessage('a', 'dm:7', sender: 7, at: DateTime.now())],
+          hasOlder: false,
+          isOlderPage: false,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      expect(tester.testTextInput.isVisible, isTrue);
+      await tester.tapAt(tester.getTopLeft(find.byType(ListView)) + const Offset(20, 10));
+      await tester.pump();
+      expect(tester.testTextInput.isVisible, isFalse);
+
+      await tester.pumpWidget(const SizedBox());
+      chat.dispose();
+    });
+
     testWidgets('a quick window that never loads offers a retry', (tester) async {
       final source = FakeChatSource();
       final chat = ChatController(source, ChatPrefs());

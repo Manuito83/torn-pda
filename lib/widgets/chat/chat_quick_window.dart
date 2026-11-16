@@ -10,6 +10,7 @@ import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_arrival_fade.dart';
+import 'package:torn_pda/widgets/chat/chat_big_window.dart';
 import 'package:torn_pda/widgets/chat/chat_color_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_composer.dart';
 import 'package:torn_pda/widgets/chat/chat_faction_ops_widgets.dart';
@@ -515,51 +516,56 @@ class _ChatQuickWindowState extends State<ChatQuickWindow> {
     }
 
     final at = {for (var i = 0; i < shown.length; i++) rowKey(i): shown.length - 1 - i};
-    return ListView.builder(
-      reverse: true,
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      itemCount: shown.length,
-      findChildIndexCallback: (key) => key is ValueKey<String> ? at[key.value] : null,
-      itemBuilder: (context, index) {
-        final i = shown.length - 1 - index;
-        final m = shown[i];
-        final older = i > 0 ? shown[i - 1] : null;
-        final newer = i < shown.length - 1 ? shown[i + 1] : null;
-        final reply = m.state == ChatMessageState.sent && chat.available && room.canWrite
-            ? () => setState(() => _replyTo = m)
-            : null;
-        final mine = chat.myUserId != null && m.sender.id == chat.myUserId;
-        final swipeLeft = chatSwipeLeft(m, mine: mine);
-        final newDay = older == null || !clock.sameDay(older.createdAt, m.createdAt);
-        final key = rowKey(i);
-        final row = ChatSwipeReply(
-          key: ValueKey(key),
-          onReply: reply,
-          onSwipeLeft: swipeLeft,
-          child: ChatMessageBubble(
-            message: m,
-            isMine: mine,
-            showSender: !room.isDm,
-            highlighted: chat.highlightOf(m).on,
-            highlightColor: chat.highlightOf(m).color,
-            isFirstInGroup: !chatSameGroup(clock, older, m),
-            isLastInGroup: !chatSameGroup(clock, m, newer),
-            presence: chat.hasRoster(room.id) ? chat.presenceOf(m.sender.id) : null,
+    return ChatListKeyboardDismiss(
+      child: ListView.builder(
+        reverse: true,
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        itemCount: shown.length,
+        findChildIndexCallback: (key) => key is ValueKey<String> ? at[key.value] : null,
+        itemBuilder: (context, index) {
+          final i = shown.length - 1 - index;
+          final m = shown[i];
+          final older = i > 0 ? shown[i - 1] : null;
+          final newer = i < shown.length - 1 ? shown[i + 1] : null;
+          final reply = m.state == ChatMessageState.sent && chat.available && room.canWrite
+              ? () => setState(() => _replyTo = m)
+              : null;
+          final mine = chat.myUserId != null && m.sender.id == chat.myUserId;
+          final swipeLeft = chatSwipeLeft(m, mine: mine);
+          final newDay = older == null || !clock.sameDay(older.createdAt, m.createdAt);
+          final key = rowKey(i);
+          final row = ChatSwipeReply(
+            key: ValueKey(key),
             onReply: reply,
             onSwipeLeft: swipeLeft,
-          ),
-        );
-        return ChatArrivalFade(
-          key: ValueKey(key),
-          animate: _arrivals.take(ChatArrivalTracker.keyOf(m)),
-          child: !newDay
-              ? row
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [ChatDaySeparator(day: m.createdAt, compact: true), row],
-                ),
-        );
-      },
+            child: ChatMessageBubble(
+              message: m,
+              isMine: mine,
+              showSender: !room.isDm,
+              highlighted: chat.highlightOf(m).on,
+              highlightColor: chat.highlightOf(m).color,
+              isFirstInGroup: !chatSameGroup(clock, older, m),
+              isLastInGroup: !chatSameGroup(clock, m, newer),
+              presence: chat.hasRoster(room.id) ? chat.presenceOf(m.sender.id) : null,
+              onReply: reply,
+              onSwipeLeft: swipeLeft,
+            ),
+          );
+          return ChatArrivalFade(
+            key: ValueKey(key),
+            animate: _arrivals.take(ChatArrivalTracker.keyOf(m)),
+            child: !newDay
+                ? row
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ChatDaySeparator(day: m.createdAt, compact: true),
+                      row,
+                    ],
+                  ),
+          );
+        },
+      ),
     );
   }
 }

@@ -126,6 +126,31 @@ class BigWindowKeyboardProbe with WidgetsBindingObserver {
   }
 }
 
+/// Tap closes the keyboard, iOS drag too
+class ChatListKeyboardDismiss extends StatelessWidget {
+  const ChatListKeyboardDismiss({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    void dismiss() {
+      final scope = FocusScope.of(context);
+      if (!scope.hasFocus || scope.hasPrimaryFocus) return;
+      BigWindowKeyboardProbe.instance.dismissed();
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+
+    return NotificationListener<ScrollUpdateNotification>(
+      onNotification: (update) {
+        if (update.dragDetails != null && Theme.of(context).platform == TargetPlatform.iOS) dismiss();
+        return false;
+      },
+      child: GestureDetector(onTap: dismiss, child: child),
+    );
+  }
+}
+
 class _ChatBigWindowViewState extends State<ChatBigWindowView> {
   EditableTextState? _field;
   FocusScopeNode? _scope;
