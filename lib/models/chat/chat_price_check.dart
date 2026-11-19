@@ -20,6 +20,7 @@ class ChatPriceCheck {
   static const double _near = 0.03;
   static const double _tooLow = -0.40;
   static const double _tooHigh = 0.30;
+  static const int _sane = 10;
 
   static final RegExp _intent = RegExp(
     r'\b(wts|wtb|wtt|selling|buying|paying|buy|sell|for sale|wanted)\b|(^|\s)[sb]\s?:',
@@ -107,11 +108,14 @@ class ChatPriceCheck {
       }
       if (best == null) continue;
       used.add(best);
+      if (!_plausible(prices[best].$3, item.marketValue!)) continue;
       checks.add(ChatPriceCheck(_idOf(catalog, item), item.type?.name, item.name!, prices[best].$3, item.marketValue!));
       if (checks.length == _maxChips) break;
     }
     return checks;
   }
+
+  static bool _plausible(int asked, int market) => asked <= market * _sane && asked * _sane >= market;
 
   static List<(int, int, int)> _prices(String text) {
     final prices = <(int, int, int)>[];

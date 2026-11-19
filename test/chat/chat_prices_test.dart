@@ -95,6 +95,14 @@ void main() {
       expect(one('WTS 5x Xanax 800k each')!.asked, 800000);
     });
 
+    test("skips prices far from the item's market", () {
+      expect(names('BUYING BULK, FAST CASH 4B+ Xanax, FHC, Erotic DVD', aliases), isEmpty);
+      expect(one('WTS Xanax 84m'), isNull);
+      expect(one('WTS Xanax 50k'), isNull);
+      expect(names('WTS Xanax 84m Donator Pack 1.2m'), ['Donator Pack']);
+      expect(one('Buying Xanax 800k+')!.asked, 800000);
+    });
+
     test('formats short prices', () {
       expect(ChatPriceCheck.short(812000), '812k');
       expect(ChatPriceCheck.short(12500000), '12.5m');

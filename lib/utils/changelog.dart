@@ -124,6 +124,7 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF2E7D32),
         items: [
           _MItem('Chat: fixed swapped names in lost attack summaries'),
+          _MItem('Chat: fixed market price check errors'),
         ],
       ),
     ],
