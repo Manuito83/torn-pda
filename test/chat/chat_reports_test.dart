@@ -119,6 +119,18 @@ void main() {
       );
     });
 
+    test('a lost attack names the loser first', () {
+      ChatLinkInfo lost(Map winner, Map loser, String text) => ChatLinkInfo.attackLog({
+        'attacklog': {
+          'log': [_action('lost', 5, attacker: winner, defender: loser, text: text)],
+          'summary': const [],
+        },
+      })!;
+      final bob = {'id': 5, 'name': 'Bob'};
+      expect(lost({'id': 4, 'name': 'Duke'}, bob, 'Bob lost to Duke').title, 'Bob [5] lost to Duke [4]');
+      expect(lost({'id': 4, 'name': null}, bob, 'Bob lost to Someone').title, 'Bob lost to Someone');
+    });
+
     test('a chain report shows hits, respect, length and who took part', () {
       final report = ChatChainReport.parse(_chainReport()['chainreport'])!;
       final info = ChatLinkInfo.chainReport(report, DateTime.fromMillisecondsSinceEpoch(1700100000 * 1000));

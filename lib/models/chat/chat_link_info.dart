@@ -260,18 +260,21 @@ class ChatLinkInfo {
     int total(String key) => summary.fold(0, (sum, s) => sum + (s[key] is int ? s[key] as int : 0));
     num at(Map a) => a['timestamp'] is num ? a['timestamp'] as num : 0;
     final last = actions.isEmpty ? null : actions.reduce((a, b) => at(b) > at(a) ? b : a);
-    String who(Object? p) =>
-        p is Map && p['name'] is String ? '${p['name']}${p['id'] is int ? ' [${p['id']}]' : ''}' : 'Someone';
+    bool named(Object? p) => p is Map && p['name'] is String;
+    String who(Object? p) => named(p) ? '${(p as Map)['name']}${p['id'] is int ? ' [${p['id']}]' : ''}' : 'Someone';
     const verbs = {'hosp': 'hospitalized', 'mug': 'mugged', 'leave': 'left', 'lost': 'lost to'};
     final verb = verbs[last?['action']];
     final text = last?['text'];
+    final said = text is String && text.isNotEmpty ? text : null;
+    // Torn puts the winner as attacker
+    final lost = last?['action'] == 'lost';
+    final first = last?[lost ? 'defender' : 'attacker'];
+    final second = last?[lost ? 'attacker' : 'defender'];
     final hits = total('hits');
     return ChatLinkInfo(
-      verb != null
-          ? '${who(last!['attacker'])} $verb ${who(last['defender'])}'
-          : text is String && text.isNotEmpty
-          ? text
-          : 'Attack log',
+      verb != null && (said == null || named(first) && named(second))
+          ? '${who(first)} $verb ${who(second)}'
+          : said ?? 'Attack log',
       detail: summary.isEmpty
           ? null
           : '${hits == 1 ? '1 hit' : '$hits hits'}, ${total('misses')} missed - ${chatCount(total('damage'))} dmg',

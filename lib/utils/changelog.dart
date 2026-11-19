@@ -105,6 +105,22 @@ class _MVersion {
 
 List<_MVersion> _modernChangelog() => [
   const _MVersion(
+    version: 'v4.1.0',
+    date: '1 December 2026',
+    hotfixes: [],
+    sections: [
+      _MSection(
+        icon: Icons.handyman,
+        title: 'Fixed',
+        color: Color(0xFF2E7D32),
+        items: [
+          _MItem('Chat: fixed swapped names in lost attack summaries'),
+        ],
+      ),
+    ],
+  ),
+
+  const _MVersion(
     version: 'v4.0.1',
     date: '20 November 2026',
     hotfixes: [],
