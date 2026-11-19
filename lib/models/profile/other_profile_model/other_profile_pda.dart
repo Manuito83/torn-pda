@@ -1,3 +1,4 @@
+import 'package:torn_pda/models/profile/own_profile_misc.dart' show bazaarUidsAverage;
 import 'other_profile_adapter.dart';
 // ignore: unused_import
 import 'dart:convert';
@@ -228,11 +229,11 @@ class BazaarItem {
   /// Extract from API response (same structure in V1 and V2)
   factory BazaarItem.fromJson(Map<String, dynamic> json) {
     return BazaarItem(
-      id: _asInt(json['ID']) ?? 0,
+      id: _asInt(json['id'] ?? json['ID']) ?? 0,
       name: json['name'] ?? '',
       type: json['type'] ?? '',
       quantity: _asInt(json['quantity']) ?? 0,
-      price: _asInt(json['price']) ?? 0,
+      price: _asInt(json['price']) ?? bazaarUidsAverage(json['uids']) ?? 0,
       marketPrice: _asInt(json['market_price']) ?? 0,
       uid: _asInt(json['UID']),
     );

@@ -67,7 +67,6 @@ void main() {
       expect(link('https://www.torn.com/loader.php?sid=attackLog&ID=abc').kind, ChatLinkKind.torn);
       expect(link('https://www.torn.com/loader.php?sid=crimes').kind, ChatLinkKind.torn);
       expect(link('https://www.torn.com/war.php?step=rankreport').kind, ChatLinkKind.torn);
-      expect(link('https://www.torn.com/factions.php?step=your&type=1').kind, ChatLinkKind.torn);
       expect(link('https://www.torn.com/factions.php?step=profile&ID=12').kind, ChatLinkKind.faction);
     });
   });

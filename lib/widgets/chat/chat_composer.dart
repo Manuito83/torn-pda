@@ -5,17 +5,22 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chat/chat_commands.dart';
 import 'package:torn_pda/models/chat/chat_mentions.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_share.dart';
 import 'package:torn_pda/models/chat/chat_short_text.dart';
+import 'package:torn_pda/pages/chat/settings/chat_upload_settings_page.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
+import 'package:torn_pda/providers/chat/chat_prefs.dart';
+import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_compose_tools.dart';
 import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_motion.dart';
+import 'package:torn_pda/widgets/chat/chat_notepad_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_send_check_dialog.dart';
 import 'package:torn_pda/widgets/chat/chat_share_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
@@ -60,6 +65,8 @@ class ChatComposer extends StatefulWidget {
   State<ChatComposer> createState() => _ChatComposerState();
 }
 
+const _noteLook = (Icons.sticky_note_2_outlined, 'Notepad');
+
 class _ChatComposerState extends State<ChatComposer> {
   late final TextEditingController _text = ChatFormatController(text: widget.draft);
   late bool _hasText = widget.draft.trim().isNotEmpty;
@@ -68,12 +75,17 @@ class _ChatComposerState extends State<ChatComposer> {
   String? _mention;
   Timer? _mentionTimer;
   String? _mentionSearched;
+  ({String name, String args})? _command;
+  ChatCommandRun? _run;
+  int _runs = 0;
+  ChatQuickFrom _quickFrom = NativeChat.prefs.quickFrom;
   bool _attachOpen = false;
   bool _toolsOpen = false;
   bool _formatOpen = false;
   double? _upload;
   String? _uploadError;
   String? _blockedError;
+  String? _refusedKeyError;
   ChatImageHost? _blockedHost;
   late final ChatImageUpload _uploads = context.read<ChatImageUpload?>() ?? ChatImageUpload();
 
@@ -88,10 +100,12 @@ class _ChatComposerState extends State<ChatComposer> {
         setState(() => _mention = mention);
         _searchMention();
       }
+      _syncCommand();
       if (widget.onDraft == null) return;
       _draftTimer?.cancel();
       _draftTimer = Timer(const Duration(milliseconds: 600), _saveDraft);
     });
+    NativeChat.prefs.addListener(_onPrefs);
     NativeChat.controller.sharePending.addListener(_takeShared);
     widget.focusSignal?.addListener(_focus.requestFocus);
     WidgetsBinding.instance.addPostFrameCallback((_) => _takeShared());
@@ -187,6 +201,7 @@ class _ChatComposerState extends State<ChatComposer> {
       if (mounted) {
         setState(() {
           _uploadError = e.message;
+          _refusedKeyError = e.refusedKey ? e.message : null;
           _blockedError = e.blocked ? e.message : null;
           _blockedHost = e.blocked ? host : null;
         });
@@ -274,9 +289,95 @@ class _ChatComposerState extends State<ChatComposer> {
     );
   }
 
+  void _syncCommand() {
+    final command = _quickFrom == ChatQuickFrom.button ? null : ChatCommands.typed(_text.text);
+    if (command != _command) setState(() => _command = command);
+  }
+
+  void _onPrefs() {
+    if (NativeChat.prefs.quickFrom == _quickFrom) return;
+    setState(() => _quickFrom = NativeChat.prefs.quickFrom);
+    _syncCommand();
+  }
+
+  List<String> _commandActions(String name) {
+    final prefs = NativeChat.prefs;
+    final available = ChatCommands.actionsIn(prefs.quickOrder)
+        .where((id) => !prefs.quickOff(id) && chatQuickAvailable(id, chat: widget.chat, roomId: widget.roomId));
+    return ChatCommands.matchActions(name, [...available, if (prefs.notepad) 'note']);
+  }
+
+  Future<void> _runCommand(String id, String args) async {
+    StatsController.chat.count('slash_command');
+    _text.clear();
+    if (id == 'note') {
+      await showChatNotepad(context, query: args);
+      return;
+    }
+    if (id == 'reply') {
+      final text = await chatFillReply(context, args, name: _replyName, me: widget.chat?.myName);
+      if (text != null && mounted) _insert(text);
+      _focus.requestFocus();
+      return;
+    }
+    setState(() {
+      _toolsOpen = true;
+      _attachOpen = false;
+      _run = (serial: ++_runs, id: id, args: args);
+    });
+  }
+
+  Widget? _commandList(BuildContext context) {
+    final command = _command;
+    if (command == null || !widget.enabled) return null;
+    final actions = _commandActions(command.name);
+    final replies = ChatCommands.matchReplies(command, NativeChat.prefs.quickReplies);
+    if (actions.isEmpty && replies.isEmpty) return null;
+    final theme = Theme.of(context);
+    final small = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final row = MediaQuery.textScalerOf(context).scale(48);
+    return Container(
+      constraints: BoxConstraints(maxHeight: row * 4.5),
+      margin: const EdgeInsets.only(bottom: 6, left: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListView(
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          children: [
+            for (final id in actions)
+              ListTile(
+                dense: true,
+                leading: Icon((ChatQuickActionsEditor.labels[id] ?? _noteLook).$1, size: 20),
+                title: Text('/$id'),
+                trailing: Text((ChatQuickActionsEditor.labels[id] ?? _noteLook).$2, style: small),
+                onTap: () => _runCommand(id, command.args),
+              ),
+            for (final reply in replies)
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
+                title: Text(reply, maxLines: 1, overflow: TextOverflow.ellipsis),
+                trailing: Text('Reply', style: small),
+                onTap: () => _runCommand('reply', reply),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _insertTool(String text) {
     _insert(text);
-    setState(() => _toolsOpen = false);
+    setState(() {
+      _toolsOpen = false;
+      _run = null;
+    });
     _focus.requestFocus();
   }
 
@@ -295,6 +396,7 @@ class _ChatComposerState extends State<ChatComposer> {
       final text = _text.text;
       scheduleMicrotask(() => save?.call(text));
     }
+    NativeChat.prefs.removeListener(_onPrefs);
     NativeChat.controller.sharePending.removeListener(_takeShared);
     widget.focusSignal?.removeListener(_focus.requestFocus);
     _text.dispose();
@@ -386,6 +488,15 @@ class _ChatComposerState extends State<ChatComposer> {
               error ?? 'The image goes to ${host.label} and anyone with the link can see it',
               style: error == null ? small : small?.copyWith(color: scheme.error),
             ),
+          if (error != null && error == _refusedKeyError)
+            TextButton.icon(
+              onPressed: () async {
+                await ChatUploadSettingsPage.editCredential(context, host);
+                if (mounted) setState(() => _uploadError = null);
+              },
+              icon: const Icon(Icons.key_rounded, size: 18),
+              label: Text('Change the ${host.credentialName}'),
+            ),
         ],
       );
     }
@@ -415,6 +526,7 @@ class _ChatComposerState extends State<ChatComposer> {
               ? () => setState(() {
                   _attachOpen = !_attachOpen;
                   _toolsOpen = false;
+                  _run = null;
                   _uploadError = null;
                   _blockedHost = null;
                 })
@@ -423,18 +535,20 @@ class _ChatComposerState extends State<ChatComposer> {
           constraints: const BoxConstraints.tightFor(width: 48, height: 48),
           padding: EdgeInsets.zero,
         ),
-        IconButton(
-          tooltip: 'Quick actions',
-          onPressed: widget.enabled
-              ? () => setState(() {
-                  _toolsOpen = !_toolsOpen;
-                  _attachOpen = false;
-                })
-              : null,
-          icon: Icon(_toolsOpen ? Icons.close_rounded : Icons.bolt_rounded),
-          constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-          padding: EdgeInsets.zero,
-        ),
+        if (_toolsOpen || _quickFrom != ChatQuickFrom.commands)
+          IconButton(
+            tooltip: 'Quick actions',
+            onPressed: widget.enabled
+                ? () => setState(() {
+                    _toolsOpen = !_toolsOpen;
+                    _run = null;
+                    _attachOpen = false;
+                  })
+                : null,
+            icon: Icon(_toolsOpen ? Icons.close_rounded : Icons.bolt_rounded),
+            constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+            padding: EdgeInsets.zero,
+          ),
         Expanded(
           child: LayoutBuilder(
             builder: (context, box) => Focus(
@@ -518,8 +632,10 @@ class _ChatComposerState extends State<ChatComposer> {
                           chat: widget.chat,
                           name: _replyName,
                           roomId: widget.roomId,
+                          run: _run,
                         ),
                       if (_formatOpen && widget.enabled) ChatFormatBar(controller: _text, focus: _focus),
+                      ?_commandList(context),
                       if (_mention != null && (suggestions.isNotEmpty || lookingUp))
                         Container(
                           height: MediaQuery.textScalerOf(context).scale(48),

@@ -112,6 +112,14 @@ void main() {
       expect(ChatWindowFrame.decode('dm:5').frame, isNull);
     });
 
+    test('a window as big as an odd sized panel fits', () {
+      const panel = Rect.fromLTRB(94.0952380952381, 30.476190476190474, 392, 300);
+      final fitted = ChatWindowFrame.fit(const Rect.fromLTWH(100, 40, 420, 640), panel);
+      expect(fitted.left, closeTo(panel.left, 1e-9));
+      expect(fitted.top, closeTo(panel.top, 1e-9));
+      expect(fitted.size, panel.size);
+    });
+
     test('three windows at most, the rest minimized', () {
       List<String> minimized() => NativeChat.minimized.value.map((m) => m.roomId).toList();
       for (final room in ['dm:1', 'dm:2', 'faction']) {
@@ -175,6 +183,43 @@ void main() {
       NativeChat.openQuickWindow('dm:7', reply: true);
       await tester.pump();
       expect(focused(), isTrue);
+
+      await tester.pumpWidget(const SizedBox());
+      chat.dispose();
+    });
+
+    testWidgets('tapping the messages closes the keyboard', (tester) async {
+      final source = FakeChatSource();
+      final chat = ChatController(source, ChatPrefs());
+      source.emit(const ChatReadyEvent(99));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 340,
+              height: 440,
+              child: ChatQuickWindow(chat: chat, roomId: 'dm:7', onClose: () {}),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      source.emit(
+        ChatHistoryEvent(
+          'dm:7',
+          [chatMessage('a', 'dm:7', sender: 7, at: DateTime.now())],
+          hasOlder: false,
+          isOlderPage: false,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      expect(tester.testTextInput.isVisible, isTrue);
+      await tester.tapAt(tester.getTopLeft(find.byType(ListView)) + const Offset(20, 10));
+      await tester.pump();
+      expect(tester.testTextInput.isVisible, isFalse);
 
       await tester.pumpWidget(const SizedBox());
       chat.dispose();
@@ -403,6 +448,22 @@ void main() {
       await _settle(tester);
       expect(NativeChat.prefs.bubbleSpot.last, '0');
       expect(opacity(), 1);
+    });
+
+    testWidgets('a second tap on the bubble closes the chat window', (tester) async {
+      NativeChat.prefs.launcherTap = ChatLauncherTap.window;
+      addTearDown(() {
+        NativeChat.prefs.launcherTap = ChatLauncherTap.full;
+        NativeChat.bigWindow.value = null;
+      });
+      await _pumpApp(tester);
+      await tester.tap(find.byIcon(Icons.forum_rounded));
+      await _settle(tester);
+      expect(NativeChat.bigWindow.value, isNotNull);
+
+      await tester.tap(find.byIcon(Icons.forum_rounded));
+      await _settle(tester);
+      expect(NativeChat.bigWindow.value, isNull);
     });
 
     testWidgets('double tap marks every chat read, with undo', (tester) async {

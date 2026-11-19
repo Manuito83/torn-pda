@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/cityshops/city_shop_daily_limit.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
@@ -22,7 +23,6 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/city_shops_daily_limit.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
@@ -830,7 +830,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   void _setCityShopMuted(bool mute) {
     final previous = _firebaseUserModel!.cityShopMutedUntil;
-    final until = mute ? CityShopDailyLimit.nextTctMidnightMs() : 0;
+    final until = mute ? nextTctMidnightMs(DateTime.now().toUtc()) : 0;
     setState(() {
       _firebaseUserModel!.cityShopMutedUntil = until;
     });

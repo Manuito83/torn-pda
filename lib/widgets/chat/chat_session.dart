@@ -379,6 +379,7 @@ class ChatSession {
     NativeChat.pastChains.forget();
     ChatLinkPreviews.forget();
     NativeChat.translator.forget();
+    NativeChat.notepad.forget();
     _chat.sharePending.value = null;
     _publishAppIconMenu();
     cancelChatNotifications();

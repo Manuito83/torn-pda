@@ -100,6 +100,7 @@ mixin ChatPrefsStorage {
   final String _kNativeChatTicker = "pda_nativeChatTicker";
   final String _kNativeChatLauncher = "pda_nativeChatLauncher";
   final String _kNativeChatLauncherTap = "pda_nativeChatLauncherTap";
+  final String _kNativeChatQuickFrom = "pda_nativeChatQuickFrom";
   final String _kNativeChatMiniBubbles = "pda_nativeChatMiniBubbles";
   final String _kNativeChatReopen = "pda_nativeChatReopen";
   final String _kNativeChatTimes = "pda_nativeChatTimes";
@@ -123,6 +124,13 @@ mixin ChatPrefsStorage {
   final String _kNativeChatLinkPreviews = "pda_nativeChatLinkPreviews";
   final String _kNativeChatLinkPreviewsOff = "pda_nativeChatLinkPreviewsOff";
   final String _kNativeChatLinkWindow = "pda_nativeChatLinkWindow";
+  final String _kNativeChatNotepad = "pda_nativeChatNotepad";
+  final String _kNativeChatNotePreviews = "pda_nativeChatNotePreviews";
+  final String _kNativeChatYoutubeInline = "pda_nativeChatYoutubeInline";
+  final String _kNativeChatNoteSort = "pda_nativeChatNoteSort";
+  final String _kNativeChatNotesCache = "pda_nativeChatNotesCache";
+  final String _kNativeChatNoteOrder = "pda_nativeChatNoteOrder";
+  final String _kNativeChatFolderOrder = "pda_nativeChatFolderOrder";
   final String _kNativeChatLinkNewTab = "pda_nativeChatLinkNewTab";
   final String _kNativeChatSwipeLeft = "pda_nativeChatSwipeLeft";
   final String _kChatImageHost = "pda_chatImageHost";
@@ -421,6 +429,14 @@ mixin ChatPrefsStorage {
     return await PrefsDatabase.setString(_kNativeChatLauncherTap, value);
   }
 
+  Future<String> getNativeChatQuickFrom() async {
+    return await PrefsDatabase.getString(_kNativeChatQuickFrom, 'both');
+  }
+
+  Future setNativeChatQuickFrom(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatQuickFrom, value);
+  }
+
   Future<bool> getNativeChatMiniBubbles() async {
     return await PrefsDatabase.getBool(_kNativeChatMiniBubbles, true);
   }
@@ -504,6 +520,62 @@ mixin ChatPrefsStorage {
 
   Future setNativeChatLinkWindow(bool value) async {
     return await PrefsDatabase.setBool(_kNativeChatLinkWindow, value);
+  }
+
+  Future<bool> getNativeChatNotepad() async {
+    return await PrefsDatabase.getBool(_kNativeChatNotepad, true);
+  }
+
+  Future setNativeChatNotepad(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatNotepad, value);
+  }
+
+  Future<bool> getNativeChatNotePreviews() async {
+    return await PrefsDatabase.getBool(_kNativeChatNotePreviews, true);
+  }
+
+  Future setNativeChatNotePreviews(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatNotePreviews, value);
+  }
+
+  Future<bool> getNativeChatYoutubeInline() async {
+    return await PrefsDatabase.getBool(_kNativeChatYoutubeInline, true);
+  }
+
+  Future setNativeChatYoutubeInline(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeChatYoutubeInline, value);
+  }
+
+  Future<String> getNativeChatNoteSort() async {
+    return await PrefsDatabase.getString(_kNativeChatNoteSort, 'torn');
+  }
+
+  Future setNativeChatNoteSort(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatNoteSort, value);
+  }
+
+  Future<String> getNativeChatNotesCache() async {
+    return await PrefsDatabase.getString(_kNativeChatNotesCache, '');
+  }
+
+  Future setNativeChatNotesCache(String value) async {
+    return await PrefsDatabase.setString(_kNativeChatNotesCache, value);
+  }
+
+  Future<List<String>> getNativeChatFolderOrder() async {
+    return await PrefsDatabase.getStringList(_kNativeChatFolderOrder, <String>[]);
+  }
+
+  Future setNativeChatFolderOrder(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kNativeChatFolderOrder, value);
+  }
+
+  Future<List<String>> getNativeChatNoteOrder() async {
+    return await PrefsDatabase.getStringList(_kNativeChatNoteOrder, <String>[]);
+  }
+
+  Future setNativeChatNoteOrder(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kNativeChatNoteOrder, value);
   }
 
   Future<bool> getNativeChatLinkNewTab() async {

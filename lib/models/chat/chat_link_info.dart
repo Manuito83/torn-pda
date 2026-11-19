@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:html/parser.dart' as html;
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/chat/chat_bazaar.dart';
 import 'package:torn_pda/models/chat/chat_chain_report.dart';
 import 'package:torn_pda/models/chat/chat_faction_ops.dart';
+import 'package:torn_pda/models/chat/chat_forum.dart';
 import 'package:torn_pda/models/chat/chat_html_text.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
@@ -40,6 +43,8 @@ class ChatBounty {
     return 'Bounty ${ChatMoneyRef.format(total)}${count > 1 ? ' ($count listed)' : ''}${age == null ? '' : ' - $age'}';
   }
 }
+
+typedef ChatFactionFacts = ({int? id, String title, List<String> lines, int? leader, int? coLeader});
 
 class ChatLinkInfo {
   final String title;
@@ -153,6 +158,28 @@ class ChatLinkInfo {
     );
   }
 
+  static ChatFactionFacts? factionFacts(Map<String, dynamic> json, [DateTime? now]) {
+    final info = faction(json, now);
+    final basic = json['basic'];
+    if (info == null || basic is! Map) return null;
+    int? number(String key) => basic[key] is int && (basic[key] as int) > 0 ? basic[key] as int : null;
+    final days = number('days_old');
+    final best = number('best_chain');
+    return (
+      id: basic['id'] is int ? basic['id'] as int : null,
+      title: info.title,
+      lines: [
+        ?info.detail,
+        if (days != null) '${chatCount(days)} days old',
+        if (best != null) 'Best chain ${chatCount(best)}',
+        if (basic['is_enlisted'] == true) 'Enlisted for ranked wars',
+        ...info.extra,
+      ],
+      leader: number('leader_id'),
+      coLeader: number('co_leader_id'),
+    );
+  }
+
   static ChatLinkInfo? company(Map<String, dynamic> json) {
     final profile = json['profile'];
     if (profile is! Map) return null;
@@ -194,12 +221,20 @@ class ChatLinkInfo {
     );
   }
 
-  static ChatLinkInfo? forum(ForumThreadExtended thread, [String? section]) {
+  static ChatLinkInfo? forum(ForumThreadExtended thread, [String? section, int start = 0]) {
     final title = chatHtmlText(thread.title).trim();
     if (title.isEmpty) return null;
     final author = thread.author.username;
     final posts = thread.posts == 1 ? '1 post' : '${chatCount(thread.posts)} posts';
-    return ChatLinkInfo(title, detail: author.isEmpty ? posts : 'by $author - $posts', kicker: _forumKicker(section));
+    return ChatLinkInfo(
+      title,
+      detail: author.isEmpty ? posts : 'by $author - $posts',
+      kicker: _forumKicker(section),
+      extra: [
+        if (start > 0)
+          'Page ${math.min(ChatForum.pageOf(start), ChatForum.pages(thread.posts))} of ${ChatForum.pages(thread.posts)}',
+      ],
+    );
   }
 
   static ChatLinkInfo? forumSection(ForumCategoriesResponse$Categories$Item section) {

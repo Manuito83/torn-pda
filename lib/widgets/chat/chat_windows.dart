@@ -84,6 +84,9 @@ class ChatWindows {
 
   final ValueNotifier<ChatBigWindow?> bigWindow = ValueNotifier(null);
 
+  /// One video plays at a time
+  final ValueNotifier<Object?> playingVideo = ValueNotifier(null);
+
   /// Front one last
   final ValueNotifier<List<String>> quickWindows = ValueNotifier(const []);
 
@@ -198,12 +201,18 @@ class ChatWindows {
     );
   }
 
+  /// Shown with no quick window over it
+  bool get bigWindowOnTop {
+    final now = bigWindow.value;
+    return now != null && !now.minimized && quickWindows.value.every(now.below.contains);
+  }
+
   /// False when it closed
   bool toggleBigWindow({SplitSide? side}) {
     final now = bigWindow.value;
     final sameSide = now?.side == null || side == null || now?.side == side;
     if (now != null && !now.minimized && sameSide) {
-      if (quickWindows.value.every(now.below.contains)) {
+      if (bigWindowOnTop) {
         closeBigWindow();
         return false;
       }

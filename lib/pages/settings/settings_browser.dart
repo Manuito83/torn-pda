@@ -98,6 +98,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       _energyExpenditureWarning(),
       _travelExpenditureWarning(),
       _profile(),
+      _factions(),
       if (Platform.isIOS) _linkPreview(),
       _gestures(),
       _memory(),
@@ -3034,6 +3035,35 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     return buildSectionWithRows(title: 'PLAYER PROFILES', rows: rows, searchText: _searchText);
   }
 
+  Widget _factions() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Collapse faction descriptions",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Collapse faction descriptions")),
+                  _factionFoldDropdown(),
+                ],
+              ),
+              Text(
+                "Fold the description until its header is tapped: large or animated images only, always, or off",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+    return buildSectionWithRows(title: 'FACTIONS', rows: rows, searchText: _searchText);
+  }
+
   Widget _linkPreview() {
     List<SearchableRow> rows = [
       SearchableRow(
@@ -4566,6 +4596,41 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         setState(() {
           _settingsProvider.changeBrowserRefreshMethod = value;
           _webViewProvider.updatePullToRefresh(value);
+        });
+      },
+    );
+  }
+
+  Widget _factionFoldDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.factionDescriptionFold,
+      items: const [
+        DropdownMenuItem(
+          value: "off",
+          child: SizedBox(
+            width: 120,
+            child: Text("Off", textAlign: TextAlign.right, style: TextStyle(fontSize: 12)),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "auto",
+          child: SizedBox(
+            width: 120,
+            child: Text("Large or animated", textAlign: TextAlign.right, style: TextStyle(fontSize: 12)),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "always",
+          child: SizedBox(
+            width: 120,
+            child: Text("Always", textAlign: TextAlign.right, style: TextStyle(fontSize: 12)),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _settingsProvider.factionDescriptionFold = value;
         });
       },
     );

@@ -14,6 +14,7 @@ import 'package:torn_pda/models/chat/chat_rooms.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/chat/chat_image_store.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
@@ -135,6 +136,9 @@ void main() {
       expect(info.detail, allOf(contains('Bravo'), contains('12 posts')));
       expect(ChatLinkInfo.forum(thread(posts: 1, author: ''))!.detail, '1 post');
       expect(ChatLinkInfo.forum(thread(title: ' ')), isNull);
+      expect(ChatLinkInfo.forum(thread(posts: 3548), null, 3520)!.extra, ['Page 177 of 178']);
+      expect(ChatLinkInfo.forum(thread(posts: 3548))!.extra, isEmpty);
+      expect(ChatLinkInfo.forum(thread(posts: 100), null, 3520)!.extra, ['Page 5 of 5']);
       expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php')), isNull);
       final asked = <int>[];
       ChatLinkPreviews.fetchThread = (id) async {
@@ -160,6 +164,7 @@ void main() {
       expect(section('https://www.torn.com/gym.php?f=4'), isNull);
       expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php#/p=forums&f=4')), 'forumSection:4');
       expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php#/p=threads&f=4&t=9')), 'forum:9');
+      expect(ChatLinkPreviews.keyOf(link('https://www.torn.com/forums.php#/p=threads&f=4&t=9&start=3520')), 'forum:9@3520');
     });
 
     group('forum names', () {
@@ -304,7 +309,7 @@ void main() {
       expect(asked, 1);
     });
 
-    test('profile, bazaar and bounties in one call', () async {
+    test('profile and bounties in one call', () async {
       final api = FakeApiCaller(
         (url) => {
           ...player(),
@@ -318,25 +323,23 @@ void main() {
       expect(card!.extra, [r'Bounty $4,000,000']);
       expect((await ChatLinkPreviews.bountyOf(42))!.total, 4000000);
       expect((await ChatPlayerCards.load(42))!.levelText, 'Lvl 15');
-      expect(api.urls.map((u) => u.queryParameters['selections']), ['profile,bazaar,bounties,discord']);
+      expect(api.urls.map((u) => u.queryParameters['selections']), ['profile,bounties,discord']);
     });
   });
 
   group('bazaar of other players', () {
-    test('the list is dropped and open or closed is kept', () async {
-      final api = FakeApiCaller(
-        (url) => {
-          ...player(bazaar: [{}, {}]),
-          'bazaar_is_open': true,
-        },
-      );
+    test('only the own card asks for the bazaar', () async {
+      final api = FakeApiCaller((url) => player());
       Get.put<ApiCallerController>(api);
       addTearDown(Get.reset);
       ChatPlayerCards.resetForTests();
-      final json = (await ChatPlayerCards.json(42))!;
-      expect(json.containsKey('bazaar'), isFalse);
-      expect(json['bazaar_is_open'], isTrue);
-      expect(ChatLinkInfo.player(ChatLinkKind.bazaar, json)!.detail, 'Open');
+      await ChatPlayerCards.json(42);
+      Get.put<UserController>(UserController()..playerId = 43);
+      await ChatPlayerCards.json(43);
+      expect(api.urls.map((u) => u.queryParameters['selections']), [
+        'profile,bounties,discord',
+        'profile,bounties,bazaar,discord',
+      ]);
     });
 
     test('the own list is kept', () async {
@@ -360,7 +363,7 @@ void main() {
       expect(first!.levelText, 'Lvl 15');
       expect(first.discordId, isNull);
       expect(second!.levelText, 'Lvl 15');
-      expect(api.asked, ['profile,bazaar,bounties,discord', 'profile,bazaar,bounties', 'profile,bazaar,bounties']);
+      expect(api.asked, ['profile,bounties,discord', 'profile,bounties', 'profile,bounties']);
     });
   });
 
@@ -415,6 +418,27 @@ void main() {
       expect(info.title, 'Natural Selection [NS]');
       expect(info.detail, '98/100 members - Respect 2.1m - Platinum');
       expect(info.extra, isEmpty);
+    });
+
+    test('faction facts', () {
+      final json = faction(chain: 40)
+        ..['basic'] = {
+          ...(faction()['basic'] as Map),
+          'leader_id': 4,
+          'co_leader_id': 0,
+          'days_old': 2400,
+          'best_chain': 10000,
+          'is_enlisted': true,
+        };
+      final facts = ChatLinkInfo.factionFacts(json, at)!;
+      expect(facts.lines, [
+        '98/100 members - Respect 2.1m - Platinum',
+        '2,400 days old',
+        'Best chain 10,000',
+        'Enlisted for ranked wars',
+        'Chain 40',
+      ]);
+      expect((facts.id, facts.leader, facts.coLeader), (11, 4, null));
     });
 
     test('faction in a live war puts its own score first', () {
@@ -535,6 +559,21 @@ void main() {
       expect(await ChatLinkPreviews.catalogItems(), isNull);
       expect(await ChatLinkPreviews.catalogItems(), isNull);
       expect(catalogs, 1);
+    });
+
+    test('Tenor and Giphy media', () async {
+      final asked = <Uri>[];
+      ChatLinkPreviews.fetchPage = (uri) async {
+        asked.add(uri);
+        return '<meta property="og:title" content="Hey Cat GIF">'
+            '<meta property="og:image" content="https://media1.tenor.com/m/nB37dEyQ_H4AAAAC/hey-cat.gif">';
+      };
+      final tenor = Uri.parse('https://tenor.com/view/hey-cat-waving-wave-paw-gif-11249423921160715390');
+      expect('${await chatGifMedia(tenor)}', 'https://media1.tenor.com/m/nB37dEyQ_H4AAAAC/hey-cat.gif');
+
+      final giphy = Uri.parse('https://giphy.com/gifs/hello-hi-wave-xT9IgG50Fb7Mi0prBC');
+      expect('${await chatGifMedia(giphy)}', 'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif');
+      expect(asked, [tenor]);
     });
 
     test('cards that went away are not fetched', () async {

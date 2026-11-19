@@ -687,6 +687,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // off, auto or always
+  String _factionDescriptionFold = "off";
+  String get factionDescriptionFold => _factionDescriptionFold;
+  set factionDescriptionFold(String value) {
+    _factionDescriptionFold = value;
+    Prefs().setFactionDescriptionFold(value);
+    notifyListeners();
+  }
+
   var _highlightColor = 0xFF009628;
   int get highlightColor => _highlightColor;
   set changeHighlightColor(int value) {
@@ -1898,6 +1907,7 @@ class SettingsProvider extends ChangeNotifier {
     _chatRemoveEnabled = await Prefs().getChatRemovalEnabled();
 
     _highlightChat = await Prefs().getHighlightChat();
+    _factionDescriptionFold = await Prefs().getFactionDescriptionFold();
     _highlightColor = await Prefs().getHighlightColor();
     _highlightWordList = await Prefs().getHighlightWordList();
 

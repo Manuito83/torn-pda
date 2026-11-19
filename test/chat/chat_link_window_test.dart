@@ -13,6 +13,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_window.dart';
 import 'package:torn_pda/widgets/chat/chat_overlay.dart';
+import 'package:torn_pda/widgets/chat/chat_youtube_player.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 import 'chat_fakes.dart';
@@ -215,6 +216,67 @@ void main() {
       navigatorObservers: [BotToastNavigatorObserver()],
       home: Scaffold(body: child),
     );
+
+    testWidgets('one YouTube video plays at a time', (tester) async {
+      NativeChat.playingVideo.value = null;
+      final first = ChatLink.parse('https://www.youtube.com/watch?v=dQw4w9WgXcQ')!;
+      final second = ChatLink.parse('https://youtu.be/9bZkp7q19f0')!;
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => SettingsProvider()),
+            ChangeNotifierProvider(create: (_) => WebViewProvider()),
+          ],
+          child: host(
+            Column(
+              children: [
+                ChatLinkCard(link: first, color: Colors.black),
+                ChatLinkCard(link: second, color: Colors.black),
+              ],
+            ),
+          ),
+        ),
+      );
+      Finder card(ChatLink link) => find.byWidgetPredicate((w) => w is ChatLinkCard && w.link == link);
+      Finder player(ChatLink link) => find.descendant(of: card(link), matching: find.byType(ChatYoutubePlayer));
+
+      await tester.tap(card(first));
+      await tester.pump();
+      expect(player(first), findsOneWidget);
+      expect(NativeChat.linkWindow.value, isNull);
+
+      await tester.tap(card(second));
+      await tester.pump();
+      expect(player(first), findsNothing);
+      expect(player(second), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Stop the video'));
+      await tester.pump();
+      expect(find.byType(ChatYoutubePlayer), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a playing video can scroll away', (tester) async {
+      NativeChat.playingVideo.value = null;
+      final video = ChatLink.parse('https://www.youtube.com/watch?v=dQw4w9WgXcQ')!;
+      final other = ChatLink.parse('https://youtu.be/9bZkp7q19f0')!;
+      Widget page(List<ChatLink> links) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => SettingsProvider()),
+          ChangeNotifierProvider(create: (_) => WebViewProvider()),
+        ],
+        child: host(Column(children: [for (final l in links) ChatLinkCard(link: l, color: Colors.black)])),
+      );
+      await tester.pumpWidget(page([video, other]));
+      await tester.tap(find.byType(ChatLinkCard).first);
+      await tester.pump();
+      expect(find.byType(ChatYoutubePlayer), findsOneWidget);
+
+      await tester.pumpWidget(page([other]));
+      expect(tester.takeException(), isNull);
+      expect(NativeChat.playingVideo.value, isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
 
     testWidgets('a profile link opens the player sheet', (tester) async {
       for (final url in ['https://www.torn.com/profiles.php?XID=42', 'https://torn.com/profiles.php?XID=42']) {

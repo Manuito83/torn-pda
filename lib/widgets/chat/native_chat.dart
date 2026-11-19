@@ -9,6 +9,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_share.dart';
 import 'package:torn_pda/providers/chat/chat_api.dart';
 import 'package:torn_pda/providers/chat/chat_controller.dart';
+import 'package:torn_pda/providers/chat/chat_notepad.dart';
 import 'package:torn_pda/providers/chat/chat_faction_events.dart';
 import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/providers/chat/chat_faction_ops.dart';
@@ -130,6 +131,11 @@ class NativeChat {
   static final TornChatSource _source = TornChatSource(ChatEngine.instance);
   static final ChatController controller = ChatController(_source, prefs, TornChatApi(prefs));
   static final ChatTranslator translator = ChatTranslator();
+  static final ChatNotepad notepad = ChatNotepad(
+    _source,
+    readCache: Prefs().getNativeChatNotesCache,
+    writeCache: Prefs().setNativeChatNotesCache,
+  );
   static final ChatFactionOps factionOps = ChatFactionOps(
     controller,
     prefs,
@@ -172,6 +178,7 @@ class NativeChat {
   static ValueNotifier<int> get composerFocus => windows.composerFocus;
   static bool takeComposerFocus(String roomId) => windows.takeComposerFocus(roomId);
   static ValueNotifier<ChatBigWindow?> get bigWindow => windows.bigWindow;
+  static ValueNotifier<Object?> get playingVideo => windows.playingVideo;
   static ValueNotifier<List<String>> get quickWindows => windows.quickWindows;
   static ValueNotifier<List<ChatMinimized>> get minimized => windows.minimized;
   static List<ChatMinimized Function()> get shownPages => windows.shownPages;

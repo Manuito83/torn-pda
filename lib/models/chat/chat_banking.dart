@@ -52,8 +52,10 @@ final String _unit = _units.keys.join('|');
 const String _digits = r'(?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)';
 final String _number = '(?:[\$£€]\\s*)?$_digits(?:\\s*(?:$_unit))?';
 
+const String _fullWords = 'all|max(?:imum)?|full|balance';
+
 final RegExp _figure = RegExp(
-  '\\b(?:(?<all>all|max(?:imum)?|full|balance)'
+  '\\b(?:(?<all>$_fullWords)'
   '|(?:between\\s+)?$_number\\s*(?:-|to|\u2013|\u2014|and)\\s*$_number'
   '|(?:[\$£€]\\s*)?(?<value>$_digits)(?:\\s*(?<unit>$_unit))?)\\b',
 );
@@ -62,6 +64,8 @@ final RegExp _typed = RegExp(
   '^\\s*(?:[\$£€]\\s*)?(?<value>$_digits)\\s*(?<unit>$_unit)?\\s*\$',
   caseSensitive: false,
 );
+
+final RegExp _fullTyped = RegExp('^\\s*(?:$_fullWords|full\\s+balance)\\s*\$', caseSensitive: false);
 
 final RegExp _safe = RegExp(r'^Bank request: (?:full balance|\$\d[\d,.]*[kmb]?)$');
 final RegExp _paid = RegExp(r'^Paid (?:\$[\d,]+ to )?(?:.+ )?\[(\d+)\]$');
@@ -90,6 +94,9 @@ int? chatBankParseTyped(String input) {
   if (total < 1 || total > 1e15) return null;
   return total.round();
 }
+
+/// Full balance word typed in the box
+bool chatBankTypedIsFull(String input) => _fullTyped.hasMatch(input);
 
 String chatBankLink(int senderId, ChatBankRequest request) {
   final money = request.full ? 'SEND_FULL' : request.amount?.toString();

@@ -26,6 +26,7 @@ class Prefs with ChatPrefsStorage {
   final String _kAppVersion = "pda_appVersion";
   final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
   final String _kBugsAnnouncementDialogVersion = "pda_bugsAnnouncementDialogVersion";
+  final String _kRemoteAnnouncementSeen = "pda_remoteAnnouncementSeen";
   final String _kPdaUpdateDialogVersion = "pda_updateDialogVersion";
   final String _kPdaUpdateDialogDisabled = "pda_updateDialogDisabled";
   final String _kOwnDetails = "pda_ownDetails";
@@ -370,6 +371,7 @@ class Prefs with ChatPrefsStorage {
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
   final String _kHighlightChat = "pda_highlightChat";
+  final String _kFactionDescriptionFold = "pda_factionDescriptionFold";
   final String _kHighlightChatWordsList = "pda_highlightChatWordsList";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
@@ -680,6 +682,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setBugsAnnouncementDialogVersion(int value) async {
     await PrefsDatabase.setInt(_kBugsAnnouncementDialogVersion, value);
+  }
+
+  Future<String> getRemoteAnnouncementSeen() async {
+    return await PrefsDatabase.getString(_kRemoteAnnouncementSeen, "");
+  }
+
+  Future setRemoteAnnouncementSeen(String value) async {
+    await PrefsDatabase.setString(_kRemoteAnnouncementSeen, value);
   }
 
   Future<int> getPdaUpdateDialogVersion() async {
@@ -3478,6 +3488,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setChatRemovalMigrated(bool value) async {
     return await PrefsDatabase.setBool(_kChatRemovalMigrated, value);
+  }
+
+  Future<String> getFactionDescriptionFold() async {
+    return await PrefsDatabase.getString(_kFactionDescriptionFold, "off");
+  }
+
+  Future setFactionDescriptionFold(String value) async {
+    return await PrefsDatabase.setString(_kFactionDescriptionFold, value);
   }
 
   /// ----------------------------

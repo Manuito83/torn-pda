@@ -3,7 +3,7 @@ import 'dart:convert';
 // Project imports:
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 
-String _snippetWithArgs(String id, String argsVar, Map<String, dynamic> args) {
+String snippetWithArgs(String id, String argsVar, Map<String, dynamic> args) {
   return 'window.$argsVar = ${jsonEncode(args)};\n${RemoteSnippets.resolve(id)}';
 }
 
@@ -20,7 +20,7 @@ String runQuickItemJS({
   bool loaned = false,
   bool kDebugMode = false,
 }) {
-  return _snippetWithArgs(RemoteSnippets.quickItemsRun, '__pdaQuickItemsRunArgs', {
+  return snippetWithArgs(RemoteSnippets.quickItemsRun,'__pdaQuickItemsRunArgs', {
     'item': item,
     'itemName': itemName,
     'faction': faction,
@@ -36,17 +36,17 @@ String runQuickItemJS({
 
 // Item picker buttons in item.php (RC-overridable)
 String quickItemPickerJS({required bool enable}) {
-  return _snippetWithArgs(RemoteSnippets.quickItemsPicker, '__pdaQuickItemsPickerArgs', {'enable': enable});
+  return snippetWithArgs(RemoteSnippets.quickItemsPicker,'__pdaQuickItemsPickerArgs', {'enable': enable});
 }
 
 // Mass item check (RC-overridable)
 String quickItemsMassCheckJS(List<String> itemNames) {
-  return _snippetWithArgs(RemoteSnippets.quickItemsMassCheck, '__pdaQuickItemsMassCheckArgs', {'names': itemNames});
+  return snippetWithArgs(RemoteSnippets.quickItemsMassCheck,'__pdaQuickItemsMassCheckArgs', {'names': itemNames});
 }
 
 // Change loadout (RC-overridable)
 String changeLoadOutJS({required String item, required bool attackWebview}) {
-  return _snippetWithArgs(RemoteSnippets.quickItemsLoadout, '__pdaQuickItemsLoadoutArgs', {
+  return snippetWithArgs(RemoteSnippets.quickItemsLoadout,'__pdaQuickItemsLoadoutArgs', {
     'item': item,
     'attackWebview': attackWebview,
   });

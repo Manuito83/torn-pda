@@ -21,6 +21,15 @@ int? _asInt(dynamic value) {
   return num.tryParse(value.toString())?.round();
 }
 
+int? bazaarUidsAverage(dynamic uids) {
+  final prices = [
+    if (uids is List)
+      for (final u in uids)
+        if (u is Map) ?_asInt(u["price"]),
+  ];
+  return prices.isEmpty ? null : prices.reduce((a, b) => a + b) ~/ prices.length;
+}
+
 class OwnProfileMisc {
   // V2 API selections transitioned
   final EducationV2 education;
@@ -93,7 +102,11 @@ class OwnProfileMisc {
       defenseInfo: json["defense_info"] == null ? [] : List<String>.from(json["defense_info"]),
       speedInfo: json["speed_info"] == null ? [] : List<String>.from(json["speed_info"]),
       dexterityInfo: json["dexterity_info"] == null ? [] : List<String>.from(json["dexterity_info"]),
-      bazaar: json["bazaar"] == null ? [] : List<Bazaar>.from(json["bazaar"].map((x) => Bazaar.fromJson(x))),
+      bazaar: json["bazaar"] == null
+          ? []
+          : List<Bazaar>.from(
+              (json["bazaar"] is Map ? json["bazaar"]["items"] ?? [] : json["bazaar"]).map((x) => Bazaar.fromJson(x)),
+            ),
       itemmarket: json["itemmarket"] == null
           ? []
           : List<Itemmarket>.from(json["itemmarket"].map((x) => Itemmarket.fromJson(x))),
@@ -135,11 +148,11 @@ class Bazaar {
   factory Bazaar.fromJson(Map<String, dynamic> json) {
     try {
       return Bazaar(
-        id: _asInt(json["ID"]),
+        id: _asInt(json["id"] ?? json["ID"]),
         name: json["name"],
         type: json["type"],
         quantity: _asInt(json["quantity"]),
-        price: _asInt(json["price"]),
+        price: _asInt(json["price"]) ?? bazaarUidsAverage(json["uids"]),
         marketPrice: _asInt(json["market_price"]),
         uid: _asInt(json["UID"]),
       );

@@ -29,6 +29,9 @@ import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
+import 'package:torn_pda/widgets/chat/chat_faction_sheet.dart';
+import 'package:torn_pda/widgets/chat/chat_forum_reader.dart';
+import 'package:torn_pda/widgets/chat/chat_youtube_player.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
@@ -106,10 +109,16 @@ class ChatMessageText extends StatefulWidget {
     this.slang = false,
     this.roomId,
     this.lead,
+    this.maxCards = 3,
+    this.trusted = false,
   });
 
   final String content;
   final Color color;
+  final int maxCards;
+
+  /// Images load as in private chats
+  final bool trusted;
 
   final String? highlight;
 
@@ -237,7 +246,7 @@ class _ChatMessageTextState extends State<ChatMessageText> {
     final links = <String, ChatLink>{
       for (final (part, _) in _parts)
         if (part is ChatLink) part.url: part,
-    }.values.take(3).toList();
+    }.values.take(widget.maxCards).toList();
     final refs = _parts.any(
       (p) =>
           p.$1 is ChatPlayerRef ||
@@ -368,7 +377,7 @@ class _ChatMessageTextState extends State<ChatMessageText> {
               container: true,
               link: !link.isImage || link.warning != null,
               child: link.isImage && link.warning == null
-                  ? ChatImageCard(link: link, color: widget.color, roomId: widget.roomId)
+                  ? ChatImageCard(link: link, color: widget.color, roomId: widget.roomId, trusted: widget.trusted)
                   : ChatScriptLink.of(link) != null
                   ? ChatScriptCard(link: link, color: widget.color)
                   : ChatLinkCard(
@@ -417,6 +426,9 @@ Future<void> openChatLink(BuildContext context, ChatLink link) async {
   }
   if (link.kind == ChatLinkKind.player && link.id != null && context.mounted) {
     return showChatPlayerActions(context, ChatUser(id: link.id!, name: 'Player'));
+  }
+  if (link.kind == ChatLinkKind.faction && link.id != null && context.mounted) {
+    return showChatFactionSheet(context, link);
   }
   await NativeChat.openLink(link.url);
 }
@@ -549,19 +561,37 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
   bool _tried = false;
   bool _held = false;
   Timer? _timer;
+  final Object _player = Object();
+  bool _shownPlaying = false;
 
   String? get _key => ChatLinkPreviews.keyOf(widget.link);
+
+  bool get _playing => identical(NativeChat.playingVideo.value, _player);
 
   @override
   void initState() {
     super.initState();
+    NativeChat.playingVideo.addListener(_onPlaying);
     _prepare();
+  }
+
+  void _onPlaying() {
+    if (mounted && _playing != _shownPlaying) setState(() => _shownPlaying = _playing);
+  }
+
+  void _tap() {
+    if (widget.link.videoId != null && NativeChat.prefs.youtubeInline) {
+      NativeChat.playingVideo.value = _player;
+    } else {
+      openChatLink(context, widget.link);
+    }
   }
 
   @override
   void didUpdateWidget(ChatLinkCard old) {
     super.didUpdateWidget(old);
     if (old.link.url == widget.link.url) return;
+    if (_playing) NativeChat.playingVideo.value = null;
     _timer?.cancel();
     _info = null;
     _ff = null;
@@ -574,6 +604,8 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
   @override
   void dispose() {
     _timer?.cancel();
+    NativeChat.playingVideo.removeListener(_onPlaying);
+    if (_playing) NativeChat.playingVideo.value = null;
     super.dispose();
   }
 
@@ -639,7 +671,7 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
     return ChatInsertFrame(
       color: color,
       child: InkWell(
-        onTap: () => openChatLink(context, widget.link),
+        onTap: _tap,
         onLongPress: () => showChatLinkMenu(context, widget.link),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 240),
@@ -722,12 +754,15 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
     final image = info?.imageUrl;
     final bazaar = widget.named == null || link.id == null ? null : info?.bazaar;
     final canAsk = _key != null && !_tried && !_loading && (_held || _timer?.isActive != true);
+    if (link.videoId case final id? when _playing) {
+      return ChatYoutubeInline(videoId: id, url: link.url, title: info?.title ?? 'YouTube', color: color);
+    }
     if (video && info != null && image != null) return _video(theme, info, image);
     return ChatInsertFrame(
       color: warning != null ? danger : color,
       alert: warning != null,
       child: InkWell(
-        onTap: () => openChatLink(context, link),
+        onTap: _tap,
         onLongPress: () => showChatLinkMenu(context, link),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(8, 6, 4, 6),
@@ -819,6 +854,13 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
                   iconSize: 18,
                   onPressed: _load,
                   icon: Icon(Icons.travel_explore_rounded, color: color.withValues(alpha: 0.7)),
+                ),
+              if (link.kind == ChatLinkKind.forum && link.id != null)
+                IconButton(
+                  tooltip: 'Read here',
+                  iconSize: 18,
+                  onPressed: () => showChatForumReader(context, link),
+                  icon: Icon(Icons.visibility_outlined, color: color.withValues(alpha: 0.7)),
                 ),
               if (link.kind == ChatLinkKind.player && link.id != null)
                 IconButton(
@@ -927,6 +969,7 @@ String? chatPlayerUrl(String action, int id) => switch (action) {
   'trade' => 'https://www.torn.com/trade.php#step=start&userID=$id',
   'bazaar' => 'https://www.torn.com/bazaar.php?userId=$id',
   'mail' => 'https://www.torn.com/messages.php#/p=compose&XID=$id',
+  'bounty' => 'https://www.torn.com/bounties.php?p=add&XID=$id',
   'report' => 'https://www.torn.com/playerreport.php?step=add&area=chat&userID=$id',
   _ => null,
 };
@@ -1084,6 +1127,14 @@ Future<void> showChatPlayerActions(BuildContext context, ChatUser user, {String?
                   title: const Text('Targets and stakeouts'),
                   subtitle: const Text('Add to your lists or copy ID and link'),
                   onTap: () => Navigator.of(context).pop(('lists', false)),
+                ),
+              if (!me)
+                ListTile(
+                  leading: const Icon(Icons.monetization_on_outlined),
+                  title: const Text('Place bounty'),
+                  subtitle: const Text("Opens Torn's bounty form for them"),
+                  onTap: () => Navigator.of(context).pop(('bounty', false)),
+                  onLongPress: () => Navigator.of(context).pop(('bounty', true)),
                 ),
               ListTile(
                 leading: const Icon(Icons.palette_outlined),

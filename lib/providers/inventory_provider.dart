@@ -136,7 +136,7 @@ class InventoryProvider extends ChangeNotifier {
     await Future.wait(waiting);
   }
 
-  /// The display case comes whole with any category, so one call per batch is enough
+  /// Display case has its own call
   bool _displayIsDue() {
     if (_displayRequested) return false;
     final DateTime? loadedAt = _displayLoadedAt;

@@ -58,6 +58,28 @@ class ChatWritingSettingsPage extends StatelessWidget {
               builder: (_) => const [ChatQuickActionsEditor()],
             ),
           ),
+          ListTile(
+            title: const Text('Open quick actions with'),
+            subtitle: prefs.quickFrom == ChatQuickFrom.button
+                ? null
+                : const Text('Typing / at the start of a message lists them'),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<ChatQuickFrom>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: ChatQuickFrom.both, label: Text('Both')),
+                  ButtonSegment(value: ChatQuickFrom.button, label: Text('Button')),
+                  ButtonSegment(value: ChatQuickFrom.commands, label: Text('/ commands')),
+                ],
+                selected: {prefs.quickFrom},
+                onSelectionChanged: (v) => prefs.setQuickFrom(v.first),
+              ),
+            ),
+          ),
           ChatSettingsLink(
             leading: const Icon(Icons.chat_bubble_outline_rounded),
             title: 'Quick replies',

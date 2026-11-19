@@ -11,6 +11,7 @@ import 'package:torn_pda/models/chat/chat_emoji.dart';
 import 'package:torn_pda/models/chat/chat_filter.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_notepad.dart';
 import 'package:torn_pda/models/chat/chat_person.dart';
 import 'package:torn_pda/models/chat/chat_profile_icon.dart';
 import 'package:torn_pda/models/chat/chat_quick_rows.dart';
@@ -50,6 +51,8 @@ enum ChatImageAutoLoad { never, torn, always }
 enum ChatLauncher { bubble, browser, menuHeader, menuBar }
 
 enum ChatLauncherTap { full, window }
+
+enum ChatQuickFrom { both, button, commands }
 
 enum ChatTimes { app, tct, local }
 
@@ -165,6 +168,7 @@ class ChatPrefs extends ChangeNotifier {
   bool ticker = true;
   ChatLauncher launcher = ChatLauncher.bubble;
   ChatLauncherTap launcherTap = ChatLauncherTap.full;
+  ChatQuickFrom quickFrom = ChatQuickFrom.both;
   bool miniBubbles = true;
   bool reopenChats = false;
   ChatTimes chatTimes = ChatTimes.app;
@@ -205,6 +209,12 @@ class ChatPrefs extends ChangeNotifier {
   /// Groups where web previews wait
   Set<String> linkPreviewsOff = {...globalRooms};
   bool linkWindow = true;
+  bool notepad = true;
+  bool notePreviews = true;
+  bool youtubeInline = true;
+  ChatNoteSort noteSort = ChatNoteSort.torn;
+  List<String> noteOrder = [];
+  List<String> folderOrder = [];
   bool linkNewTab = false;
   ChatImageHost imageHost = ChatImageHost.imgbb;
   String imgurClientId = '';
@@ -252,6 +262,7 @@ class ChatPrefs extends ChangeNotifier {
     'smiley',
     'pin',
     'save',
+    'note',
     'translate',
     'share',
     'remind',
@@ -394,6 +405,8 @@ class ChatPrefs extends ChangeNotifier {
     launcher = ChatLauncher.values.where((l) => l.name == launcherName).firstOrNull ?? ChatLauncher.bubble;
     final tapName = await Prefs().getNativeChatLauncherTap();
     launcherTap = ChatLauncherTap.values.where((t) => t.name == tapName).firstOrNull ?? ChatLauncherTap.full;
+    final quickName = await Prefs().getNativeChatQuickFrom();
+    quickFrom = ChatQuickFrom.values.where((q) => q.name == quickName).firstOrNull ?? ChatQuickFrom.both;
     miniBubbles = await Prefs().getNativeChatMiniBubbles();
     reopenChats = await Prefs().getNativeChatReopen();
     final timesName = await Prefs().getNativeChatTimes();
@@ -437,6 +450,13 @@ class ChatPrefs extends ChangeNotifier {
     linkPreviews = ChatImageAutoLoad.values.firstWhere((v) => v.name == previews, orElse: () => ChatImageAutoLoad.always);
     linkPreviewsOff = (await Prefs().getNativeChatLinkPreviewsOff([...globalRooms])).toSet();
     linkWindow = await Prefs().getNativeChatLinkWindow();
+    notepad = await Prefs().getNativeChatNotepad();
+    notePreviews = await Prefs().getNativeChatNotePreviews();
+    youtubeInline = await Prefs().getNativeChatYoutubeInline();
+    final sortName = await Prefs().getNativeChatNoteSort();
+    noteSort = ChatNoteSort.values.where((s) => s.name == sortName).firstOrNull ?? ChatNoteSort.torn;
+    noteOrder = await Prefs().getNativeChatNoteOrder();
+    folderOrder = await Prefs().getNativeChatFolderOrder();
     linkNewTab = await Prefs().getNativeChatLinkNewTab();
     imgurClientId = await Prefs().getChatImgurClientId();
     final host = await Prefs().getChatImageHost();
@@ -1295,6 +1315,12 @@ class ChatPrefs extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setQuickFrom(ChatQuickFrom value) {
+    quickFrom = value;
+    Prefs().setNativeChatQuickFrom(value.name);
+    notifyListeners();
+  }
+
   void setMiniBubbles(bool value) {
     miniBubbles = value;
     Prefs().setNativeChatMiniBubbles(value);
@@ -1411,6 +1437,53 @@ class ChatPrefs extends ChangeNotifier {
   void setLinkWindow(bool value) {
     linkWindow = value;
     Prefs().setNativeChatLinkWindow(value);
+    notifyListeners();
+  }
+
+  void setNotepad(bool value) {
+    notepad = value;
+    Prefs().setNativeChatNotepad(value);
+    notifyListeners();
+  }
+
+  void setNotePreviews(bool value) {
+    notePreviews = value;
+    Prefs().setNativeChatNotePreviews(value);
+    notifyListeners();
+  }
+
+  void setYoutubeInline(bool value) {
+    youtubeInline = value;
+    Prefs().setNativeChatYoutubeInline(value);
+    notifyListeners();
+  }
+
+  void setNoteSort(ChatNoteSort value) {
+    noteSort = value;
+    Prefs().setNativeChatNoteSort(value.name);
+    notifyListeners();
+  }
+
+  /// Place of a deleted note, to restore it
+  int dropNote(String id) {
+    final at = noteOrder.indexOf(id);
+    if (at >= 0) setNoteOrder([...noteOrder]..removeAt(at));
+    return at;
+  }
+
+  void placeNote(String id, int at) {
+    if (at >= 0) setNoteOrder([...noteOrder]..insert(at.clamp(0, noteOrder.length), id));
+  }
+
+  void setFolderOrder(List<String> order) {
+    folderOrder = order;
+    Prefs().setNativeChatFolderOrder(order);
+    notifyListeners();
+  }
+
+  void setNoteOrder(List<String> order) {
+    noteOrder = order;
+    Prefs().setNativeChatNoteOrder(order);
     notifyListeners();
   }
 
@@ -1698,6 +1771,9 @@ class ChatPrefs extends ChangeNotifier {
     'imagesPrivate': (imagesPrivate, setImagesPrivate),
     'imagesPublic': (imagesPublic, setImagesPublic),
     'linkWindow': (linkWindow, setLinkWindow),
+    'notepad': (notepad, setNotepad),
+    'notePreviews': (notePreviews, setNotePreviews),
+    'youtubeInline': (youtubeInline, setYoutubeInline),
     'linkNewTab': (linkNewTab, setLinkNewTab),
     'warnApiKey': (warnApiKey, setWarnApiKey),
     'confirmPublic': (confirmPublic, setConfirmPublic),
@@ -1860,6 +1936,10 @@ class ChatPrefs extends ChangeNotifier {
       if (backup.glowMode case final v?) setGlowMode(v);
       if (backup.launcher case final v?) setLauncher(v);
       if (backup.launcherTap case final v?) setLauncherTap(v);
+      if (backup.quickFrom case final v?) setQuickFrom(v);
+      if (backup.noteSort case final v?) setNoteSort(v);
+      if (backup.noteOrder case final v?) setNoteOrder(v);
+      if (backup.folderOrder case final v?) setFolderOrder(v);
       if (backup.chatTimes case final v?) setChatTimes(v);
       if (backup.animations case final v?) setAnimations(v);
       if (backup.profileIcon case final v?) setProfileIcon(v);
@@ -1916,6 +1996,10 @@ class ChatPrefs extends ChangeNotifier {
     playerNotes = {};
     chatFriends = {};
     pinnedMessages = {};
+    noteOrder = [];
+    folderOrder = [];
+    Prefs().setNativeChatNoteOrder([]);
+    Prefs().setNativeChatFolderOrder([]);
     pinned = [
       for (final id in pinned)
         if (!id.startsWith('dm:')) id,

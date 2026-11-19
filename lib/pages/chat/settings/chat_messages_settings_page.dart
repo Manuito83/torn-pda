@@ -87,6 +87,12 @@ class ChatMessagesSettingsPage extends StatelessWidget {
               ),
           ],
           SwitchListTile(
+            title: const Text('Play YouTube videos in chat'),
+            subtitle: const Text('Off opens them like any other link'),
+            value: prefs.youtubeInline,
+            onChanged: prefs.setYoutubeInline,
+          ),
+          SwitchListTile(
             title: const Text('Preview links in a window'),
             subtitle: const Text('A small browser over the app, without scripts'),
             value: prefs.linkWindow,
@@ -114,6 +120,20 @@ class ChatMessagesSettingsPage extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          const ChatSettingsHeading('Notepad'),
+          SwitchListTile(
+            title: const Text('Show notepad'),
+            subtitle: const Text("Torn's notepad, from the chat list"),
+            value: prefs.notepad,
+            onChanged: prefs.setNotepad,
+          ),
+          if (prefs.notepad)
+            SwitchListTile(
+              title: const Text('Link previews in notes'),
+              subtitle: const Text('Off keeps links as plain text, ready to copy'),
+              value: prefs.notePreviews,
+              onChanged: prefs.setNotePreviews,
             ),
           const ChatSettingsHeading('Trade'),
           SwitchListTile(

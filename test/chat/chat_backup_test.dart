@@ -159,7 +159,7 @@ void main() {
 
   test('message actions keep their order and a new one lands last', () async {
     final prefs = ChatPrefs()
-      ..moveMessageAction(0, 8)
+      ..moveMessageAction(0, ChatPrefs.messageActionIds.length - 1)
       ..setMessageActionShown('pin', false);
     addTearDown(prefs.dispose);
     await Future<void>.delayed(Duration.zero);

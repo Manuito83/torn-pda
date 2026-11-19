@@ -138,7 +138,7 @@ class ApiCallsV2 {
   }
 
   /// Get the user's inventory for a single category (see InventoryProvider.apiCategories)
-  /// [withDisplay] reads the whole display case in the same call, whatever the category
+  /// [withDisplay] adds one display call
   /// Returns [InventoryV2Category], [ApiError] or null
   static Future<dynamic> getUserInventory_v2({required String cat, bool withDisplay = false}) async {
     final apiCaller = Get.find<ApiCallerController>();
@@ -150,12 +150,11 @@ class ApiCallsV2 {
     // Torn pages at 250
     while (true) {
       final int currentOffset = offset;
-      final bool askDisplay = withDisplay && currentOffset == 0;
       final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
         apiSelection_v2: ApiSelection_v2.userInventory,
         apiCall: (client, apiKey) {
           return client.userGet(
-            selections: askDisplay ? "inventory,display" : "inventory",
+            selections: "inventory",
             cat: cat,
             limit: 250,
             offset: currentOffset,
@@ -174,15 +173,6 @@ class ApiCallsV2 {
         items.addAll(page.items);
         if (page.timestamp > 0) timestamp = page.timestamp;
 
-        final displayNode = body["display"];
-        if (askDisplay && displayNode is List) {
-          try {
-            display = displayNode.whereType<Map<String, dynamic>>().map(InventoryV2DisplayItem.fromJson).toList();
-          } catch (e, trace) {
-            log("Error converting V2 InventoryV2DisplayItem: $e, $trace");
-          }
-        }
-
         final metadata = body["_metadata"];
         final links = metadata is Map<String, dynamic> ? metadata["links"] : null;
         final next = links is Map<String, dynamic> ? links["next"] : null;
@@ -191,6 +181,22 @@ class ApiCallsV2 {
       } catch (e, trace) {
         log("Error converting V2 InventoryV2Category: $e, $trace");
         return null;
+      }
+    }
+
+    if (withDisplay) {
+      final displayResponse = await apiCaller.enqueueApiCall<dynamic>(
+        apiSelection_v2: ApiSelection_v2.userInventory,
+        apiCall: (client, apiKey) => client.userGet(selections: "display"),
+      );
+      try {
+        final node = displayResponse is ApiError ? null : _deepCastJson(displayResponse)["display"];
+        final rows = node is Map ? node["items"] : node;
+        if (rows is List) {
+          display = rows.whereType<Map<String, dynamic>>().map(InventoryV2DisplayItem.fromJson).toList();
+        }
+      } catch (e, trace) {
+        log("Error converting V2 InventoryV2DisplayItem: $e, $trace");
       }
     }
 

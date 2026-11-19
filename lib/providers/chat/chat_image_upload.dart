@@ -4,10 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 
 class ChatUploadError implements Exception {
-  const ChatUploadError(this.message, {this.blocked = false});
+  const ChatUploadError(this.message, {this.blocked = false, this.refusedKey = false});
 
   final String message;
   final bool blocked;
+  final bool refusedKey;
 
   @override
   String toString() => message;
@@ -134,12 +135,12 @@ class ChatImageUpload {
       );
     }
     final said = '${body is Map && body['error'] is Map ? body['error']['message'] : body}'.toLowerCase();
+    final refusedKey =
+        status == 401 || status == 403 || (status == 400 && (said.contains('key') || said.contains('userhash')));
+    if (refusedKey) throw ChatUploadError('$label refused the ${host.credentialName}', refusedKey: true);
     throw ChatUploadError(switch (status) {
-      401 || 403 => '$label refused the ${host.credentialName}, check it in the chat settings',
       413 => 'The image is too big for $label',
       429 => '$label is limiting uploads right now, try again later',
-      400 when said.contains('key') || said.contains('userhash') =>
-        '$label refused the ${host.credentialName}, check it in the chat settings',
       400 => '$label could not read that image',
       _ => '$label could not take the image${status == 200 ? '' : ' (error $status)'}',
     });

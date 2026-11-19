@@ -8,6 +8,7 @@ import 'package:chopper/chopper.dart' as chopper;
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:torn_pda/models/chat/chat_chain_report.dart';
+import 'package:torn_pda/models/chat/chat_forum.dart';
 import 'package:torn_pda/models/chat/chat_link_info.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
@@ -220,7 +221,7 @@ class ChatLinkPreviews {
     ChatLinkKind.company ||
     ChatLinkKind.chainReport ||
     ChatLinkKind.warReport when link.id != null => '${link.kind.name}:${link.id}',
-    ChatLinkKind.forum when link.id != null => 'forum:${link.id}',
+    ChatLinkKind.forum when link.id != null => 'forum:${link.id}${_forumPageKey(link)}',
     ChatLinkKind.forum when link.forumId != null => 'forumSection:${link.forumId}',
     ChatLinkKind.attackLog when link.logCode != null => 'attackLog:${link.logCode}',
     ChatLinkKind.item when link.id != null || !link.title.startsWith('Item') => 'item:${link.id ?? link.title}',
@@ -328,7 +329,9 @@ class ChatLinkPreviews {
         final thread = await fetchThread(link.id!);
         final sections = await forumSections();
         final name = sections?[thread?.forumId ?? link.forumId]?.title;
-        return thread == null ? ChatLinkInfo.forumPlaced(link, name) : ChatLinkInfo.forum(thread, name);
+        return thread == null
+            ? ChatLinkInfo.forumPlaced(link, name)
+            : ChatLinkInfo.forum(thread, name, ChatForum.startOf(link.uri));
       case ChatLinkKind.attackLog:
         final json = await fetchAttackLog(link.logCode!);
         return json == null ? null : ChatLinkInfo.attackLog(json);
@@ -408,8 +411,11 @@ class ChatLinkPreviews {
   static Future<Map<String, dynamic>?> _company(int id) =>
       _get('/company/$id/profile', ApiSelection_v2.otherUserProfile);
 
-  static Future<Map<String, dynamic>?> _faction(int id) =>
-      _get('/faction/$id', ApiSelection_v2.factionBasic, 'basic,wars,chain');
+  static Future<Map<String, dynamic>?> _faction(int id) => _get(
+    id == ChatLink.ownFaction ? '/faction' : '/faction/$id',
+    ApiSelection_v2.factionBasic,
+    'basic,wars,chain',
+  );
 
   // Newest first
   static Future<Map<String, dynamic>?> _attackLog(String code) => _get(
@@ -437,6 +443,27 @@ class ChatLinkPreviews {
   );
 
   static Future<Map<String, dynamic>?> pastChainReport(int id) => queued(() => fetchChainReport(id), () => true);
+
+  static String _forumPageKey(ChatLink link) {
+    final start = ChatForum.startOf(link.uri);
+    return start > 0 ? '@$start' : '';
+  }
+
+  static Future<Map<String, dynamic>?> _forumPosts(int thread, int offset) => _get(
+    '/forum/$thread/posts',
+    ApiSelection_v2.forumThread,
+    null,
+    {'offset': '$offset', 'striptags': 'false'},
+  );
+
+  /// Null when Torn fails
+  static Future<ChatForumPage?> forumPage(int thread, int offset) async {
+    try {
+      return ChatForumPage.fromJson(await _forumPosts(thread, offset).timeout(const Duration(seconds: 20)));
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Future<ForumThreadExtended?> _thread(int id) async {
     final response = await Get.find<ApiCallerController>().enqueueApiCall<ForumThreadResponse>(

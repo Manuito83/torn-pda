@@ -1,4 +1,5 @@
 import 'package:torn_pda/models/chat/chat_models.dart';
+import 'package:torn_pda/models/chat/chat_notepad.dart';
 
 abstract class ChatSource {
   bool get available;
@@ -46,6 +47,18 @@ abstract class ChatSource {
   Future<void> typing(String roomId, bool on);
 
   Future<void> send(String roomId, String content, String reqId);
+
+  /// Null when Torn fails
+  Future<List<ChatNote>?> notes();
+
+  Future<ChatNote?> createNote(String title, String text);
+
+  /// [age] since the last keystroke
+  Future<ChatNoteSave> saveNote(ChatNote note, Duration age);
+
+  Future<bool> deleteNote(String id);
+
+  Future<bool> selectNote(String id);
 
   /// For a lost session
   Future<void> reconnect();

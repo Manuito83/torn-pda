@@ -93,6 +93,7 @@ const Set<String> shareableExcludedKeys = {
   'pda_nativeChatPausedAt',
   'pda_nativeChatOwner',
   'pda_nativeChatInbox',
+  'pda_nativeChatNotesCache',
 };
 
 Map<String, dynamic>? tryDecodeBackupJson(String encoded) {
