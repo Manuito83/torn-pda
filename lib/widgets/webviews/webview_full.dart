@@ -5111,7 +5111,7 @@ class WebViewFullState extends State<WebViewFull>
               );
             } else {
               _profileAttackWidget = const SizedBox.shrink();
-              _fetchAttackTargetStatus(userId);
+              if (_settingsProvider.attackHospitalTimerEnabled) _fetchAttackTargetStatus(userId);
             }
           });
         } catch (e) {
@@ -5129,7 +5129,7 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   void _onAttackTargetStatus(String? state, int? until) {
-    if (!mounted || state != "Hospital" || until == null) return;
+    if (!mounted || !_settingsProvider.attackHospitalTimerEnabled || state != "Hospital" || until == null) return;
     if (!_currentUrl.contains("sid=attack&user2ID=") && !_currentUrl.contains("sid=getInAttack&user2ID=")) return;
     webViewController?.evaluateJavascript(source: hospitalTimerJS(until: until));
   }

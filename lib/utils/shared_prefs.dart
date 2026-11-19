@@ -133,6 +133,7 @@ class Prefs with ChatPrefsStorage {
   final String _kDiscreetScheduleOffsetSynced = "pda_discreetScheduleOffsetSynced";
   final String _kDiscreetSchedulePending = "pda_discreetSchedulePending";
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
+  final String _kAttackHospitalTimerEnabled = "pda_attackHospitalTimerEnabled";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDrawerSectionOrder = "pda_drawerSectionOrder";
   final String _kDrawerSectionHidden = "pda_drawerSectionHidden";
@@ -3104,6 +3105,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setProfileCheckAttackEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kProfileCheckAttackEnabled, value);
+  }
+
+  Future<bool> getAttackHospitalTimerEnabled() async {
+    return await PrefsDatabase.getBool(_kAttackHospitalTimerEnabled, true);
+  }
+
+  Future setAttackHospitalTimerEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kAttackHospitalTimerEnabled, value);
   }
 
   Future<String> getShortcutTile() async {

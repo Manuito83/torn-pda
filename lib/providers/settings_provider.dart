@@ -1532,6 +1532,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _attackHospitalTimerEnabled = true;
+  bool get attackHospitalTimerEnabled => _attackHospitalTimerEnabled;
+  set attackHospitalTimerEnabled(bool value) {
+    _attackHospitalTimerEnabled = value;
+    Prefs().setAttackHospitalTimerEnabled(value);
+    notifyListeners();
+  }
+
   var _showShortcutEditIcon = true;
   bool get showShortcutEditIcon => _showShortcutEditIcon;
   set showShortcutEditIcon(bool value) {
@@ -2078,6 +2086,7 @@ class SettingsProvider extends ChangeNotifier {
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
     _hideProfileFab = await Prefs().getHideProfileFab();
     _profileCheckAttackEnabled = await Prefs().getProfileCheckAttackEnabled();
+    _attackHospitalTimerEnabled = await Prefs().getAttackHospitalTimerEnabled();
     _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();

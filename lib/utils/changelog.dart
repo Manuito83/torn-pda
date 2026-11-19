@@ -110,6 +110,14 @@ List<_MVersion> _modernChangelog() => [
     hotfixes: [],
     sections: [
       _MSection(
+        icon: Icons.auto_awesome,
+        title: 'New',
+        color: Color(0xFF1565C0),
+        items: [
+          _MItem('Browser: added option to hide the hospital timer in attacks'),
+        ],
+      ),
+      _MSection(
         icon: Icons.handyman,
         title: 'Fixed',
         color: Color(0xFF2E7D32),

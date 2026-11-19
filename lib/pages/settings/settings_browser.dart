@@ -2787,6 +2787,38 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Hospital timer in attacks",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Hospital timer in attacks")),
+                  Switch(
+                    value: _settingsProvider.attackHospitalTimerEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.attackHospitalTimerEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'Replaces the hospital time in the attack screen with a live countdown',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
       if (_settingsProvider.extraPlayerInformation)
         SearchableRow(
           label: "Friendly factions",
