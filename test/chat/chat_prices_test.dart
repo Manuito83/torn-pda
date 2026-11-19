@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart' show ItemMarket;
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
@@ -9,8 +10,10 @@ import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:torn_pda/models/inventory/inventory_v2_model.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/providers/chat/chat_bazaar_controller.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_price_check_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -133,12 +136,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ChatTradeInsert(
-              roomId: 'trade',
-              text: text ?? 'WTS 20x Xanax 830k each',
-              userId: null,
-              color: Colors.black,
-            ),
+            body: ChatTradeInsert(roomId: 'trade', text: text ?? 'WTS 20x Xanax 830k each', color: Colors.black),
           ),
         ),
       );
@@ -183,6 +181,113 @@ void main() {
     });
   });
 
+  group('seller bazaar', () {
+    Map<String, dynamic> reply({bool exists = true, bool open = true}) => {
+      'bazaar_is_open': open,
+      'bazaar_exists': exists,
+      'bazaar': [],
+    };
+
+    final listings = ItemMarket.fromJson({
+      'item': {'id': 206, 'name': 'Xanax', 'type': 'Drug', 'average_price': 847000},
+      'listings': [
+        {'price': 812000, 'amount': 3},
+      ],
+      'cache_timestamp': 1,
+    }).listings;
+
+    late List<int> asked;
+
+    Future<void> pumpOffer(
+      WidgetTester tester,
+      Future<dynamic> Function(int) bazaar, {
+      int? seller = 77,
+      int? own,
+      Future<(List<Object>, int?)?> Function(int)? market,
+    }) async {
+      asked = [];
+      await tester.pumpWidget(const SizedBox());
+      Get.reset();
+      addTearDown(Get.reset);
+      if (own != null) Get.put<UserController>(UserController()..playerId = own);
+      addTearDown(ChatLinkPreviews.resetForTests);
+      ChatLinkPreviews.resetForTests();
+      ChatLinkPreviews.fetchItems = () async => catalog;
+      ChatLinkPreviews.fetchMarket = market ?? (id) async => null;
+      NativeChat.prefs.priceCheck = true;
+      NativeChat.linkWindow.value = null;
+      Get.put(
+        ChatBazaarController(
+          fetch: (id) {
+            asked.add(id);
+            return bazaar(id);
+          },
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ChatTradeInsert(
+              roomId: 'trade',
+              text: 'WTS 20x Xanax 830k each',
+              color: Colors.black,
+              sellerId: seller,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('market'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('open shows the button that opens the bazaar filtered', (tester) async {
+      await pumpOffer(tester, (id) async => reply());
+      expect(find.text('Bazaar open'), findsOneWidget);
+      await tester.tap(find.text('Open bazaar'));
+      expect(NativeChat.linkWindow.value?.url, 'https://www.torn.com/bazaar.php?userId=77');
+      expect(NativeChat.linkWindow.value?.fill, 'Xanax');
+      expect(asked, [77]);
+    });
+
+    testWidgets('closed or without a bazaar has no button', (tester) async {
+      await pumpOffer(tester, (id) async => reply(open: false));
+      expect(find.text('Bazaar closed'), findsOneWidget);
+      expect(find.text('Open bazaar'), findsNothing);
+      await pumpOffer(tester, (id) async => reply(exists: false, open: false), seller: 78);
+      expect(find.text('No bazaar'), findsOneWidget);
+      expect(find.text('Open bazaar'), findsNothing);
+    });
+
+    testWidgets('unknown shows nothing', (tester) async {
+      await pumpOffer(tester, (id) async => throw Exception('down'));
+      expect(find.textContaining('azaar'), findsNothing);
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+    });
+
+    testWidgets('the own message asks nothing', (tester) async {
+      await pumpOffer(tester, (id) async => reply(), own: 77);
+      expect(asked, isEmpty);
+      expect(find.textContaining('azaar'), findsNothing);
+    });
+
+    testWidgets('without a seller id asks nothing', (tester) async {
+      await pumpOffer(tester, (id) async => reply(), seller: null);
+      expect(asked, isEmpty);
+      expect(find.textContaining('azaar'), findsNothing);
+    });
+
+    testWidgets('a failing market line does not drop the bazaar line', (tester) async {
+      await pumpOffer(tester, (id) async => reply(), market: (id) async => throw Exception('down'));
+      expect(find.text('Bazaar open'), findsOneWidget);
+    });
+
+    testWidgets('a failing bazaar does not drop the market line', (tester) async {
+      await pumpOffer(tester, (id) async => throw Exception('down'), market: (id) async => (listings, null));
+      expect(find.textContaining('Lowest listed'), findsOneWidget);
+    });
+  });
+
   group('own stock', () {
     Future<List<String>> pumpStock(WidgetTester tester, InventoryCategoryFetcher fetch, List<String> texts) async {
       addTearDown(ChatLinkPreviews.resetForTests);
@@ -205,9 +310,7 @@ void main() {
           child: MaterialApp(
             home: Scaffold(
               body: Column(
-                children: [
-                  for (final t in texts) ChatTradeInsert(roomId: 'trade', text: t, userId: null, color: Colors.black),
-                ],
+                children: [for (final t in texts) ChatTradeInsert(roomId: 'trade', text: t, color: Colors.black)],
               ),
             ),
           ),

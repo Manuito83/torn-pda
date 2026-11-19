@@ -337,7 +337,7 @@ class ApiCallerController extends GetxController {
         url += 'user/?selections=money,education,workstats,battlestats,jobpoints,properties,skills,bazaar';
         break;
       case ApiSelection_v1.bazaar:
-        url += 'user/?selections=bazaar';
+        url += 'user/$prefix?selections=bazaar';
         break;
       case ApiSelection_v1.basicProfile:
         url += 'user/$prefix?selections=profile';

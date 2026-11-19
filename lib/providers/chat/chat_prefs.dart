@@ -272,7 +272,6 @@ class ChatPrefs extends ChangeNotifier {
   List<String> emojiFavorites = [...ChatEmoji.defaultFavorites];
   Map<String, int> emojiCounts = {};
   bool priceCheck = true;
-  bool bazaarAnalysis = true;
   bool slangEverywhere = false;
   bool moneyOnHand = false;
   bool warnApiKey = true;
@@ -532,7 +531,6 @@ class ChatPrefs extends ChangeNotifier {
     emojiFavorites = await Prefs().getNativeChatEmojiFavorites(ChatEmoji.defaultFavorites);
     emojiCounts = ChatEmoji.decodeCounts(await Prefs().getNativeChatEmojiCounts());
     priceCheck = await Prefs().getNativeChatPriceCheck();
-    bazaarAnalysis = await Prefs().getNativeChatBazaarAnalysis();
     slangEverywhere = await Prefs().getNativeChatSlangEverywhere();
     moneyOnHand = await Prefs().getNativeChatMoneyOnHand();
     warnApiKey = await Prefs().getNativeChatWarnApiKey();
@@ -738,12 +736,6 @@ class ChatPrefs extends ChangeNotifier {
   void setPriceCheck(bool value) {
     priceCheck = value;
     Prefs().setNativeChatPriceCheck(value);
-    notifyListeners();
-  }
-
-  void setBazaarAnalysis(bool value) {
-    bazaarAnalysis = value;
-    Prefs().setNativeChatBazaarAnalysis(value);
     notifyListeners();
   }
 
@@ -1794,7 +1786,6 @@ class ChatPrefs extends ChangeNotifier {
     'factionEvents': (factionEvents, setFactionEvents),
     'itemPrice': (itemPrice, setItemPrice),
     'priceCheck': (priceCheck, setPriceCheck),
-    'bazaarAnalysis': (bazaarAnalysis, setBazaarAnalysis),
     'slangEverywhere': (slangEverywhere, setSlangEverywhere),
     'moneyOnHand': (moneyOnHand, setMoneyOnHand),
   };

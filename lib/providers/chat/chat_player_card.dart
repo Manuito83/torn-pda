@@ -24,11 +24,6 @@ class ChatPlayerCards {
     return hit != null && DateTime.now().difference(hit.$1) < _ttl ? hit.$3 : null;
   }
 
-  static Map<String, dynamic>? peekJson(int id) {
-    final hit = _cache[id];
-    return hit != null && DateTime.now().difference(hit.$1) < _ttl ? hit.$2 : null;
-  }
-
   static Future<ChatPlayerCard?> load(int id, {Duration maxAge = _ttl}) async {
     await json(id, maxAge: maxAge);
     return _cache[id]?.$3;
@@ -55,6 +50,8 @@ class ChatPlayerCards {
     return json;
   }
 
+  static bool isMine(int id) => Get.isRegistered<UserController>() && Get.find<UserController>().playerId == id;
+
   static Future<Map<String, dynamic>?> _fetch(int id) async {
     Future<dynamic> ask(String selections) => Get.find<ApiCallerController>().enqueueApiCall<dynamic>(
       apiSelection_v2: ApiSelection_v2.otherUserProfile,
@@ -62,8 +59,7 @@ class ChatPlayerCards {
     );
     final generation = _generation;
     // Another player's bazaar gives error 7
-    final mine = Get.isRegistered<UserController>() && Get.find<UserController>().playerId == id;
-    final base = mine ? '$_base,bazaar' : _base;
+    final base = isMine(id) ? '$_base,bazaar' : _base;
     var response = await ask(_discordRejected ? base : '$base,discord');
     if (response is ApiError && response.errorId == 4 && !_discordRejected) {
       response = await ask(base);

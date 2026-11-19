@@ -98,7 +98,6 @@ void main() {
       ..setFactionEvents(true)
       ..setItemPrice(false)
       ..setPriceCheck(false)
-      ..setBazaarAnalysis(false)
       ..setListReplyCount(14)
       ..setListTextScale(1.2)
       ..setSlangEverywhere(true)

@@ -92,7 +92,7 @@ void main() {
       expect(info.detail, allOf(contains('15'), contains('Okay')));
       expect(info.presence, ChatPresence.online);
       expect(ChatLinkInfo.player(ChatLinkKind.bazaar, player(bazaar: [{}, {}]))!.detail, '2 items');
-      expect(ChatLinkInfo.player(ChatLinkKind.bazaar, player(bazaar: []))!.detail, 'Empty');
+      expect(ChatLinkInfo.player(ChatLinkKind.bazaar, {...player(bazaar: []), 'bazaar_is_open': true})!.detail, 'Open');
       expect(ChatLinkInfo.player(ChatLinkKind.bazaar, player())!.detail, isNull);
       final flat = {
         'player_id': 42,

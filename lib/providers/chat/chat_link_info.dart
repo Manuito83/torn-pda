@@ -19,6 +19,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/chat/chat_bazaar_controller.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/user_controller.dart';
@@ -307,12 +308,18 @@ class ChatLinkPreviews {
     }
   }
 
+  static ChatBazaarController get bazaar => Get.isRegistered<ChatBazaarController>()
+      ? Get.find<ChatBazaarController>()
+      : Get.put(ChatBazaarController(busy: () => busy));
+
   static Future<ChatLinkInfo?> _resolve(ChatLink link) async {
     switch (link.kind) {
       case ChatLinkKind.player || ChatLinkKind.attack || ChatLinkKind.bazaar:
         final json = await ChatPlayerCards.json(link.id!);
         if (json == null) return null;
-        return ChatLinkInfo.player(link.kind, json, link.kind == ChatLinkKind.bazaar ? null : ChatBounty.parse(json));
+        if (link.kind != ChatLinkKind.bazaar) return ChatLinkInfo.player(link.kind, json, ChatBounty.parse(json));
+        final state = ChatPlayerCards.isMine(link.id!) ? null : await bazaar.state(link.id!);
+        return ChatLinkInfo.player(link.kind, json, null, state);
       case ChatLinkKind.faction:
         final json = await fetchFaction(link.id!);
         return json == null ? null : ChatLinkInfo.faction(json);
@@ -603,6 +610,7 @@ class ChatLinkPreviews {
     _cache.clear();
     _loading.clear();
     ChatPlayerCards.forget();
+    if (Get.isRegistered<ChatBazaarController>()) Get.find<ChatBazaarController>().forget();
     _ffAsked.clear();
     _markets.clear();
     _marketLoading.clear();

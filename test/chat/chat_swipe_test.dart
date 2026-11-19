@@ -78,7 +78,7 @@ void main() {
               child: const Column(
                 children: [
                   ColoredBox(key: Key('bubble'), color: Colors.white, child: SizedBox(height: 60, width: 300)),
-                  ChatTradeInsert(roomId: 'trade', text: 'WTS Xanax 800k', userId: null, color: Colors.black),
+                  ChatTradeInsert(roomId: 'trade', text: 'WTS Xanax 800k', color: Colors.black),
                 ],
               ),
             ),

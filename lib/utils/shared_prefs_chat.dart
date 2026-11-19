@@ -61,7 +61,6 @@ mixin ChatPrefsStorage {
   final String _kNativeChatEmojiFavorites = "pda_nativeChatEmojiFavorites";
   final String _kNativeChatEmojiCounts = "pda_nativeChatEmojiCounts";
   final String _kNativeChatPriceCheck = "pda_nativeChatPriceCheck";
-  final String _kNativeChatBazaarAnalysis = "pda_nativeChatBazaarAnalysis";
   final String _kNativeChatSlangEverywhere = "pda_nativeChatSlangEverywhere";
   final String _kNativeChatMoneyOnHand = "pda_nativeChatMoneyOnHand";
   final String _kNativeChatWarnApiKey = "pda_nativeChatWarnApiKey";
@@ -958,14 +957,6 @@ mixin ChatPrefsStorage {
 
   Future setNativeChatPriceCheck(bool value) async {
     return await PrefsDatabase.setBool(_kNativeChatPriceCheck, value);
-  }
-
-  Future<bool> getNativeChatBazaarAnalysis() async {
-    return await PrefsDatabase.getBool(_kNativeChatBazaarAnalysis, true);
-  }
-
-  Future setNativeChatBazaarAnalysis(bool value) async {
-    return await PrefsDatabase.setBool(_kNativeChatBazaarAnalysis, value);
   }
 
   Future<bool> getNativeChatSlangEverywhere() async {

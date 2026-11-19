@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:html/parser.dart' as html;
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/chat/chat_bazaar.dart';
+import 'package:torn_pda/models/chat/chat_bazaar_sources.dart';
 import 'package:torn_pda/models/chat/chat_chain_report.dart';
 import 'package:torn_pda/models/chat/chat_faction_ops.dart';
 import 'package:torn_pda/models/chat/chat_forum.dart';
@@ -65,14 +66,11 @@ class ChatLinkInfo {
     this.clock,
     this.lead,
     this.settled = false,
-    this.bazaar,
     this.kicker,
   });
 
   /// Overrides the label above the title
   final String? kicker;
-
-  final ChatBazaar? bazaar;
 
   /// Won't change any more
   final bool settled;
@@ -83,7 +81,12 @@ class ChatLinkInfo {
     return text.isEmpty ? null : text;
   }
 
-  static ChatLinkInfo? player(ChatLinkKind kind, Map<String, dynamic> json, [ChatBounty? bounty]) {
+  static ChatLinkInfo? player(
+    ChatLinkKind kind,
+    Map<String, dynamic> json, [
+    ChatBounty? bounty,
+    ChatBazaarState? bazaarState,
+  ]) {
     // v1 sends it flat
     final profile = json['profile'] is Map ? json['profile'] as Map : json;
     final name = profile['name'];
@@ -97,14 +100,18 @@ class ChatLinkInfo {
     if (kind == ChatLinkKind.bazaar) {
       final parsed = ChatBazaar.parse(json);
       final detail = switch (parsed) {
-        null => null,
+        null => switch (bazaarState) {
+          ChatBazaarState.open => 'Open',
+          ChatBazaarState.closed => 'Closed',
+          ChatBazaarState.none => 'No bazaar',
+          _ => null,
+        },
         ChatBazaar(open: false) => 'Closed',
         ChatBazaar(listed: false) => 'Open',
-        ChatBazaar(items: []) => 'Empty',
         ChatBazaar(items: [_]) => '1 item',
         _ => '${parsed.items.length} items',
       };
-      return ChatLinkInfo('Bazaar of $title', detail: detail, presence: presence, bazaar: parsed);
+      return ChatLinkInfo('Bazaar of $title', detail: detail, presence: presence);
     }
     final parts = [if (level != null) 'Lvl $level', if (status is String && status.isNotEmpty) status];
     return ChatLinkInfo(

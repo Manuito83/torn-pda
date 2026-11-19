@@ -2,18 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:torn_pda/models/chat/chat_bazaar.dart';
-import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_money.dart';
 import 'package:torn_pda/models/chat/chat_price_check.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_player_card.dart';
+import 'package:torn_pda/widgets/chat/chat_bazaar_line.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/chat/chat_bazaar_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_motion.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
@@ -23,15 +21,15 @@ class ChatTradeInsert extends StatefulWidget {
     super.key,
     required this.roomId,
     required this.text,
-    required this.userId,
     required this.color,
     this.mine = false,
+    this.sellerId,
   });
 
   final String roomId;
   final String text;
-  final int? userId;
   final Color color;
+  final int? sellerId;
 
   /// Hangs from the right edge
   final bool mine;
@@ -45,8 +43,6 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
   final Set<int> _open = {};
   final Map<int, String> _lines = {};
   final Map<int, int> _have = {};
-  Set<int> _named = const {};
-  ChatBazaar? _bazaar;
 
   @override
   void initState() {
@@ -57,41 +53,24 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
   @override
   void didUpdateWidget(ChatTradeInsert old) {
     super.didUpdateWidget(old);
-    if (old.text != widget.text || old.userId != widget.userId) _scan();
+    if (old.text != widget.text) _scan();
   }
 
   Future<void> _scan() async {
     final text = widget.text;
-    final id = widget.userId;
     _checks = const [];
-    _named = const {};
-    _bazaar = null;
     _open.clear();
     _lines.clear();
     _have.clear();
     if (!NativeChat.prefs.priceCheck || !ChatPriceCheck.rooms.contains(widget.roomId)) return;
-    final offer = ChatPriceCheck.looksLikeOffer(text);
-    final bazaarId =
-        NativeChat.prefs.bazaarAnalysis &&
-            id != null &&
-            id > 0 &&
-            !ChatLink.split(text).any((p) => p is ChatLink && p.kind == ChatLinkKind.bazaar)
-        ? id
-        : null;
-    if (!offer && bazaarId == null) return;
+    if (!ChatPriceCheck.looksLikeOffer(text)) return;
     final catalog = await ChatLinkPreviews.catalogItems();
     if (!mounted || text != widget.text) return;
     if (catalog != null) {
-      final aliases = NativeChat.prefs.itemAliases;
-      final cached = bazaarId == null ? null : ChatPlayerCards.peekJson(bazaarId);
-      setState(() {
-        if (offer) _checks = ChatPriceCheck.find(text, catalog, aliases);
-        if (bazaarId != null) _named = ChatItemRef.namedIds(text, catalog, aliases);
-        _bazaar = cached == null ? null : ChatBazaar.parse(cached);
-      });
+      setState(() => _checks = ChatPriceCheck.find(text, catalog, NativeChat.prefs.itemAliases));
       unawaited(_loadHave(text));
     }
-    if (offer && ChatPriceCheck.mentionsPoints(text) && !ChatLinkPreviews.busy) unawaited(_loadPoints(text));
+    if (ChatPriceCheck.mentionsPoints(text) && !ChatLinkPreviews.busy) unawaited(_loadPoints(text));
   }
 
   Future<void> _loadPoints(String text) async {
@@ -150,11 +129,7 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
 
   @override
   Widget build(BuildContext context) {
-    final id = widget.userId;
-    final bazaar = _bazaar;
-    final bazaarShown =
-        NativeChat.prefs.bazaarAnalysis && id != null && _named.isNotEmpty && bazaar != null;
-    if (!NativeChat.prefs.priceCheck || (_checks.isEmpty && !bazaarShown)) return const SizedBox.shrink();
+    if (!NativeChat.prefs.priceCheck || _checks.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     final color = widget.color;
@@ -164,6 +139,8 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
     final style = theme.textTheme.bodySmall?.copyWith(color: color);
     final head = theme.textTheme.labelSmall?.copyWith(color: accent, fontSize: 10);
     final hidden = ChatSwiping.of(context);
+    final id = widget.sellerId;
+    final seller = id == null || id <= 0 || ChatPlayerCards.isMine(id) ? null : id;
     const round = Radius.circular(12);
     const tied = Radius.circular(4);
     return IgnorePointer(
@@ -217,7 +194,7 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              [if (_checks.isNotEmpty) 'Price check', if (bazaarShown) 'Bazaar'].join(' - '),
+                              'Price check',
                               textAlign: TextAlign.end,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -227,11 +204,10 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      if (_checks.isNotEmpty)
-                        Wrap(
-                          spacing: 6,
-                          children: [for (final check in _checks) _chip(theme, check, chatToneColor(check.tone, dark))],
-                        ),
+                      Wrap(
+                        spacing: 6,
+                        children: [for (final check in _checks) _chip(theme, check, chatToneColor(check.tone, dark))],
+                      ),
                       for (final check in _checks)
                         if (_have[check.id] case final owned?
                             when check.id != ChatPriceCheck.pointsId || _open.contains(check.id))
@@ -246,7 +222,7 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
                             ),
                           ),
                       for (final check in _checks)
-                        if (_open.contains(check.id))
+                        if (_open.contains(check.id)) ...[
                           Padding(
                             padding: const EdgeInsets.only(top: 4, left: 2),
                             child: _lines[check.id] == null
@@ -256,9 +232,15 @@ class _ChatTradeInsertState extends State<ChatTradeInsert> {
                                     style: style,
                                   ),
                           ),
-                      if (_checks.isNotEmpty && bazaarShown) const SizedBox(height: 6),
-                      if (bazaarShown)
-                        ChatBazaarSummary(bazaar: bazaar, userId: id, named: _named, color: color, framed: true),
+                          if (seller != null && check.id != ChatPriceCheck.pointsId)
+                            ChatBazaarLine(
+                              key: ValueKey(check.id),
+                              sellerId: seller,
+                              item: check.name,
+                              style: style,
+                              prefix: _checks.length > 1 ? '${check.name} - ' : '',
+                            ),
+                        ],
                     ],
                   ),
                 ),

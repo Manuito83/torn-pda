@@ -655,9 +655,9 @@ class ChatMessageBubble extends StatelessWidget {
           child: ChatTradeInsert(
             roomId: message.roomId,
             text: body,
-            userId: isMine ? null : message.sender.id,
             color: plainText,
             mine: isMine && !compact,
+            sellerId: isMine ? null : message.sender.id,
           ),
         ),
         if (!isMine) Semantics(container: true, child: ChatBankInsert(message: message)),

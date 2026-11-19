@@ -43,7 +43,6 @@ import 'package:torn_pda/widgets/chat/chat_player_card_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_script_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_wiki_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
-import 'package:torn_pda/widgets/chat/chat_bazaar_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
@@ -154,7 +153,6 @@ class _ChatMessageTextState extends State<ChatMessageText> {
   List<(Object, int)> _parts = const [];
   final List<_LinkPress> _taps = [];
   ItemsModel? _catalog;
-  Set<int>? _named;
   bool _parsedItems = false;
   List<ChatItemAlias>? _parsedAliases;
 
@@ -192,11 +190,6 @@ class _ChatMessageTextState extends State<ChatMessageText> {
     final catalog = _itemsOn ? _catalog : null;
     _parsedItems = _itemsOn;
     _parsedAliases = NativeChat.prefs.itemAliases;
-    _named = !_itemsOn
-        ? null
-        : catalog == null
-        ? const {}
-        : ChatItemRef.namedIds(widget.content, catalog, _parsedAliases!);
     for (final tap in _taps) {
       tap.dispose();
     }
@@ -380,12 +373,7 @@ class _ChatMessageTextState extends State<ChatMessageText> {
                   ? ChatImageCard(link: link, color: widget.color, roomId: widget.roomId, trusted: widget.trusted)
                   : ChatScriptLink.of(link) != null
                   ? ChatScriptCard(link: link, color: widget.color)
-                  : ChatLinkCard(
-                      link: link,
-                      color: widget.color,
-                      named: link.kind == ChatLinkKind.bazaar && NativeChat.prefs.bazaarAnalysis ? _named : null,
-                      roomId: widget.roomId,
-                    ),
+                  : ChatLinkCard(link: link, color: widget.color, roomId: widget.roomId),
             ),
           ),
       ],
@@ -523,13 +511,11 @@ class ChatInsertFrame extends StatelessWidget {
 }
 
 class ChatLinkCard extends StatefulWidget {
-  const ChatLinkCard({super.key, required this.link, required this.color, this.named, this.roomId});
+  const ChatLinkCard({super.key, required this.link, required this.color, this.roomId});
 
   final ChatLink link;
   final Color color;
 
-  /// Null skips the bazaar summary
-  final Set<int>? named;
   final String? roomId;
 
   static const Map<ChatLinkKind, (IconData, String)> _looks = {
@@ -752,7 +738,6 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
     };
     final title = info?.title ?? link.title;
     final image = info?.imageUrl;
-    final bazaar = widget.named == null || link.id == null ? null : info?.bazaar;
     final canAsk = _key != null && !_tried && !_loading && (_held || _timer?.isActive != true);
     if (link.videoId case final id? when _playing) {
       return ChatYoutubeInline(videoId: id, url: link.url, title: info?.title ?? 'YouTube', color: color);
@@ -817,7 +802,7 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
                       until: info?.clock?.until,
                       builder: (context) {
                         final detail = info == null ? link.detail : info.detailAt(DateTime.now()) ?? link.detail;
-                        if (detail == null || bazaar != null) return const SizedBox.shrink();
+                        if (detail == null) return const SizedBox.shrink();
                         return Text(
                           detail,
                           maxLines: 1,
@@ -826,8 +811,6 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
                         );
                       },
                     ),
-                    if (bazaar != null)
-                      ChatBazaarSummary(bazaar: bazaar, userId: link.id!, named: widget.named!, color: color),
                     for (final line in [...?info?.extra, if (_ff case final ff?) chatFfText(ff)])
                       Text(
                         line,

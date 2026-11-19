@@ -115,6 +115,7 @@ List<_MVersion> _modernChangelog() => [
         color: Color(0xFF1565C0),
         items: [
           _MItem('Browser: added option to hide the hospital timer in attacks'),
+          _MItem("Chat: seller's bazaar status on offers"),
         ],
       ),
       _MSection(

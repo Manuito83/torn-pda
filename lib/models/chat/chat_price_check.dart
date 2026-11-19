@@ -255,12 +255,6 @@ class ChatItemRef {
   final String name;
   final int market;
 
-  /// One word names too
-  static Set<int> namedIds(String text, ItemsModel catalog, List<ChatItemAlias> aliases) => {
-    for (final (_, _, item) in ChatPriceCheck._match(text, catalog, aliases, singles: true))
-      ChatPriceCheck._idOf(catalog, item),
-  };
-
   /// Skips one word catalog names
   static List<Object> split(String text, ItemsModel catalog, List<ChatItemAlias> aliases) {
     final parts = <Object>[];
