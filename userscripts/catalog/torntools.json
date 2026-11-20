@@ -998,6 +998,83 @@
       "matches": [
         "https://*.torn.com/forums.php*"
       ]
+    },
+    {
+      "id": "torntools.category-value-calculator",
+      "greasyforkId": 606181,
+      "name": "Category Value Calculator",
+      "description": "Calculate the value of an entire item category.",
+      "category": "items",
+      "usesApiKey": true,
+      "downloadUrl": "https://update.greasyfork.org/scripts/606181/TORN%3A%20TornTools%20-%20Category%20Value%20Calculator.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/606181-torn-torntools-category-value-calculator",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.weapon-bonus-information",
+      "greasyforkId": 606176,
+      "name": "Weapon Bonus Information",
+      "description": "Show the weapon bonus behind each line of the attack log.",
+      "category": "combat",
+      "downloadUrl": "https://update.greasyfork.org/scripts/606176/TORN%3A%20TornTools%20-%20Weapon%20Bonus%20Information.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/606176-torn-torntools-weapon-bonus-information",
+      "matches": [
+        "https://*.torn.com/page.php?sid=attacklog*"
+      ]
+    },
+    {
+      "id": "torntools.prevent-join-attacks",
+      "greasyforkId": 606177,
+      "name": "Prevent Join Attacks",
+      "description": "Warn you before you join an attack.",
+      "category": "combat",
+      "downloadUrl": "https://update.greasyfork.org/scripts/606177/TORN%3A%20TornTools%20-%20Prevent%20Join%20Attacks.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/606177-torn-torntools-prevent-join-attacks",
+      "matches": [
+        "https://*.torn.com/page.php?sid=attack*"
+      ]
+    },
+    {
+      "id": "torntools.hide-too-many-items-warning",
+      "greasyforkId": 606178,
+      "name": "Hide Too Many Items Warning",
+      "description": "Hide the 'too many items' warning on the item page.",
+      "category": "items",
+      "downloadUrl": "https://update.greasyfork.org/scripts/606178/TORN%3A%20TornTools%20-%20Hide%20Too%20Many%20Items%20Warning.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/606178-torn-torntools-hide-too-many-items-warning",
+      "matches": [
+        "https://*.torn.com/item.php*"
+      ]
+    },
+    {
+      "id": "torntools.grey-completed-courses",
+      "greasyforkId": 606179,
+      "name": "Grey Completed Courses",
+      "description": "Grey out education categories you have already completed.",
+      "category": "general",
+      "downloadUrl": "https://update.greasyfork.org/scripts/606179/TORN%3A%20TornTools%20-%20Grey%20Completed%20Courses.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/606179-torn-torntools-grey-completed-courses",
+      "matches": [
+        "https://*.torn.com/page.php?sid=education*"
+      ]
+    },
+    {
+      "id": "torntools.csv-report",
+      "greasyforkId": 606180,
+      "name": "CSV Report",
+      "description": "Download the faction chain, war, ranked war, raid and challenge contribution reports as CSV.",
+      "category": "faction",
+      "downloadUrl": "https://update.greasyfork.org/scripts/606180/TORN%3A%20TornTools%20-%20CSV%20Report.user.js",
+      "pageUrl": "https://greasyfork.org/en/scripts/606180-torn-torntools-csv-report",
+      "matches": [
+        "https://*.torn.com/factions.php*",
+        "https://*.torn.com/war.php?step=chainreport*",
+        "https://*.torn.com/war.php?step=raidreport*",
+        "https://*.torn.com/war.php?step=rankreport*",
+        "https://*.torn.com/war.php?step=warreport*"
+      ]
     }
   ]
 }
