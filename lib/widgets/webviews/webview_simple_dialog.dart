@@ -94,6 +94,9 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
   // See: https://github.com/flutter/flutter/issues/112542
   bool _requestClose = false;
 
+  bool _captchaReplied = false;
+  double _progress = 0;
+
   @override
   void initState() {
     super.initState();
@@ -228,6 +231,17 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
   Column mainWebViewColumn() {
     return Column(
       children: [
+        if (_settingsProvider.loadBarBrowser)
+          SizedBox(
+            height: 2,
+            child: _progress < 1.0
+                ? LinearProgressIndicator(
+                    value: _progress,
+                    backgroundColor: Colors.blueGrey[100],
+                    valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
+                  )
+                : null,
+          ),
         Expanded(
           child: _requestClose ? const SizedBox.shrink() : _mainWebView(),
         ),
@@ -243,11 +257,11 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       onWebViewCreated: (c) {
         webView = c;
       },
+      onProgressChanged: (c, progress) {
+        if (mounted) setState(() => _progress = progress / 100);
+      },
       /*
       onLoadStart: (c, uri) async {
-        //
-      },
-      onProgressChanged: (c, progress) async {
         //
       },
       onLoadStop: (c, uri) async {
@@ -263,10 +277,10 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
           if (resource.url.toString().contains("favicon.ico")) {
             // Try to get captcha success message twice in a row
             fireCallbackOnCaptchaSuccess(String value) {
-              if (value.isNotEmpty && value.contains('"success"')) {
-                widget.callback!("captchaWorkflow");
-                Navigator.pop(context);
-              }
+              if (_captchaReplied || !mounted || !value.contains('"success"')) return;
+              _captchaReplied = true;
+              widget.callback!("captchaWorkflow");
+              Navigator.pop(context);
             }
 
             webView.getHtml().then(
