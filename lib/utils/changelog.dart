@@ -116,6 +116,7 @@ List<_MVersion> _modernChangelog() => [
         items: [
           _MItem('Browser: added option to hide the hospital timer in attacks'),
           _MItem("Chat: seller's bazaar status on offers"),
+          _MItem('Chat: online status in chat list'),
         ],
       ),
       _MSection(

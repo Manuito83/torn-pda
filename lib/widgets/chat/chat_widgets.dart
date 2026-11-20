@@ -1840,6 +1840,7 @@ class ChatConversationTile extends StatelessWidget {
     this.draft = '',
     this.awayLine,
     this.typing = const [],
+    this.presence,
     this.actions = const {},
     this.dot = false,
     this.more = false,
@@ -1882,6 +1883,7 @@ class ChatConversationTile extends StatelessWidget {
 
   /// Who is typing, replaces everything else
   final List<ChatUser> typing;
+  final ChatPresence? presence;
 
   /// For screen readers, the swipe actions
   final Map<CustomSemanticsAction, VoidCallback> actions;
@@ -1949,6 +1951,7 @@ class ChatConversationTile extends StatelessWidget {
 
     final spoken = [
       name,
+      ?presence?.name,
       if (highlight)
         dot
             ? 'new messages'
@@ -2002,6 +2005,10 @@ class ChatConversationTile extends StatelessWidget {
                                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                                 ),
                               ),
+                              if (presence != null) ...[
+                                const SizedBox(width: 6),
+                                ChatPresenceDot(presence: presence!, foreground: scheme.onSurface),
+                              ],
                               if (frozen) ...[
                                 const SizedBox(width: 4),
                                 Icon(Icons.ac_unit_rounded, size: 15, color: scheme.onSurfaceVariant),

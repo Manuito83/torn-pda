@@ -1294,10 +1294,19 @@ class ChatController extends ChangeNotifier {
     if (ask.isNotEmpty) _holdOrder([for (final r in conversations) r.id], waiting: ask);
     _source.peek(ask);
     _source.loadBlocked();
+    _refreshPresence();
   }
 
+  static const int _presenceMax = 50;
+  bool _askedList = false;
+
   void _refreshPresence() {
-    final peers = {for (final id in _onScreen) ?ChatRoom.peerIdOf(id)};
+    final listed = [
+      if (_inboxShown)
+        for (final r in _privateChats.take(_presenceMax)) ?ChatRoom.peerIdOf(r.id),
+    ];
+    _askedList = listed.isNotEmpty;
+    final peers = {for (final id in _onScreen) ?ChatRoom.peerIdOf(id), ...listed};
     if (peers.isNotEmpty) _source.online(peers.toList());
   }
 
@@ -1604,12 +1613,14 @@ class ChatController extends ChangeNotifier {
       case ChatDmsEvent():
         _dms = event.dms;
         _dmsLoaded = true;
+        if (_inboxShown && !_askedList) _refreshPresence();
         _applyLateAway(event.dms);
         _takeLast(event.dms);
         if (_dms.any((d) => d.id == _draftDm?.id)) _draftDm = null;
       case ChatRecentDmsEvent():
         _mergeRecent(event);
         _dmsLoaded = true;
+        if (_inboxShown && !_askedList) _refreshPresence();
         _applyLateAway(event.dms);
         _takeLast(event.dms);
         if (_recent.any((d) => d.id == _draftDm?.id)) _draftDm = null;

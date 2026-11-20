@@ -91,6 +91,19 @@ void main() {
     expect(chat.roomById('dm:7').name, 'Charles');
   });
 
+  test('inbox asks presence of its private chats once', () {
+    chat.attach();
+    source.calls.clear();
+    source.emit(const ChatDmsEvent([dm, dm8]));
+    source.emit(const ChatDmsEvent([dm, dm8]));
+    expect(source.calls.where((c) => c.startsWith('online')), ['online [7, 8]']);
+
+    chat.detach();
+    source.calls.clear();
+    chat.openConversation('dm:8');
+    expect(source.calls, contains('online [8]'));
+  });
+
   group('session', () {
     test('a lost session keeps the chat, another account wipes it', () {
       chat.openConversation('faction');
