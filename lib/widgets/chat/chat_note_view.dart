@@ -122,9 +122,15 @@ Future<void> chatShareNote(BuildContext context, ChatNote note) async {
             ),
           ListTile(
             leading: const Icon(Icons.copy_rounded),
-            title: const Text('Copy'),
-            onTap: () => Navigator.pop(context, 'copy'),
+            title: const Text('Copy only content'),
+            onTap: () => Navigator.pop(context, 'body'),
           ),
+          if (note.title.trim().isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.copy_all_rounded),
+              title: const Text('Copy with title'),
+              onTap: () => Navigator.pop(context, 'copy'),
+            ),
           ListTile(
             leading: const Icon(Icons.share_rounded),
             title: const Text('Share'),
@@ -139,6 +145,9 @@ Future<void> chatShareNote(BuildContext context, ChatNote note) async {
     case 'chat' when context.mounted:
       Navigator.of(context).pop();
       await ChatShareIn.shareText(note.body);
+    case 'body':
+      await Clipboard.setData(ClipboardData(text: note.body.trim()));
+      chatToast('Note copied', seconds: 1);
     case 'copy':
       await Clipboard.setData(ClipboardData(text: text));
       chatToast('Note copied', seconds: 1);

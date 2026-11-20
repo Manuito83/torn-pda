@@ -1,8 +1,12 @@
 import 'dart:async';
 
+import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:torn_pda/models/chat/chat_notepad.dart';
 import 'package:torn_pda/providers/chat/chat_notepad.dart';
+import 'package:torn_pda/widgets/chat/chat_note_view.dart';
 
 import 'chat_fakes.dart';
 
@@ -406,5 +410,34 @@ void main() {
       expect(source.saves, isEmpty);
       expect(notepad.notes.map((n) => n.id), [_b.id]);
     });
+  });
+
+  testWidgets('copies the note with or without its title', (tester) async {
+    final copied = <String>[];
+    final messenger = TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'Clipboard.setData') copied.add((call.arguments as Map)['text'] as String);
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    const note = ChatNote(id: '1', title: 'Loot', text: 'PDA Pinned\nXanax 800k');
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: BotToastInit(),
+        navigatorObservers: [BotToastNavigatorObserver()],
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(onPressed: () => chatShareNote(context, note), child: const Text('share')),
+          ),
+        ),
+      ),
+    );
+    for (final option in ['Copy only content', 'Copy with title']) {
+      await tester.tap(find.text('share'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(option));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+    }
+    expect(copied, ['Xanax 800k', 'Loot\n\nXanax 800k']);
   });
 }
