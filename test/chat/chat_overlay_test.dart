@@ -450,6 +450,39 @@ void main() {
       expect(opacity(), 1);
     });
 
+    testWidgets('a tucked bubble tucks back when left alone or the chat closes', (tester) async {
+      NativeChat.prefs.launcherTap = ChatLauncherTap.window;
+      addTearDown(() {
+        NativeChat.prefs.launcherTap = ChatLauncherTap.full;
+        NativeChat.bigWindow.value = null;
+      });
+      NativeChat.prefs.bubbleSpot = ['1', '0.5', '1'];
+      await _pumpApp(tester);
+      Offset edge() => tester.getRect(find.byIcon(Icons.forum_rounded)).centerLeft + const Offset(4, 0);
+
+      await tester.tapAt(edge());
+      await _settle(tester);
+      expect(NativeChat.prefs.bubbleSpot.last, '0');
+      await tester.pump(const Duration(seconds: 5));
+      expect(NativeChat.prefs.bubbleSpot.last, '1');
+
+      await tester.tapAt(edge());
+      await _settle(tester);
+      // Past the double tap
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.byIcon(Icons.forum_rounded));
+      await _settle(tester);
+      expect(NativeChat.bigWindowShown, isTrue);
+      await tester.pump(const Duration(seconds: 6));
+      expect(NativeChat.prefs.bubbleSpot.last, '0');
+
+      await tester.tap(find.byIcon(Icons.forum_rounded));
+      await _settle(tester);
+      expect(NativeChat.bigWindow.value, isNull);
+      await tester.pump(const Duration(seconds: 5));
+      expect(NativeChat.prefs.bubbleSpot.last, '1');
+    });
+
     testWidgets('a second tap on the bubble closes the chat window', (tester) async {
       NativeChat.prefs.launcherTap = ChatLauncherTap.window;
       addTearDown(() {

@@ -105,6 +105,9 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
   static const int _maxMinis = 3;
 
   Offset? _dragged;
+  static const Duration _retuckAfter = Duration(seconds: 5);
+  int _wasDock = 0;
+  Timer? _retuck;
   final Map<String, _Floating> _windows = {};
   _Floating? _bigWin;
   SplitSide? _bigWindowSide;
@@ -141,6 +144,7 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
 
   @override
   void dispose() {
+    _retuck?.cancel();
     if (NativeChat.sheetsKey == _sheets) NativeChat.sheetsKey = null;
     dropChatToast();
     NativeChat.rootTop.removeListener(_trackWindowBack);
@@ -497,6 +501,31 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     _layer?.markNeedsBuild();
   }
 
+  void _untuck() {
+    _wasDock = _spot.$2;
+    _setSpot(_spot.$1, 0);
+    _armRetuck();
+  }
+
+  void _armRetuck() {
+    _retuck?.cancel();
+    if (_wasDock != 0) _retuck = Timer(_retuckAfter, _retuckIfIdle);
+  }
+
+  void _keepOut() {
+    _wasDock = 0;
+    _retuck?.cancel();
+  }
+
+  // Waits while the chat is open
+  void _retuckIfIdle() {
+    if (!mounted || _wasDock == 0) return;
+    if (_menu || _windowsShown || !(NativeChat.rootTop.value?.isFirst ?? true)) return _armRetuck();
+    final dock = _wasDock;
+    _wasDock = 0;
+    _setSpot(_spot.$1, dock);
+  }
+
   Offset _bubbleAt(MediaQueryData media) {
     if (_dragged case final at?) return at;
     final (spot, dock) = _spot;
@@ -538,11 +567,15 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
     return ChatWindowFrame.semanticMoves(
       at,
       range,
-      (to) => _setSpot(Offset(share(to.left, range.left, range.width), share(to.top, range.top, range.height)), 0),
+      (to) {
+        _keepOut();
+        _setSpot(Offset(share(to.left, range.left, range.width), share(to.top, range.top, range.height)), 0);
+      },
     );
   }
 
   void _bubbleDrag(MediaQueryData media, Offset delta) {
+    _keepOut();
     final at = _bubbleAt(media) + delta;
     final range = _bubbleRange(media);
     final (edgeLeft, edgeRight) = _edges(media);
@@ -955,13 +988,12 @@ class _ChatOverlayState extends State<ChatOverlay> with TickerProviderStateMixin
         prefs.launcherTap == ChatLauncherTap.window &&
         NativeChat.windows.bigWindowOnTop;
     final VoidCallback tap = dock != 0
-        ? () => _setSpot(_spot.$1, 0)
-        : (failed
-              ? () {
-                  chat.retry();
-                  open();
-                }
-              : open);
+        ? _untuck
+        : () {
+            _armRetuck();
+            if (failed) chat.retry();
+            open();
+          };
     const names = {
       'faction': 'faction',
       'company': 'company',
