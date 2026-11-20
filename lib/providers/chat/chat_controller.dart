@@ -1295,10 +1295,47 @@ class ChatController extends ChangeNotifier {
     _source.peek(ask);
     _source.loadBlocked();
     _refreshPresence();
+    _refreshMembers();
+  }
+
+  Future<void> _refreshMembers() async {
+    final api = _api;
+    final room = _factionRoom;
+    if (api == null || room == null || _asking.contains(room) || appInBackground()) return;
+    if (_membersAt != null && DateTime.now().difference(_membersAt!) < _membersEvery) return;
+    _membersAt = DateTime.now();
+    _asking.add(room);
+    final generation = _generation;
+    try {
+      final roster = await api.roster(room);
+      if (_disposed || generation != _generation) return;
+      // Retry in five minutes
+      if (roster == null) {
+        _membersAt = DateTime.now().subtract(_membersEvery - const Duration(minutes: 5));
+        return;
+      }
+      _roster[room] = _byPresence(roster);
+      _presenceRevision++;
+      if (_inboxShown) _refreshPresence();
+      notifyListeners();
+    } finally {
+      if (generation == _generation) _asking.remove(room);
+    }
   }
 
   static const int _presenceMax = 50;
+  static const Duration _membersEvery = Duration(hours: 1);
   bool _askedList = false;
+  DateTime? _membersAt;
+
+  String? get _factionRoom => _rooms.where((r) => _prefs.isFactionRoom(r.id)).firstOrNull?.id;
+
+  /// Null without a faction list
+  int? onlineIn(String roomId) {
+    final members = _roster[roomId];
+    if (members == null || roomId != _factionRoom) return null;
+    return members.where((u) => presenceOf(u.id) == ChatPresence.online).length;
+  }
 
   void _refreshPresence() {
     final listed = [
@@ -1306,7 +1343,12 @@ class ChatController extends ChangeNotifier {
         for (final r in _privateChats.take(_presenceMax)) ?ChatRoom.peerIdOf(r.id),
     ];
     _askedList = listed.isNotEmpty;
-    final peers = {for (final id in _onScreen) ?ChatRoom.peerIdOf(id), ...listed};
+    final peers = {
+      for (final id in _onScreen) ?ChatRoom.peerIdOf(id),
+      ...listed,
+      if (_inboxShown && _factionRoom != null)
+        for (final u in rosterOf(_factionRoom!)) u.id,
+    };
     if (peers.isNotEmpty) _source.online(peers.toList());
   }
 
@@ -1550,6 +1592,7 @@ class ChatController extends ChangeNotifier {
           _source.refreshUnread();
           if (_inboxShown) _source.refreshDms();
           _refreshPresence();
+          if (_inboxShown) _refreshMembers();
         });
         if (!_unreadKnown && !_countsLate) {
           _countsTimer ??= Timer(_countsWait, () {
@@ -1868,6 +1911,7 @@ class ChatController extends ChangeNotifier {
     _presence.clear();
     _lastAction.clear();
     _roster.clear();
+    _membersAt = null;
     _friends = null;
     _friendsAt = DateTime(0);
     _blocked = {};

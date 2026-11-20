@@ -1841,6 +1841,7 @@ class ChatConversationTile extends StatelessWidget {
     this.awayLine,
     this.typing = const [],
     this.presence,
+    this.online,
     this.actions = const {},
     this.dot = false,
     this.more = false,
@@ -1884,6 +1885,7 @@ class ChatConversationTile extends StatelessWidget {
   /// Who is typing, replaces everything else
   final List<ChatUser> typing;
   final ChatPresence? presence;
+  final int? online;
 
   /// For screen readers, the swipe actions
   final Map<CustomSemanticsAction, VoidCallback> actions;
@@ -1952,6 +1954,7 @@ class ChatConversationTile extends StatelessWidget {
     final spoken = [
       name,
       ?presence?.name,
+      if (online != null) '$online online',
       if (highlight)
         dot
             ? 'new messages'
@@ -2008,6 +2011,15 @@ class ChatConversationTile extends StatelessWidget {
                               if (presence != null) ...[
                                 const SizedBox(width: 6),
                                 ChatPresenceDot(presence: presence!, foreground: scheme.onSurface),
+                              ],
+                              if (online != null) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  '- $online online',
+                                  softWrap: false,
+                                  overflow: TextOverflow.fade,
+                                  style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                                ),
                               ],
                               if (frozen) ...[
                                 const SizedBox(width: 4),

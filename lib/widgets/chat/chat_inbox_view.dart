@@ -272,6 +272,7 @@ class ChatInboxViewState extends State<ChatInboxView> {
         awayLine: unreadCount > 0 ? chat.awayFor(room.id)?.inboxLine(unreadCount) : null,
         typing: chat.typingIn(room.id),
         presence: room.isDm ? chat.presenceOf(ChatRoom.peerIdOf(room.id)) : null,
+        online: chat.onlineIn(room.id),
         hidePreview: replying,
         footer: room.id == ChatFactionOps.roomId ? ChatFactionFooter(prefs: prefs) : null,
         onTap: () => _open(room.id),

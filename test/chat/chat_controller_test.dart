@@ -104,6 +104,30 @@ void main() {
     expect(source.calls, contains('online [8]'));
   });
 
+  test('faction online count, roster once an hour', () async {
+    final api = _SlowApi();
+    final c = ChatController(source, prefs, api);
+    addTearDown(c.dispose);
+    source
+      ..emit(const ChatReadyEvent(1))
+      ..emit(const ChatRoomsEvent([faction]));
+    c.attach();
+    api.rosterAnswer.complete([
+      (const ChatUser(id: 20, name: 'Alpha'), const ChatLastAction(ChatPresence.online)),
+      (const ChatUser(id: 21, name: 'Bravo'), const ChatLastAction(ChatPresence.offline)),
+    ]);
+    await Future<void>.delayed(Duration.zero);
+    expect(c.onlineIn('faction'), 1);
+    expect(source.calls, contains('online [20, 21]'));
+
+    source.emit(const ChatPresenceEvent({21: ChatPresence.online}));
+    expect(c.onlineIn('faction'), 2);
+    c
+      ..detach()
+      ..attach();
+    expect(api.rosterCalls, 1);
+  });
+
   group('session', () {
     test('a lost session keeps the chat, another account wipes it', () {
       chat.openConversation('faction');
