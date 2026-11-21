@@ -2595,6 +2595,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Set up SettingsProvider so that user preferences are applied
     // ## Leave this first as other options below need this to be initialized ##
     await _settingsProvider.loadPreferences();
+    // Widget storage can miss restored settings
+    unawaited(_settingsProvider.syncAppWidgetSettings());
 
     // Set up UserScriptsProvider so that user preferences are applied
     await _userScriptsProvider.loadPreferencesAndScripts();

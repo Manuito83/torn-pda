@@ -132,6 +132,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Login: fixed captcha reopening in a loop'),
           _MItem('Chat: fixed market price check errors'),
           _MItem('Scripts: fixed freeze with very large scripts'),
+          _MItem('Widget: fixed reported home screen widget issues'),
         ],
       ),
     ],

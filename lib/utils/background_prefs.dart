@@ -27,6 +27,7 @@ class BackgroundPrefs {
   static const String _kDiscreetSchedule = "pda_discreetSchedule";
   static const String _kDiscreetScheduleFrom = "pda_discreetScheduleFrom";
   static const String _kDiscreetScheduleTo = "pda_discreetScheduleTo";
+  static const String _kWidgetFailureReported = "pda_widgetFailureReported";
 
   Future<String> getOwnDetails() async {
     final prefs = SharedPreferencesAsync();
@@ -55,6 +56,14 @@ class BackgroundPrefs {
 
   Future<void> setTornChatDmPush(bool value) async {
     await SharedPreferencesAsync().setBool(_kTornChatDmPush, value);
+  }
+
+  Future<int> getWidgetFailureReported() async {
+    return await SharedPreferencesAsync().getInt(_kWidgetFailureReported) ?? 0;
+  }
+
+  Future<void> setWidgetFailureReported(int millis) async {
+    await SharedPreferencesAsync().setInt(_kWidgetFailureReported, millis);
   }
 
   Future<bool> getNativeChatReplyEnabled() async {

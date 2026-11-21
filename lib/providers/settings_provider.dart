@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart' show InAppWebViewController;
 import 'package:flutter_refresh_rate_control/flutter_refresh_rate_control.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
@@ -1554,6 +1555,7 @@ class SettingsProvider extends ChangeNotifier {
   set appwidgetDarkMode(bool value) {
     _appwidgetDarkMode = value;
     Prefs().setAppwidgetDarkMode(value);
+    unawaited(syncAppWidgetSettings());
     notifyListeners();
   }
 
@@ -1562,6 +1564,7 @@ class SettingsProvider extends ChangeNotifier {
   set appwidgetRemoveShortcutsOneRowLayout(bool value) {
     _appwidgetRemoveShortcutsOneRowLayout = value;
     Prefs().setAppwidgetRemoveShortcutsOneRowLayout(value);
+    unawaited(syncAppWidgetSettings());
     notifyListeners();
   }
 
@@ -1570,6 +1573,7 @@ class SettingsProvider extends ChangeNotifier {
   set appwidgetMoneyEnabled(bool value) {
     _appwidgetMoneyEnabled = value;
     Prefs().setAppwidgetMoneyEnabled(value);
+    unawaited(syncAppWidgetSettings());
     notifyListeners();
   }
 
@@ -1578,6 +1582,7 @@ class SettingsProvider extends ChangeNotifier {
   set appwidgetCooldownTapOpenBrowser(bool value) {
     _appwidgetCooldownTapOpenBrowser = value;
     Prefs().setAppwidgetCooldownTapOpensBrowser(value);
+    unawaited(syncAppWidgetSettings());
     notifyListeners();
   }
 
@@ -1594,7 +1599,30 @@ class SettingsProvider extends ChangeNotifier {
   set appwidgetRacingTapOpenBrowser(bool value) {
     _appwidgetRacingTapOpenBrowser = value;
     Prefs().setAppwidgetRacingTapOpensBrowser(value);
+    unawaited(syncAppWidgetSettings());
     notifyListeners();
+  }
+
+  // Keys the Android widget reads
+  Map<String, bool> get _appwidgetSettings => {
+        'darkMode': _appwidgetDarkMode,
+        'removeShortcutsOneRowLayout': _appwidgetRemoveShortcutsOneRowLayout,
+        'money_enabled': _appwidgetMoneyEnabled,
+        'cooldown_tap_opens_browser': _appwidgetCooldownTapOpenBrowser,
+        'racing_tap_opens_browser': _appwidgetRacingTapOpenBrowser,
+      };
+
+  /// Copies widget settings to widget storage
+  Future<void> syncAppWidgetSettings() async {
+    if (!Platform.isAndroid) return;
+    try {
+      for (final setting in _appwidgetSettings.entries) {
+        await HomeWidget.saveWidgetData<bool>(setting.key, setting.value);
+      }
+      await HomeWidget.updateWidget(name: 'HomeWidgetTornPda');
+    } catch (e) {
+      log("Error syncing widget settings: $e");
+    }
   }
 
   var _pipEnabled = true;

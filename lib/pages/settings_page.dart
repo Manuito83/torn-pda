@@ -15,7 +15,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
@@ -1194,7 +1193,6 @@ class SettingsPageState extends State<SettingsPage> {
                 onChanged: (value) {
                   setState(() {
                     _settingsProvider.appwidgetDarkMode = value;
-                    HomeWidget.saveWidgetData<bool>('darkMode', value);
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -1220,7 +1218,6 @@ class SettingsPageState extends State<SettingsPage> {
                     onChanged: (value) {
                       setState(() {
                         _settingsProvider.appwidgetRemoveShortcutsOneRowLayout = value;
-                        HomeWidget.saveWidgetData<bool>('removeShortcutsOneRowLayout', value);
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -1253,7 +1250,6 @@ class SettingsPageState extends State<SettingsPage> {
                     onChanged: (value) {
                       setState(() {
                         _settingsProvider.appwidgetMoneyEnabled = value;
-                        HomeWidget.saveWidgetData<bool>('money_enabled', value);
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -1285,7 +1281,6 @@ class SettingsPageState extends State<SettingsPage> {
                     onChanged: (value) {
                       setState(() {
                         _settingsProvider.appwidgetCooldownTapOpenBrowser = value;
-                        HomeWidget.saveWidgetData<bool>('cooldown_tap_opens_browser', value);
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -1318,7 +1313,6 @@ class SettingsPageState extends State<SettingsPage> {
                     onChanged: (value) {
                       setState(() {
                         _settingsProvider.appwidgetRacingTapOpenBrowser = value;
-                        HomeWidget.saveWidgetData<bool>('racing_tap_opens_browser', value);
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,

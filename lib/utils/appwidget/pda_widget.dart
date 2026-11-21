@@ -4,11 +4,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/main.dart' show analytics;
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
@@ -94,23 +97,26 @@ Future<bool> _updateWidgetsInBackgroundAndroid(String taskName, Map<String, dyna
   }
 
   if (taskName == 'wm_backgroundUpdate') {
-    await fetchAndPersistWidgetData();
+    await fetchAndPersistWidgetData(trigger: taskName);
 
     await Workmanager().registerOneOffTask('pdaWidget_background_3', 'wm_backgroundUpdate_3',
-        initialDelay: const Duration(minutes: 3));
+        initialDelay: const Duration(minutes: 3), constraints: _needsNetwork());
     await Workmanager().registerOneOffTask('pdaWidget_background_6', 'wm_backgroundUpdate_6',
-        initialDelay: const Duration(minutes: 6));
+        initialDelay: const Duration(minutes: 6), constraints: _needsNetwork());
     await Workmanager().registerOneOffTask('pdaWidget_background_9', 'wm_backgroundUpdate_9',
-        initialDelay: const Duration(minutes: 9));
+        initialDelay: const Duration(minutes: 9), constraints: _needsNetwork());
     await Workmanager().registerOneOffTask('pdaWidget_background_12', 'wm_backgroundUpdate_12',
-        initialDelay: const Duration(minutes: 12));
+        initialDelay: const Duration(minutes: 12), constraints: _needsNetwork());
   } else if (taskName.contains("wm_backgroundUpdate_")) {
     // If it is a one-off task, only update
-    await fetchAndPersistWidgetData();
+    await fetchAndPersistWidgetData(trigger: taskName);
   }
 
   return true;
 }
+
+// Without it Android 15+ blocks background network
+Constraints _needsNetwork() => Constraints(networkType: NetworkType.connected);
 
 // =================================================================================
 // Background update logic for iOS
@@ -155,7 +161,7 @@ FutureOr<void> onWidgetInteractivityCallback(Uri? data) async {
     HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
     HomeWidget.updateWidget(name: 'HomeWidgetRankedWar', iOSName: 'HomeWidgetRankedWar');
 
-    await fetchAndPersistWidgetData();
+    await fetchAndPersistWidgetData(trigger: 'reload_clicked');
 
     HomeWidget.saveWidgetData<bool>('reloading', false);
     HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
@@ -172,7 +178,7 @@ FutureOr<void> onWidgetInteractivityCallback(Uri? data) async {
 /// - Detect which widgets are installed
 /// - Read API key from Prefs, fetch data, write shared data via HomeWidget.saveWidgetData
 /// - Update widgets after persisting data
-Future<void> fetchAndPersistWidgetData() async {
+Future<void> fetchAndPersistWidgetData({String trigger = "app"}) async {
   try {
     final installedWidgets = await getInstalledWidgetsInfo();
     if (!installedWidgets.anyWidgetInstalled) {
@@ -225,7 +231,7 @@ Future<void> fetchAndPersistWidgetData() async {
       }
     } else {
       if (isPdaWidgetInstalled && Platform.isAndroid) {
-        await _refreshMainPdaWidgetData(apiKey);
+        await _refreshMainPdaWidgetData(apiKey, trigger);
       }
       if (isRankedWarWidgetInstalled) {
         await _refreshRankedWarWidgetData(savedUserRaw, apiKey);
@@ -258,6 +264,7 @@ Future<void> startBackgroundRefresh() async {
       Workmanager().registerPeriodicTask(
         "pdaWidget_background",
         'wm_backgroundUpdate',
+        constraints: _needsNetwork(),
       );
     } else if (Platform.isIOS) {
       final active = await Workmanager().printScheduledTasks();
@@ -496,7 +503,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
 /// Called from:
 /// - fetchAndPersistWidgetData (only if the main PDA widget is installed)
 /// Purpose: Build status/counters/shortcuts snapshot for the main widget UI.
-Future<void> _refreshMainPdaWidgetData(String apiKey) async {
+Future<void> _refreshMainPdaWidgetData(String apiKey, String trigger) async {
   var user = await ApiCallsV1.getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
 
   if (user is ApiError) {
@@ -840,6 +847,39 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<bool>('main_layout_visibility', false);
     HomeWidget.saveWidgetData<bool>('error_layout_visibility', true);
     HomeWidget.saveWidgetData<String>('error_message', "API error: ${error.errorReason}");
+    // Connection and timeout only
+    if (error.errorId == 0 || error.errorId == 100) {
+      await _reportWidgetFailure(error, trigger);
+    }
+  }
+}
+
+Future<void> _reportWidgetFailure(ApiError error, String trigger) async {
+  try {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    // One report every 6 hours
+    if (now - await BackgroundPrefs().getWidgetFailureReported() < const Duration(hours: 6).inMilliseconds) {
+      return;
+    }
+    await BackgroundPrefs().setWidgetFailureReported(now);
+
+    // Background isolates start without Firebase
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    }
+    // webview_hcpp key only if main ran
+    await FirebaseCrashlytics.instance.recordError(
+      "Widget update failed",
+      null,
+      reason: "errorId ${error.errorId}: ${error.errorReason}",
+      information: [
+        "trigger: $trigger",
+        "pdaErrorDetails: ${error.pdaErrorDetails}",
+        "tornErrorDetails: ${error.tornErrorDetails}",
+      ],
+    );
+  } catch (e) {
+    log("Widget failure report failed: $e");
   }
 }
 
