@@ -5,6 +5,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:provider/provider.dart';
 
 // Project imports:
+import 'package:torn_pda/models/userscripts/script_source_preview.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 
@@ -215,7 +216,7 @@ class UserScriptsBulkUpdateDialogState extends State<UserScriptsBulkUpdateDialog
             ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(6),
-              child: Text(item.remote!.source, style: const TextStyle(fontSize: 11)),
+              child: Text(previewScriptSourceWithNotice(item.remote!.source), style: const TextStyle(fontSize: 11)),
             ),
           ),
         ],

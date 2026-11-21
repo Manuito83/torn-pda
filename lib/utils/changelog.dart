@@ -131,6 +131,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Chat: fixed swapped names in lost attack summaries'),
           _MItem('Login: fixed captcha reopening in a loop'),
           _MItem('Chat: fixed market price check errors'),
+          _MItem('Scripts: fixed freeze with very large scripts'),
         ],
       ),
     ],

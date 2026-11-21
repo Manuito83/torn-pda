@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/models/userscripts/script_source_preview.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
@@ -326,7 +327,7 @@ class _DevToolsScriptsTabState extends State<DevToolsScriptsTab> {
           height: 400,
           child: SingleChildScrollView(
             child: SelectableText(
-              script.source,
+              previewScriptSourceWithNotice(script.source),
               style: TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 12,

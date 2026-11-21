@@ -12,6 +12,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/models/userscripts/script_source_preview.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/widgets/settings/gold_storage_icon.dart';
@@ -45,6 +46,10 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
   final _nameFormKey = GlobalKey<FormState>();
   final _sourceFormKey = GlobalKey<FormState>();
 
+  String? _fullSource;
+  String? _sourceNotice;
+  String get _mainSource => _fullSource ?? _addSourceController.text;
+
   // Custom API Key handling
   bool _mainTabFirstSavePress = true;
   bool _remoteTabFirstLoadOrSavePress = true;
@@ -59,6 +64,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
   final _remoteSourceFormKey = GlobalKey<FormState>();
   bool _remoteSourceFetching = false;
   final _remoteSourceController = TextEditingController();
+  String? _remoteSourceNotice;
   final _remoteNameController = TextEditingController();
   final _remoteRunTimeController = TextEditingController();
 
@@ -87,7 +93,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       for (final script in _userScriptsProvider.userScriptList) {
         if (script.name == widget.scriptBeingEdited!.name) {
           _addNameController.text = script.name;
-          _addSourceController.text = script.source;
+          _setMainSource(script.source);
           _originalSource = script.source;
           _originalName = script.name;
           _originalTime = script.time;
@@ -112,10 +118,24 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
     });
   }
 
+  void _setMainSource(String source) {
+    final preview = previewScriptSource(source);
+    _fullSource = preview.notice == null ? null : source;
+    _sourceNotice = preview.notice;
+    _addSourceController.value = TextEditingValue(
+      text: preview.text,
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+  }
+
   void _onMainTabSourceChanged() {
     // Only main tab
     if (_tabController.index == 0) {
-      final pdaLogicFound = _addSourceController.text.contains(apiKeyPlaceholder);
+      if (_fullSource == null && _addSourceController.text.length > scriptPreviewThreshold) {
+        _setMainSource(_addSourceController.text);
+        setState(() {});
+      }
+      final pdaLogicFound = _mainSource.contains(apiKeyPlaceholder);
 
       // Update state if the candidate status changes or needs to be corrected
       if (pdaLogicFound != _isCurrentScriptCandidateForCustomApiKey || pdaLogicFound != _showCustomApiKeyButton) {
@@ -298,26 +318,48 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               ],
             ),
           ),
+          if (_fullSource != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, 28),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                  child: const Text("Clear"),
+                  onPressed: () {
+                    _fullSource = null;
+                    _sourceNotice = null;
+                    _addSourceController.clear();
+                    setState(() {});
+                  },
+                ),
+              ),
+            ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
               child: Form(
                 key: _sourceFormKey,
                 child: TextFormField(
+                  readOnly: _fullSource != null,
                   maxLines: null,
                   expands: true,
                   autocorrect: false,
                   style: const TextStyle(fontSize: 12),
                   controller: _addSourceController,
                   keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     isDense: true,
                     counterText: "",
-                    border: OutlineInputBorder(),
-                    labelText: 'Paste source code',
+                    border: const OutlineInputBorder(),
+                    labelText: _sourceNotice ?? 'Paste source code',
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
+                  validator: (_) {
+                    final value = _mainSource;
+                    if (value.isEmpty) {
                       return "Cannot be empty!";
                     }
                     try {
@@ -559,7 +601,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
                       if (fetchWasSuccessful) {
                         _fetchedRemoteModel = resultModel;
-                        _remoteSourceController.text = resultModel.source;
+                        final preview = previewScriptSource(resultModel.source);
+                        _remoteSourceController.text = preview.text;
+                        _remoteSourceNotice = preview.notice;
                         _remoteNameController.text = resultModel.name;
                         _remoteRunTimeController.text = resultModel.time.name;
                         newRemoteSourceIsCandidate = resultModel.source.contains(apiKeyPlaceholder);
@@ -653,6 +697,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           setState(() {
                             _remoteUrlController.clear();
                             _remoteSourceController.clear();
+                            _remoteSourceNotice = null;
                             _remoteNameController.clear();
                             _remoteRunTimeController.clear();
                             _fetchedRemoteModel = null;
@@ -660,13 +705,13 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
                             if (widget.editingExistingScript && widget.scriptBeingEdited != null) {
                               // If editing, candidate status based on the source currently in the main tab editor
-                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(apiKeyPlaceholder);
+                              _isCurrentScriptCandidateForCustomApiKey = _mainSource.contains(apiKeyPlaceholder);
                               _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
                               // Allow main tab to prompt again if needed by resetting its first save press flag
                               _mainTabFirstSavePress = true;
                             } else {
                               // If we were adding a new script, the main tab's source determines candidate status
-                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(apiKeyPlaceholder);
+                              _isCurrentScriptCandidateForCustomApiKey = _mainSource.contains(apiKeyPlaceholder);
                               _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
                             }
                           });
@@ -702,6 +747,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           border: const OutlineInputBorder(),
                           label: _remoteSourceController.text.isEmpty
                               ? const Center(child: Text("Remote source"))
+                              : _remoteSourceNotice != null
+                              ? Text(_remoteSourceNotice!)
                               : null,
                         ),
                         validator: (value) {
@@ -810,7 +857,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
     if (_nameFormKey.currentState!.validate() && _sourceFormKey.currentState!.validate()) {
       final inputName = _addNameController.text;
       final inputTime = _originalTime;
-      final inputSource = _addSourceController.text;
+      final inputSource = _mainSource;
       Map<String, dynamic>? metaMap;
 
       try {
