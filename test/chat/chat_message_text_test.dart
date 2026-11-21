@@ -9,6 +9,7 @@ import 'package:torn_pda/models/chat/chat_quote.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
 import 'package:torn_pda/providers/chat/chat_translate.dart';
+import 'package:torn_pda/widgets/chat/chat_compose_tools.dart';
 
 import 'chat_fakes.dart';
 
@@ -355,5 +356,28 @@ void main() {
       expect(asked, 2);
       expect(translator.shownFor('m1', 'en')!.text, 'hello again');
     });
+  });
+
+  testWidgets('the selection menu formats the selected text', (tester) async {
+    final controller = TextEditingController(text: 'hey you');
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TextField(
+            controller: controller,
+            contextMenuBuilder: (context, state) => ChatSelectionMenu(state: state, controller: controller),
+          ),
+        ),
+      ),
+    );
+    await tester.showKeyboard(find.byType(TextField));
+    controller.selection = const TextSelection(baseOffset: 0, extentOffset: 3);
+    tester.state<EditableTextState>(find.byType(EditableText)).showToolbar();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Format'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.format_bold_rounded));
+    await tester.pumpAndSettle();
+    expect(controller.text, '**hey** you');
   });
 }

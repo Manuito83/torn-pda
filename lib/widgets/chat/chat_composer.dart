@@ -558,6 +558,7 @@ class _ChatComposerState extends State<ChatComposer> {
               child: TextField(
                 controller: _text,
                 focusNode: _focus,
+                contextMenuBuilder: (context, state) => ChatSelectionMenu(state: state, controller: _text),
                 autofocus: widget.autofocus,
                 enabled: widget.enabled,
                 onChanged: (value) {

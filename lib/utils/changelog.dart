@@ -119,6 +119,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Chat: online status in chat list'),
           _MItem('Chat: faction online count'),
           _MItem('Chat: bubble goes back to the edge after use'),
+          _MItem('Chat: format text from the selection menu'),
           _MItem('Chat: copy notes without title'),
         ],
       ),

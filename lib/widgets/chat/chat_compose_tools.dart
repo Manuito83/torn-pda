@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
@@ -1145,7 +1146,7 @@ class ChatFormatBar extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focus;
 
-  static const List<(IconData, String, String, String)> _styles = [
+  static const List<(IconData, String, String, String)> styles = [
     (Icons.format_bold_rounded, 'Bold', '**', 'bold'),
     (Icons.format_italic_rounded, 'Italic', '*', 'italic'),
     (Icons.format_strikethrough_rounded, 'Strikethrough', '~~', 'strikethrough'),
@@ -1176,7 +1177,7 @@ class ChatFormatBar extends StatelessWidget {
         decoration: BoxDecoration(color: scheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(8)),
         child: Row(
           children: [
-            for (final (icon, tooltip, marker, placeholder) in _styles)
+            for (final (icon, tooltip, marker, placeholder) in styles)
               button(icon, tooltip, () => _apply(ChatFormat.wrap(controller.value, marker, placeholder))),
             button(Icons.link_rounded, 'Link', () => _apply(ChatFormat.link(controller.value))),
             const SizedBox(width: 6),
@@ -1191,6 +1192,85 @@ class ChatFormatBar extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class ChatSelectionMenu extends StatefulWidget {
+  const ChatSelectionMenu({super.key, required this.state, required this.controller});
+
+  final EditableTextState state;
+  final TextEditingController controller;
+
+  @override
+  State<ChatSelectionMenu> createState() => _ChatSelectionMenuState();
+}
+
+class _ChatSelectionMenuState extends State<ChatSelectionMenu> {
+  bool _format = false;
+
+  void _apply(TextEditingValue value) {
+    widget.controller.value = value;
+    widget.state.hideToolbar();
+  }
+
+  List<(IconData, String, VoidCallback)> get _actions {
+    TextEditingValue value() => widget.controller.value;
+    return [
+      for (final (icon, label, marker, placeholder) in ChatFormatBar.styles)
+        (icon, label, () => _apply(ChatFormat.wrap(value(), marker, placeholder))),
+      (Icons.link_rounded, 'Link', () => _apply(ChatFormat.link(value()))),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
+    final selected = !state.textEditingValue.selection.isCollapsed;
+    // Native iOS menu keeps its extras
+    if (SystemContextMenu.isSupportedByField(state)) {
+      return SystemContextMenu.editableText(
+        editableTextState: state,
+        items: [
+          ...SystemContextMenu.getDefaultItems(state),
+          if (selected)
+            for (final (_, label, onPressed) in _actions)
+              IOSSystemContextMenuItemCustom(title: label, onPressed: onPressed),
+        ],
+      );
+    }
+    final anchors = state.contextMenuAnchors;
+    if (!_format) {
+      final items = [...state.contextMenuButtonItems];
+      if (selected) {
+        final at = items.indexWhere((i) => i.type == ContextMenuButtonType.paste);
+        items.insert(
+          at < 0 ? items.length : at + 1,
+          ContextMenuButtonItem(label: 'Format', onPressed: () => setState(() => _format = true)),
+        );
+      }
+      return AdaptiveTextSelectionToolbar.buttonItems(anchors: anchors, buttonItems: items);
+    }
+    final actions = _actions;
+    final cupertino = switch (Theme.of(context).platform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => true,
+      _ => false,
+    };
+    return AdaptiveTextSelectionToolbar(
+      anchors: anchors,
+      children: [
+        for (final (i, (icon, label, onPressed)) in actions.indexed)
+          cupertino
+              ? CupertinoTextSelectionToolbarButton(
+                  onPressed: onPressed,
+                  child: Icon(icon, size: 20, semanticLabel: label),
+                )
+              : TextSelectionToolbarTextButton(
+                  padding: TextSelectionToolbarTextButton.getPadding(i, actions.length),
+                  onPressed: onPressed,
+                  child: Icon(icon, size: 20, semanticLabel: label),
+                ),
+      ],
     );
   }
 }
