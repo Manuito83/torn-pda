@@ -1,6 +1,7 @@
 // AppDelegate.swift
 import ActivityKit  // For Live Activities
 import Darwin  // for host_statistics64
+import FirebaseCrashlytics
 import Flutter
 import MachO  // for task_info APIs
 import UIKit
@@ -83,6 +84,10 @@ import workmanager_apple
     )
 
     WorkmanagerDebug.setCurrent(LoggingDebugHandler())
+
+    NotificationCenter.default.addObserver(
+      forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main
+    ) { [weak self] _ in self?.trail("memoryWarning") }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -526,6 +531,31 @@ import workmanager_apple
     handleSceneDidBecomeActive()
   }
 
+  // MARK: - Lifecycle trail (Crashlytics log + last value)
+  private let trailStart = ProcessInfo.processInfo.systemUptime
+  private weak var trailEngine: FlutterEngine?
+
+  func trail(_ event: String) {
+    let vc = UIApplication.shared.connectedScenes
+      .compactMap { ($0 as? UIWindowScene)?.windows.first?.rootViewController as? FlutterViewController }
+      .first
+    if let engine = vc?.engine { trailEngine = engine }
+    let elapsed = Int(ProcessInfo.processInfo.systemUptime - trailStart)
+    let line =
+      "t+\(elapsed)s \(event) app=\(UIApplication.shared.applicationState.rawValue) "
+      + "vc=\(vc != nil) engine=\(trailEngine != nil) isolate=\(trailEngine?.isolateId != nil)"
+    Crashlytics.crashlytics().log(line)
+    Crashlytics.crashlytics().setCustomValue(line, forKey: "lifecycle_trail")
+    #if targetEnvironment(simulator)
+      NSLog("[trail] %@", line)
+    #endif
+  }
+
+  override func applicationWillTerminate(_ application: UIApplication) {
+    trail("applicationWillTerminate")
+    super.applicationWillTerminate(application)
+  }
+
   // MARK: - Scene Lifecycle (Live Activities)
   func handleSceneDidBecomeActive() {
     if #available(iOS 16.2, *) {
@@ -575,6 +605,10 @@ import workmanager_apple
 
   // MARK: - AlarmKit Handlers
   // Handlers moved to AlarmKitHandler.swift
+}
+
+final class DeallocTrail {
+  deinit { (UIApplication.shared.delegate as? AppDelegate)?.trail("FlutterViewController dealloc") }
 }
 
 // MARK: - Chat notification reply
