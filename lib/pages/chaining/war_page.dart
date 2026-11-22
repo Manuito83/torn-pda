@@ -6,14 +6,13 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
@@ -48,6 +47,7 @@ import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/chaining/profile_slidable_action.dart';
 import 'package:torn_pda/widgets/pip/pip_player_picker.dart';
+import 'package:torn_pda/widgets/segmented_toggle.dart';
 
 class WarOptions {
   String? description;
@@ -281,32 +281,14 @@ class WarPageState extends State<WarPage> {
   Widget _onlineFilter() {
     return SizedBox(
       height: 25,
-      child: ToggleSwitch(
-        customWidths: const [32, 32],
-        borderWidth: 1,
-        cornerRadius: 5,
-        doubleTapDisable: true,
-        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-        initialLabelIndex: _w.onlineFilter == 0
+      child: SegmentedToggle(
+        itemWidth: 32,
+        allowDeselect: true,
+        selectedIndex: _w.onlineFilter == 0
             ? null
             : _w.onlineFilter == 1
             ? 0
             : 1,
-        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? [Colors.blueGrey]
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? [Colors.blueGrey]
-            : [Colors.blueGrey[900]!],
-        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? Colors.white
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? Colors.grey[800]
-            : Colors.black,
-        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        totalSwitches: 2,
-        animate: true,
-        animationDuration: 500,
         customIcons: const [
           Icon(Icons.circle, color: Colors.green, size: 12),
           Icon(Icons.circle, color: Colors.red, size: 12),
@@ -346,32 +328,14 @@ class WarPageState extends State<WarPage> {
   Widget _okayRedFilter(WarController w) {
     return SizedBox(
       height: 25,
-      child: ToggleSwitch(
-        customWidths: const [32, 32],
-        borderWidth: 1,
-        cornerRadius: 5,
-        doubleTapDisable: true,
-        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-        initialLabelIndex: _w.okayRedFilter == 0
+      child: SegmentedToggle(
+        itemWidth: 32,
+        allowDeselect: true,
+        selectedIndex: _w.okayRedFilter == 0
             ? null
             : _w.okayRedFilter == 1
             ? 0
             : 1,
-        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? [Colors.blueGrey]
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? [Colors.blueGrey]
-            : [Colors.blueGrey[900]!],
-        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? Colors.white
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? Colors.grey[800]
-            : Colors.black,
-        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        totalSwitches: 2,
-        animate: true,
-        animationDuration: 500,
         customIcons: [
           const Icon(MdiIcons.check, size: 12, color: Colors.green),
           const Icon(MdiIcons.hospital, size: 12, color: Colors.red),
@@ -411,28 +375,10 @@ class WarPageState extends State<WarPage> {
   Widget _countryFilter(WarController w) {
     return SizedBox(
       height: 25,
-      child: ToggleSwitch(
-        customWidths: const [32],
-        borderWidth: 1,
-        cornerRadius: 5,
-        doubleTapDisable: true,
-        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-        initialLabelIndex: !w.countryFilter ? null : 0,
-        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? [Colors.blueGrey]
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? [Colors.blueGrey]
-            : [Colors.blueGrey[900]!],
-        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? Colors.white
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? Colors.grey[800]
-            : Colors.black,
-        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        totalSwitches: 1,
-        animate: true,
-        animationDuration: 500,
+      child: SegmentedToggle(
+        itemWidth: 32,
+        allowDeselect: true,
+        selectedIndex: !w.countryFilter ? null : 0,
         customIcons: [const Icon(MdiIcons.mapMarker, size: 12)],
         onToggle: (index) async {
           await _performQuickUpdate(forceIntegrityCheck: false);
@@ -467,38 +413,25 @@ class WarPageState extends State<WarPage> {
   Widget _travelingFilter(WarController w) {
     return SizedBox(
       height: 25,
-      child: ToggleSwitch(
-        customWidths: const [32, 32],
-        borderWidth: 1,
-        cornerRadius: 5,
-        doubleTapDisable: true,
-        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-        initialLabelIndex: _w.abroadFilter == 0
+      child: SegmentedToggle(
+        itemWidth: 32,
+        allowDeselect: true,
+        selectedIndex: _w.abroadFilter == 0
             ? null
             : _w.abroadFilter == 1
             ? 0
             : 1,
-        activeBgColor: _w.abroadFilter == 1
+        activeColor: _w.abroadFilter == 1
             ? _themeProvider!.currentTheme == AppTheme.light
-                  ? [Colors.blue[200]!]
+                  ? Colors.blue[200]!
                   : _themeProvider!.currentTheme == AppTheme.dark
-                  ? [Colors.blue[500]!]
-                  : [Colors.blue[900]!]
+                  ? Colors.blue[500]!
+                  : Colors.blue[900]!
             : _themeProvider!.currentTheme == AppTheme.light
-            ? [Colors.red[200]!]
+            ? Colors.red[200]!
             : _themeProvider!.currentTheme == AppTheme.dark
-            ? [Colors.red[500]!]
-            : [Colors.red[900]!],
-        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? Colors.white
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? Colors.grey[800]
-            : Colors.black,
-        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        totalSwitches: 2,
-        animate: true,
-        animationDuration: 500,
+            ? Colors.red[500]!
+            : Colors.red[900]!,
         customIcons: [const Icon(MdiIcons.airplane, size: 12), const Icon(MdiIcons.airplaneOff, size: 12)],
         onToggle: (index) async {
           await _performQuickUpdate(forceIntegrityCheck: false);
@@ -535,28 +468,10 @@ class WarPageState extends State<WarPage> {
   Widget _chainWidgetToggler(WarController w) {
     return SizedBox(
       height: 25,
-      child: ToggleSwitch(
-        customWidths: const [32],
-        borderWidth: 1,
-        cornerRadius: 5,
-        doubleTapDisable: true,
-        borderColor: _themeProvider!.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-        initialLabelIndex: !w.showChainWidget ? null : 0,
-        activeBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? [Colors.blueGrey]
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? [Colors.blueGrey]
-            : [Colors.blueGrey[900]!],
-        activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-            ? Colors.white
-            : _themeProvider!.currentTheme == AppTheme.dark
-            ? Colors.grey[800]
-            : Colors.black,
-        inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        totalSwitches: 1,
-        animate: true,
-        animationDuration: 500,
+      child: SegmentedToggle(
+        itemWidth: 32,
+        allowDeselect: true,
+        selectedIndex: !w.showChainWidget ? null : 0,
         customIcons: [
           Icon(
             MdiIcons.linkVariant,

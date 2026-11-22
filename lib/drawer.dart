@@ -15,7 +15,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 // Flutter imports:
-import 'package:flutter/material.dart' hide Intent;
+import 'package:material_ui/material_ui.dart' hide Intent;
 import 'package:flutter/services.dart';
 import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
@@ -26,7 +26,6 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'package:receive_intent/receive_intent.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
@@ -106,10 +105,10 @@ import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/pda_update_dialog.dart';
 import 'package:torn_pda/widgets/drawer/remote_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
+import 'package:torn_pda/widgets/segmented_toggle.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/chaining/chain_attack.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:uri_to_file/uri_to_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 bool routeWithDrawer = true;
@@ -776,10 +775,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "pda_connectivity_check": false,
         "network_strict_mode": true,
         "scripts_early_http_allowed": true,
+        "hcpp_enabled": true,
+        "hcpp_default_on": true,
       });
 
       // Wait for preferences to be loaded before fetching Remote Config
       await _preferencesCompleter.future;
+
+      // Last session's values if the fetch fails
+      _settingsProvider.setHcppRemoteConfig(
+        enabled: remoteConfig.getBool("hcpp_enabled"),
+        defaultOn: remoteConfig.getBool("hcpp_default_on"),
+      );
 
       // Initial fetch and activation
       await remoteConfig.fetchAndActivate();
@@ -829,6 +836,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "ffscouter_hitcalling_enabled",
       );
       _settingsProvider.ffScouterBountiesEnabledRemoteConfig = remoteConfig.getBool("ffscouter_bounties_enabled");
+      _settingsProvider.setHcppRemoteConfig(
+        enabled: remoteConfig.getBool("hcpp_enabled"),
+        defaultOn: remoteConfig.getBool("hcpp_default_on"),
+      );
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
       _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");
@@ -1199,13 +1210,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           );
           return;
         } else if (Platform.isAndroid) {
-          final file = await toFile(uri.toString());
-          final bytes = await file.readAsBytes();
+          final bytes = await platformAndroid!.invokeMethod<Uint8List>("readContentUri", {"uri": uri.toString()});
 
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (_) => PreferencesImportDialog(bytes: bytes),
+            builder: (_) => PreferencesImportDialog(bytes: bytes!),
           );
           return;
         }
@@ -2329,34 +2339,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     children: <Widget>[
                       SizedBox(
                         height: 30,
-                        child: ToggleSwitch(
-                          customWidths: const [35, 35, 35],
-                          iconSize: 15,
-                          borderWidth: 1,
-                          cornerRadius: 5,
-                          borderColor: _themeProvider!.currentTheme == AppTheme.light
-                              ? [Colors.blueGrey]
-                              : [Colors.grey[900]!],
-                          initialLabelIndex: _themeProvider!.currentTheme == AppTheme.light
+                        child: SegmentedToggle(
+                          itemWidth: 35,
+                          selectedIndex: _themeProvider!.currentTheme == AppTheme.light
                               ? 0
                               : _themeProvider!.currentTheme == AppTheme.dark
                               ? 1
                               : 2,
-                          activeBgColor: _themeProvider!.currentTheme == AppTheme.light
-                              ? [Colors.blueGrey]
-                              : _themeProvider!.currentTheme == AppTheme.dark
-                              ? [Colors.blueGrey]
-                              : [Colors.blueGrey[900]!],
-                          activeFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                          inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-                              ? Colors.white
-                              : _themeProvider!.currentTheme == AppTheme.dark
-                              ? Colors.grey[800]
-                              : Colors.black,
-                          inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                          totalSwitches: 3,
-                          animate: true,
-                          animationDuration: 500,
                           icons: [FontAwesome.sun_o, FontAwesome.moon_o, MdiIcons.ghost],
                           onToggle: (index) {
                             bool syncToast = false;

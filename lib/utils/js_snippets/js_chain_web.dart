@@ -43,15 +43,23 @@ const String chainWebReader = r"""
     return null;
   }
 
+  function sidebarStore(el) {
+    return store || findStore(el) || findStore(document.getElementById('sidebar'));
+  }
+
+  function chainState(s) {
+    if (!s) return 'nostore';
+    try {
+      return s.getState().sidebar.bars.chain ? 'chain' : 'nochain';
+    } catch (e) {
+      return 'noshape';
+    }
+  }
+
   function attachStore(el) {
     if (store) return;
-    var s = findStore(el) || findStore(document.getElementById('sidebar'));
-    if (!s) return;
-    try {
-      if (!s.getState().sidebar.bars.chain) return;
-    } catch (e) {
-      return;
-    }
+    var s = sidebarStore(el);
+    if (chainState(s) !== 'chain') return;
     store = s;
     store.subscribe(function () {
       check(false);
@@ -244,8 +252,29 @@ const String chainWebReader = r"""
     check(true);
   });
 
-  window.__pdaChainReader = { check: check };
+  function sidebarState() {
+    return chainState(sidebarStore(document.querySelector(BAR)));
+  }
+
+  window.__pdaChainReader = { check: check, sidebarState: sidebarState };
   check(true);
+})();
+""";
+
+const String chainWebProbe = r"""
+(function () {
+  var b = document.querySelector('a[class*="chainBar___"]');
+  var r = window.__pdaChainReader;
+  var req = performance.getEntriesByType('resource').filter(function (e) {
+    return e.name.indexOf('getSidebarData') >= 0;
+  });
+  var last = req[req.length - 1];
+  var bar = !b ? 'none' : b.offsetWidth > 0 && getComputedStyle(b).visibility === 'visible' ? 'shown' : 'hidden';
+  var reader = !r ? 'none' : window.__pdaChainShown === true ? 'on' : 'off';
+  var sidebar = r ? r.sidebarState() : 'noreader';
+  var status = !last ? 'none' : last.responseStatus === undefined ? 'unknown' : last.responseStatus;
+  return 'vis=' + document.visibilityState + ' bar=' + bar + ' reader=' + reader + ' sidebar=' + sidebar +
+    ' req=' + status + ' w=' + innerWidth + ' url=' + location.pathname;
 })();
 """;
 

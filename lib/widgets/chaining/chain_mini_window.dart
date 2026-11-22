@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -137,6 +137,7 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
   bool _tornTab = false;
   bool _warm = !Platform.isAndroid;
   bool _loadStopped = false;
+  bool _probing = false;
   String _loadError = '';
 
   double get _width => _widths[_chain.miniWindowSize];
@@ -226,20 +227,38 @@ class _ChainMiniFrameState extends State<_ChainMiniFrame> with WidgetsBindingObs
     }
   }
 
-  void _toReload(String why) {
-    _reportFailure(why);
+  Future<void> _toReload(String why) async {
+    if (_probing) return;
+    final c = _controller;
+    final generation = _generation;
+    final state = _state;
+    var message = 'Chain mini window $why created=${c != null} loadStop=$_loadStopped error=$_loadError';
+    final probing = (why == 'no_bar' || why == 'bar_lost') && !_chain.miniWindowFailureReported && !Platform.isWindows;
+    if (probing && c != null) {
+      _probing = true;
+      try {
+        final result = await c.evaluateJavascript(source: chainWebProbe).timeout(const Duration(seconds: 2));
+        message += ' ${result ?? 'probe=null'}';
+      } catch (_) {
+        message += ' probe=failed';
+      } finally {
+        _probing = false;
+      }
+      if (!mounted || _generation != generation || _state != state || _controller != c) return;
+    }
+    _reportFailure(message);
     setState(() {
       _controller = null;
       _state = _MiniState.reload;
     });
   }
 
-  void _reportFailure(String why) {
+  void _reportFailure(String message) {
     if (_chain.miniWindowFailureReported || Platform.isWindows) return;
     _chain.miniWindowFailureReported = true;
     try {
       FirebaseCrashlytics.instance.recordError(
-        'Chain mini window $why created=${_controller != null} loadStop=$_loadStopped error=$_loadError',
+        message,
         null,
         reason: 'Chain mini window failure',
         fatal: false,

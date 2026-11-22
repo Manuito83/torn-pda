@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show ColorScheme;
+import 'package:material_ui/material_ui.dart' show ColorScheme;
 import 'package:flutter/widgets.dart';
 import 'package:torn_pda/models/chat/chat_alerts.dart';
 import 'package:torn_pda/models/chat/chat_away.dart';

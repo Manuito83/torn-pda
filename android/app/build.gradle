@@ -1,6 +1,5 @@
 plugins {
     id "com.android.application"
-    id "kotlin-android"
     id "org.jetbrains.kotlin.plugin.compose"
     id "dev.flutter.flutter-gradle-plugin"
     id "com.google.gms.google-services"
@@ -85,9 +84,9 @@ android {
 
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = '21'
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
     }
 }
 
@@ -103,6 +102,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.core:core-splashscreen:1.0.0'
+    // Promoted ongoing notifications (live updates)
+    implementation 'androidx.core:core:1.17.0'
     implementation platform('androidx.compose:compose-bom:2024.10.00')
     implementation 'androidx.compose.runtime:runtime'
     

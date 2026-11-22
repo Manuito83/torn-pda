@@ -6,21 +6,22 @@ import 'dart:io';
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:dart_ping/dart_ping.dart';
 // Package imports:
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/api_ping_summary.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
@@ -3528,29 +3529,34 @@ class SettingsPageState extends State<SettingsPage> {
                         duration: const Duration(seconds: 1),
                         contentPadding: const EdgeInsets.all(10),
                       );
-                      final ping = Ping('api.torn.com', count: 4);
-                      ping.stream.listen((event) {
-                        if (event.summary != null || event.error != null) {
-                          String message = "";
-                          if (event.error != null) {
-                            message = "CONNECTION PROBLEM\n\n${event.error}";
-                          } else {
-                            if (event.summary!.transmitted == event.summary!.received) {
-                              message = "SUCCESS\n\n${event.summary}";
-                            } else {
-                              message = "CONNECTION PROBLEM\n\n${event.summary}";
-                            }
-                          }
-                          BotToast.showText(
-                            clickClose: true,
-                            text: message,
-                            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                            contentColor: Colors.blue,
-                            duration: const Duration(seconds: 10),
-                            contentPadding: const EdgeInsets.all(10),
-                          );
+                      final client = http.Client();
+                      final times = <int>[];
+                      Object? lastError;
+                      for (int i = 0; i < 4; i++) {
+                        final stopwatch = Stopwatch()..start();
+                        try {
+                          // A redirect means the API answered
+                          final request = http.Request("GET", Uri.parse("https://api.torn.com/"))
+                            ..followRedirects = false;
+                          await client
+                              .send(request)
+                              .then((response) => response.stream.drain())
+                              .timeout(const Duration(seconds: 15));
+                          times.add(stopwatch.elapsedMilliseconds);
+                        } catch (e) {
+                          lastError = e;
                         }
-                      });
+                      }
+                      client.close();
+
+                      BotToast.showText(
+                        clickClose: true,
+                        text: apiPingMessage(times, 4, lastError),
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                        contentColor: Colors.blue,
+                        duration: const Duration(seconds: 10),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
                     },
                   ),
                 ],

@@ -5,7 +5,7 @@ import 'dart:io';
 // Flutter imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
@@ -126,6 +126,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   // SEARCH END #######
 
   late StreamSubscription _willPopSubscription;
+  late final Future<bool> _hcppActive = HybridAndroidViewController.checkIfSupported();
 
   @override
   void initState() {
@@ -3469,6 +3470,56 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      if (Platform.isAndroid && kSdkAndroid >= 34 && _settingsProvider.hcppEnabledRemoteConfig)
+        SearchableRow(
+          label: "Modern webview rendering",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Modern webview rendering")),
+                    Switch(
+                      value: _settingsProvider.modernWebviewRendering,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.modernWebviewRendering = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    "Uses Android's newer rendering path for web pages. Smoother on supported devices (Android 14+). "
+                    "Turn off if pages look wrong. Restart the app to apply",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ),
+                FutureBuilder<bool>(
+                  future: _hcppActive,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        snapshot.data! ? "Active" : "Not active on this device",
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
       SearchableRow(
         label: "Allow remote debugging",
         searchText: _searchText,

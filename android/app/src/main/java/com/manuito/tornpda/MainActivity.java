@@ -54,6 +54,7 @@ import android.view.View;
 import java.util.Arrays;
 import io.flutter.plugin.common.MethodCall;
 import android.content.ContentResolver;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -77,6 +78,7 @@ public class MainActivity extends FlutterActivity {
     private HandlerThread pixelProbeThread;
     private MethodChannel shareChannel;
     private Map<String, String> pendingShare;
+    private boolean hcppLaunch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -200,6 +202,13 @@ public class MainActivity extends FlutterActivity {
 
     private MethodChannel.Result myResult;
 
+    @NonNull
+    @Override
+    public List<String> getFlutterEngineFlags() {
+        hcppLaunch = HcppLaunchPolicy.countLaunch(this);
+        return super.getFlutterEngineFlags();
+    }
+
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine);
@@ -278,12 +287,52 @@ public class MainActivity extends FlutterActivity {
                             probeWebViewPixels(call, result);
                             break;
 
+                        case "setHcppRequested":
+                            HcppLaunchPolicy.setRequested(this, Boolean.TRUE.equals(call.argument("requested")),
+                                    Boolean.TRUE.equals(call.argument("rearm")));
+                            result.success(null);
+                            break;
+
+                        case "hcppTripped":
+                            result.success(HcppLaunchPolicy.isTripped(this));
+                            break;
+
+                        case "takeHcppTripEvent":
+                            result.success(HcppLaunchPolicy.takeTripEvent(this));
+                            break;
+
+                        case "confirmHcppLaunch":
+                            if (hcppLaunch) {
+                                HcppLaunchPolicy.confirmLaunch(this);
+                            }
+                            result.success(null);
+                            break;
+
                         case "getProcessExitReasons":
                             try {
                                 result.success(getProcessExitReasons());
                             } catch (Exception e) {
                                 result.error("UNAVAILABLE", "Failed to get exit reasons: " + e.getMessage(), null);
                             }
+                            break;
+
+                        case "readContentUri":
+                            String contentUri = call.argument("uri");
+                            new Thread(() -> {
+                                try (InputStream in = getContentResolver().openInputStream(Uri.parse(contentUri))) {
+                                    if (in == null) throw new IOException("No stream");
+                                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                                    byte[] buffer = new byte[64 * 1024];
+                                    int read;
+                                    while ((read = in.read(buffer)) != -1) {
+                                        out.write(buffer, 0, read);
+                                    }
+                                    byte[] bytes = out.toByteArray();
+                                    runOnUiThread(() -> result.success(bytes));
+                                } catch (Exception e) {
+                                    runOnUiThread(() -> result.error("UNREADABLE", e.getMessage(), null));
+                                }
+                            }).start();
                             break;
 
                         default:

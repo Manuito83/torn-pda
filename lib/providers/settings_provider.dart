@@ -7,7 +7,7 @@ import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart' show InAppWebViewController;
 import 'package:flutter_refresh_rate_control/flutter_refresh_rate_control.dart';
@@ -21,6 +21,7 @@ import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/discreet_schedule.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
+import 'package:torn_pda/models/webview/hcpp_decision.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
@@ -727,6 +728,61 @@ class SettingsProvider extends ChangeNotifier {
     _androidFastKeyboard = value;
     Prefs().setAndroidFastKeyboard(_androidFastKeyboard);
     notifyListeners();
+  }
+
+  // -1 untouched, 0 off, 1 on
+  var _modernWebviewRendering = -1;
+  bool get modernWebviewRendering => hcppRequested(
+    remoteEnabled: _hcppEnabledRemoteConfig,
+    remoteDefaultOn: _hcppDefaultOnRemoteConfig,
+    userChoice: _modernWebviewRendering,
+  );
+  set modernWebviewRendering(bool value) {
+    _modernWebviewRendering = value ? 1 : 0;
+    Prefs().setModernWebviewRendering(_modernWebviewRendering);
+    _sendHcppRequest(rearm: true);
+    analytics?.logEvent(name: "hcpp_toggled", parameters: {"enabled": value.toString()});
+    notifyListeners();
+  }
+
+  var _hcppEnabledRemoteConfig = true;
+  bool get hcppEnabledRemoteConfig => _hcppEnabledRemoteConfig;
+  var _hcppDefaultOnRemoteConfig = false;
+
+  void setHcppRemoteConfig({required bool enabled, required bool defaultOn}) {
+    _hcppEnabledRemoteConfig = enabled;
+    _hcppDefaultOnRemoteConfig = defaultOn;
+    _sendHcppRequest();
+    _reportHcppUserProperty();
+    notifyListeners();
+  }
+
+  String? _lastHcppProperty;
+
+  Future<void> _reportHcppUserProperty() async {
+    if (!Platform.isAndroid) return;
+    try {
+      const channel = MethodChannel('tornpda.channel');
+      final value = hcppUserProperty(
+        active: await HybridAndroidViewController.checkIfSupported(),
+        tripped: await channel.invokeMethod<bool>("hcppTripped") ?? false,
+        remoteEnabled: _hcppEnabledRemoteConfig,
+        remoteDefaultOn: _hcppDefaultOnRemoteConfig,
+        userChoice: _modernWebviewRendering,
+      );
+      if (value == _lastHcppProperty) return;
+      _lastHcppProperty = value;
+      await analytics?.setUserProperty(name: "webview_hcpp", value: value);
+    } catch (_) {}
+  }
+
+  // Read at the next process start
+  Future<void> _sendHcppRequest({bool rearm = false}) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await const MethodChannel('tornpda.channel')
+          .invokeMethod("setHcppRequested", {"requested": modernWebviewRendering, "rearm": rearm});
+    } catch (_) {}
   }
 
   var _removeForeignItemsDetails = false;
@@ -1949,6 +2005,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _removeAirplane = await Prefs().getRemoveAirplane();
     _androidFastKeyboard = await Prefs().getAndroidFastKeyboard();
+    _modernWebviewRendering = await Prefs().getModernWebviewRendering();
     _removeForeignItemsDetails = await Prefs().getRemoveForeignItemsDetails();
     _preventBasketKeyboard = await Prefs().getPreventBasketKeyboard();
     _cityShopsBuyMaxEnabled = await Prefs().getCityShopsBuyMaxEnabled();

@@ -3,18 +3,18 @@ import 'dart:developer';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/models/userscripts/script_source_preview.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/widgets/segmented_toggle.dart';
 import 'package:torn_pda/widgets/settings/gold_storage_icon.dart';
 import 'package:torn_pda/widgets/settings/script_storage_quota_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_simple_dialog.dart';
@@ -288,32 +288,20 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                 const Row(
                   children: [Icon(MdiIcons.lightningBoltOutline, size: 16), SizedBox(width: 4), Text("Injection time")],
                 ),
-                ToggleSwitch(
-                  minHeight: 28,
-                  customHeights: const [30, 30],
-                  borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]!],
-                  initialLabelIndex: _originalTime == UserScriptTime.start ? 0 : 1,
-                  activeBgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? [Colors.blueGrey[400]!]
-                      : _themeProvider.currentTheme == AppTheme.dark
-                      ? [Colors.blueGrey]
-                      : [Colors.blueGrey[700]!],
-                  activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                  inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? Colors.white
-                      : _themeProvider.currentTheme == AppTheme.dark
-                      ? Colors.grey[800]
-                      : Colors.black,
-                  inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                  borderWidth: 1,
-                  cornerRadius: 5,
-                  totalSwitches: 2,
-                  animate: true,
-                  animationDuration: 500,
-                  labels: const ["START", "END"],
-                  onToggle: (index) {
-                    index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
-                  },
+                SizedBox(
+                  height: 31,
+                  child: SegmentedToggle(
+                    selectedIndex: _originalTime == UserScriptTime.start ? 0 : 1,
+                    activeColor: _themeProvider.currentTheme == AppTheme.light
+                        ? Colors.blueGrey[400]!
+                        : _themeProvider.currentTheme == AppTheme.dark
+                        ? Colors.blueGrey
+                        : Colors.blueGrey[700]!,
+                    labels: const ["START", "END"],
+                    onToggle: (index) {
+                      index == 0 ? _originalTime = UserScriptTime.start : _originalTime = UserScriptTime.end;
+                    },
+                  ),
                 ),
               ],
             ),

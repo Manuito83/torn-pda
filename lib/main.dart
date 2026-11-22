@@ -10,7 +10,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 // Useful for functions debugging
-import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -21,7 +20,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode;
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -100,8 +99,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '4.1.0';
-const String androidCompilation = '716';
-const String iosCompilation = '716';
+const String androidCompilation = '720';
+const String iosCompilation = '720';
 
 /// All Firestore fields related to alerts configuration
 /// Used for auth recovery and local backup restoration
@@ -293,6 +292,16 @@ Future<void> main() async {
       child: MyApp(),
     ),
   );
+
+  if (Platform.isAndroid) {
+    unawaited(
+      widgetsBinding.waitUntilFirstFrameRasterized
+          // Covers the prewarm webview too
+          .then((_) => Future.delayed(const Duration(seconds: 10)))
+          .then((_) => const MethodChannel('tornpda.channel').invokeMethod("confirmHcppLaunch"))
+          .catchError((_) {}),
+    );
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -928,6 +937,31 @@ Future<void> _initializeFirebase() async {
 
       // Before the rest of the startup, which is where the fatals we cannot attribute happen
       await seedCrashlyticsIdentityFromStorage();
+      if (Platform.isAndroid) {
+        unawaited(
+          HybridAndroidViewController.checkIfSupported()
+              .then((active) => FirebaseCrashlytics.instance.setCustomKey("webview_hcpp", active))
+              .catchError((_) {}),
+        );
+        unawaited(
+          const MethodChannel('tornpda.channel')
+              .invokeMethod<bool>("hcppTripped")
+              .then((tripped) {
+                if (tripped != true) return;
+                FirebaseCrashlytics.instance.setCustomKey("webview_hcpp_tripped", true);
+                FirebaseCrashlytics.instance.log("HCPP turned off after two launches without a frame");
+              })
+              .catchError((_) {}),
+        );
+        unawaited(
+          const MethodChannel('tornpda.channel')
+              .invokeMethod<int>("takeHcppTripEvent")
+              .then((build) {
+                if (build != null) analytics?.logEvent(name: "hcpp_tripped", parameters: {"build_number": build});
+              })
+              .catchError((_) {}),
+        );
+      }
 
       if (kDebugMode) {
         if (pointFunctionsEmulatorToLocal) {
@@ -964,9 +998,6 @@ Future<void> _activateAppCheck() async {
 
 Future<void> _initializePlatformPlugins() async {
   try {
-    if (Platform.isIOS) {
-      DartPingIOS.register();
-    }
     HttpOverrides.global = MyHttpOverrides();
   } catch (e, stackTrace) {
     log("Error initializing platform plugins: $e");

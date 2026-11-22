@@ -2,12 +2,11 @@
 import 'dart:async';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 // Package imports:
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/items/items_sort.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -22,6 +21,7 @@ import 'package:torn_pda/utils/inventory_feedback.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/items/item_card.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/segmented_toggle.dart';
 import 'package:torn_pda/widgets/sliding_up_panel.dart';
 
 class ItemsPage extends StatefulWidget {
@@ -355,39 +355,14 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                             padding: const EdgeInsets.only(left: 5),
                             child: SizedBox(
                               height: 25,
-                              child: ToggleSwitch(
-                                customWidths: const [35, 35],
-                                iconSize: 15,
-                                borderWidth: 1,
-                                cornerRadius: 5,
-                                doubleTapDisable: true,
-                                borderColor: _themeProvider!.currentTheme == AppTheme.light
-                                    ? [Colors.blueGrey]
-                                    : [Colors.grey[900]!],
-                                initialLabelIndex: _ownedItemsFilter == 0
+                              child: SegmentedToggle(
+                                itemWidth: 35,
+                                allowDeselect: true,
+                                selectedIndex: _ownedItemsFilter == 0
                                     ? null
                                     : _ownedItemsFilter == 1
                                     ? 0
                                     : 1,
-                                activeBgColor: _themeProvider!.currentTheme == AppTheme.light
-                                    ? [Colors.blueGrey]
-                                    : _themeProvider!.currentTheme == AppTheme.dark
-                                    ? [Colors.blueGrey]
-                                    : [Colors.blueGrey[900]!],
-                                activeFgColor: _themeProvider!.currentTheme == AppTheme.light
-                                    ? Colors.black
-                                    : Colors.white,
-                                inactiveBgColor: _themeProvider!.currentTheme == AppTheme.light
-                                    ? Colors.white
-                                    : _themeProvider!.currentTheme == AppTheme.dark
-                                    ? Colors.grey[800]
-                                    : Colors.black,
-                                inactiveFgColor: _themeProvider!.currentTheme == AppTheme.light
-                                    ? Colors.black
-                                    : Colors.white,
-                                totalSwitches: 2,
-                                animate: true,
-                                animationDuration: 500,
                                 icons: const [Icons.check, Icons.close],
                                 onToggle: (index) async {
                                   if (index == null) {

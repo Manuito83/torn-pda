@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 // Package imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
@@ -176,6 +176,7 @@ class Prefs with ChatPrefsStorage {
 
   final String _kBrowserDoNotPauseWebviews = "pda_browserDoNotPauseWebviews";
   final String _kAndroidFastKeyboard = "pda_androidFastKeyboard";
+  final String _kModernWebviewRendering = "pda_modernWebviewRendering";
   final String _kDismissKeyboardOnBrowserClose = "pda_dismissKeyboardOnBrowserClose";
 
   // Browser gestures
@@ -1651,6 +1652,14 @@ class Prefs with ChatPrefsStorage {
 
   Future setAndroidFastKeyboard(bool value) async {
     return await PrefsDatabase.setBool(_kAndroidFastKeyboard, value);
+  }
+
+  Future<int> getModernWebviewRendering() async {
+    return await PrefsDatabase.getInt(_kModernWebviewRendering, -1);
+  }
+
+  Future setModernWebviewRendering(int value) async {
+    return await PrefsDatabase.setInt(_kModernWebviewRendering, value);
   }
 
   Future<bool> getDismissKeyboardOnBrowserClose() async {

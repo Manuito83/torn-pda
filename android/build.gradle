@@ -7,7 +7,6 @@ allprojects {
 
 rootProject.buildDir = '../build'
 
-// Plugins without a namespace, like uri_to_file
 subprojects {
     afterEvaluate { project ->
         if (project.plugins.hasPlugin("com.android.library")) {
