@@ -4,6 +4,7 @@
 
 # ESLint config
 !eslint.config.js
+!territory_map_key.example.js
 
 # Typescript v1 declaration files
 typings/

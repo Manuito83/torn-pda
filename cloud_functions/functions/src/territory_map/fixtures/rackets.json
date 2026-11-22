@@ -1,0 +1,172 @@
+{
+ "rackets": [
+  {
+   "territory": "IFE",
+   "faction_id": 7835,
+   "name": "Bootleg Distillery I",
+   "level": 1,
+   "description": "10x Bottle of Moonshine daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 10,
+    "id": 984
+   },
+   "created_at": 1592153824,
+   "changed_at": 1793624223
+  },
+  {
+   "territory": "DJC",
+   "faction_id": 29865,
+   "name": "Street Surgeon IV",
+   "level": 4,
+   "description": "40x Melatonin daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 40,
+    "id": 464
+   },
+   "created_at": 1597604224,
+   "changed_at": 1793397423
+  },
+  {
+   "territory": "WZD",
+   "faction_id": 230,
+   "name": "Bordello V",
+   "level": 5,
+   "description": "80x Erotic DVD daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 80,
+    "id": 366
+   },
+   "created_at": 1612857426,
+   "changed_at": 1791061023
+  },
+  {
+   "territory": "RDF",
+   "faction_id": 11581,
+   "name": "Drug Lab V",
+   "level": 5,
+   "description": "400x Xanax daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 400,
+    "id": 206
+   },
+   "created_at": 1616245025,
+   "changed_at": 1791395824
+  },
+  {
+   "territory": "JND",
+   "faction_id": 41768,
+   "name": "Street Surgeon IV",
+   "level": 4,
+   "description": "40x Melatonin daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 40,
+    "id": 464
+   },
+   "created_at": 1619989026,
+   "changed_at": 1792789023
+  },
+  {
+   "territory": "KFE",
+   "faction_id": 8336,
+   "name": "Point Broker III",
+   "level": 3,
+   "description": "2,000x Points daily",
+   "reward": {
+    "type": "Points",
+    "quantity": 2000,
+    "id": null
+   },
+   "created_at": 1625245025,
+   "changed_at": 1793012223
+  },
+  {
+   "territory": "SIA",
+   "faction_id": 7709,
+   "name": "Point Broker II",
+   "level": 2,
+   "description": "1,000x Points daily",
+   "reward": {
+    "type": "Points",
+    "quantity": 1000,
+    "id": null
+   },
+   "created_at": 1629111425,
+   "changed_at": 1791529023
+  },
+  {
+   "territory": "NHE",
+   "faction_id": 12863,
+   "name": "Money Launderer IV",
+   "level": 4,
+   "description": "$80,000,000 daily",
+   "reward": {
+    "type": "Money",
+    "quantity": 80000000,
+    "id": null
+   },
+   "created_at": 1629950225,
+   "changed_at": 1793487424
+  },
+  {
+   "territory": "CDE",
+   "faction_id": 11539,
+   "name": "Cannabis Factory III",
+   "level": 3,
+   "description": "100x Cannabis daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 100,
+    "id": 196
+   },
+   "created_at": 1641794224,
+   "changed_at": 1793383024
+  },
+  {
+   "territory": "HPD",
+   "faction_id": 10820,
+   "name": "Bootleg Distillery V",
+   "level": 5,
+   "description": "160x Bottle of Moonshine daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 160,
+    "id": 984
+   },
+   "created_at": 1642183025,
+   "changed_at": 1779026223
+  },
+  {
+   "territory": "TSB",
+   "faction_id": 8954,
+   "name": "Protection Racket IV",
+   "level": 4,
+   "description": "$40,000,000 daily",
+   "reward": {
+    "type": "Money",
+    "quantity": 40000000,
+    "id": null
+   },
+   "created_at": 1644350224,
+   "changed_at": 1793386623
+  },
+  {
+   "territory": "VRE",
+   "faction_id": 2095,
+   "name": "Arms Dealer V",
+   "level": 5,
+   "description": "400x Tear Gas daily",
+   "reward": {
+    "type": "Item",
+    "quantity": 400,
+    "id": 256
+   },
+   "created_at": 1644685024,
+   "changed_at": 1781243823
+  }
+ ]
+}

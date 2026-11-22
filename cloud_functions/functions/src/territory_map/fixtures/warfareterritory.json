@@ -1,0 +1,226 @@
+{
+ "warfareterritory": [
+  {
+   "id": 46843,
+   "territory": "RCD",
+   "start": 1793755059,
+   "end": 1794014259,
+   "target": 300000,
+   "aggressor": {
+    "id": 51387,
+    "name": "7DS*: Envy",
+    "score": 29698,
+    "chain": 0,
+    "players_on_wall": [
+     {
+      "id": 5000137,
+      "name": "Player001"
+     },
+     {
+      "id": 5000274,
+      "name": "Player002"
+     },
+     {
+      "id": 5000411,
+      "name": "Player003"
+     }
+    ]
+   },
+   "defender": {
+    "id": 8315,
+    "name": "7DS*: Gluttony",
+    "score": 0,
+    "chain": 0,
+    "players_on_wall": []
+   },
+   "result": "in_progress"
+  },
+  {
+   "id": 46842,
+   "territory": "KHC",
+   "start": 1793733408,
+   "end": 1793992608,
+   "target": 1500000,
+   "aggressor": {
+    "id": 25025,
+    "name": "DP Warriors",
+    "score": 0,
+    "chain": 81333,
+    "players_on_wall": [
+     {
+      "id": 5000548,
+      "name": "Player004"
+     },
+     {
+      "id": 5000685,
+      "name": "Player005"
+     },
+     {
+      "id": 5000822,
+      "name": "Player006"
+     }
+    ]
+   },
+   "defender": {
+    "id": 15929,
+    "name": "The Inquisition",
+    "score": 0,
+    "chain": 91599,
+    "players_on_wall": [
+     {
+      "id": 5000959,
+      "name": "Player007"
+     },
+     {
+      "id": 5001096,
+      "name": "Player008"
+     },
+     {
+      "id": 5001233,
+      "name": "Player009"
+     }
+    ]
+   },
+   "result": "in_progress"
+  },
+  {
+   "id": 46841,
+   "territory": "MVF",
+   "start": 1793728055,
+   "end": 1793987255,
+   "target": 850000,
+   "aggressor": {
+    "id": 7990,
+    "name": "Nomads",
+    "score": 0,
+    "chain": 1,
+    "players_on_wall": []
+   },
+   "defender": {
+    "id": 17587,
+    "name": "Nomads 2.0",
+    "score": 0,
+    "chain": 0,
+    "players_on_wall": [
+     {
+      "id": 5001370,
+      "name": "Player010"
+     },
+     {
+      "id": 5001507,
+      "name": "Player011"
+     },
+     {
+      "id": 5001644,
+      "name": "Player012"
+     }
+    ]
+   },
+   "result": "in_progress"
+  },
+  {
+   "id": 46840,
+   "territory": "IVF",
+   "start": 1793728037,
+   "end": 1793987237,
+   "target": 1300000,
+   "aggressor": {
+    "id": 7990,
+    "name": "Nomads",
+    "score": 0,
+    "chain": 1,
+    "players_on_wall": [
+     {
+      "id": 5001781,
+      "name": "Player013"
+     },
+     {
+      "id": 5001918,
+      "name": "Player014"
+     }
+    ]
+   },
+   "defender": {
+    "id": 9280,
+    "name": "Nomads Medical",
+    "score": 0,
+    "chain": 0,
+    "players_on_wall": [
+     {
+      "id": 5002055,
+      "name": "Player015"
+     },
+     {
+      "id": 5002192,
+      "name": "Player016"
+     },
+     {
+      "id": 5002329,
+      "name": "Player017"
+     }
+    ]
+   },
+   "result": "in_progress"
+  },
+  {
+   "id": 46834,
+   "territory": "CNF",
+   "start": 1793656199,
+   "end": 1793915399,
+   "target": 500000,
+   "aggressor": {
+    "id": 38662,
+    "name": "OTF Headquarters",
+    "score": 500000
+   },
+   "defender": {
+    "id": 51606,
+    "name": "Attic View",
+    "score": 0
+   },
+   "result": "success_assault"
+  },
+  {
+   "id": 46833,
+   "territory": "AKA",
+   "start": 1793583167,
+   "end": 1793842367,
+   "target": 1000000,
+   "aggressor": {
+    "id": 57451,
+    "name": "apocalypse survivor",
+    "score": 0
+   },
+   "defender": {
+    "id": 9110,
+    "name": "Unity",
+    "score": 0
+   },
+   "result": "end_with_peace_treaty"
+  },
+  {
+   "id": 46830,
+   "territory": "ZZG",
+   "start": 1793551970,
+   "end": 1793811170,
+   "target": 1200000,
+   "aggressor": {
+    "id": 38761,
+    "name": "Vinerri Shadow Cult",
+    "score": 0
+   },
+   "defender": {
+    "id": 95,
+    "name": "MORTAL LEGENDS",
+    "score": 0
+   },
+   "result": "end_with_peace_treaty"
+  }
+ ],
+ "_metadata": {
+  "links": {
+   "prev": "https://api.torn.com/v2/faction/warfareterritory?&limit=100&sort=desc&to=1793417783",
+   "next": null
+  }
+ }
+}

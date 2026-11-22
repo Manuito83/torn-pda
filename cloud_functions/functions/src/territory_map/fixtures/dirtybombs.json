@@ -1,0 +1,32 @@
+{
+  "dirtybombs": [
+    {
+      "id": 89,
+      "planted_at": 1792941268,
+      "detonated_at": 1792947668,
+      "faction": {"id": 13377, "name": "The Brotherhood of War", "respect_lost": 769315},
+      "user": null
+    },
+    {
+      "id": 88,
+      "planted_at": 1782481794,
+      "detonated_at": 1782486069,
+      "faction": {"id": 28073, "name": "Shiny Horde Avian Team", "respect_lost": 587526},
+      "user": {"id": 5900001, "name": "Player018"}
+    },
+    {
+      "id": 87,
+      "planted_at": 1781818664,
+      "detonated_at": 1781823668,
+      "faction": {"id": 28073, "name": "Shiny Horde Avian Team", "respect_lost": 609005},
+      "user": {"id": 5900002, "name": "Player019"}
+    },
+    {
+      "id": 3,
+      "planted_at": 1550248437,
+      "detonated_at": 1550253663,
+      "faction": {"id": 8336, "name": "Monarch HQ", "respect_lost": 409140},
+      "user": null
+    }
+  ]
+}

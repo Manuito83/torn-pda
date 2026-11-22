@@ -161,3 +161,5 @@ export const feedback = {
 // };
 
 export { lookupPlayerByApiKey } from "./players";
+export { territoryMapTick } from "./territory_map/tick";
+export { getFactionFlights, getShareFlights, setShareFlights } from "./territory_map/flights_call";

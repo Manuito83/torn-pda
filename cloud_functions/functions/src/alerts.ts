@@ -27,6 +27,7 @@ import { KeyTracking, readKeyTracking, settleKeyFailures, trackKeyResult } from 
 import { verifiedUpdate } from "./verified_players";
 import { sendCityShopRestockNotification } from "./city_shops";
 import { CityShopItem } from "./interfaces/city_shops_interface";
+import { logSharedFlight } from "./territory_map/flights";
 
 const privateKey = require("../key/torn_key");
 
@@ -396,6 +397,7 @@ async function sendNotificationForProfile(
       if (subscriber.travelNotification) {
         checkResults.push(logTravelArrival(userStats, subscriber));
       }
+      checkResults.push(logSharedFlight(userStats, subscriber));
       if (subscriber.hospitalNotification) {
         checkResults.push(sendHospitalNotification(userStats, subscriber));
       }

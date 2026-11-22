@@ -1,0 +1,130 @@
+{
+ "territoryOwnership": [
+  {
+   "id": "JTB",
+   "owned_by": 14386,
+   "acquired_at": 1791244093,
+   "irradiated": false
+  },
+  {
+   "id": "KTB",
+   "owned_by": 41309,
+   "acquired_at": 1769012401,
+   "irradiated": false
+  },
+  {
+   "id": "LTB",
+   "owned_by": 41309,
+   "acquired_at": 1769012415,
+   "irradiated": false
+  },
+  {
+   "id": "MTB",
+   "owned_by": 14386,
+   "acquired_at": 1768703870,
+   "irradiated": false
+  },
+  {
+   "id": "NUB",
+   "owned_by": 14386,
+   "acquired_at": 1768703866,
+   "irradiated": false
+  },
+  {
+   "id": "OUB",
+   "owned_by": 14386,
+   "acquired_at": 1768704462,
+   "irradiated": false
+  },
+  {
+   "id": "PUB",
+   "owned_by": 6799,
+   "acquired_at": 1788101858,
+   "irradiated": false
+  },
+  {
+   "id": "QUB",
+   "owned_by": 41309,
+   "acquired_at": 1769012422,
+   "irradiated": false
+  },
+  {
+   "id": "RUB",
+   "owned_by": 6799,
+   "acquired_at": 1768725780,
+   "irradiated": false
+  },
+  {
+   "id": "SUB",
+   "owned_by": 24884,
+   "acquired_at": 1770849919,
+   "irradiated": false
+  },
+  {
+   "id": "TUB",
+   "owned_by": 6895,
+   "acquired_at": 1769817903,
+   "irradiated": false
+  },
+  {
+   "id": "UUB",
+   "owned_by": 13737,
+   "acquired_at": 1769955703,
+   "irradiated": false
+  },
+  {
+   "id": "VUB",
+   "owned_by": 6895,
+   "acquired_at": 1769817906,
+   "irradiated": false
+  },
+  {
+   "id": "WUB",
+   "owned_by": 6895,
+   "acquired_at": 1769817900,
+   "irradiated": false
+  },
+  {
+   "id": "XUB",
+   "owned_by": 48461,
+   "acquired_at": 1778632262,
+   "irradiated": false
+  },
+  {
+   "id": "YUB",
+   "owned_by": 38482,
+   "acquired_at": 1768766286,
+   "irradiated": false
+  },
+  {
+   "id": "ZUB",
+   "owned_by": 24106,
+   "acquired_at": 1772917226,
+   "irradiated": false
+  },
+  {
+   "id": "AUB",
+   "owned_by": 24106,
+   "acquired_at": 1772917224,
+   "irradiated": false
+  },
+  {
+   "id": "BUB",
+   "owned_by": 6895,
+   "acquired_at": 1769818029,
+   "irradiated": false
+  },
+  {
+   "id": "CUB",
+   "owned_by": 13737,
+   "acquired_at": 1769990465,
+   "irradiated": false
+  }
+ ],
+ "_metadata": {
+  "links": {
+   "prev": "https://api.torn.com/v2/faction/territoryownership?&limit=500&offset=0",
+   "next": "https://api.torn.com/v2/faction/territoryownership?&limit=500&offset=1000"
+  }
+ }
+}
