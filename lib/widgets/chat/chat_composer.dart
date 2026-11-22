@@ -16,6 +16,7 @@ import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_image_upload.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
+import 'package:torn_pda/utils/territory_map/territory_map_chat.dart';
 import 'package:torn_pda/widgets/chat/chat_compose_tools.dart';
 import 'package:torn_pda/widgets/chat/chat_image_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
@@ -302,8 +303,11 @@ class _ChatComposerState extends State<ChatComposer> {
 
   List<String> _commandActions(String name) {
     final prefs = NativeChat.prefs;
-    final available = ChatCommands.actionsIn(prefs.quickOrder)
-        .where((id) => !prefs.quickOff(id) && chatQuickAvailable(id, chat: widget.chat, roomId: widget.roomId));
+    final available = ChatCommands.actionsIn(prefs.quickOrder).where(
+      (id) =>
+          !prefs.quickOff(id) &&
+          chatQuickAvailable(id, chat: widget.chat, roomId: widget.roomId, mapOn: territoryMapOn(context)),
+    );
     return ChatCommands.matchActions(name, [...available, if (prefs.notepad) 'note']);
   }
 

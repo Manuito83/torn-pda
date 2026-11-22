@@ -1,0 +1,36 @@
+{
+  "format": 1,
+  "revision": 2,
+  "day": "2026-11-04",
+  "generated_at": 1793827054,
+  "factions": {
+    "7990": {"name": "Lords of Chaos", "tag": "LOC"},
+    "38662": {"name": "Dead Pool", "tag": "DP"},
+    "8085": {"name": "Night Shift", "tag": null},
+    "36811": {"name": "The Untouchables", "tag": "UNT"},
+    "26312": {"name": "7DS*: Gluttony", "tag": "GLU"},
+    "21234": {"name": "7DS*: Envy", "tag": "7DS"}
+  },
+  "changes": [
+    [1793785032, "war", "XGG", "end:fail_assault", 28073, 8677, 46822, null, {"score": 63934, "target": 300000}],
+    [1793785516, "war", "LIC", "end:fail_assault", 6731, 15929, 46823, null, {"score": 0, "target": 250000}],
+    [1793787417, "war", "XGF", "start:in_progress", 53808, 34623, 46845, null, null],
+    [1793787842, "war", "VBB", "start:in_progress", 48640, 11131, 46846, null, null],
+    [1793788998, "ownership", "MVE", "owner", 0, 8085, null, null, null],
+    [1793789178, "war", "MEE", "start:in_progress", 8085, 10174, 46847, null, null],
+    [1793789665, "ownership", "VJB", "reacquired", 8076, 8076, null, null, null],
+    [1793790759, "ownership", "ZHB", "owner", 13665, null, null, null, null],
+    [1793790759, "ownership", "OIB", "owner", 13665, 0, null, null, null],
+    [1793796346, "war", "CNF", "end:success_assault", 7990, 38662, 46838, null, {"score": 300000, "target": 300000}],
+    [1793796349, "ownership", "CNF", "owner", 7990, 38662, 46838, null, null],
+    [1793797804, "war", "DJA", "end:end_with_peace_treaty", 30584, 49763, 46826, null, {"score": 12000, "target": 300000}],
+    [1793800660, "racket", "FWG", "level", 44817, 44817, null, null, {"level": 3, "previous_level": 2, "name": "Pharmacy III"}],
+    [1793801000, "racket", "IFE", "level", 7835, 7835, null, null, {"level": 1, "previous_level": 2, "name": "Bootleg Distillery I"}],
+    [1793802000, "racket", "KBG", "new", 6799, null, null, null, {"level": 1, "previous_level": null, "name": "Bootleg Distillery I"}],
+    [1793803244, "ownership", "QWF", "owner", 26312, 21234, null, null, null],
+    [1793803500, "racket", "QWF", "owner", 26312, 21234, null, null, null],
+    [1793804000, "bomb", null, "new", 36811, null, null, 89, {"respect_lost": 769315, "territories": ["RFG"]}],
+    [1793804000, "ownership", "RFG", "irradiated", 36811, 36811, null, 89, null],
+    [1793805000, "ownership", "AAA", "owner", 0, 0, null, null, null]
+  ]
+}

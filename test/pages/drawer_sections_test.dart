@@ -26,4 +26,16 @@ void main() {
     final placed = ['feedback', 'chat', 'profile', 'about'];
     expect(drawerFullOrder(placed).take(4), placed);
   });
+
+  test('a saved map start falls back to Profile only while the map is off', () {
+    expect(startSection('territoryMap', territoryMapOff: false), DrawerSection.territoryMap);
+    expect(startSection('territoryMap', territoryMapOff: true), DrawerSection.profile);
+    expect(startSection('loot', territoryMapOff: true), DrawerSection.loot);
+  });
+
+  test('older and odd saved starts still resolve', () {
+    expect(startSection('browser_full', territoryMapOff: false), DrawerSection.profile);
+    expect(startSection('8', territoryMapOff: false), DrawerSection.rankedWars);
+    expect(startSection('gone', territoryMapOff: false), DrawerSection.profile);
+  });
 }

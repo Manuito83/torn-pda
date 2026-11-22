@@ -6,11 +6,16 @@ import 'package:torn_pda/models/chat/chat_link_info.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/providers/chat/chat_faction_roster.dart';
+import 'package:torn_pda/models/territory_map/map_usage.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
+import 'package:torn_pda/providers/territory_map_usage.dart';
+import 'package:torn_pda/utils/territory_map/territory_map_chat.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/chat/chat_faction_roster_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/territory_map/map_thumbnail.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 Future<void> showChatFactionSheet(BuildContext context, ChatLink link) => showModalBottomSheet<void>(
@@ -36,6 +41,7 @@ class _FactionSheetState extends State<_FactionSheet> {
   late final Future<ChatFactionFacts?> _facts = _loadFacts();
   late final Future<List<FactionMember>?> _members = _loadMembers();
   late final bool _own = widget.link.id == ChatLink.ownFaction;
+  late final int _mapFaction = _own ? UserHelper.factionId : widget.link.id!;
   late final ChatFactionRoster _roster = _own
       ? ChatFactionRoster.shared
       : ChatFactionRoster(fetchMembers: () => ChatFactionRoster.membersOf(widget.link.id!, fresh: true));
@@ -152,6 +158,24 @@ class _FactionSheetState extends State<_FactionSheet> {
                       else
                         const ListTile(leading: Icon(Icons.groups_rounded), title: Text("Couldn't load the members")),
                     ],
+                    if (_mapFaction != 0 && territoryMapOn(context))
+                      Semantics(
+                        key: const ValueKey('map'),
+                        button: true,
+                        label: 'Open the map',
+                        child: GestureDetector(
+                          onTap: () {
+                            countMapUse(mapChatFactionMinimapFeature);
+                            openMapFaction(context, _mapFaction);
+                          },
+                          child: MapThumbnail(
+                            factionId: _mapFaction,
+                            aspect: 2.5,
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                            radius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.open_in_new_rounded),

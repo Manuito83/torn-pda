@@ -68,6 +68,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   flutter_slidable: 4.0.3
   flutter_speed_dial: 7.0.0
+  flutter_story_encoder: 1.2.2
   flutter_svg: 2.2.4
   flutter_xlider: 3.5.0
   font_awesome_flutter: 11.0.0
@@ -227,6 +228,7 @@ flutter:
     - docs/webview/
     - userscripts/GMforPDA.user.js
     - userscripts/TornPDA_Storage.md
+    - assets/territory_map/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

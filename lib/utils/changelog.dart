@@ -114,6 +114,22 @@ List<_MVersion> _modernChangelog() => [
         title: 'New',
         color: Color(0xFF1565C0),
         items: [
+          _MItem(
+            'Map: new Territory Map of Torn City',
+            pinned: true,
+            detail:
+                'See who holds each territory and follow the wars as they happen. Switch to 3D, play back the '
+                'territory history, or share the map as a picture or a video.\n\n'
+                'Open it from City to see the City Finder items over the real streets. In the flights globe you '
+                'can follow the faction members who choose to share their flights.\n\n'
+                'In chat, map links show a preview, and the Territory map quick action shares any territory.',
+            diagrams: [
+              FeatureDiagramScene.mapTerritories,
+              FeatureDiagramScene.map3d,
+              FeatureDiagramScene.mapFlights,
+              FeatureDiagramScene.mapHistory,
+            ],
+          ),
           _MItem('Browser: added option to hide the hospital timer in attacks'),
           _MItem("Chat: seller's bazaar status on offers"),
           _MItem('Chat: online status in chat list'),

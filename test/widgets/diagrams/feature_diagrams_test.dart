@@ -57,11 +57,13 @@ void main() {
           value: theme,
           child: MaterialApp(
             home: Scaffold(
-              body: ListView(
-                children: [
-                  for (final scene in FeatureDiagramScene.values) FeatureDiagram(scenes: [scene]),
-                  const FeatureDiagram(scenes: FeatureDiagramScene.values),
-                ],
+              body: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (final scene in FeatureDiagramScene.values) FeatureDiagram(scenes: [scene]),
+                    const FeatureDiagram(scenes: FeatureDiagramScene.values),
+                  ],
+                ),
               ),
             ),
           ),

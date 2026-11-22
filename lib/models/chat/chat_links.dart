@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:torn_pda/models/chat/chat_format.dart';
 import 'package:torn_pda/models/chat/chat_html_text.dart';
+import 'package:torn_pda/models/territory_map/map_share.dart';
 import 'package:torn_pda/utils/torn_web.dart';
 
 const String chatAttackUrl = 'https://www.torn.com/page.php?sid=attack&user2ID=';
@@ -29,6 +30,7 @@ enum ChatLinkKind {
   company,
   forum,
   item,
+  map,
   torn,
   external,
 }
@@ -128,7 +130,7 @@ class ChatLink {
   // URLs end at the first non ASCII
   static final RegExp _pattern = RegExp(
     r'\[([^\[\]\n]{1,200})\]\(((?:https?://|www\.)[\x21\x23-\x27\x2A-\x3B\x3D\x3F-\x7E]+)\)'
-    r'|(?:https?://|www\.|torn\.com/)[\x21\x23-\x3B\x3D\x3F-\x7E]+',
+    r'|(?:https?://|www\.|torn\.com/|tornpda://map)[\x21\x23-\x3B\x3D\x3F-\x7E]+',
     caseSensitive: false,
   );
   static const String _trailing = '.,!?;:\'"*';
@@ -187,6 +189,16 @@ class ChatLink {
 
   static ChatLink? parse(String raw) {
     final withScheme = raw.toLowerCase().startsWith('http') ? raw : 'https://$raw';
+    final mapLink = raw.toLowerCase().startsWith('$mapLinkScheme:') ? raw : withScheme;
+    if (readMapLink(mapLink) case final view?) {
+      return ChatLink(
+        uri: Uri.parse(mapLink),
+        raw: raw,
+        kind: ChatLinkKind.map,
+        title: 'Territory map',
+        detail: view.territory,
+      );
+    }
     final uri = Uri.tryParse(withScheme);
     if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http') || uri.host.isEmpty) return null;
     if (!uri.host.contains('.')) return null;

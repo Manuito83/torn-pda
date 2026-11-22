@@ -9,6 +9,7 @@ const List<String> chatQuickActionIds = [
   'bank',
   'emoji',
   'replies',
+  'map',
 ];
 
 const String chatQuickRowBreak2 = 'row2';

@@ -21,6 +21,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
+import 'package:torn_pda/pages/territory_map/territory_map_page.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -89,6 +90,8 @@ class WarOptions {
         break;
       case "Watch players":
         iconData = Icons.picture_in_picture_alt_outlined;
+      case "Territory Map":
+        iconData = MdiIcons.mapLegend;
     }
   }
 }
@@ -138,6 +141,7 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "Combat Ready revive"),
     WarOptions(description: "Asclepius revive"),
     WarOptions(description: "Watch players"),
+    WarOptions(description: "Territory Map"),
   ];
 
   final _pipSelection = PipSelection();
@@ -731,6 +735,13 @@ class WarPageState extends State<WarPage> {
                 openAsclepiusReviveDialog(context, _themeProvider!, null);
               case "Watch players":
                 _pipSelection.start(empty: _w.orderedCardsDetails.isEmpty);
+              case "Territory Map":
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    settings: const RouteSettings(name: 'territoryMap'),
+                    builder: (BuildContext context) => const TerritoryMapPage(),
+                  ),
+                );
             }
           },
           itemBuilder: (BuildContext context) {
@@ -761,6 +772,9 @@ class WarPageState extends State<WarPage> {
                 .where((WarOptions choice) {
                   // Don't return hidden members option if there is none
                   if (choice.description!.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
+                    return false;
+                  }
+                  if (choice.description == "Territory Map" && _settingsProvider!.disableTerritoryMap) {
                     return false;
                   }
                   // Revives

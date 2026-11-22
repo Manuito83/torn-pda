@@ -24,6 +24,8 @@ class CityOptions extends StatefulWidget {
 
 class CityOptionsState extends State<CityOptions> {
   bool _cityEnabled = true;
+  bool _opensPdaMap = false;
+  bool _showPdaMapButton = true;
 
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
@@ -68,37 +70,44 @@ class CityOptionsState extends State<CityOptions> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             const SizedBox(height: 10),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  const Text("Use city finder"),
-                                  Switch(
-                                    value: _cityEnabled,
-                                    onChanged: (value) {
-                                      Prefs().setCityEnabled(value);
-                                      setState(() {
-                                        _cityEnabled = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeThumbColor: Colors.green,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15),
-                              child: Text(
+                            SwitchListTile(
+                              title: const Text("Use City Finder"),
+                              subtitle: const Text(
                                 'Consider deactivating the city finder if it impacts '
                                 'performance or you just simply would not prefer to use it',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                ),
+                                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                               ),
+                              value: _cityEnabled,
+                              onChanged: (value) {
+                                Prefs().setCityEnabled(value);
+                                setState(() => _cityEnabled = value);
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeThumbColor: Colors.green,
+                            ),
+                            SwitchListTile(
+                              title: const Text("Show Map button"),
+                              subtitle: const Text(
+                                "The button over Torn's map, with or without the city finder",
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              value: _showPdaMapButton,
+                              onChanged: (value) {
+                                Prefs().setCityShowPdaMapButton(value);
+                                setState(() => _showPdaMapButton = value);
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeThumbColor: Colors.green,
+                            ),
+                            SwitchListTile(
+                              title: const Text("Open the map when entering the city"),
+                              value: _opensPdaMap,
+                              onChanged: (value) {
+                                Prefs().setCityOpensPdaMap(value);
+                                setState(() => _opensPdaMap = value);
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeThumbColor: Colors.green,
                             ),
                             const SizedBox(height: 50),
                           ],
@@ -136,9 +145,13 @@ class CityOptionsState extends State<CityOptions> {
 
   Future _restorePreferences() async {
     final cityEnabled = await Prefs().getCityEnabled();
+    final opensPdaMap = await Prefs().getCityOpensPdaMap();
+    final showPdaMapButton = await Prefs().getCityShowPdaMapButton();
 
     setState(() {
       _cityEnabled = cityEnabled;
+      _opensPdaMap = opensPdaMap;
+      _showPdaMapButton = showPdaMapButton;
     });
   }
 }

@@ -21,16 +21,21 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/chat/chat_time.dart';
 import 'package:torn_pda/models/chat/chat_wiki.dart';
 import 'package:torn_pda/models/chat/chat_status.dart';
+import 'package:torn_pda/models/territory_map/map_share.dart';
+import 'package:torn_pda/models/territory_map/map_usage.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/territory_map_usage.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
+import 'package:torn_pda/utils/territory_map/territory_map_chat.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/chat/chat_faction_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_forum_reader.dart';
+import 'package:torn_pda/widgets/chat/chat_map_card.dart';
 import 'package:torn_pda/widgets/chat/chat_youtube_player.dart';
 import 'package:torn_pda/widgets/chat/chat_alerts_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_toast.dart';
@@ -418,6 +423,13 @@ Future<void> openChatLink(BuildContext context, ChatLink link) async {
   if (link.kind == ChatLinkKind.faction && link.id != null && context.mounted) {
     return showChatFactionSheet(context, link);
   }
+  if (link.kind == ChatLinkKind.map && context.mounted) {
+    if (!territoryMapOn(context)) return chatToast('The Territory Map is disabled in Settings');
+    if (readMapLink(link.url) case final view?) {
+      countMapUse(mapChatCardFeature);
+      return openMapView(context, view);
+    }
+  }
   await NativeChat.openLink(link.url);
 }
 
@@ -444,21 +456,23 @@ Future<void> showChatLinkMenu(BuildContext context, ChatLink link) async {
               title: const Text('Copy link'),
               onTap: () => Navigator.of(context).pop('copy'),
             ),
-            ListTile(
-              leading: const Icon(Icons.tab_rounded),
-              title: const Text('Open in main tab'),
-              onTap: () => Navigator.of(context).pop('main'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.add_box_outlined),
-              title: const Text('Open in new tab'),
-              onTap: () => Navigator.of(context).pop('new'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.open_in_new_rounded),
-              title: const Text('Open in external browser'),
-              onTap: () => Navigator.of(context).pop('external'),
-            ),
+            if (link.kind != ChatLinkKind.map) ...[
+              ListTile(
+                leading: const Icon(Icons.tab_rounded),
+                title: const Text('Open in main tab'),
+                onTap: () => Navigator.of(context).pop('main'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.add_box_outlined),
+                title: const Text('Open in new tab'),
+                onTap: () => Navigator.of(context).pop('new'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.open_in_new_rounded),
+                title: const Text('Open in external browser'),
+                onTap: () => Navigator.of(context).pop('external'),
+              ),
+            ],
           ],
         ),
       );
@@ -530,6 +544,7 @@ class ChatLinkCard extends StatefulWidget {
     ChatLinkKind.company: (Icons.business_rounded, 'Company'),
     ChatLinkKind.forum: (Icons.forum_rounded, 'Forum'),
     ChatLinkKind.item: (Icons.inventory_2_rounded, 'Item'),
+    ChatLinkKind.map: (Icons.map_rounded, 'Map'),
     ChatLinkKind.torn: (Icons.public_rounded, 'Torn'),
     ChatLinkKind.external: (Icons.link_rounded, 'Link'),
   };
@@ -743,6 +758,9 @@ class _ChatLinkCardState extends State<ChatLinkCard> {
       return ChatYoutubeInline(videoId: id, url: link.url, title: info?.title ?? 'YouTube', color: color);
     }
     if (video && info != null && image != null) return _video(theme, info, image);
+    if (link.kind == ChatLinkKind.map && territoryMapOn(context)) {
+      if (readMapLink(link.url) case final view?) return ChatMapCard(link: link, view: view, color: color);
+    }
     return ChatInsertFrame(
       color: warning != null ? danger : color,
       alert: warning != null,

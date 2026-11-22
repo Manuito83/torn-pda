@@ -1,5 +1,6 @@
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/utils/js_snippets/city_map_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/js_faction_fold.dart';
 import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
 
@@ -30,6 +31,14 @@ class RemoteSnippets {
   RemoteSnippets._();
 
   static const String cityItemsHighlight = 'city_items_highlight';
+  static const String cityMapEarlyHide = 'city_map_early_hide';
+  static const String cityMapClean = 'city_map_clean';
+  static const String cityMapData = 'city_map_data';
+  static const String cityItemPick = 'city_item_pick';
+  static const String cityMapPause = 'city_map_pause';
+  static const String cityMapHole = 'city_map_hole';
+  static const String cityMapRect = 'city_map_rect';
+  static const String cityMapFocus = 'city_map_focus';
   static const String cityShopsMax = 'city_shops_max';
   static const String cityShopsPurchase = 'city_shops_purchase';
   static const String travelRemovePlane = 'travel_remove_plane';
@@ -49,6 +58,14 @@ class RemoteSnippets {
       version: '1.0.0',
       buildBase: _cityItemsHighlightBaseJS,
     ),
+    cityMapEarlyHide: const RemoteSnippet(id: cityMapEarlyHide, version: '1.0.0', buildBase: cityMapEarlyHideBaseJS),
+    cityMapClean: const RemoteSnippet(id: cityMapClean, version: '1.0.0', buildBase: cityMapCleanBaseJS),
+    cityMapData: const RemoteSnippet(id: cityMapData, version: '1.0.0', buildBase: cityMapDataBaseJS),
+    cityItemPick: const RemoteSnippet(id: cityItemPick, version: '1.0.0', buildBase: cityItemPickBaseJS),
+    cityMapPause: const RemoteSnippet(id: cityMapPause, version: '1.0.0', buildBase: cityMapPauseBaseJS),
+    cityMapHole: const RemoteSnippet(id: cityMapHole, version: '1.0.0', buildBase: cityMapHoleBaseJS),
+    cityMapRect: const RemoteSnippet(id: cityMapRect, version: '1.0.0', buildBase: cityMapRectBaseJS),
+    cityMapFocus: const RemoteSnippet(id: cityMapFocus, version: '1.0.0', buildBase: cityMapFocusBaseJS),
     cityShopsMax: const RemoteSnippet(id: cityShopsMax, version: '1.0.1', buildBase: _cityShopsMaxBaseJS),
     cityShopsPurchase: const RemoteSnippet(
       id: cityShopsPurchase,

@@ -13,6 +13,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chat/chat_tone.dart';
+import 'package:torn_pda/models/territory_map/alert_subscriptions.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/background_prefs.dart';
 import 'package:torn_pda/utils/chat_notifications.dart';
@@ -253,6 +254,12 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts work stats';
     channelName = 'Alerts work stats';
     channelDescription = 'Automatic alerts for work stats targets';
+  } else if (channel == territoryAlertsChannel) {
+    notificationColor = Colors.purple[700];
+    onTapPayload += alertTapPayload(payload);
+    channelId = territoryAlertsChannel;
+    channelName = territoryAlertsChannel;
+    channelDescription = 'Assaults and territory changes on the map';
   }
 
   String title = payload["title"] ?? "";
@@ -277,7 +284,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     if (channelId.contains("travel") || channelId.contains("assists") || channelId.contains("loot")) {
       channelId = "$channelId ${modifier.channelIdModifier} s";
       channelName = "$channelName ${modifier.channelIdModifier} s";
-    } else {
+    } else if (channelId != territoryAlertsChannel) {
       channelId = "$channelId ${modifier.channelIdModifier}";
       channelName = "$channelName ${modifier.channelIdModifier}";
     }
@@ -1025,6 +1032,18 @@ Future configureNotificationChannels({String? mod = ""}) async {
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  // Topic alerts can't carry the vibration suffix
+  channels.add(
+    const AndroidNotificationChannel(
+      territoryAlertsChannel,
+      territoryAlertsChannel,
+      description: 'Assaults and territory changes on the map',
+      importance: Importance.max,
+      enableLights: true,
+      ledColor: Color.fromARGB(255, 255, 0, 0),
     ),
   );
 

@@ -133,6 +133,48 @@ class _FirebaseFunctions {
     }
   }
 
+  Future<dynamic> getFactionFlights(String apiToken) async {
+    const String functionName = 'getFactionFlights';
+    final data = {'apiToken': apiToken};
+
+    if (Platform.isWindows) {
+      return _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+    }
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
+      region: region,
+    ).httpsCallable(functionName, options: HttpsCallableOptions(timeout: const Duration(seconds: 30)));
+    final HttpsCallableResult results = await callable.call(data);
+    return results.data;
+  }
+
+  Future<dynamic> getShareFlights(String? apiToken) async {
+    const String functionName = 'getShareFlights';
+    final data = {'apiToken': apiToken};
+
+    if (Platform.isWindows) {
+      return _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+    }
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
+      region: region,
+    ).httpsCallable(functionName, options: HttpsCallableOptions(timeout: const Duration(seconds: 20)));
+    final HttpsCallableResult results = await callable.call(data);
+    return results.data;
+  }
+
+  Future<dynamic> setShareFlights(bool share, String? apiToken) async {
+    const String functionName = 'setShareFlights';
+    final data = {'share': share, 'apiToken': apiToken};
+
+    if (Platform.isWindows) {
+      return _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+    }
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
+      region: region,
+    ).httpsCallable(functionName, options: HttpsCallableOptions(timeout: const Duration(seconds: 20)));
+    final HttpsCallableResult results = await callable.call(data);
+    return results.data;
+  }
+
   Future<bool> sendAlertsTroubleshootingTest() async {
     final String functionName = 'troubleshooting-sendTroubleshootingAutoNotification';
 

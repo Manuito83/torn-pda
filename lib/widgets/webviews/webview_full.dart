@@ -63,6 +63,7 @@ import 'package:torn_pda/models/travel/oc_travel_check.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/city_pda_map_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -88,6 +89,7 @@ import 'package:torn_pda/torn-pda-native/chat/chat_engine.dart';
 import 'package:torn_pda/utils/js_snippets/js_blank_probe.dart';
 import 'package:torn_pda/utils/js_snippets/js_chain_web.dart';
 import 'package:torn_pda/utils/js_snippets/js_chat_profile_icon.dart';
+import 'package:torn_pda/utils/js_snippets/city_map_snippets.dart';
 import 'package:torn_pda/utils/js_snippets/remote_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -99,6 +101,7 @@ import 'package:torn_pda/utils/webview/webview_utils.dart';
 import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
+import 'package:torn_pda/widgets/city/city_map_frame.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/faction_crimes_widget.dart';
@@ -310,9 +313,28 @@ class WebViewFullState extends State<WebViewFull>
   var _cityEnabled = false;
   var _cityIconActive = false;
   bool _cityPreferencesLoaded = false;
-  var _errorCityApi = false;
-  var _cityItemsFound = <Item>[];
   Widget _cityExpandable = const SizedBox.shrink();
+  final _cityPdaMapButton = GlobalKey();
+  late final CityPdaMapController _cityPdaMap = CityPdaMapController(
+    web: () => webViewController,
+    pushFrame: (page, hole, pick, {required arrival}) => pushCityMapFrame(
+      context,
+      page: page,
+      hole: hole,
+      pick: pick,
+      webArea: _webViewAreaKey,
+      button: _cityPdaMapButton,
+      arrival: arrival,
+      prices: _cityPdaMap.prices,
+    ),
+    mayAutoOpen: () =>
+        mounted &&
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
+        _webViewProvider.isTabUidOnScreen(_tabUid),
+    toast: (text) => BotToast.showText(text: text, contentColor: Colors.grey[700]!),
+    debugToast: (text) => logToUser(text, duration: 8),
+    fetchItems: _fetchCityItems,
+  );
 
   var _bazaarActiveOwn = false;
   var _bazaarFillActive = false;
@@ -793,6 +815,7 @@ class WebViewFullState extends State<WebViewFull>
       _progressController.dispose();
       _animatedProgress.dispose();
 
+      _cityPdaMap.dispose();
       webViewController?.dispose();
     } catch (e, t) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
@@ -1478,6 +1501,7 @@ class WebViewFullState extends State<WebViewFull>
                 time: UserScriptTime.start,
               );
               await _addUserScriptsAvoidDuplicates(scriptsToAdd);
+              unawaited(_cityPdaMap.syncEarlyHide());
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
                 widget.key,
@@ -1508,6 +1532,8 @@ class WebViewFullState extends State<WebViewFull>
             WebviewHandlers.addPageReloadHandler(webview: webViewController!);
 
             WebviewHandlers.addCityShopPurchaseHandler(webview: webViewController!);
+
+            WebviewHandlers.addCityMapHandler(webview: webViewController!, onAction: _cityPdaMap.onPageAction);
 
             WebviewHandlers.addThemeChangeHandler(
               webview: webViewController!,
@@ -1632,6 +1658,7 @@ class WebViewFullState extends State<WebViewFull>
                 time: UserScriptTime.start,
               );
               await _addUserScriptsAvoidDuplicates(scriptsToAdd);
+              if (action.isForMainFrame && incomingUrl.contains('city.php')) await _cityPdaMap.syncEarlyHide();
 
               // DEBUG
               if (_debugScriptsInjection) {
@@ -1789,6 +1816,9 @@ class WebViewFullState extends State<WebViewFull>
 
             try {
               _currentUrl = uri.toString();
+
+              // A reload hides Torn's map again
+              if (_currentUrl.contains('city.php') && _cityPdaMap.hidesEarly) _cityTriggered = false;
 
               hideChatOnLoad();
 
@@ -4634,6 +4664,7 @@ class WebViewFullState extends State<WebViewFull>
   // CITY
   Future _assessCity(dom.Document document, String pageTitle) async {
     if (!pageTitle.contains('city') || pageTitle.contains('raceway')) {
+      _cityPdaMap.leave();
       setState(() {
         _cityIconActive = false;
         _cityExpandable = const SizedBox.shrink();
@@ -4650,6 +4681,7 @@ class WebViewFullState extends State<WebViewFull>
       return;
     }
     _cityTriggered = true;
+    unawaited(_cityPdaMap.syncEarlyHide());
 
     // We only get this once and if we are inside the city
     // It's also in the callback from city options
@@ -4658,12 +4690,20 @@ class WebViewFullState extends State<WebViewFull>
       _cityPreferencesLoaded = true;
     }
 
-    if (!_cityEnabled) {
+    final mapOff = await Prefs().getDisableTerritoryMap();
+    final showButton = !mapOff && await Prefs().getCityShowPdaMapButton();
+    _cityPdaMap.finderOn = _cityEnabled;
+    if (!_cityEnabled && !showButton && (mapOff || !await Prefs().getCityOpensPdaMap())) {
+      // May be hidden by an old script
+      await _cityPdaMap.showTornMap();
       setState(() {
         _cityExpandable = const SizedBox.shrink();
       });
       return;
     }
+
+    _cityPdaMap.mapClean = _cityEnabled && await Prefs().getCityMapCleanView();
+    final pdaMapFirst = await _cityPdaMap.hideForArrival();
 
     // The new map renders items on a Leaflet canvas (no DOM element per item),
     // so we read the item IDs from the live map instead of parsing the page HTML.
@@ -4675,7 +4715,10 @@ class WebViewFullState extends State<WebViewFull>
     var mapReady = false;
     for (var i = 0; i < 30; i++) {
       if (!mounted) break;
-      final dynamic jsResult = await webViewController!.evaluateJavascript(source: highlightCityItemsJS());
+      // Without the finder, only wait for the map
+      final dynamic jsResult = await webViewController!.evaluateJavascript(
+        source: _cityEnabled ? highlightCityItemsJS() : cityMapRectJS(),
+      );
       final resultStr = jsResult?.toString() ?? "";
       if (resultStr.isEmpty || resultStr == "NOT_READY") {
         await Future.delayed(const Duration(seconds: 1));
@@ -4698,53 +4741,49 @@ class WebViewFullState extends State<WebViewFull>
     if (!mapReady) {
       // Set false so that the page can be reloaded if city widget didn't load
       _cityTriggered = false;
+      if (pdaMapFirst || _cityPdaMap.active) await _cityPdaMap.showTornMap();
       return;
     }
 
-    // Pass items to widget (if nothing found, widget's list will be empty)
-    try {
-      final dynamic apiResponse = await ApiCallsV1.getItems();
-      if (apiResponse is ItemsModel) {
-        apiResponse.items!.forEach((key, value) {
-          // Assign correct ids
-          value.id = key;
-        });
-        final tornItems = apiResponse.items!.values.toList();
-        final itemsFound = <Item>[];
-        for (final mapItem in mapItemsList) {
-          // Skip any map id missing from the items API instead of blanking the whole widget
-          final Item? itemMatch = tornItems.firstWhereOrNull((element) => element.id == mapItem);
-          if (itemMatch != null) itemsFound.add(itemMatch);
-        }
-        if (mounted) {
-          // Show only if still on city when data arrives, checking the URL not _cityTriggered
-          // (that flag gets transiently reset by URL churn on a fresh direct-open load)
-          if (!_currentUrl.contains('city.php')) {
-            setState(() {
-              _cityExpandable = const SizedBox.shrink();
-            });
-          } else {
-            setState(() {
-              _cityItemsFound = itemsFound;
-              _errorCityApi = false;
-              _cityExpandable = CityWidget(
-                controller: webViewController,
-                cityItems: _cityItemsFound,
-                error: _errorCityApi,
-              );
-            });
-          }
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            _errorCityApi = true;
-          });
-        }
-      }
-    } catch (e) {
+    if (!pdaMapFirst && !_cityPdaMap.active) {
+      await webViewController?.evaluateJavascript(source: cityMapCleanJS(hidden: _cityPdaMap.mapClean));
+    }
+
+    // Nothing waits for the API
+    if (_cityEnabled) unawaited(_cityPdaMap.prices.load(mapItemsList));
+    await _showCityWidget(showButton);
+  }
+
+  Future<List<Item>> _fetchCityItems() async {
+    final dynamic apiResponse = await ApiCallsV1.getItems();
+    if (apiResponse is! ItemsModel) throw StateError('items unavailable');
+    apiResponse.items!.forEach((key, value) {
+      // Assign correct ids
+      value.id = key;
+    });
+    return apiResponse.items!.values.toList();
+  }
+
+  Future<void> _showCityWidget(bool showButton) async {
+    if (!mounted) return;
+    // Show only if still on city when data arrives, checking the URL not _cityTriggered
+    // (that flag gets transiently reset by URL churn on a fresh direct-open load)
+    if (!_currentUrl.contains('city.php')) {
+      _cityPdaMap.leave();
+      setState(() {
+        _cityExpandable = const SizedBox.shrink();
+      });
       return;
     }
+    setState(() {
+      _cityExpandable = CityWidget(
+        pdaMap: _cityPdaMap,
+        pdaMapButton: _cityPdaMapButton,
+        showFinder: _cityEnabled,
+        showButton: showButton,
+      );
+    });
+    await _cityPdaMap.arrive();
   }
 
   Widget _cityMenuIcon() {
@@ -4761,7 +4800,7 @@ class WebViewFullState extends State<WebViewFull>
         openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -4785,6 +4824,7 @@ class WebViewFullState extends State<WebViewFull>
     // Do not reload upon first city activation, otherwise we get a reload glitch. Do it only
     // after we have activated/deactivated the city
     if (!init) {
+      await _cityPdaMap.syncEarlyHide();
       await _reload();
     }
   }

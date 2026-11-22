@@ -71,6 +71,18 @@ class WebviewHandlers {
     );
   }
 
+  static void addCityMapHandler({
+    required InAppWebViewController webview,
+    required Future<void> Function(Object? action, {required bool isMainFrame}) onAction,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_cityMap',
+      callback: (JavaScriptHandlerFunctionData data) async {
+        await onAction(data.args.isEmpty ? null : data.args.first, isMainFrame: data.isMainFrame);
+      },
+    );
+  }
+
   static void addPageReloadHandler({required InAppWebViewController webview}) {
     webview.addJavaScriptHandler(
       handlerName: 'reloadPage',

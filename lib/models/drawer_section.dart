@@ -16,6 +16,7 @@ enum DrawerSection {
   awards,
   items,
   rankedWars,
+  territoryMap,
   stockMarket,
   wiki,
   alerts,
@@ -53,6 +54,8 @@ enum DrawerSection {
         return 'Items';
       case DrawerSection.rankedWars:
         return 'Ranked Wars';
+      case DrawerSection.territoryMap:
+        return 'Territory Map';
       case DrawerSection.stockMarket:
         return 'Stock Market';
       case DrawerSection.wiki:
@@ -93,6 +96,8 @@ enum DrawerSection {
         return MdiIcons.packageVariantClosed;
       case DrawerSection.rankedWars:
         return MaterialCommunityIcons.sword_cross;
+      case DrawerSection.territoryMap:
+        return MdiIcons.mapLegend;
       case DrawerSection.stockMarket:
         return MdiIcons.bankTransfer;
       case DrawerSection.wiki:
@@ -170,6 +175,16 @@ enum DrawerSection {
 }
 
 const drawerChatId = 'chat';
+
+// Start section from the saved default
+DrawerSection startSection(String saved, {required bool territoryMapOff}) {
+  // The browser opens over Profile
+  if (saved == 'browser' || saved == 'browser_full') return DrawerSection.profile;
+  final legacy = int.tryParse(saved);
+  final section = legacy != null ? DrawerSection.fromIndex(legacy) : DrawerSection.fromId(saved);
+  if (section == DrawerSection.territoryMap && territoryMapOff) return DrawerSection.profile;
+  return section ?? DrawerSection.profile;
+}
 
 /// New sections join, chat above Profile
 List<String> drawerFullOrder(List<String> saved) {

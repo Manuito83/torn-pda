@@ -62,6 +62,7 @@ MAIN INDEX
   cp yata_config.dart.example yata_config.dart
   cp webview_config.dart.example webview_config.dart
   cp tac_config.dart.example tac_config.dart
+  cp territory_map_config.dart.example territory_map_config.dart
   ```
 
   ### 2. Copy the native stubs

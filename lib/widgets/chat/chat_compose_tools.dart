@@ -22,9 +22,12 @@ import 'package:torn_pda/providers/chat/chat_controller.dart';
 import 'package:torn_pda/providers/chat/chat_link_info.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
+import 'package:torn_pda/models/territory_map/map_usage.dart';
+import 'package:torn_pda/providers/territory_map_usage.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/territory_map/territory_map_chat.dart';
 import 'package:torn_pda/widgets/chat/chat_bank_widgets.dart';
 import 'package:torn_pda/widgets/chat/chat_help.dart';
 import 'package:torn_pda/widgets/chat/chat_link_widgets.dart';
@@ -32,13 +35,15 @@ import 'package:torn_pda/widgets/chat/chat_slot_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_status_sheet.dart';
 import 'package:torn_pda/widgets/chat/chat_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
+import 'package:torn_pda/widgets/territory_map/map_link_picker.dart';
 
 enum _Tool { replies, price, player, tabs, scripts, wiki, help }
 
-bool chatQuickAvailable(String id, {ChatController? chat, String? roomId}) => switch (id) {
+bool chatQuickAvailable(String id, {ChatController? chat, String? roomId, required bool mapOn}) => switch (id) {
   'price' => NativeChat.prefs.itemPrice,
   'player' => chat != null,
   'bank' => chatBankAppliesTo(roomId ?? ''),
+  'map' => mapOn,
   _ => true,
 };
 
@@ -142,6 +147,8 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
         _insertTime();
       case 'bank':
         _requestMoney();
+      case 'map':
+        _insertMapLink();
     }
   }
 
@@ -224,6 +231,13 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
   Future<void> _requestMoney() async {
     final text = await showChatBankRequest(context);
     if (text != null && mounted) widget.onInsert(text);
+  }
+
+  Future<void> _insertMapLink() async {
+    final link = await showMapLinkPicker(context);
+    if (link == null || !mounted) return;
+    countMapUse(mapChatInsertFeature);
+    widget.onInsert(link);
   }
 
   void _onName(String text) {
@@ -405,7 +419,10 @@ class _ChatComposeToolsState extends State<ChatComposeTools> {
     if (id == 'emoji') return _emojiChips();
     if (id == 'replies') return _replyChips();
     final label = ChatQuickActionsEditor.labels[id];
-    if (label == null || !chatQuickAvailable(id, chat: widget.chat, roomId: widget.roomId)) return const [];
+    if (label == null ||
+        !chatQuickAvailable(id, chat: widget.chat, roomId: widget.roomId, mapOn: territoryMapOn(context))) {
+      return const [];
+    }
     return [
       ActionChip(
         avatar: Icon(label.$1, size: 18),
@@ -813,6 +830,7 @@ class ChatQuickActionsEditor extends StatelessWidget {
     'bank': (Icons.account_balance_outlined, 'Request money'),
     'emoji': (Icons.add_reaction_outlined, 'Emojis'),
     'replies': (Icons.bolt_rounded, 'Quick replies'),
+    'map': (Icons.map_outlined, 'Territory map'),
   };
 
   @override
@@ -891,6 +909,7 @@ class ChatQuickActionsEditor extends StatelessWidget {
                               Text(labels[id]!.$2),
                             ],
                           ),
+                          subtitle: id == 'map' && !territoryMapOn(context) ? const Text('Needs the Territory Map') : null,
                           value: !prefs.quickOff(id),
                           onChanged: (on) => prefs.setQuickActionShown(id, on),
                         ),

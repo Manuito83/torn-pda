@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/drawer_section.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/territory_alerts_controller.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 
 class DrawerSectionsPage extends StatefulWidget {
@@ -34,6 +35,7 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
       _order = drawerFullOrder(const []);
     });
     _settingsProvider.changeDisableTravelSection = false;
+    _settingsProvider.changeDisableTerritoryMap = false;
     _settingsProvider.changeRankedWarsInMenu = false;
     _settingsProvider.changeStockExchangeInMenu = false;
     _settingsProvider.showWikiInDrawer = true;
@@ -45,6 +47,8 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
     switch (section) {
       case DrawerSection.travel:
         return !_settingsProvider.disableTravelSection;
+      case DrawerSection.territoryMap:
+        return !_settingsProvider.disableTerritoryMap;
       case DrawerSection.rankedWars:
         return _settingsProvider.rankedWarsInMenu;
       case DrawerSection.stockMarket:
@@ -61,6 +65,9 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
     switch (section) {
       case DrawerSection.travel:
         _settingsProvider.changeDisableTravelSection = currentlyVisible;
+        break;
+      case DrawerSection.territoryMap:
+        setTerritoryMapDisabled(context, currentlyVisible);
         break;
       case DrawerSection.rankedWars:
         _settingsProvider.changeRankedWarsInMenu = !currentlyVisible;
@@ -166,6 +173,9 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
               child: ListTile(
                 leading: Icon(section.icon),
                 title: Text(section.title),
+                subtitle: section == DrawerSection.territoryMap && isVisible
+                    ? const Text('Hiding it also turns off its alerts and flight sharing')
+                    : null,
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

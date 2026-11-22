@@ -16,7 +16,7 @@ void main() {
 
   test('names that start with it come first', () {
     final actions = ChatCommands.actionsIn(chatQuickActionIds);
-    expect(ChatCommands.matchActions('p', actions), ['price', 'player', 'script']);
+    expect(ChatCommands.matchActions('p', actions), ['price', 'player', 'script', 'map']);
     expect(ChatCommands.matchActions('', ['wiki', 'time']), ['wiki', 'time']);
     expect(ChatCommands.matchActions('zz', actions), isEmpty);
   });

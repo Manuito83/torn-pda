@@ -16,6 +16,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
+import 'package:torn_pda/models/app_orientations.dart';
 
 // Project imports:
 import 'package:torn_pda/models/discreet_schedule.dart';
@@ -23,6 +24,7 @@ import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/webview/hcpp_decision.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/flights_sharing.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -284,6 +286,15 @@ class SettingsProvider extends ChangeNotifier {
   set changeDisableTravelSection(bool disable) {
     _disableTravelSection = disable;
     Prefs().setDisableTravelSection(_disableTravelSection);
+    notifyListeners();
+  }
+
+  var _disableTerritoryMap = false;
+  bool get disableTerritoryMap => _disableTerritoryMap;
+  set changeDisableTerritoryMap(bool disable) {
+    _disableTerritoryMap = disable;
+    Prefs().setDisableTerritoryMap(disable);
+    if (disable) unawaited(stopSharingFlights());
     notifyListeners();
   }
 
@@ -1084,16 +1095,7 @@ class SettingsProvider extends ChangeNotifier {
   set changeAllowScreenRotation(bool allow) {
     _allowScreenRotation = allow;
 
-    if (allow) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    }
+    SystemChrome.setPreferredOrientations(appOrientations(allowRotation: allow));
 
     Prefs().setAllowScreenRotation(_allowScreenRotation);
     notifyListeners();
@@ -1921,6 +1923,7 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _disableTravelSection = await Prefs().getDisableTravelSection();
+    _disableTerritoryMap = await Prefs().getDisableTerritoryMap();
 
     _testBrowserActive = await Prefs().getTestBrowserActive();
 

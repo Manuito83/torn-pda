@@ -2,19 +2,24 @@
 // Package imports:
 import 'package:expandable/expandable.dart';
 import 'package:material_ui/material_ui.dart';
-// ignore: depend_on_referenced_packages
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
 // Project imports:
-import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
+import 'package:torn_pda/providers/city_pda_map_controller.dart';
+import 'package:torn_pda/widgets/city/city_pda_map_button.dart';
+import 'package:torn_pda/widgets/territory_map/map_load_note.dart';
 
 class CityWidget extends StatefulWidget {
-  final InAppWebViewController? controller;
-  final List<Item> cityItems;
-  final bool error;
+  final CityPdaMapController pdaMap;
+  final GlobalKey pdaMapButton;
+  final bool showFinder;
+  final bool showButton;
 
-  const CityWidget({required this.controller, required this.cityItems, required this.error});
+  const CityWidget({
+    required this.pdaMap,
+    required this.pdaMapButton,
+    required this.showFinder,
+    required this.showButton,
+  });
 
   @override
   CityWidgetState createState() => CityWidgetState();
@@ -23,9 +28,7 @@ class CityWidget extends StatefulWidget {
 class CityWidgetState extends State<CityWidget> {
   final _scrollController = ScrollController();
   final _moneyFormat = NumberFormat("#,##0", "en_US");
-
-  // Whether the on-map item overlay is hidden
-  bool _itemsHiddenOnMap = false;
+  late final _changes = Listenable.merge([widget.pdaMap, widget.pdaMap.prices]);
 
   @override
   void dispose() {
@@ -33,34 +36,69 @@ class CityWidgetState extends State<CityWidget> {
     super.dispose();
   }
 
-  void _toggleItemsOnMap() {
-    setState(() => _itemsHiddenOnMap = !_itemsHiddenOnMap);
-    widget.controller?.evaluateJavascript(source: toggleCityItemsHighlightJS(hidden: _itemsHiddenOnMap));
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Stack(
-        children: [
-          _cityPanel(context),
-          if (widget.cityItems.isNotEmpty)
-            Positioned(
-              top: -6,
-              right: -6,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                visualDensity: VisualDensity.compact,
-                iconSize: 20,
-                color: Colors.orange,
-                tooltip: _itemsHiddenOnMap ? 'Show items on map' : 'Hide items from map',
-                icon: Icon(_itemsHiddenOnMap ? Icons.visibility_off : Icons.visibility),
-                onPressed: _toggleItemsOnMap,
-              ),
+    return ListenableBuilder(
+      listenable: _changes,
+      builder: (context, _) {
+        // Torn's map hidden, nothing to find
+        final showFinder = widget.showFinder && !widget.pdaMap.active;
+        if (widget.pdaMap.arriving || (!showFinder && !widget.showButton)) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: [
+              if (widget.showButton) CityPdaMapButton(key: widget.pdaMapButton, map: widget.pdaMap),
+              if (showFinder) ...[
+                if (widget.showButton) const SizedBox(height: 8),
+                _finder(context),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _finder(BuildContext context) {
+    return Stack(
+      children: [
+        _cityPanel(context),
+        if (widget.pdaMap.prices.found.isNotEmpty)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              visualDensity: VisualDensity.compact,
+              iconSize: 20,
+              color: Colors.orange,
+              tooltip: widget.pdaMap.itemsHidden ? 'Show items on map' : 'Hide items from map',
+              icon: Icon(widget.pdaMap.itemsHidden ? Icons.visibility_off : Icons.visibility),
+              onPressed: widget.pdaMap.toggleItemsOnMap,
             ),
-        ],
+          ),
+      ],
+    );
+  }
+
+  Widget _mapCleanRow() {
+    final clean = widget.pdaMap.mapClean;
+    return InkWell(
+      onTap: widget.pdaMap.toggleMapClean,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          children: [
+            Icon(clean ? Icons.layers_clear : Icons.layers, size: 16, color: Colors.orange),
+            const SizedBox(width: 6),
+            Text(
+              clean ? 'Show territories and rackets' : 'Hide territories and rackets',
+              style: const TextStyle(color: Colors.orange, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -104,7 +142,7 @@ class CityWidgetState extends State<CityWidget> {
               controller: _scrollController,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(10, 10, 0, 15),
-                child: Column(children: _returnItems(false)),
+                child: Column(children: [_mapCleanRow(), ..._returnItems(false)]),
               ),
             ),
           ),
@@ -115,20 +153,23 @@ class CityWidgetState extends State<CityWidget> {
 
   List<Widget> _returnItems(bool onlyTitle) {
     final itemList = <Widget>[];
+    final prices = widget.pdaMap.prices;
+    final cityItems = prices.found;
+
+    if (prices.loading) return const [MapLoadNote(loading: true, label: 'Loading items')];
+    if (prices.failed) {
+      return [MapLoadNote(error: 'Torn API unavailable', onRetry: prices.retry)];
+    }
 
     // Empty text
-    if (widget.cityItems.isEmpty) {
-      String noFoundText = "No items found";
-      if (widget.error) {
-        noFoundText += ", Torn API unavailable (try later)";
-      }
+    if (cityItems.isEmpty) {
       itemList.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 2),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 2),
           child: Row(
             children: [
               Flexible(
-                child: Text(noFoundText, style: const TextStyle(color: Colors.orange, fontSize: 12)),
+                child: Text("No items found", style: TextStyle(color: Colors.orange, fontSize: 12)),
               ),
             ],
           ),
@@ -138,7 +179,7 @@ class CityWidgetState extends State<CityWidget> {
     }
 
     // Total items and price text
-    if (widget.cityItems.length == 1) {
+    if (cityItems.length == 1) {
       itemList.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 2),
@@ -148,9 +189,9 @@ class CityWidgetState extends State<CityWidget> {
         ),
       );
     } else {
-      final itemQuantity = widget.cityItems.length;
+      final itemQuantity = cityItems.length;
       var totalPrice = 0;
-      for (final item in widget.cityItems) {
+      for (final item in cityItems) {
         totalPrice += item.marketValue!;
       }
       itemList.add(
@@ -171,7 +212,7 @@ class CityWidgetState extends State<CityWidget> {
     }
 
     // Item rows
-    for (final item in widget.cityItems) {
+    for (final item in cityItems) {
       itemList.add(
         Padding(
           padding: const EdgeInsets.fromLTRB(10, 3, 0, 0),

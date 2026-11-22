@@ -56,6 +56,12 @@ import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
+import 'package:torn_pda/providers/territory_alerts_controller.dart';
+import 'package:torn_pda/providers/territory_history_controller.dart';
+import 'package:torn_pda/providers/territory_map_controller.dart';
+import 'package:torn_pda/providers/territory_map_usage.dart';
+import 'package:torn_pda/providers/territory_share_controller.dart';
+import 'package:torn_pda/providers/territory_wars_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
@@ -290,6 +296,12 @@ Future<void> main() async {
         ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
         ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
+        ChangeNotifierProvider<TerritoryMapController>(create: (context) => TerritoryMapController()),
+        ChangeNotifierProvider<TerritoryWarsController>(create: (context) => TerritoryWarsController()),
+        ChangeNotifierProvider<TerritoryAlertsController>(create: (context) => TerritoryAlertsController()),
+        ChangeNotifierProvider<TerritoryHistoryController>(create: (context) => TerritoryHistoryController()),
+        ChangeNotifierProvider<TerritoryShareController>(create: (context) => TerritoryShareController()),
+        Provider<TerritoryMapUsage>(create: (context) => TerritoryMapUsage()),
       ],
       child: MyApp(),
     ),

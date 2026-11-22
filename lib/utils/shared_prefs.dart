@@ -370,6 +370,42 @@ class Prefs with ChatPrefsStorage {
   final String _kTradePriceProvider = "pda_tradePriceProvider";
   final String _kTornExchangeProfitEnabled = "pda_tornExchangeProfitActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
+  final String _kCityMapCleanView = "pda_cityMapCleanView";
+  final String _kCityOpensPdaMap = "pda_cityOpensPdaMap";
+  final String _kCityShowPdaMapButton = "pda_cityShowPdaMapButton";
+  final String _kTerritoryMapDiaryStrip = "pda_territoryMapDiaryStrip";
+  final String _kTerritoryMapFlightsButton = "pda_territoryMapFlightsButton";
+  final String _kTerritoryMapFlatFlights = "pda_territoryMapFlatFlights";
+  final String _kTerritoryMapShareStopPending = "pda_territoryMapShareStopPending";
+  final String _kCityMapShowItems = "pda_cityMapShowItems";
+  final String _kCityMapShowPanel = "pda_cityMapShowPanel";
+  final String _kCityMapShowSites = "pda_cityMapShowSites";
+  final String _kTerritoryMapStateEtag = "pda_territoryMapStateEtag";
+  final String _kTerritoryMapStateSavedAt = "pda_territoryMapStateSavedAt";
+  final String _kTerritoryMapVersion = "pda_territoryMapTerritoriesVersion";
+  final String _kTerritoryMapCamera = "pda_territoryMapCamera";
+  final String _kTerritoryMapShowLocks = "pda_territoryMapShowLocks";
+  final String _kTerritoryMapFactionNames = "pda_territoryMapFactionNames";
+  final String _kTerritoryMapView = "pda_territoryMapView";
+  final String _kTerritoryMapActivitySpan = "pda_territoryMapActivitySpan";
+  final String _kTerritoryMapCityLife = "pda_territoryMapCityLife";
+  final String _kTerritoryMapLifePlanes = "pda_territoryMapLifePlanes";
+  final String _kTerritoryMapLifeTraffic = "pda_territoryMapLifeTraffic";
+  final String _kTerritoryMapLifeNight = "pda_territoryMapLifeNight";
+  final String _kTerritoryMapLifeGunfire = "pda_territoryMapLifeGunfire";
+  final String _kTerritoryMapLifePolice = "pda_territoryMapLifePolice";
+  final String _kTerritoryMapLifeDensity = "pda_territoryMapLifeDensity";
+  final String _kTerritoryMap3d = "pda_territoryMap3d";
+  final String _kTerritoryMap3dHeight = "pda_territoryMap3dHeight";
+  final String _kTerritoryMapDiaryLastLook = "pda_territoryMapDiaryLastLook";
+  final String _kTerritoryMapAlerts = "pda_territoryMapAlerts";
+  final String _kTerritoryMapAlertTopics = "pda_territoryMapAlertTopics";
+  final String _kTerritoryMapAlertFaction = "pda_territoryMapAlertFaction";
+  final String _kTerritoryMapAlertsHint = "pda_territoryMapAlertsHint";
+  final String _kDisableTerritoryMap = "pda_disableTerritoryMap";
+  final String _kTerritoryMapOrigins = "pda_territoryMapOrigins";
+  final String _kTerritoryMapUsageDay = "pda_territoryMapUsageDay";
+  final String _kTerritoryMapCount = "pda_territoryMapCount_";
   final String _kAwardsSort = "pda_awardsSort";
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
@@ -3385,6 +3421,294 @@ class Prefs with ChatPrefsStorage {
 
   Future setCityEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kCityFinderEnabled, value);
+  }
+
+  Future<bool> getCityMapCleanView() async {
+    return await PrefsDatabase.getBool(_kCityMapCleanView, false);
+  }
+
+  Future setCityMapCleanView(bool value) async {
+    return await PrefsDatabase.setBool(_kCityMapCleanView, value);
+  }
+
+  Future<bool> getCityOpensPdaMap() async {
+    return await PrefsDatabase.getBool(_kCityOpensPdaMap, false);
+  }
+
+  Future setCityOpensPdaMap(bool value) async {
+    return await PrefsDatabase.setBool(_kCityOpensPdaMap, value);
+  }
+
+  Future<bool> getCityShowPdaMapButton() async {
+    return await PrefsDatabase.getBool(_kCityShowPdaMapButton, true);
+  }
+
+  Future setCityShowPdaMapButton(bool value) async {
+    return await PrefsDatabase.setBool(_kCityShowPdaMapButton, value);
+  }
+
+  Future<bool> getCityMapShowPanel() async {
+    return await PrefsDatabase.getBool(_kCityMapShowPanel, true);
+  }
+
+  Future setCityMapShowPanel(bool value) async {
+    return await PrefsDatabase.setBool(_kCityMapShowPanel, value);
+  }
+
+  Future<bool> getCityMapShowItems() async {
+    return await PrefsDatabase.getBool(_kCityMapShowItems, true);
+  }
+
+  Future setCityMapShowItems(bool value) async {
+    return await PrefsDatabase.setBool(_kCityMapShowItems, value);
+  }
+
+  Future<bool> getCityMapShowSites() async {
+    return await PrefsDatabase.getBool(_kCityMapShowSites, false);
+  }
+
+  Future setCityMapShowSites(bool value) async {
+    return await PrefsDatabase.setBool(_kCityMapShowSites, value);
+  }
+
+  Future<String> getTerritoryMapStateEtag() async {
+    return await PrefsDatabase.getString(_kTerritoryMapStateEtag, "");
+  }
+
+  Future setTerritoryMapStateEtag(String value) async {
+    return await PrefsDatabase.setString(_kTerritoryMapStateEtag, value);
+  }
+
+  Future<int> getTerritoryMapStateSavedAt() async {
+    return await PrefsDatabase.getInt(_kTerritoryMapStateSavedAt, 0);
+  }
+
+  Future setTerritoryMapStateSavedAt(int value) async {
+    return await PrefsDatabase.setInt(_kTerritoryMapStateSavedAt, value);
+  }
+
+  Future<int> getTerritoryMapVersion() async {
+    return await PrefsDatabase.getInt(_kTerritoryMapVersion, 0);
+  }
+
+  Future setTerritoryMapVersion(int value) async {
+    return await PrefsDatabase.setInt(_kTerritoryMapVersion, value);
+  }
+
+  Future<String> getTerritoryMapCamera() async {
+    return await PrefsDatabase.getString(_kTerritoryMapCamera, "");
+  }
+
+  Future setTerritoryMapCamera(String value) async {
+    return await PrefsDatabase.setString(_kTerritoryMapCamera, value);
+  }
+
+  Future<bool> getTerritoryMapShowLocks() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapShowLocks, true);
+  }
+
+  Future setTerritoryMapShowLocks(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapShowLocks, value);
+  }
+
+  Future<bool> getTerritoryMapDiaryStrip() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapDiaryStrip, false);
+  }
+
+  Future setTerritoryMapDiaryStrip(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapDiaryStrip, value);
+  }
+
+  Future<bool> getTerritoryMapFlightsButton() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapFlightsButton, true);
+  }
+
+  Future setTerritoryMapFlightsButton(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapFlightsButton, value);
+  }
+
+  Future<bool> getTerritoryMapFlatFlights() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapFlatFlights, false);
+  }
+
+  Future setTerritoryMapFlatFlights(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapFlatFlights, value);
+  }
+
+  Future<bool> getTerritoryMapShareStopPending() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapShareStopPending, false);
+  }
+
+  Future setTerritoryMapShareStopPending(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapShareStopPending, value);
+  }
+
+  Future<bool> getTerritoryMapFactionNames() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapFactionNames, false);
+  }
+
+  Future setTerritoryMapFactionNames(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapFactionNames, value);
+  }
+
+  Future<String> getTerritoryMapView() async {
+    return await PrefsDatabase.getString(_kTerritoryMapView, "");
+  }
+
+  Future setTerritoryMapView(String value) async {
+    return await PrefsDatabase.setString(_kTerritoryMapView, value);
+  }
+
+  Future<String> getTerritoryMapActivitySpan() async {
+    return await PrefsDatabase.getString(_kTerritoryMapActivitySpan, "");
+  }
+
+  Future setTerritoryMapActivitySpan(String value) async {
+    return await PrefsDatabase.setString(_kTerritoryMapActivitySpan, value);
+  }
+
+  Future<bool> getTerritoryMapCityLife() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapCityLife, true);
+  }
+
+  Future setTerritoryMapCityLife(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapCityLife, value);
+  }
+
+  Future<bool> getTerritoryMapLifePlanes() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapLifePlanes, true);
+  }
+
+  Future setTerritoryMapLifePlanes(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapLifePlanes, value);
+  }
+
+  Future<bool> getTerritoryMapLifeTraffic() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapLifeTraffic, true);
+  }
+
+  Future setTerritoryMapLifeTraffic(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapLifeTraffic, value);
+  }
+
+  Future<bool> getTerritoryMapLifeNight() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapLifeNight, true);
+  }
+
+  Future setTerritoryMapLifeNight(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapLifeNight, value);
+  }
+
+  Future<bool> getTerritoryMapLifeGunfire() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapLifeGunfire, true);
+  }
+
+  Future setTerritoryMapLifeGunfire(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapLifeGunfire, value);
+  }
+
+  Future<bool> getTerritoryMapLifePolice() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapLifePolice, true);
+  }
+
+  Future setTerritoryMapLifePolice(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapLifePolice, value);
+  }
+
+  Future<String> getTerritoryMapLifeDensity() async {
+    return await PrefsDatabase.getString(_kTerritoryMapLifeDensity, "");
+  }
+
+  Future setTerritoryMapLifeDensity(String value) async {
+    return await PrefsDatabase.setString(_kTerritoryMapLifeDensity, value);
+  }
+
+  Future<bool> getTerritoryMap3d() async {
+    return await PrefsDatabase.getBool(_kTerritoryMap3d, false);
+  }
+
+  Future setTerritoryMap3d(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMap3d, value);
+  }
+
+  Future<String> getTerritoryMap3dHeight() async {
+    return await PrefsDatabase.getString(_kTerritoryMap3dHeight, "");
+  }
+
+  Future setTerritoryMap3dHeight(String value) async {
+    return await PrefsDatabase.setString(_kTerritoryMap3dHeight, value);
+  }
+
+  Future<int> getTerritoryMapDiaryLastLook() async {
+    return await PrefsDatabase.getInt(_kTerritoryMapDiaryLastLook, 0);
+  }
+
+  Future setTerritoryMapDiaryLastLook(int value) async {
+    return await PrefsDatabase.setInt(_kTerritoryMapDiaryLastLook, value);
+  }
+
+  Future<bool> getTerritoryMapAlerts() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapAlerts, false);
+  }
+
+  Future setTerritoryMapAlerts(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapAlerts, value);
+  }
+
+  Future<List<String>> getTerritoryMapAlertTopics() async {
+    return await PrefsDatabase.getStringList(_kTerritoryMapAlertTopics, <String>[]);
+  }
+
+  Future setTerritoryMapAlertTopics(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kTerritoryMapAlertTopics, value);
+  }
+
+  Future<int> getTerritoryMapAlertFaction() async {
+    return await PrefsDatabase.getInt(_kTerritoryMapAlertFaction, -1);
+  }
+
+  Future setTerritoryMapAlertFaction(int value) async {
+    return await PrefsDatabase.setInt(_kTerritoryMapAlertFaction, value);
+  }
+
+  Future<bool> getTerritoryMapAlertsHinted() async {
+    return await PrefsDatabase.getBool(_kTerritoryMapAlertsHint, false);
+  }
+
+  Future setTerritoryMapAlertsHinted(bool value) async {
+    return await PrefsDatabase.setBool(_kTerritoryMapAlertsHint, value);
+  }
+
+  Future<bool> getDisableTerritoryMap() async {
+    return await PrefsDatabase.getBool(_kDisableTerritoryMap, false);
+  }
+
+  Future setDisableTerritoryMap(bool value) async {
+    return await PrefsDatabase.setBool(_kDisableTerritoryMap, value);
+  }
+
+  Future<List<String>> getTerritoryMapOrigins() async {
+    return await PrefsDatabase.getStringList(_kTerritoryMapOrigins, <String>[]);
+  }
+
+  Future setTerritoryMapOrigins(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kTerritoryMapOrigins, value);
+  }
+
+  Future<int> getTerritoryMapUsageDay() async {
+    return await PrefsDatabase.getInt(_kTerritoryMapUsageDay, 0);
+  }
+
+  Future setTerritoryMapUsageDay(int value) async {
+    return await PrefsDatabase.setInt(_kTerritoryMapUsageDay, value);
+  }
+
+  Future<int> getTerritoryMapCount(String feature) async {
+    return await PrefsDatabase.getInt('$_kTerritoryMapCount$feature', 0);
+  }
+
+  Future setTerritoryMapCount(String feature, int value) async {
+    return await PrefsDatabase.setInt('$_kTerritoryMapCount$feature', value);
   }
 
   /// ----------------------------

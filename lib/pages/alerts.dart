@@ -36,6 +36,7 @@ import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 import 'package:torn_pda/widgets/alerts/work_stats_targets_dialog.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
+import 'package:torn_pda/widgets/territory_map/territory_alerts_sheet.dart';
 
 class AlertsSettings extends StatefulWidget {
   final Function stockMarketInMenuCallback;
@@ -1214,6 +1215,13 @@ class AlertsSettingsState extends State<AlertsSettings> {
           onChanged: _onRetalsToggled,
         ),
         if ((m.retalsNotification ?? false) && _factionApiAccess) _retalsOptions(),
+        if (!_settingsProvider.disableTerritoryMap)
+          AlertRow(
+            title: "Territory alerts",
+            subtitle: "Assaults, endings, owner changes and rackets from the Territory Map",
+            trailing: _chevron(),
+            onTap: () => showTerritoryAlertsSheet(context),
+          ),
         AlertRow(
           title: "Faction assist messages",
           subtitle: "Receive attack assist messages manually triggered by your faction mates",

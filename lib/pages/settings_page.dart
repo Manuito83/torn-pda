@@ -43,6 +43,7 @@ import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
+import 'package:torn_pda/providers/territory_alerts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/models/discreet_schedule.dart';
@@ -2923,6 +2924,35 @@ class SettingsPageState extends State<SettingsPage> {
         ),
       ),
       SearchableRow(
+        label: "Disable territory map",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Disable territory map")),
+                  Switch(
+                    value: _settingsProvider.disableTerritoryMap,
+                    onChanged: (disable) {
+                      setState(() => setTerritoryMapDisabled(context, disable));
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Hides the map from the menu, the city and the wars page. Also turns off its alerts and flight sharing",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
         label: "Back button exits app",
         searchText: _searchText,
         child: Padding(
@@ -4559,6 +4589,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Future<void> _getApiDetails({required bool userTriggered, required String currentKey}) async {
     final InventoryProvider inventoryProvider = context.read<InventoryProvider>();
+    final territoryAlerts = context.read<TerritoryAlertsController>();
     int errorPlayerId = 0;
     dynamic firebaseErrorUser;
 
@@ -4589,6 +4620,7 @@ class SettingsPageState extends State<SettingsPage> {
           uc.factionId = myProfile.faction?.factionId ?? 0;
           uc.companyId = myProfile.job?.companyId ?? 0;
         }
+        if (userTriggered) territoryAlerts.resubscribe();
 
         errorPlayerId = uc.playerId;
 

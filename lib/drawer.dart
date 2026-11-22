@@ -28,6 +28,7 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:receive_intent/receive_intent.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/app_orientations.dart';
 import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/feedback/feedback_input.dart';
@@ -35,6 +36,8 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/models/drawer_section.dart';
+import 'package:torn_pda/models/territory_map/alert_subscriptions.dart';
+import 'package:torn_pda/models/territory_map/map_share.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/models/remote_announcement.dart';
 import 'package:torn_pda/pages/about.dart';
@@ -44,6 +47,7 @@ import 'package:torn_pda/pages/alerts_windows.dart';
 import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
+import 'package:torn_pda/pages/territory_map/territory_map_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/feedback/feedback_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
@@ -71,6 +75,10 @@ import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
+import 'package:torn_pda/providers/territory_alerts_controller.dart';
+import 'package:torn_pda/providers/flights_sharing.dart';
+import 'package:torn_pda/providers/territory_map_usage.dart';
+import 'package:torn_pda/providers/territory_share_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
@@ -416,8 +424,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
         // Heal tokens that rotated before we listened
         FirestoreHelper().reconcileMessagingToken();
+        final territoryAlerts = context.read<TerritoryAlertsController>();
+        _preferencesCompleter.future.then((_) => territoryAlerts.resubscribe());
         _messaging.onTokenRefresh.listen((newToken) {
           FirestoreHelper().onMessagingTokenRefreshed(newToken);
+          territoryAlerts.resubscribe();
         });
       }
     } catch (e, stackTrace) {
@@ -1020,6 +1031,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
+      unawaited(retryStopSharingFlights());
       FirestoreHelper().syncDiscreetScheduleOffset();
       FirestoreHelper().reconcileMessagingToken();
 
@@ -1276,6 +1288,29 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       return;
     }
 
+    // Territory map view shared by another player
+    if (link != null && (link.startsWith("tornpda://map/") || link.startsWith("tornpda://map?"))) {
+      if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
+        return;
+      }
+      _deepLinkSubTriggeredTime = DateTime.now();
+
+      final view = readMapLink(link);
+      if (view == null) {
+        BotToast.showText(text: "Incorrect map link!", contentColor: Colors.orange[700]!);
+        return;
+      }
+      _preferencesCompleter.future.whenComplete(() {
+        if (_settingsProvider.disableTerritoryMap) {
+          BotToast.showText(text: "The Territory Map is disabled in Settings", contentColor: Colors.orange[700]!);
+          return;
+        }
+        context.read<TerritoryShareController>().receive(view);
+        _callSectionFromOutside(DrawerSection.territoryMap);
+      });
+      return;
+    }
+
     // Handle in-app settings deep links (e.g. tornpda://settings/browser?highlight=clear-cache)
     if (link != null && link.startsWith("tornpda://settings/")) {
       // Prevents double activation (same guard as browser deep links)
@@ -1422,6 +1457,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final chatDm = ChatPush.fromData(message);
     if (chatDm != null) {
       selectNotificationStream.add(NativeChat.dmTapPayload(chatDm.senderId, chatDm.senderName));
+      return;
+    }
+
+    if (isTerritoryAlert(message)) {
+      _openTerritoryAlert(readAlertTap(message));
       return;
     }
 
@@ -1812,6 +1852,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
       if (payload == NativeChat.alertsPayload) {
         _callSectionFromOutside(DrawerSection.alerts);
+        return;
+      }
+      if (isAlertTapPayload(payload)) {
+        _openTerritoryAlert(readAlertTapPayload(payload));
         return;
       }
       final chainingTab = NativeChat.chainingTabOf(payload);
@@ -2471,6 +2515,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       if (settingsProvider.disableTravelSection && section == DrawerSection.travel) {
         continue;
       }
+      if (settingsProvider.disableTerritoryMap && section == DrawerSection.territoryMap) {
+        continue;
+      }
       if (!settingsProvider.rankedWarsInMenu && section == DrawerSection.rankedWars) {
         continue;
       }
@@ -2565,6 +2612,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return const ItemsPage();
       case DrawerSection.rankedWars:
         return const RankedWarsPage(calledFromMenu: true);
+      case DrawerSection.territoryMap:
+        return const TerritoryMapPage(calledFromMenu: true);
       case DrawerSection.stockMarket:
         return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
       case DrawerSection.wiki:
@@ -2631,39 +2680,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _activeDrawerIndex = DrawerSection.settings;
       _statsController.section(DrawerSection.settings);
     } else {
-      String defaultSection = await Prefs().getDefaultSection();
-
-      // If user wants to load the browser, change the default section to Profile
-      if (defaultSection == "browser" || defaultSection == "browser_full") {
-        defaultSection = DrawerSection.profile.name;
-      }
-
-      // Migrate old numeric indices (0-14) to symbolic names
-      DrawerSection resolvedSection = DrawerSection.profile;
-      final numericTry = int.tryParse(defaultSection);
-      if (numericTry != null) {
-        resolvedSection = DrawerSection.fromIndex(numericTry);
-      } else {
-        resolvedSection = DrawerSection.fromId(defaultSection) ?? DrawerSection.profile;
-      }
+      final resolvedSection = startSection(
+        await Prefs().getDefaultSection(),
+        territoryMapOff: _settingsProvider.disableTerritoryMap,
+      );
 
       _selected = resolvedSection;
       _activeDrawerIndex = resolvedSection;
       _statsController.section(resolvedSection);
+      unawaited(context.read<TerritoryMapUsage>().sync(disabled: _settingsProvider.disableTerritoryMap));
     }
 
     // Change device preferences
-    final allowRotation = _settingsProvider.allowScreenRotation;
-    if (allowRotation) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    }
+    SystemChrome.setPreferredOrientations(appOrientations(allowRotation: _settingsProvider.allowScreenRotation));
   }
 
   /// Startup work that hits the network. Runs after the connectivity check, so that a cold
@@ -2692,6 +2721,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       FirestoreHelper().uidCompleter.future.whenComplete(() {
         _updateLastActiveTime();
         FirestoreHelper().syncDiscreetScheduleOffset();
+        unawaited(retryStopSharingFlights());
       });
     }
 
@@ -3192,6 +3222,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (!isFeedbackDocId(id)) return;
     Get.find<FeedbackController>().requestOpen(id);
     _preferencesCompleter.future.whenComplete(() => _callSectionFromOutside(DrawerSection.feedback));
+  }
+
+  void _openTerritoryAlert(AlertTap? tap) {
+    if (_settingsProvider.disableTerritoryMap) return;
+    if (tap != null) context.read<TerritoryAlertsController>().openTap(tap);
+    _callSectionFromOutside(DrawerSection.territoryMap);
   }
 
   Future<bool> _handleTravelEntryAction({required String action}) async {

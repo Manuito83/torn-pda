@@ -1,8 +1,26 @@
+import 'dart:math';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/territory_map/faction_colors.dart' show fillColor, unownedFill;
+import 'package:torn_pda/models/territory_map/faction_flights.dart' show flightPlaces, tornPlace;
+import 'package:torn_pda/models/territory_map/flight_projection.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chat/chat_logo_bubble.dart';
+import 'package:torn_pda/widgets/territory_map/city_life_shapes.dart' show CityLifeShapes;
+import 'package:torn_pda/widgets/territory_map/flights_globe.dart'
+    show
+        flightsAbroadColor,
+        flightsAbroadTextColor,
+        flightsFlyingColor,
+        flightsLimbColor,
+        flightsSeaColor,
+        flightsStarTextColor,
+        flightsTornColor;
+
+part 'map_diagram_scenes.dart';
 
 enum FeatureDiagramScene {
   dragToApp,
@@ -22,6 +40,10 @@ enum FeatureDiagramScene {
   chatDrawer,
   chatMenuBar,
   chatListReply,
+  mapTerritories,
+  map3d,
+  mapFlights,
+  mapHistory,
 }
 
 const Map<FeatureDiagramScene, String> featureDiagramCaptions = {
@@ -42,9 +64,13 @@ const Map<FeatureDiagramScene, String> featureDiagramCaptions = {
   FeatureDiagramScene.chatDrawer: "The chat button sits on the side menu logo",
   FeatureDiagramScene.chatMenuBar: "The chat button is a Chat row in the side menu",
   FeatureDiagramScene.chatListReply: "Tap the arrow on a chat to read it and answer from the list",
+  FeatureDiagramScene.mapTerritories: "See who holds each territory and where the wars are",
+  FeatureDiagramScene.map3d: "Switch the map to 3D",
+  FeatureDiagramScene.mapFlights: "Follow your faction's flights on the globe",
+  FeatureDiagramScene.mapHistory: "Play back the territory history",
 };
 
-typedef _Palette = ({Color frame, Color panel, Color appBar, Color ink});
+typedef _Palette = ({Color frame, Color panel, Color appBar, Color ink, bool light});
 
 class FeatureDiagram extends StatefulWidget {
   const FeatureDiagram({super.key, required this.scenes, this.showCaption});
@@ -90,6 +116,7 @@ class _FeatureDiagramState extends State<FeatureDiagram> with SingleTickerProvid
           ? theme.statusBar
           : Color.alphaBlend(ink.withValues(alpha: 0.12), theme.statusBar),
       ink: ink,
+      light: theme.currentTheme == AppTheme.light,
     );
 
     final diagram = AspectRatio(
@@ -145,6 +172,10 @@ class _FeatureDiagramPainter extends CustomPainter {
   };
 
   final double u;
+  late final _life = CityLifeShapes();
+  late final _flightLines = [
+    for (final (_, place, _, _) in _flights) greatCircleLine(flightPlaces[tornPlace]!, flightPlaces[place]!),
+  ];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -175,6 +206,10 @@ class _FeatureDiagramPainter extends CustomPainter {
       FeatureDiagramScene.chatDrawer,
       FeatureDiagramScene.chatMenuBar,
       FeatureDiagramScene.chatListReply,
+      FeatureDiagramScene.mapTerritories,
+      FeatureDiagramScene.map3d,
+      FeatureDiagramScene.mapFlights,
+      FeatureDiagramScene.mapHistory,
     }.contains(scene)) {
       canvas.drawLine(
         Offset(u * 50, u * 22),
@@ -210,6 +245,14 @@ class _FeatureDiagramPainter extends CustomPainter {
         _paintChatPlayerCard(canvas, size, t);
       case FeatureDiagramScene.chatDrawer || FeatureDiagramScene.chatMenuBar:
         _paintChatMenu(canvas, size, t);
+      case FeatureDiagramScene.mapTerritories:
+        _paintMapTerritories(canvas, size, t);
+      case FeatureDiagramScene.map3d:
+        _paintMap3d(canvas, size, t);
+      case FeatureDiagramScene.mapFlights:
+        _paintMapFlights(canvas, t);
+      case FeatureDiagramScene.mapHistory:
+        _paintMapHistory(canvas, size, t);
     }
     canvas.restore();
   }
@@ -1147,6 +1190,15 @@ class _FeatureDiagramPainter extends CustomPainter {
     );
   }
 
+  void _drawAppBar(Canvas canvas, Rect rect) {
+    canvas.drawRect(Rect.fromLTWH(rect.left, rect.top, rect.width, u * 8), Paint()..color = palette.appBar);
+    final barPaint = Paint()..color = Colors.white.withValues(alpha: 0.9);
+    for (var i = 0; i < 3; i++) {
+      canvas.drawRect(Rect.fromLTWH(rect.left + u * 3, rect.top + u * (2.6 + i * 1.2), u * 4, u * 0.6), barPaint);
+    }
+    canvas.drawRect(Rect.fromLTWH(rect.left + u * 10, rect.top + u * 3.4, u * 14, u * 1.2), barPaint);
+  }
+
   void _drawApp(Canvas canvas, Rect rect, {double alpha = 1, double tapped = 0, bool shadow = false}) {
     final ink = palette.ink;
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(u * 1.5));
@@ -1155,12 +1207,7 @@ class _FeatureDiagramPainter extends CustomPainter {
     canvas.drawRRect(rrect, Paint()..color = palette.panel);
     canvas.save();
     canvas.clipRRect(rrect);
-    canvas.drawRect(Rect.fromLTWH(rect.left, rect.top, rect.width, u * 8), Paint()..color = palette.appBar);
-    final barPaint = Paint()..color = Colors.white.withValues(alpha: 0.9);
-    for (var i = 0; i < 3; i++) {
-      canvas.drawRect(Rect.fromLTWH(rect.left + u * 3, rect.top + u * (2.6 + i * 1.2), u * 4, u * 0.6), barPaint);
-    }
-    canvas.drawRect(Rect.fromLTWH(rect.left + u * 10, rect.top + u * 3.4, u * 14, u * 1.2), barPaint);
+    _drawAppBar(canvas, rect);
     for (var i = 0; i < 4; i++) {
       final row = Rect.fromLTWH(rect.left + u * 3, rect.top + u * 11 + i * u * 9.5, rect.width - u * 6, u * 7);
       canvas.drawRRect(

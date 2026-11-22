@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
+import 'package:torn_pda/providers/territory_alerts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
@@ -172,6 +173,7 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
                                     widget.apiKeyInputController.clear();
                                     UserHelper.removeUser();
                                     context.read<InventoryProvider>().clear();
+                                    context.read<TerritoryAlertsController>().forget();
                                     setState(() => _removingUser = !Platform.isWindows);
                                     widget.setStateOnParent();
                                     widget.changeUserProfile(null);
