@@ -7,7 +7,7 @@ import 'package:android_intent_plus/android_intent.dart';
 // Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';

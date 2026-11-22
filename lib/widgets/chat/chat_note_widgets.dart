@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chat/chat_links.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';

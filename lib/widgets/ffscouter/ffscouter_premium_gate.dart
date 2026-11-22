@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/providers/ffscouter_premium_controller.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog_simple.dart';

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/models/chat/chat_away.dart';
 
 class ChatAwayCard extends StatelessWidget {

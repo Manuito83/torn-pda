@@ -2,7 +2,7 @@
 import 'dart:collection';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 
 // Project imports:

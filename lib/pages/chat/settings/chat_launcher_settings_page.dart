@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/pages/chat/settings/chat_settings_subpage.dart';
 import 'package:torn_pda/pages/settings/app_icon_menu_page.dart';
 import 'package:torn_pda/providers/chat/chat_prefs.dart';

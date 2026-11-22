@@ -1,5 +1,5 @@
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Project imports:
 import 'package:torn_pda/utils/script_storage.dart';

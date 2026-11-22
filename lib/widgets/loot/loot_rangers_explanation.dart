@@ -1,6 +1,6 @@
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 

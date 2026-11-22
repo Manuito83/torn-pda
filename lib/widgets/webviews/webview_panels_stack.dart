@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/widgets/webviews/split_divider.dart';
 import 'package:torn_pda/widgets/webviews/webview_tabslist.dart';

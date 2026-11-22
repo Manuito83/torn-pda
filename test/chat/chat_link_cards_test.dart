@@ -2,7 +2,7 @@ import 'dart:async';
 
 // ignore: depend_on_referenced_packages
 import 'package:chopper/chopper.dart' as chopper;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';

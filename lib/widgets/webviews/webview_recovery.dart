@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Recovery of a tab being rebuilt after a renderer death (Android): keeps the last frame
 /// on screen, retries the main frame and reports both ends to Crashlytics

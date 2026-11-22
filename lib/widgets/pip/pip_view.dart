@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/pip/pip_player.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';

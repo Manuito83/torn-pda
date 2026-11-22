@@ -1,6 +1,6 @@
 // Package imports:
 import 'package:expandable/expandable.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/vault/vault_status_model.dart';

@@ -1,7 +1,7 @@
 // Flutter imports:
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/providers/theme_provider.dart';

@@ -1,6 +1,6 @@
 // Flutter imports:
 import 'package:app_settings/app_settings.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';

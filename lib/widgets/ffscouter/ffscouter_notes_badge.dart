@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';

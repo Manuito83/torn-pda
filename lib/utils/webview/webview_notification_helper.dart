@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:timezone/timezone.dart' as tz;

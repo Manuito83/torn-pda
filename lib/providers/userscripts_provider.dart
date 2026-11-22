@@ -8,7 +8,7 @@ import 'dart:io';
 // Flutter imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Package imports:
 // ignore: depend_on_referenced_packages

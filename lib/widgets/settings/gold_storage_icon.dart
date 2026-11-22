@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class GoldStorageIcon extends StatefulWidget {
   const GoldStorageIcon({this.size = 20, super.key});

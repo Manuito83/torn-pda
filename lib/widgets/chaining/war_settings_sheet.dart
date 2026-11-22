@@ -1,7 +1,7 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';

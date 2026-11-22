@@ -2,7 +2,7 @@
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';

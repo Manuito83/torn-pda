@@ -1,6 +1,6 @@
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/inventory_provider.dart';

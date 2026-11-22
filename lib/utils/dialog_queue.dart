@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:developer';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Drawer dialog queue to ensure dialogs are shown sequentially
 /// without overlapping. There's a 500ms startup delay to allow proper

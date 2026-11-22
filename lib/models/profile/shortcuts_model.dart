@@ -6,7 +6,7 @@
 import 'dart:convert';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/utils/color_json.dart';
 
 Shortcut shortcutFromJson(String str) => Shortcut.fromJson(json.decode(str));

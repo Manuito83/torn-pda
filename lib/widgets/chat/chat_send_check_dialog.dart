@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chat/chat_emoji.dart';
 import 'package:torn_pda/models/chat/chat_send_check.dart';

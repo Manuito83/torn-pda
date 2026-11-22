@@ -1,7 +1,7 @@
 // Flutter imports:
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';

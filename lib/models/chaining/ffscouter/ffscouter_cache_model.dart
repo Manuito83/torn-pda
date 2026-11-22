@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_stats_model.dart';
 
 /// Cached FFScouter battle score entry for a single player.

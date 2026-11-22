@@ -6,7 +6,7 @@ import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 // Package imports:
 import 'package:http/http.dart' as http;

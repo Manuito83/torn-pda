@@ -9,7 +9,7 @@ import 'package:animations/animations.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';

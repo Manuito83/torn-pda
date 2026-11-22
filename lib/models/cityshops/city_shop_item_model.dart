@@ -2,7 +2,7 @@
 //
 //     final cityShopItemModel = CityShopItemModel.fromJson(jsonMap);
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 enum CityShopMode {
   headsUp("heads_up", "Early warning", Colors.green),

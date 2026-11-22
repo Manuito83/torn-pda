@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class BrowserReloadButton extends StatelessWidget {
   const BrowserReloadButton({required this.isReloading, required this.color, required this.onPressed, super.key});

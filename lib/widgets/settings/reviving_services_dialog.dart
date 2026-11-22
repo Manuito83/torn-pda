@@ -2,7 +2,7 @@
 import 'dart:math';
 
 // Flutter imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/profile/revive_services/revive_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';

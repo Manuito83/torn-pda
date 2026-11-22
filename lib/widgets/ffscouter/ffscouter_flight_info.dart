@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/ffscouter/ffscouter_flights_model.dart';
 import 'package:torn_pda/providers/ffscouter_flights_controller.dart';

@@ -9,7 +9,7 @@ import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 // Package imports:
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 // ignore: depend_on_referenced_packages
 import 'package:chopper/chopper.dart' as chopper;
 import 'package:get/get.dart';

@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 TabSaveModel tabSaveModelFromJson(String str) => TabSaveModel.fromJson(json.decode(str));
 

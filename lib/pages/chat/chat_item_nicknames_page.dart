@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/models/chat/chat_item_aliases.dart';
 import 'package:torn_pda/widgets/chat/chat_alias_widgets.dart';
 import 'package:torn_pda/widgets/chat/native_chat.dart';

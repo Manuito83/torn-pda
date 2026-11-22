@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:torn_pda/widgets/chat/chat_help.dart';
 
 class ChatSettingsText extends StatelessWidget {

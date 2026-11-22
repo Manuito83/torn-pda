@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/yata/yata_stats_response_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
