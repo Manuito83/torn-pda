@@ -137,6 +137,7 @@ class Prefs with ChatPrefsStorage {
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDrawerSectionOrder = "pda_drawerSectionOrder";
   final String _kDrawerSectionHidden = "pda_drawerSectionHidden";
+  final String _kFeedbackFilter = "pda_feedbackFilter";
 
   // Foreign Stocks
   final String _kForeignStockSellingFee = "pda_foreignStockSellingFee";
@@ -1360,6 +1361,13 @@ class Prefs with ChatPrefsStorage {
   Future setDrawerSectionHidden(List<String> value) async {
     return await PrefsDatabase.setString(_kDrawerSectionHidden, value.join(','));
   }
+
+  /// ----------------------------
+  /// Methods for feedback filter
+  /// ----------------------------
+  Future<String> getFeedbackFilter() => PrefsDatabase.getString(_kFeedbackFilter, '');
+
+  Future setFeedbackFilter(String value) => PrefsDatabase.setString(_kFeedbackFilter, value);
 
   /// ----------------------------
   /// Methods for on app exit

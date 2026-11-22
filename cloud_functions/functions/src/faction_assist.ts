@@ -6,6 +6,7 @@ import { isDiscreetNow } from "./discreet";
 import { getUserSelections, INVALID_KEY_ERRORS, isApiKey } from "./torn_api";
 import { takeRateLimitSlot } from "./rate_limit";
 import { MAX_RECHECK_MS, RECIPIENT_FACTION_FIELD } from "./verified_players";
+import { anHourInMilliseconds } from "./time";
 
 const ASSISTS_PER_HOUR = 60;
 const TORN_TIMEOUT_MS = 6 * 1000;
@@ -131,7 +132,7 @@ export const sendAssistMessage = onCall({
         return failure(INVALID_API_KEY);
     }
 
-    if (!await takeRateLimitSlot(`assist_${request.auth.uid}`, ASSISTS_PER_HOUR, 60 * 60 * 1000)) {
+    if (!await takeRateLimitSlot(`assist_${request.auth.uid}`, ASSISTS_PER_HOUR, anHourInMilliseconds)) {
         logger.info(`Call from uid ${request.auth.uid}: assist limit reached`);
         return failure(ASSIST_LIMIT_REACHED);
     }

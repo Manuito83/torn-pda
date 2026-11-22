@@ -38,6 +38,14 @@ import { registerActivityToken, registerPushToStartToken /*, sendTestTravelPushT
 import { recalculateStats } from "./stats_recalc";
 import { updateCityShops /*, cityShopsTest */ } from "./city_shops";
 import { countActives } from "./metrics";
+import * as feedbackFunctions from "./feedback";
+import * as feedbackComments from "./feedback_comments";
+import * as feedbackModeration from "./feedback_moderation";
+import * as feedbackSubscriptions from "./feedback_subscriptions";
+import * as feedbackTriggers from "./feedback_triggers";
+import { api as feedbackApi } from "./feedback_api";
+import { modUnlock, removePinFromApp, setPinFromApp } from "./feedback_auth";
+import { mine as feedbackMine } from "./feedback_mine";
 // import { verifyPlayersBackfill } from "./verified_players";
 
 export const alerts = {
@@ -126,6 +134,26 @@ export const liveActivities = {
 
 export const stats = {
   recalculateStats: recalculateStats
+};
+
+export const feedback = {
+  create: feedbackFunctions.create,
+  vote: feedbackFunctions.vote,
+  comment: feedbackComments.comment,
+  deleteOwnComment: feedbackComments.deleteOwnComment,
+  myState: feedbackFunctions.myState,
+  mine: feedbackMine,
+  subscribe: feedbackSubscriptions.subscribe,
+  subscribeAll: feedbackSubscriptions.subscribeAll,
+  listPrivate: feedbackModeration.listPrivate,
+  moderate: feedbackModeration.moderate,
+  setPin: setPinFromApp,
+  removePin: removePinFromApp,
+  modUnlock: modUnlock,
+  onCreated: feedbackTriggers.onFeedbackCreated,
+  onCommented: feedbackTriggers.onCommentCreated,
+  onEvent: feedbackTriggers.onFeedbackEvent,
+  api: feedbackApi
 };
 
 // export const verified = {

@@ -30,6 +30,7 @@ import 'package:receive_intent/receive_intent.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/cityshops/city_shop_item_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
+import 'package:torn_pda/models/feedback/feedback_input.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
@@ -44,6 +45,7 @@ import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
+import 'package:torn_pda/pages/feedback/feedback_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
@@ -61,6 +63,7 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/feedback_controller.dart';
 import 'package:torn_pda/providers/ffscouter_cache_controller.dart';
 import 'package:torn_pda/providers/ffscouter_hit_calling_controller.dart';
 import 'package:torn_pda/providers/ffscouter_notes_controller.dart';
@@ -124,9 +127,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   bool get wantKeepAlive => true;
 
   var _allowSectionsWithoutKey = <DrawerSection>[];
-
-  // Drawer section order
-  final _drawerItemsList = DrawerSection.values;
 
   final StatsController _statsController = Get.find<StatsController>();
 
@@ -1266,6 +1266,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     }
 
+    final feedbackLinkId = link == null ? null : feedbackIdFromLink(link);
+    if (feedbackLinkId != null) {
+      if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
+        return;
+      }
+      _deepLinkSubTriggeredTime = DateTime.now();
+      _openFeedbackFromOutside(feedbackLinkId);
+      return;
+    }
+
     // Handle in-app settings deep links (e.g. tornpda://settings/browser?highlight=clear-cache)
     if (link != null && link.startsWith("tornpda://settings/")) {
       // Prevents double activation (same guard as browser deep links)
@@ -1426,6 +1436,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool hospital = false;
     bool restocks = false;
     bool cityShops = false;
+    bool feedback = false;
     bool abroadStay = false;
     bool racing = false;
     bool messages = false;
@@ -1452,6 +1463,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     String? assistId = '';
     String? bulkDetails = '';
     String? cityShopId = '';
+    String? feedbackId = '';
 
     if (Platform.isIOS) {
       channel = message["channelId"] as String?;
@@ -1460,6 +1472,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       assistId = message["assistId"] as String?;
       bulkDetails = message["bulkDetails"] as String?;
       cityShopId = message["shopId"] as String?;
+      feedbackId = message["feedbackId"] as String?;
     } else if (Platform.isAndroid) {
       channel = message["channelId"] as String?;
       messageId = message["tornMessageId"] as String?;
@@ -1467,6 +1480,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       assistId = message["assistId"] as String?;
       bulkDetails = message["bulkDetails"] as String?;
       cityShopId = message["shopId"] as String?;
+      feedbackId = message["feedbackId"] as String?;
     }
 
     if (channel!.contains("Alerts travel")) {
@@ -1479,6 +1493,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       restocks = true;
     } else if (channel.contains("Alerts city shops")) {
       cityShops = true;
+    } else if (channel.contains("Alerts feedback")) {
+      feedback = true;
     } else if (channel.contains("Alerts racing")) {
       racing = true;
     } else if (channel.contains("Alerts messages")) {
@@ -1533,6 +1549,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowserWithUrl = true;
       final firstShopId = int.tryParse((cityShopId ?? "").split(",").first);
       browserUrl = CityShopSlugs.urlForShop(firstShopId);
+    } else if (feedback) {
+      _openFeedbackFromOutside(feedbackId ?? '');
+      return;
     } else if (abroadStay) {
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com";
@@ -1840,6 +1859,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         final cityShopId = payload.substring('cityShops:'.length);
         final firstShopId = int.tryParse(cityShopId.split(",").first);
         browserUrl = CityShopSlugs.urlForShop(firstShopId);
+      } else if (payload.startsWith('feedbackId:')) {
+        _openFeedbackFromOutside(payload.substring('feedbackId:'.length));
+        return;
       } else if (payload == 'abroadStay') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com';
@@ -2438,20 +2460,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       return _allowSectionsWithoutKey;
     }
 
-    final order = settingsProvider.drawerSectionOrder;
-    final sectionsToIterate = order.isNotEmpty
-        ? order.map((id) => DrawerSection.fromId(id)).whereType<DrawerSection>().toList()
-        : _drawerItemsList.toList();
-
-    // Ensure any new sections not in the saved order are still shown
-    for (final section in _drawerItemsList) {
-      if (!sectionsToIterate.contains(section)) {
-        sectionsToIterate.add(section);
-      }
-    }
+    final sectionsToIterate = drawerFullOrder(
+      settingsProvider.drawerSectionOrder,
+    ).map(DrawerSection.fromId).whereType<DrawerSection>();
 
     final visible = <DrawerSection>[];
     for (final section in sectionsToIterate) {
+      if (section.hiddenHere) continue;
       // Existing feature toggles
       if (settingsProvider.disableTravelSection && section == DrawerSection.travel) {
         continue;
@@ -2559,6 +2574,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return AlertsSettings(_onChangeStockMarketInMenu);
       case DrawerSection.settings:
         return SettingsPage(statsController: _statsController);
+      case DrawerSection.feedback:
+        return const FeedbackPage();
       case DrawerSection.about:
         return AboutPage(uid: Platform.isWindows ? "" : FirebaseAuth.instance.currentUser?.uid ?? "");
       case DrawerSection.tips:
@@ -3169,6 +3186,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
     _statsController.section(section);
     _getPages();
+  }
+
+  void _openFeedbackFromOutside(String id) {
+    if (!isFeedbackDocId(id)) return;
+    Get.find<FeedbackController>().requestOpen(id);
+    _preferencesCompleter.future.whenComplete(() => _callSectionFromOutside(DrawerSection.feedback));
   }
 
   Future<bool> _handleTravelEntryAction({required String action}) async {

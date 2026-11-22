@@ -25,8 +25,15 @@ export async function getFactionSelections(factionId: number, selections: string
   );
 }
 
-async function getTornJson(url: string, timeoutMs?: number) {
-  const response = await fetch(url, timeoutMs === undefined ? undefined : { signal: AbortSignal.timeout(timeoutMs) });
+export async function getUserBasic(apiKey: string, timeoutMs: number) {
+  return getTornJson("https://api.torn.com/v2/user/basic", timeoutMs, { Authorization: `ApiKey ${apiKey}` });
+}
+
+async function getTornJson(url: string, timeoutMs?: number, headers?: Record<string, string>) {
+  const response = await fetch(url, {
+    headers,
+    signal: timeoutMs === undefined ? undefined : AbortSignal.timeout(timeoutMs),
+  });
   if (!response.ok) {
     return { error: { error: `HTTP ${response.status}` } };
   }

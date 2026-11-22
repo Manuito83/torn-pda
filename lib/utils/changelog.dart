@@ -121,6 +121,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Chat: bubble goes back to the edge after use'),
           _MItem('Chat: format text from the selection menu'),
           _MItem('Chat: copy notes without title'),
+          _MItem('Feedback: suggest, vote and follow ideas from the app'),
         ],
       ),
       _MSection(

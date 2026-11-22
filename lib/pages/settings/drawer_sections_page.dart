@@ -156,6 +156,7 @@ class DrawerSectionsPageState extends State<DrawerSectionsPage> {
               );
             }
             final section = DrawerSection.fromId(_order[index])!;
+            if (section.hiddenHere) return SizedBox.shrink(key: ValueKey(section.name));
             final isVisible = _isVisible(section);
             final canHide = section.canHide;
 

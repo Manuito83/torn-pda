@@ -3982,7 +3982,7 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
-        ...DrawerSection.values.map((section) {
+        ...DrawerSection.values.where((section) => !section.hiddenHere).map((section) {
           return DropdownMenuItem(
             value: section.name,
             child: SizedBox(

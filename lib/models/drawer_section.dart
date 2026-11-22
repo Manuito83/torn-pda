@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 // Package imports:
@@ -20,6 +21,7 @@ enum DrawerSection {
   alerts,
   divider1,
   settings,
+  feedback,
   about,
   tips,
   divider2;
@@ -27,6 +29,9 @@ enum DrawerSection {
   bool get isDivider {
     return this == DrawerSection.divider1 || this == DrawerSection.divider2;
   }
+
+  // Needs Firebase Auth and Firestore
+  bool get hiddenHere => Platform.isWindows && this == DrawerSection.feedback;
 
   String get title {
     switch (this) {
@@ -56,6 +61,8 @@ enum DrawerSection {
         return 'Alerts';
       case DrawerSection.settings:
         return 'Settings';
+      case DrawerSection.feedback:
+        return 'Feedback';
       case DrawerSection.about:
         return 'About';
       case DrawerSection.tips:
@@ -94,6 +101,8 @@ enum DrawerSection {
         return Icons.notifications_active;
       case DrawerSection.settings:
         return Icons.settings;
+      case DrawerSection.feedback:
+        return Icons.lightbulb_outline;
       case DrawerSection.about:
         return Icons.info_outline;
       case DrawerSection.tips:
@@ -169,7 +178,9 @@ List<String> drawerFullOrder(List<String> saved) {
     order.insert(math.max(0, order.indexOf(DrawerSection.profile.name)), drawerChatId);
   }
   for (final section in DrawerSection.values) {
-    if (!order.contains(section.name)) order.add(section.name);
+    if (order.contains(section.name)) continue;
+    final aboveAbout = section == DrawerSection.feedback ? order.indexOf(DrawerSection.about.name) : -1;
+    aboveAbout < 0 ? order.add(section.name) : order.insert(aboveAbout, section.name);
   }
   return order;
 }

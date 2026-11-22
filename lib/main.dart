@@ -42,6 +42,8 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/profile_api_calls_controller.dart';
 import 'package:torn_pda/providers/pip_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
+import 'package:torn_pda/providers/feedback_account_controller.dart';
+import 'package:torn_pda/providers/feedback_controller.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/inventory_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
@@ -851,6 +853,8 @@ Future<void> _initializeGetXControllers() async {
     Get.put(FFScouterFlightsController(), permanent: true);
     Get.put(FFScouterActivityController(), permanent: true);
     Get.put(FFScouterNotesController(), permanent: true);
+    Get.put(FeedbackAccountController(), permanent: true);
+    Get.put(FeedbackController(), permanent: true);
     Get.put(FFScouterHitCallingController(), permanent: true);
     Get.put(StakeoutsController(), permanent: true);
     Get.put(PlayerNotesController(), permanent: true);
