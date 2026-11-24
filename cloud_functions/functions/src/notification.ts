@@ -949,6 +949,7 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
     const stocksRestockedAndGone: string[] = [];
 
     const userStocks = subscriber.restockActiveAlerts || {};
+    const notifiedAt: { [key: string]: number } = {};
     const alsoWhenSoldOut = subscriber.foreignRestockNotificationSellout === true;
 
     // Country filter, with three possible states: all countries, the country the user is flying to or
@@ -998,7 +999,7 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
         lastNotified = selloutMs;
       }
 
-      userStocks[userCodeName] = lastNotified;
+      if (lastNotified !== userTime) notifiedAt[`restockActiveAlerts.${userCodeName}`] = lastNotified;
     }
 
     if (stocksRestocked.length > 0 || stocksSoldOut.length > 0 || stocksRestockedAndGone.length > 0) {
@@ -1019,9 +1020,7 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
         body = stocksSoldOut.join(", ");
       }
 
-      result.firestoreUpdate = {
-        restockActiveAlerts: userStocks,
-      }
+      result.firestoreUpdate = notifiedAt;
 
       if (isDiscreetNow(subscriber)) {
         title = `Stock`;
