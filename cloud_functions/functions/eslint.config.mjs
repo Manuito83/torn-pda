@@ -49,6 +49,6 @@ export default [
     },
   },
   {
-    ignores: ['lib/**/*', 'key/**/*', 'territory_map_key.example.js'],
+    ignores: ['lib/**/*', 'key/**/*', 'checker/**/*', 'territory_map_key.example.js'],
   },
 ];

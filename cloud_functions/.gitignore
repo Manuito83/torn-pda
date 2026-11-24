@@ -12,6 +12,9 @@ firebase-debug.log*
 # Firebase config
 functions/key/serviceAccountKey.json
 
+# Checker, built locally
+functions/checker/
+
 # Key folder as a whole
 key/
 
