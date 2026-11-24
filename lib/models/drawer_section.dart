@@ -22,10 +22,10 @@ enum DrawerSection {
   alerts,
   divider1,
   settings,
-  feedback,
   about,
   tips,
-  divider2;
+  divider2,
+  feedback;
 
   bool get isDivider {
     return this == DrawerSection.divider1 || this == DrawerSection.divider2;
@@ -193,9 +193,7 @@ List<String> drawerFullOrder(List<String> saved) {
     order.insert(math.max(0, order.indexOf(DrawerSection.profile.name)), drawerChatId);
   }
   for (final section in DrawerSection.values) {
-    if (order.contains(section.name)) continue;
-    final aboveAbout = section == DrawerSection.feedback ? order.indexOf(DrawerSection.about.name) : -1;
-    aboveAbout < 0 ? order.add(section.name) : order.insert(aboveAbout, section.name);
+    if (!order.contains(section.name)) order.add(section.name);
   }
   return order;
 }

@@ -4,6 +4,9 @@ import 'package:torn_pda/utils/feedback_functions.dart';
 
 const _idsPerCall = 50;
 
+// Only a saved PIN answers these
+const _pinReasons = {'pin_required', 'pin_wrong', 'pin_locked'};
+
 class FeedbackAccountController extends GetxController {
   FeedbackAccountController({
     Future<Map<String, dynamic>> Function(List<String> ids)? loadState,
@@ -11,17 +14,23 @@ class FeedbackAccountController extends GetxController {
     Future<void> Function(String id, bool on)? subscribe,
     Future<void> Function(bool on)? subscribeAll,
     Future<DateTime> Function(String pin)? unlock,
+    Future<void> Function(String next, String? current)? setPin,
+    Future<void> Function(String current)? removePin,
   }) : _loadState = loadState ?? fetchFeedbackState,
        _vote = vote ?? voteFeedback,
        _subscribe = subscribe ?? subscribeFeedback,
        _subscribeAll = subscribeAll ?? subscribeAllFeedback,
-       _unlock = unlock ?? unlockFeedbackModeration;
+       _unlock = unlock ?? unlockFeedbackModeration,
+       _setPin = setPin ?? ((next, current) => setFeedbackPin(next, current: current)),
+       _removePin = removePin ?? removeFeedbackPin;
 
   final Future<Map<String, dynamic>> Function(List<String> ids) _loadState;
   final Future<int> Function(String id, bool on) _vote;
   final Future<void> Function(String id, bool on) _subscribe;
   final Future<void> Function(bool on) _subscribeAll;
   final Future<DateTime> Function(String pin) _unlock;
+  final Future<void> Function(String next, String? current) _setPin;
+  final Future<void> Function(String current) _removePin;
 
   FeedbackAccount _account = const FeedbackAccount();
   final _asked = <String>{};
@@ -115,6 +124,24 @@ class FeedbackAccountController extends GetxController {
   Future<void> unlock(String pin) async {
     final until = await _unlock(pin);
     _account = _account.copyWith(modUnlockedUntil: until);
+    update();
+  }
+
+  Future<void> setPin(String next, {String? current}) => _pinCall(() => _setPin(next, current), hasPinAfter: true);
+
+  Future<void> removePin(String current) => _pinCall(() => _removePin(current), hasPinAfter: false);
+
+  // Both calls end the moderation session
+  Future<void> _pinCall(Future<void> Function() run, {required bool hasPinAfter}) async {
+    try {
+      await run();
+    } on FeedbackCallError catch (e) {
+      if (_pinReasons.contains(e.reason)) _account = _account.copyWith(hasPin: true);
+      if (e.reason == 'mod_first_pin_admin') _account = _account.copyWith(hasPin: false);
+      update();
+      rethrow;
+    }
+    _account = _account.copyWith(hasPin: hasPinAfter, clearUnlock: true);
     update();
   }
 

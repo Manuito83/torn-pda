@@ -42,12 +42,6 @@ class _FeedbackPinDialogState extends State<_FeedbackPinDialog> {
 
   bool get _valid => isFeedbackPinFormValid(_mode, current: _current.text, next: _next.text, repeat: _repeat.text);
 
-  String get _title => switch (_mode) {
-    FeedbackPinMode.unlock => 'Unlock moderation',
-    FeedbackPinMode.change => 'PIN',
-    FeedbackPinMode.remove => 'Remove PIN',
-  };
-
   Future<void> _submit() async {
     setState(() {
       _busy = true;
@@ -58,50 +52,63 @@ class _FeedbackPinDialogState extends State<_FeedbackPinDialog> {
       switch (_mode) {
         case FeedbackPinMode.unlock:
           await account.unlock(_current.text);
+        case FeedbackPinMode.set:
+          await account.setPin(_next.text);
         case FeedbackPinMode.change:
-          await setFeedbackPin(_next.text, current: _current.text.isEmpty ? null : _current.text);
-          account.markLocked();
+          await account.setPin(_next.text, current: _current.text);
         case FeedbackPinMode.remove:
-          await removeFeedbackPin(_current.text);
-          account.markLocked();
+          await account.removePin(_current.text);
       }
     } catch (e) {
       if (!mounted) return;
+      final reason = e is FeedbackCallError ? e.reason : null;
       setState(() {
         _busy = false;
-        _error = e is FeedbackCallError ? e.text : feedbackReasonText(null);
+        _error = _mode == FeedbackPinMode.set && reason == 'pin_required'
+            ? 'You already have a PIN'
+            : feedbackReasonText(reason);
       });
       return;
     }
     if (!mounted) return;
     Navigator.pop(context);
     if (_mode != FeedbackPinMode.unlock) {
-      BotToast.showText(text: _mode == FeedbackPinMode.change ? 'PIN saved' : 'PIN removed');
+      BotToast.showText(text: _mode == FeedbackPinMode.remove ? 'PIN removed' : 'PIN saved');
     }
   }
 
-  Widget _field(TextEditingController controller, String label) {
+  Widget _field(TextEditingController controller, String label, {String? helper}) {
     return TextField(
       controller: controller,
       enabled: !_busy,
       obscureText: true,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(12)],
-      decoration: InputDecoration(labelText: label, counterText: ''),
+      decoration: InputDecoration(labelText: label, helperText: helper, counterText: ''),
       onChanged: (_) => setState(() {}),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final (title, line) = switch (_mode) {
+      FeedbackPinMode.unlock => ('Unlock moderation', null),
+      FeedbackPinMode.set => ('Set PIN', 'You will need it to sign in on the web'),
+      FeedbackPinMode.change => ('Change PIN', 'Signs you out on the web'),
+      FeedbackPinMode.remove => ('Remove PIN', 'Your API key alone will sign you in on the web'),
+    };
+    final asksCurrent = _mode != FeedbackPinMode.set;
+    final asksNext = _mode == FeedbackPinMode.set || _mode == FeedbackPinMode.change;
     return AlertDialog(
-      title: Text(_title),
+      title: Text(title),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _field(_current, _mode == FeedbackPinMode.unlock ? 'PIN' : 'Current PIN'),
-            if (_mode == FeedbackPinMode.change) ...[_field(_next, 'New PIN'), _field(_repeat, 'Repeat new PIN')],
+            if (line != null) Text(line, style: const TextStyle(fontSize: 13)),
+            if (asksCurrent) _field(_current, _mode == FeedbackPinMode.unlock ? 'PIN' : 'Current PIN'),
+            if (asksNext) ...[_field(_next, 'New PIN', helper: '6 to 12 digits'), _field(_repeat, 'Repeat new PIN')],
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
@@ -118,7 +125,7 @@ class _FeedbackPinDialogState extends State<_FeedbackPinDialog> {
               ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
               : Text(switch (_mode) {
                   FeedbackPinMode.unlock => 'Unlock',
-                  FeedbackPinMode.change => 'Save',
+                  FeedbackPinMode.set || FeedbackPinMode.change => 'Save',
                   FeedbackPinMode.remove => 'Remove',
                 }),
         ),

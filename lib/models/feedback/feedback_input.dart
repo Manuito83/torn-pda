@@ -31,7 +31,7 @@ bool isValidFeedbackPin(String value) => _pinFormat.hasMatch(value);
 
 bool isFeedbackDocId(String value) => _docIdFormat.hasMatch(value);
 
-enum FeedbackPinMode { unlock, change, remove }
+enum FeedbackPinMode { unlock, set, change, remove }
 
 // Server counts every wrong PIN
 bool isFeedbackPinFormValid(FeedbackPinMode mode, {String current = '', String next = '', String repeat = ''}) {
@@ -39,8 +39,10 @@ bool isFeedbackPinFormValid(FeedbackPinMode mode, {String current = '', String n
     case FeedbackPinMode.unlock:
     case FeedbackPinMode.remove:
       return isValidFeedbackPin(current);
+    case FeedbackPinMode.set:
+      return isValidFeedbackPin(next) && next == repeat;
     case FeedbackPinMode.change:
-      return (current.isEmpty || isValidFeedbackPin(current)) && isValidFeedbackPin(next) && next == repeat;
+      return isValidFeedbackPin(current) && isValidFeedbackPin(next) && next == repeat;
   }
 }
 

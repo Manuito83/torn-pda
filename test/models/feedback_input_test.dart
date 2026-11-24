@@ -30,9 +30,11 @@ void main() {
     expect(isValidFeedbackPin('12345a'), isFalse);
     expect(isFeedbackPinFormValid(FeedbackPinMode.unlock, current: '123456'), isTrue);
     expect(isFeedbackPinFormValid(FeedbackPinMode.remove), isFalse);
-    expect(isFeedbackPinFormValid(FeedbackPinMode.change, next: '123456', repeat: '123456'), isTrue);
-    expect(isFeedbackPinFormValid(FeedbackPinMode.change, next: '123456', repeat: '654321'), isFalse);
+    expect(isFeedbackPinFormValid(FeedbackPinMode.set, next: '123456', repeat: '123456'), isTrue);
+    expect(isFeedbackPinFormValid(FeedbackPinMode.set, next: '123456', repeat: '654321'), isFalse);
+    expect(isFeedbackPinFormValid(FeedbackPinMode.change, next: '123456', repeat: '123456'), isFalse);
     expect(isFeedbackPinFormValid(FeedbackPinMode.change, current: '12', next: '123456', repeat: '123456'), isFalse);
+    expect(isFeedbackPinFormValid(FeedbackPinMode.change, current: '111111', next: '123456', repeat: '123456'), isTrue);
   });
 
   test('status request keeps only what changed and checks the duplicate', () {

@@ -11,6 +11,7 @@ class FeedbackAccount {
     this.subscribedIds = const {},
     this.lockedIds = const {},
     this.subscribedToAll = false,
+    this.hasPin,
   });
 
   // False until the server answers
@@ -25,6 +26,8 @@ class FeedbackAccount {
   final Set<String> subscribedIds;
   final Set<String> lockedIds;
   final bool subscribedToAll;
+  // Null until the server says
+  final bool? hasPin;
 
   bool isUnlocked(DateTime now) => isModerator && modUnlockedUntil != null && modUnlockedUntil!.isAfter(now);
 
@@ -34,6 +37,7 @@ class FeedbackAccount {
     bool? subscribedToAll,
     DateTime? modUnlockedUntil,
     bool clearUnlock = false,
+    bool? hasPin,
   }) {
     return FeedbackAccount(
       known: known,
@@ -47,6 +51,7 @@ class FeedbackAccount {
       subscribedIds: subscribedIds ?? this.subscribedIds,
       lockedIds: lockedIds,
       subscribedToAll: subscribedToAll ?? this.subscribedToAll,
+      hasPin: hasPin ?? this.hasPin,
     );
   }
 
@@ -70,6 +75,7 @@ class FeedbackAccount {
       subscribedIds: merged(subscribedIds, ids('subscribedIds')),
       lockedIds: merged(lockedIds, ids('lockedIds')),
       subscribedToAll: map['subscribedToAll'] == true,
+      hasPin: map['hasPin'] is bool ? map['hasPin'] as bool : hasPin,
     );
   }
 }
@@ -92,7 +98,11 @@ String feedbackReasonText(String? reason) {
     case 'pin_wrong':
       return 'Wrong PIN';
     case 'pin_locked':
-      return 'PIN locked';
+      return 'Too many tries, try again later';
+    case 'mod_pin_remove_admin':
+      return 'Moderators cannot remove their PIN';
+    case 'mod_first_pin_admin':
+      return 'Ask the admin for your first PIN';
     case 'has_public_duplicates':
       return 'Has public duplicates';
     case 'invalid-argument':

@@ -155,4 +155,28 @@ void main() {
     controller.markLocked();
     expect(controller.unlocked, isFalse);
   });
+
+  test('pin calls tell whether there is a pin', () async {
+    var answer = 'pin_required';
+    final controller = FeedbackAccountController(
+      loadState: (_) async => _state(),
+      setPin: (_, _) async => throw FeedbackCallError(answer),
+      removePin: (_) async {},
+    );
+    await controller.load([]);
+    expect(controller.account.hasPin, isNull);
+
+    await expectLater(controller.setPin('123456'), throwsA(isA<FeedbackCallError>()));
+    expect(controller.account.hasPin, isTrue);
+
+    await controller.removePin('123456');
+    expect(controller.account.hasPin, isFalse);
+
+    answer = 'too_many';
+    await expectLater(controller.setPin('123456'), throwsA(isA<FeedbackCallError>()));
+    expect(controller.account.hasPin, isFalse);
+
+    await controller.load(['a']);
+    expect(controller.account.hasPin, isFalse);
+  });
 }

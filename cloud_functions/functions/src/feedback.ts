@@ -7,6 +7,7 @@ import { allSubsRef, subscribersOf, subscription } from "./feedback_notification
 import { touchUser } from "./feedback_users";
 import { Author, actsAsModerator, asModerator, findAuthor, isModerator, requireAuthor } from "./feedback_author";
 import { cleanText, docId, invalid, notFound } from "./feedback_input";
+import { pinRef } from "./feedback_pin_hash";
 
 export const OPTIONS = { region: "us-east4", timeoutSeconds: 60 };
 export const MAX_IDS_PER_CALL = 50;
@@ -202,7 +203,8 @@ export const myState = onCall(OPTIONS, async (request) => {
   const author = await findAuthor(signedIn(request), false);
   if (typeof author !== "string") {
     return { ...await stateOf(author, request.data ?? {}), isModerator: await isModerator(author.playerId),
-      modUnlockedUntil: author.modUntil ?? null };
+      modUnlockedUntil: author.modUntil ?? null,
+      hasPin: (await pinRef(author.playerId).get()).get("hash") !== undefined };
   }
   const none: string[] = [];
   return { canWrite: false, reason: author, isModerator: false, modUnlockedUntil: null as number | null, votedIds: none,
