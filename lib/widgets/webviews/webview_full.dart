@@ -50,6 +50,7 @@ import 'package:torn_pda/models/chat/chat_models.dart';
 import 'package:torn_pda/models/chat/chat_profile_icon.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/models/webview/blank_page.dart';
+import 'package:torn_pda/models/webview/locked_tab_section.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
@@ -2602,8 +2603,8 @@ class WebViewFullState extends State<WebViewFull>
           }
         }
 
-        // Allow movement across sections like hospital, forums, etc.
-        if (_currentUrl.contains(incomingUrl.path)) {
+        // Paging inside the same section
+        if (isSameLockedSection(_currentUrl, incomingUrl.toString())) {
           return false;
         }
 

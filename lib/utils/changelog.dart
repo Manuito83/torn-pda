@@ -150,6 +150,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Chat: fixed market price check errors'),
           _MItem('Scripts: fixed freeze with very large scripts'),
           _MItem('Widget: fixed reported home screen widget issues'),
+          _MItem('Browser: fixed full lock letting some sections through'),
         ],
       ),
     ],
