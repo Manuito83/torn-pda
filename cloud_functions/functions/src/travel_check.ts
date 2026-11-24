@@ -138,7 +138,7 @@ export const sendTravelNotifications = onSchedule(
               channelId: "Alerts travel",
               vibration: thisUser.vibration,
               sound: "aircraft_seatbelt.aiff"
-            })
+            }).catch((e) => logger.warn(`Travel send failed for ${docId}: ${e}`))
           );
 
           promises.push(

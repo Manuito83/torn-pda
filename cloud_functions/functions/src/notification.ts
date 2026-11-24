@@ -1413,7 +1413,8 @@ export async function sendNotificationToUser({
     if (
       message.includes("registration token is not a valid FCM registration token") ||
       message.includes("Requested entity was not found") ||
-      message.includes("NotRegistered")
+      message.includes("NotRegistered") ||
+      message.includes("APNs device token is disabled")
     ) {
       logger.warn(`Invalid FCM token. Skipping notification. (${message})`);
       return null;
