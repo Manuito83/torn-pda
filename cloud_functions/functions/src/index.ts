@@ -142,7 +142,6 @@ export const stats = {
 export const feedback = {
   create: feedbackFunctions.create,
   createReport: feedbackFunctions.createReport,
-  listReports: feedbackReads.reports,
   get: feedbackReads.get,
   comments: feedbackReads.comments,
   attachmentRequest: feedbackAttachments.attachmentRequest,

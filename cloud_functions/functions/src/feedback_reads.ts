@@ -2,7 +2,7 @@ import { HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { MAX_IDS_PER_CALL, STATUSES, byNumber, configRef, feedbackIdOf, feedbackRef, forPlayer, isPublic, privateRef, visibleTo, withSlots, Slot } from "./feedback";
 import { anHourInMilliseconds } from "./time";
-import { Author, actsAsModerator, asModerator } from "./feedback_author";
+import { Author, actsAsModerator } from "./feedback_author";
 import { docId, invalid, notFound } from "./feedback_input";
 
 const DEFAULT_PAGE = 20;
@@ -86,16 +86,6 @@ export async function listPrivateBugs(data: any) {
   const extras = docs.length === 0 ? [] : await admin.firestore().getAll(...docs.map((doc) => privateRef(doc.id)));
   return { items: docs.map((doc, i) => ({ ...item(doc), ...plain(extras[i].data() ?? {}) })), cursor: nextCursor };
 }
-
-// Players' bugs, for moderators with PIN
-export async function listReports(actor: Author, data: any) {
-  await asModerator(actor);
-  const query = feedbackRef().where("visibility", "==", "report").orderBy("createdAt", "desc");
-  const { docs, nextCursor } = await pageOf(feedbackRef(), query, data.limit, data.cursor);
-  return { items: docs.map(item), cursor: nextCursor };
-}
-
-export const reports = forPlayer(listReports);
 
 // App reads, inside the slot
 const readSlot = (author: Author) => [[`feedback_read_${author.playerId}`, 300, anHourInMilliseconds]] as Slot[];
