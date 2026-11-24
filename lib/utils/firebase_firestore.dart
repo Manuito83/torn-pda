@@ -70,7 +70,7 @@ class FirestoreHelper {
       ? "ios"
       : "windows";
 
-  Future<bool> _updateAlertField(String fieldName, Map<String, Object?> update) async {
+  Future<bool> _updateAlertField(String fieldName, Map<Object, Object?> update) async {
     final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
     try {
@@ -215,22 +215,24 @@ class FirestoreHelper {
   }
 
   Future<bool> subscribeToForeignRestockNotification(bool? subscribe) async {
+    final Map<String, Object?> update = {"foreignRestockNotification": subscribe};
+    if (subscribe != true) {
+      final success = await _updateAlertField("foreignRestockNotification", update);
+      if (success) Prefs().setRestocksNotificationEnabled(false);
+      return success;
+    }
     // Reset existing stock alert timestamps to now so alerts are not
     // triggered on the first pass after enabling
-    Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
-    final now = DateTime.now().millisecondsSinceEpoch;
-    previous.forEach((key, value) {
-      previous[key] = now;
-    });
-
-    final success = await _updateAlertField("foreignRestockNotification", {
-      "foreignRestockNotification": subscribe,
-      "restockActiveAlerts": previous,
-    });
-    if (success) {
-      Prefs().setRestocksNotificationEnabled(subscribe!);
-    }
-    return success;
+    final alerts = await _updateWithMarksNow(
+      "restockActiveAlerts",
+      DateTime.now().millisecondsSinceEpoch,
+      "foreignRestockNotification",
+      update,
+    );
+    if (alerts == null) return false;
+    Prefs().setRestocksNotificationEnabled(true);
+    Prefs().setActiveRestocks(json.encode(alerts));
+    return true;
   }
 
   Future<bool> changeForeignRestockNotificationOnlyCurrentCountry(bool enabled) {
@@ -249,21 +251,18 @@ class FirestoreHelper {
 
   Future<bool> changeForeignRestockSellout(bool enabled) async {
     final Map<String, Object?> update = {"foreignRestockNotificationSellout": enabled};
-
+    if (!enabled) return _updateAlertField("foreignRestockNotificationSellout", update);
     // Reset existing stock alert timestamps to now, so that old sellouts are not
     // notified on the first pass after enabling
-    if (enabled) {
-      final Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
-      if (previous.isNotEmpty) {
-        final now = DateTime.now().millisecondsSinceEpoch;
-        previous.forEach((key, value) {
-          previous[key] = now;
-        });
-        update["restockActiveAlerts"] = previous;
-      }
-    }
-
-    return _updateAlertField("foreignRestockNotificationSellout", update);
+    final alerts = await _updateWithMarksNow(
+      "restockActiveAlerts",
+      DateTime.now().millisecondsSinceEpoch,
+      "foreignRestockNotificationSellout",
+      update,
+    );
+    if (alerts == null) return false;
+    Prefs().setActiveRestocks(json.encode(alerts));
+    return true;
   }
 
   Future<bool> changeTravelStocksInNotification(bool enabled) {
@@ -298,11 +297,14 @@ class FirestoreHelper {
     return _firestore.collection("stocks-main").doc(codeName).get();
   }
 
-  Future<bool> updateActiveRestockAlerts(Map restockMap) async {
+  // null removes the key
+  Future<bool> setRestockActiveAlert(String codeName, int? time) async {
     final playerDoc = _playerDoc();
     if (playerDoc == null) return false;
     return playerDoc
-        .update({"restockActiveAlerts": restockMap})
+        .update({
+          FieldPath(["restockActiveAlerts", codeName]): time ?? FieldValue.delete(),
+        })
         .then((value) {
           return true;
         })
@@ -354,30 +356,38 @@ class FirestoreHelper {
     });
   }
 
-  // Sets every followed key to now, so restocks already seen are not notified
-  // Returns false without writing anything if the current alerts can't be read
   Future<bool> _updateWithCityShopMarksNow(String fieldName, Map<String, Object?> update) async {
+    final alerts = await _updateWithMarksNow("cityShopActiveAlerts", FieldValue.serverTimestamp(), fieldName, update);
+    if (alerts == null) return false;
+    _firebaseUserModel?.cityShopActiveAlerts = alerts;
+    return true;
+  }
+
+  // Null if the alerts can't be read
+  Future<Map<String, dynamic>?> _updateWithMarksNow(
+    String alertsField,
+    Object mark,
+    String fieldName,
+    Map<String, Object?> fields,
+  ) async {
     final playerDoc = _playerDoc();
-    if (playerDoc == null) return false;
+    if (playerDoc == null) return null;
     Map<String, dynamic> alerts;
     try {
       final doc = await playerDoc.get();
-      final remote = doc.data()?["cityShopActiveAlerts"];
+      final remote = doc.data()?[alertsField];
       alerts = remote is Map ? Map<String, dynamic>.from(remote) : <String, dynamic>{};
     } catch (e, s) {
       logErrorToCrashlytics("Alert field update failed: $fieldName", e, s);
-      return false;
+      return null;
     }
     final now = DateTime.now().millisecondsSinceEpoch;
+    final Map<Object, Object?> update = {...fields};
     for (final key in alerts.keys) {
       alerts[key] = now;
-      update["cityShopActiveAlerts.$key"] = FieldValue.serverTimestamp();
+      update[FieldPath([alertsField, key])] = mark;
     }
-    final success = await _updateAlertField(fieldName, update);
-    if (success) {
-      _firebaseUserModel?.cityShopActiveAlerts = alerts;
-    }
-    return success;
+    return await _updateAlertField(fieldName, update) ? alerts : null;
   }
 
   // Single key, the server writes the others
@@ -403,12 +413,16 @@ class FirestoreHelper {
         });
   }
 
+  Future<Map<String, dynamic>?> getCityShopActiveAlerts() => _getActiveAlerts("cityShopActiveAlerts");
+
+  Future<Map<String, dynamic>?> getRestockActiveAlerts() => _getActiveAlerts("restockActiveAlerts");
+
   // Read from the player document, marks as milliseconds; null without a user
-  Future<Map<String, dynamic>?> getCityShopActiveAlerts() async {
+  Future<Map<String, dynamic>?> _getActiveAlerts(String field) async {
     final playerDoc = _playerDoc();
     if (playerDoc == null) return null;
     final doc = await playerDoc.get();
-    final remote = doc.data()?["cityShopActiveAlerts"];
+    final remote = doc.data()?[field];
     if (remote is! Map) return <String, dynamic>{};
     return remote.map(
       (key, value) => MapEntry(key.toString(), value is Timestamp ? value.millisecondsSinceEpoch : value),

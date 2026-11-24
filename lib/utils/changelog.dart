@@ -151,6 +151,7 @@ List<_MVersion> _modernChangelog() => [
           _MItem('Scripts: fixed freeze with very large scripts'),
           _MItem('Widget: fixed reported home screen widget issues'),
           _MItem('Browser: fixed full lock letting some sections through'),
+          _MItem('Foreign stocks: fixed restock alerts that could not be turned off'),
         ],
       ),
     ],

@@ -688,48 +688,35 @@ class ForeignStockCardState extends State<ForeignStockCard> {
 
   Future _addToActiveRestockAlerts() async {
     final time = DateTime.now().millisecondsSinceEpoch;
-    if (!widget.activeRestocks!.keys.contains(_codeName)) {
-      Map<String, dynamic> tempMap = widget.activeRestocks!;
-      tempMap.addAll({_codeName: time});
-      FirestoreHelper().updateActiveRestockAlerts(tempMap).then((success) async {
-        if (success) {
-          setState(() {
-            widget.activeRestocks!.addAll({_codeName: time});
-          });
-          Prefs().setActiveRestocks(json.encode(tempMap));
+    if (widget.activeRestocks!.keys.contains(_codeName)) return;
+    final success = await FirestoreHelper().setRestockActiveAlert(_codeName, time);
+    if (!success) return;
+    widget.activeRestocks![_codeName] = time;
+    Prefs().setActiveRestocks(json.encode(widget.activeRestocks));
+    if (mounted) setState(() {});
 
-          final alertsEnabled = await Prefs().getRestocksNotificationEnabled();
-          if (!alertsEnabled) {
-            BotToast.showText(
-              text: "Your restocks notifications are OFF, remember to active "
-                  "them in the Alerts section!",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: _themeProvider.getTextColor(Colors.orange[700]),
-              duration: const Duration(seconds: 4),
-              contentPadding: const EdgeInsets.all(10),
-            );
-          }
-        }
-      });
+    final alertsEnabled = await Prefs().getRestocksNotificationEnabled();
+    if (!alertsEnabled) {
+      BotToast.showText(
+        text: "Restock notifications are OFF, activate them in Alerts",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: _themeProvider.getTextColor(Colors.orange[700]),
+        duration: const Duration(seconds: 4),
+        contentPadding: const EdgeInsets.all(10),
+      );
     }
   }
 
+  // Deletes in Firestore even if missing locally
   Future _removeToActiveRestockAlerts() async {
-    if (widget.activeRestocks!.keys.contains(_codeName)) {
-      Map<String, dynamic> tempMap = widget.activeRestocks!;
-      tempMap.removeWhere((key, value) => key == _codeName);
-      FirestoreHelper().updateActiveRestockAlerts(tempMap).then((success) {
-        if (success) {
-          setState(() {
-            widget.activeRestocks!.removeWhere((key, value) => key == _codeName);
-          });
-          Prefs().setActiveRestocks(json.encode(tempMap));
-        }
-      });
-    }
+    final success = await FirestoreHelper().setRestockActiveAlert(_codeName, null);
+    if (!success) return;
+    widget.activeRestocks!.remove(_codeName);
+    Prefs().setActiveRestocks(json.encode(widget.activeRestocks));
+    if (mounted) setState(() {});
   }
 
   Row _firstRow(ForeignStock stock) {

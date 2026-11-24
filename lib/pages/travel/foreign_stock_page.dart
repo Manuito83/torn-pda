@@ -26,6 +26,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/usage_counters.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/inventory_feedback.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -1771,6 +1772,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _inventoryWanted = _inventoryWanted || await Prefs().getInventoryAutoLoad();
 
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
+    _syncActiveRestocks();
 
     List<String> savedHiddenRaw = await Prefs().getHiddenForeignStocks();
     for (final s in savedHiddenRaw) {
@@ -1782,6 +1784,21 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       final id = int.tryParse(s);
       if (id != null) _blacklistedItemIds.add(id);
     }
+  }
+
+  // Prefs only if Firestore fails
+  Future<void> _syncActiveRestocks() async {
+    Map<String, dynamic>? remote;
+    try {
+      remote = await FirestoreHelper().getRestockActiveAlerts().timeout(const Duration(seconds: 8));
+    } catch (e) {
+      log("Restock alerts sync failed: $e");
+      return;
+    }
+    if (remote == null) return;
+    Prefs().setActiveRestocks(json.encode(remote));
+    if (!mounted) return;
+    setState(() => _activeRestocks = remote);
   }
 
   Future<void> _showOptionsDialog() {
