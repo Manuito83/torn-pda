@@ -15,19 +15,14 @@ import 'package:torn_pda/utils/feedback_functions.dart';
 import 'package:torn_pda/widgets/pda_scaffold.dart';
 
 class FeedbackPrivatePage extends StatefulWidget {
-  const FeedbackPrivatePage({super.key, this.reports = false});
-
-  final bool reports;
+  const FeedbackPrivatePage({super.key});
 
   @override
   State<FeedbackPrivatePage> createState() => _FeedbackPrivatePageState();
 }
 
 class _FeedbackPrivatePageState extends State<FeedbackPrivatePage> with FeedbackSubRoute {
-  late final _pager = FeedbackPager<FeedbackItem>(
-    widget.reports ? fetchReportFeedback : fetchPrivateFeedback,
-    onModLocked: _onModLocked,
-  );
+  late final _pager = FeedbackPager<FeedbackItem>(fetchPrivateFeedback, onModLocked: _onModLocked);
 
   @override
   String get subRouteName => 'feedback_private';
@@ -68,10 +63,7 @@ class _FeedbackPrivatePageState extends State<FeedbackPrivatePage> with Feedback
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: settings.appBarTop ? 2 : 0,
         toolbarHeight: 50,
-        title: Text(
-          widget.reports ? 'Reports' : 'Private bugs',
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-        ),
+        title: const Text('Bugs', style: TextStyle(color: Colors.white, fontSize: 16)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: goBack),
       ),
       body: Container(
@@ -85,7 +77,7 @@ class _FeedbackPrivatePageState extends State<FeedbackPrivatePage> with Feedback
     final tags = Get.find<FeedbackController>().tags;
     return FeedbackPagedList<FeedbackItem>(
       pager: _pager,
-      emptyText: widget.reports ? 'No reports' : 'No private bugs',
+      emptyText: 'No bugs',
       itemBuilder: (item) => FeedbackCard(item: item, tags: tags, onTap: () => _open(item)),
     );
   }

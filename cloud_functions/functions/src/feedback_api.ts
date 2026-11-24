@@ -6,7 +6,7 @@ import { createHash, timingSafeEqual } from "crypto";
 import { aDayInMilliseconds, anHourInMilliseconds } from "./time";
 import { takeRateLimitSlot } from "./rate_limit";
 import { moderateAs } from "./feedback_moderation";
-import { getFeedback, listComments, listFeedback, listReports, readConfig } from "./feedback_reads";
+import { getFeedback, listComments, listFeedback, listPrivateBugs, listReports, readConfig } from "./feedback_reads";
 import { attachmentLinks, confirmAttachment, deleteAttachment, requestAttachment } from "./feedback_attachments";
 import { subscribeTo, subscribeToAll } from "./feedback_subscriptions";
 import { addComment, deleteOwn } from "./feedback_comments";
@@ -61,11 +61,15 @@ const READS = new Map<string, Reader>([
   ["config", readConfig],
   ["attachmentLinks", attachmentLinks],
   ["listReports", (actor, data) => listReports(actor ?? forbidden(), data)],
+  ["listPrivate", async (actor, data) => {
+    await asModerator(actor ?? forbidden());
+    return listPrivateBugs(data);
+  }],
   ["myState", async (actor, data) => ({ ...await stateOf(actor ?? forbidden(), data), isOwner: await isOwner(actor) })],
   ["mine", (actor, data) => mineOf(actor ?? forbidden(), data)],
 ]);
 // Reads that need the signed player
-const PLAYER_READS = ["myState", "mine", "listReports"];
+const PLAYER_READS = ["myState", "mine", "listReports", "listPrivate"];
 
 // Owner only, for the web's Admin page
 const ADMIN = new Map<string, () => Promise<unknown>>([

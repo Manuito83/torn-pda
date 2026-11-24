@@ -2,7 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { eventsRef, feedbackEvent } from "./feedback_notifications";
-import { item, listComments, pageOf, plain } from "./feedback_reads";
+import { listComments, listPrivateBugs } from "./feedback_reads";
 import { removeComment } from "./feedback_comments";
 import { OPTIONS, STATUSES, configRef, feedbackIdOf, feedbackRef, isPublic, privateRef, signedIn, visibleTo } from "./feedback";
 import { Author, requireModerator } from "./feedback_author";
@@ -89,10 +89,8 @@ export const listPrivate = onCall(OPTIONS, async (request) => {
     const { items, cursor } = await listComments(moderator, { feedbackId: data.commentsOf, limit: data.limit, cursor: data.startAfter });
     return { items, nextCursor: cursor };
   }
-  const query = feedbackRef().where("visibility", "==", "private").orderBy("createdAt", "desc");
-  const { docs, nextCursor } = await pageOf(feedbackRef(), query, data.limit, data.startAfter);
-  const extras = docs.length === 0 ? [] : await admin.firestore().getAll(...docs.map((doc) => privateRef(doc.id)));
-  return { items: docs.map((doc, i) => ({ ...item(doc), ...plain(extras[i].data() ?? {}) })), nextCursor };
+  const { items, cursor } = await listPrivateBugs({ limit: data.limit, cursor: data.startAfter });
+  return { items, nextCursor: cursor };
 });
 
 export async function moderateAs(moderator: Author, data: any) {

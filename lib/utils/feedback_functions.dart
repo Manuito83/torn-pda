@@ -88,11 +88,6 @@ Future<FeedbackPage<FeedbackComment>> fetchPrivateComments(String id, Object? cu
   return _pageOf(answer, FeedbackComment.fromMap);
 }
 
-Future<FeedbackPage<FeedbackItem>> fetchReportFeedback(Object? cursor) async {
-  final answer = await callFeedback('listReports', {'limit': feedbackPageSize, 'cursor': ?cursor});
-  return _pageOf(answer, FeedbackItem.fromMap);
-}
-
 Future<FeedbackPage<FeedbackComment>> fetchReportComments(String id, Object? cursor) async {
   final answer = await callFeedback('comments', {'feedbackId': id, 'limit': feedbackPageSize, 'cursor': ?cursor});
   return _pageOf(answer, FeedbackComment.fromMap);

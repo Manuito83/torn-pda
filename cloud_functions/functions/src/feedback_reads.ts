@@ -1,6 +1,6 @@
 import { HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import { MAX_IDS_PER_CALL, STATUSES, byNumber, configRef, feedbackIdOf, feedbackRef, forPlayer, isPublic, visibleTo, withSlots, Slot } from "./feedback";
+import { MAX_IDS_PER_CALL, STATUSES, byNumber, configRef, feedbackIdOf, feedbackRef, forPlayer, isPublic, privateRef, visibleTo, withSlots, Slot } from "./feedback";
 import { anHourInMilliseconds } from "./time";
 import { Author, actsAsModerator, asModerator } from "./feedback_author";
 import { docId, invalid, notFound } from "./feedback_input";
@@ -77,6 +77,14 @@ export async function listComments(actor: Author | undefined, data: any) {
   const comments = ref.collection("comments");
   const { docs, nextCursor } = await pageOf(comments, comments.orderBy("createdAt", "asc"), data.limit, data.cursor);
   return { items: docs.map(item), cursor: nextCursor };
+}
+
+// Bugs and reports, caller checks moderator
+export async function listPrivateBugs(data: any) {
+  const query = feedbackRef().where("visibility", "in", ["private", "report"]).orderBy("createdAt", "desc");
+  const { docs, nextCursor } = await pageOf(feedbackRef(), query, data.limit, data.cursor);
+  const extras = docs.length === 0 ? [] : await admin.firestore().getAll(...docs.map((doc) => privateRef(doc.id)));
+  return { items: docs.map((doc, i) => ({ ...item(doc), ...plain(extras[i].data() ?? {}) })), cursor: nextCursor };
 }
 
 // Players' bugs, for moderators with PIN

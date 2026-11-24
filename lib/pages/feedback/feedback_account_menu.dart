@@ -8,8 +8,6 @@ import 'package:torn_pda/providers/feedback_account_controller.dart';
 
 enum _MenuAction { alerts, pin, removePin }
 
-enum _Inbox { privateBugs, reports }
-
 class FeedbackAppBarActions extends StatelessWidget {
   const FeedbackAppBarActions({super.key, required this.onCreate, required this.onReport});
 
@@ -46,16 +44,11 @@ class FeedbackAppBarActions extends StatelessWidget {
             IconButton(icon: const Icon(Icons.add), tooltip: 'New', onPressed: onCreate),
             IconButton(icon: const Icon(Icons.bug_report_outlined), tooltip: 'Report a bug', onPressed: onReport),
             if (account.isModerator && controller.unlocked)
-              PopupMenuButton<_Inbox>(
+              IconButton(
                 icon: const Icon(Icons.lock_open),
-                tooltip: 'Inbox',
-                onSelected: (inbox) => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => FeedbackPrivatePage(reports: inbox == _Inbox.reports))),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: _Inbox.reports, child: Text('Reports')),
-                  PopupMenuItem(value: _Inbox.privateBugs, child: Text('Private bugs')),
-                ],
+                tooltip: 'Bugs',
+                onPressed: () =>
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FeedbackPrivatePage())),
               )
             else if (account.isModerator)
               IconButton(
