@@ -14,6 +14,7 @@ import type {
 } from "./interfaces/city_shops_interface";
 import { sendNotificationToUser, type NotificationCheckResult } from "./notification";
 import { isDiscreetNow } from "./discreet";
+import { median } from "./stocks/median";
 const { tornKey } = require("../key/torn_key.js");
 
 // Interval between scheduled API samples
@@ -69,11 +70,6 @@ export function effectiveBase(seedBaseMin: number | null, seedCycles: number, cy
     n = cycles.length;
   }
   return { base, n };
-}
-
-function median(sorted: number[]): number {
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 export function learnedStockStats(periods: number[]) {

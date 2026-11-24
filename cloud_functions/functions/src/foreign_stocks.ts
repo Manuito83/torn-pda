@@ -6,6 +6,7 @@
  * 3. Updates Stocks/Restocks
  *    - Uses transactions to ensure concurrency safety when updating stocks in Firestore
  *    - Updates restocks in Realtime Database
+ *    - Both passes record sellouts and restocks in Firestore
  * 4. Adds Missing Items: after processing the most recent source, it checks the less recent source for any missing items and adds them.
  */
 
@@ -13,6 +14,7 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { FieldPath, FieldValue } from "firebase-admin/firestore";
+import { nextStockEvents, stockEventFields, storedStockEvents } from "./stocks/events";
 
 // API URLs
 const YATA_API_URL = "https://yata.yt/api/v1/travel/export/";
@@ -100,44 +102,10 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
         newPeriodicMap = filteredMap;
       }
 
-      // Save the timestamp of lastEmpty if this item just transitioned to 0 quantity
-      const justSoldOut =
-        currentStockData.quantity === 0 &&
-        (dbStockData.quantity || 0) > 0 &&
-        (dbStockData.quantity || 0) < 1000;
-
-      const justRestocked = (dbStockData.quantity || 0) === 0 && currentStockData.quantity > 0;
-
-      let lastEmpty = dbStockData.lastEmpty || 0;
-      if (justSoldOut) {
-        lastEmpty = timestamp;
-      }
-
-      // Mirror of lastEmpty, needed to measure how long an item takes to sell out
-      let lastRestock = dbStockData.lastRestock || 0;
-      if (justRestocked) {
-        lastRestock = timestamp;
-      }
-
-      // Update restockElapsed if an item was restocked
-      const restockElapsed = dbStockData.restockElapsed || [];
-      if (justRestocked && dbStockData.lastEmpty) {
-        restockElapsed.push(timestamp - dbStockData.lastEmpty);
-        // Keep only the last 15 restocks
-        if (restockElapsed.length > 15) {
-          restockElapsed.shift();
-        }
-      }
-
-      // Update selloutElapsed if an item was depleted
-      const selloutElapsed = dbStockData.selloutElapsed || [];
-      if (justSoldOut && dbStockData.lastRestock) {
-        selloutElapsed.push(timestamp - dbStockData.lastRestock);
-        // Keep only the last 15 sellouts
-        if (selloutElapsed.length > 15) {
-          selloutElapsed.shift();
-        }
-      }
+      const storedEvents = storedStockEvents(dbStockData);
+      const events =
+        nextStockEvents(storedEvents, dbStockData.quantity, dbStockData.update, currentStockData.quantity, timestamp) ??
+        storedEvents;
 
       // Construct the new data payload
       const newData = {
@@ -151,10 +119,7 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
         update: timestamp,
         source: source,
         periodicMap: newPeriodicMap,
-        lastEmpty: lastEmpty,
-        lastRestock: lastRestock,
-        restockElapsed: restockElapsed,
-        selloutElapsed: selloutElapsed,
+        ...stockEventFields(events),
       };
 
       transaction.set(docRef, newData);
@@ -191,8 +156,8 @@ async function updateRestock(currentStockData: any, timestamp: number, source: s
         restockTimestamp = timestamp;
       }
 
-      // Same for the sellout timestamp, with the quantity guardrail used in Firestore
-      if (currentStockData.quantity === 0 && savedData.quantity > 0 && savedData.quantity < 1000) {
+      // Same for the sellout timestamp
+      if (currentStockData.quantity === 0 && savedData.quantity > 0) {
         selloutTimestamp = timestamp;
       }
     }
@@ -253,6 +218,17 @@ async function updateRestock(currentStockData: any, timestamp: number, source: s
 
     // Update Realtime DB
     await db.ref(`stocks/restocks/${codeName}`).set(stock);
+
+    if (savedData && (savedData.quantity === 0) !== (currentStockData.quantity === 0)) {
+      const docRef = admin.firestore().collection("stocks-main").doc(codeName);
+      await admin.firestore().runTransaction(async (transaction) => {
+        const docSnapshot = await transaction.get(docRef);
+        if (!docSnapshot.exists) return;
+        const events = nextStockEvents(storedStockEvents(docSnapshot.data() || {}),
+          savedData.quantity, savedData.lastUpdated, currentStockData.quantity, timestamp);
+        if (events) transaction.update(docRef, stockEventFields(events));
+      });
+    }
 
   } catch (e) {
     logger.warn(`ERROR updating restock data for ${codeName}: \n${e}`);
