@@ -133,7 +133,7 @@ class ReviveProviders {
         "Asclepius is an independent revive faction dedicated to providing affordable "
         "healthcare and efficient service to patients all over Torn.",
     forumUrl: 'https://www.torn.com/forums.php#/p=threads&f=10&t=16562082&b=0&a=0',
-    discordUrl: 'https://discord.gg/uvfm978f6v',
+    discordUrl: 'https://discord.gg/QdwQDvFEWF',
     priceNote: (price) =>
         "Revives cost $price and are paid directly to the reviver, unless on a contract. Failure to pay will "
         "result in removal from access to their services.",
