@@ -97,6 +97,14 @@ String feedbackReasonText(String? reason) {
       return 'Has public duplicates';
     case 'invalid-argument':
       return 'Invalid input';
+    case 'too_many_attachments':
+      return 'Too many files';
+    case 'not_uploaded':
+    case 'upload_failed':
+    case 'expired':
+      return 'Upload failed';
+    case 'permission-denied':
+      return 'Not allowed';
     case 'not-found':
       return 'Not found';
     case 'unauthenticated':

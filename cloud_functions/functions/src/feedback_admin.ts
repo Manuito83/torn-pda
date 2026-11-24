@@ -1,23 +1,13 @@
 import * as admin from "firebase-admin";
 import { aDayInMilliseconds } from "./time";
 import { feedbackRef } from "./feedback";
-import { Author, modsRef } from "./feedback_author";
-import { deny } from "./feedback_input";
+import { modsRef } from "./feedback_author";
 import { pinRef } from "./feedback_pin_hash";
 import { usersRef } from "./feedback_users";
 
 const LOG_DAYS = 7;
 // Each document read is billed
 const LOG_DOCS_READ = 5000;
-
-// Set by alta-moderador only, never by clients
-export async function isOwner(author?: Author): Promise<boolean> {
-  return author !== undefined && !author.asPlayer && (await modsRef().doc(`${author.playerId}`).get()).get("owner") === true;
-}
-
-export async function requireOwner(author: Author) {
-  if (!await isOwner(author)) deny("owner_only", author);
-}
 
 export async function adminMods() {
   const docs = (await modsRef().get()).docs;

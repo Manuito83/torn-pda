@@ -6,15 +6,16 @@ import { createHash, timingSafeEqual } from "crypto";
 import { aDayInMilliseconds, anHourInMilliseconds } from "./time";
 import { takeRateLimitSlot } from "./rate_limit";
 import { moderateAs } from "./feedback_moderation";
-import { getFeedback, listComments, listFeedback, readConfig } from "./feedback_reads";
+import { getFeedback, listComments, listFeedback, listReports, readConfig } from "./feedback_reads";
+import { attachmentLinks, confirmAttachment, deleteAttachment, requestAttachment } from "./feedback_attachments";
 import { subscribeTo, subscribeToAll } from "./feedback_subscriptions";
 import { addComment, deleteOwn } from "./feedback_comments";
-import { adminLogSummary, adminMods, adminStats, isOwner, requireOwner } from "./feedback_admin";
+import { adminLogSummary, adminMods, adminStats } from "./feedback_admin";
 import { mineOf } from "./feedback_mine";
 import { touchUser } from "./feedback_users";
 import { keyed, login, pinSecrets, readPass, removePin, resetPin, setPin, tokenSecret, tornKey } from "./feedback_auth";
 import { Slot, castVote, createFeedback, stateOf, withSlots } from "./feedback";
-import { Author, asModerator, givenPlayer, moderatorName } from "./feedback_author";
+import { Author, asModerator, givenPlayer, isOwner, moderatorName, requireOwner } from "./feedback_author";
 import { deny, invalid } from "./feedback_input";
 
 const KEYS = [["web", defineSecret("FEEDBACK_API_KEY_WEB")], ["bot", defineSecret("FEEDBACK_API_KEY_BOT")]] as const;
@@ -58,11 +59,13 @@ const READS = new Map<string, Reader>([
   ["get", getFeedback],
   ["comments", listComments],
   ["config", readConfig],
+  ["attachmentLinks", attachmentLinks],
+  ["listReports", (actor, data) => listReports(actor ?? forbidden(), data)],
   ["myState", async (actor, data) => ({ ...await stateOf(actor ?? forbidden(), data), isOwner: await isOwner(actor) })],
   ["mine", (actor, data) => mineOf(actor ?? forbidden(), data)],
 ]);
 // Reads that need the signed player
-const PLAYER_READS = ["myState", "mine"];
+const PLAYER_READS = ["myState", "mine", "listReports"];
 
 // Owner only, for the web's Admin page
 const ADMIN = new Map<string, () => Promise<unknown>>([
@@ -74,9 +77,13 @@ const ADMIN = new Map<string, () => Promise<unknown>>([
 const WRITES = new Map<string, Writer>([
   ["create", (actor, data) => createFeedback(actor, { ...data, type: "suggestion" })],
   ["createBug", (actor, data) => createFeedback(actor, { ...data, type: "bug" })],
+  ["createReport", (actor, data) => createFeedback(actor, { ...data, type: "bug" }, true)],
   ["vote", castVote],
   ["comment", addComment],
   ["deleteOwnComment", deleteOwn],
+  ["requestAttachment", requestAttachment],
+  ["confirmAttachment", confirmAttachment],
+  ["deleteAttachment", deleteAttachment],
   ["subscribe", subscribeTo],
   ["subscribeAll", subscribeToAll],
   ["moderate", async (actor, data) => moderateAs(await asModerator(actor), { ...data, action: data.moderation })],
@@ -102,7 +109,7 @@ function clientOf(key: string | undefined): Client | undefined {
 async function callerOf(client: Client, action: unknown, actor: unknown, token: unknown): Promise<Caller> {
   if (client === "bot") {
     if (token !== undefined) invalid("token");
-    return { client, actor: actor === undefined ? undefined : givenPlayer(actor, "actor") };
+    return { client, actor: actor === undefined ? undefined : { ...givenPlayer(actor, "actor"), bot: true } };
   }
   if (actor !== undefined) invalid("actor");
   if (token === undefined || action === "login") return { client };

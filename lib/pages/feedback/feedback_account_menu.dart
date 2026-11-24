@@ -8,10 +8,13 @@ import 'package:torn_pda/providers/feedback_account_controller.dart';
 
 enum _MenuAction { alerts, pin, removePin }
 
+enum _Inbox { privateBugs, reports }
+
 class FeedbackAppBarActions extends StatelessWidget {
-  const FeedbackAppBarActions({super.key, required this.onCreate});
+  const FeedbackAppBarActions({super.key, required this.onCreate, required this.onReport});
 
   final VoidCallback onCreate;
+  final VoidCallback onReport;
 
   Future<void> _toggleAlerts() async {
     try {
@@ -41,13 +44,24 @@ class FeedbackAppBarActions extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(icon: const Icon(Icons.add), tooltip: 'New', onPressed: onCreate),
-            if (account.isModerator)
+            IconButton(icon: const Icon(Icons.bug_report_outlined), tooltip: 'Report a bug', onPressed: onReport),
+            if (account.isModerator && controller.unlocked)
+              PopupMenuButton<_Inbox>(
+                icon: const Icon(Icons.lock_open),
+                tooltip: 'Inbox',
+                onSelected: (inbox) => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => FeedbackPrivatePage(reports: inbox == _Inbox.reports))),
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: _Inbox.reports, child: Text('Reports')),
+                  PopupMenuItem(value: _Inbox.privateBugs, child: Text('Private bugs')),
+                ],
+              )
+            else if (account.isModerator)
               IconButton(
-                icon: Icon(controller.unlocked ? Icons.lock_open : Icons.lock_outline),
-                tooltip: controller.unlocked ? 'Private bugs' : 'Unlock',
-                onPressed: () => controller.unlocked
-                    ? Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FeedbackPrivatePage()))
-                    : showFeedbackPinDialog(context, FeedbackPinMode.unlock),
+                icon: const Icon(Icons.lock_outline),
+                tooltip: 'Unlock',
+                onPressed: () => showFeedbackPinDialog(context, FeedbackPinMode.unlock),
               ),
             PopupMenuButton<_MenuAction>(
               onSelected: (action) => _select(context, action),

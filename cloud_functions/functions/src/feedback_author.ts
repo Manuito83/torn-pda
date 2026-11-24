@@ -16,6 +16,8 @@ export interface Author {
   // Moderator without PIN or app session
   asPlayer?: boolean;
   modUntil?: number;
+  // Named by the bot
+  bot?: boolean;
 }
 
 type Reason = "no_player" | "no_key" | "not_verified" | "verify_busy";
@@ -93,6 +95,16 @@ export async function moderatorIds(): Promise<Set<number>> {
 
 export async function actsAsModerator(author?: Author): Promise<boolean> {
   return author !== undefined && !author.asPlayer && await isModerator(author.playerId);
+}
+
+// Set by alta-moderador only, never by clients
+export async function isOwner(author?: Author): Promise<boolean> {
+  return author !== undefined && !author.asPlayer && !author.bot &&
+    (await modsRef().doc(`${author.playerId}`).get()).get("owner") === true;
+}
+
+export async function requireOwner(author: Author) {
+  if (!await isOwner(author)) deny("owner_only", author);
 }
 
 export async function asModerator(author: Author): Promise<Author> {

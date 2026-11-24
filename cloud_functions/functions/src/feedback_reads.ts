@@ -1,7 +1,8 @@
 import { HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import { MAX_IDS_PER_CALL, STATUSES, byNumber, configRef, feedbackIdOf, feedbackRef, isPublic, visibleTo } from "./feedback";
-import { Author, actsAsModerator } from "./feedback_author";
+import { MAX_IDS_PER_CALL, STATUSES, byNumber, configRef, feedbackIdOf, feedbackRef, forPlayer, isPublic, visibleTo, withSlots, Slot } from "./feedback";
+import { anHourInMilliseconds } from "./time";
+import { Author, actsAsModerator, asModerator } from "./feedback_author";
 import { docId, invalid, notFound } from "./feedback_input";
 
 const DEFAULT_PAGE = 20;
@@ -51,7 +52,8 @@ export async function listFeedback(actor: Author | undefined, data: any) {
   if (data.search !== undefined) {
     const found = /^#?(\d{1,9})$/.exec(typeof data.search === "string" ? data.search.trim() : "") ?? invalid("search");
     const hit = await byNumber(Number(found[1]));
-    return { items: hit.docs.filter((doc) => data.includePrivate || isPublic(doc)).map(item), cursor: null };
+    const seen = await Promise.all(hit.docs.map(async (doc) => isPublic(doc) || (data.includePrivate === true && await visibleTo(doc, actor))));
+    return { items: hit.docs.filter((_, i) => seen[i]).map(item), cursor: null };
   }
   let query = feedbackRef()
     .where("visibility", "in", data.includePrivate ? ["public", "private"] : ["public"])
@@ -68,12 +70,29 @@ export async function getFeedback(actor: Author | undefined, data: any) {
 }
 
 export async function listComments(actor: Author | undefined, data: any) {
+  if (data.limit !== undefined && (!Number.isSafeInteger(data.limit) || data.limit < 1 || data.limit > MAX_IDS_PER_CALL)) invalid("limit");
+  if (data.cursor !== undefined) docId(data.cursor, "cursor");
   const ref = feedbackRef().doc(await feedbackIdOf(data));
   if (!await visibleTo(await ref.get(), actor)) notFound();
   const comments = ref.collection("comments");
   const { docs, nextCursor } = await pageOf(comments, comments.orderBy("createdAt", "asc"), data.limit, data.cursor);
   return { items: docs.map(item), cursor: nextCursor };
 }
+
+// Players' bugs, for moderators with PIN
+export async function listReports(actor: Author, data: any) {
+  await asModerator(actor);
+  const query = feedbackRef().where("visibility", "==", "report").orderBy("createdAt", "desc");
+  const { docs, nextCursor } = await pageOf(feedbackRef(), query, data.limit, data.cursor);
+  return { items: docs.map(item), cursor: nextCursor };
+}
+
+export const reports = forPlayer(listReports);
+
+// App reads, inside the slot
+const readSlot = (author: Author) => [[`feedback_read_${author.playerId}`, 300, anHourInMilliseconds]] as Slot[];
+export const get = forPlayer((author, data) => withSlots(readSlot(author), () => getFeedback(author, data)));
+export const comments = forPlayer((author, data) => withSlots(readSlot(author), () => listComments(author, data)));
 
 export async function readConfig() {
   return { tags: (await configRef().get()).get("tags") ?? [] };

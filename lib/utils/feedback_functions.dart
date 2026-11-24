@@ -1,6 +1,8 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:torn_pda/models/feedback/feedback_account.dart';
 import 'package:torn_pda/models/feedback/feedback_models.dart';
+import 'package:torn_pda/utils/feedback_firestore.dart';
 
 const feedbackCallTimeout = Duration(seconds: 15);
 
@@ -29,8 +31,8 @@ Future<Map<String, dynamic>> callFeedback(String name, [Map<String, dynamic> dat
 
 Future<Map<String, dynamic>> fetchFeedbackState(List<String> ids) => callFeedback('myState', {'feedbackIds': ids});
 
-Future<String> createFeedback(String title, String body) async {
-  final answer = await callFeedback('create', {'title': title, 'body': body});
+Future<String> createFeedback(String title, String body, {bool report = false}) async {
+  final answer = await callFeedback(report ? 'createReport' : 'create', {'title': title, 'body': body});
   return answer['feedbackId'] as String;
 }
 
@@ -39,7 +41,10 @@ Future<int> voteFeedback(String id, bool on) async {
   return feedbackCount(answer['votesCount']);
 }
 
-Future<void> commentFeedback(String id, String body) => callFeedback('comment', {'feedbackId': id, 'body': body});
+Future<String> commentFeedback(String id, String body) async {
+  final answer = await callFeedback('comment', {'feedbackId': id, 'body': body});
+  return answer['commentId'] as String;
+}
 
 Future<void> deleteOwnFeedbackComment(String id, String commentId) {
   return callFeedback('deleteOwnComment', {'feedbackId': id, 'commentId': commentId});
@@ -81,6 +86,31 @@ Future<FeedbackPage<FeedbackComment>> fetchPrivateComments(String id, Object? cu
     'startAfter': ?cursor,
   });
   return _pageOf(answer, FeedbackComment.fromMap);
+}
+
+Future<FeedbackPage<FeedbackItem>> fetchReportFeedback(Object? cursor) async {
+  final answer = await callFeedback('listReports', {'limit': feedbackPageSize, 'cursor': ?cursor});
+  return _pageOf(answer, FeedbackItem.fromMap);
+}
+
+Future<FeedbackPage<FeedbackComment>> fetchReportComments(String id, Object? cursor) async {
+  final answer = await callFeedback('comments', {'feedbackId': id, 'limit': feedbackPageSize, 'cursor': ?cursor});
+  return _pageOf(answer, FeedbackComment.fromMap);
+}
+
+Future<FeedbackItem?> fetchReportItem(String id) async {
+  final answer = await callFeedback('get', {'feedbackId': id});
+  final map = answer['feedback'];
+  return map is Map ? FeedbackItem.fromMap(id, Map<String, dynamic>.from(map)) : null;
+}
+
+Future<FeedbackItem?> fetchFeedbackItemOrReport(String id) async {
+  try {
+    return await fetchFeedbackItem(id);
+  } on FirebaseException catch (e) {
+    if (e.code != 'permission-denied') rethrow;
+    return fetchReportItem(id);
+  }
 }
 
 Future<void> setFeedbackPin(String newPin, {String? current}) {

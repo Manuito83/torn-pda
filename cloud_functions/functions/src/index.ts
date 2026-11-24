@@ -39,9 +39,12 @@ import { recalculateStats } from "./stats_recalc";
 import { updateCityShops /*, cityShopsTest */ } from "./city_shops";
 import { countActives } from "./metrics";
 import * as feedbackFunctions from "./feedback";
+import * as feedbackAttachments from "./feedback_attachments";
 import * as feedbackComments from "./feedback_comments";
 import * as feedbackModeration from "./feedback_moderation";
+import * as feedbackReads from "./feedback_reads";
 import * as feedbackSubscriptions from "./feedback_subscriptions";
+import * as feedbackSweep from "./feedback_sweep";
 import * as feedbackTriggers from "./feedback_triggers";
 import { api as feedbackApi } from "./feedback_api";
 import { modUnlock, removePinFromApp, setPinFromApp } from "./feedback_auth";
@@ -138,6 +141,14 @@ export const stats = {
 
 export const feedback = {
   create: feedbackFunctions.create,
+  createReport: feedbackFunctions.createReport,
+  listReports: feedbackReads.reports,
+  get: feedbackReads.get,
+  comments: feedbackReads.comments,
+  attachmentRequest: feedbackAttachments.attachmentRequest,
+  attachmentConfirm: feedbackAttachments.attachmentConfirm,
+  attachmentDelete: feedbackAttachments.attachmentDelete,
+  attachmentUrls: feedbackAttachments.attachmentUrls,
   vote: feedbackFunctions.vote,
   comment: feedbackComments.comment,
   deleteOwnComment: feedbackComments.deleteOwnComment,
@@ -153,6 +164,9 @@ export const feedback = {
   onCreated: feedbackTriggers.onFeedbackCreated,
   onCommented: feedbackTriggers.onCommentCreated,
   onEvent: feedbackTriggers.onFeedbackEvent,
+  onDeleted: feedbackTriggers.onFeedbackDeleted,
+  onCommentDeleted: feedbackTriggers.onCommentDeleted,
+  sweepAttachments: feedbackSweep.sweepFeedbackAttachments,
   api: feedbackApi
 };
 

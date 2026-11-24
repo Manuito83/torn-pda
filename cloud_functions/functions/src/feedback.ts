@@ -45,8 +45,15 @@ export function isPublic(feedback: admin.firestore.DocumentSnapshot) {
   return feedback.exists && feedback.get("visibility") === "public";
 }
 
+// Reports: author and moderators, never the bot
 export async function visibleTo(feedback: admin.firestore.DocumentSnapshot, viewer?: Author) {
-  return isPublic(feedback) || (feedback.exists && await actsAsModerator(viewer));
+  if (!feedback.exists) return false;
+  if (isPublic(feedback)) return true;
+  if (feedback.get("report") === true) {
+    if (viewer === undefined || viewer.bot) return false;
+    if (feedback.get("authorPlayerId") === viewer.playerId) return true;
+  }
+  return actsAsModerator(viewer);
 }
 
 // Slots go back if the write fails
@@ -81,7 +88,8 @@ export function forPlayer(handler: (author: Author, data: any, uid: string) => P
   });
 }
 
-export async function createFeedback(actor: Author, data: any) {
+// report: a player's private bug
+export async function createFeedback(actor: Author, data: any, report = false) {
   const title = cleanText(data.title, 3, 120, false);
   if (title === undefined || !VISIBLE_CHAR.test(title)) invalid("title");
   const body = cleanText(data.body ?? "", 0, 4000, true) ?? invalid("body");
@@ -89,10 +97,10 @@ export async function createFeedback(actor: Author, data: any) {
   let source: { kind: string; url: string; excerpt: string } | undefined;
   if (data.source !== undefined) {
     const { kind, url, excerpt } = data.source ?? {};
-    if (type !== "bug" || kind !== "discord" || typeof url !== "string" || !DISCORD_URL.test(url)) invalid("source");
+    if (report || type !== "bug" || kind !== "discord" || typeof url !== "string" || !DISCORD_URL.test(url)) invalid("source");
     source = { kind, url, excerpt: cleanText(excerpt ?? "", 0, 1000, true) ?? invalid("source excerpt") };
   }
-  if (type === "bug") await asModerator(actor);
+  if (type === "bug" && !report) await asModerator(actor);
   const ref = feedbackRef().doc();
   const write = () => admin.firestore().runTransaction(async (t) => {
     const last = (await t.get(counterRef())).get("last");
@@ -105,7 +113,8 @@ export async function createFeedback(actor: Author, data: any) {
       title,
       body,
       type,
-      visibility: type === "bug" ? "private" : "public",
+      visibility: report ? "report" : type === "bug" ? "private" : "public",
+      ...(report ? { report: true } : {}),
       status: "open",
       tags: [],
       authorName: actor.name,
@@ -123,9 +132,10 @@ export async function createFeedback(actor: Author, data: any) {
     return number;
   });
   // Moderators file bugs without limits
-  const number = type === "bug" ? await write() : await withSlots([
-    [`feedback_create_h_${actor.playerId}`, 3, anHourInMilliseconds],
-    [`feedback_create_d_${actor.playerId}`, 10, aDayInMilliseconds],
+  const slotName = report ? "feedback_report" : "feedback_create";
+  const number = type === "bug" && !report ? await write() : await withSlots([
+    [`${slotName}_h_${actor.playerId}`, 3, anHourInMilliseconds],
+    [`${slotName}_d_${actor.playerId}`, 10, aDayInMilliseconds],
   ], write);
   logger.info(`Feedback #${number} ${ref.id} (${type}) created by ${actor.name} [${actor.playerId}]`);
   return { feedbackId: ref.id, number };
@@ -183,7 +193,8 @@ export async function stateOf(author: Author, data: any) {
   };
 }
 
-export const create = forPlayer(createFeedback);
+export const create = forPlayer((author, data) => createFeedback(author, data));
+export const createReport = forPlayer((author, data) => createFeedback(author, { ...data, type: "bug" }, true));
 export const vote = forPlayer(castVote);
 
 // Never calls Torn; app asks PIN

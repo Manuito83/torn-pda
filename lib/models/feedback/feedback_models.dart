@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/feedback/feedback_account.dart';
+import 'package:torn_pda/models/feedback/feedback_attachment.dart';
 
 const feedbackPageSize = 20;
 
@@ -131,6 +132,10 @@ class FeedbackItem {
     this.number,
     this.type = 'suggestion',
     this.isPrivate = false,
+    this.isReport = false,
+    this.fromReport = false,
+    this.authorPlayerId,
+    this.attachments = const [],
     this.duplicateOf,
     this.role,
   });
@@ -149,10 +154,20 @@ class FeedbackItem {
   final int? number;
   final String type;
   final bool isPrivate;
+
+  final bool isReport;
+  final bool fromReport;
+  final int? authorPlayerId;
+  final List<FeedbackAttachment> attachments;
   final String? duplicateOf;
   final String? role;
 
   bool get isBug => type == 'bug';
+
+  bool get isHidden => isPrivate || isReport;
+
+  // Value that hides it again
+  String get hiddenVisibility => fromReport ? 'report' : 'private';
 
   String get heading => number == null ? title : '#$number $title';
 
@@ -162,6 +177,8 @@ class FeedbackItem {
     int? votesCount,
     int? commentsCount,
     bool? isPrivate,
+    bool? isReport,
+    List<FeedbackAttachment>? attachments,
     FeedbackResponse? response,
     bool clearResponse = false,
   }) {
@@ -180,6 +197,10 @@ class FeedbackItem {
       number: number,
       type: type,
       isPrivate: isPrivate ?? this.isPrivate,
+      isReport: isReport ?? this.isReport,
+      fromReport: fromReport,
+      authorPlayerId: authorPlayerId,
+      attachments: attachments ?? this.attachments,
       duplicateOf: duplicateOf,
       role: role,
     );
@@ -201,6 +222,10 @@ class FeedbackItem {
       number: map['number'] is num ? (map['number'] as num).toInt() : null,
       type: map['type']?.toString() ?? 'suggestion',
       isPrivate: map['visibility'] == 'private',
+      isReport: map['visibility'] == 'report',
+      fromReport: map['report'] == true,
+      authorPlayerId: map['authorPlayerId'] is num ? (map['authorPlayerId'] as num).toInt() : null,
+      attachments: feedbackAttachmentsOf(map['attachments']),
       duplicateOf: map['duplicateOf'] is String ? map['duplicateOf'] as String : null,
       role: map['role'] is String ? map['role'] as String : null,
     );
@@ -215,6 +240,7 @@ class FeedbackComment {
     required this.createdAt,
     required this.isModerator,
     this.authorPlayerId,
+    this.attachments = const [],
   });
 
   final String id;
@@ -223,6 +249,19 @@ class FeedbackComment {
   final DateTime? createdAt;
   final bool isModerator;
   final int? authorPlayerId;
+  final List<FeedbackAttachment> attachments;
+
+  FeedbackComment copyWith({List<FeedbackAttachment>? attachments}) {
+    return FeedbackComment(
+      id: id,
+      body: body,
+      authorName: authorName,
+      createdAt: createdAt,
+      isModerator: isModerator,
+      authorPlayerId: authorPlayerId,
+      attachments: attachments ?? this.attachments,
+    );
+  }
 
   factory FeedbackComment.fromMap(String id, Map<String, dynamic> map) {
     return FeedbackComment(
@@ -232,6 +271,7 @@ class FeedbackComment {
       createdAt: feedbackTime(map['createdAt']),
       isModerator: map['isModerator'] == true,
       authorPlayerId: map['authorPlayerId'] is num ? (map['authorPlayerId'] as num).toInt() : null,
+      attachments: feedbackAttachmentsOf(map['attachments']),
     );
   }
 }

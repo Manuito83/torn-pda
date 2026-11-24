@@ -17,7 +17,6 @@ import 'package:torn_pda/providers/feedback_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/feedback_firestore.dart';
 import 'package:torn_pda/utils/feedback_functions.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
@@ -55,7 +54,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     if (id == null || !mounted) return;
     final stopLoading = BotToast.showLoading();
     try {
-      final item = await fetchFeedbackItem(id);
+      final item = await fetchFeedbackItemOrReport(id);
       if (item == null) throw const FeedbackCallError('not-found');
       _account.load([id]);
       stopLoading();
@@ -67,8 +66,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
     }
   }
 
-  Future<void> _create() async {
-    final id = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const FeedbackCreatePage()));
+  Future<void> _create({bool report = false}) async {
+    final id = await Navigator.of(
+      context,
+    ).push<String>(MaterialPageRoute(builder: (_) => FeedbackCreatePage(report: report)));
     if (id == null) return;
     _controller.reload();
     _controller.requestOpen(id);
@@ -142,7 +143,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         ],
       ),
       title: const Text('Feedback', style: TextStyle(color: Colors.white)),
-      actions: [FeedbackAppBarActions(onCreate: _create)],
+      actions: [FeedbackAppBarActions(onCreate: _create, onReport: () => _create(report: true))],
     );
   }
 

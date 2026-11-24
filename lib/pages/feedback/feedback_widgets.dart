@@ -60,7 +60,8 @@ class FeedbackBadges extends StatelessWidget {
       spacing: 6,
       runSpacing: 4,
       children: [
-        if (item.isBug) const FeedbackBadge(text: 'Bug', color: Colors.red),
+        if (item.isBug && !item.isReport) const FeedbackBadge(text: 'Bug', color: Colors.red),
+        if (item.isReport) const FeedbackBadge(text: 'Report', color: Colors.red),
         if (item.isPrivate) const FeedbackBadge(text: 'Private', color: Colors.red),
         FeedbackBadge(text: item.status.label, color: feedbackStatusColor(item.status)),
         for (final tag in feedbackTagsOf(item, tags)) FeedbackBadge(text: tag.name, color: Color(tag.color)),

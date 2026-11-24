@@ -2,7 +2,7 @@ import { HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import { subscribersOf, subscription } from "./feedback_notifications";
 import { anHourInMilliseconds } from "./time";
-import { feedbackIdOf, feedbackRef, forPlayer, isPublic, withSlots } from "./feedback";
+import { feedbackIdOf, feedbackRef, forPlayer, visibleTo, withSlots } from "./feedback";
 import { Author, actsAsModerator } from "./feedback_author";
 import { cleanText, docId, invalid, notFound } from "./feedback_input";
 
@@ -29,7 +29,7 @@ export async function addComment(author: Author, data: any) {
     const subRef = subscribersOf(ref).doc(`${author.playerId}`);
     return admin.firestore().runTransaction(async (t) => {
       const [feedback, subscribed] = await t.getAll(ref, subRef);
-      if (!isPublic(feedback) && !(feedback.exists && moderator)) notFound();
+      if (!await visibleTo(feedback, author)) notFound();
       const now = admin.firestore.Timestamp.now();
       const commentRef = ref.collection("comments").doc();
       t.create(commentRef, {
@@ -48,7 +48,10 @@ export async function addComment(author: Author, data: any) {
 }
 
 export async function deleteOwn(author: Author, data: any) {
-  await removeComment(await feedbackIdOf(data), docId(data.commentId, "commentId"), author.playerId);
+  const commentId = docId(data.commentId, "commentId");
+  const feedbackId = await feedbackIdOf(data);
+  if (!await visibleTo(await feedbackRef().doc(feedbackId).get(), author)) notFound();
+  await removeComment(feedbackId, commentId, author.playerId);
 }
 
 export const comment = forPlayer(addComment);

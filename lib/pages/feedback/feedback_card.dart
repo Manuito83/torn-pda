@@ -28,7 +28,10 @@ class FeedbackCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FeedbackVotes(count: item.votesCount, voted: voted, onTap: onVote),
+              if (item.isReport)
+                const SizedBox(width: 8)
+              else
+                FeedbackVotes(count: item.votesCount, voted: voted, onTap: onVote),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -3,17 +3,22 @@ import 'dart:math';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/models/feedback/feedback_attachment.dart';
 import 'package:torn_pda/models/feedback/feedback_models.dart';
+import 'package:torn_pda/pages/feedback/feedback_attachment_widgets.dart';
 import 'package:torn_pda/pages/feedback/feedback_comment_box.dart';
 import 'package:torn_pda/pages/feedback/feedback_mod_sheets.dart';
 import 'package:torn_pda/pages/feedback/feedback_route.dart';
 import 'package:torn_pda/pages/feedback/feedback_widgets.dart';
 import 'package:torn_pda/providers/feedback_account_controller.dart';
 import 'package:torn_pda/providers/feedback_controller.dart';
+import 'package:torn_pda/providers/feedback_links_controller.dart';
 import 'package:torn_pda/providers/feedback_pager.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/feedback_attachment_functions.dart';
 import 'package:torn_pda/utils/feedback_firestore.dart';
 import 'package:torn_pda/utils/feedback_functions.dart';
 import 'package:torn_pda/widgets/pda_scaffold.dart';
@@ -34,8 +39,10 @@ class FeedbackDetailPage extends StatefulWidget {
 class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSubRoute {
   late FeedbackItem _item = widget.item;
   late final FeedbackPager<FeedbackComment> _comments = FeedbackPager((cursor) {
+    if (_item.isReport) return fetchReportComments(_item.id, cursor);
     return _item.isPrivate ? fetchPrivateComments(_item.id, cursor) : fetchFeedbackComments(_item.id, cursor);
   }, onModLocked: _account.markLocked);
+  late final _links = FeedbackLinksController(widget.item.id);
   final _scroll = ScrollController();
   final _controller = Get.find<FeedbackController>();
   final _account = Get.find<FeedbackAccountController>();
@@ -53,15 +60,79 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
     _scroll.addListener(() {
       if (_scroll.position.extentAfter < 300) _comments.loadMore();
     });
+    _comments.addListener(_askLinks);
     if (_item.commentsCount > 0) _comments.reload();
     _account.load([_item.id]);
+    _askLinks();
   }
 
   @override
   void dispose() {
     _scroll.dispose();
     _comments.dispose();
+    _links.dispose();
     super.dispose();
+  }
+
+  Map<String, List<FeedbackAttachment>> get _commentFiles => {
+    for (final comment in _comments.items)
+      if (comment.attachments.isNotEmpty) comment.id: comment.attachments,
+  };
+
+  void _askLinks() => _links.ensure(item: _item.attachments, comments: _commentFiles);
+
+  Future<void> _openAttachment(FeedbackAttachment attachment, {String? commentId}) async {
+    final url = await _links.freshUrl(
+      attachment,
+      commentId: commentId,
+      item: _item.attachments,
+      comments: _commentFiles,
+    );
+    if (url == null || !isFeedbackStorageUrl(url)) return showFeedbackError(const FeedbackCallError('upload_failed'));
+    if (attachment.isVideo) {
+      final opened = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!opened) showFeedbackError(const FeedbackCallError('upload_failed'));
+    } else if (mounted) {
+      showFeedbackImage(context, url);
+    }
+  }
+
+  Future<void> _deleteAttachment(FeedbackAttachment attachment, {String? commentId}) async {
+    if (!await confirmFeedbackAction(context, 'Delete file', 'Delete')) return;
+    try {
+      await deleteFeedbackAttachment(_item.id, attachment.id, commentId: commentId);
+    } catch (e) {
+      showFeedbackError(e);
+      return;
+    }
+    List<FeedbackAttachment> remaining(List<FeedbackAttachment> all) => [
+      for (final a in all)
+        if (a.id != attachment.id) a,
+    ];
+    if (commentId == null) {
+      if (mounted) _apply(_item.copyWith(attachments: remaining(_item.attachments)));
+      return;
+    }
+    _comments.patch(
+      (comment) => comment.id == commentId,
+      (comment) => comment.copyWith(attachments: remaining(comment.attachments)),
+    );
+  }
+
+  bool _canDeleteFiles(int? authorPlayerId) {
+    return _account.unlocked || (authorPlayerId != null && authorPlayerId == _account.account.playerId);
+  }
+
+  Widget _buildFiles(List<FeedbackAttachment> attachments, int? authorPlayerId, {String? commentId}) {
+    if (attachments.isEmpty) return const SizedBox.shrink();
+    final linked = commentId == null ? _links.itemLinks(attachments) : _links.commentLinks(commentId, attachments);
+    return FeedbackAttachmentStrip(
+      attachments: linked,
+      onOpen: (attachment) => _openAttachment(attachment, commentId: commentId),
+      onDelete: _canDeleteFiles(authorPlayerId)
+          ? (attachment) => _deleteAttachment(attachment, commentId: commentId)
+          : null,
+    );
   }
 
   void _openLink(String url) {
@@ -94,9 +165,13 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
     }
   }
 
-  Future<void> _sendComment(String text) async {
-    await commentFeedback(_item.id, text);
+  Future<String> _createComment(String text) async {
+    final id = await commentFeedback(_item.id, text);
     _apply(_item.copyWith(commentsCount: _item.commentsCount + 1));
+    return id;
+  }
+
+  Future<void> _showNewComments() async {
     await _comments.reload();
     while (mounted && _comments.hasMore && !_comments.failed) {
       await _comments.loadMore();
@@ -135,10 +210,13 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
   }
 
   Future<void> _changeVisibility() async {
-    final toPublic = _item.isPrivate;
+    final toPublic = _item.isHidden;
     if (!await confirmFeedbackAction(context, toPublic ? 'Make public' : 'Make private', 'Confirm')) return;
     try {
-      await moderateFeedback('setVisibility', {'feedbackId': _item.id, 'visibility': toPublic ? 'public' : 'private'});
+      await moderateFeedback('setVisibility', {
+        'feedbackId': _item.id,
+        'visibility': toPublic ? 'public' : _item.hiddenVisibility,
+      });
     } catch (e) {
       showFeedbackError(e);
       return;
@@ -187,7 +265,7 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
                   if (_item.isBug)
                     PopupMenuItem(
                       value: _ModAction.visibility,
-                      child: Text(_item.isPrivate ? 'Make public' : 'Make private'),
+                      child: Text(_item.isHidden ? 'Make public' : 'Make private'),
                     ),
                   const PopupMenuItem(value: _ModAction.delete, child: Text('Delete')),
                 ],
@@ -216,12 +294,17 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
           children: [
             Expanded(
               child: GetBuilder<FeedbackAccountController>(
-                builder: (_) => ListenableBuilder(listenable: _comments, builder: (_, _) => _buildList()),
+                builder: (_) => ListenableBuilder(
+                  listenable: Listenable.merge([_comments, _links]),
+                  builder: (_, _) => _buildList(),
+                ),
               ),
             ),
             GetBuilder<FeedbackAccountController>(
               builder: (account) => FeedbackCommentBox(
-                onSend: _sendComment,
+                feedbackId: _item.id,
+                onCreate: _createComment,
+                onDone: _showNewComments,
                 blockedReason: account.account.known && !account.account.canWrite ? account.account.reason : null,
               ),
             ),
@@ -255,7 +338,7 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FeedbackVotes(count: item.votesCount, voted: _account.isVoted(item.id), onTap: _vote),
+            if (!item.isReport) FeedbackVotes(count: item.votesCount, voted: _account.isVoted(item.id), onTap: _vote),
             Expanded(
               child: Text(item.heading, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             ),
@@ -271,6 +354,7 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
         const SizedBox(height: 12),
         if (item.body.isNotEmpty)
           FeedbackMarkdown(data: item.body, themeProvider: _themeProvider, onOpenLink: _openLink),
+        _buildFiles(item.attachments, item.authorPlayerId),
         if (response != null) ...[
           const SizedBox(height: 16),
           Container(
@@ -332,6 +416,7 @@ class _FeedbackDetailPageState extends State<FeedbackDetailPage> with FeedbackSu
           ),
           const SizedBox(height: 4),
           FeedbackMarkdown(data: comment.body, themeProvider: _themeProvider, onOpenLink: _openLink),
+          _buildFiles(comment.attachments, comment.authorPlayerId, commentId: comment.id),
         ],
       ),
     );

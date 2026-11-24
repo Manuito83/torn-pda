@@ -4,25 +4,26 @@ import * as admin from "firebase-admin";
 import { eventsRef, feedbackEvent } from "./feedback_notifications";
 import { item, listComments, pageOf, plain } from "./feedback_reads";
 import { removeComment } from "./feedback_comments";
-import { OPTIONS, STATUSES, configRef, feedbackIdOf, feedbackRef, isPublic, privateRef, signedIn } from "./feedback";
+import { OPTIONS, STATUSES, configRef, feedbackIdOf, feedbackRef, isPublic, privateRef, signedIn, visibleTo } from "./feedback";
 import { Author, requireModerator } from "./feedback_author";
 import { cleanText, docId, invalid, notFound } from "./feedback_input";
 
 const MAX_TAGS = 30;
-const VISIBILITIES = ["public", "private"];
+const VISIBILITIES = ["public", "private", "report"];
 
 async function setStatus(moderator: Author, data: any) {
-  const feedbackId = await feedbackIdOf(data);
   const status: string = STATUSES.includes(data.status) ? data.status : invalid("status");
   const responseText = data.responseText === undefined ? undefined
     : cleanText(data.responseText, 0, 2000, true) ?? invalid("responseText");
   const duplicateOf = status === "duplicate" ? docId(data.duplicateOf, "duplicateOf") : undefined;
-  if (duplicateOf === feedbackId || (status !== "duplicate" && data.duplicateOf !== undefined)) invalid("duplicateOf");
+  if (status !== "duplicate" && data.duplicateOf !== undefined) invalid("duplicateOf");
+  const feedbackId = await feedbackIdOf(data);
+  if (duplicateOf === feedbackId) invalid("duplicateOf");
 
   const ref = feedbackRef().doc(feedbackId);
   await admin.firestore().runTransaction(async (t) => {
     const [feedback, original] = await t.getAll(ref, ...(duplicateOf ? [feedbackRef().doc(duplicateOf)] : []));
-    if (!feedback.exists) notFound();
+    if (!await visibleTo(feedback, moderator)) notFound();
     if (original !== undefined && !isPublic(original)) invalid("duplicateOf");
     const now = admin.firestore.Timestamp.now();
     const remove = admin.firestore.FieldValue.delete();
@@ -40,28 +41,29 @@ async function setStatus(moderator: Author, data: any) {
 }
 
 async function setVisibility(data: any) {
-  const ref = feedbackRef().doc(await feedbackIdOf(data));
   const visibility = VISIBILITIES.includes(data.visibility) ? data.visibility : invalid("visibility");
+  const ref = feedbackRef().doc(await feedbackIdOf(data));
   const publicDuplicates = feedbackRef().where("duplicateOf", "==", ref.id).where("visibility", "==", "public").limit(1);
   await admin.firestore().runTransaction(async (t) => {
     const [feedback, duplicates] = await Promise.all([t.get(ref), t.get(publicDuplicates)]);
     if (!feedback.exists) notFound();
-    // Suggestions are always public
-    if (visibility === "private" && feedback.get("type") !== "bug") invalid("visibility");
-    if (visibility === "private" && !duplicates.empty) {
+    // Reports never become private
+    const hidden = feedback.get("report") === true ? "report" : "private";
+    if (visibility !== "public" && (visibility !== hidden || feedback.get("type") !== "bug")) invalid("visibility");
+    if (visibility !== "public" && !duplicates.empty) {
       throw new HttpsError("failed-precondition", "Has public duplicates", { reason: "has_public_duplicates" });
     }
     t.update(ref, { visibility, updatedAt: admin.firestore.Timestamp.now() });
   });
 }
 
-async function setTags(data: any) {
-  const ref = feedbackRef().doc(await feedbackIdOf(data));
+async function setTags(moderator: Author, data: any) {
   const tags = data.tags;
   if (!Array.isArray(tags) || tags.length > MAX_TAGS || new Set(tags).size !== tags.length) invalid("tags");
+  const ref = feedbackRef().doc(await feedbackIdOf(data));
   await admin.firestore().runTransaction(async (t) => {
     const [feedback, config] = await t.getAll(ref, configRef());
-    if (!feedback.exists) notFound();
+    if (!await visibleTo(feedback, moderator)) notFound();
     const known = new Set((config.get("tags") ?? []).map((tag: any) => tag.id));
     if (!tags.every((tag: unknown) => known.has(tag))) invalid("tags");
     t.update(ref, { tags, updatedAt: admin.firestore.Timestamp.now() });
@@ -101,11 +103,13 @@ export async function moderateAs(moderator: Author, data: any) {
     case "setVisibility":
       return setVisibility(data);
     case "setTags":
-      return setTags(data);
+      return setTags(moderator, data);
     case "setConfigTags":
       return setConfigTags(data);
-    case "deleteComment":
-      return removeComment(await feedbackIdOf(data), docId(data.commentId, "commentId"));
+    case "deleteComment": {
+      const commentId = docId(data.commentId, "commentId");
+      return removeComment(await feedbackIdOf(data), commentId);
+    }
     case "deleteFeedback": {
       const ref = feedbackRef().doc(await feedbackIdOf(data));
       if (!(await ref.get()).exists) notFound();
